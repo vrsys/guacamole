@@ -60,9 +60,6 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum ABufferWarpMode {
     ABUFFER_NONE,
-    ABUFFER_POINTS,
-    ABUFFER_QUADS,
-    ABUFFER_SCALED_POINTS,
     ABUFFER_RAYCASTING
   };
 
@@ -76,9 +73,21 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   WarpPassDescription& depth_test(bool val);
   bool depth_test() const;
+  
+  WarpPassDescription& adaptive_entry_level(bool val);
+  bool adaptive_entry_level() const;
 
   WarpPassDescription& debug_cell_colors(bool val);
   bool debug_cell_colors() const;
+
+  WarpPassDescription& debug_sample_count(bool val);
+  bool debug_sample_count() const;
+
+  WarpPassDescription& debug_bounding_volumes(bool val);
+  bool debug_bounding_volumes() const;
+
+  WarpPassDescription& debug_sample_ray(bool val);
+  bool debug_sample_ray() const;
 
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
@@ -101,7 +110,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   std::string shared_window_name_;
 
   bool depth_test_;
+  bool adaptive_entry_level_;
   bool debug_cell_colors_;
+  bool debug_sample_count_;
+  bool debug_bounding_volumes_;
+  bool debug_sample_ray_;
   int max_layers_;
   float pixel_size_;
   GBufferWarpMode gbuffer_warp_mode_;

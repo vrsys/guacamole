@@ -57,6 +57,9 @@ bool backface_culling       = true;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
+bool warping                = true;
+bool stereo                 = false;
+bool warp_perspective       = false;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_gbuffer");
@@ -131,7 +134,7 @@ int main(int argc, char** argv) {
     }
   #else
     bool fullscreen = (argc == 2);
-    auto resolution = gua::math::vec2ui(1280, 800);
+    auto resolution = gua::math::vec2ui(1600, 1000);
   #endif
 
   // add mouse interaction
@@ -534,36 +537,105 @@ int main(int argc, char** argv) {
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
 
-  auto update_transparency_mode([&](){
-    normal_pipe->set_enable_abuffer(true);
-    warp_pipe->set_enable_abuffer(true);
-    res_pass->compositing_enable(false);
-
-    if (current_transparency_mode == "set_transparency_type_points")        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_POINTS);
-    if (current_transparency_mode == "set_transparency_type_quads")         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_QUADS);
-    if (current_transparency_mode == "set_transparency_type_scaled_points") warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_SCALED_POINTS);
-    if (current_transparency_mode == "set_transparency_type_raycasting")    warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
-    if (current_transparency_mode == "set_transparency_type_none") {
-      warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-      normal_pipe->set_enable_abuffer(false);
-      warp_pipe->set_enable_abuffer(false);
-    }
-    if (current_transparency_mode == "set_transparency_type_gbuffer") {
-      warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-      res_pass->compositing_enable(true);
-    }
-  });
-
-  update_transparency_mode();
-
-  // ---------------------------------------------------------------------------
-  // ----------------------------- setup gui -----------------------------------
-  // ---------------------------------------------------------------------------
   #if OCULUS
     auto window = std::make_shared<gua::OculusWindow>();
   #else
     auto window = std::make_shared<gua::GlfwWindow>();
   #endif
+
+  auto update_view_mode([&](){
+
+    // set transparency mode
+    if (warping) {
+      warp_pipe->set_enable_abuffer(true);
+      res_pass->compositing_enable(false);
+
+      if (current_transparency_mode == "set_transparency_type_raycasting")    warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
+      if (current_transparency_mode == "set_transparency_type_none") {
+        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+        warp_pipe->set_enable_abuffer(false);
+      }
+      if (current_transparency_mode == "set_transparency_type_gbuffer") {
+        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+        res_pass->compositing_enable(true);
+      }
+    } else {
+      res_pass->compositing_enable(true);
+    }
+
+    // set stereo options
+    if (stereo) {
+
+      slow_cam->config.set_enable_stereo(true);
+
+      #if OCULUS
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+      #endif
+
+      clear_pass->set_enable_for_right_eye(!warping);
+      trimesh_pass->set_enable_for_right_eye(!warping);
+      #if LOAD_PITOTI
+        plod_pass->set_enable_for_right_eye(!warping);
+      #endif
+      tex_quad_pass->set_enable_for_right_eye(!warping);
+      light_pass->set_enable_for_right_eye(!warping);
+      res_pass->set_enable_for_right_eye(!warping);
+      grid_pass->set_enable_for_right_eye(!warping);
+      render_grid_pass->set_enable_for_right_eye(!warping);
+
+      if (warping) {
+        slow_cam->config.set_eye_dist(0.f);
+        fast_cam->config.set_eye_dist(0.064f);
+        
+        #if OCULUS
+          slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+          slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        #endif
+        
+        slow_cam->set_pipeline_description(warp_pipe);
+
+      } else {
+        slow_cam->config.set_eye_dist(0.064f);
+      
+        #if OCULUS
+          slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+          slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+        #endif
+        
+        slow_cam->set_pipeline_description(normal_pipe);
+      }
+
+    } else {
+
+      slow_cam->config.set_enable_stereo(false);
+      slow_cam->config.set_eye_dist(0.f);
+      fast_cam->config.set_eye_dist(0.f);
+      clear_pass->set_enable_for_right_eye(true);
+
+      #if OCULUS
+        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+      #else
+        window->config.set_stereo_mode(gua::StereoMode::MONO);
+      #endif
+
+      if (warping) {
+        slow_cam->set_pipeline_description(warp_pipe);
+      } else {
+        slow_cam->set_pipeline_description(normal_pipe);
+      }
+    }
+
+  });
+
+  update_view_mode();
+
+  // ---------------------------------------------------------------------------
+  // ----------------------------- setup gui -----------------------------------
+  // ---------------------------------------------------------------------------
 
   auto gui = std::make_shared<gua::GuiResource>();
   auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
@@ -592,10 +664,17 @@ int main(int argc, char** argv) {
     gui->add_javascript_getter("get_max_split_depth", [&](){ return gua::string_utils::to_string(grid_pass->max_split_depth());});
     gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
     gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
+    gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
+    gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
+    gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
     gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
     gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
     gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
+    gui->add_javascript_getter("get_adaptive_entry_level", [&](){ return std::to_string(warp_pass->adaptive_entry_level());});
     gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
+    gui->add_javascript_getter("get_debug_sample_count", [&](){ return std::to_string(warp_pass->debug_sample_count());});
+    gui->add_javascript_getter("get_debug_bounding_volumes", [&](){ return std::to_string(warp_pass->debug_bounding_volumes());});
+    gui->add_javascript_getter("get_debug_sample_ray", [&](){ return std::to_string(warp_pass->debug_sample_ray());});
     gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
     gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
@@ -604,6 +683,9 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_max_split_depth");
     gui->add_javascript_callback("set_cell_size");
     gui->add_javascript_callback("set_depth_test");
+    gui->add_javascript_callback("set_warp_perspective");
+    gui->add_javascript_callback("set_warping");
+    gui->add_javascript_callback("set_stereo");
     gui->add_javascript_callback("set_backface_culling");
     gui->add_javascript_callback("set_background");
     gui->add_javascript_callback("set_gbuffer_type_none");
@@ -617,10 +699,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
     gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
     gui->add_javascript_callback("set_transparency_type_none");
-    gui->add_javascript_callback("set_transparency_type_points");
     gui->add_javascript_callback("set_transparency_type_gbuffer");
-    gui->add_javascript_callback("set_transparency_type_quads");
-    gui->add_javascript_callback("set_transparency_type_scaled_points");
     gui->add_javascript_callback("set_transparency_type_raycasting");
     gui->add_javascript_callback("set_adaptive_abuffer");
     gui->add_javascript_callback("set_scene_one_oilrig");
@@ -641,7 +720,11 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_manipulation_camera");
     gui->add_javascript_callback("set_manipulation_object");
     gui->add_javascript_callback("set_show_warp_grid");
+    gui->add_javascript_callback("set_adaptive_entry_level");
     gui->add_javascript_callback("set_debug_cell_colors");
+    gui->add_javascript_callback("set_debug_sample_count");
+    gui->add_javascript_callback("set_debug_bounding_volumes");
+    gui->add_javascript_callback("set_debug_sample_ray");
     gui->add_javascript_callback("set_pixel_size");
     gui->add_javascript_callback("set_bg_tex");
     gui->add_javascript_callback("set_view_mono_warped");
@@ -661,83 +744,6 @@ int main(int argc, char** argv) {
       int depth_layers;
       str >> depth_layers;
       warp_pass->max_layers(depth_layers);
-    } else if (callback == "set_view_mono_warped") {
-      slow_cam->set_pipeline_description(warp_pipe);
-      slow_cam->config.set_enable_stereo(false);
-      slow_cam->config.set_eye_dist(0.f);
-      fast_cam->config.set_eye_dist(0.f);
-      clear_pass->set_enable_for_right_eye(true);
-      update_transparency_mode();
-
-      #if OCULUS
-        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-      #else
-        window->config.set_stereo_mode(gua::StereoMode::MONO);
-      #endif
-
-    } else if (callback == "set_view_stereo_warped") {
-      slow_cam->set_pipeline_description(warp_pipe);
-      slow_cam->config.set_enable_stereo(true);
-      slow_cam->config.set_eye_dist(0.f);
-      fast_cam->config.set_eye_dist(0.064f);
-      clear_pass->set_enable_for_right_eye(false);
-      trimesh_pass->set_enable_for_right_eye(false);
-      #if LOAD_PITOTI
-      plod_pass->set_enable_for_right_eye(false);
-      #endif
-      tex_quad_pass->set_enable_for_right_eye(false);
-      light_pass->set_enable_for_right_eye(false);
-      res_pass->set_enable_for_right_eye(false);
-      grid_pass->set_enable_for_right_eye(false);
-      render_grid_pass->set_enable_for_right_eye(false);
-      
-      update_transparency_mode();
-      #if OCULUS
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
-        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-        slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-      #else
-        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
-      #endif
-
-    } else if (callback == "set_view_mono") {
-      slow_cam->set_pipeline_description(normal_pipe);
-      slow_cam->config.set_enable_stereo(false);
-      slow_cam->config.set_eye_dist(0.f);
-      
-      update_transparency_mode();
-      #if OCULUS
-        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-      #else
-        window->config.set_stereo_mode(gua::StereoMode::MONO);
-      #endif
-
-    } else if (callback == "set_view_stereo") {
-      slow_cam->set_pipeline_description(normal_pipe);
-      slow_cam->config.set_enable_stereo(true);
-      slow_cam->config.set_eye_dist(0.064f);
-      trimesh_pass->set_enable_for_right_eye(true);
-      #if LOAD_PITOTI
-      plod_pass->set_enable_for_right_eye(true);
-      #endif
-      tex_quad_pass->set_enable_for_right_eye(true);
-      light_pass->set_enable_for_right_eye(true);
-      res_pass->set_enable_for_right_eye(true);
-      grid_pass->set_enable_for_right_eye(true);
-      render_grid_pass->set_enable_for_right_eye(true);
-      
-      update_transparency_mode();
-      #if OCULUS
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
-        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-        slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
-      #else
-        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
-      #endif
 
     } else if (callback == "set_split_threshold") {
       std::stringstream str(params[0]);
@@ -765,6 +771,17 @@ int main(int argc, char** argv) {
       std::stringstream str(params[0]);
       str >> depth_test;
       warp_pass->depth_test(depth_test);
+    } else if (callback == "set_warp_perspective") {
+      std::stringstream str(params[0]);
+      str >> warp_perspective;
+    } else if (callback == "set_warping") {
+      std::stringstream str(params[0]);
+      str >> warping;
+      update_view_mode();
+    } else if (callback == "set_stereo") {
+      std::stringstream str(params[0]);
+      str >> stereo;
+      update_view_mode();
     } else if (callback == "set_backface_culling") {
       std::stringstream str(params[0]);
       str >> backface_culling;
@@ -779,11 +796,31 @@ int main(int argc, char** argv) {
       bool checked;
       str >> checked;
       render_grid_pass->show_warp_grid(checked);
+    } else if (callback == "set_adaptive_entry_level") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->adaptive_entry_level(checked);
     } else if (callback == "set_debug_cell_colors") {
       std::stringstream str(params[0]);
       bool checked;
       str >> checked;
       warp_pass->debug_cell_colors(checked);
+    } else if (callback == "set_debug_sample_count") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->debug_sample_count(checked);
+    } else if (callback == "set_debug_bounding_volumes") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->debug_bounding_volumes(checked);
+    } else if (callback == "set_debug_sample_ray") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      warp_pass->debug_sample_ray(checked);
     } else if (callback == "set_adaptive_abuffer") {
       std::stringstream str(params[0]);
       bool checked;
@@ -835,15 +872,12 @@ int main(int argc, char** argv) {
         grid_pass->mode(mode);
         render_grid_pass->mode(mode);
       }
-    } else if (callback == "set_transparency_type_points"
-             | callback == "set_transparency_type_quads"
-             | callback == "set_transparency_type_gbuffer"
-             | callback == "set_transparency_type_scaled_points"
+    } else if (callback == "set_transparency_type_gbuffer"
              | callback == "set_transparency_type_raycasting"
              | callback == "set_transparency_type_none") {
 
       current_transparency_mode = callback;
-      update_transparency_mode();
+      update_view_mode();
 
     } else if (callback == "set_manipulation_object"
             || callback == "set_manipulation_camera"
@@ -1039,10 +1073,18 @@ int main(int argc, char** argv) {
     warp_nav.update();
 
     #if POWER_WALL
-      navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+      if (warp_perspective && !warping) {
+        navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+      } else {
+        navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+      }
       warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
     #else
-      navigation->set_transform(gua::math::mat4(nav.get_transform()));
+      if (warp_perspective && !warping) {
+        navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));
+      } else {
+        navigation->set_transform(gua::math::mat4(nav.get_transform()));
+      }
       warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
     #endif
 
@@ -1056,7 +1098,8 @@ int main(int argc, char** argv) {
       double trimesh_time(0);
       double gbuffer_warp_time(0);
       double abuffer_warp_time(0);
-      double grid_time(0);
+      double gbuffer_grid_time(0);
+      double abuffer_grid_time(0);
       int gbuffer_primitives(0);
       int abuffer_primitives(0);
 
@@ -1066,7 +1109,8 @@ int main(int argc, char** argv) {
           if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
           if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time += result.second;
           if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time += result.second;
-          if (result.first.find("WarpGridGenerator") != std::string::npos) grid_time += result.second;
+          if (result.first.find("WarpGridGenerator") != std::string::npos) gbuffer_grid_time += result.second;
+          if (result.first.find("MinMaxMap") != std::string::npos) abuffer_grid_time += result.second;
         }
       }
 
@@ -1076,9 +1120,9 @@ int main(int argc, char** argv) {
       }
 
       stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
-                           window->get_rendering_fps(), trimesh_time, grid_time,
-                           gbuffer_warp_time, abuffer_warp_time, gbuffer_primitives,
-                           abuffer_primitives);
+                           window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
+                           abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time, 
+                           gbuffer_primitives, abuffer_primitives);
     }
 
     window->process_events();

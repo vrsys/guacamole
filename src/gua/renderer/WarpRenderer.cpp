@@ -61,17 +61,12 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     ResourceFactory factory;
     std::string v_shader = factory.read_shader_file("shaders/warp_abuffer.vert");
     std::string f_shader = factory.read_shader_file("shaders/warp_abuffer.frag");
-    std::string g_shader = factory.read_shader_file("shaders/warp_abuffer.geom");
   #else
     std::string v_shader = Resources::lookup_shader("shaders/warp_abuffer.vert");
     std::string f_shader = Resources::lookup_shader("shaders/warp_abuffer.frag");
-    std::string g_shader = Resources::lookup_shader("shaders/warp_abuffer.geom");
   #endif
 
     warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
-    if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_RAYCASTING) {
-      warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_shader));
-    }
     warp_abuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
     warp_abuffer_program_ = std::make_shared<ShaderProgram>();
     warp_abuffer_program_->set_shaders(warp_abuffer_program_stages_, std::list<std::string>(), false, global_substitution_map_);
@@ -182,14 +177,10 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_gpu_query(ctx, gpu_query_name_b);
   pipe.begin_primitive_query(ctx, pri_query_name_b);
 
-  if (description->abuffer_warp_mode() != WarpPassDescription::ABUFFER_NONE) {
+  if (description->abuffer_warp_mode() == WarpPassDescription::ABUFFER_RAYCASTING) {
     warp_abuffer_program_->use(ctx);
 
-    if (description->abuffer_warp_mode() == WarpPassDescription::ABUFFER_RAYCASTING) {
-      warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", scm::math::inverse(warp_matrix));
-    } else {
-      warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
-    }
+    warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", scm::math::inverse(warp_matrix));
 
     auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
     gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
@@ -209,17 +200,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     //   }
     // }
 
-    if (description->abuffer_warp_mode() == WarpPassDescription::ABUFFER_RAYCASTING) {
-      ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
-      ctx.render_context->apply();
-      pipe.draw_quad();
-    } else {
-      ctx.render_context->set_rasterizer_state(points_);
-      ctx.render_context->bind_vertex_array(empty_vao_);
-      ctx.render_context->apply();
-      math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, resolution.x * resolution.y);
-    }
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
+    ctx.render_context->apply();
+    pipe.draw_quad();
   }
 
   pipe.end_primitive_query(ctx, pri_query_name_b);

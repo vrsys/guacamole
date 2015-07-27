@@ -28,7 +28,7 @@ layout(pixel_center_integer) in vec4 gl_FragCoord;
 // output
 layout(location=0) out vec3 gua_out_color;
 
-#define MAX_RAY_STEPS 50
+#define MAX_RAY_STEPS @warping_max_layers@
 
 #if WARP_MODE == WARP_MODE_RAYCASTING
 
@@ -119,7 +119,10 @@ layout(location=0) out vec3 gua_out_color;
     end   = e.xyz * 0.5 + 0.5;
 
     if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) || 
-        any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) ) {
+        any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) || crop_depth.x > crop_depth.y) {
+      // invalid ray if either
+      // 
+      // - there is no transparent surface visible at all
       return false;
     }
 
@@ -161,10 +164,11 @@ layout(location=0) out vec3 gua_out_color;
 
   void draw_debug_views() {
 
-    vec2 preview_coords = gua_quad_coords*3-vec2(0.09, 0.12);
+    const int preview_scale = 3;
+    vec2 preview_coords = gua_quad_coords*preview_scale-vec2(0.09, 0.12);
     
     // center ray preview
-    #if 0
+    #if 1
       // draw mini version of depth buffer
       if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
         gua_out_color = vec3(get_min_max_depth(ivec2(preview_coords*gua_resolution)/2, 1).x);
@@ -197,7 +201,7 @@ layout(location=0) out vec3 gua_out_color;
 
         int current_level = min(max_level, int(log2(max(abs(dir.x), abs(dir.y))+1)+1));
 
-        while(++sample_count < MAX_RAY_STEPS) {
+        while(++sample_count < (MAX_RAY_STEPS+1)) {
 
           const float cell_size   = 1<<current_level;
           const vec2  cell_origin = cell_size * mix(ceil(pos/cell_size-1), floor(pos/cell_size), flip);
@@ -298,30 +302,31 @@ layout(location=0) out vec3 gua_out_color;
     const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
 
     int sample_count = 0;
-    if (total_min_max_depth.x > total_min_max_depth.y) {
-      sample_count = MAX_RAY_STEPS;
-    }
+    int perform_ray_casting = 1;
 
     vec3 s, e;
     if (!get_ray(gua_quad_coords, s, e, total_min_max_depth)) {
-      sample_count = MAX_RAY_STEPS;
+      // skip raycasting if invalid ray was generated
+      sample_count = MAX_RAY_STEPS+1;
+      perform_ray_casting = 0;
     }
 
     s.xy = vec2(gua_resolution) * s.xy;
     e.xy = vec2(gua_resolution) * e.xy;
 
-
           vec2 pos = s.xy;
-    const vec3 dir = e-s;
+    const vec3 dir = e-s + 0.000001;
 
     const vec2 signs = vec2(s.x <= e.x ? 1 : -1, s.y <= e.y ? 1 : -1);
     const vec2 flip  = vec2(s.x <= e.x ? 1 :  0, s.y <= e.y ? 1 :  0);
 
-    int current_level = max_level;
-    // int current_level = min(max_level, int(log2(max(abs(dir.x), abs(dir.y))+1)+1));
+    #if @adaptive_entry_level@ == 1
+      int current_level = min(max_level, int(log2(max(abs(dir.x), abs(dir.y))+1)));
+    #else
+      int current_level = max_level;
+    #endif
 
-    while(++sample_count < MAX_RAY_STEPS) {
-
+    while(++sample_count < (MAX_RAY_STEPS+1)) {
       const float cell_size   = 1<<current_level;
       const vec2  cell_origin = cell_size * mix(ceil(pos/cell_size-1), floor(pos/cell_size), flip);
       const vec2  min_max_depth = get_min_max_depth(ivec2(cell_origin.xy/max(2, cell_size)), max(1, current_level));
@@ -361,7 +366,6 @@ layout(location=0) out vec3 gua_out_color;
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
             vec3  frag_color = uintBitsToFloat(data.rgb);
             abuf_mix_frag(vec4(frag_color, frag_alpha), color);
-            // break;
           }
 
           frag = unpackUint2x32(frag_list[frag.x]);
@@ -369,11 +373,13 @@ layout(location=0) out vec3 gua_out_color;
 
       }
 
-      // draw debug hierachy
-      if (current_level == 0 && intersects) {
-        abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
-      }
-      abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
+      #if @debug_bounding_volumes@ == 1
+        // draw debug hierachy
+        if (current_level == 0 && intersects) {
+          abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
+        }
+        abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.05), color);
+      #endif
 
     
       if (!intersects || current_level == 0) {
@@ -393,23 +399,17 @@ layout(location=0) out vec3 gua_out_color;
     }
 
 
-
-
-
+    #if @debug_sample_count@ == 1
+      // draw debug sample count
+      abuf_mix_frag(vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.5), color);
+    #endif
 
     abuf_mix_frag(texture2D(sampler2D(warped_color_buffer), gua_quad_coords), color);
     gua_out_color = toneMap(color.rgb);
 
-    draw_debug_views();
-  }
-
-#else
-
-  in vec3 color;
-  in vec3 normal;
-
-  void main() {
-    gua_out_color = color;
+    #if @debug_sample_ray@ == 1
+      draw_debug_views();
+    #endif
   }
 
 #endif

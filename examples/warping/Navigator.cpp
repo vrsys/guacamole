@@ -28,7 +28,7 @@ void Navigator::update() {
     frame_time_ = timer_.get_elapsed();
 
     const float rotation_speed = 0.2f;
-    const float motion_speed = 0.02f;
+    const float motion_speed = 0.01f;
 
     auto y_rot(scm::math::mat4f::identity());
     auto x_rot(scm::math::mat4f::identity());
@@ -63,7 +63,7 @@ void Navigator::update() {
     }
 
     auto target = scm::math::make_translation(current_location_.x, current_location_.y, current_location_.z) * rotation;
-    float smoothness = frame_time_ * 10;
+    float smoothness = frame_time_ * 20;
     transform_ = transform_ * (1.f - smoothness) + target * smoothness;
     mouse_movement_ = scm::math::vec2i(0);
 

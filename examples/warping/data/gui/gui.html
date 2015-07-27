@@ -65,10 +65,10 @@
 
         $(parent_selector).append(
           '<div class="row">' +
-            '<div class="col-xs-6">' +
+            '<div class="col-xs-5">' +
               label + ':' +
             '</div>' +
-            '<div class="col-xs-6">' +
+            '<div class="col-xs-7">' +
               '<div class="btn btn-default btn-image texture_button ' + func + '" data-toggle="popover" data-placement="left" title="Select Texture" style="height: 20px; width: 100%; padding:0"></div>' +
             '</div>' +
           '</div>'
@@ -208,6 +208,10 @@
         init_checkbox("#backface_culling", "backface_culling");
         init_checkbox("#background", "background");
 
+        init_checkbox("#warp_perspective", "warp_perspective");
+        init_checkbox("#warping", "warping");
+        init_checkbox("#stereo", "stereo");
+
         init_radio("#gbuffer_type_none", "gbuffer_type_none");
         init_radio("#gbuffer_type_points", "gbuffer_type_points");
         init_radio("#gbuffer_type_scaled_points", "gbuffer_type_scaled_points");
@@ -221,23 +225,19 @@
 
         init_radio("#transparency_type_none", "transparency_type_none");
         init_radio("#transparency_type_gbuffer", "transparency_type_gbuffer");
-        init_radio("#transparency_type_quads", "transparency_type_quads");
-        init_radio("#transparency_type_points", "transparency_type_points");
-        init_radio("#transparency_type_scaled_points", "transparency_type_scaled_points");
         init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
+        init_checkbox("#adaptive_entry_level", "adaptive_entry_level");
 
         init_checkbox("#show_warp_grid", "show_warp_grid");
         init_checkbox("#debug_cell_colors", "debug_cell_colors");
+        init_checkbox("#debug_sample_count", "debug_sample_count");
+        init_checkbox("#debug_bounding_volumes", "debug_bounding_volumes");
+        init_checkbox("#debug_sample_ray", "debug_sample_ray");
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
         init_radio("#grid_depth_threshold", "grid_depth_threshold");
-
-        init_radio("#view_mono_warped", "view_mono_warped");
-        init_radio("#view_stereo_warped", "view_stereo_warped");
-        init_radio("#view_mono", "view_mono");
-        init_radio("#view_stereo", "view_stereo");
 
         init_slider("#preview-panel .depth_layers", "depth_layers");
         init_slider("#preview-panel .pixel_size", "pixel_size");
@@ -245,7 +245,7 @@
         init_slider("#preview-panel .cell_size", "cell_size");
         init_slider("#preview-panel .max_split_depth", "max_split_depth");
 
-        add_texture_select("#control-panel", "bg_tex", "Background");
+        add_texture_select("#control-panel", "bg_tex", "Texture");
 
         $("body").addClass("on");
       }
@@ -284,74 +284,10 @@
 
     <div id="settings-right">
 
-
-      <div class="side-panel expanded">
-        <div id="control-panel" class="panel-inner">
-
-          <h4><i class="fa fa-eye"></i> View Options</h4>
-
-          <div class="row">
-            <div class="col-xs-5">
-            Camera:
-            </div>
-            <div class="col-xs-7">
-
-              <div class="checkbox">
-                <label>
-                  <input id="depth_test" type="checkbox" value="">
-                  <span>Depth Test</span>
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label>
-                  <input id="backface_culling" type="checkbox" value="">
-                  <span>Backface Culling</span>
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label>
-                  <input id="background" type="checkbox" value="">
-                  <span>Background</span>
-                </label>
-              </div>
-
-               <div class="radio">
-                <label>
-                  <input type="radio" name="stereoRadios" id="view_mono_warped" value="" checked>
-                  <span>Mono Warped</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="stereoRadios" id="view_stereo_warped" value="">
-                  <span>Stereo Warped</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="stereoRadios" id="view_mono" value="">
-                  <span>Mono</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="stereoRadios" id="view_stereo" value="">
-                  <span>Stereo</span>
-                </label>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
-
       <div class="side-panel">
         <div id="control-panel" class="panel-inner">
 
-          <h4><i class="fa fa-picture-o"></i> Scene Options</h4>
+          <h4><i class="fa fa-picture-o"></i> Scene Selection</h4>
 
           <div class="row">
             <div class="col-xs-5">
@@ -447,13 +383,73 @@
             </div>
           </div>
 
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Background:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="background" type="checkbox" value="">
+                  <span>Enable</span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="side-panel">
-        <div id="input-panel" class="panel-inner">
+      <div class="side-panel expanded">
+        <div id="control-panel" class="panel-inner">
 
-          <h4><i class="fa fa-gamepad"></i> Input Options</h4>
+          <h4><i class="fa fa-eye"></i> View Options</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Camera:
+            </div>
+            <div class="col-xs-7">
+
+              <div class="checkbox">
+                <label>
+                  <input id="depth_test" type="checkbox" value="">
+                  <span>Depth Test</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="backface_culling" type="checkbox" value="">
+                  <span>Backface Culling</span>
+                </label>
+              </div>
+
+
+              <div class="checkbox">
+                <label>
+                  <input id="warping" type="checkbox" value="">
+                  <span>Warping</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="stereo" type="checkbox" value="">
+                  <span>Stereo</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="warp_perspective" type="checkbox" value="">
+                  <span>Warp Perspective</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
+          <hr />
 
           <div class="row">
             <div class="col-xs-5">
@@ -493,17 +489,17 @@
             </div>
           </div>
 
-          <hr />
-
         </div>
       </div>
+
+
 
 
 
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-recycle"></i> Warp Options</h4>
+          <h4><i class="fa fa-recycle"></i> Opaque Warping</h4>
 
 
           <div class="row">
@@ -660,7 +656,7 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-magic"></i> Transparency Options</h4>
+          <h4><i class="fa fa-magic"></i> Transparency Warping</h4>
 
           <div class="row">
             <div class="col-xs-5">
@@ -702,24 +698,6 @@
 
               <div class="radio">
                 <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_points" value="">
-                  <span>Points</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_scaled_points" value="">
-                  <span>Scaled Points</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_quads" value="">
-                  <span>Quads</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
                   <input type="radio" name="transparencyRadios" id="transparency_type_raycasting" value="">
                   <span>Raycasting</span>
                 </label>
@@ -730,14 +708,46 @@
                   <span>Adaptive ABuffer</span>
                 </label>
               </div>
+              <div class="checkbox">
+                <label>
+                  <input id="adaptive_entry_level" type="checkbox" value="">
+                  <span>Adaptive Ray Entry</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Debug Options:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="debug_sample_count" type="checkbox" value="">
+                  <span>Sample Count</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_bounding_volumes" type="checkbox" value="">
+                  <span>Bounding Volumes</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_sample_ray" type="checkbox" value="">
+                  <span>Sample Ray</span>
+                </label>
+              </div>
             </div>
           </div>
           <div class="row">
             <div class="col-xs-5">
-              Layers:
+              Ray Steps:
             </div>
             <div class="col-xs-7">
-              <input class="slider depth_layers" data-slider-tooltip="hide" data-slider-id="depth_layers" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" handle="custom"/>
+              <input class="slider depth_layers" data-slider-tooltip="hide" data-slider-id="depth_layers" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="2" handle="custom"/>
             </div>
           </div>
 
