@@ -312,12 +312,12 @@ int main(int argc, char** argv) {
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  // scene_root->scale(20);
-  // auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(sponza);
+  scene_root->scale(20);
+  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(sponza);
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");

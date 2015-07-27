@@ -76,8 +76,8 @@ bool abuf_insert(float depth)
     frag_data[ctr] = uvec4(packUnorm2x16(gua_color.rg), col_norm,
                            packSnorm2x16(gua_normal.yz), pbr);
 
-    imageAtomicMax(abuf_min_depth, ivec2(gl_FragCoord.xy)/2, pack_depth((1-depth)));
-    imageAtomicMax(abuf_max_depth, ivec2(gl_FragCoord.xy)/2, pack_depth(depth));
+    imageAtomicMax(abuf_min_depth, ivec2(gl_FragCoord.xy)/2, pack_depth((1-depth)+0.0001));
+    imageAtomicMax(abuf_max_depth, ivec2(gl_FragCoord.xy)/2, pack_depth(depth+0.0001));
   }
   return success;
 }
@@ -95,6 +95,7 @@ void submit_fragment(float depth)
     // float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
     // if (abs(depth - z) < 0.0001) discard;
 
+    #if 1
     if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
       discard;
     }
@@ -107,6 +108,11 @@ void submit_fragment(float depth)
         discard;
       }
     }
+    
+    #else
+    abuf_insert(depth);
+    discard;
+    #endif
 
 
     // // always abuffer

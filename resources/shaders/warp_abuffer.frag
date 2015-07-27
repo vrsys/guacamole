@@ -326,6 +326,8 @@ layout(location=0) out vec3 gua_out_color;
       int current_level = max_level;
     #endif
 
+    float last_depth = 0;
+
     while(++sample_count < (MAX_RAY_STEPS+1)) {
       const float cell_size   = 1<<current_level;
       const vec2  cell_origin = cell_size * mix(ceil(pos/cell_size-1), floor(pos/cell_size), flip);
@@ -360,12 +362,14 @@ layout(location=0) out vec3 gua_out_color;
         while (frag.x != 0) {
 
           float z = unpack_depth24(frag.y);
-          const float thickness = 0.000;
-          if (d_range.y + thickness > z && d_range.x - thickness <= z) {
+          const float thickness = 0.001;
+          // const float minimum_seperation = 0.001;
+          if (last_depth < z-2*thickness && d_range.y > z-thickness && d_range.x <= z+thickness) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
             vec3  frag_color = uintBitsToFloat(data.rgb);
             abuf_mix_frag(vec4(frag_color, frag_alpha), color);
+            last_depth = z;
           }
 
           frag = unpackUint2x32(frag_list[frag.x]);
