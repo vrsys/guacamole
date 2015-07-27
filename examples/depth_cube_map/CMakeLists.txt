@@ -21,9 +21,9 @@ include_directories( ${INCLUDE_PATHS}
 
 add_executable( ${_EXE_NAME} ${EXAMPLE_SRC})
 
-add_dependencies(${_EXE_NAME} guacamole-gui)
+add_dependencies(${_EXE_NAME} guacamole-gui guacamole-PLOD)
 
-list(APPEND LIBS guacamole-gui guacamole)
+list(APPEND LIBS guacamole-gui guacamole guacamole-PLOD)
 
 target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 
