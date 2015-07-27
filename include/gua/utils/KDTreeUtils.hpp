@@ -26,10 +26,9 @@
 #include <gua/math/BoundingBox.hpp>
 
 #include <scm/gl_core/primitives/box.h>
+#include <gua/utils/Mesh.hpp>
 
 #include <vector>
-
-struct aiMesh;
 
 namespace gua {
 
@@ -67,12 +66,12 @@ struct GUA_DLL Triangle {
   Triangle();
   Triangle(unsigned face_id);
 
-  float intersect(aiMesh* mesh,Ray const& ray) const;
+  float intersect(Mesh const& mesh,Ray const& ray) const;
 
-  math::vec3 get_vertex(aiMesh* mesh, unsigned vertex_id) const;
-  math::vec3 get_normal(aiMesh* mesh) const;
-  math::vec3 get_normal_interpolated(aiMesh* mesh, math::vec3 const& position) const;
-  math::vec2 get_texture_coords_interpolated(aiMesh* mesh, math::vec3 const& position) const;
+  math::vec3 get_vertex(Mesh const& mesh, unsigned vertex_id) const;
+  math::vec3 get_normal(Mesh const& mesh) const;
+  math::vec3 get_normal_interpolated(Mesh const& mesh, math::vec3 const& position) const;
+  math::vec2 get_texture_coords_interpolated(Mesh const& mesh, math::vec3 const& position) const;
 
 
   unsigned face_id_;

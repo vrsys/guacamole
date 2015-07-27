@@ -60,5 +60,6 @@ examples/warping/data/objects/sibenik
 examples/warping/data/objects/dragon.dae
 examples/warping/data/objects/hairball.dae
 examples/warping/data/objects/buddha.dae
-
+examples/animation/example-animation
+externals
 install

@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     }
   #else
     bool fullscreen = (argc == 2);
-    auto resolution = gua::math::vec2ui(1920, 1200);
+    auto resolution = gua::math::vec2ui(1280, 800);
   #endif
 
   // add mouse interaction

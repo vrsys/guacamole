@@ -234,8 +234,8 @@ bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
                                        std::string const& custom_label) const
 {
   // get contents
-  typedef boost::filesystem::path::string_type string_type; 
-  typedef string_type::value_type char_type;
+  using string_type = boost::filesystem::path::string_type;
+  using char_type = string_type::value_type;
 
   string_type s;
   string_type file_label;
@@ -273,8 +273,7 @@ bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
   string_type out;
   std::size_t line_ctr{};
 
-  while (boost::regex_search(s, match, regex)) 
-  {
+  while (boost::regex_search(s, match, regex)) {
     std::string shader_code;
 
     if (!resolve_includes(match[2].str(), first_search_dir, shader_code)) {
@@ -290,8 +289,8 @@ bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename,
   }
 
 #if WIN32
-  typedef std::codecvt_utf8<wchar_t> convert_type;
-  
+  using convert_type = std::codecvt_utf8<wchar_t>;
+
   std::wstring_convert<convert_type, wchar_t> converter;
   auto contents_native = out + s;
 

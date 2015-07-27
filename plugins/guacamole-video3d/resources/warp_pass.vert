@@ -112,7 +112,7 @@ float bilateral_filter(){
     filtered_depth = 0.0;
 
 #if 1
-  if(w_range < 60.1)
+  if(w_range < 70.1)
     filtered_depth = 0.0;
 #endif
 

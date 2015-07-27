@@ -6,6 +6,7 @@ set(LIB_PATH
   ${BULLET_LIBRARY_DIRS}
   ${GUACAMOLE_LIBRARY_DIRS}
   ${ASSIMP_LIBRARY_DIRS}
+  ${FBX_LIBRARY_DIRS}
   ${JSON_LIBRARY_DIRS}
   )
 link_directories(${LIB_PATH})
@@ -14,6 +15,7 @@ set(LIBS
   ${SCHISM_LIBRARIES}
   ${BULLET_LIBRARIES}
   ${GUACAMOLE_LIBRARIES}
+  ${FBX_LIBRARIES}
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -25,6 +27,7 @@ set(INCLUDE_PATHS
   ${BULLET_INCLUDE_DIRS}
   ${GUACAMOLE_INCLUDE_DIRS}
   ${ASSIMP_INCLUDE_DIR}
+  ${FBX_INCLUDE_DIR}
   ${JSON_INCLUDE_DIRS}
   )
 
@@ -41,9 +44,15 @@ IF (GUACAMOLE_EXAMPLES)
     # add_subdirectory(oit_demo)
     # add_subdirectory(tiled_shading_test)
     # add_subdirectory(clipping)
+
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 
+  # skelanim example requires skelanim-plugin and the fbx sdk
+  if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+    add_subdirectory(animation)
+  endif(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
+  
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
     # add_subdirectory(nurbs)
@@ -54,6 +63,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
+  
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
     # add_subdirectory(plod)

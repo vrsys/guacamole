@@ -34,14 +34,14 @@ template <typename T> struct scalar {
 };
 
 template <> struct scalar<float> {
-  typedef float type;
+  using type = float;
 };
 template <> struct scalar<double> {
-  typedef double type;
+  using type = double;
 };
 
 template <> struct scalar<long double> {
-  typedef long double type;
+  using type = long double;
 };
 
 template <typename T> struct dimension {
@@ -63,7 +63,7 @@ template <> struct dimension<long double> {
 // template<>
 // struct scalar<glm::vec3>
 // {
-//   typedef glm::vec3::value_type type;
+//   using type = glm::vec3::value_type;
 // };
 //
 // template<>
@@ -75,7 +75,7 @@ template <> struct dimension<long double> {
 // template<T,N>
 // struct scalar< ::scm::math::vec<T, N> >
 // {
-//   typedef typename ::scm::math::vec<T, N>::value_type type;
+//   using type = typename ::scm::math::vec<T, N>::value_type;
 // };
 //
 // template<T,N>

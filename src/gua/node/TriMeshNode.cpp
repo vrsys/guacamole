@@ -22,14 +22,13 @@
 // class header
 #include "gua/node/TriMeshNode.hpp"
 
+// guacamole headers
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
-
-// guacamole headers
 
 namespace gua {
 namespace node {

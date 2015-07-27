@@ -25,7 +25,8 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/InstanceCollection.hpp>
-
+#include <gua/renderer/BoneTransformUniformBlock.hpp>
+ 
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>
@@ -40,6 +41,10 @@ namespace gua {
 
 class Pipeline;
 class WindowBase;
+
+namespace node{
+  class Node;
+}
 
 /**
  * Information on a specific context.
@@ -102,8 +107,14 @@ struct GUA_DLL RenderContext {
 
   std::map<std::string, double>                   time_query_results;
   std::map<std::string, std::pair<int, int>>      primitive_query_results;
+
+ /**
+  * Animated Bone Uniforms
+  */
+  std::unordered_map<node::Node*, std::shared_ptr<BoneTransformUniformBlock>> bone_transform_blocks;
 };
 
 }
 
 #endif  // GUA_RENDERCONTEXT_HPP
+

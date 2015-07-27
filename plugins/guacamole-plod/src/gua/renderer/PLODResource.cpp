@@ -59,7 +59,7 @@ namespace gua {
       local_transform_(local_transform)
   {
 
-  scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id)->kdn_tree()->bounding_boxes()[0];
+  scm::gl::boxf bb = pbr::ren::ModelDatabase::GetInstance()->GetModel(model_id)->bvh()->bounding_boxes()[0];
 
   bounding_box_.min = bb.min_vertex();
   bounding_box_.max = bb.max_vertex();
@@ -85,10 +85,10 @@ void PLODResource::draw(
 
   pbr::ren::Cut& cut = cuts->GetCut(context_id, view_id, model_id);
   std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
-  pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
+  pbr::ren::Bvh const* bvh = database->GetModel(model_id)->bvh();
 
   uint32_t surfels_per_node = database->surfels_per_node();
-  uint32_t surfels_per_node_of_model = kdn_tree->surfels_per_node();
+  uint32_t surfels_per_node_of_model = bvh->surfels_per_node();
 
   scm::gl::context_vertex_input_guard vig(ctx.render_context);
 

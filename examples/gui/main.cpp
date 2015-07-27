@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
     sstr << "FPS: " << renderer.get_application_fps()
          << " / " << window->get_rendering_fps();
     fps->call_javascript("set_fps_text", sstr.str());
-
+ 
     // ray->rotate(1, 0, 1, 0);
     gua::Interface::instance()->update();
     // apply trackball matrix to object

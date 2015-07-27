@@ -154,8 +154,8 @@ void Trackball::motion(int x, int y)
 
   if (button_middle_)
   {
-    shiftx_ += mapping_shift_ * double(x - mousepos_x_);
-    shifty_ += mapping_shift_ * double(y - mousepos_y_);
+    shiftx_ += mapping_shift_ * double(mousepos_x_ - x);
+    shifty_ += mapping_shift_ * double(mousepos_y_ - y);
   }
 
   mousepos_y_ = y;

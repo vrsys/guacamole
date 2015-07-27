@@ -312,13 +312,11 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   pbr::context_t PLODRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
-    
-    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+    pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance(); 
     if (previous_frame_count_ != ctx.framecount) {
       controller->ResetSystem();
     }
     return controller->DeduceContextId(ctx.id);
-      
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -507,10 +505,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
       std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
 
       //perform frustum culling 
-      pbr::ren::KdnTree const* kdn_tree = database->GetModel(model_id)->kdn_tree();
+      pbr::ren::Bvh const* bvh = database->GetModel(model_id)->bvh();
       scm::gl::frustum const& culling_frustum = cut_update_cam.GetFrustumByModel(math::mat4f(scm_model_matrix));
 
-      std::vector<scm::gl::boxf> const& model_bounding_boxes = kdn_tree->bounding_boxes();
+      std::vector<scm::gl::boxf> const& model_bounding_boxes = bvh->bounding_boxes();
 
       std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
 
@@ -863,22 +861,18 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
       }
 
     }
-     //////////////////////////////////////////////////////////////////////////
-     // Draw finished -> unbind g-buffer
-     //////////////////////////////////////////////////////////////////////////
-     target.unbind(ctx);
+    //////////////////////////////////////////////////////////////////////////
+    // Draw finished -> unbind g-buffer
+    //////////////////////////////////////////////////////////////////////////
+    target.unbind(ctx);
 
-     pipe.end_cpu_query(cpu_query_name_plod_total); 
- 
-    //dispatch cut updates when all info has been uploaded
+    pipe.end_cpu_query(cpu_query_name_plod_total); 
+    
+    //dispatch cut updates
     if (previous_frame_count_ != ctx.framecount) {
       previous_frame_count_ = ctx.framecount;
-      pbr::context_t context_id = controller->DeduceContextId(ctx.id);
-      controller->Dispatch(context_id, ctx.render_device);
-
+      controller->Dispatch(controller->DeduceContextId(ctx.id), ctx.render_device);
     }
-
- 
   } 
 
 }

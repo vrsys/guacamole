@@ -47,7 +47,7 @@ namespace node {
   class SpotLightNode;
 }
 
-struct GUA_DLL PipelineViewState 
+struct GUA_DLL PipelineViewState
 {
   enum ViewDirection {
     front   = 0,
@@ -84,7 +84,7 @@ class GUA_DLL Pipeline {
    };
 
    struct GUA_DLL time_query_collection {
-     typedef std::chrono::steady_clock::time_point   time_point;
+     using time_point = std::chrono::steady_clock::time_point;
      std::unordered_map<std::string, query_dispatch> gpu_queries;
      std::unordered_map<std::string, time_point>     cpu_queries;
    };

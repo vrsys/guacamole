@@ -102,6 +102,13 @@ std::shared_ptr<TriMeshPassDescription> const& PipelineDescription::get_tri_mesh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// std::shared_ptr<SkeletalAnimationPassDescription> const& PipelineDescription::get_skel_anim_pass() const
+// {
+//   return get_pass_by_type<SkeletalAnimationPassDescription>();
+// }
+
+////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<TexturedQuadPassDescription> const& PipelineDescription::get_textured_quad_pass() const
 {
   return get_pass_by_type<TexturedQuadPassDescription>();
