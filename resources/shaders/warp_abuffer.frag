@@ -178,10 +178,6 @@ layout(location=0) out vec3 gua_out_color;
         const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
         const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
 
-        if (total_min_max_depth.x > total_min_max_depth.y) {
-          return;
-        }
-
         vec2 ref = preview_coords*gua_resolution;
         vec3 s, e;
         if (!get_ray(vec2(0.5), s, e, total_min_max_depth)) {
@@ -362,8 +358,7 @@ layout(location=0) out vec3 gua_out_color;
         while (frag.x != 0) {
 
           float z = unpack_depth24(frag.y);
-          const float thickness = 0.001;
-          // const float minimum_seperation = 0.001;
+          const float thickness = 0.00005;
           if (last_depth < z-2*thickness && d_range.y > z-thickness && d_range.x <= z+thickness) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
@@ -382,7 +377,7 @@ layout(location=0) out vec3 gua_out_color;
         if (current_level == 0 && intersects) {
           abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
         }
-        abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.05), color);
+        abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
       #endif
 
     
@@ -405,7 +400,8 @@ layout(location=0) out vec3 gua_out_color;
 
     #if @debug_sample_count@ == 1
       // draw debug sample count
-      abuf_mix_frag(vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.5), color);
+      color = mix(color, vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.8);
+      // gua_out_color = heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS);
     #endif
 
     abuf_mix_frag(texture2D(sampler2D(warped_color_buffer), gua_quad_coords), color);
