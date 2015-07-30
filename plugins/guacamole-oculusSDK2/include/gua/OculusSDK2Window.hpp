@@ -38,6 +38,8 @@
 //for the OVR members
 #include <gua/utils/OculusSDK2DistortionMesh.hpp>
 
+#include <scm/gl_core/state_objects/state_objects_fwd.h>
+
 namespace gua {
 
 
@@ -70,12 +72,16 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
     scm::gl::buffer_ptr distortion_mesh_indices_[2];
     scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
 
-    unsigned num_distortion_mesh_indices[2];
+    // for distorted rendering as a replacement of the distortion shader
+    unsigned num_distortion_mesh_indices_[2];
 
+    // oculus device associated with the window
     ovrHmd registered_HMD_;
+
+    // sensor orientation
     gua::math::mat4 oculus_sensor_orientation_;
 
-    ovrVector2f UVScaleOffset[2];
+    scm::gl::rasterizer_state_ptr no_backface_culling_state_;
 };
 
 }

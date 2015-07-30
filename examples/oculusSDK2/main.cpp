@@ -153,12 +153,12 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(gua::math::vec2(0.0625, 0.065));
-  left_screen->translate(-0.03125, 0, -0.06f);
+  left_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
+  left_screen->translate(-0.03175, 0, -0.008f);
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(gua::math::vec2(0.0625, 0.065));
-  right_screen->translate(0.03125, 0, -0.06f);
+  right_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
+  right_screen->translate(0.03175, 0, -0.008f);
 
 
 
