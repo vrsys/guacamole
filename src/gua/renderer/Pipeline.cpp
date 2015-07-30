@@ -308,9 +308,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // set view parameters
+	auto original_camera_resolution = current_viewstate_.camera.config.get_resolution();
+	auto shadow_resolution = gua::math::vec2ui{ viewport_size, viewport_size };
+
     current_viewstate_.viewpoint_uuid = light->uuid();
     current_viewstate_.view_direction = PipelineViewState::front;
     current_viewstate_.shadow_mode = true;
+	current_viewstate_.camera.config.set_resolution(shadow_resolution);
 
     // render cascaded shadows for sunlights
     switch (light->data.get_type()) {
@@ -332,6 +336,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     current_viewstate_.target = gbuffer_.get();
     current_viewstate_.scene = orig_scene;
     current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
+	current_viewstate_.camera.config.set_resolution(original_camera_resolution);
 
     camera_block_.update(context_,
                          current_viewstate_.scene->rendering_frustum,
@@ -339,6 +344,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                          current_viewstate_.scene->clipping_planes,
                          current_viewstate_.camera.config.get_view_id(),
                          current_viewstate_.camera.config.get_resolution());
+
     bind_camera_uniform_block(0);
 
     light_block.shadow_offset = light->data.get_shadow_offset();
@@ -499,6 +505,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // calculate light frustum
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
+
     std::vector<math::mat4> screen_transforms({
       screen_transform,
       scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
@@ -521,14 +528,19 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
 
-      auto frustum(
-        Frustum::perspective(
-        light->get_cached_world_transform(), transform,
-        current_viewstate_.camera.config.near_clip(),
-        scm::math::length(math::get_translation(transform))
-        )
-        );
+	  // scale far clip of virtual camera to radius of unit sphere 
+	  auto light_far_clip = 2.0f * scm::math::length(math::get_translation(transform) - math::get_translation(light->get_cached_world_transform()));
 
+	  // TODO: make near clip of light configurable? currently 1/100th of light source size
+	  auto light_near_clip = light_far_clip / 100.0f;
+
+	  auto frustum(
+		  Frustum::perspective(
+		  light->get_cached_world_transform(), transform,
+		  light_near_clip,
+		  light_far_clip
+        )
+      );
       shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 
       current_viewstate_.view_direction = view_directions[cascade];
@@ -545,12 +557,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
     screen_transform = light->get_cached_world_transform() * screen_transform;
 
+	auto light_far_clip = scm::math::length(math::get_translation(screen_transform) - math::get_translation(light->get_cached_world_transform()));
+
     auto frustum(
       Frustum::perspective(
       light->get_cached_world_transform(), screen_transform,
       //current_viewstate_.camera.config.near_clip(),
       light->data.get_shadow_near_clipping_in_sun_direction(),
-      scm::math::length(math::get_translation(screen_transform))
+	  light_far_clip
       )
       );
 
