@@ -1,0 +1,8 @@
+
+{
+	"shading_model" : "Shadeless.gsd",
+	"uniforms" :
+	{
+		"diffuse_color" : "(1.000  1.000  1.000)"
+	}
+}
