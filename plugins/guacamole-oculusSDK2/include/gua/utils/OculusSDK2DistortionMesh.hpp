@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUSSDK2_WINDOW_HPP
-#define GUA_OCULUSSDK2_WINDOW_HPP
+#ifndef GUA_OCULUSSDK2_DISTORTION_MESH_HPP
+#define GUA_OCULUSSDK2_DISTORTION_MESH_HPP
 
 #if defined (_MSC_VER)
   #if defined (GUA_OCULUSSDK2_LIBRARY)
@@ -32,47 +32,53 @@
   #define GUA_OCULUSSDK2_DLL
 #endif // #if defined(_MSC_VER)
 
-// guacamole headers
-#include <gua/renderer/Window.hpp>
-
-//for internal distortion mesh handling
+#include <gua/math/math.hpp>
 #include <OVR.h>
+
+#include <scm/gl_core.h>
 
 namespace gua {
 
+struct OculusSDK2DistortionMesh {
 
-class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
- public:
+  /* the vertex contains three different texture coordinates
+     since it has to correct chromatic abberations for each
+     wavelength (~color channel) independently
+  */
+  struct DistortionVertex {
+    scm::math::vec2f ndc_2d_pos;
+    scm::math::vec2f tex_r;
+    scm::math::vec2f tex_g;
+    scm::math::vec2f tex_b;
+  };
 
-  OculusSDK2Window(std::string const& display);
-  virtual ~OculusSDK2Window();
+  OculusSDK2DistortionMesh();
 
-  void init_context() override;
+  ~OculusSDK2DistortionMesh();
+  
 
-  // virtual
-  void display(std::shared_ptr<Texture> const& texture, bool is_left);
+  void add_distortion_mesh_component(ovrDistortionMesh const& mesh_component, 
+                                     ovrVector2f* UVScaleOffset,
+                                     bool isLeftEye);
 
-  gua::math::mat4 get_oculus_sensor_orientation() const;
+  void copy_to_buffer(DistortionVertex* d_vertex_buffer) const;
 
-  private:
+  virtual scm::gl::vertex_format get_vertex_format() const;
 
-    static unsigned registered_oculus_device_count_;
 
-    void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-    void retrieve_oculus_sensor_orientation(double absolute_time);
-    //void create_distortion_mesh();
-    scm::gl::buffer_ptr distortion_mesh_vertices_[2];
-    scm::gl::buffer_ptr distortion_mesh_indices_[2];
-    scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+  //member
+  std::vector<scm::math::vec2f> ndc_2d_positions;
+  std::vector<scm::math::vec2f> tex_coords_r;
+  std::vector<scm::math::vec2f> tex_coords_g;
+  std::vector<scm::math::vec2f> tex_coords_b;
+  std::vector<unsigned> indices;
 
-    unsigned num_distortion_mesh_indices[2];
+  unsigned int num_vertices;
+  unsigned int num_indices;
 
-    ovrHmd registered_HMD_;
-    gua::math::mat4 oculus_sensor_rotation_;
-
-    ovrVector2f UVScaleOffset[2];
+  unsigned int index_buffer_component_offset;
 };
 
 }
 
-#endif  // GUA_OCULUSSDK2_WINDOW_HPP
+#endif  // GUA_OCULUSSDK2_DISTORTION_MESH_HPP

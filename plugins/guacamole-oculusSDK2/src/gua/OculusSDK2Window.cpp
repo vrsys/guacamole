@@ -21,12 +21,15 @@
 
 // class header
 #include <gua/OculusSDK2Window.hpp>
+#include <gua/utils/OculusSDK2DistortionMesh.hpp>
 
 // external headers
 #include <iostream>
 
 
 namespace gua {
+
+unsigned OculusSDK2Window::registered_oculus_device_count_ = 0;
 
 void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx) {
   ovrEyeRenderDesc eyeRenderDesc[2];
@@ -125,7 +128,7 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 
 }
 
-OculusSDK2Window::OculusSDK2Window(std::string const& display, ovrHmd const& hmd):
+OculusSDK2Window::OculusSDK2Window(std::string const& display):
   Window(),
   num_distortion_mesh_indices{0,0} {
 
@@ -139,7 +142,19 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display, ovrHmd const& hmd
   config.set_right_position(math::vec2ui(1920/2, 0));
 
 
-  registeredHMD = hmd;
+  registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
+
+
+  bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0);
+
+  if( !tracking_configured ) {
+    ovrHmd_Destroy(registered_HMD_);
+    registered_HMD_ = NULL;
+    std::cout << "The oculus device does not support demanded tracking features\n";
+    //shutdown_oculus();
+    std::cout << "Exiting..\n";
+    exit(-1); 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +234,7 @@ void OculusSDK2Window::init_context() {
 
   ctx_.render_window = this;
 
-  initialize_distortion_meshes(registeredHMD, *get_context());
+  initialize_distortion_meshes(registered_HMD_, *get_context());
 
   depth_stencil_state_ = ctx_.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
@@ -240,15 +255,12 @@ void OculusSDK2Window::init_context() {
 
 void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
+  auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0);
+
+  retrieve_oculus_sensor_orientation(frameTiming.ScanoutMidpointSeconds);
+
   fullscreen_shader_.use(*get_context());
   fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
-
-  if (is_left)
-    fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.6f, 0.5f), "lens_center");
-  else
-    fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.5f), "lens_center");
-
-  fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
 
   if (is_left)
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
@@ -276,6 +288,28 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
   
   fullscreen_shader_.unuse(*get_context());
 
+  ovrHmd_EndFrameTiming(registered_HMD_);
+}
+
+gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
+  return oculus_sensor_rotation_;
+}
+
+void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) {
+
+  ovrTrackingState ts = ovrHmd_GetTrackingState(registered_HMD_, absolute_time);
+
+  if (ts.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked)) {
+  // The cpp compatibility layer is used to convert ovrPosef to Posef (see OVR_Math.h)
+  auto pose = ts.HeadPose.ThePose;
+
+  scm::math::quat<double> rot_quat(pose.Orientation.w,
+                           pose.Orientation.x,
+                           pose.Orientation.y,
+                           pose.Orientation.z);
+
+  oculus_sensor_rotation_ = rot_quat.to_matrix();
+  }
 }
 
 }
