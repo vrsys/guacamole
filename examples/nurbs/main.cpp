@@ -191,7 +191,7 @@ int main(int argc, char** argv)
   /////////////////////////////////////////////////////////////////////////////
   auto input_transform = graph.add_node<gua::node::TransformNode>("/", "nurbs_transform");
   auto count = 0;
-  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/deckel_vorn.igs", lack));
+  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/teapot.igs", lack));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_links.igs", lack));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_rechts.igs", lack));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/heckscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_links.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_links.igs", glass));
-  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
+  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
   
