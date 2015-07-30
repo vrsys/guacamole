@@ -37,11 +37,11 @@ namespace gua {
   OculusSDK2DistortionMesh::~OculusSDK2DistortionMesh() {
   }
 
-  void OculusSDK2DistortionMesh::add_distortion_mesh_component(ovrDistortionMesh const& mesh_component, 
-                                     ovrVector2f* UVScaleOffset,
-                                     bool isLeftEye) {
-    num_vertices  += mesh_component.VertexCount;
-    num_indices += mesh_component.IndexCount;
+  void OculusSDK2DistortionMesh::initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
+                                                            ovrVector2f* UVScaleOffset,
+                                                            bool isLeftEye) {
+    num_vertices  = mesh_component.VertexCount;
+    num_indices   = mesh_component.IndexCount;
 
     ndc_2d_positions.reserve(num_vertices);
     tex_coords_r.reserve(num_vertices);

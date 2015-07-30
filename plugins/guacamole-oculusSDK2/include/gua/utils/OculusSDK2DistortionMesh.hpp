@@ -57,9 +57,9 @@ struct OculusSDK2DistortionMesh {
   ~OculusSDK2DistortionMesh();
   
 
-  void add_distortion_mesh_component(ovrDistortionMesh const& mesh_component, 
-                                     ovrVector2f* UVScaleOffset,
-                                     bool isLeftEye);
+  void initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
+                                  ovrVector2f* UVScaleOffset,
+                                  bool isLeftEye);
 
   void copy_to_buffer(DistortionVertex* d_vertex_buffer) const;
 

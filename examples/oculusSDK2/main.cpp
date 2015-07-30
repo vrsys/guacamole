@@ -24,8 +24,6 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/OculusSDK2Window.hpp>
 
-#include <OVR.h>
-#include <Extras/OVR_Math.h>
 const std::string geometry("data/objects/monkey.obj");
 
 std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
@@ -92,22 +90,13 @@ void setup_scene(gua::SceneGraph& graph,
   }
 }
 
-void init_oculus() {
-  ovr_Initialize();
-}
-
-void shutdown_oculus() {
-  ovr_Shutdown();
-}
-
-
 
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
   // initialize Oculus SDK
-  init_oculus();
+  gua::OculusSDK2Window::initialize_oculus_environment();
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -137,7 +126,14 @@ int main(int argc, char** argv) {
   nav->translate(0.0, 0.0, 2.0);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+
+  auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
+  gua::WindowDatabase::instance()->add("main_window", window);
+  window->config.set_enable_vsync(false);
+
+  window->open();
+
+  auto resolution = window->get_full_oculus_resolution();
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -164,11 +160,7 @@ int main(int argc, char** argv) {
   right_screen->data.set_size(gua::math::vec2(0.0625, 0.065));
   right_screen->translate(0.03125, 0, -0.06f);
 
-  auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
-  gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
 
-  window->open();
 
   gua::Renderer renderer;
 
@@ -213,5 +205,6 @@ int main(int argc, char** argv) {
 
   loop.start();
 
+    gua::OculusSDK2Window::shutdown_oculus_environment();
   return 0;
 }

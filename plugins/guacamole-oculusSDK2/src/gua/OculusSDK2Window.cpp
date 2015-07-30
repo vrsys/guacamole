@@ -21,7 +21,9 @@
 
 // class header
 #include <gua/OculusSDK2Window.hpp>
-#include <gua/utils/OculusSDK2DistortionMesh.hpp>
+
+// gua headers
+#include <gua/utils/Logger.hpp>
 
 // external headers
 #include <iostream>
@@ -29,7 +31,31 @@
 
 namespace gua {
 
+//static member
+bool OculusSDK2Window::oculus_environment_initialized_ = false;
 unsigned OculusSDK2Window::registered_oculus_device_count_ = 0;
+
+
+//static functions
+void OculusSDK2Window::initialize_oculus_environment() {
+  if( !oculus_environment_initialized_ ) {
+      ovr_Initialize();
+      oculus_environment_initialized_ = true;
+  } else {
+      Logger::LOG_WARNING << "Attempt to initialize oculus environment multiple times!"
+                          << std::endl;
+  }
+}
+
+void OculusSDK2Window::shutdown_oculus_environment() {
+  if( oculus_environment_initialized_ ) {
+      ovr_Shutdown();
+      oculus_environment_initialized_ = false;
+  } else {
+      Logger::LOG_WARNING << "Attempt to shutdown uninitialized oculus environment!"
+                          << std::endl;
+  }
+}
 
 void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx) {
   ovrEyeRenderDesc eyeRenderDesc[2];
@@ -42,55 +68,50 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
   OculusSDK2DistortionMesh distortion_mesh_cpu_buffer[2];
 
   unsigned index_buffer_offset = 0;
-  for ( int eyeNum = 0; eyeNum < 2; eyeNum ++ )
-  {
-    ovrDistortionMesh meshData;
-    ovrHmd_CreateDistortionMesh( hmd,
-        eyeRenderDesc[eyeNum].Eye,
-        eyeRenderDesc[eyeNum].Fov,
-        0,
-        &meshData );
+  for ( int eyeNum = 0; eyeNum < 2; eyeNum ++ ) {
+    
+  ovrDistortionMesh meshData;
+  ovrHmd_CreateDistortionMesh( hmd,
+    eyeRenderDesc[eyeNum].Eye,
+    eyeRenderDesc[eyeNum].Fov,
+    0,
+    &meshData );
 
+  OVR::Sizei eyeTextureSize = OVR::Sizei(hmd->Resolution.w/2, hmd->Resolution.h);
 
+  ovrRecti viewports[2];
+  viewports[0].Pos.x = 0;
+  viewports[0].Pos.y = 0;
+  viewports[0].Size.w = eyeTextureSize.w;
+  viewports[0].Size.h = eyeTextureSize.h;
+  viewports[1].Pos.x = eyeTextureSize.w;
+  viewports[1].Pos.y = 0;
+  viewports[1].Size.w = eyeTextureSize.w;
+  viewports[1].Size.h = eyeTextureSize.h;
 
-    OVR::Sizei eyeTextureSize = OVR::Sizei(1920/2, 1080);
+  if( eyeNum == 0 ) {
+    ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
+    eyeTextureSize, viewports[eyeNum],
+    UVScaleOffset);
+  } else {
+    ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
+    eyeTextureSize, viewports[eyeNum],
+    UVScaleOffset);
+  }
 
+  bool isLeftEye = 0 == eyeNum;
 
-    ovrRecti viewports[2];
-    viewports[0].Pos.x = 0;
-    viewports[0].Pos.y = 0;
-    viewports[0].Size.w = eyeTextureSize.w;
-    viewports[0].Size.h = eyeTextureSize.h;
-    viewports[1].Pos.x = eyeTextureSize.w;
-    viewports[1].Pos.y = 0;
-    viewports[1].Size.w = eyeTextureSize.w;
-    viewports[1].Size.h = eyeTextureSize.h;
+  distortion_mesh_cpu_buffer[eyeNum].initialize_distortion_mesh(meshData, UVScaleOffset, isLeftEye);
 
-    if( eyeNum == 0 )
-    {
-      ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
-          eyeTextureSize, viewports[eyeNum],
-          UVScaleOffset);
-    } else {
-      ovrHmd_GetRenderScaleAndOffset( eyeRenderDesc[eyeNum].Fov,
-          eyeTextureSize, viewports[eyeNum],
-          UVScaleOffset);
-    }
-
-    bool isLeftEye = 0 == eyeNum;
-
-    distortion_mesh_cpu_buffer[eyeNum].add_distortion_mesh_component(meshData, UVScaleOffset, isLeftEye);
-
-
-    ovrHmd_DestroyDistortionMesh( &meshData );
+  ovrHmd_DestroyDistortionMesh( &meshData );
 
   distortion_mesh_vertices_[eyeNum] = 
     ctx.render_device
-      ->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                      scm::gl::USAGE_STATIC_DRAW,
-                      distortion_mesh_cpu_buffer[eyeNum].num_vertices
-                        * sizeof(OculusSDK2DistortionMesh::DistortionVertex),
-                      0);
+    ->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                    scm::gl::USAGE_STATIC_DRAW,
+                    distortion_mesh_cpu_buffer[eyeNum].num_vertices
+                      * sizeof(OculusSDK2DistortionMesh::DistortionVertex),
+                    0);
 
   //map it to cpu
   OculusSDK2DistortionMesh::DistortionVertex* 
@@ -122,8 +143,6 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 
   num_distortion_mesh_indices[eyeNum] = distortion_mesh_cpu_buffer[eyeNum].num_indices;
 
-
-
   }
 
 }
@@ -132,18 +151,7 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   Window(),
   num_distortion_mesh_indices{0,0} {
 
-  config.set_size(math::vec2ui(1920, 1080));
-  config.set_title("guacamole");
-  config.set_display_name(display);
-  config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
-  config.set_left_resolution(math::vec2ui(1920/2, 1080));
-  config.set_left_position(math::vec2ui(0, 0));
-  config.set_right_resolution(math::vec2ui(1920/2, 1080));
-  config.set_right_position(math::vec2ui(1920/2, 0));
-
-
   registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
-
 
   bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0);
 
@@ -155,12 +163,29 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
     std::cout << "Exiting..\n";
     exit(-1); 
   }
+
+  unsigned res_x = registered_HMD_->Resolution.w;
+  unsigned res_y = registered_HMD_->Resolution.h;
+
+  config.set_size(math::vec2ui(res_x, res_y));
+  config.set_title("guacamole");
+  config.set_display_name(display);
+  config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
+  config.set_left_resolution(math::vec2ui(res_x/2, res_y));
+  config.set_left_position(math::vec2ui(0, 0));
+  config.set_right_resolution(math::vec2ui(res_x/2, res_y));
+  config.set_right_position(math::vec2ui(res_x/2, 0));
+
+
+
+
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 OculusSDK2Window::~OculusSDK2Window() {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +317,7 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 }
 
 gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
-  return oculus_sensor_rotation_;
+  return oculus_sensor_orientation_;
 }
 
 void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) {
@@ -308,8 +333,17 @@ void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) 
                            pose.Orientation.y,
                            pose.Orientation.z);
 
-  oculus_sensor_rotation_ = rot_quat.to_matrix();
+  oculus_sensor_orientation_ = rot_quat.to_matrix();
   }
+}
+
+gua::math::vec2ui OculusSDK2Window::get_full_oculus_resolution() const {
+  gua::math::vec2ui oculus_resolution(0, 0);
+
+  oculus_resolution.x = registered_HMD_->Resolution.w;
+  oculus_resolution.y = registered_HMD_->Resolution.h;
+
+  return oculus_resolution;
 }
 
 }

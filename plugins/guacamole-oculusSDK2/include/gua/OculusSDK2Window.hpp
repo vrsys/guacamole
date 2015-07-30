@@ -35,14 +35,18 @@
 // guacamole headers
 #include <gua/renderer/Window.hpp>
 
-//for internal distortion mesh handling
-#include <OVR.h>
+//for the OVR members
+#include <gua/utils/OculusSDK2DistortionMesh.hpp>
 
 namespace gua {
 
 
 class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
  public:
+
+  
+  static void initialize_oculus_environment();
+  static void shutdown_oculus_environment();
 
   OculusSDK2Window(std::string const& display);
   virtual ~OculusSDK2Window();
@@ -53,9 +57,10 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
   gua::math::mat4 get_oculus_sensor_orientation() const;
-
+  gua::math::vec2ui get_full_oculus_resolution() const;
   private:
 
+    static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
 
     void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
@@ -68,7 +73,7 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
     unsigned num_distortion_mesh_indices[2];
 
     ovrHmd registered_HMD_;
-    gua::math::mat4 oculus_sensor_rotation_;
+    gua::math::mat4 oculus_sensor_orientation_;
 
     ovrVector2f UVScaleOffset[2];
 };
