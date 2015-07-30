@@ -50,6 +50,7 @@ struct OculusSDK2DistortionMesh {
     scm::math::vec2f tex_r;
     scm::math::vec2f tex_g;
     scm::math::vec2f tex_b;
+    float vig_factor;
   };
 
   OculusSDK2DistortionMesh();
@@ -71,6 +72,7 @@ struct OculusSDK2DistortionMesh {
   std::vector<scm::math::vec2f> tex_coords_r;
   std::vector<scm::math::vec2f> tex_coords_g;
   std::vector<scm::math::vec2f> tex_coords_b;
+  std::vector<float> vig_factors;
   std::vector<unsigned> indices;
 
   unsigned int num_vertices;

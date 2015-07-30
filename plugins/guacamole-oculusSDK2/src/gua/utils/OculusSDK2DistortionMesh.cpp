@@ -28,6 +28,7 @@ namespace gua {
                                                          tex_coords_r(),
                                                          tex_coords_g(),
                                                          tex_coords_b(),
+                                                         vig_factors(),
                                                          indices(),
                                                          num_vertices(0),
                                                          num_indices(0),
@@ -47,6 +48,7 @@ namespace gua {
     tex_coords_r.reserve(num_vertices);
     tex_coords_g.reserve(num_vertices);
     tex_coords_b.reserve(num_vertices);
+    vig_factors.reserve(num_vertices);
     indices.reserve(num_indices);
 
     //populate vertex buffer components
@@ -109,6 +111,7 @@ namespace gua {
       tex_coords_r.push_back(vTexCoordsRed);
       tex_coords_g.push_back(vTexCoordsGreen);
       tex_coords_b.push_back(vTexCoordsBlue);
+      vig_factors.push_back(distortion_vertex.VignetteFactor);
     }
   
     //populate index buffer
@@ -144,6 +147,8 @@ namespace gua {
       d_vertex_buffer[v].tex_g = tex_coords_g[v];
 
       d_vertex_buffer[v].tex_b = tex_coords_b[v];
+
+      d_vertex_buffer[v].vig_factor = vig_factors[v];
     }
   }
 
@@ -152,7 +157,8 @@ namespace gua {
       0, 0, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
       0, 1, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
       0, 2, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
-      0, 3, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex));
+      0, 3, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
+      0, 4, scm::gl::TYPE_FLOAT, sizeof(DistortionVertex));
   }
 
 };

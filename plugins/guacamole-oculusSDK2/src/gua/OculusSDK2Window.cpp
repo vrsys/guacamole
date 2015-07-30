@@ -175,12 +175,6 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   config.set_left_position(math::vec2ui(0, 0));
   config.set_right_resolution(math::vec2ui(res_x/2, res_y));
   config.set_right_position(math::vec2ui(res_x/2, 0));
-
-
-
-
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,15 +194,18 @@ void OculusSDK2Window::init_context() {
       layout(location=1) in vec2 in_tex_coords_r;
       layout(location=2) in vec2 in_tex_coords_g;
       layout(location=3) in vec2 in_tex_coords_b;
+      layout(location=4) in float in_vignette_fac;
 
       out vec2 tex_coord_r;
       out vec2 tex_coord_g;
       out vec2 tex_coord_b;
+      out float vig_factor;
 
       void main() {
           tex_coord_r = in_tex_coords_r;
           tex_coord_g = in_tex_coords_g;
           tex_coord_b = in_tex_coords_b;
+          vig_factor = in_vignette_fac;
           gl_Position = vec4(in_position, 0.0, 1.0);
       }
     )", R"(
@@ -219,6 +216,7 @@ void OculusSDK2Window::init_context() {
       in vec2 tex_coord_r;
       in vec2 tex_coord_g;
       in vec2 tex_coord_b;
+      in float vig_factor;
 
 
       uniform uvec2 sampler;
@@ -244,8 +242,7 @@ void OculusSDK2Window::init_context() {
       }
 
       void main() {
-          out_color = get_color();
-          //out_color = vec3(tex_coord_r, 0.0);
+          out_color = vig_factor * get_color();
       }
     )");
 
