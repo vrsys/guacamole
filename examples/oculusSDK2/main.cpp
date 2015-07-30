@@ -27,7 +27,6 @@
 #include <OVR.h>
 #include <Extras/OVR_Math.h>
 const std::string geometry("data/objects/monkey.obj");
-// const std::string geometry("data/objects/cube.obj");
 
 std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
                                                   int count) {
@@ -92,19 +91,6 @@ void setup_scene(gua::SceneGraph& graph,
     }
   }
 }
-/*
-OVR::SensorFusion* init_oculus() {
-  OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
-  OVR::DeviceManager* device_manager  = OVR::DeviceManager::Create();
-  OVR::SensorDevice*  sensor_device   = device_manager->EnumerateDevices<OVR::SensorDevice>().CreateDevice();
-  if (sensor_device) {
-    OVR::SensorFusion* sensor_fusion = new OVR::SensorFusion();
-    sensor_fusion->AttachToSensor(sensor_device);
-    return sensor_fusion;
-  }
-  return nullptr;
-}
-*/
 
 void init_oculus() {
   ovr_Initialize();
@@ -114,73 +100,14 @@ void shutdown_oculus() {
   ovr_Shutdown();
 }
 
-/*
-gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
-  OVR::Quatf orient = sensor->GetPredictedOrientation();
-  OVR::Matrix4f mat(orient.Inverted());
-  return gua::math::mat4( mat.M[0][0], mat.M[0][1], mat.M[0][2], mat.M[0][3],
-                          mat.M[1][0], mat.M[1][1], mat.M[1][2], mat.M[1][3],
-                          mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
-                          mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
 
-  return gua::math::identity();
-}
-*/
-
-gua::math::mat4 const get_oculus_transform( ovrHmd const& hmd) {
-  auto frameTiming = ovrHmd_BeginFrameTiming(hmd, 0);
-ovrTrackingState ts = ovrHmd_GetTrackingState(hmd, frameTiming.ScanoutMidpointSeconds);
-
-if (ts.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked)) {
-  // The cpp compatibility layer is used to convert ovrPosef to Posef (see OVR_Math.h)
-  auto pose = ts.HeadPose.ThePose;
-
-  scm::math::quat<double> rot_quat(pose.Orientation.w,
-                           pose.Orientation.x,
-                           pose.Orientation.y,
-                           pose.Orientation.z);
-
-  ovrHmd_EndFrameTiming(hmd);
-
-  return (rot_quat.to_matrix());
-}
-
-
-
-  ovrHmd_EndFrameTiming(hmd);
-  return gua::math::mat4::identity();
-}
 
 int main(int argc, char** argv) {
-
   // initialize guacamole
   gua::init(argc, argv);
 
   // initialize Oculus SDK
-  //OVR::SensorFusion* oculus_sensor = init_oculus();
-
   init_oculus();
-  ovrHmd hmd = ovrHmd_Create(0);
-
-  if(!hmd) {
-    std::cout << "Unable to create HMD: " << ovrHmd_GetLastError(NULL);
-    shutdown_oculus();
-    std::cout << "Exiting..\n";
-    exit(-1);
-  }
-
-
-  bool tracking_configured = ovrHmd_ConfigureTracking(hmd, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0);
-
-  if( !tracking_configured ) {
-    ovrHmd_Destroy(hmd);
-    hmd = NULL;
-    std::cout << "The oculus device does not support demanded tracking features\n";
-    shutdown_oculus();
-    std::cout << "Exiting..\n";
-    exit(-1); 
-  }
-
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -210,7 +137,7 @@ int main(int argc, char** argv) {
   nav->translate(0.0, 0.0, 2.0);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1280, 800);
+  auto resolution = gua::math::vec2ui(1920, 1080);
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -230,14 +157,14 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  left_screen->translate(-0.04, 0, -0.05f);
+  left_screen->data.set_size(gua::math::vec2(0.0625, 0.065));
+  left_screen->translate(-0.03125, 0, -0.06f);
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  right_screen->translate(0.04, 0, -0.05f);
+  right_screen->data.set_size(gua::math::vec2(0.0625, 0.065));
+  right_screen->translate(0.03125, 0, -0.06f);
 
-  auto window = std::make_shared<gua::OculusSDK2Window>(":0.0", hmd);
+  auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
 
@@ -278,7 +205,7 @@ int main(int argc, char** argv) {
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
     //if (oculus_sensor) {
-      camera->set_transform(get_oculus_transform(hmd));
+      camera->set_transform(window->get_oculus_sensor_orientation());
     //}
 
     renderer.queue_draw({&graph});
@@ -288,4 +215,3 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
