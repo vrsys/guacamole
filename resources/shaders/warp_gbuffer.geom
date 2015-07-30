@@ -61,7 +61,7 @@ void emit_quad(uvec2 offset, uvec2 size) {
     float depth;
     vec2 position;
 
-    #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD
+    #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
       position = varying_position[0].xy+offset;
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
@@ -77,24 +77,6 @@ void emit_quad(uvec2 offset, uvec2 size) {
       position = varying_position[0].xy+offset + vec2(size.x-1, size.y-1);
       depth = gua_get_depth_raw(position);
       emit_grid_vertex(position + vec2(1, 1) + vec2(GAP, GAP), depth);
-
-    #elif WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
-
-      position = varying_position[0].xy+offset + vec2(0, 0)  + vec2(-GAP, -GAP);
-      depth = gua_get_unscaled_depth(position/gua_resolution);
-      emit_grid_vertex(position, depth);
-
-      position = varying_position[0].xy+offset + vec2(size.x, 0)  + vec2( GAP, -GAP);
-      depth = gua_get_unscaled_depth(position/gua_resolution);
-      emit_grid_vertex(position, depth);
-
-      position = varying_position[0].xy+offset + vec2(0, size.y)  + vec2(-GAP,  GAP);
-      depth = gua_get_unscaled_depth(position/gua_resolution);
-      emit_grid_vertex(position, depth);
-
-      position = varying_position[0].xy+offset + vec2(size.x, size.y)  + vec2( GAP,  GAP);
-      depth = gua_get_unscaled_depth(position/gua_resolution);
-      emit_grid_vertex(position, depth);
 
     #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
@@ -149,6 +131,7 @@ void emit_pixel(uvec2 offset) {
 void emit_pixel(uvec2 offset, uint do_emit) {
 
   if (do_emit > 0) {
+    
     cellsize = 1;
     const float depth = gua_get_depth_raw(varying_position[0].xy + offset);
     emit_grid_vertex(varying_position[0].xy + offset + vec2(0, 0) + vec2(-GAP, -GAP), depth);
@@ -214,18 +197,6 @@ void main() {
   emit_quad(quad1.xy, quad1.zw);
   emit_pixel(quad2.xy, quad2.z);
   emit_pixel(quad3.xy, quad3.z);
-
-#elif WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
-
-  if ((varying_position[0].z & 1) > 0) {
-    emit_quad(uvec2(0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-  } else {
-    emit_quad(uvec2(0, 0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-    emit_quad(uvec2(1, 0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-    emit_quad(uvec2(1, 1), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-    emit_quad(uvec2(0, 1), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
-  }
-  
 
 #else
   

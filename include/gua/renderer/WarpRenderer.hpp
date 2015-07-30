@@ -41,7 +41,7 @@ class WarpRenderer {
  public:
 
   WarpRenderer();
-  virtual ~WarpRenderer() {}
+  virtual ~WarpRenderer();
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
@@ -62,6 +62,12 @@ class WarpRenderer {
 
   std::vector<ShaderProgramStage>  warp_abuffer_program_stages_;
   std::shared_ptr<ShaderProgram>   warp_abuffer_program_;
+
+  scm::gl::frame_buffer_ptr fbo_;
+  std::shared_ptr<Texture2D> color_buffer_;
+  std::shared_ptr<Texture2D> depth_buffer_;
+
+  Pipeline* pipe_;
 };
 
 }

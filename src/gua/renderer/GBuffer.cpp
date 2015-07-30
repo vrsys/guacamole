@@ -39,7 +39,7 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   fbo_read_only_color_(nullptr),
   fbo_write_only_color_(nullptr) {
 
-#if 1
+#if 0
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_MIRRORED_REPEAT,
     scm::gl::WRAP_MIRRORED_REPEAT);

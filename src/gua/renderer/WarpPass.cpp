@@ -44,9 +44,10 @@ WarpPassDescription::WarpPassDescription()
   , debug_sample_count_(false)
   , debug_bounding_volumes_(false)
   , debug_sample_ray_(false)
-  , pixel_size_(0.4f)
+  , pixel_size_(0.0f)
   , gbuffer_warp_mode_(GBUFFER_POINTS)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
+  , hole_filling_mode_(HOLE_FILLING_INPAINT)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -225,6 +226,20 @@ WarpPassDescription::ABufferWarpMode WarpPassDescription::abuffer_warp_mode() co
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::hole_filling_mode(HoleFillingMode hole_filling_mode) {
+  hole_filling_mode_ = hole_filling_mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription::HoleFillingMode WarpPassDescription::hole_filling_mode() const {
+  return hole_filling_mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const {
   return std::make_shared<WarpPassDescription>(*this);
 }
@@ -240,6 +255,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
+  substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};
 

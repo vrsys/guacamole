@@ -24,8 +24,6 @@
 @include "common/gua_gbuffer_input.glsl"
 @include "gbuffer_warp_modes.glsl"
 
-uniform bool warp_left_eye;
-
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
@@ -41,7 +39,14 @@ void main() {
     float intensity = log2(cellsize) / 5.0;
     gua_out_color =  0.8*(vec3(0.5, 0.3, 0.1) * (1-intensity) + vec3(0.6, 0.9, 0.4) * intensity);
   #else
-    gua_out_color = gua_get_color(texcoords);
+    // if (abs(dFdx(texcoords.x)) > 0.001 || abs(dFdy(texcoords.y)) > 0.001) {
+
+    //     gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+    // } else {
+
+        gua_out_color = gua_get_color(texcoords);
+    // }
+
   #endif
 }
 

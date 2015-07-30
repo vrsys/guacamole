@@ -24,7 +24,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball

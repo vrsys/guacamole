@@ -116,9 +116,6 @@ int main(int argc, char** argv) {
   pipe_deferred->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe_deferred->add_pass(std::make_shared<gua::EmissivePassDescription>());
   pipe_deferred->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
-  auto tone_mapping_pass = std::make_shared<gua::ToneMappingPassDescription>();
-  tone_mapping_pass->exposure(0.1f);
-  pipe_deferred->add_pass(tone_mapping_pass);
   pipe_deferred->add_pass(std::make_shared<gua::BackgroundPassDescription>());
 
   // tiled shading pipeline with A-Buffer support

@@ -202,7 +202,7 @@
         init_radio("#scene_buddha", "scene_buddha");
         init_radio("#scene_dragon", "scene_dragon");
         init_radio("#scene_hairball", "scene_hairball");
-        init_radio("#scene_sibenik", "scene_sibenik");
+        init_radio("#scene_engine", "scene_engine");
 
         init_checkbox("#depth_test", "depth_test");
         init_checkbox("#backface_culling", "backface_culling");
@@ -246,6 +246,9 @@
         init_slider("#preview-panel .max_split_depth", "max_split_depth");
 
         add_texture_select("#control-panel", "bg_tex", "Texture");
+
+        init_radio("#hole_filling_type_none", "hole_filling_type_none");
+        init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
 
         $("body").addClass("on");
       }
@@ -375,8 +378,8 @@
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_sibenik" value="">
-                  <span>Sibenik</span>
+                  <input type="radio" name="sceneRadios" id="scene_engine" value="">
+                  <span>Engine</span>
                 </label>
               </div>
 
@@ -656,7 +659,7 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-magic"></i> Transparency Warping</h4>
+          <h4><i class="fa fa-recycle"></i> Transparency Warping</h4>
 
           <div class="row">
             <div class="col-xs-5">
@@ -748,6 +751,35 @@
             </div>
             <div class="col-xs-7">
               <input class="slider depth_layers" data-slider-tooltip="hide" data-slider-id="depth_layers" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="2" handle="custom"/>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <div class="side-panel">
+        <div id="preview-panel" class="panel-inner">
+
+          <h4><i class="fa fa-magic"></i> Hole Filling</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Mode:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_none" value="">
+                  <span>None</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_inpaint" value="" checked>
+                  <span>Inpaint</span>
+                </label>
+              </div>
             </div>
           </div>
 

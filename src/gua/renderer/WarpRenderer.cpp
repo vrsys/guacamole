@@ -46,11 +46,24 @@ WarpRenderer::WarpRenderer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpRenderer::~WarpRenderer() {
+  if (color_buffer_) {
+    color_buffer_->make_non_resident(pipe_->get_context());
+  }
+  if (depth_buffer_) {
+    depth_buffer_->make_non_resident(pipe_->get_context());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
 
   auto& ctx(pipe.get_context());
+  pipe_ = &pipe;
   auto description(dynamic_cast<WarpPassDescription const*>(&desc));
+  math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
 
   // ---------------------------------------------------------------------------
   // ------------------------------ allocate resources -------------------------
@@ -110,13 +123,19 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
     auto empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, sizeof(math::vec2), 0);
     empty_vao_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC2F, sizeof(math::vec2)), {empty_vbo});
+
+    scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
+      scm::gl::WRAP_MIRRORED_REPEAT,
+      scm::gl::WRAP_MIRRORED_REPEAT);
+
+    color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 1, state);
+    depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     1, state);
+
+    fbo_ = ctx.render_device->create_frame_buffer();
+    fbo_->attach_color_buffer(0, color_buffer_->get_buffer(ctx),0,0);
+    fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
   }
 
-  auto& target = *pipe.current_viewstate().target;
-
-  bool write_all_layers = true;
-  target.bind(ctx, write_all_layers);
-  target.set_viewport(ctx);
 
   if (description->depth_test()) {
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_yes_, 1);
@@ -134,6 +153,13 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   // ---------------------------------------------------------------------------
   // --------------------------------- warp gbuffer ----------------------------
   // ---------------------------------------------------------------------------
+  auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+
+  ctx.render_context->set_frame_buffer(fbo_);
+  gbuffer->set_viewport(ctx);
+  ctx.render_context->clear_color_buffers(
+      fbo_, scm::math::vec4f(0,0,0,0));
+  ctx.render_context->clear_depth_stencil_buffer(fbo_);
 
   std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
   std::string const pri_query_name_a = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
@@ -160,7 +186,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       ctx.render_context->set_rasterizer_state(points_);
       ctx.render_context->bind_vertex_array(empty_vao_);
       ctx.render_context->apply();
-      math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, resolution.x * resolution.y);
     }
   }
@@ -169,7 +194,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.end_gpu_query(ctx, gpu_query_name_a);
 
   // ---------------------------------------------------------------------------
-  // --------------------------------- warp abuffer ----------------------------
+  // --------------------- warp abuffer & hole filling -------------------------
   // ---------------------------------------------------------------------------
 
   std::string const gpu_query_name_b = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
@@ -177,38 +202,25 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_gpu_query(ctx, gpu_query_name_b);
   pipe.begin_primitive_query(ctx, pri_query_name_b);
 
-  if (description->abuffer_warp_mode() == WarpPassDescription::ABUFFER_RAYCASTING) {
-    warp_abuffer_program_->use(ctx);
+  warp_abuffer_program_->use(ctx);
+  warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", scm::math::inverse(warp_matrix));
 
-    warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", scm::math::inverse(warp_matrix));
+  bool write_all_layers = false;
+  gbuffer->bind(ctx, write_all_layers);
+  
+  gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
+  warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer()->get_handle(ctx), "color_buffer");
+  warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
+  warp_abuffer_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "warped_depth_buffer");
 
-    auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
-    gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx), "warped_depth_buffer");
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer_write()->get_handle(ctx), "warped_color_buffer");
-    
-    // if (description->use_abuffer_from_window() != "") {
-    //   auto shared_window(WindowDatabase::instance()->lookup(description->use_abuffer_from_window()));
-    //   if (shared_window) {
-    //     if (!shared_window->get_is_open()) {
-    //       Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Shared window is not opened yet!" << std::endl;
-    //     } else {
-    //       a_buffer.allocate_shared(*shared_window->get_context());
-    //     }
-    //   } else {
-    //     Logger::LOG_WARNING << "Failed to share ABuffer for WarpPass: Target window not found!" << std::endl;
-    //   }
-    // }
-
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
-    ctx.render_context->apply();
-    pipe.draw_quad();
-  }
+  ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
+  ctx.render_context->apply();
+  pipe.draw_quad();
 
   pipe.end_primitive_query(ctx, pri_query_name_b);
   pipe.end_gpu_query(ctx, gpu_query_name_b);
 
-  target.unbind(ctx);
+  gbuffer->unbind(ctx);
 
   ctx.render_context->reset_state_objects();
 }

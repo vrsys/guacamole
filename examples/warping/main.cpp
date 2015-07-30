@@ -19,6 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
+#define POWER_WALL      false
+#define OCULUS          false
+#define STEREO_MONITOR  false
+
+#define SSAO            true
+#define LOAD_CAR        true
+#define LOAD_PITOTI     false
+#define LOAD_MOUNTAINS  false
+
 #include <functional>
 
 #include <scm/input/tracking/art_dtrack.h>
@@ -31,16 +40,6 @@
 #include <gua/utils/Trackball.hpp>
 #include <gua/gui.hpp>
 
-#include "Navigator.hpp"
-
-#define COUNT           6
-#define POWER_WALL      false
-#define OCULUS          false
-
-#define LOAD_CAR        true
-#define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  true
-
 #if OCULUS
 #include <OVR.h>
 #include <gua/OculusWindow.hpp>
@@ -51,6 +50,8 @@
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
 #endif
+
+#include "Navigator.hpp"
 
 bool depth_test             = true;
 bool backface_culling       = true;
@@ -132,6 +133,9 @@ int main(int argc, char** argv) {
       gua::Logger::LOG_WARNING << "Could not connect to Oculus Rift! " << std::endl;
       return -1;
     }
+  #elif STEREO_MONITOR
+    bool fullscreen = true;
+    auto resolution = gua::math::vec2ui(2560, 1440);
   #else
     bool fullscreen = (argc == 2);
     auto resolution = gua::math::vec2ui(1600, 1000);
@@ -198,9 +202,9 @@ int main(int argc, char** argv) {
 
   };
 
-  for (int x(0); x<COUNT; ++x) {
-    for (int y(0); y<COUNT; ++y) {
-      add_oilrig(x, y, COUNT, "/transform/many_oilrigs");
+  for (int x(0); x<6; ++x) {
+    for (int y(0); y<6; ++y) {
+      add_oilrig(x, y, 6, "/transform/many_oilrigs");
     }
   }
 
@@ -336,19 +340,19 @@ int main(int argc, char** argv) {
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  // auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
+  auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
 
-  // dragon->translate(0.6, -0.17, 0);
-  // transp_dragon->translate(-0.6, -0.17, 0);
-  // scene_root->add_child(dragon);
-  // scene_root->add_child(transp_dragon);
-  // scene_root->add_child(plane);
+  dragon->translate(0.6, -0.17, 0);
+  transp_dragon->translate(-0.6, -0.17, 0);
+  scene_root->add_child(dragon);
+  scene_root->add_child(transp_dragon);
+  scene_root->add_child(plane);
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
@@ -357,15 +361,68 @@ int main(int argc, char** argv) {
   //   gua::TriMeshLoader::NORMALIZE_SCALE));
   // scene_root->add_child(hairball);
 
-  // sibenik --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sibenik");
-  // scene_root->scale(20);
-  // auto sibenik(loader.create_geometry_from_file("sibenik", "data/objects/sibenik/sibenik.obj",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(sibenik);
+  // engine --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "engine");
+  scene_root->scale(0.05);
 
+  auto light2 = std::make_shared<gua::node::LightNode>("light2");
+  light2->data.set_type(gua::node::LightNode::Type::POINT);
+  light2->data.set_brightness(10.0f);
+  light2->scale(50.f);
+  light2->translate(14.f, 20.f, -25.f);
+  scene_root->add_child(light2);
+
+  auto light3 = std::make_shared<gua::node::LightNode>("light3");
+  light3->data.set_type(gua::node::LightNode::Type::POINT);
+  light3->data.set_brightness(10.0f);
+  light3->scale(50.f);
+  light3->translate(-10.f, -20.f, 20.f);
+  scene_root->add_child(light3);
+
+  // material
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_file("data/materials/engine.gmd");
+  auto shader(std::make_shared<gua::MaterialShader>("data/materials/engine.gmd", desc));
+  gua::MaterialShaderDatabase::instance()->add(shader);
+
+  std::map<std::string, int> part_names {
+    {"part_inner_04",2},   
+    {"part_inner_03",2},  
+    {"part_inner_02",2}, 
+    {"part_08",2      }, 
+    {"part_10",1      },  
+    {"part_09",1      }, 
+    {"part_04",2      },  
+    {"part_05",1      },  
+    {"part_06",2      },  
+    {"part_07",2      }, 
+    {"part_02",2      },  
+    {"part_03",2      }, 
+    {"part_inner_01",1},   
+    {"part_01",0      }    
+  };
+
+  const std::string engine_directory = "/opt/3d_models/engine/";
+
+  // prepare engine parts
+  for(const auto& p : part_names) {
+    auto mat = shader->make_new_material();
+    mat->set_uniform("style", p.second)
+     .set_uniform("opacity", 1.f)
+     .set_uniform("cut_rad", 0.3f)
+     .set_uniform("cut_n", gua::math::vec3(0.5, 1, 0))
+     .set_uniform("roughness_map", std::string("data/textures/roughness.jpg"))
+     .set_uniform("reflection_texture", std::string("/opt/guacamole/resources/skymaps/uffizi.jpg"))
+     .set_show_back_faces(true);
+
+    // derived from http://www.turbosquid.com/3d-models/speculate-3ds-free/302188
+    // Royalty Free License
+    auto part(loader.create_geometry_from_file(p.first,
+                                               engine_directory + p.first + ".obj",
+                                               mat,
+                                               gua::TriMeshLoader::DEFAULTS));
+    scene_root->add_child(part);
+  }
 
   show_backfaces(transform);
 
@@ -380,7 +437,7 @@ int main(int argc, char** argv) {
     graph["/transform/bottle"]->get_tags().add_tag("invisible");
     graph["/transform/mountains"]->get_tags().add_tag("invisible");
     graph["/transform/sphere"]->get_tags().add_tag("invisible");
-    graph["/transform/sibenik"]->get_tags().add_tag("invisible");
+    graph["/transform/engine"]->get_tags().add_tag("invisible");
     graph["/transform/dragon"]->get_tags().add_tag("invisible");
     graph["/transform/buddha"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
@@ -405,8 +462,8 @@ int main(int argc, char** argv) {
       graph["/transform/mountains"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_sphere")
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sibenik")
-      graph["/transform/sibenik"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_engine")
+      graph["/transform/engine"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_dragon")
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_hairball")
@@ -423,7 +480,7 @@ int main(int argc, char** argv) {
   auto navigation = graph.add_node<gua::node::TransformNode>("/", "navigation");
   auto warp_navigation = graph.add_node<gua::node::TransformNode>("/navigation", "warp");
 
-  // slow client ---------------------------------------------------------------
+  // normal camera -------------------------------------------------------------
   #if OCULUS
     auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
     auto slow_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/slow_cam", "slow_screen_left");
@@ -454,7 +511,7 @@ int main(int argc, char** argv) {
   slow_cam->config.mask().blacklist.add_tag("invisible");
   slow_cam->config.set_near_clip(0.1f);
 
-  // fast client ---------------------------------------------------------------
+  // warping camera ------------------------------------------------------------
   #if OCULUS
     auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation", "fast_cam");
     auto fast_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/fast_cam", "fast_screen_left");
@@ -501,11 +558,11 @@ int main(int argc, char** argv) {
             environment_lighting_texture("/opt/guacamole/resources/skymaps/uffizi.jpg").
             background_color(gua::utils::Color3f(0, 0, 0)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SKYMAP_TEXTURE).
-            ssao_enable(true).
+            ssao_enable(SSAO).
             horizon_fade(0.2f).
             compositing_enable(false).
-            ssao_intensity(2.f).
-            ssao_radius(5.f);
+            ssao_intensity(3.f).
+            ssao_radius(2.f);
 
   slow_cam->config.set_output_window_name("window");
 
@@ -701,6 +758,8 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_transparency_type_none");
     gui->add_javascript_callback("set_transparency_type_gbuffer");
     gui->add_javascript_callback("set_transparency_type_raycasting");
+    gui->add_javascript_callback("set_hole_filling_type_none");
+    gui->add_javascript_callback("set_hole_filling_type_inpaint");
     gui->add_javascript_callback("set_adaptive_abuffer");
     gui->add_javascript_callback("set_scene_one_oilrig");
     gui->add_javascript_callback("set_scene_many_oilrigs");
@@ -715,7 +774,7 @@ int main(int argc, char** argv) {
     gui->add_javascript_callback("set_scene_dragon");
     gui->add_javascript_callback("set_scene_buddha");
     gui->add_javascript_callback("set_scene_hairball");
-    gui->add_javascript_callback("set_scene_sibenik");
+    gui->add_javascript_callback("set_scene_engine");
     gui->add_javascript_callback("set_manipulation_navigator");
     gui->add_javascript_callback("set_manipulation_camera");
     gui->add_javascript_callback("set_manipulation_object");
@@ -879,6 +938,21 @@ int main(int argc, char** argv) {
       current_transparency_mode = callback;
       update_view_mode();
 
+    } else if (callback == "set_hole_filling_type_none"
+             | callback == "set_hole_filling_type_inpaint") {
+      std::stringstream str(params[0]);
+      bool checked;
+      str >> checked;
+      if (checked) {
+
+        gua::WarpPassDescription::HoleFillingMode mode(gua::WarpPassDescription::HOLE_FILLING_NONE);
+
+        if (callback == "set_hole_filling_type_inpaint")
+          mode = gua::WarpPassDescription::HOLE_FILLING_INPAINT;
+
+        warp_pass->hole_filling_mode(mode);
+      }
+
     } else if (callback == "set_manipulation_object"
             || callback == "set_manipulation_camera"
             || callback == "set_manipulation_navigator") {
@@ -905,7 +979,7 @@ int main(int argc, char** argv) {
                callback == "set_scene_sphere"            ||
                callback == "set_scene_dragon"            ||
                callback == "set_scene_hairball"          ||
-               callback == "set_scene_sibenik"           ||
+               callback == "set_scene_engine"           ||
                callback == "set_scene_buddha"            ||
                callback == "set_scene_textured_quads") {
       set_scene(callback);
@@ -940,7 +1014,7 @@ int main(int argc, char** argv) {
   window->config.set_fullscreen_mode(fullscreen);
   window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
 
-  #if (!POWER_WALL && !OCULUS)
+  #if (!POWER_WALL && !OCULUS && !STEREO_MONITOR)
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       window->config.set_resolution(new_size);
@@ -1005,7 +1079,7 @@ int main(int argc, char** argv) {
     window->config.set_size(resolution);
     window->config.set_resolution(resolution);
   #endif
-  window->config.set_enable_vsync(false);
+  window->config.set_enable_vsync(STEREO_MONITOR);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
 
@@ -1055,7 +1129,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+  gua::events::Ticker ticker(loop, 1.0/120.0);
 
   int ctr=0;
 

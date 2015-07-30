@@ -63,6 +63,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     ABUFFER_RAYCASTING
   };
 
+  enum HoleFillingMode {
+    HOLE_FILLING_NONE,
+    HOLE_FILLING_INPAINT
+  };
+
   WarpPassDescription();
 
   WarpPassDescription& use_abuffer_from_window(std::string const& name);
@@ -98,6 +103,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
   ABufferWarpMode abuffer_warp_mode() const;
 
+  WarpPassDescription& hole_filling_mode(HoleFillingMode hole_filling_mode);
+  HoleFillingMode hole_filling_mode() const;
+
   WarpPassDescription& get_warp_state(std::function<WarpState()> const& f);
   std::function<WarpState()> const& get_warp_state() const;
 
@@ -119,6 +127,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   float pixel_size_;
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
+  HoleFillingMode hole_filling_mode_;
 
   std::function<WarpState()> get_warp_state_;
 };
