@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
 	plod_loader.set_upload_budget_in_mb(20);
 
 	auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-	auto plod_node = plod_loader.load_geometry("pig", "data/objects/pig_pr_pn.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
+	auto plod_node = plod_loader.load_geometry("pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
 	graph.add_node("/transform", plod_node);
 	plod_node->set_draw_bounding_box(true);
 
