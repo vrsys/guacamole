@@ -161,7 +161,6 @@ int main(int argc, char** argv) {
   right_screen->translate(0.03175, 0, -0.008f);
 
 
-
   gua::Renderer renderer;
 
   gua::Timer timer;
@@ -196,15 +195,14 @@ int main(int argc, char** argv) {
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
-    //if (oculus_sensor) {
-      camera->set_transform(window->get_oculus_sensor_orientation());
-    //}
+    camera->set_transform(window->get_oculus_sensor_orientation());
+
 
     renderer.queue_draw({&graph});
   });
 
   loop.start();
 
-    gua::OculusSDK2Window::shutdown_oculus_environment();
+  gua::OculusSDK2Window::shutdown_oculus_environment();
   return 0;
 }
