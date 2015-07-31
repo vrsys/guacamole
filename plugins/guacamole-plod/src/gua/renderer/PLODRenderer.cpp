@@ -468,10 +468,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
     std::size_t gua_view_id = (camera_id >> 8) | ( std::size_t(view_direction) << 56 );
 
-	std::cout << " View UUID : " << std::setfill('0') << std::setw(32) << gua_view_id <<
-		         " Near clip : " << frustum.get_clip_near() << 
-				 " Far clip : " << frustum.get_clip_far() <<
-				 " Resolution : " << render_target_dims << std::endl;
+	//std::cout << " View UUID : " << std::setfill('0') << std::setw(32) << gua_view_id <<
+	//	         " Near clip : " << frustum.get_clip_near() << 
+	//			 " Far clip : " << frustum.get_clip_far() <<
+	//			 " Resolution : " << render_target_dims << std::endl;
 
     pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, gua_view_id);
 
@@ -509,7 +509,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
       cut_map.insert(std::make_pair(plod_node, &cut));
 
       std::vector<pbr::ren::Cut::NodeSlotAggregate>& node_list = cut.complete_set();
-	  std::cout << " # Rendered Nodes : " << node_list.size() << std::endl;
+	  //std::cout << " # Rendered Nodes : " << node_list.size() << std::endl;
 
       //perform frustum culling 
       pbr::ren::Bvh const* bvh = database->GetModel(model_id)->bvh();
