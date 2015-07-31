@@ -1,0 +1,460 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "PBR_uniform",
+      "source" : "
+
+        ///////////////////////////////////////////////////////////////////////
+        float Gamma        = 0.80;
+        float IntensityMax = 255.0;
+
+        ///////////////////////////////////////////////////////////////////////
+        float round(float d){
+          return floor(d + 0.5);
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        float Adjust(float Color, float Factor){
+          if (Color == 0.0){
+            return 0.0;
+          }
+          else{
+            float res = round(IntensityMax * pow(Color * Factor, Gamma));
+            return min(255.0, max(0.0, res));
+          }
+        } 
+
+        ///////////////////////////////////////////////////////////////////////
+        vec3 WavelengthToRGB(float Wavelength)
+        {
+          float Blue;
+          float factor;
+          float Green;
+          float Red;
+
+          if(380.0 <= Wavelength && Wavelength <= 440.0){
+            Red   = -(Wavelength - 440.0) / (440.0 - 380.0);
+            Green = 0.0;
+            Blue  = 1.0;
+          }
+          else if(440.0 < Wavelength && Wavelength <= 490.0){
+            Red   = 0.0;
+            Green = (Wavelength - 440.0) / (490.0 - 440.0);
+            Blue  = 1.0;
+          }
+          else if(490.0 < Wavelength && Wavelength <= 510.0){
+            Red   = 0.0;
+            Green = 1.0;
+            Blue  = -(Wavelength - 510.0) / (510.0 - 490.0);
+          }
+          else if(510.0 < Wavelength && Wavelength <= 580.0){
+            Red   = (Wavelength - 510.0) / (580.0 - 510.0);
+            Green = 1.0;
+            Blue  = 0.0;
+          }
+          else if(580.0 < Wavelength && Wavelength <= 645.0){
+            Red   = 1.0;
+            Green = -(Wavelength - 645.0) / (645.0 - 580.0);
+            Blue  = 0.0;
+          }
+          else if(645.0 < Wavelength && Wavelength <= 780.0){
+            Red   = 1.0;
+            Green = 0.0;
+            Blue  = 0.0;
+          }
+          else{
+            Red   = 0.0;
+            Green = 0.0;
+            Blue  = 0.0;
+          }
+
+
+          if(380.0 <= Wavelength && Wavelength <= 420.0){
+            factor = 0.3 + 0.7*(Wavelength - 380.0) / (420.0 - 380.0);
+          }
+          else if(420.0 < Wavelength && Wavelength <= 701.0){
+            factor = 1.0;
+          }
+          else if(701.0 < Wavelength && Wavelength <= 780.0){
+            factor = 0.3 + 0.7*(780.0 - Wavelength) / (780.0 - 701.0);
+          }
+          else{
+            factor = 0.0;
+          }
+          float R = Adjust(Red,   factor);
+          float G = Adjust(Green, factor);
+          float B = Adjust(Blue,  factor);
+          return vec3(R/255.0,G/255.0,B/255.0);
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        float GetWaveLengthFromDataPoint(float Value, float MinValue, float MaxValue)
+        {
+          float MinVisibleWavelength = 380.0;//350.0;
+          float MaxVisibleWavelength = 780.0;//650.0;
+          //Convert data value in the range of MinValues..MaxValues to the
+          //range 350..780
+          return (Value - MinValue) / (MaxValue-MinValue) * (MaxVisibleWavelength - MinVisibleWavelength) + MinVisibleWavelength;
+        } 
+
+
+        ///////////////////////////////////////////////////////////////////////
+        void distance_lens_effect () {
+
+            vec3 lens_world_normal_n = normalize(lens_world_normal.xyz);
+                                  
+            //float sn = -dot(normalize(ref_plane_n), ((inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz - (inverse(gua_model_matrix) * vec4(lens_center, 1.0)).xyz));
+            float sn = dot(lens_world_normal_n, gua_world_position - lens_center);
+                                 
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(sn, depth_range.x, depth_range.y));
+            
+        }
+        
+        ///////////////////////////////////////////////////////////////////////
+        void normal_lens_effect () {
+          
+          vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
+          binormal = normalize(binormal);
+
+          float angle = dot(binormal, gua_normal);
+          gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(angle, -1.0, 1.0));
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+
+        void first_derivation_lens_effect() {
+
+            //float step_size_in_os = 0.001; //TODO: uniform
+
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
+            binormal = normalize(binormal);
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
+
+            vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
+            
+            vec3 step_hori = binormal * step_size_in_os;
+            vec3 step_vert = tangent * step_size_in_os;
+
+            vec3 pos_l = pos_os - step_hori;
+            vec3 pos_r = pos_os + step_hori;
+            vec3 pos_o = pos_os - step_vert;
+            vec3 pos_u = pos_os + step_vert;
+
+            //mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            vec4 pos_l_ss = gua_model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = gua_model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = gua_model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = gua_model_view_projection_matrix * vec4(pos_u, 1.0);
+
+            vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
+            
+
+            const vec2 screen_res = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+
+            if (length(pos_l_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_l_ss_norm = pos_ss_norm + vec2(-screen_res.x, 0.0);
+            }
+            if (length(pos_r_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_r_ss_norm = pos_ss_norm + vec2(screen_res.x, 0.0);
+            }
+            if (length(pos_o_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_o_ss_norm = pos_ss_norm + vec2(0.0, screen_res.y);
+            }
+            if (length(pos_u_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_u_ss_norm = pos_ss_norm + vec2(0.0, -screen_res.y);
+            }
+
+            float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
+            float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
+            float d_y_o = texture(p01_linear_depth_texture, pos_o_ss_norm).r;
+            float d_y_u = texture(p01_linear_depth_texture, pos_u_ss_norm).r;
+
+            float d = length(vec2((d_x_r - d_x_l) / (length(step_hori) * 2.0), (d_y_u - d_y_o) / (length(step_vert) * 2.0)));
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(d, -0.0, 0.02));
+            //if (d > 0.0)
+            //    gua_color = vec3(0.0, 0.0, 1.0);
+            //else
+            //    gua_color = vec3(1.0, 0.0, 0.0);
+
+        }
+
+        void second_derivation_lens_effect() {
+
+            //float step_size_in_os = 0.001; //TODO: uniform
+
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
+            binormal = normalize(binormal);
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
+
+            vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
+
+            vec3 step_hori = binormal * step_size_in_os;
+            vec3 step_vert = tangent * step_size_in_os;
+
+            vec3 pos_l = pos_os - step_hori;
+            vec3 pos_r = pos_os + step_hori;
+            vec3 pos_o = pos_os - step_vert;
+            vec3 pos_u = pos_os + step_vert;
+
+            mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            vec4 pos_l_ss = model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = model_view_projection_matrix * vec4(pos_u, 1.0);
+
+            vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            const vec2 screen_res = vec2(1.0 / 1920.0, 1.0 / 1080.0);
+
+            if (length(pos_l_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_l_ss_norm = pos_ss_norm + vec2(-screen_res.x, 0.0);
+            }
+            if (length(pos_r_ss_norm - pos_ss_norm) < screen_res.x){
+                pos_r_ss_norm = pos_ss_norm + vec2(screen_res.x, 0.0);
+            }
+            if (length(pos_o_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_o_ss_norm = pos_ss_norm + vec2(0.0, screen_res.y);
+            }
+            if (length(pos_u_ss_norm - pos_ss_norm) < screen_res.y){
+                pos_u_ss_norm = pos_ss_norm + vec2(0.0, -screen_res.y);
+            }
+
+            float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
+            float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
+            float d_y_o = texture(p01_linear_depth_texture, pos_o_ss_norm).r;
+            float d_y_u = texture(p01_linear_depth_texture, pos_u_ss_norm).r;
+
+            float f = texture(p01_linear_depth_texture, pos_ss_norm).r;
+
+            float d = length(vec2((d_x_r + d_x_l - 2.0 * f) / (length(step_hori) * length(step_vert)), (d_y_u + d_y_o - 2.0 * f) / (length(step_vert) * length(step_vert))));
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(d, -0.0, 0.02));
+        }
+
+
+        void edge() {
+            vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+            vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            //float step_size_in_os = 0.005; //TODO: uniform
+
+            vec3 binormal = vec3(lens_world_normal.y, -lens_world_normal.x, 0.0);
+            binormal = normalize(binormal);
+            vec3 tangent = normalize(cross(binormal, lens_world_normal));
+
+            vec3 pos_os = (inverse(gua_model_matrix) * vec4(gua_world_position, 1.0)).xyz;
+
+            vec3 step_hori = binormal * step_size_in_ss;
+            vec3 step_vert = tangent * step_size_in_ss;
+
+            vec3 pos_l = pos_os - step_hori;
+            vec3 pos_r = pos_os + step_hori;
+            vec3 pos_o = pos_os - step_vert;
+            vec3 pos_u = pos_os + step_vert;
+
+            //mat4 model_view_projection_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix; //TODO: use gua_model_view_projection_matrix
+
+            vec4 pos_l_ss = gua_model_view_projection_matrix * vec4(pos_l, 1.0);
+            vec4 pos_r_ss = gua_model_view_projection_matrix * vec4(pos_r, 1.0);
+            vec4 pos_o_ss = gua_model_view_projection_matrix * vec4(pos_o, 1.0);
+            vec4 pos_u_ss = gua_model_view_projection_matrix * vec4(pos_u, 1.0);
+
+            vec2 pos_l_ss_norm = (pos_l_ss.xy / pos_l_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_r_ss_norm = (pos_r_ss.xy / pos_r_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_o_ss_norm = (pos_o_ss.xy / pos_o_ss.w) * 0.5f + vec2(0.5, 0.5);
+            vec2 pos_u_ss_norm = (pos_u_ss.xy / pos_u_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+            float d_x_l = texture(p01_linear_depth_texture, pos_l_ss_norm).r;
+            float d_x_r = texture(p01_linear_depth_texture, pos_r_ss_norm).r;
+            float d_y_o = texture(p01_linear_depth_texture, pos_o_ss_norm).r;
+            float d_y_u = texture(p01_linear_depth_texture, pos_u_ss_norm).r;
+
+            float f = texture(p01_linear_depth_texture, pos_ss_norm).r;
+
+            //float d = length(vec2((d_x_r + d_x_l - 2.0 * f) / (length(step_hori) * length(step_vert)), (d_y_u + d_y_o - 2.0 * f) / (length(step_vert) * length(step_vert))));
+            float d = (length((vec2((d_x_r - d_x_l) * 0.5, (d_y_u - d_y_o) * 0.5)))) * 100.0;
+            
+
+            gua_color = WavelengthToRGB(GetWaveLengthFromDataPoint(d, 0.0, 0.01));
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////
+        void apply_lens_effect()               
+        {
+          switch (lens_vis_mode) {
+            case 1 : 
+                distance_lens_effect();
+              break;
+            case 2 : 
+              normal_lens_effect();
+              break;
+            case 3:                
+                first_derivation_lens_effect();
+                break;
+            case 4:
+                edge();
+                break;
+            case 5:
+                second_derivation_lens_effect();
+                break;            
+            default : 
+                //gua_color = vec3(1.0, 0.0, 0.0);
+              break;
+          }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        void PBR_uniform() 
+        {
+            if (lens_vis_mode != 0){
+                bool fragment_in_lens = true;
+                switch (lens_geo_mode) {
+                case 0: { //sphere_ws
+                    float distance_to_lens = length(gua_world_position - lens_center);
+                    fragment_in_lens = lens_radius > distance_to_lens ? true : false;
+                    break;
+                }
+                case 1: {//sphere_ss
+                    //TODO: recalculate?
+                    vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+                    vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+                    float distance_to_lens = length(pos_ss_norm - lens_center_ss);
+                    fragment_in_lens = lens_radius > distance_to_lens ? true : false;
+                    break;
+                }
+                case 2: //square_ss
+                    vec4 pos_ss = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position, 1.0);
+                    vec2 pos_ss_norm = (pos_ss.xy / pos_ss.w) * 0.5f + vec2(0.5, 0.5);
+
+                    if (lens_square_ss_min.x > pos_ss_norm.x
+                        || lens_square_ss_max.x < pos_ss_norm.x
+                        || lens_square_ss_min.y > pos_ss_norm.y
+                        || lens_square_ss_max.y < pos_ss_norm.y)
+                    {
+                        fragment_in_lens = false;
+                    }
+                    break;
+                case 3: //square_ws
+                    break;
+                default:
+                    break;
+                }
+                if (fragment_in_lens)
+              {
+                apply_lens_effect();
+              }
+
+            }
+
+          gua_metalness = metalness;
+          gua_roughness = roughness;
+          gua_emissivity = emissivity;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "metalness",
+          "type" : "float",
+          "value" : "1.0"
+        },
+        {
+          "name" : "roughness",
+          "type" : "float",
+          "value" : "0.2"
+        },
+        {
+          "name" : "emissivity",
+          "type" : "float",
+          "value" : "0.0"
+        },
+        {
+          "name" : "lens_center",
+          "type" : "vec3",
+          "value" : "(0.0 0.0 0.0)"
+        },
+        {
+            "name" : "lens_center_ss",
+            "type" : "vec2",
+            "value" : "(0.0 0.0)"
+        },
+        {
+          "name" : "lens_world_normal",
+          "type" : "vec3",
+          "value" : "(0.0 0.0 0.0)"
+        },
+        {
+          "name" : "lens_radius",
+          "type" : "float",
+          "value" : "0.1"
+        },
+        {
+          "name" : "lens_square_ss_min",
+          "type" : "vec2",
+          "value" : "(0.1 0.1)"
+        },
+        {
+            "name" : "lens_square_ss_max",
+            "type" : "vec2",
+            "value" : "(0.1 0.1)"
+        },
+        {
+          "name" : "lens_vis_mode",
+          "type" : "int",
+          "value" : "0"
+        },
+        {
+          "name" : "lens_geo_mode",
+          "type" : "int",
+          "value" : "0"
+        },
+        {
+          "name" : "step_size_in_os",
+          "type" : "float",
+          "value" : "0.1"
+        },
+        {
+          "name" : "step_size_in_ss",
+          "type" : "float",
+          "value" : "0.1"
+        },
+        {
+            "name" : "ref_plane_v",
+            "type" : "vec3",
+            "value" : "vec3(0.0 0.0 0.0)"
+        },
+        {
+            "name" : "ref_plane_n",
+            "type" : "vec3",
+            "value" : "vec3(0.0 1.0 0.0)"
+        },
+        {
+            "name" : "depth_range",
+            "type" : "vec2",
+            "value" : "vec2(0.0 1.0)"
+        }        
+      ] 
+    }
+  ]
+}
