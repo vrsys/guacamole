@@ -159,12 +159,15 @@ void PLODNode::ray_test_impl(Ray const& ray,
     return;
   }
 
-  auto geometry(
-      GeometryDatabase::instance()->lookup(get_geometry_description()));
+  // bbox is intersected, but check geometry only if mask tells us to check
+  if (get_geometry_description() != "" && mask.check(get_tags())) {
+    auto geometry(
+        GeometryDatabase::instance()->lookup(get_geometry_description()));
 
-  if (geometry) {
-    Ray world_ray(ray);
-    geometry->ray_test(world_ray, options, this, hits);
+    if (geometry) {
+      Ray world_ray(ray);
+      geometry->ray_test(world_ray, options, this, hits);
+    }
   }
 
   for (auto child : get_children()) {
