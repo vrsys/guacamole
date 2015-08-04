@@ -43,10 +43,13 @@
 
  #define FULLSCREEN false
 
+ //TRIMESH
  #define RECURSIVE_OILRIGS false
- #define ELEPHANT false
- 
- #define PITOTI true
+ #define VIADEN false //requires /mnt/pitoti
+
+ //Plod
+ #define PITOTI false //requires /mnt/pitoti
+ #define BRIDGE true //requires /mnt/pitoti
 
  #define SKYMAP true
 
@@ -88,7 +91,7 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader trimesh_loader;
 
   plod_loader.set_upload_budget_in_mb(128);
-  plod_loader.set_render_budget_in_mb(4048);
+  plod_loader.set_render_budget_in_mb(2048);
   plod_loader.set_out_of_core_budget_in_mb(4096);
 
 
@@ -144,10 +147,7 @@ int main(int argc, char** argv) {
     small_oilrig->translate(19.98f, 1.11f, 8.88f);
 
     graph.add_node(scene, small_oilrig);
-  }
 
-  if (ELEPHANT)
-  {
     auto elephant(trimesh_loader.create_geometry_from_file("elephant", "/opt/3d_models/animals/elephant/elephant.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
@@ -160,6 +160,28 @@ int main(int argc, char** argv) {
 
     graph.add_node(scene, elephant);
   }
+
+  if(VIADEN)
+  {
+    auto viaden_outside(trimesh_loader.create_geometry_from_file("viaden_outside", "/mnt/pitoti/3d_pitoti/Vianden/Aussen_gesamt/VIANDEN.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+
+    viaden_outside->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    // viaden_outside->scale(100.0f);
+
+    graph.add_node(scene, viaden_outside);
+ 
+    auto viaden_inside(trimesh_loader.create_geometry_from_file("viaden_inside", "/mnt/pitoti/3d_pitoti/Vianden/Innen_gesamt/Innenraeume_Gesamt.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+
+    viaden_inside->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    // viaden_inside->scale(100.0f);
+
+    graph.add_node(scene, viaden_inside);
+  }
+
+  
+
   if (PITOTI)
   {
     auto rot_offset_mat = gua::math::mat4(0.088, 0.996, -0.007, 0.0,
@@ -175,15 +197,15 @@ int main(int argc, char** argv) {
       "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00010_knobi_cutout_flagged.kdn",
       "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00011_knobi_cutout_flagged.kdn",
 
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00001_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00002_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00003_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00004_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00005_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00006_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00007_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00008_knobi.kdn",
-      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00009_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00001_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00002_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00003_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00004_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00005_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00006_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00007_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00008_knobi.kdn",
+      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00009_knobi.kdn",
     };
 
     auto rot_mat = gua::math::mat4(-0.57732352, 0.040792, -0.8154959, 0.0,
@@ -222,6 +244,25 @@ int main(int argc, char** argv) {
     }
 
   }
+  if (BRIDGE)
+  {
+    std::vector<std::string> model_paths{
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00001_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00002_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00003_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00004_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00005_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00006_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00007_knobi.kdn",
+      "/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part00008_knobi.kdn",
+    };
+    for (const auto path: model_paths)
+    {
+      auto plod_node = plod_loader.load_geometry(path, gua::PLODLoader::DEFAULTS);
+      graph.add_node("/scene" , plod_node);  
+    }
+    scene->rotate(-90.0, 1.0, 0.0, 0.0);
+  }
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -254,10 +295,26 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
   }
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::PLODPassDescription>());
-  // camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
+  camera->get_pipeline_description()->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
+  
+  // CUBEMAP NAVIGATION
+  bool adaptive_navigation(true);
+  auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
+  cmn->config.set_texture_name("navigation_depth_texture");
+  cmn->config.set_near_clip(0.1f);
+  cmn->config.set_far_clip(100.0f);
+  float motion_speed = 0.1f;
 
-  // GUI
+  // DEBUG VIEW
+  auto cm_preview = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("cubemap_debug");
+  cm_preview->data.texture() = cmn->get_texture_name();
+  gua::math::vec2 preview_size(resolution.x, resolution.x / 6.0f);
+  cm_preview->data.size() = preview_size;
+  cm_preview->data.anchor() = gua::math::vec2(0.f, -1.f);
+  graph.add_node("/", cm_preview);
+
   // gua::math::vec2 gui_size(150.f, 80.f);
   // auto gui = std::make_shared<gua::GuiResource>();
   // gui->init("gui", "asset://gua/data/gui/fps.html", gui_size);
@@ -268,14 +325,6 @@ int main(int argc, char** argv) {
   // gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   // graph.add_node("/", gui_quad);
-  
-  // CUBEMAP NAVIGATION
-  bool adaptive_navigation(true);
-  auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
-  cmn->config.set_texture_name("navigation_depth_texture");
-  cmn->config.set_near_clip(1.0f);
-  cmn->config.set_far_clip(1000.0f);
-  float motion_speed = 0.1f;
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -287,6 +336,7 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
+    cm_preview->data.size() = gua::math::vec2(new_size.x, new_size.x / 6.f);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -332,16 +382,24 @@ int main(int argc, char** argv) {
   //   gui->call_javascript("set_fps_text", sstr.str());
 
 
-    // adaptive speed 
+    // adaptive speed & clipping
     float new_motion_speed = motion_speed;
     if (adaptive_navigation) {
 
       float closest_distance = cmn->get_closest_distance();
+      float test = cmn->get_distance_by_direction(gua::math::vec3(0.f, 0.f, -1.f));
+      std::cout << test << std::endl;
       if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
         new_motion_speed = closest_distance / 1000.0f;
+
+        // cmn->config.set_near_clip(closest_distance / 100.0);
+        // cmn->config.set_far_clip(closest_distance * 100.0);
+        camera->config.set_near_clip(closest_distance / 100.0);
+        camera->config.set_far_clip(closest_distance * 100.0);
+
       }
       nav.set_motion_speed(new_motion_speed);
-      
+
       // std::cout << motion_speed << std::endl;
     } else {
       nav.set_motion_speed(new_motion_speed);
@@ -353,7 +411,9 @@ int main(int argc, char** argv) {
     if(count == 60){
       count = 0;
       // std::cout << nav.get_transform() << std::endl;
-      std::cout << new_motion_speed*60 << std::endl;
+      // std::cout << "Speed: " << new_motion_speed*60 << std::endl;
+      // std::cout << "Transform: " << nav.get_transform() << std::endl;
+      // std::cout << "Clipping: " << camera->config.get_near_clip() << " , " << camera->config.get_far_clip() << std::endl;
     }
 
     // gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
