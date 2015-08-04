@@ -109,8 +109,8 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
 }
 
 float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{
-  unsigned row(config.resolution() * ((coords.x + 1)/2.0));
-  unsigned colm(config.resolution() * ((coords.y + 1)/2.0));
+  unsigned row(config.resolution() * ((coords.y + 1)/2.0));
+  unsigned colm(config.resolution() * ((coords.x + 1)/2.0));
 
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(texture_name_));
   if (texture){
