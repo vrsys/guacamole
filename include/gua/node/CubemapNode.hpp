@@ -101,11 +101,13 @@ class GUA_DLL CubemapNode : public SerializableNode {
   std::string get_texture_name() const;
 
   float get_closest_distance() const;
+  float get_distance_by_local_direction(math::vec3 const& dir) const;
 
  private:
 
-  std::shared_ptr<Node> copy() const override;
+  float acces_texture_data(unsigned side, math::vec2 coords) const;
 
+  std::shared_ptr<Node> copy() const override;
   std::string texture_name_;
 };
 

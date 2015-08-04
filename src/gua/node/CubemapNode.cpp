@@ -26,6 +26,7 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/databases.hpp>
 #include <gua/renderer/TextureDistance.hpp>
+#include <gua/renderer/Frustum.hpp>
 
 #include <limits>
 #include <climits>
@@ -70,6 +71,54 @@ float CubemapNode::get_closest_distance() const{
   }
   return -1.0f;
 
+}
+
+
+float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
+
+  math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
+  std::vector<math::mat4> screen_transforms({
+    screen_transform,
+    scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
+    scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
+    scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
+    scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
+    scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
+  });
+
+  std::vector<gua::Frustum> frusta;
+
+  for(int i = 0; i<6; ++i){
+    auto frustum(
+      Frustum::perspective(
+        math::mat4::identity(), screen_transforms[i],
+        config.near_clip(),
+        config.far_clip()
+      )
+    );
+    frusta.push_back(frustum);
+    if (frustum.contains(dir)){
+      math::vec4 view_point(frustum.get_view() * math::vec4(dir.x, dir.y, dir.z, 1.0));
+      math::vec4 proj_point(frustum.get_projection() * view_point);
+
+      return acces_texture_data(i, math::vec2(proj_point.x, proj_point.y));
+    }
+  }
+
+  return -1.0;
+}
+
+float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{
+  unsigned row(config.resolution() * ((coords.x + 1)/2.0));
+  unsigned colm(config.resolution() * ((coords.y + 1)/2.0));
+
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(texture_name_));
+  if (texture){
+    std::vector<float> const& v = texture->get_data();
+    return v[row * config.resolution() * 6 + side * config.resolution() + colm];
+  } else {
+    return -1.0;
+  }
 }
 
 std::shared_ptr<Node> CubemapNode::copy() const {
