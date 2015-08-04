@@ -26,7 +26,7 @@
 #define SSAO            true
 #define LOAD_CAR        true
 #define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  false
+#define LOAD_MOUNTAINS  true
 
 #include <functional>
 
@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
       }
     }
   #endif
-  scene_root->add_child(plane);
+  // scene_root->add_child(plane);
 
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
@@ -314,45 +314,49 @@ int main(int argc, char** argv) {
   scene_root->add_child(sphere);
   scene_root->add_child(plane);
 
-  // sponza --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  scene_root->scale(20);
-  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(sponza);
-
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE);
-  // buddha->translate(0, -0.16, 0);
-  // for (auto c: buddha->get_children()) {
-  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
-  //   node->get_material()->set_uniform("Roughness", 0.2f);
-  //   node->get_material()->set_uniform("Metalness", 1.0f);
-  // }
-  // scene_root->add_child(buddha);
+  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE);
+  buddha->translate(0, -0.16, 0);
+  for (auto c: buddha->get_children()) {
+    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+    node->get_material()->set_uniform("Roughness", 0.2f);
+    node->get_material()->set_uniform("Metalness", 1.0f);
+  }
+  scene_root->add_child(buddha);
   // scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  auto dragon(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
-  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.4f));
+  dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
 
   dragon->translate(0.6, -0.17, 0);
-  transp_dragon->translate(-0.6, -0.17, 0);
+  transp_dragon->translate(-0.6, 0, 0);
+  transp_dragon->scale(1.4);
   scene_root->add_child(dragon);
   scene_root->add_child(transp_dragon);
   scene_root->add_child(plane);
+
+  // sponza --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
+  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  sponza->scale(20);
+  sponza->translate(0, 3, 0);
+  scene_root->add_child(transp_dragon);
+  scene_root->add_child(sponza);
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
@@ -427,6 +431,7 @@ int main(int argc, char** argv) {
   show_backfaces(transform);
 
   auto set_scene = [&](std::string const& name) {
+    std::cout << "huhu -------------------------------" << std::endl;
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
     graph["/transform/sponza"]->get_tags().add_tag("invisible");
     graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
@@ -1168,6 +1173,7 @@ int main(int argc, char** argv) {
     transform->set_transform(modelmatrix);
 
 
+
     if (ctr++ % 100 == 0) {
       double trimesh_time(0);
       double gbuffer_warp_time(0);
@@ -1192,6 +1198,8 @@ int main(int argc, char** argv) {
         if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives += result.second.first;
         if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
       }
+
+      std::cout << resolution.x*resolution.y << " " << 1000.f / window->get_rendering_fps() << " " << gbuffer_warp_time+abuffer_warp_time << " " << gbuffer_grid_time+abuffer_grid_time << std::endl;
 
       stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                            window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,

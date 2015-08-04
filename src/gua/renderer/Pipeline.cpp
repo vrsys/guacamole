@@ -849,24 +849,24 @@ void Pipeline::clear_frame_cache() {
 
   #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
       if (context_.framecount % 60 == 0) {
-        std::cout << "===== Time Queries for Context: " << context_.id
-          << " ============================" << std::endl;
-        for (auto const& t : context_.time_query_results) {
-          std::cout << t.first << " : " << t.second << " ms" << std::endl;
-        }
-        std::cout << std::endl;
+        // std::cout << "===== Time Queries for Context: " << context_.id
+        //   << " ============================" << std::endl;
+        // for (auto const& t : context_.time_query_results) {
+        //   std::cout << t.first << " : " << t.second << " ms" << std::endl;
+        // }
+        // std::cout << std::endl;
         context_.time_query_results.clear();
       }
   #endif
 
   #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
       if (context_.framecount % 60 == 0) {
-        std::cout << "===== Primitive Queries for Context: " << context_.id
-          << " ============================" << std::endl;
-        for (auto const& t : context_.primitive_query_results) {
-          std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
-        }
-        std::cout << std::endl;
+        // std::cout << "===== Primitive Queries for Context: " << context_.id
+        //   << " ============================" << std::endl;
+        // for (auto const& t : context_.primitive_query_results) {
+        //   std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
+        // }
+        // std::cout << std::endl;
         context_.primitive_query_results.clear();
       }
   #endif
