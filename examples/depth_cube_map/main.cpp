@@ -44,12 +44,13 @@
  #define FULLSCREEN false
 
  //TRIMESH
+ #define TEAPOT true
  #define RECURSIVE_OILRIGS false
  #define VIADEN false //requires /mnt/pitoti
 
  //Plod
  #define PITOTI false //requires /mnt/pitoti
- #define BRIDGE true //requires /mnt/pitoti
+ #define BRIDGE false //requires /mnt/pitoti
 
  #define SKYMAP true
 
@@ -100,6 +101,19 @@ int main(int argc, char** argv) {
 
   
   // MODELS
+  if (TEAPOT)
+  {
+    auto teapot(trimesh_loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+
+    // teapot->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+    // teapot->scale(0.1f);
+
+    graph.add_node(scene, teapot);
+  }
+
   if (RECURSIVE_OILRIGS)
   {
     auto much_big_oilrig(trimesh_loader.create_geometry_from_file("much_big_oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
@@ -387,8 +401,6 @@ int main(int argc, char** argv) {
     if (adaptive_navigation) {
 
       float closest_distance = cmn->get_closest_distance();
-      float test = cmn->get_distance_by_direction(gua::math::vec3(0.f, 0.f, -1.f));
-      std::cout << test << std::endl;
       if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
         new_motion_speed = closest_distance / 1000.0f;
 
