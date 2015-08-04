@@ -30,7 +30,16 @@ in vec2 gua_quad_coords;
 layout(location=0) out vec4 gua_out_color;
 
 void main() {
-  vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5) * opacity;
-  color.rgb /= color.a;
-  gua_out_color = color;
+  // vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5) * opacity;
+  // color.rgb /= color.a;
+  // gua_out_color = color;
+
+  float intensity = 0.0;
+  const int slices = 100;
+  for (int i=0; i < slices; ++i) {
+    intensity += texture(sampler2DShadow(gua_in_texture), vec3(gua_quad_coords, i * 1.0/slices)).r;
+  }
+
+  gua_out_color = vec4(vec3(pow(intensity/slices,20)),1);
 }
+  
