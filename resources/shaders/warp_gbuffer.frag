@@ -41,10 +41,10 @@ void main() {
   #else
     // if (abs(dFdx(texcoords.x)) > 0.001 || abs(dFdy(texcoords.y)) > 0.001) {
 
-    //     gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+        gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
     // } else {
 
-        gua_out_color = gua_get_color(texcoords);
+        // gua_out_color = gua_get_color(texcoords);
     // }
 
   #endif

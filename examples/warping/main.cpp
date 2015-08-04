@@ -255,10 +255,15 @@ int main(int argc, char** argv) {
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
   #if LOAD_PITOTI
     gua::PLODLoader plodloader;
-    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/valley/sera_part_14.kdn",
-      gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-    scene_root->scale(30);
-    scene_root->add_child(pitoti);
+    for (int i(1); i<=8; ++i) {
+      auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
+        gua::PLODLoader::DEFAULTS));
+      scene_root->add_child(pitoti);
+      pitoti->set_radius_scale(1.5f);
+      pitoti->set_error_threshold(1.0f);
+    }
+    scene_root->rotate(-90, 1, 0, 0);
+    scene_root->scale(0.5);
   #endif
 
   // bottle --------------------------------------------------------------------
@@ -431,7 +436,6 @@ int main(int argc, char** argv) {
   show_backfaces(transform);
 
   auto set_scene = [&](std::string const& name) {
-    std::cout << "huhu -------------------------------" << std::endl;
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
     graph["/transform/sponza"]->get_tags().add_tag("invisible");
     graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
@@ -1199,7 +1203,7 @@ int main(int argc, char** argv) {
         if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
       }
 
-      std::cout << resolution.x*resolution.y << " " << 1000.f / window->get_rendering_fps() << " " << gbuffer_warp_time+abuffer_warp_time << " " << gbuffer_grid_time+abuffer_grid_time << std::endl;
+      // std::cout << resolution.x*resolution.y << " " << 1000.f / window->get_rendering_fps() << " " << gbuffer_warp_time+abuffer_warp_time << " " << gbuffer_grid_time+abuffer_grid_time << std::endl;
 
       stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                            window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,

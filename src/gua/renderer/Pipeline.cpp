@@ -136,13 +136,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
   }
 
-  if (reload_abuffer) {
-    gbuffer_->get_abuffer().allocate(*this,
-                      last_description_.get_enable_abuffer()
-                          ? last_description_.get_abuffer_size()
-                          : 0, gbuffer_->get_resolution());
-  }
-
 
   if (reload_passes) {
     for (auto& pass : passes_) {
@@ -164,6 +157,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     for (auto pass : last_description_.get_passes()) {
       passes_.push_back(pass->make_pass(context_, global_substitution_map_));
     }
+  }
+
+  if (reload_abuffer) {
+    gbuffer_->get_abuffer().allocate(*this,
+                      last_description_.get_enable_abuffer()
+                          ? last_description_.get_abuffer_size()
+                          : 0, gbuffer_->get_resolution());
   }
 
   // get scenegraph which shall be rendered

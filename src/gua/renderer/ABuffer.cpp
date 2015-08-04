@@ -83,7 +83,6 @@ void ABuffer::allocate(Pipeline& pipe, size_t buffer_size, math::vec2ui const& r
   scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
     scm::gl::WRAP_CLAMP_TO_EDGE,
     scm::gl::WRAP_CLAMP_TO_EDGE);
-
   res_->min_max_buffer = std::make_shared<Texture2D>(size.x, size.y,
     scm::gl::FORMAT_RG_32UI, mip_map_levels, state);
 

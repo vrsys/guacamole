@@ -150,7 +150,7 @@ scm::gl::texture_image_ptr const& Texture::get_buffer(
 ////////////////////////////////////////////////////////////////////////////////
 
 void Texture::make_resident(RenderContext const& context) const {
-  if (textures_[context.id]) {
+  if (textures_[context.id] && !textures_[context.id]->native_handle_resident()) {
     context.render_context->make_resident(textures_[context.id], sampler_states_[context.id]);
     //context.render_device->create_resident_handle(textures_[context.id], sampler_states_[context.id]);
   }
@@ -159,8 +159,9 @@ void Texture::make_resident(RenderContext const& context) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Texture::make_non_resident(RenderContext const& context) const {
-  if (textures_[context.id])
+  if (textures_[context.id] && textures_[context.id]->native_handle_resident()) {
     context.render_context->make_non_resident(textures_[context.id]);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
