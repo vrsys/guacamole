@@ -302,10 +302,6 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
                                 false,
                                 scm::gl::point_raster_state(false));
 
-
-    fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
-                                                      scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
-
     //invalidation before first write
     previous_frame_count_ = UINT_MAX;
   }
@@ -591,7 +587,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
         ctx.render_context->apply();
 
-        fullscreen_quad_->draw(ctx.render_context);
+        pipe.draw_quad();
 
         //pipe.end_cpu_query("CPU : PLODRenderer::depth_conversion_pass");
         //pipe.end_gpu_query(ctx, "GPU : PLODRenderer::depth_conversion_pass");
@@ -789,7 +785,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
            ctx.render_context->apply();
 
-           fullscreen_quad_->draw(ctx.render_context);
+           pipe.draw_quad();
          }
          normalization_pass_program_->unuse(ctx);
 

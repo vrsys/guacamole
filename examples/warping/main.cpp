@@ -23,10 +23,10 @@
 #define OCULUS          false
 #define STEREO_MONITOR  false
 
-#define SSAO            true
-#define LOAD_CAR        true
-#define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  true
+#define SSAO            false
+#define LOAD_CAR        false
+#define LOAD_PITOTI     true
+#define LOAD_MOUNTAINS  false
 
 #include <functional>
 
@@ -160,17 +160,17 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
-  auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(3.f);
-  light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 1.5f, 5.f, 20.f});
-  light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
-  light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
-  light->data.set_max_shadow_dist(50.0f);
-  light->data.set_shadow_offset(0.0005f);
-  light->data.set_enable_shadows(true);
-  light->data.set_shadow_map_size(2048);
-  light->rotate(-95, 1, 0.5, 0);
+  // auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  // light->data.set_type(gua::node::LightNode::Type::SUN);
+  // light->data.set_brightness(3.f);
+  // light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 2.f, 10.f});
+  // light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+  // light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+  // light->data.set_max_shadow_dist(30.0f);
+  // light->data.set_shadow_offset(0.0007f);
+  // light->data.set_enable_shadows(true);
+  // light->data.set_shadow_map_size(2048);
+  // light->rotate(-95, 1, 0.5, 0);
 
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",

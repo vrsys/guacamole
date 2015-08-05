@@ -115,8 +115,6 @@ namespace gua {
     //misc:
     ////////////////////////////////////////////////////////////////////////////////////
     //unsigned int material_id_;  XXX still needed?
-    scm::gl::quad_geometry_ptr                   fullscreen_quad_;
-
     bool                                         gpu_resources_already_created_;
     unsigned                                     previous_frame_count_;
 
