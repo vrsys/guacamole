@@ -32,6 +32,8 @@
   #define GUA_OCULUSSDK2_DLL
 #endif // #if defined(_MSC_VER)
 
+#include <string>
+
 // guacamole headers
 #include <gua/renderer/Window.hpp>
 
@@ -44,9 +46,7 @@ namespace gua {
 
 
 class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
- public:
-
-  
+public:
   static void initialize_oculus_environment();
   static void shutdown_oculus_environment();
 
@@ -58,10 +58,14 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  gua::math::mat4 get_oculus_sensor_orientation() const;
-  gua::math::vec2ui get_full_oculus_resolution() const;
-  private:
+  std::string get_product_name() const;
+  gua::math::mat4 get_sensor_orientation() const;
+  gua::math::vec2ui get_resolution() const;
+  gua::math::vec2ui get_eye_resolution() const;
+  gua::math::vec2 get_screen_size() const;
+  gua::math::vec2 get_screen_size_per_eye() const;
 
+private:
     static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
 
@@ -77,6 +81,11 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
 
     // oculus device associated with the window
     ovrHmd registered_HMD_;
+
+    // HMD params
+    std::string product_name_;
+    gua::math::vec2ui resolution_;
+    gua::math::vec2 screen_size_;
 
     // sensor orientation
     gua::math::mat4 oculus_sensor_orientation_;

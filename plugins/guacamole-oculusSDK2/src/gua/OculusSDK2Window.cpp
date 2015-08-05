@@ -186,37 +186,54 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   Window(),
   num_distortion_mesh_indices_{0,0} {
 
+  if (!oculus_environment_initialized_)
+    initialize_oculus_environment();
+
   // automatically register the HMDs in order
+  Logger::LOG_DEBUG << "Opening Oculus device#"
+    << registered_oculus_device_count_ + 1 << std::endl;
   registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
 
-  // register all three sensors for sensor fusion
-  bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation 
-                                                                     | ovrTrackingCap_MagYawCorrection 
-                                                                     | ovrTrackingCap_Position, 0);
+  if (!registered_HMD_) {
+    Logger::LOG_ERROR << "Failed to create Oculus device!" << std::endl;
+  }
 
-  std::cout << registered_HMD_->ProductName << "\n";
+  // register all three sensors for sensor fusion
+  bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+                                                                     | ovrTrackingCap_MagYawCorrection
+                                                                     | ovrTrackingCap_Position
+                                                                     , 0);
 
   if( !tracking_configured ) {
     ovrHmd_Destroy(registered_HMD_);
     registered_HMD_ = NULL;
     gua::Logger::LOG_WARNING << "The oculus device does not support demanded tracking feature.\n";
 
-    exit(-1); 
+    exit(-1);
+  } else {
+    Logger::LOG_DEBUG << "Successfully created '" << registered_HMD_->ProductName
+      << "'" << std::endl;
   }
 
-  // get the resolution from the device itself
-  unsigned res_x = registered_HMD_->Resolution.w;
-  unsigned res_y = registered_HMD_->Resolution.h;
+  // get data from the device
+  product_name_ = std::string(registered_HMD_->ProductName);
+  resolution_ = gua::math::vec2ui(
+    registered_HMD_->Resolution.w, registered_HMD_->Resolution.h
+    );
+  if (product_name_ == "Oculus Rift DK2")
+    screen_size_ = gua::math::vec2(0.12576, 0.07074);
+  else
+    screen_size_ = gua::math::vec2(0.1498, 0.0936);   // assumes DK1
 
   // set up the window parameters
-  config.set_size(math::vec2ui(res_x, res_y));
-  config.set_title("guacamole");
+  config.set_size(resolution_);
+  config.set_title(product_name_);
   config.set_display_name(display);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
-  config.set_left_resolution(math::vec2ui(res_x/2, res_y));
+  config.set_left_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
   config.set_left_position(math::vec2ui(0, 0));
-  config.set_right_resolution(math::vec2ui(res_x/2, res_y));
-  config.set_right_position(math::vec2ui(res_x/2, 0));
+  config.set_right_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
+  config.set_right_position(math::vec2ui(resolution_.x / 2, 0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +241,7 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
 OculusSDK2Window::~OculusSDK2Window() {
   // cleanup the oculus device
   ovrHmd_Destroy(registered_HMD_);
+  registered_oculus_device_count_--;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,19 +382,28 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
   ovrHmd_EndFrameTiming(registered_HMD_);
 }
 
-// retrieve the oculus sensor orientation for the application
-gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
+std::string OculusSDK2Window::get_product_name() const {
+  return product_name_;
+}
+
+gua::math::mat4 OculusSDK2Window::get_sensor_orientation() const {
   return oculus_sensor_orientation_;
 }
 
-// retrieve the oculus resolution for the application
-gua::math::vec2ui OculusSDK2Window::get_full_oculus_resolution() const {
-  gua::math::vec2ui oculus_resolution(0, 0);
+gua::math::vec2ui OculusSDK2Window::get_resolution() const {
+  return resolution_;
+}
 
-  oculus_resolution.x = registered_HMD_->Resolution.w;
-  oculus_resolution.y = registered_HMD_->Resolution.h;
+gua::math::vec2ui OculusSDK2Window::get_eye_resolution() const {
+  return gua::math::vec2ui(resolution_.x / 2, resolution_.y);
+}
 
-  return oculus_resolution;
+gua::math::vec2 OculusSDK2Window::get_screen_size() const {
+  return screen_size_;
+}
+
+gua::math::vec2 OculusSDK2Window::get_screen_size_per_eye() const {
+  return gua::math::vec2(screen_size_.x / 2, screen_size_.y);
 }
 
 }
