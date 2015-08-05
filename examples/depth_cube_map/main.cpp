@@ -44,12 +44,12 @@
  #define FULLSCREEN false
 
  //TRIMESH
- #define TEAPOT true
+ #define TEAPOT false
  #define RECURSIVE_OILRIGS false
  #define VIADEN false //requires /mnt/pitoti
 
  //Plod
- #define PITOTI false //requires /mnt/pitoti
+ #define PITOTI true //requires /mnt/pitoti
  #define BRIDGE false //requires /mnt/pitoti
 
  #define SKYMAP true
@@ -211,15 +211,15 @@ int main(int argc, char** argv) {
       "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00010_knobi_cutout_flagged.kdn",
       "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00011_knobi_cutout_flagged.kdn",
 
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00001_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00002_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00003_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00004_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00005_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00006_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00007_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00008_knobi.kdn",
-      "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00009_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00001_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00002_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00003_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00004_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00005_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00006_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00007_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00008_knobi.kdn",
+      // "/mnt/pitoti/3d_pitoti/grundtruth_data/valley/seradina_flyover/seradina_full_las_0_part_00009_knobi.kdn",
     };
 
     auto rot_mat = gua::math::mat4(-0.57732352, 0.040792, -0.8154959, 0.0,
@@ -256,6 +256,8 @@ int main(int argc, char** argv) {
       auto plod_node = plod_loader.load_geometry(path, gua::PLODLoader::DEFAULTS);
       graph.add_node(seradina_12c_group, plod_node);  
     }
+    nav.set_transform(scm::math::make_translation(450.f, 65.f, 115.f));
+
 
   }
   if (BRIDGE)
@@ -319,9 +321,10 @@ int main(int argc, char** argv) {
   cmn->config.set_texture_name("navigation_depth_texture");
   cmn->config.set_near_clip(0.1f);
   cmn->config.set_far_clip(100.0f);
-  float motion_speed = 0.1f;
+  float motion_speed = 0.01f;
 
   // DEBUG VIEW
+  bool debug_preview = true;
   auto cm_preview = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("cubemap_debug");
   cm_preview->data.texture() = cmn->get_texture_name();
   gua::math::vec2 preview_size(resolution.x, resolution.x / 6.0f);
@@ -360,7 +363,8 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     nav.set_key_press(static_cast<gua::Key>(key), action);
-    // std::cout << key << " " << action << std::endl;       
+    // std::cout << key << " " << action << std::endl;
+    // ENTER
     if ((key == 257) && (action == 1)){
       adaptive_navigation = !adaptive_navigation;
       if (adaptive_navigation){
@@ -369,6 +373,15 @@ int main(int argc, char** argv) {
         std::cout << "Adaptive locomotion turned off" << std::endl;       
       }
     }
+    // V
+    if ((key == 86) && (action == 1)){
+      debug_preview = !debug_preview;
+      if (debug_preview){
+        graph.add_node("/", cm_preview);
+      }else{
+        graph.remove_node("/cubemap_debug");
+      }
+  }
   });  
 
   window->on_button_press.connect([&](int key, int action, int mods) {
@@ -401,6 +414,7 @@ int main(int argc, char** argv) {
     if (adaptive_navigation) {
 
       float closest_distance = cmn->get_closest_distance();
+      // float closest_distance = cmn->get_distance_by_local_direction(gua::math::vec3(0.f, 0.5f, -1.f));
       if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
         new_motion_speed = closest_distance / 1000.0f;
 
@@ -423,7 +437,7 @@ int main(int argc, char** argv) {
     if(count == 60){
       count = 0;
       // std::cout << nav.get_transform() << std::endl;
-      // std::cout << "Speed: " << new_motion_speed*60 << std::endl;
+      std::cout << "Speed: " << new_motion_speed*60 << std::endl;
       // std::cout << "Transform: " << nav.get_transform() << std::endl;
       // std::cout << "Clipping: " << camera->config.get_near_clip() << " , " << camera->config.get_far_clip() << std::endl;
     }
