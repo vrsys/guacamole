@@ -1,0 +1,41 @@
+
+{
+	"final_shading_stage" : 
+	{
+		"body" : "gua_color = diffuse_color;\n",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : 
+		{
+			"diffuse_color" : "vec3"
+		}
+	},
+	"gbuffer_fragment_stage" : 
+	{
+		"body" : "gua_normal = varying_normal;\n",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : null
+	},
+	"gbuffer_vertex_stage" : 
+	{
+		"body" : "gua_position = gua_world_position;\nvarying_normal = gua_world_normal;\n",
+		"functions" : "",
+		"outputs" : 
+		{
+			"varying_normal" : "vec3"
+		},
+		"uniforms" : null
+	},
+	"lbuffer_stage" : 
+	{
+		"body" : "",
+		"functions" : "",
+		"outputs" : 
+		{
+			"diffuse" : "vec3",
+			"specular" : "float"
+		},
+		"uniforms" : null
+	}
+}

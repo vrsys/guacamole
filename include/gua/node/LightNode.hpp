@@ -122,7 +122,7 @@ class GUA_DLL LightNode : public SerializableNode {
      * zero, only objects wchich are visible in the viewing frustum will cast
      * shadows.
      */
-    GUA_ADD_PROPERTY(float,       shadow_near_clipping_in_sun_direction, 100.f);
+    GUA_ADD_PROPERTY(float,       shadow_near_clipping_in_sun_direction, 1.f);
     GUA_ADD_PROPERTY(float,       shadow_far_clipping_in_sun_direction,  100.f);
 
   };
