@@ -37,6 +37,7 @@ src/gua/generated/*
 tests/tests
 plugins/guacamole-oculus/example-oculus/example-oculus
 examples/oculus/example-oculus
+examples/oculusSDK2/example-oculusSDK2
 examples/multicontext/example-multicontext
 examples/input/example-input
 examples/gui/example-gui
