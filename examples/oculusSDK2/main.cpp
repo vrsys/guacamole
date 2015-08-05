@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
 
   window->open();
 
-  auto resolution = window->get_full_oculus_resolution();
+  float eye_screen_distance = 0.08f;
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
   auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
   //camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
+  camera->config.set_resolution(window->get_resolution());
   camera->config.set_left_screen_path("/nav/cam/left_screen");
   camera->config.set_right_screen_path("/nav/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -153,12 +153,12 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
-  left_screen->translate(-0.03175, 0, -0.008f);
+  left_screen->data.set_size(window->get_screen_size_per_eye());
+  left_screen->translate(-0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
-  right_screen->translate(0.03175, 0, -0.008f);
+  right_screen->data.set_size(window->get_screen_size_per_eye());
+  right_screen->translate(0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
 
 
   gua::Renderer renderer;
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
-    camera->set_transform(window->get_oculus_sensor_orientation());
+    camera->set_transform(window->get_sensor_orientation());
 
 
     renderer.queue_draw({&graph});
