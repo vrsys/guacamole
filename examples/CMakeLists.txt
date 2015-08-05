@@ -35,15 +35,15 @@ IF (GUACAMOLE_EXAMPLES)
 
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
-    # add_subdirectory(input)
-    # add_subdirectory(projective_texturing)
-    # add_subdirectory(nice_and_shiny)
-    # add_subdirectory(smooth_lighting)
-    # add_subdirectory(stress_test)
-    # add_subdirectory(transparency)
-    # add_subdirectory(oit_demo)
-    # add_subdirectory(tiled_shading_test)
-    # add_subdirectory(clipping)
+    add_subdirectory(input)
+    add_subdirectory(projective_texturing)
+    add_subdirectory(nice_and_shiny)
+    add_subdirectory(smooth_lighting)
+    add_subdirectory(stress_test)
+    add_subdirectory(transparency)
+    add_subdirectory(oit_demo)
+    add_subdirectory(tiled_shading_test)
+    add_subdirectory(clipping)
 
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
@@ -74,27 +74,21 @@ IF (GUACAMOLE_EXAMPLES)
 
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
-    # add_subdirectory(plod)
+    add_subdirectory(plod)
   ENDIF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
 
   IF (${PLUGIN_guacamole-video3d})
-    # add_subdirectory(video3d)
+    add_subdirectory(video3d)
   ENDIF (${PLUGIN_guacamole-video3d})
 
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
-    # add_subdirectory(gui)
+    add_subdirectory(gui)
     add_subdirectory(warping)
     # volume example requires volume-plugin and gui-plugin
     IF (${PLUGIN_guacamole-volume})
-      # add_subdirectory(volume)
+      add_subdirectory(volume)
     ENDIF (${PLUGIN_guacamole-volume})
   ENDIF (${PLUGIN_guacamole-gui})
-
-
-  # multicontext example requires nurbs-plugin
-  # IF (${PLUGIN_guacamole-nurbs})
-    # add_subdirectory(multicontext)
-  # ENDIF (${PLUGIN_guacamole-nurbs})
 
 ENDIF (GUACAMOLE_EXAMPLES)

@@ -23,7 +23,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
@@ -274,6 +273,7 @@ int main(int argc, char** argv) {
 
 	auto pipe = std::make_shared<gua::PipelineDescription>();
 
+	pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
 	pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
 	pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
 	pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());

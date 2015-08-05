@@ -32,6 +32,7 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+#include <gua/renderer/ClearPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
@@ -45,6 +46,7 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
 
   auto pipe(std::make_shared<PipelineDescription>());
 
+  pipe->add_pass(std::make_shared<ClearPassDescription>());
   pipe->add_pass(std::make_shared<TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
