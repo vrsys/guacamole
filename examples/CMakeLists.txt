@@ -40,7 +40,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(smooth_lighting)
-    add_subdirectory(video3d)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(oit_demo)
@@ -88,9 +87,14 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${PLUGIN_guacamole-gui})
 
 
-  # multicontext example requires nurbs-plugin
-  # IF (${PLUGIN_guacamole-nurbs})
+  # multicontext example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
     add_subdirectory(multicontext)
-  # ENDIF (${PLUGIN_guacamole-nurbs})
+  ENDIF (${PLUGIN_guacamole-plod})
+
+  # video3d example requires glfw and video3d-plugin
+  IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
+      add_subdirectory(video3d)
+    ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
 ENDIF (GUACAMOLE_EXAMPLES)
