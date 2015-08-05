@@ -233,9 +233,14 @@ int main(int argc, char** argv) {
   
   auto light = graph.add_node<gua::node::LightNode>("/transform/city", "light");
   light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_enable_shadows(true);
+  //light->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.0f, 10.0f});
+  //light->data.set_max_shadow_dist(100.0f);                                                                 
+  light->data.set_shadow_map_size(1024);
+  light->data.set_shadow_near_clipping_in_sun_direction(0.2f);
   light->data.brightness = 5.0f;
-  light->scale(7.f);
-  light->translate(0.f, 7.f, 5.f);
+  light->scale(9.f);
+  light->translate(0.f, 7.f, 8.f);
 
   auto light_proxy_geometry(loader.create_geometry_from_file("light_proxy", "data/objects/sphere.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
   light_proxy_geometry->scale(0.02);
@@ -278,8 +283,11 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/envmap.jpg");
 
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
   camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
+
+  camera->config.set_near_clip(0.1f);
+  camera->config.set_far_clip(10.0f);
+
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
