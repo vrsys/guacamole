@@ -45,14 +45,14 @@
 
  //TRIMESH
  #define TEAPOT false
- #define RECURSIVE_OILRIGS false
+ #define RECURSIVE_OILRIGS true
  #define VIADEN false //requires /mnt/pitoti
 
  //Plod
- #define PITOTI true //requires /mnt/pitoti
+ #define PITOTI false //requires /mnt/pitoti
  #define BRIDGE false //requires /mnt/pitoti
 
- #define SKYMAP true
+ #define SKYMAP false
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -173,6 +173,8 @@ int main(int argc, char** argv) {
     elephant->translate(19.957f, 1.1201f, 8.892f);
 
     graph.add_node(scene, elephant);
+
+    nav.set_transform(scm::math::make_translation(50.f, 1.f, 9.f) * scm::math::make_rotation(90.0f, 0.f, 1.f, 0.f));
   }
 
   if(VIADEN)
@@ -303,24 +305,32 @@ int main(int argc, char** argv) {
   camera->config.set_near_clip(1.0f);
   camera->config.set_far_clip(1000.0f);
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+  auto pipe = std::make_shared<gua::PipelineDescription>();
+
+  pipe->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
+  pipe->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   if (SKYMAP)
   {
-  camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
-  camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
+    pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    pipe->get_resolve_pass()->background_texture("data/textures/skymap.jpg");
   }
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::PLODPassDescription>());
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DepthCubeMapPassDesciption>());
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
+
+  camera->set_pipeline_description(pipe);
   
   // CUBEMAP NAVIGATION
   bool adaptive_navigation(true);
   auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
+  // graph.remove_node("/navigation/test");
   cmn->config.set_texture_name("navigation_depth_texture");
-  cmn->config.set_near_clip(0.1f);
+  cmn->config.set_near_clip(0.01f);
   cmn->config.set_far_clip(100.0f);
+  // cmn->config.set_resolution(64);
   float motion_speed = 0.01f;
 
   // DEBUG VIEW
@@ -368,9 +378,11 @@ int main(int argc, char** argv) {
     if ((key == 257) && (action == 1)){
       adaptive_navigation = !adaptive_navigation;
       if (adaptive_navigation){
-        std::cout << "Adaptive locomotion turned on" << std::endl;       
+        std::cout << "Adaptive locomotion turned on" << std::endl; 
+        graph.add_node("/navigation", cmn);      
       }else{
         std::cout << "Adaptive locomotion turned off" << std::endl;       
+        graph.remove_node("/navigation/test");
       }
     }
     // V
@@ -436,8 +448,9 @@ int main(int argc, char** argv) {
     count++;
     if(count == 60){
       count = 0;
+      std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
       // std::cout << nav.get_transform() << std::endl;
-      std::cout << "Speed: " << new_motion_speed*60 << std::endl;
+      // std::cout << "Speed: " << new_motion_speed*60 << std::endl;
       // std::cout << "Transform: " << nav.get_transform() << std::endl;
       // std::cout << "Clipping: " << camera->config.get_near_clip() << " , " << camera->config.get_far_clip() << std::endl;
     }
