@@ -357,7 +357,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   ////////////////////////////////////////////////////////////////////////////////
   void Pipeline::generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node)
   {
-    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node)->second;
+    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node->get_texture_name())->second;
 
     auto node_transform(cube_map_node->get_cached_world_transform());
     math::vec2ui viewport_size(depth_cube_map->get_viewport_size());
@@ -451,17 +451,17 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     unsigned resolution = cube_map_node->config.resolution();
     unsigned viewport_size(resolution);
     unsigned map_width(resolution*6);
+    auto texture_name(cube_map_node->get_texture_name());
 
     if (!depth_cube_map_res_) {
       depth_cube_map_res_ = context_.resources.get<SharedDepthCubeMapResource>();
     }
     std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
-    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node);
+    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(texture_name);
 
     if (depth_cube_map == depth_cube_map_res_->cube_maps_.end()){
-      auto texture_name(cube_map_node->get_texture_name());
       current_depth_cube_map = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size), texture_name);;
-      depth_cube_map_res_->cube_maps_[cube_map_node] = current_depth_cube_map;
+      depth_cube_map_res_->cube_maps_[texture_name] = current_depth_cube_map;
     } else {
       current_depth_cube_map = depth_cube_map->second;
       current_depth_cube_map->retrieve_data(context_, cube_map_node->config.near_clip(), cube_map_node->config.far_clip());
