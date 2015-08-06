@@ -68,7 +68,7 @@ class DepthCubeMap : public RenderTarget {
 };
 
 struct SharedDepthCubeMapResource {
-  std::unordered_map<node::CubemapNode*, std::shared_ptr<DepthCubeMap>> cube_maps_;
+  std::unordered_map<std::string, std::shared_ptr<DepthCubeMap>> cube_maps_;
 };
 
 }
