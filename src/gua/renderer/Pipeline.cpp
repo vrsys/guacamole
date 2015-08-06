@@ -364,14 +364,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     current_viewstate_.target = depth_cube_map.get();
     auto orig_scene(current_viewstate_.scene);
+    auto orig_shadow_mode(current_viewstate_.shadow_mode);
+    auto orig_viewpoint_uuid(current_viewstate_.viewpoint_uuid);
 
-    // set view parameters
-    current_viewstate_.viewpoint_uuid = current_viewstate_.camera.uuid;
-    current_viewstate_.view_direction = PipelineViewState::front;
-    current_viewstate_.shadow_mode = true;
-
-    //generate_shadow_map_pointlight
-    // calculate light frustum
+    // calculate screen transforms
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
     std::vector<math::mat4> screen_transforms({
       screen_transform,
@@ -382,6 +378,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
     });
 
+    // view directions
     std::vector<PipelineViewState::ViewDirection> view_directions = {
       PipelineViewState::front,
       PipelineViewState::back,
@@ -391,7 +388,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       PipelineViewState::right
     };
 
-
+    // frustum
     math::mat4 transform(node_transform * screen_transforms[face]);
     auto frustum(
       Frustum::perspective(
@@ -403,10 +400,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     depth_cube_map->set_viewport_offset(math::vec2f(face, 0.f));
 
+    // set view parameters
+    current_viewstate_.shadow_mode = true;
     current_viewstate_.view_direction = view_directions[face];
+    current_viewstate_.viewpoint_uuid = cube_map_node->uuid();
 
     current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
-      math::get_translation(current_viewstate_.camera.transform),
+      math::get_translation(node_transform),
       current_viewstate_.camera.config.enable_frustum_culling(),
       current_viewstate_.camera.config.mask(),
       current_viewstate_.camera.config.view_id());
@@ -434,6 +434,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     current_viewstate_.target = gbuffer_.get();
     current_viewstate_.scene = orig_scene;
     current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
+    current_viewstate_.shadow_mode = orig_shadow_mode;
+    current_viewstate_.viewpoint_uuid = orig_viewpoint_uuid;
     camera_block_.update(context_,
                          current_viewstate_.scene->rendering_frustum,
                          math::get_translation(current_viewstate_.camera.transform),
