@@ -87,6 +87,12 @@ std::string const& Video3DNode::get_video_description() const {
   return video_description_;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+void Video3DNode::set_video_description(std::string const& v) {
+  video_description_ = v;
+  video_changed_ = true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DNode::force_reload(){
   video_changed_ = true;
