@@ -65,6 +65,24 @@ template <typename T, typename K = std::string> class Database {
   }
 
   /**
+  * Remove entry to the data base.
+  */
+  void remove(key_type const& k) {
+    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
+    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+
+    auto entry = data_.find(k);
+    if (entry != data_.end()) {
+      data_.erase(entry);
+    }
+    
+    auto key = keys_.find(k);
+    if (key != keys_.end()) {
+      keys_.erase(key);
+    }
+  }
+
+  /**
    * Check for existance of a key.
    *
    * Returns true, if an entry with the given key exists in the Database.
