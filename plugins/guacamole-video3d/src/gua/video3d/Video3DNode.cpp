@@ -28,6 +28,7 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/video3d/Video3DLoader.hpp>
 #include <gua/video3d/Video3DRenderer.hpp>
+#include <gua/video3d/Video3DResource.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
@@ -37,13 +38,16 @@ namespace node {
 
 /////////////////////////////////////////////////////////////////////////////
 Video3DNode::Video3DNode(std::string const& name,
-                         std::string const& video_name,
+	                       std::string const& video_description,
                          std::shared_ptr<Material> const& material,
                          math::mat4 const& transform)
     : GeometryNode(name, transform),
-      video_name_(video_name),
-      material_(material) {
-}
+	  video_(nullptr),
+	  video_description_(video_description),
+	  video_changed_(true),
+	  material_(material),
+	  material_changed_(true)
+{}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +55,10 @@ void Video3DNode::ray_test_impl(Ray const& ray,
                                 int options,
                                 Mask const& mask,
                                 std::set<PickResult>& hits) {
+  if (!video_->is_pickable()) {
+    return;
+  }
+
   // first of all, check bbox
   auto box_hits(::gua::intersect(ray, bounding_box_));
 
@@ -74,6 +82,16 @@ void Video3DNode::ray_test_impl(Ray const& ray,
   visitor.visit(this);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+std::string const& Video3DNode::get_video_description() const {
+  return video_description_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Video3DNode::force_reload(){
+  video_changed_ = true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Material> const& Video3DNode::get_material() const {
   return material_;
@@ -93,18 +111,34 @@ std::shared_ptr<Node> Video3DNode::copy() const {
 /////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void Video3DNode::update_cache() {
-  if (video_name_ != "") {
-    if (!GeometryDatabase::instance()->contains(video_name_)) {
-      Video3DLoader loader;
-      loader.create_geometry_from_file("dummy", video_name_);
-    }
-    // video already in database
-  } else {
-    Logger::LOG_WARNING
-        << "Failed to auto-load geometry " << video_name_
-        << ": The name does not contain a type, file, id and flag parameter!"
-        << std::endl;
-  }
+	if (video_changed_) {
+		if (video_description_ != "") {
+			if (!GeometryDatabase::instance()->contains(video_description_)) {
+				GeometryDescription desc(video_description_);
+				try {
+					gua::Video3DLoader loader;
+					loader.create_geometry_from_file("tmp", desc.filepath(), nullptr, desc.flags());
+          Logger::LOG_WARNING
+            << "Video3DNode::update_cache(): Loading " << desc.filepath() << std::endl;
+				} catch (std::exception& e) {
+					Logger::LOG_WARNING
+						<< "Video3DNode::update_cache(): Loading failed from "
+						<< desc.filepath() << " : " << e.what() << std::endl;
+				}
+			}
+
+			video_ = std::dynamic_pointer_cast<Video3DResource>(
+        GeometryDatabase::instance()->lookup(video_description_));
+
+      if (!video_) {
+				Logger::LOG_WARNING
+					<< "Failed to get VideoResource for " << video_description_
+					<< ": The data base entry is of wrong type!" << std::endl;
+			}
+		}
+
+		video_changed_ = false;
+	}
 
   Node::update_cache();
 }
