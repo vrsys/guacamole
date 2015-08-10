@@ -63,7 +63,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    * Creates a new Video3D from a given video3d string.
    * \param video3d      Holds information about kinect streams.
   */
-   Video3DResource(std::string const& video3d);
+   Video3DResource(std::string const& video3d, unsigned flags);
 
   /**
    * destructor.
@@ -106,6 +106,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   bool                            do_overwrite_normal() const;
   scm::math::vec3f const&         get_overwrite_normal() const;
+  bool                            is_pickable() const;
 
  private:
 
@@ -152,6 +153,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   mutable bool overwrite_normal_;
   mutable scm::math::vec3f o_normal_;
+  bool is_pickable_;
 };
 
 }

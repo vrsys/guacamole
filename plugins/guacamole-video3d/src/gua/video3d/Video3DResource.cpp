@@ -26,6 +26,7 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/video3d/Video3DRenderer.hpp>
+#include <gua/video3d/Video3DLoader.hpp>
 #include <gua/video3d/video3d_geometry/DXTCompressor.h>
 #include <gua/video3d/video3d_geometry/NetKinectArray.hpp>
 #include <gua/utils/Logger.hpp>
@@ -66,7 +67,7 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  Video3DResource::Video3DResource(std::string const& video3d) :
+  Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
   ks_filename_(video3d),
   calib_files_(),
   server_endpoint_(),
@@ -92,7 +93,8 @@ namespace gua {
   height_colorimage_(),
   upload_mutex_(),
   overwrite_normal_(false),
-  o_normal_()
+  o_normal_(),
+  is_pickable_(flags & Video3DLoader::MAKE_PICKABLE)
   {
 
     init();
@@ -559,5 +561,10 @@ KinectCalibrationFile const& Video3DResource::calibration_file(unsigned i) const
   scm::math::vec3f const&
   Video3DResource::get_overwrite_normal() const{
     return o_normal_;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool Video3DResource::is_pickable() const {
+    return is_pickable_;
   }
 }
