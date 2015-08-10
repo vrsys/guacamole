@@ -90,7 +90,7 @@ std::string const& Video3DNode::get_video_description() const {
 /////////////////////////////////////////////////////////////////////////////
 void Video3DNode::set_video_description(std::string const& v) {
   video_description_ = v;
-  video_changed_ = true;
+  video_changed_ = self_dirty_ = true; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,6 +106,7 @@ std::shared_ptr<Material> const& Video3DNode::get_material() const {
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DNode::set_material(std::shared_ptr<Material> const& material) {
   material_ = material;
+  video_changed_ = self_dirty_ = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
