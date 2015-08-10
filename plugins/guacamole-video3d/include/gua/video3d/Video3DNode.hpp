@@ -69,6 +69,7 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
   void accept(NodeVisitor& visitor) override;
 
   std::string const& get_video_description() const;
+  void               set_video_description(std::string const& v);
   void               force_reload();
 
   std::shared_ptr<Material> const& get_material() const;
