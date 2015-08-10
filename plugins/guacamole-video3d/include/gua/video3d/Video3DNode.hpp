@@ -38,16 +38,12 @@
 namespace gua {
 
 	class Video3DResource;
-  class Video3DLoader;
 
 namespace node {
 
 class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
+
  public :
-
-   friend class gua::Video3DLoader;
-
- private :
 
   Video3DNode(std::string const& name,
               std::string const& video_description = "gua_default_video",
