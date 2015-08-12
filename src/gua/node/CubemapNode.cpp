@@ -37,26 +37,17 @@ namespace node {
 CubemapNode::CubemapNode(std::string const& name,
                          Configuration const& configuration,
                          math::mat4 const& transform)
-  : SerializableNode(name, transform), config(configuration) {}
+  : SerializableNode(name, transform), config(configuration)
+{}
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-void CubemapNode::set_texture_name(std::string const& name){
-  // TODO remove old Texture in database
-  texture_name_ = name;
-}
-
-std::string CubemapNode::get_texture_name() const{
-  // TODO create new texture in database
-  return texture_name_;
-}
-
 float CubemapNode::get_closest_distance() const{
 
-  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(texture_name_));
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   if (texture){
     std::vector<float> const& v = texture->get_data();
 
@@ -112,7 +103,7 @@ float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{
   unsigned row(config.resolution() * ((coords.y + 1)/2.0));
   unsigned colm(config.resolution() * ((coords.x + 1)/2.0));
 
-  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(texture_name_));
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   if (texture){
     std::vector<float> const& v = texture->get_data();
     return v[row * config.resolution() * 6 + side * config.resolution() + colm];
