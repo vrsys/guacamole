@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
   // DEBUG VIEW
   bool debug_preview = true;
   auto cm_preview = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("cubemap_debug");
-  cm_preview->data.texture() = cmn->get_texture_name();
+  cm_preview->data.texture() = cmn->config.get_texture_name();
   gua::math::vec2 preview_size(resolution.x, resolution.x / 6.0f);
   cm_preview->data.size() = preview_size;
   cm_preview->data.anchor() = gua::math::vec2(0.f, -1.f);
