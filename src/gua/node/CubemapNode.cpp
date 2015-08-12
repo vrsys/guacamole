@@ -57,7 +57,9 @@ float CubemapNode::get_closest_distance() const{
         closest = f;
       }
     }
-    return closest;
+    if (closest != std::numeric_limits<float>::max()){
+      return closest;
+    }
 
   }
   return -1.0f;
