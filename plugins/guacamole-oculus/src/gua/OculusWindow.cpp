@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/OculusSDK2Window.hpp>
+#include <gua/OculusWindow.hpp>
 
 // gua headers
 #include <gua/utils/Logger.hpp>
@@ -34,15 +34,15 @@ namespace gua {
 // ---------------------------------------------------------------
 //'static member
 // ---------------------------------------------------------------
-bool OculusSDK2Window::oculus_environment_initialized_ = false;
-unsigned OculusSDK2Window::registered_oculus_device_count_ = 0;
+bool OculusWindow::oculus_environment_initialized_ = false;
+unsigned OculusWindow::registered_oculus_device_count_ = 0;
 
 // ---------------------------------------------------------------
 // static functions
 // ---------------------------------------------------------------
 // calling this once in the application before any window creation
 // will set up the oculus environment
-void OculusSDK2Window::initialize_oculus_environment() {
+void OculusWindow::initialize_oculus_environment() {
   if( !oculus_environment_initialized_ ) {
       ovr_Initialize();
       oculus_environment_initialized_ = true;
@@ -54,7 +54,7 @@ void OculusSDK2Window::initialize_oculus_environment() {
 
 // calling this once in the application after the windows are destroyed will shutdown
 // the oculus environment
-void OculusSDK2Window::shutdown_oculus_environment() {
+void OculusWindow::shutdown_oculus_environment() {
   if( oculus_environment_initialized_ ) {
       ovr_Shutdown();
       oculus_environment_initialized_ = false;
@@ -71,14 +71,14 @@ void OculusSDK2Window::shutdown_oculus_environment() {
 
 // gets the distortion meshes of the oculus API and initializes a parsing process to 
 // gua buffers
-void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx) {
+void OculusWindow::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx) {
   ovrEyeRenderDesc eyeRenderDesc[2];
 
   eyeRenderDesc[0] = ovrHmd_GetRenderDesc( hmd, ovrEye_Left, hmd->DefaultEyeFov[0] );
   eyeRenderDesc[1] = ovrHmd_GetRenderDesc( hmd, ovrEye_Right, hmd->DefaultEyeFov[1] );
 
   // Create the Distortion Meshes (one for each eye):
-  OculusSDK2DistortionMesh distortion_mesh_cpu_buffer[2];
+  OculusDistortionMesh distortion_mesh_cpu_buffer[2];
 
 
   for ( int eye_num = 0; eye_num < 2; eye_num ++ ) {
@@ -124,12 +124,12 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
     ->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                     scm::gl::USAGE_STATIC_DRAW,
                     distortion_mesh_cpu_buffer[eye_num].num_vertices
-                      * sizeof(OculusSDK2DistortionMesh::DistortionVertex),
+                      * sizeof(OculusDistortionMesh::DistortionVertex),
                     0);
 
   // map it to cpu
-  OculusSDK2DistortionMesh::DistortionVertex* 
-  data(static_cast<OculusSDK2DistortionMesh::DistortionVertex*>
+  OculusDistortionMesh::DistortionVertex* 
+  data(static_cast<OculusDistortionMesh::DistortionVertex*>
     (ctx.render_context->map_buffer(distortion_mesh_vertices_[eye_num],
                       scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
@@ -164,7 +164,7 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
 }
 
 // call this function to store the orientation each render frame
-void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) {
+void OculusWindow::retrieve_oculus_sensor_orientation(double absolute_time) {
 
   ovrTrackingState ts = ovrHmd_GetTrackingState(registered_HMD_, absolute_time);
 
@@ -182,7 +182,7 @@ void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) 
 }
 
 
-OculusSDK2Window::OculusSDK2Window(std::string const& display):
+OculusWindow::OculusWindow(std::string const& display):
   Window(),
   num_distortion_mesh_indices_{0,0} {
 
@@ -244,7 +244,7 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-OculusSDK2Window::~OculusSDK2Window() {
+OculusWindow::~OculusWindow() {
   // cleanup the oculus device
   ovrHmd_Destroy(registered_HMD_);
   registered_oculus_device_count_--;
@@ -252,7 +252,7 @@ OculusSDK2Window::~OculusSDK2Window() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusSDK2Window::init_context() {
+void OculusWindow::init_context() {
 
   fullscreen_shader_.create_from_sources(R"(
       #version 420
@@ -344,7 +344,7 @@ void OculusSDK2Window::init_context() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
+void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
   // right now the frame timing is not used for time warping (needs right application in rendering structure)
   auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0);
@@ -388,27 +388,27 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
   ovrHmd_EndFrameTiming(registered_HMD_);
 }
 
-std::string OculusSDK2Window::get_product_name() const {
+std::string OculusWindow::get_product_name() const {
   return product_name_;
 }
 
-gua::math::mat4 OculusSDK2Window::get_sensor_orientation() const {
+gua::math::mat4 OculusWindow::get_sensor_orientation() const {
   return oculus_sensor_orientation_;
 }
 
-gua::math::vec2ui OculusSDK2Window::get_resolution() const {
+gua::math::vec2ui OculusWindow::get_resolution() const {
   return resolution_;
 }
 
-gua::math::vec2ui OculusSDK2Window::get_eye_resolution() const {
+gua::math::vec2ui OculusWindow::get_eye_resolution() const {
   return gua::math::vec2ui(resolution_.x / 2, resolution_.y);
 }
 
-gua::math::vec2 OculusSDK2Window::get_screen_size() const {
+gua::math::vec2 OculusWindow::get_screen_size() const {
   return screen_size_;
 }
 
-gua::math::vec2 OculusSDK2Window::get_screen_size_per_eye() const {
+gua::math::vec2 OculusWindow::get_screen_size_per_eye() const {
   return gua::math::vec2(screen_size_.x / 2, screen_size_.y);
 }
 
