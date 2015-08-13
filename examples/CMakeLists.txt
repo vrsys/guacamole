@@ -64,7 +64,7 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${PLUGIN_guacamole-oculus})
 
   IF(${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
-    add_subdirectory(oculusSDK2_Pitoti)
+    add_subdirectory(oculus_pitoti)
   ENDIF (${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
 
   # plod example requires plod-plugin
