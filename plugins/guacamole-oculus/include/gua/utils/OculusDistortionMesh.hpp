@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUSSDK2_DISTORTION_MESH_HPP
-#define GUA_OCULUSSDK2_DISTORTION_MESH_HPP
+#ifndef GUA_OCULUS_DISTORTION_MESH_HPP
+#define GUA_OCULUS_DISTORTION_MESH_HPP
 
 #if defined (_MSC_VER)
   #if defined (GUA_OCULUSSDK2_LIBRARY)
@@ -39,7 +39,7 @@
 
 namespace gua {
 
-struct OculusSDK2DistortionMesh {
+struct OculusDistortionMesh {
 
   /* the vertex contains three different texture coordinates
      since it has to correct chromatic abberations for each
@@ -53,9 +53,9 @@ struct OculusSDK2DistortionMesh {
     float vig_factor;
   };
 
-  OculusSDK2DistortionMesh();
+  OculusDistortionMesh();
 
-  ~OculusSDK2DistortionMesh();
+  ~OculusDistortionMesh();
   
 
   void initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
@@ -83,4 +83,4 @@ struct OculusSDK2DistortionMesh {
 
 }
 
-#endif  // GUA_OCULUSSDK2_DISTORTION_MESH_HPP
+#endif  // GUA_OCULUS_DISTORTION_MESH_HPP

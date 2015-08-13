@@ -19,17 +19,17 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUSSDK2_WINDOW_HPP
-#define GUA_OCULUSSDK2_WINDOW_HPP
+#ifndef GUA_OCULUS_WINDOW_HPP
+#define GUA_OCULUS_WINDOW_HPP
 
 #if defined (_MSC_VER)
-  #if defined (GUA_OCULUSSDK2_LIBRARY)
-    #define GUA_OCULUSSDK2_DLL __declspec( dllexport )
+  #if defined (GUA_OCULUS_LIBRARY)
+    #define GUA_OCULUS_DLL __declspec( dllexport )
   #else
-#define GUA_OCULUSSDK2_DLL __declspec( dllimport )
+#define GUA_OCULUS_DLL __declspec( dllimport )
   #endif
 #else
-  #define GUA_OCULUSSDK2_DLL
+  #define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
 #include <string>
@@ -38,20 +38,20 @@
 #include <gua/renderer/Window.hpp>
 
 //for the OVR members
-#include <gua/utils/OculusSDK2DistortionMesh.hpp>
+#include <gua/utils/OculusDistortionMesh.hpp>
 
 #include <scm/gl_core/state_objects/state_objects_fwd.h>
 
 namespace gua {
 
 
-class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
+class GUA_OCULUS_DLL OculusWindow : public Window {
 public:
   static void initialize_oculus_environment();
   static void shutdown_oculus_environment();
 
-  OculusSDK2Window(std::string const& display);
-  virtual ~OculusSDK2Window();
+  OculusWindow(std::string const& display);
+  virtual ~OculusWindow();
 
   void init_context() override;
 
@@ -95,4 +95,4 @@ private:
 
 }
 
-#endif  // GUA_OCULUSSDK2_WINDOW_HPP
+#endif  // GUA_OCULUS_WINDOW_HPP
