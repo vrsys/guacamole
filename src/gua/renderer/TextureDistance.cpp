@@ -41,8 +41,8 @@ TextureDistance::TextureDistance(unsigned width,
   : Texture2D(width, height, color_format, mipmap_layers, state_descripton){
 
   int pixel_size = height_ * width_ * 6; 
-  int byte_size = pixel_size * sizeof(uint16_t); 
-  texture_data_ = (uint16_t*)malloc(byte_size);
+  int byte_size = pixel_size * sizeof(uint32_t); 
+  texture_data_ = (uint32_t*)malloc(byte_size);
   world_depth_data_ = std::vector<float>(pixel_size, -1.0f);
 }
 
@@ -51,10 +51,10 @@ void TextureDistance::download_data(RenderContext const& ctx, float near_clip, f
   ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
   unsigned size = height_*width_;
   for (int texel = 0; texel < size; ++texel){
-    if (texture_data_[texel] == 65535){
+    if (texture_data_[texel] == 4294967296){
       world_depth_data_[texel] = -1.0;
     }else{
-      float z_n = (float)texture_data_[texel] / 65535.0;
+      float z_n = (float)texture_data_[texel] / 4294967296.0;
       world_depth_data_[texel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
     }
   } 

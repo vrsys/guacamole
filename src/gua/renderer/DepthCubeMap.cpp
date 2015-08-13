@@ -46,7 +46,7 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
   state._max_anisotropy = 16;
 
-  depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
+  depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D32, 1, state);
   TextureDatabase::instance()->add(tex_name, std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
 
   fbo_ = ctx.render_device->create_frame_buffer();

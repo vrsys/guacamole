@@ -60,7 +60,7 @@ namespace gua {
    */
   TextureDistance(unsigned width,
             unsigned height,
-            scm::gl::data_format color_format = scm::gl::FORMAT_RGB_32F,
+            scm::gl::data_format color_format,
             unsigned mipmap_layers = 1,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
@@ -88,7 +88,7 @@ namespace gua {
 
  private:
 
-  uint16_t* texture_data_;
+  uint32_t* texture_data_;
   std::vector<float> world_depth_data_;
 
 };
