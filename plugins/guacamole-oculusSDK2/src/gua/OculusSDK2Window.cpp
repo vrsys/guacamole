@@ -231,9 +231,14 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   config.set_display_name(display);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
   config.set_left_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
-  config.set_left_position(math::vec2ui(0, 0));
   config.set_right_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
-  config.set_right_position(math::vec2ui(resolution_.x / 2, 0));
+  if (product_name_ == "Oculus Rift DK2") {
+    config.set_left_position(math::vec2ui(0, 0));
+    config.set_right_position(math::vec2ui(resolution_.x / 2, 0));
+  } else {  // DK1 has different eye order
+    config.set_left_position(math::vec2ui(resolution_.x / 2, 0));
+    config.set_right_position(math::vec2ui(0, 0));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +368,7 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
     );
 
   unsigned current_eye_num = is_left ? 0 : 1;
-  
+
   // bind vertex array for the currently rendered eye
   get_context()->render_context->bind_vertex_array(distortion_mesh_vertex_array_[current_eye_num]);
   get_context()->render_context->bind_index_buffer(distortion_mesh_indices_[current_eye_num], 
