@@ -232,12 +232,13 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
   config.set_left_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
   config.set_right_resolution(math::vec2ui(resolution_.x / 2, resolution_.y));
-  if (product_name_ == "Oculus Rift DK2") {
-    config.set_left_position(math::vec2ui(0, 0));
-    config.set_right_position(math::vec2ui(resolution_.x / 2, 0));
-  } else {  // DK1 has different eye order
+  if (product_name_ == "Oculus Rift DK1") {
+    // DK1 has different eye order
     config.set_left_position(math::vec2ui(resolution_.x / 2, 0));
     config.set_right_position(math::vec2ui(0, 0));
+  } else {
+    config.set_left_position(math::vec2ui(0, 0));
+    config.set_right_position(math::vec2ui(resolution_.x / 2, 0));
   }
 }
 
