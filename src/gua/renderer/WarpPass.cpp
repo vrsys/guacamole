@@ -45,7 +45,7 @@ WarpPassDescription::WarpPassDescription()
   , debug_bounding_volumes_(false)
   , debug_sample_ray_(false)
   , pixel_size_(0.0f)
-  , gbuffer_warp_mode_(GBUFFER_POINTS)
+  , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
   , hole_filling_mode_(HOLE_FILLING_INPAINT)
 {

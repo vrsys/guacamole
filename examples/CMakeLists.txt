@@ -52,7 +52,7 @@ IF (GUACAMOLE_EXAMPLES)
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
     add_subdirectory(animation)
   endif(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
-  
+
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
     # add_subdirectory(nurbs)
@@ -81,10 +81,11 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(video3d)
   ENDIF (${PLUGIN_guacamole-video3d})
 
+  add_subdirectory(warping)
+
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
     add_subdirectory(gui)
-    add_subdirectory(warping)
     # volume example requires volume-plugin and gui-plugin
     IF (${PLUGIN_guacamole-volume})
       add_subdirectory(volume)

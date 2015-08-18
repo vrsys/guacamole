@@ -38,6 +38,7 @@ namespace gua {
 RenderWarpGridPassDescription::RenderWarpGridPassDescription()
   : PipelinePassDescription()
   , show_warp_grid_(false)
+  , mode_(WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
