@@ -35,8 +35,8 @@ layout(location=0) out uvec2 result;
 void main() {
 
   if (current_level == 0) {
-    const uint min_0 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy));
-    const uint max_0 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy));
+    const uint min_0 = imageLoad(abuf_min_depth, ivec2(gl_FragCoord.xy)).x;
+    const uint max_0 = imageLoad(abuf_max_depth, ivec2(gl_FragCoord.xy)).x;
 
     result = uvec2(min_0, max_0);
 
