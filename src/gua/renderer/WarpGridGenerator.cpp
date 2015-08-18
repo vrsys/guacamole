@@ -164,16 +164,16 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   // --------------------- Generate Warp Grid ----------------------------------
   // ---------------------------------------------------------------------------
 
-  uint initial_grid_x(std::ceil((float)resolution.x/description->cell_size()));
-  uint initial_grid_y(std::ceil((float)resolution.y/description->cell_size()));
+  unsigned initial_grid_x(std::ceil((float)resolution.x/description->cell_size()));
+  unsigned initial_grid_y(std::ceil((float)resolution.y / description->cell_size()));
 
   {
     // upload initial data
     auto data = static_cast<math::vec3ui*>(ctx.render_context->map_buffer(
         res_->grid_vbo[res_->current_vbo()], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-    for (uint x(0); x < initial_grid_x; ++x) {
-      for (uint y(0); y < initial_grid_y; ++y) {
+	for (unsigned x(0); x < initial_grid_x; ++x) {
+		for (unsigned y(0); y < initial_grid_y; ++y) {
         data[y*initial_grid_x + x] = math::vec3ui(x*description->cell_size(),
                                                   y*description->cell_size(),
                                                   current_level<<12 /* write the current mipmap level at bit position 12 */);
