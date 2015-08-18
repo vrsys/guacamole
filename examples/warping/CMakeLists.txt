@@ -23,8 +23,19 @@ ADD_EXECUTABLE( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui guacamole-plod guacamole-oculus)
-LIST(APPEND LIBS guacamole-oculus guacamole-gui guacamole-plod guacamole ${OVR_LIBRARY})
+
+ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
+LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARY})
+
+IF (${PLUGIN_guacamole-gui})
+	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
+	LIST(APPEND LIBS guacamole-gui)
+ENDIF (${PLUGIN_guacamole-gui})
+
+IF (${PLUGIN_guacamole-plod})
+	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-plod)
+	LIST(APPEND LIBS guacamole-plod)
+ENDIF (${PLUGIN_guacamole-plod})
 
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
@@ -37,12 +48,9 @@ ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
-
-    COPY_RUNTIME_DEPENDENCIES ( ${_EXE_NAME} \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\")
-    COPY_RUNTIME_DEPENDENCIES ( ${_EXE_NAME} \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\")
-
-    FOREACH (_LIB_DIR ${GUACAMOLE_LIBRARY_DIRS})
-        COPY_RUNTIME_DEPENDENCIES ( ${_EXE_NAME} \"${_LIB_DIR}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\")
-    ENDFOREACH (_LIB_DIR ${GUACAMOLE_LIBRARY_DIRS})
-
+    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD 
+      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
+            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
+            \n if %ERRORLEVEL% LEQ 7 (exit /b 0) else (exit /b 1)
+    )
 ENDIF (MSVC)

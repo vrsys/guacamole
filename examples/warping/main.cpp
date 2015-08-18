@@ -20,16 +20,16 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     false
+#define GUI_SUPPORT     0 
 
-#define POWER_WALL      false
-#define OCULUS          false
-#define STEREO_MONITOR  false
+#define POWER_WALL      0
+#define OCULUS          0
+#define STEREO_MONITOR  0
 
-#define SSAO            false
-#define LOAD_CAR        false
-#define LOAD_PITOTI     false
-#define LOAD_MOUNTAINS  false
+#define SSAO            0
+#define LOAD_CAR        0
+#define LOAD_PITOTI     0
+#define LOAD_MOUNTAINS  0
 
 #include <functional>
 
@@ -162,6 +162,12 @@ int main(int argc, char** argv) {
   // ---------------------------- setup scene ----------------------------------
   // ---------------------------------------------------------------------------
 
+  #if WIN32
+    std::string opt_prefix("D:/guacamole/");
+	#else
+    std::string opt_prefix("/opt/");
+	#endif
+
   gua::TriMeshLoader loader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
@@ -200,7 +206,7 @@ int main(int argc, char** argv) {
   auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
     t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
-    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto oilrig(loader.create_geometry_from_file("oilrig", opt_prefix + "3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -282,13 +288,13 @@ int main(int argc, char** argv) {
   };
 
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "bottle");
-  auto mat_bottle(load_mat("../transparency/data/materials/Bottle.gmd"));
-  mat_bottle->set_uniform("ColorMap",     std::string("../transparency/data/objects/bottle/albedo.png"))
-             .set_uniform("RoughnessMap", std::string("../transparency/data/objects/bottle/roughness.jpg"))
+  auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
+  mat_bottle->set_uniform("ColorMap",     std::string("data/objects/bottle/albedo.png"))
+             .set_uniform("RoughnessMap", std::string("data/objects/bottle/roughness.jpg"))
              .set_show_back_faces(true);
 
   for (int i(-1); i<=1; ++i) {
-    auto bottle(loader.create_geometry_from_file("bottle", "../transparency/data/objects/bottle/bottle.obj", mat_bottle,
+    auto bottle(loader.create_geometry_from_file("bottle", "data/objects/bottle/bottle.obj", mat_bottle,
                                                  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     bottle->translate(i*0.75, 0, 0);
     scene_root->add_child(bottle);
@@ -360,7 +366,7 @@ int main(int argc, char** argv) {
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  auto sponza(loader.create_geometry_from_file("sponza", "/opt/3d_models/Sponza/sponza.obj",
+  auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/Sponza/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -417,7 +423,7 @@ int main(int argc, char** argv) {
     {"part_01",0      }
   };
 
-  const std::string engine_directory = "/opt/3d_models/engine/";
+  const std::string engine_directory = opt_prefix + "3d_models/engine/";
 
   // prepare engine parts
   for(const auto& p : part_names) {
@@ -427,7 +433,7 @@ int main(int argc, char** argv) {
      .set_uniform("cut_rad", 0.3f)
      .set_uniform("cut_n", gua::math::vec3(0.5, 1, 0))
      .set_uniform("roughness_map", std::string("data/textures/roughness.jpg"))
-     .set_uniform("reflection_texture", std::string("/opt/guacamole/resources/skymaps/uffizi.jpg"))
+     .set_uniform("reflection_texture", std::string(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg"))
      .set_show_back_faces(true);
 
     // derived from http://www.turbosquid.com/3d-models/speculate-3ds-free/302188
@@ -569,8 +575,8 @@ int main(int argc, char** argv) {
   #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
-            background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg").
-            environment_lighting_texture("/opt/guacamole/resources/skymaps/uffizi.jpg").
+            background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg").
+            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg").
             background_color(gua::utils::Color3f(0, 0, 0)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SKYMAP_TEXTURE).
             ssao_enable(SSAO).
