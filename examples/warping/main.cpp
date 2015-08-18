@@ -25,7 +25,7 @@
 
 #define SSAO            false
 #define LOAD_CAR        false
-#define LOAD_PITOTI     true
+#define LOAD_PITOTI     false
 #define LOAD_MOUNTAINS  false
 
 #include <functional>
@@ -160,17 +160,17 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
-  // auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  // light->data.set_type(gua::node::LightNode::Type::SUN);
-  // light->data.set_brightness(3.f);
-  // light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 2.f, 10.f});
-  // light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
-  // light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
-  // light->data.set_max_shadow_dist(30.0f);
-  // light->data.set_shadow_offset(0.0007f);
-  // light->data.set_enable_shadows(true);
-  // light->data.set_shadow_map_size(2048);
-  // light->rotate(-95, 1, 0.5, 0);
+  auto light = graph.add_node<gua::node::LightNode>("/", "light");
+  light->data.set_type(gua::node::LightNode::Type::SUN);
+  light->data.set_brightness(3.f);
+  light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 2.f, 10.f});
+  light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+  light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+  light->data.set_max_shadow_dist(30.0f);
+  light->data.set_shadow_offset(0.0007f);
+  light->data.set_enable_shadows(true);
+  light->data.set_shadow_map_size(2048);
+  light->rotate(-95, 1, 0.5, 0);
 
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
@@ -321,36 +321,36 @@ int main(int argc, char** argv) {
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE);
-  buddha->translate(0, -0.16, 0);
-  for (auto c: buddha->get_children()) {
-    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
-    node->get_material()->set_uniform("Roughness", 0.2f);
-    node->get_material()->set_uniform("Metalness", 1.0f);
-  }
-  scene_root->add_child(buddha);
+  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE);
+  // buddha->translate(0, -0.16, 0);
+  // for (auto c: buddha->get_children()) {
+  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+  //   node->get_material()->set_uniform("Roughness", 0.2f);
+  //   node->get_material()->set_uniform("Metalness", 1.0f);
+  // }
+  // scene_root->add_child(buddha);
   // scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+  // auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+  // transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
 
-  dragon->translate(0.6, -0.17, 0);
-  transp_dragon->translate(-0.6, 0, 0);
-  transp_dragon->scale(1.4);
-  scene_root->add_child(dragon);
-  scene_root->add_child(transp_dragon);
-  scene_root->add_child(plane);
+  // dragon->translate(0.6, -0.17, 0);
+  // transp_dragon->translate(-0.6, 0, 0);
+  // transp_dragon->scale(1.4);
+  // scene_root->add_child(dragon);
+  // scene_root->add_child(transp_dragon);
+  // scene_root->add_child(plane);
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
@@ -360,7 +360,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
   sponza->translate(0, 3, 0);
-  scene_root->add_child(transp_dragon);
+  // scene_root->add_child(transp_dragon);
   scene_root->add_child(sponza);
 
   // hairball --------------------------------------------------------------------
@@ -395,20 +395,20 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(shader);
 
   std::map<std::string, int> part_names {
-    {"part_inner_04",2},   
-    {"part_inner_03",2},  
-    {"part_inner_02",2}, 
-    {"part_08",2      }, 
-    {"part_10",1      },  
-    {"part_09",1      }, 
-    {"part_04",2      },  
-    {"part_05",1      },  
-    {"part_06",2      },  
-    {"part_07",2      }, 
-    {"part_02",2      },  
-    {"part_03",2      }, 
-    {"part_inner_01",1},   
-    {"part_01",0      }    
+    {"part_inner_04",2},
+    {"part_inner_03",2},
+    {"part_inner_02",2},
+    {"part_08",2      },
+    {"part_10",1      },
+    {"part_09",1      },
+    {"part_04",2      },
+    {"part_05",1      },
+    {"part_06",2      },
+    {"part_07",2      },
+    {"part_02",2      },
+    {"part_03",2      },
+    {"part_inner_01",1},
+    {"part_01",0      }
   };
 
   const std::string engine_directory = "/opt/3d_models/engine/";
@@ -655,22 +655,22 @@ int main(int argc, char** argv) {
       if (warping) {
         slow_cam->config.set_eye_dist(0.f);
         fast_cam->config.set_eye_dist(0.064f);
-        
+
         #if OCULUS
           slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
           slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
         #endif
-        
+
         slow_cam->set_pipeline_description(warp_pipe);
 
       } else {
         slow_cam->config.set_eye_dist(0.064f);
-      
+
         #if OCULUS
           slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
           slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
         #endif
-        
+
         slow_cam->set_pipeline_description(normal_pipe);
       }
 
@@ -1207,7 +1207,7 @@ int main(int argc, char** argv) {
 
       stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                            window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
-                           abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time, 
+                           abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
                            gbuffer_primitives, abuffer_primitives);
     }
 
