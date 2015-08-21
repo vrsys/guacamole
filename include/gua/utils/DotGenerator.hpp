@@ -68,7 +68,6 @@ class GUA_DLL DotGenerator : public NodeVisitor {
   /*virtual*/ void visit(node::Node* node);
   /*virtual*/ void visit(node::TransformNode* cam);
   /*virtual*/ void visit(node::GeometryNode* geometry);
-  /*virtual*/ void visit(node::VolumeNode* volume);
   /*virtual*/ void visit(node::LightNode* pointlight);
   /*virtual*/ void visit(node::ScreenNode* screen);
   /*virtual*/ void visit(node::RayNode* ray);

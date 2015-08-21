@@ -23,5 +23,19 @@
 	    "shell" : "true",
 	    "cmd":  ["doxygen"]
 	  }
-	]
+	],
+	"settings":
+	{
+		"cc_include_options":
+	    [
+	        "-I${project_path}/../include",
+	        "-I${project_path}/../build/include",
+	        "-I${project_path}/../plugins/guacamole-gui/include",
+	        "-I${project_path}/../plugins/guacamole-oculus/include",
+	        "-isystem", "${project_path}/../../schism/scm_core/src/",
+	        "-isystem", "${project_path}/../../schism/scm_input/src/",
+	        "-isystem", "${project_path}/../../schism/scm_gl_core/src/",
+	        "-isystem", "${project_path}/../../schism/scm_gl_util/src/"
+	    ]
+	}
 }

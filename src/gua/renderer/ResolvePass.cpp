@@ -481,7 +481,7 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
     target.set_viewport(ctx);
     if (pass.depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
-    
+
     pass.shader_->use(ctx);
 
     for (auto const& u : desc.uniforms) {

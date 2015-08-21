@@ -185,11 +185,11 @@ void ABuffer::bind(RenderContext const& ctx) {
   ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
   ctx.render_context->bind_storage_buffer(res_->frag_list, 0);
   ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
-  ctx.render_context->bind_image(res_->min_depth, 
-                                 scm::gl::data_format::FORMAT_R_32I, 
+  ctx.render_context->bind_image(res_->min_depth,
+                                 scm::gl::data_format::FORMAT_R_32I,
                                  scm::gl::access_mode::ACCESS_READ_WRITE, 0);
-  ctx.render_context->bind_image(res_->max_depth, 
-                                 scm::gl::data_format::FORMAT_R_32I, 
+  ctx.render_context->bind_image(res_->max_depth,
+                                 scm::gl::data_format::FORMAT_R_32I,
                                  scm::gl::access_mode::ACCESS_READ_WRITE, 1);
 }
 

@@ -20,13 +20,14 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     0 
+#define GUI_SUPPORT     1
 
 #define POWER_WALL      0
 #define OCULUS          0
 #define STEREO_MONITOR  0
 
 #define SSAO            0
+#define SHADOWS         0
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
@@ -180,7 +181,7 @@ int main(int argc, char** argv) {
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
   light->data.set_max_shadow_dist(30.0f);
   light->data.set_shadow_offset(0.0007f);
-  light->data.set_enable_shadows(true);
+  light->data.set_enable_shadows(SHADOWS);
   light->data.set_shadow_map_size(2048);
   light->rotate(-95, 1, 0.5, 0);
 
@@ -351,15 +352,15 @@ int main(int argc, char** argv) {
   // auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
   //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
   //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
   // dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-  // transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
 
   // dragon->translate(0.6, -0.17, 0);
-  // transp_dragon->translate(-0.6, 0, 0);
-  // transp_dragon->scale(1.4);
+  transp_dragon->translate(-0.6, 0, 0);
+  transp_dragon->scale(1.4);
   // scene_root->add_child(dragon);
   // scene_root->add_child(transp_dragon);
   // scene_root->add_child(plane);
@@ -372,7 +373,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
   sponza->translate(0, 3, 0);
-  // scene_root->add_child(transp_dragon);
+  scene_root->add_child(transp_dragon);
   scene_root->add_child(sponza);
 
   // hairball --------------------------------------------------------------------

@@ -39,8 +39,8 @@ namespace Awesomium {
 namespace gua {
 
 class GuiTexture;
-class RenderContext;
 class ShaderProgram;
+struct RenderContext;
 
 /**
  * Stores geometry data.
