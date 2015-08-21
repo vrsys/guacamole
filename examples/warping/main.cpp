@@ -27,7 +27,7 @@
 #define STEREO_MONITOR  0
 
 #define SSAO            0
-#define SHADOWS         0
+#define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0

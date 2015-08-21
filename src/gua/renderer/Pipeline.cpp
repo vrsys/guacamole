@@ -34,7 +34,7 @@
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/LightNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/renderer/LightTable.hpp>
 
@@ -46,11 +46,11 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
   Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : context_(ctx),
+    : current_viewstate_(),
+      context_(ctx),
       gbuffer_(new GBuffer(ctx, resolution)),
       camera_block_(ctx.render_device),
       light_table_(new LightTable),
-      current_viewstate_(),
       last_resolution_(0, 0),
       last_description_(),
       global_substitution_map_(),
@@ -94,6 +94,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   bool reload_gbuffer(false);
   bool reload_abuffer(false);
 
+  GUA_PUSH_GL_RANGE(context_, "Process pre-render pipelines");
+
   // execute all prerender cameras
   for (auto const& cam : camera.pre_render_cameras) {
     if (!context_.render_pipelines.count(cam.uuid)) {
@@ -102,6 +104,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
     context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs);
   }
+
+  GUA_POP_GL_RANGE(context_);
+
+  GUA_PUSH_GL_RANGE(context_, "Prepare frame");
 
   // recreate gbuffer if resolution changed
   if (last_resolution_ != camera.config.get_resolution()) {
@@ -190,7 +196,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   bind_camera_uniform_block(0);
 
   current_viewstate_.target = gbuffer_.get();
-  
+
+  GUA_POP_GL_RANGE(context_);
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
@@ -198,17 +205,25 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
      || (mode == CameraMode::RIGHT && passes_[i].get_enable_for_right_eye())
      || (mode == CameraMode::CENTER && passes_[i].get_enable_for_cyclops_eye())) {
 
+      GUA_PUSH_GL_RANGE(context_, "Bind G-Buffer");
       if (passes_[i].needs_color_buffer_as_input()) {
+        GUA_PUSH_GL_RANGE(context_, "Pingpong G-Buffer");
         gbuffer_->toggle_ping_pong();
+        GUA_POP_GL_RANGE(context_);
       }
 
       gbuffer_->bind(context_, !passes_[i].writes_only_color_buffer());
 
       if (passes_[i].needs_color_buffer_as_input()) {
+        GUA_PUSH_GL_RANGE(context_, "Clear G-Buffer");
         gbuffer_->clear(context_, 1.f, 1);
+        GUA_POP_GL_RANGE(context_);
       }
+      GUA_POP_GL_RANGE(context_);
 
+      GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
       passes_[i].process(*last_description_.get_passes()[i], *this);
+      GUA_POP_GL_RANGE(context_);
     }
   }
 
@@ -232,6 +247,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   void Pipeline::generate_shadow_map(node::LightNode* light,
                                    LightTable::LightBlock& light_block) {
+
+    GUA_PUSH_GL_RANGE(context_, "Generate shadow map");
 
     if (!shadow_map_res_) {
       shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
@@ -304,13 +321,13 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // set view parameters
-	auto original_camera_resolution = current_viewstate_.camera.config.get_resolution();
-	auto shadow_resolution = gua::math::vec2ui{ viewport_size, viewport_size };
+  	auto original_camera_resolution = current_viewstate_.camera.config.get_resolution();
+  	auto shadow_resolution = gua::math::vec2ui{ viewport_size, viewport_size };
 
     current_viewstate_.viewpoint_uuid = light->uuid();
     current_viewstate_.view_direction = PipelineViewState::front;
     current_viewstate_.shadow_mode = true;
-	current_viewstate_.camera.config.set_resolution(shadow_resolution);
+	  current_viewstate_.camera.config.set_resolution(shadow_resolution);
 
     // render cascaded shadows for sunlights
     switch (light->data.get_type()) {
@@ -342,6 +359,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     light_block.shadow_offset = light->data.get_shadow_offset();
     light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
+
+    GUA_POP_GL_RANGE(context_);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -374,7 +393,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       // process all passes
       for (int i(0); i < passes_.size(); ++i) {
         if (passes_[i].enable_for_shadows()) {
+          GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
           passes_[i].process(*last_description_.get_passes()[i], *this);
+          GUA_POP_GL_RANGE(context_);
         }
       }
     }
@@ -524,7 +545,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
 
-	  // scale far clip of virtual camera to radius of unit sphere 
+	  // scale far clip of virtual camera to radius of unit sphere
 	  auto light_far_clip = 2.0f * scm::math::length(math::get_translation(transform) - math::get_translation(light->get_cached_world_transform()));
 
 	  // TODO: make near clip of light configurable? currently 1/100th of light source size
@@ -840,6 +861,8 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 
 void Pipeline::clear_frame_cache() {
 
+  GUA_PUSH_GL_RANGE(context_, "Clear frame cache");
+
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
   }
@@ -883,6 +906,8 @@ void Pipeline::clear_frame_cache() {
         context_.primitive_query_results.clear();
       }
   #endif
+
+  GUA_POP_GL_RANGE(context_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

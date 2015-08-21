@@ -29,6 +29,7 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/databases/WindowDatabase.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/utils.hpp>
@@ -134,24 +135,35 @@ void Renderer::renderclient(Mailbox in) {
 
         window->on_start_frame.emit();
 
+        GUA_PUSH_GL_RANGE(*window->get_context(), "Frame");
+
         if (cmd.serialized_cam->config.get_enable_stereo()) {
+          GUA_PUSH_GL_RANGE(*window->get_context(), "Left eye");
           auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
           if (img) window->display(img, true);
+          GUA_POP_GL_RANGE(*window->get_context());
+          GUA_PUSH_GL_RANGE(*window->get_context(), "Right eye");
           img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
           if (img) window->display(img, false);
+          GUA_POP_GL_RANGE(*window->get_context());
         } else {
+          GUA_PUSH_GL_RANGE(*window->get_context(), "Cyclops eye");
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
                    *cmd.serialized_cam, *cmd.scene_graphs));
           if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
+          GUA_POP_GL_RANGE(*window->get_context());
         }
 
         pipe->clear_frame_cache();
+
+        GUA_POP_GL_RANGE(*window->get_context());
 
         // swap buffers
         window->finish_frame();
         ++(window->get_context()->framecount);
 
         window->on_finish_frame.emit();
+
 
         fpsc.step();
       }

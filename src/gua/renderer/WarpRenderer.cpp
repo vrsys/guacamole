@@ -30,7 +30,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
-
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/WindowDatabase.hpp>
@@ -155,6 +155,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   // ---------------------------------------------------------------------------
   auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
 
+  GUA_PUSH_GL_RANGE(ctx, "Warp G-Buffer");
+
   ctx.render_context->set_frame_buffer(fbo_);
   gbuffer->set_viewport(ctx);
   ctx.render_context->clear_color_buffers(
@@ -193,9 +195,13 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.end_primitive_query(ctx, pri_query_name_a);
   pipe.end_gpu_query(ctx, gpu_query_name_a);
 
+  GUA_POP_GL_RANGE(ctx);
+
   // ---------------------------------------------------------------------------
   // --------------------- warp abuffer & hole filling -------------------------
   // ---------------------------------------------------------------------------
+
+  GUA_PUSH_GL_RANGE(ctx, "Warp A-Buffer");
 
   std::string const gpu_query_name_b = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
   std::string const pri_query_name_b = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass ABuffer";
@@ -207,7 +213,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   bool write_all_layers = false;
   gbuffer->bind(ctx, write_all_layers);
-  
+
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
   warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer()->get_handle(ctx), "color_buffer");
   warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
@@ -219,6 +225,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   pipe.end_primitive_query(ctx, pri_query_name_b);
   pipe.end_gpu_query(ctx, gpu_query_name_b);
+
+  GUA_POP_GL_RANGE(ctx);
 
   gbuffer->unbind(ctx);
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * guacamole - delicious VR                                                   *
+ * guacamole - delicious VR                                Release                   *
  *                                                                            *
  * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
  * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
@@ -19,38 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_OPENGL_DEBUGGING_HPP
+#define GUA_OPENGL_DEBUGGING_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/WarpPass.hpp>
-#include <gua/renderer/RenderWarpGridPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/ClearPass.hpp>
-#include <gua/renderer/TexturedQuadPass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/GenerateWarpGridPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/opengl_debugging.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+// includes  -------------------------------------------------------------------
+#include <scm/gl_core/render_device/opengl/gl_core.h>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#define GUA_PUSH_GL_RANGE(ctx, name) (ctx).render_context->opengl_api().glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, std::string(name).length(), std::string(name).c_str())
+#define GUA_POP_GL_RANGE(ctx)        (ctx).render_context->opengl_api().glPopDebugGroup()
+
+#endif  // GUA_OPENGL_DEBUGGING_HPP

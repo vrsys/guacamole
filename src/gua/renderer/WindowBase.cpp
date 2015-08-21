@@ -29,6 +29,7 @@
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
+#include <gua/renderer/opengl_debugging.hpp>
 
 // external headers
 #include <sstream>
@@ -66,17 +67,17 @@ std::mutex WindowBase::last_context_id_mutex_{};
 ////////////////////////////////////////////////////////////////////////////////
 
 WindowBase::WindowBase(Configuration const& configuration)
-    : rendering_fps(1.0f),
-      config(configuration),
-      fullscreen_shader_(),
-      fullscreen_quad_(),
-      depth_stencil_state_(),
+    : config(configuration),
+      rendering_fps(1.0f),
       warpRR_(nullptr),
       warpGR_(nullptr),
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {}
+      warpBL_(nullptr),
+      fullscreen_shader_(),
+      fullscreen_quad_(),
+      depth_stencil_state_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +119,7 @@ void WindowBase::init_context() {
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader.frag"));
-#else 
+#else
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_frag));
@@ -141,7 +142,7 @@ void WindowBase::init_context() {
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader_warped.frag"));
-#else 
+#else
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
@@ -189,7 +190,7 @@ void WindowBase::start_frame() const {
 void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
   display(center_texture, true);
-  
+
   if (config.get_stereo_mode() != StereoMode::MONO) {
     display(center_texture, false);
   }
@@ -247,6 +248,8 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      bool is_left,
                      bool clear) {
 
+  GUA_PUSH_GL_RANGE(ctx_, "Display image");
+
   fullscreen_shader_.use(ctx_);
   fullscreen_shader_.set_uniform(ctx_, texture->get_handle(ctx_), "sampler");
 
@@ -276,6 +279,8 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
 
   ctx_.render_context->reset_state_objects();
   fullscreen_shader_.unuse(ctx_);
+
+  GUA_POP_GL_RANGE(ctx_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
