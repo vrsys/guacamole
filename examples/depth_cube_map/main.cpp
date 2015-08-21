@@ -425,7 +425,9 @@ int main(int argc, char** argv) {
     float new_motion_speed = motion_speed;
     if (adaptive_navigation) {
 
-      float closest_distance = cmn->get_closest_distance();
+      float closest_distance = cmn->get_min_distance();
+      // std::cout << "min distance " << closest_distance << std::endl;
+      // std::cout << "new data " << *(cmn->m_NewTextureData) << std::endl;
       // float closest_distance = cmn->get_distance_by_local_direction(gua::math::vec3(0.f, 0.5f, -1.f));
       if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
         new_motion_speed = closest_distance / 1000.0f;

@@ -467,6 +467,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     } else {
       current_depth_cube_map = depth_cube_map->second;
       current_depth_cube_map->retrieve_data(context_, cube_map_node->config.near_clip(), cube_map_node->config.far_clip());
+      *(cube_map_node->m_NewTextureData) = true;
     }
 
     current_depth_cube_map->clear(context_);

@@ -51,10 +51,10 @@ void TextureDistance::download_data(RenderContext const& ctx, float near_clip, f
   ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
   unsigned size = height_*width_;
   for (int texel = 0; texel < size; ++texel){
-    if (texture_data_[texel] == 4294967296){
+    if (texture_data_[texel] == 0xFFFFFFFF){
       world_depth_data_[texel] = -1.0;
     }else{
-      float z_n = (float)texture_data_[texel] / 4294967296.0;
+      float z_n = (float)texture_data_[texel] / 4294967295.0;
       world_depth_data_[texel] = 2.0 * near_clip * far_clip / (far_clip + near_clip - z_n * (far_clip - near_clip));
     }
   } 
