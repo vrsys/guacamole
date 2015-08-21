@@ -37,33 +37,21 @@ namespace node {
 CubemapNode::CubemapNode(std::string const& name,
                          Configuration const& configuration,
                          math::mat4 const& transform)
-  : SerializableNode(name, transform), config(configuration)
-{}
+  : SerializableNode(name, transform), config(configuration), m_MinDistance(-1.0)
+{
+  m_NewTextureData = std::make_shared<std::atomic<bool>>(false);
+}
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
 
   visitor.visit(this);
 }
 
-float CubemapNode::get_closest_distance() const{
-
-  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
-  if (texture){
-    std::vector<float> const& v = texture->get_data();
-
-    float closest(std::numeric_limits<float>::max());
-    for (const float &f : v){
-      if ( (f < closest) && (f!=-1.f) ){
-        closest = f;
-      }
-    }
-    if (closest != std::numeric_limits<float>::max()){
-      return closest;
-    }
-
+float CubemapNode::get_min_distance(){
+  if (m_NewTextureData->load()){
+    find_min_distance();
   }
-  return -1.0f;
-
+  return m_MinDistance;
 }
 
 
@@ -79,8 +67,6 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
     scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
   });
 
-  std::vector<gua::Frustum> frusta;
-
   for(int i = 0; i<6; ++i){
     auto frustum(
       Frustum::perspective(
@@ -89,7 +75,6 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
         config.far_clip()
       )
     );
-    frusta.push_back(frustum);
     if (frustum.contains(dir)){
       math::vec4 view_point(frustum.get_view() * math::vec4(dir.x, dir.y, dir.z, 1.0));
       math::vec4 proj_point(frustum.get_projection() * view_point);
@@ -99,6 +84,27 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
   }
 
   return -1.0;
+}
+
+void CubemapNode::find_min_distance(){
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
+  if (texture){
+    std::vector<float> const& v = texture->get_data();
+    *(m_NewTextureData) = false;
+
+    float closest(std::numeric_limits<float>::max());
+    for (const float &f : v){
+      if ( (f < closest) && (f!=-1.f) ){
+        closest = f;
+      }
+    }
+    if (closest != std::numeric_limits<float>::max()){
+      m_MinDistance = closest;
+      return;
+    }
+
+  }
+  m_MinDistance = -1.0;
 }
 
 float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{

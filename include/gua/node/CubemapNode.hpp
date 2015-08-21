@@ -27,6 +27,7 @@
 #include <gua/utils/configuration_macro.hpp>
 
 #include <string>
+#include <atomic>
 
 namespace gua {
 namespace node {
@@ -97,11 +98,16 @@ class GUA_DLL CubemapNode : public SerializableNode {
    */
   void accept(NodeVisitor& visitor) override;
 
-  float get_closest_distance() const;
+  float get_min_distance();
   float get_distance_by_local_direction(math::vec3 const& dir) const;
+
+  std::shared_ptr<std::atomic<bool>> m_NewTextureData;
 
  private:
 
+  float m_MinDistance;
+
+  void find_min_distance();
   float acces_texture_data(unsigned side, math::vec2 coords) const;
 
   std::shared_ptr<Node> copy() const override;
