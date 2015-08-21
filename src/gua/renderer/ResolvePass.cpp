@@ -468,12 +468,6 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
 
   pass.process_ = [](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
-    auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
-    if (gbuffer) {
-      gbuffer->get_abuffer().update_min_max_buffer();
-      gbuffer->get_abuffer().bind_min_max_buffer(pass.shader_);
-    }
-
     auto& target = *pipe.current_viewstate().target;
     auto const& ctx(pipe.get_context());
 

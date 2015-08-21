@@ -70,16 +70,16 @@ vec3 environment_lighting (in ShadingTerms T)
       col1 = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
       col2 = brdf_spec * texture(sampler2D(gua_alternative_environment_lighting_texture), texcoord).rgb;
       env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
-      break; 
+      break;
     } case 1 : { // cubemap
       col1 = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
       col2 = brdf_spec * texture(samplerCube(gua_alternative_environment_lighting_texture), T.N).rgb;
       env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
-      break; 
+      break;
     } case 2 : { // single color
       // http://marmosetco.tumblr.com/post/81245981087
       env_color = gua_environment_lighting_color;
-      break; 
+      break;
     } case 3 : { // skymap
       const float pi = 3.14159265359;
       float x = 0.5 + 0.5*gua_my_atan2(T.N.x, -T.N.z)/pi;
@@ -244,13 +244,9 @@ void main() {
 
   bool res = true;
 #if @enable_abuffer@
-  
+
   int level = 0;
-  // uvec2 min_max_depth = texelFetch(usampler2D(abuf_min_max_depth), ivec2(gl_FragCoord.xy)/(1 << (level+2)), level).xy;
-  // float max_depth = unpack_depth(min_max_depth.y);
-  // if (max_depth > 0) {
-    res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
-  // }
+  res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
 
 #endif
 

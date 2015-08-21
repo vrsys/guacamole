@@ -205,6 +205,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
      || (mode == CameraMode::RIGHT && passes_[i].get_enable_for_right_eye())
      || (mode == CameraMode::CENTER && passes_[i].get_enable_for_cyclops_eye())) {
 
+      GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
+
       GUA_PUSH_GL_RANGE(context_, "Bind G-Buffer");
       if (passes_[i].needs_color_buffer_as_input()) {
         GUA_PUSH_GL_RANGE(context_, "Pingpong G-Buffer");
@@ -221,7 +223,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       }
       GUA_POP_GL_RANGE(context_);
 
-      GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
       passes_[i].process(*last_description_.get_passes()[i], *this);
       GUA_POP_GL_RANGE(context_);
     }

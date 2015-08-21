@@ -22,6 +22,7 @@
 // class header
 #include <gua/renderer/WarpGridGenerator.hpp>
 
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GenerateWarpGridPass.hpp>
 #include <gua/databases/Resources.hpp>
@@ -141,6 +142,8 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   // ---------------------- MinMax Depth Map -----------------------------------
   // ---------------------------------------------------------------------------
 
+  GUA_PUSH_GL_RANGE(ctx, "Generate surface map");
+
   std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpGridGenerator Preprocessing";
   pipe.begin_gpu_query(ctx, gpu_query_name_a);
 
@@ -160,9 +163,13 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
 
   pipe.end_gpu_query(ctx, gpu_query_name_a);
 
+  GUA_POP_GL_RANGE(ctx);
+
   // ---------------------------------------------------------------------------
   // --------------------- Generate Warp Grid ----------------------------------
   // ---------------------------------------------------------------------------
+
+  GUA_PUSH_GL_RANGE(ctx, "Generate grid");
 
   unsigned initial_grid_x(std::ceil((float)resolution.x/description->cell_size()));
   unsigned initial_grid_y(std::ceil((float)resolution.y / description->cell_size()));
@@ -220,6 +227,8 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   pipe.end_gpu_query(ctx, gpu_query_name_b);
 
   ctx.render_context->reset_state_objects();
+
+  GUA_POP_GL_RANGE(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
