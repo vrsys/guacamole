@@ -37,9 +37,10 @@ namespace node {
 CubemapNode::CubemapNode(std::string const& name,
                          Configuration const& configuration,
                          math::mat4 const& transform)
-  : SerializableNode(name, transform), config(configuration), m_MinDistance(-1.0)
+  : SerializableNode(name, transform), config(configuration)
 {
   m_NewTextureData = std::make_shared<std::atomic<bool>>(false);
+  m_MinDistance.distance = -1.0;
 }
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
@@ -51,9 +52,15 @@ float CubemapNode::get_min_distance(){
   if (m_NewTextureData->load()){
     find_min_distance();
   }
-  return m_MinDistance;
+  return m_MinDistance.distance;
 }
 
+math::vec3 CubemapNode::get_min_distance_position(){
+  if (m_NewTextureData->load()){
+    find_min_distance();
+  }
+  return m_MinDistance.world_position;
+}
 
 float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
 
@@ -89,22 +96,42 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
 void CubemapNode::find_min_distance(){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   if (texture){
-    std::vector<float> const& v = texture->get_data();
+    std::vector<float> const& data = texture->get_data();
     *(m_NewTextureData) = false;
 
-    float closest(std::numeric_limits<float>::max());
-    for (const float &f : v){
-      if ( (f < closest) && (f!=-1.f) ){
-        closest = f;
+    Distance_Info min_distance;
+    min_distance.distance = std::numeric_limits<float>::max();
+
+    for (const float &f : data){
+      if ( (f < min_distance.distance) && (f!=-1.f) ){
+        min_distance.distance = f;
+        uint index = &f - &data[0];
+        min_distance.tex_coords = math::vec2(index%(config.resolution()*6), index/(config.resolution()*6));
       }
     }
-    if (closest != std::numeric_limits<float>::max()){
-      m_MinDistance = closest;
+
+    if (min_distance.distance != std::numeric_limits<float>::max()){
+      min_distance.world_position = project_back_to_world_coords(min_distance);
+      m_MinDistance = min_distance;
       return;
     }
 
   }
-  m_MinDistance = -1.0;
+  m_MinDistance.distance = -1.0;
+}
+
+math::vec3 CubemapNode::project_back_to_world_coords(Distance_Info const& di) const{
+  int side = di.tex_coords.x / config.resolution();
+
+  math::vec2 xy( float(di.tex_coords.x) / config.resolution(), float(di.tex_coords.y) / config.resolution() ); 
+  xy -= 0.5;
+
+  math::vec4 point_on_face( world_transform_ *  math::vec4( xy.x, xy.y, -0.5, 1.0) );
+  math::vec3 center( gua::math::get_translation(world_transform_) );
+  math::vec3 direction( math::vec3(point_on_face.x, point_on_face.y, point_on_face.z) - center);
+  direction = scm::math::normalize(direction);
+
+  return center + (direction*di.distance);
 }
 
 float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{

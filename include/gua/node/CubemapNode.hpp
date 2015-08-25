@@ -61,6 +61,14 @@ class GUA_DLL CubemapNode : public SerializableNode {
     GUA_ADD_PROPERTY(std::string,     texture_name,       "depth_map");
   };
 
+  struct Distance_Info {
+    public:
+      float distance;
+      math::vec2ui tex_coords;
+      math::vec3 world_position;
+      Distance_Info(): distance(-1.0), tex_coords(0, 0), world_position(0.f, 0.f, 0.f){}
+  };
+
   /**
    * The CubemapNode's configuration.
    */
@@ -99,15 +107,17 @@ class GUA_DLL CubemapNode : public SerializableNode {
   void accept(NodeVisitor& visitor) override;
 
   float get_min_distance();
+  math::vec3 get_min_distance_position();
   float get_distance_by_local_direction(math::vec3 const& dir) const;
 
   std::shared_ptr<std::atomic<bool>> m_NewTextureData;
 
  private:
 
-  float m_MinDistance;
+  Distance_Info m_MinDistance;
 
   void find_min_distance();
+  math::vec3 project_back_to_world_coords(Distance_Info const& di) const;
   float acces_texture_data(unsigned side, math::vec2 coords) const;
 
   std::shared_ptr<Node> copy() const override;
