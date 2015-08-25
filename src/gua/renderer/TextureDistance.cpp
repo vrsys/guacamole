@@ -62,7 +62,7 @@ void TextureDistance::download_data(RenderContext const& ctx, float near_clip, f
       float x_n = x * z_n / 0.5;
       float y_n = y * z_n / 0.5;
 
-      float distance = std::sqrt( (x_n*x_n) + (y_n*y_n) + (z_n*z_n) );
+      float distance = std::sqrt( (x_n*x_n) + (y_n*y_n) + (z_n*z_n) ) * 0.5;
       world_depth_data_[texel] = distance;
     }
   } 
