@@ -78,7 +78,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   WarpPassDescription& depth_test(bool val);
   bool depth_test() const;
-  
+
   WarpPassDescription& adaptive_entry_level(bool val);
   bool adaptive_entry_level() const;
 
@@ -93,6 +93,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   WarpPassDescription& debug_sample_ray(bool val);
   bool debug_sample_ray() const;
+
+  WarpPassDescription& debug_interpolation_borders(bool val);
+  bool debug_interpolation_borders() const;
 
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
@@ -123,6 +126,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool debug_sample_count_;
   bool debug_bounding_volumes_;
   bool debug_sample_ray_;
+  bool debug_interpolation_borders_;
   int max_layers_;
   float pixel_size_;
   GBufferWarpMode gbuffer_warp_mode_;

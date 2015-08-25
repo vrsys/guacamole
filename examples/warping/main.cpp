@@ -737,7 +737,7 @@ int main(int argc, char** argv) {
     });
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 800));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 830));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -756,6 +756,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_sample_count", [&](){ return std::to_string(warp_pass->debug_sample_count());});
       gui->add_javascript_getter("get_debug_bounding_volumes", [&](){ return std::to_string(warp_pass->debug_bounding_volumes());});
       gui->add_javascript_getter("get_debug_sample_ray", [&](){ return std::to_string(warp_pass->debug_sample_ray());});
+      gui->add_javascript_getter("get_debug_interpolation_borders", [&](){ return std::to_string(warp_pass->debug_interpolation_borders());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
@@ -808,6 +809,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_debug_sample_count");
       gui->add_javascript_callback("set_debug_bounding_volumes");
       gui->add_javascript_callback("set_debug_sample_ray");
+      gui->add_javascript_callback("set_debug_interpolation_borders");
       gui->add_javascript_callback("set_pixel_size");
       gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
@@ -904,6 +906,11 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_sample_ray(checked);
+      } else if (callback == "set_debug_interpolation_borders") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->debug_interpolation_borders(checked);
       } else if (callback == "set_adaptive_abuffer") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1011,7 +1018,7 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 800);
+    gui_quad->data.size() = gua::math::vec2ui(330, 830);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
     graph.add_node("/", gui_quad);

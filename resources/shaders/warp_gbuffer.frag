@@ -23,6 +23,7 @@
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
 @include "gbuffer_warp_modes.glsl"
+@include "warp_grid_bits.glsl"
 
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
@@ -31,22 +32,36 @@
 flat in uint cellsize;
 in vec2 texcoords;
 
+uniform uvec2 gua_warp_grid_tex;
+
 // output
 layout(location=0) out vec3 gua_out_color;
 
 void main() {
-  #if @debug_cell_colors@ == 1
-    float intensity = log2(cellsize) / 5.0;
-    gua_out_color =  0.8*(vec3(0.5, 0.3, 0.1) * (1-intensity) + vec3(0.6, 0.9, 0.4) * intensity);
+
+  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
+    const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x & 1) == 1;
   #else
-    // if (abs(dFdx(texcoords.x)) > 0.001 || abs(dFdy(texcoords.y)) > 0.001) {
+    uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x;
+    const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
+  #endif
 
-        gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
-    // } else {
+  if (is_surface) {
+    gua_out_color = gua_get_color(texcoords);
+  } else {
+    gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+  }
 
-        // gua_out_color = gua_get_color(texcoords);
-    // }
 
+  #if @debug_cell_colors@ == 1
+    float intensity = log2(cellsize) / 7.0;
+    gua_out_color = mix(gua_out_color, vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity, 0.9);
+  #endif
+
+  #if @debug_interpolation_borders@ == 1
+    if (!is_surface) {
+      gua_out_color = mix(gua_out_color, vec3(0.0, 0.0, 0.8), 0.8);
+    }
   #endif
 }
 

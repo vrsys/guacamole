@@ -139,7 +139,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   }
 
   // ---------------------------------------------------------------------------
-  // ---------------------- MinMax Depth Map -----------------------------------
+  // ------------------- Surface Information Map -------------------------------
   // ---------------------------------------------------------------------------
 
   GUA_PUSH_GL_RANGE(ctx, "Generate surface map");

@@ -184,6 +184,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
       auto res(ctx.resources.get_dont_create<WarpGridGenerator::SharedResource>());
       if (res) {
+        warp_gbuffer_program_->set_uniform(ctx, res->surface_detection_buffer->get_handle(ctx),  "gua_warp_grid_tex");
         ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
         ctx.render_context->apply();
         ctx.render_context->draw_transform_feedback(scm::gl::PRIMITIVE_POINT_LIST, res->grid_tfb[res->current_vbo()]);

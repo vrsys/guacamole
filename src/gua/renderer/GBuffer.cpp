@@ -133,7 +133,7 @@ void GBuffer::toggle_ping_pong() {
 
 void GBuffer::remove_buffers(RenderContext const& ctx) {
   unbind(ctx);
-  
+
   if (fbo_write_) {
     fbo_write_->clear_attachments();
     fbo_write_.reset();

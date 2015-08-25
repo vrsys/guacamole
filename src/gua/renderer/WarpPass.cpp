@@ -44,6 +44,7 @@ WarpPassDescription::WarpPassDescription()
   , debug_sample_count_(false)
   , debug_bounding_volumes_(false)
   , debug_sample_ray_(false)
+  , debug_interpolation_borders_(false)
   , pixel_size_(0.0f)
   , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
@@ -184,6 +185,20 @@ bool WarpPassDescription::debug_sample_ray() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::debug_interpolation_borders(bool val) {
+  debug_interpolation_borders_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::debug_interpolation_borders() const {
+  return debug_interpolation_borders_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::pixel_size(float val) {
   pixel_size_ = val;
   touch();
@@ -251,6 +266,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["debug_cell_colors"] = debug_cell_colors_ ? "1" : "0";
   substitution_map["debug_sample_count"] = debug_sample_count_ ? "1" : "0";
   substitution_map["debug_bounding_volumes"] = debug_bounding_volumes_ ? "1" : "0";
+  substitution_map["debug_interpolation_borders"] = debug_interpolation_borders_ ? "1" : "0";
   substitution_map["debug_sample_ray"] = debug_sample_ray_ ? "1" : "0";
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
