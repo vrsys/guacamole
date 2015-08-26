@@ -122,11 +122,22 @@ void CubemapNode::find_min_distance(){
 
 math::vec3 CubemapNode::project_back_to_world_coords(Distance_Info const& di) const{
   int side = di.tex_coords.x / config.resolution();
-
   math::vec2 xy( float(di.tex_coords.x) / config.resolution(), float(di.tex_coords.y) / config.resolution() ); 
+  xy.x = fmod(xy.x, 1.0);
   xy -= 0.5;
 
-  math::vec4 point_on_face( world_transform_ *  math::vec4( xy.x, xy.y, -0.5, 1.0) );
+  math::vec4 point_on_face;
+  switch(side){
+    case 0: point_on_face = math::vec4(xy.x, xy.y, -0.5, 1.0); break;
+    case 1: point_on_face = math::vec4(-xy.x, xy.y, 0.5, 1.0); break;
+    case 2: point_on_face = math::vec4(xy.x, 0.5, xy.y, 1.0); break;
+    case 3: point_on_face = math::vec4(xy.x, -0.5, -xy.y, 1.0); break;
+    case 4: point_on_face = math::vec4(-0.5, xy.y, -xy.x, 1.0); break;
+    case 5: point_on_face = math::vec4(0.5, xy.y, xy.x, 1.0); break;
+  }
+
+  point_on_face = world_transform_ *  point_on_face;
+
   math::vec3 center( gua::math::get_translation(world_transform_) );
   math::vec3 direction( math::vec3(point_on_face.x, point_on_face.y, point_on_face.z) - center);
   direction = scm::math::normalize(direction);
