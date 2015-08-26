@@ -407,9 +407,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
       math::get_translation(node_transform),
-      current_viewstate_.camera.config.enable_frustum_culling(),
-      current_viewstate_.camera.config.mask(),
-      current_viewstate_.camera.config.view_id());
+      true, //Frustum Culling
+      cube_map_node->config.mask(),
+      current_viewstate_.camera.config.view_id());  //TODO good ID beacause CUTS
 
     current_viewstate_.frustum = frustum;
 

@@ -59,6 +59,9 @@ class GUA_DLL CubemapNode : public SerializableNode {
      * Name of the depth texture in the texture database
      */
     GUA_ADD_PROPERTY(std::string,     texture_name,       "depth_map");
+
+    // limits the rendered object to a set defined by the mask
+    GUA_ADD_PROPERTY(Mask,            mask,                   Mask());
   };
 
   struct Distance_Info {
