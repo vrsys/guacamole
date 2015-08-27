@@ -30,7 +30,8 @@
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
-#define LOAD_MOUNTAINS  0
+#define LOAD_MOUNTAINS  1
+#define LOAD_ENGINE     1
 
 #include <functional>
 
@@ -305,7 +306,8 @@ int main(int argc, char** argv) {
   // mountains --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
   #if LOAD_MOUNTAINS
-    auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
+    auto mountains(loader.create_geometry_from_file("mountains", "/home/simon/Master/Code/gua_dependencies/guacamole-restricted-develop/mountains/data/objects/terrain/lod0.obj",
+    // auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -385,66 +387,68 @@ int main(int argc, char** argv) {
 
   // engine --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "engine");
-  scene_root->scale(0.05);
+  #if LOAD_ENGINE
+    scene_root->scale(0.05);
 
-  auto light2 = std::make_shared<gua::node::LightNode>("light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.set_brightness(10.0f);
-  light2->scale(50.f);
-  light2->translate(14.f, 20.f, -25.f);
-  scene_root->add_child(light2);
+    auto light2 = std::make_shared<gua::node::LightNode>("light2");
+    light2->data.set_type(gua::node::LightNode::Type::POINT);
+    light2->data.set_brightness(10.0f);
+    light2->scale(50.f);
+    light2->translate(14.f, 20.f, -25.f);
+    scene_root->add_child(light2);
 
-  auto light3 = std::make_shared<gua::node::LightNode>("light3");
-  light3->data.set_type(gua::node::LightNode::Type::POINT);
-  light3->data.set_brightness(10.0f);
-  light3->scale(50.f);
-  light3->translate(-10.f, -20.f, 20.f);
-  scene_root->add_child(light3);
+    auto light3 = std::make_shared<gua::node::LightNode>("light3");
+    light3->data.set_type(gua::node::LightNode::Type::POINT);
+    light3->data.set_brightness(10.0f);
+    light3->scale(50.f);
+    light3->translate(-10.f, -20.f, 20.f);
+    scene_root->add_child(light3);
 
-  // material
-  auto desc(std::make_shared<gua::MaterialShaderDescription>());
-  desc->load_from_file("data/materials/engine.gmd");
-  auto shader(std::make_shared<gua::MaterialShader>("data/materials/engine.gmd", desc));
-  gua::MaterialShaderDatabase::instance()->add(shader);
+    // material
+    auto desc(std::make_shared<gua::MaterialShaderDescription>());
+    desc->load_from_file("data/materials/engine.gmd");
+    auto shader(std::make_shared<gua::MaterialShader>("data/materials/engine.gmd", desc));
+    gua::MaterialShaderDatabase::instance()->add(shader);
 
-  std::map<std::string, int> part_names {
-    {"part_inner_04",2},
-    {"part_inner_03",2},
-    {"part_inner_02",2},
-    {"part_08",2      },
-    {"part_10",1      },
-    {"part_09",1      },
-    {"part_04",2      },
-    {"part_05",1      },
-    {"part_06",2      },
-    {"part_07",2      },
-    {"part_02",2      },
-    {"part_03",2      },
-    {"part_inner_01",1},
-    {"part_01",0      }
-  };
+    std::map<std::string, int> part_names {
+      {"part_inner_04",2},
+      {"part_inner_03",2},
+      {"part_inner_02",2},
+      {"part_08",2      },
+      {"part_10",1      },
+      {"part_09",1      },
+      {"part_04",2      },
+      {"part_05",1      },
+      {"part_06",2      },
+      {"part_07",2      },
+      {"part_02",2      },
+      {"part_03",2      },
+      {"part_inner_01",1},
+      {"part_01",0      }
+    };
 
-  const std::string engine_directory = opt_prefix + "3d_models/engine/";
+    const std::string engine_directory = opt_prefix + "3d_models/engine/";
 
-  // prepare engine parts
-  for(const auto& p : part_names) {
-    auto mat = shader->make_new_material();
-    mat->set_uniform("style", p.second)
-     .set_uniform("opacity", 1.f)
-     .set_uniform("cut_rad", 0.3f)
-     .set_uniform("cut_n", gua::math::vec3(0.5, 1, 0))
-     .set_uniform("roughness_map", std::string("data/textures/roughness.jpg"))
-     .set_uniform("reflection_texture", std::string(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg"))
-     .set_show_back_faces(true);
+    // prepare engine parts
+    for(const auto& p : part_names) {
+      auto mat = shader->make_new_material();
+      mat->set_uniform("style", p.second)
+       .set_uniform("opacity", 1.f)
+       .set_uniform("cut_rad", 0.3f)
+       .set_uniform("cut_n", gua::math::vec3(0.5, 1, 0))
+       .set_uniform("roughness_map", std::string("data/textures/roughness.jpg"))
+       .set_uniform("reflection_texture", std::string(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg"))
+       .set_show_back_faces(true);
 
-    // derived from http://www.turbosquid.com/3d-models/speculate-3ds-free/302188
-    // Royalty Free License
-    auto part(loader.create_geometry_from_file(p.first,
-                                               engine_directory + p.first + ".obj",
-                                               mat,
-                                               gua::TriMeshLoader::DEFAULTS));
-    scene_root->add_child(part);
-  }
+      // derived from http://www.turbosquid.com/3d-models/speculate-3ds-free/302188
+      // Royalty Free License
+      auto part(loader.create_geometry_from_file(p.first,
+                                                 engine_directory + p.first + ".obj",
+                                                 mat,
+                                                 gua::TriMeshLoader::DEFAULTS));
+      scene_root->add_child(part);
+    }
+  #endif
 
   show_backfaces(transform);
 
@@ -628,6 +632,7 @@ int main(int argc, char** argv) {
     if (warping) {
       warp_pipe->set_enable_abuffer(true);
       res_pass->compositing_enable(false);
+      res_pass->write_abuffer_depth(false);
 
       if (current_transparency_mode == "set_transparency_type_raycasting")    warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
       if (current_transparency_mode == "set_transparency_type_none") {
@@ -636,6 +641,11 @@ int main(int argc, char** argv) {
       }
       if (current_transparency_mode == "set_transparency_type_gbuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+        res_pass->compositing_enable(true);
+      }
+      if (current_transparency_mode == "set_transparency_type_abuffer") {
+        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
+        res_pass->write_abuffer_depth(true);
         res_pass->compositing_enable(true);
       }
     } else {
@@ -782,6 +792,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
       gui->add_javascript_callback("set_transparency_type_none");
       gui->add_javascript_callback("set_transparency_type_gbuffer");
+      gui->add_javascript_callback("set_transparency_type_abuffer");
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_inpaint");
@@ -963,6 +974,7 @@ int main(int argc, char** argv) {
           render_grid_pass->mode(mode);
         }
       } else if (callback == "set_transparency_type_gbuffer"
+               | callback == "set_transparency_type_abuffer"
                | callback == "set_transparency_type_raycasting"
                | callback == "set_transparency_type_none") {
 

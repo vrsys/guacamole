@@ -41,7 +41,7 @@ ResolvePassDescription::ResolvePassDescription()
   fragment_shader_ = "shaders/resolve.frag";
   name_ = "ResolvePass";
   needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
+  writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Custom;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
@@ -101,6 +101,17 @@ ResolvePassDescription& ResolvePassDescription::compositing_enable(bool value) {
 ////////////////////////////////////////////////////////////////////////////////
 bool ResolvePassDescription::compositing_enable() const {
   return compositing_enable_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::write_abuffer_depth(bool value) {
+  write_abuffer_depth_ = value;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool ResolvePassDescription::write_abuffer_depth() const {
+  return write_abuffer_depth_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,6 +473,7 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
 {
   substitution_map["gua_debug_tiles"] = debug_tiles() ? "1" : "0";
   substitution_map["gua_compositing_enable"] = compositing_enable() ? "1" : "0";
+  substitution_map["gua_write_abuffer_depth"] = write_abuffer_depth() ? "1" : "0";
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
   PipelinePass pass{*this, ctx, substitution_map};

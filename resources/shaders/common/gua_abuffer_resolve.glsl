@@ -23,7 +23,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
     uvec2 frag = unpackUint2x32(frag_list[current]);
     if (frag.x == 0) {
       break;
-    } 
+    }
     ++frag_count;
 
     float z = unpack_depth24(frag.y);
@@ -33,6 +33,11 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
       if (z - 0.000001 > opaque_depth) { // fix depth-fighting artifacts
         break;
       }
+      #if @gua_write_abuffer_depth@
+        if (frag_count == 1) {
+          gl_FragDepth = z*2-1;
+        }
+      #endif
       float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
       emissivity = min(1.0, emissivity + (1-color.a)*shaded_color.w*frag_alpha);
       abuf_mix_frag(vec4(shaded_color.rgb, frag_alpha), color);

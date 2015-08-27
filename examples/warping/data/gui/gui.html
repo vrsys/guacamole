@@ -225,6 +225,7 @@
 
         init_radio("#transparency_type_none", "transparency_type_none");
         init_radio("#transparency_type_gbuffer", "transparency_type_gbuffer");
+        init_radio("#transparency_type_abuffer", "transparency_type_abuffer");
         init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
         init_checkbox("#adaptive_abuffer", "adaptive_abuffer");
         init_checkbox("#adaptive_entry_level", "adaptive_entry_level");
@@ -692,7 +693,13 @@
               <div class="radio">
                 <label>
                   <input type="radio" name="transparencyRadios" id="transparency_type_gbuffer" value="">
-                  <span>Paint on GBuffer</span>
+                  <span>GBuffer Depth</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_abuffer" value="">
+                  <span>ABuffer Depth</span>
                 </label>
               </div>
             </div>

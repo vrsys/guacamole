@@ -39,7 +39,7 @@ GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
   , mode_(WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
-  , split_threshold_(0.0001f)
+  , split_threshold_(0.0005f)
   , max_split_depth_(1.f)
 {
   vertex_shader_ = "";

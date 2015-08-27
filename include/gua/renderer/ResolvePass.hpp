@@ -58,6 +58,9 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ResolvePassDescription& compositing_enable(bool enable);
   bool compositing_enable() const;
 
+  ResolvePassDescription& write_abuffer_depth(bool enable);
+  bool write_abuffer_depth() const;
+
   /////////////////////////////////////////////////////////////////////////////
   // background
   /////////////////////////////////////////////////////////////////////////////
@@ -179,6 +182,7 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
   bool debug_tiles_ = false;
   bool compositing_enable_ = true;
+  bool write_abuffer_depth_ = false;
 };
 }
 
