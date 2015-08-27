@@ -54,7 +54,7 @@ WarpPassDescription::WarpPassDescription()
   fragment_shader_ = "";
   name_ = "WarpPass";
   needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
+  writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Custom;
 }
 
