@@ -161,16 +161,16 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   GUA_PUSH_GL_RANGE(ctx, "Warp G-Buffer");
 
+  std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
+  std::string const pri_query_name_a = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
+  pipe.begin_gpu_query(ctx, gpu_query_name_a);
+  pipe.begin_primitive_query(ctx, pri_query_name_a);
+
   ctx.render_context->set_frame_buffer(fbo_);
   gbuffer->set_viewport(ctx);
   ctx.render_context->clear_color_buffers(
       fbo_, scm::math::vec4f(0,0,0,0));
   ctx.render_context->clear_depth_stencil_buffer(fbo_);
-
-  std::string const gpu_query_name_a = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
-  std::string const pri_query_name_a = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass GBuffer";
-  pipe.begin_gpu_query(ctx, gpu_query_name_a);
-  pipe.begin_primitive_query(ctx, pri_query_name_a);
 
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
     warp_gbuffer_program_->use(ctx);

@@ -52,7 +52,6 @@ void main() {
     gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
   }
 
-
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;
     gua_out_color = mix(gua_out_color, vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity, 0.9);

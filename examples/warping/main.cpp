@@ -508,65 +508,65 @@ int main(int argc, char** argv) {
 
   // normal camera -------------------------------------------------------------
   #if OCULUS
-    auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
-    auto slow_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/slow_cam", "slow_screen_left");
-    auto slow_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/slow_cam", "slow_screen_right");
-    slow_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
-    slow_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-    slow_screen_right->translate(0.04, 0, -0.05f);
-    slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-    slow_cam->config.set_eye_dist(0.f);
-    slow_cam->config.set_resolution(resolution);
-    slow_cam->config.set_left_screen_path("/navigation/slow_cam/slow_screen_left");
-    slow_cam->config.set_right_screen_path("/navigation/slow_cam/slow_screen_right");
+    auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
+    auto normal_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_left");
+    auto normal_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_right");
+    normal_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+    normal_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+    normal_screen_right->translate(0.04, 0, -0.05f);
+    normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+    normal_cam->config.set_eye_dist(0.f);
+    normal_cam->config.set_resolution(resolution);
+    normal_cam->config.set_left_screen_path("/navigation/normal_cam/normal_screen_left");
+    normal_cam->config.set_right_screen_path("/navigation/normal_cam/normal_screen_right");
   #else
-    auto slow_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "slow_screen");
-    auto slow_cam = graph.add_node<gua::node::CameraNode>("/navigation", "slow_cam");
-    slow_screen->data.set_size(gua::math::vec2(3, 2));
-    slow_screen->translate(0, 0, -1.7);
+    auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
+    auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
+    normal_screen->data.set_size(gua::math::vec2(3, 2));
+    normal_screen->translate(0, 0, -1.7);
     #if POWER_WALL
-      slow_screen->translate(0, 1.5, 0);
-      slow_cam->translate(0, 1.5, 0);
+      normal_screen->translate(0, 1.5, 0);
+      normal_cam->translate(0, 1.5, 0);
     #endif
-    slow_cam->config.set_eye_dist(0.f);
-    slow_cam->config.set_resolution(resolution);
-    slow_cam->config.set_screen_path("/navigation/slow_screen");
+    normal_cam->config.set_eye_dist(0.f);
+    normal_cam->config.set_resolution(resolution);
+    normal_cam->config.set_screen_path("/navigation/normal_screen");
   #endif
 
-  slow_cam->config.set_scene_graph_name("main_scenegraph");
-  slow_cam->config.mask().blacklist.add_tag("invisible");
-  slow_cam->config.set_near_clip(0.1f);
+  normal_cam->config.set_scene_graph_name("main_scenegraph");
+  normal_cam->config.mask().blacklist.add_tag("invisible");
+  normal_cam->config.set_near_clip(0.1f);
 
   // warping camera ------------------------------------------------------------
   #if OCULUS
-    auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation", "fast_cam");
-    auto fast_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/fast_cam", "fast_screen_left");
-    auto fast_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/fast_cam", "fast_screen_right");
-    fast_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
-    fast_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-    fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-    fast_screen_right->translate(0.04, 0, -0.05f);
-    fast_cam->config.set_eye_dist(0.f);
-    fast_cam->config.set_resolution(resolution);
-    fast_cam->config.set_left_screen_path("/navigation/fast_cam/fast_screen_left");
-    fast_cam->config.set_right_screen_path("/navigation/fast_cam/fast_screen_right");
+    auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation", "warp_cam");
+    auto warp_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/warp_cam", "warp_screen_left");
+    auto warp_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/warp_cam", "warp_screen_right");
+    warp_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+    warp_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+    warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+    warp_screen_right->translate(0.04, 0, -0.05f);
+    warp_cam->config.set_eye_dist(0.f);
+    warp_cam->config.set_resolution(resolution);
+    warp_cam->config.set_left_screen_path("/navigation/warp_cam/warp_screen_left");
+    warp_cam->config.set_right_screen_path("/navigation/warp_cam/warp_screen_right");
   #else
-    auto fast_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "fast_screen");
-    auto fast_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "fast_cam");
-    fast_screen->data.set_size(gua::math::vec2(3, 2));
-    fast_screen->translate(0, 0, -1.7);
+    auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
+    auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
+    warp_screen->data.set_size(gua::math::vec2(3, 2));
+    warp_screen->translate(0, 0, -1.7);
     #if POWER_WALL
-      fast_screen->translate(0, 1.5, 0);
-      fast_cam->translate(0, 1.5, 0);
+      warp_screen->translate(0, 1.5, 0);
+      warp_cam->translate(0, 1.5, 0);
     #endif
-    fast_cam->config.set_eye_dist(0.f);
-    fast_cam->config.set_resolution(resolution);
-    fast_cam->config.set_screen_path("/navigation/warp/fast_screen");
+    warp_cam->config.set_eye_dist(0.f);
+    warp_cam->config.set_resolution(resolution);
+    warp_cam->config.set_screen_path("/navigation/warp/warp_screen");
   #endif
 
-  fast_cam->config.set_scene_graph_name("main_scenegraph");
-  fast_cam->config.set_far_clip(slow_cam->config.get_far_clip()*1.5);
-  fast_cam->config.set_near_clip(0.1f);
+  warp_cam->config.set_scene_graph_name("main_scenegraph");
+  warp_cam->config.set_far_clip(normal_cam->config.get_far_clip()*1.5);
+  warp_cam->config.set_near_clip(0.1f);
 
   auto clear_pass(std::make_shared<gua::ClearPassDescription>());
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
@@ -590,7 +590,7 @@ int main(int argc, char** argv) {
             ssao_intensity(3.f).
             ssao_radius(2.f);
 
-  slow_cam->config.set_output_window_name("window");
+  normal_cam->config.set_output_window_name("window");
 
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
   warp_pipe->add_pass(clear_pass);
@@ -606,7 +606,6 @@ int main(int argc, char** argv) {
   warp_pipe->add_pass(render_grid_pass);
   warp_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   warp_pipe->set_enable_abuffer(true);
-  slow_cam->set_pipeline_description(warp_pipe);
 
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
   normal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
@@ -655,11 +654,11 @@ int main(int argc, char** argv) {
     // set stereo options
     if (stereo) {
 
-      slow_cam->config.set_enable_stereo(true);
+      normal_cam->config.set_enable_stereo(true);
 
       #if OCULUS
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-        fast_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+        warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+        warp_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
       #else
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
@@ -676,45 +675,45 @@ int main(int argc, char** argv) {
       render_grid_pass->set_enable_for_right_eye(!warping);
 
       if (warping) {
-        slow_cam->config.set_eye_dist(0.f);
-        fast_cam->config.set_eye_dist(0.064f);
+        normal_cam->config.set_eye_dist(0.f);
+        warp_cam->config.set_eye_dist(0.064f);
 
         #if OCULUS
-          slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-          slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
         #endif
 
-        slow_cam->set_pipeline_description(warp_pipe);
+        normal_cam->set_pipeline_description(warp_pipe);
 
       } else {
-        slow_cam->config.set_eye_dist(0.064f);
+        normal_cam->config.set_eye_dist(0.064f);
 
         #if OCULUS
-          slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-          slow_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
+          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
         #endif
 
-        slow_cam->set_pipeline_description(normal_pipe);
+        normal_cam->set_pipeline_description(normal_pipe);
       }
 
     } else {
 
-      slow_cam->config.set_enable_stereo(false);
-      slow_cam->config.set_eye_dist(0.f);
-      fast_cam->config.set_eye_dist(0.f);
+      normal_cam->config.set_enable_stereo(false);
+      normal_cam->config.set_eye_dist(0.f);
+      warp_cam->config.set_eye_dist(0.f);
       clear_pass->set_enable_for_right_eye(true);
 
       #if OCULUS
-        slow_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-        fast_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
       #else
         window->config.set_stereo_mode(gua::StereoMode::MONO);
       #endif
 
       if (warping) {
-        slow_cam->set_pipeline_description(warp_pipe);
+        normal_cam->set_pipeline_description(warp_pipe);
       } else {
-        slow_cam->set_pipeline_description(normal_pipe);
+        normal_cam->set_pipeline_description(normal_pipe);
       }
     }
 
@@ -1036,14 +1035,14 @@ int main(int argc, char** argv) {
     graph.add_node("/", gui_quad);
 
     // bottom gui --------------------------------------------------------------
-    stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x, 60));
+    stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x*0.7, 60));
 
     stats->on_loaded.connect([&]() {
       stats->call_javascript("init");
     });
 
     stats_quad->data.texture() = "stats";
-    stats_quad->data.size() = gua::math::vec2ui(resolution.x, 60);
+    stats_quad->data.size() = gua::math::vec2ui(resolution.x*0.7, 60);
     stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
 
     graph.add_node("/", stats_quad);
@@ -1061,9 +1060,9 @@ int main(int argc, char** argv) {
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       window->config.set_resolution(new_size);
-      slow_cam->config.set_resolution(new_size);
-      slow_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-      fast_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      normal_cam->config.set_resolution(new_size);
+      normal_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      warp_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
     });
   #endif
 
@@ -1163,20 +1162,20 @@ int main(int argc, char** argv) {
   // tracking ------------------------------------------------------------------
   warp_pass->get_warp_state([&](){
     #if POWER_WALL
-      fast_cam->set_transform(current_tracking_matrix);
+      warp_cam->set_transform(current_tracking_matrix);
     #elif OCULUS
-      fast_cam->set_transform(get_oculus_transform(oculus_sensor));
+      warp_cam->set_transform(get_oculus_transform(oculus_sensor));
     #endif
 
     gua::WarpPassDescription::WarpState state;
 
-    gua::Frustum frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    gua::Frustum frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
     state.projection_view_center = frustum.get_projection() * frustum.get_view();
 
-    frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+    frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
     state.projection_view_left = frustum.get_projection() * frustum.get_view();
 
-    frustum = fast_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
+    frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
     state.projection_view_right = frustum.get_projection() * frustum.get_view();
 
     return state;
@@ -1216,7 +1215,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/120.0);
+  gua::events::Ticker ticker(loop, 1.0/200.0);
 
   int ctr=0;
 
@@ -1227,9 +1226,9 @@ int main(int argc, char** argv) {
     #endif
 
     #if POWER_WALL
-      slow_cam->set_transform(current_tracking_matrix);
+      normal_cam->set_transform(current_tracking_matrix);
     #elif OCULUS
-      slow_cam->set_transform(get_oculus_transform(oculus_sensor));
+      normal_cam->set_transform(get_oculus_transform(oculus_sensor));
     #endif
 
     nav.update();
@@ -1237,11 +1236,11 @@ int main(int argc, char** argv) {
 
     #if POWER_WALL
       if (warp_perspective && !warping) {
-        navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
       } else {
-        navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
       }
-      warp_navigation->set_transform(slow_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(slow_screen->get_transform()));
+      warp_navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
     #else
       if (warp_perspective && !warping) {
         navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));

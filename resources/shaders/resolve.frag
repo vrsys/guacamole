@@ -224,7 +224,7 @@ float get_vignette(float coverage, float softness, float intensity) {
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  float depth = gua_get_depth();
+  float depth = gua_get_unscaled_depth();
 
   // WARP TODO: Why is this necessary?
   gl_FragDepth = depth-0.000001;
@@ -246,7 +246,7 @@ void main() {
 #if @enable_abuffer@
 
   int level = 0;
-  res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
+  res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
 
 #endif
 

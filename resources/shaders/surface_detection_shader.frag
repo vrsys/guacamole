@@ -89,8 +89,8 @@ void main() {
       const uint is_surface = (is_on_line(d0, d3, d7, d10)
                              & is_on_line(d1, d4, d8, d11)
                              & is_on_line(d2, d3, d4, d5)
-                             & is_on_line(d6, d7, d8, d9)) 
-                             | uint(d3 >= MAX_SPLIT_DEPTH 
+                             & is_on_line(d6, d7, d8, d9))
+                             | uint(d3 >= MAX_SPLIT_DEPTH
                                  && d4 >= MAX_SPLIT_DEPTH
                                  && d7 >= MAX_SPLIT_DEPTH
                                  && d8 >= MAX_SPLIT_DEPTH);
@@ -173,7 +173,7 @@ void main() {
 
     // if the patch is connected on two othogonal sides, it represents a surface
     #if USE_MAX_SPLIT_DEPTH
-      const uint at_max_depth = uint(d5 >= MAX_SPLIT_DEPTH 
+      const uint at_max_depth = uint(d5 >= MAX_SPLIT_DEPTH
                                   && d6 >= MAX_SPLIT_DEPTH
                                   && d9 >= MAX_SPLIT_DEPTH
                                   && d10 >= MAX_SPLIT_DEPTH);

@@ -35,7 +35,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
       }
       #if @gua_write_abuffer_depth@
         if (frag_count == 1) {
-          gl_FragDepth = z*2-1;
+          gl_FragDepth = z;
         }
       #endif
       float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
