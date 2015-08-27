@@ -47,13 +47,10 @@ uint is_on_line(float a, float b, float c) {
   return int(abs(a-2*b+c) < @split_threshold@);
 }
 
-#define MAX_SPLIT_DEPTH @max_split_depth@
-#define USE_MAX_SPLIT_DEPTH @use_max_split_depth@
-
 void main() {
 
   // ---------------------------------------------------------------------------
-  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION // ------------------------
+  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH
   // ---------------------------------------------------------------------------
 
   if (current_level == 0) {
@@ -84,22 +81,10 @@ void main() {
     const float d10 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 0, -1))), 0).x;
     const float d11 = texelFetch(sampler2D(depth_buffer), max(ivec2(0), min(res, ivec2(gl_FragCoord.xy*2) + ivec2( 1, -1))), 0).x;
 
-
-    #if USE_MAX_SPLIT_DEPTH
-      const uint is_surface = (is_on_line(d0, d3, d7, d10)
-                             & is_on_line(d1, d4, d8, d11)
-                             & is_on_line(d2, d3, d4, d5)
-                             & is_on_line(d6, d7, d8, d9))
-                             | uint(d3 >= MAX_SPLIT_DEPTH
-                                 && d4 >= MAX_SPLIT_DEPTH
-                                 && d7 >= MAX_SPLIT_DEPTH
-                                 && d8 >= MAX_SPLIT_DEPTH);
-    #else
-      const uint is_surface = is_on_line(d0, d3, d7, d10)
-                            & is_on_line(d1, d4, d8, d11)
-                            & is_on_line(d2, d3, d4, d5)
-                            & is_on_line(d6, d7, d8, d9);
-    #endif
+    const uint is_surface = is_on_line(d0, d3, d7, d10)
+                          & is_on_line(d1, d4, d8, d11)
+                          & is_on_line(d2, d3, d4, d5)
+                          & is_on_line(d6, d7, d8, d9);
 
     const uint merge_type = is_surface << BIT_MERGE_TYPE;
 
@@ -172,33 +157,15 @@ void main() {
     const uint br = is_on_line(d5,  d10, d15);
 
     // if the patch is connected on two othogonal sides, it represents a surface
-    #if USE_MAX_SPLIT_DEPTH
-      const uint at_max_depth = uint(d5 >= MAX_SPLIT_DEPTH
-                                  && d6 >= MAX_SPLIT_DEPTH
-                                  && d9 >= MAX_SPLIT_DEPTH
-                                  && d10 >= MAX_SPLIT_DEPTH);
-      const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t)
-                            | at_max_depth;
-      const uint continuous = (t  << BIT_CONTINUOUS_T)
-                            | (r  << BIT_CONTINUOUS_R)
-                            | (b  << BIT_CONTINUOUS_B)
-                            | (l  << BIT_CONTINUOUS_L)
-                            | (tl << BIT_CONTINUOUS_TL)
-                            | (tr << BIT_CONTINUOUS_TR)
-                            | (bl << BIT_CONTINUOUS_BL)
-                            | (br << BIT_CONTINUOUS_BR)
-                            | at_max_depth * ALL_CONTINUITY_BITS;
-    #else
-      const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
-      const uint continuous = (t  << BIT_CONTINUOUS_T)
-                            | (r  << BIT_CONTINUOUS_R)
-                            | (b  << BIT_CONTINUOUS_B)
-                            | (l  << BIT_CONTINUOUS_L)
-                            | (tl << BIT_CONTINUOUS_TL)
-                            | (tr << BIT_CONTINUOUS_TR)
-                            | (bl << BIT_CONTINUOUS_BL)
-                            | (br << BIT_CONTINUOUS_BR);
-    #endif
+    const uint is_surface = (t & r) | (r & b) | (b & l) | (l & t);
+    const uint continuous = (t  << BIT_CONTINUOUS_T)
+                          | (r  << BIT_CONTINUOUS_R)
+                          | (b  << BIT_CONTINUOUS_B)
+                          | (l  << BIT_CONTINUOUS_L)
+                          | (tl << BIT_CONTINUOUS_TL)
+                          | (tr << BIT_CONTINUOUS_TR)
+                          | (bl << BIT_CONTINUOUS_BL)
+                          | (br << BIT_CONTINUOUS_BR);
 
     const uint merge_type = is_surface << BIT_MERGE_TYPE;
 

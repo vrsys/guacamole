@@ -25,7 +25,7 @@
 @include "common/gua_gbuffer_input.glsl"
 
 // -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
 layout(location=0) in uvec3 position;
@@ -51,7 +51,7 @@ void main() {
   const vec2 pos = vec2(gl_VertexID % gua_resolution.x, gl_VertexID / gua_resolution.x) + 0.5;
   const vec2 tex_coords = pos/vec2(gua_resolution.x, gua_resolution.y);
 
-  const float depth = gua_get_unscaled_depth(tex_coords);
+  const float depth = gua_get_depth(tex_coords);
 
   color = gua_get_color(tex_coords);
   normal = gua_get_normal(tex_coords);

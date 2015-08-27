@@ -751,7 +751,6 @@ int main(int argc, char** argv) {
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
       gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
-      gui->add_javascript_getter("get_max_split_depth", [&](){ return gua::string_utils::to_string(grid_pass->max_split_depth());});
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
@@ -771,7 +770,6 @@ int main(int argc, char** argv) {
 
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
-      gui->add_javascript_callback("set_max_split_depth");
       gui->add_javascript_callback("set_cell_size");
       gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_warp_perspective");
@@ -787,6 +785,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
       gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
       gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
+      gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation_stretch");
       gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
       gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
       gui->add_javascript_callback("set_transparency_type_none");
@@ -845,11 +844,6 @@ int main(int argc, char** argv) {
         float split_threshold;
         str >> split_threshold;
         grid_pass->split_threshold(split_threshold);
-      } else if (callback == "set_max_split_depth") {
-        std::stringstream str(params[0]);
-        float max_split_depth;
-        str >> max_split_depth;
-        grid_pass->max_split_depth(max_split_depth);
       } else if (callback == "set_pixel_size") {
         std::stringstream str(params[0]);
         float pixel_size;
@@ -937,6 +931,7 @@ int main(int argc, char** argv) {
                | callback == "set_gbuffer_type_quads_depth_aligned"
                | callback == "set_gbuffer_type_grid_depth_theshold"
                | callback == "set_gbuffer_type_grid_surface_estimation"
+               | callback == "set_gbuffer_type_grid_surface_estimation_stretch"
                | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
                | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
                | callback == "set_gbuffer_type_none") {
@@ -961,6 +956,8 @@ int main(int argc, char** argv) {
             mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
           if (callback == "set_gbuffer_type_grid_surface_estimation")
             mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
+          if (callback == "set_gbuffer_type_grid_surface_estimation_stretch")
+            mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION_STRETCH;
           if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
             mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
           if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")

@@ -26,7 +26,7 @@
 @include "warp_grid_bits.glsl"
 
 // -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
 flat in uint cellsize;
@@ -39,7 +39,7 @@ layout(location=0) out vec3 gua_out_color;
 
 void main() {
 
-  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
+  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH
     const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x & 1) == 1;
   #else
     uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x;
