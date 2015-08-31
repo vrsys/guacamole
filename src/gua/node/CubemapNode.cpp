@@ -27,7 +27,9 @@
 #include <gua/databases.hpp>
 #include <gua/renderer/TextureDistance.hpp>
 #include <gua/renderer/Frustum.hpp>
+#include <gua/math/BoundingBoxAlgo.hpp>
 
+//c++ headers
 #include <limits>
 #include <climits>
 
@@ -41,11 +43,20 @@ CubemapNode::CubemapNode(std::string const& name,
 {
   m_NewTextureData = std::make_shared<std::atomic<bool>>(false);
   m_MinDistance.distance = -1.0;
+  update_bounding_box();
 }
 
 /* virtual */ void CubemapNode::accept(NodeVisitor& visitor) {
-
   visitor.visit(this);
+}
+
+void CubemapNode::update_bounding_box() const {
+  auto bbox = math::BoundingBox<math::vec3>(math::vec3(-config.far_clip()), math::vec3(config.far_clip()));
+  bounding_box_ = transform(bbox, world_transform_);
+
+  for (auto child : get_children()) {
+    bounding_box_.expandBy(child->get_bounding_box());
+  }
 }
 
 float CubemapNode::get_min_distance(){
