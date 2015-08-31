@@ -108,6 +108,7 @@ class GUA_DLL CubemapNode : public SerializableNode {
    * \param visitor  A visitor to process the CubemapNode's data.
    */
   void accept(NodeVisitor& visitor) override;
+  void update_bounding_box() const override;
 
   float get_min_distance();
   math::vec3 get_min_distance_position();
