@@ -55,10 +55,15 @@ class GUA_DLL CubemapNode : public SerializableNode {
      * far clipping distance for depth value generation
      */
     GUA_ADD_PROPERTY(float,           far_clip,                  10.f);
+
     /**
      * Name of the depth texture in the texture database
      */
     GUA_ADD_PROPERTY(std::string,     texture_name,       "depth_map");
+
+    // a user-defined view id, can be used to customize material parameters for
+    // objects rendered by this camera
+    GUA_ADD_PROPERTY(int,             view_id,                0);
 
     // limits the rendered object to a set defined by the mask
     GUA_ADD_PROPERTY(Mask,            mask,                   Mask());

@@ -409,15 +409,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       math::get_translation(node_transform),
       true, //Frustum Culling
       cube_map_node->config.mask(),
-      current_viewstate_.camera.config.view_id());  //TODO good ID beacause CUTS
-
+      cube_map_node->config.view_id());
     current_viewstate_.frustum = frustum;
 
     camera_block_.update(context_,
       frustum,
       frustum.get_camera_position(),
       current_viewstate_.scene->clipping_planes,
-      current_viewstate_.camera.config.get_view_id(),
+      cube_map_node->config.view_id(),
       viewport_size);
     bind_camera_uniform_block(0);
 
