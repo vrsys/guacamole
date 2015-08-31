@@ -46,11 +46,17 @@ void main() {
     const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
   #endif
 
-  if (is_surface) {
-    gua_out_color = gua_get_color(texcoords);
-  } else {
+  #if INTERPOLATION_MODE == INTERPOLATION_MODE_NEAREST
     gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
-  }
+  #elif INTERPOLATION_MODE == INTERPOLATION_MODE_LINEAR
+    gua_out_color = gua_get_color(texcoords);
+  #else
+    if (is_surface) {
+      gua_out_color = gua_get_color(texcoords);
+    } else {
+      gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+    }
+  #endif
 
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;

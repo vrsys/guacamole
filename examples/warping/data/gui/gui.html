@@ -252,6 +252,10 @@
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
         init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
 
+        init_radio("#interpolation_mode_nearest", "interpolation_mode_nearest");
+        init_radio("#interpolation_mode_linear", "interpolation_mode_linear");
+        init_radio("#interpolation_mode_adaptive", "interpolation_mode_adaptive");
+
         $("body").addClass("on");
       }
 
@@ -608,24 +612,6 @@
                   <span>Non-Uniform Surf. Est.</span>
                 </label>
               </div>
-              <div class="checkbox">
-                <label>
-                  <input id="show_warp_grid" type="checkbox" value="">
-                  <span>Display Grid</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_cell_colors" type="checkbox" value="">
-                  <span>Cell Colors</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_interpolation_borders" type="checkbox" value="">
-                  <span>Interpolation Borders</span>
-                </label>
-              </div>
 
             </div>
           </div>
@@ -733,31 +719,6 @@
 
           <div class="row">
             <div class="col-xs-5">
-            Debug Options:
-            </div>
-            <div class="col-xs-7">
-              <div class="checkbox">
-                <label>
-                  <input id="debug_sample_count" type="checkbox" value="">
-                  <span>Sample Count</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_bounding_volumes" type="checkbox" value="">
-                  <span>Bounding Volumes</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_sample_ray" type="checkbox" value="">
-                  <span>Sample Ray</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-xs-5">
               Ray Steps:
             </div>
             <div class="col-xs-7">
@@ -776,7 +737,7 @@
 
           <div class="row">
             <div class="col-xs-5">
-            Mode:
+              Mode:
             </div>
             <div class="col-xs-7">
               <div class="radio">
@@ -789,6 +750,94 @@
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_inpaint" value="" checked>
                   <span>Inpaint</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+
+       <div class="side-panel">
+        <div id="preview-panel" class="panel-inner">
+
+          <h4><i class="fa fa-bug"></i> Debug Options</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Grid Warping:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="show_warp_grid" type="checkbox" value="">
+                  <span>Display Grid</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_cell_colors" type="checkbox" value="">
+                  <span>Cell Colors</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_interpolation_borders" type="checkbox" value="">
+                  <span>Interpolation Borders</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-xs-5">
+              Interpolation:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="interpolationRadios" id="interpolation_mode_nearest" value="">
+                  <span>Nearest</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="interpolationRadios" id="interpolation_mode_linear" value="">
+                  <span>Linear</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="interpolationRadios" id="interpolation_mode_adaptive" value="" checked>
+                  <span>Adaptive</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Ray Casting:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="debug_sample_count" type="checkbox" value="">
+                  <span>Sample Count</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_bounding_volumes" type="checkbox" value="">
+                  <span>Bounding Volumes</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_sample_ray" type="checkbox" value="">
+                  <span>Sample Ray</span>
                 </label>
               </div>
             </div>

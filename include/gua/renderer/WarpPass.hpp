@@ -69,6 +69,12 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     HOLE_FILLING_INPAINT
   };
 
+  enum InterpolationMode {
+    INTERPOLATION_MODE_NEAREST,
+    INTERPOLATION_MODE_LINEAR,
+    INTERPOLATION_MODE_ADAPTIVE
+  };
+
   WarpPassDescription();
 
   WarpPassDescription& use_abuffer_from_window(std::string const& name);
@@ -110,6 +116,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& hole_filling_mode(HoleFillingMode hole_filling_mode);
   HoleFillingMode hole_filling_mode() const;
 
+  WarpPassDescription& interpolation_mode(InterpolationMode interpolation_mode);
+  InterpolationMode interpolation_mode() const;
+
   WarpPassDescription& get_warp_state(std::function<WarpState()> const& f);
   std::function<WarpState()> const& get_warp_state() const;
 
@@ -133,6 +142,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
   HoleFillingMode hole_filling_mode_;
+  InterpolationMode interpolation_mode_;
 
   std::function<WarpState()> get_warp_state_;
 };

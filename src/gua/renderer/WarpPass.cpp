@@ -49,6 +49,7 @@ WarpPassDescription::WarpPassDescription()
   , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
   , hole_filling_mode_(HOLE_FILLING_INPAINT)
+  , interpolation_mode_(INTERPOLATION_MODE_ADAPTIVE)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -255,6 +256,20 @@ WarpPassDescription::HoleFillingMode WarpPassDescription::hole_filling_mode() co
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::interpolation_mode(InterpolationMode interpolation_mode) {
+  interpolation_mode_ = interpolation_mode;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription::InterpolationMode WarpPassDescription::interpolation_mode() const {
+  return interpolation_mode_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const {
   return std::make_shared<WarpPassDescription>(*this);
 }
@@ -272,6 +287,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
+  substitution_map["interpolation_mode"] = std::to_string(interpolation_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};
 

@@ -30,7 +30,7 @@
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
-#define LOAD_MOUNTAINS  1
+#define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     1
 
 #include <functional>
@@ -746,7 +746,7 @@ int main(int argc, char** argv) {
     });
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 830));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 850));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -794,6 +794,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_inpaint");
+      gui->add_javascript_callback("set_interpolation_mode_nearest");
+      gui->add_javascript_callback("set_interpolation_mode_linear");
+      gui->add_javascript_callback("set_interpolation_mode_adaptive");
       gui->add_javascript_callback("set_adaptive_abuffer");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
@@ -991,6 +994,23 @@ int main(int argc, char** argv) {
 
           warp_pass->hole_filling_mode(mode);
         }
+      } else if (callback == "set_interpolation_mode_nearest"
+               | callback == "set_interpolation_mode_linear"
+               | callback == "set_interpolation_mode_adaptive") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+
+          gua::WarpPassDescription::InterpolationMode mode(gua::WarpPassDescription::INTERPOLATION_MODE_ADAPTIVE);
+
+          if (callback == "set_interpolation_mode_nearest")
+            mode = gua::WarpPassDescription::INTERPOLATION_MODE_NEAREST;
+          if (callback == "set_interpolation_mode_linear")
+            mode = gua::WarpPassDescription::INTERPOLATION_MODE_LINEAR;
+
+          warp_pass->interpolation_mode(mode);
+        }
 
       } else if (callback == "set_manipulation_object"
               || callback == "set_manipulation_camera"
@@ -1026,7 +1046,7 @@ int main(int argc, char** argv) {
     });
 
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 830);
+    gui_quad->data.size() = gua::math::vec2ui(330, 850);
     gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
     graph.add_node("/", gui_quad);
