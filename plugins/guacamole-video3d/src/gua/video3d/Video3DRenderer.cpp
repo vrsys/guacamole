@@ -127,14 +127,14 @@ void Video3DRenderer::render(Pipeline& pipe)
     for (auto& o: objects->second) {
 
       auto video_node(reinterpret_cast<node::Video3DNode*>(o));
-      auto video_name(video_node->get_video_name());
+      auto video_desc(video_node->get_video_description());
 
-      if (!GeometryDatabase::instance()->contains(video_name)) {
-        gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): No such video." << video_name << ", " << std::endl;
+      if (!GeometryDatabase::instance()->contains(video_desc)) {
+        gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): No such video." << video_desc << ", " << std::endl;
         continue;
       }
 
-      auto video3d_ressource = std::static_pointer_cast<Video3DResource>(GeometryDatabase::instance()->lookup(video_name));
+      auto video3d_ressource = std::static_pointer_cast<Video3DResource>(GeometryDatabase::instance()->lookup(video_desc));
       if (!video3d_ressource) {
         gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): Invalid video." << std::endl;
         continue;

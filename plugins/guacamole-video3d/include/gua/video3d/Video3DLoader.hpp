@@ -34,6 +34,8 @@
 
 namespace gua {
 
+  class Material;
+
 namespace node {
 class Node;
 class InnerNode;
@@ -49,16 +51,22 @@ class Video3DNode;
 class GUA_VIDEO3D_DLL Video3DLoader {
  public:
 
+  enum Flags {
+  	DEFAULTS = 0,
+  	MAKE_PICKABLE = 1 << 0,
+  	NORMALIZE_POSITION = 1 << 1,
+  	NORMALIZE_SCALE = 1 << 2
+  };
+
   Video3DLoader();
   ~Video3DLoader() = default;
 
   std::shared_ptr<node::Video3DNode> create_geometry_from_file(std::string const& nodename,
-                                                  std::string const& ksfile);
-
-  bool is_supported(std::string const& file_name) const;
+                                                               std::string const& ksfile,
+															                                 std::shared_ptr<Material> material = nullptr,
+															                                 unsigned flags = DEFAULTS);
 
  private:
-    boost::unordered_set<std::string> _supported_file_extensions;
 
 };
 
