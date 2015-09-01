@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  scene_root->scale(3);
+  scene_root->scale(0.3);
   scene_root->rotate(-90, 1, 0, 0);
   add_oilrig(0, 0, 1, "/transform/one_oilrig");
 

@@ -103,41 +103,36 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto monkey_geometry(loader.create_geometry_from_file(
-    "root_ape",
-    geometry
-  ));
+  auto add_oilrig = [&](std::string const& parent) {
+    auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
+    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    t->add_child(oilrig);
 
-  auto root_monkey = graph.add_node("/", monkey_geometry);
-  root_monkey->scale(1.5, 1.5, 1.5);
+  };
 
-  // depth    monkey    cube          car
-  // 1        14.084      56    3.619.000 Vertices  /      7 draw calls
-  // 2        74.444     296   19.129.000 Vertices  /     37 draw calls
-  // 3       436.604   1.736  112.189.000 Vertices  /    217 draw calls
-  // 4     2.609.564  10.376              Vertices  /  1.297 draw calls
-  // 5    15.647.324  62.216              Vertices  /  7.777 draw calls
-  // 6    93.873.884 373.256              Vertices  / 46.657 draw calls
-  setup_scene(graph, root_monkey, 4);
+  auto scene_root = graph.add_node<gua::node::TransformNode>("/", "model");
+  scene_root->scale(0.5);
+  scene_root->rotate(-90, 1, 0, 0);
+  scene_root->translate(-0.2, -0.5, 0);
+  add_oilrig("/model");
 
-  auto lights = add_lights(graph, 50);
+  auto lights = add_lights(graph, 20);
 
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
-  nav->translate(0.0, 0.0, 2.0);
+  nav->translate(0.0, 0.0, 1.0);
 
   // setup rendering pipeline and window
-
   auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
+  window->config.set_fullscreen_mode(true);
 
   window->open();
 
   auto resolution = window->get_full_oculus_resolution();
-
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
@@ -153,13 +148,12 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
-  left_screen->translate(-0.03175, 0, -0.008f);
+  left_screen->data.set_size(gua::math::vec2(0.17074, 0.21));
+  left_screen->translate(-0.03175, 0, -0.08f);
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(gua::math::vec2(0.06288, 0.07074));
-  right_screen->translate(0.03175, 0, -0.008f);
-
+  right_screen->data.set_size(gua::math::vec2(0.17074, 0.21));
+  right_screen->translate(0.03175, 0, -0.08f);
 
   gua::Renderer renderer;
 
@@ -178,25 +172,7 @@ int main(int argc, char** argv) {
     time += frame_time;
     timer.reset();
 
-    std::function<void (std::shared_ptr<gua::node::Node>, int)> rotate;
-    rotate = [&](std::shared_ptr<gua::node::Node> node, int depth) {
-      node->rotate(frame_time * (1+depth) * 0.5, 1, 1, 0);
-      for (auto child: node->get_children()) {
-        rotate(child, ++depth);
-      }
-    };
-
-    rotate(graph["/root_ape"], 1);
-
-    for (int i = 0; i < lights.size(); ++i) {
-      lights[i]->rotate(
-          std::sin(time * (i * 0.1 + 0.5)) * frame_time * 2.5, 0, 1, 0);
-    }
-
-    graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
-
     camera->set_transform(window->get_oculus_sensor_orientation());
-
 
     renderer.queue_draw({&graph});
   });

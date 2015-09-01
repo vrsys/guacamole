@@ -33,7 +33,7 @@
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
 
 //for the OVR members
 #include <gua/utils/OculusSDK2DistortionMesh.hpp>
@@ -43,10 +43,10 @@
 namespace gua {
 
 
-class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
+class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
  public:
 
-  
+
   static void initialize_oculus_environment();
   static void shutdown_oculus_environment();
 

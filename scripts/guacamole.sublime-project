@@ -32,6 +32,8 @@
 	        "-I${project_path}/../build/include",
 	        "-I${project_path}/../plugins/guacamole-gui/include",
 	        "-I${project_path}/../plugins/guacamole-oculus/include",
+	        "-I${project_path}/../plugins/guacamole-oculusSDK2/include",
+	        "-isystem", "/opt/oculus2/include",
 	        "-isystem", "${project_path}/../../schism/scm_core/src/",
 	        "-isystem", "${project_path}/../../schism/scm_input/src/",
 	        "-isystem", "${project_path}/../../schism/scm_gl_core/src/",
