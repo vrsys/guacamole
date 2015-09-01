@@ -31,7 +31,7 @@
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     1
+#define LOAD_ENGINE     0
 
 #include <functional>
 
@@ -177,6 +177,7 @@ int main(int argc, char** argv) {
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
   light->data.set_brightness(3.f);
+  light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
   light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 2.f, 10.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
@@ -369,7 +370,7 @@ int main(int argc, char** argv) {
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
-  auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/Sponza/sponza.obj",
+  auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -468,12 +469,16 @@ int main(int argc, char** argv) {
     graph["/transform/buddha"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
+    light->data.set_brightness(3.f);
+
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_one_oilrig")
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sponza")
+    if (name == "set_scene_sponza") {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
+      light->data.set_brightness(6.f);
+    }
     if (name == "set_scene_textured_quads")
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_teapot")
@@ -536,6 +541,12 @@ int main(int argc, char** argv) {
   normal_cam->config.set_scene_graph_name("main_scenegraph");
   normal_cam->config.mask().blacklist.add_tag("invisible");
   normal_cam->config.set_near_clip(0.1f);
+
+  auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
+  fill_light->data.set_type(gua::node::LightNode::Type::SUN);
+  fill_light->data.set_brightness(1.f);
+  fill_light->data.set_color(gua::utils::Color3f(0.5f, 1.0f, 2.f));
+  fill_light->rotate(95, 1, 0.5, 0);
 
   // warping camera ------------------------------------------------------------
   #if OCULUS

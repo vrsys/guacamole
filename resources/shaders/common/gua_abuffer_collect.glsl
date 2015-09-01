@@ -104,11 +104,10 @@ void submit_fragment(float depth)
       @include "gua_write_gbuffer.glsl"
     }
     else {
-      if (abuf_insert(depth)) {
-        discard;
-      }
+      abuf_insert(depth);
+      discard;
     }
-    
+
     #else
     abuf_insert(depth);
     discard;

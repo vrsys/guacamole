@@ -30,7 +30,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
     vec4 shaded_color = ABUF_SHADE_FUNC(frag.x - abuf_list_offset, fma(z, 2.0, -1.0));
 
     #if @gua_compositing_enable@
-      if (z - 0.000001 > opaque_depth) { // fix depth-fighting artifacts
+      if (z + 0.000001 > opaque_depth) { // fix depth-fighting artifacts
         break;
       }
       #if @gua_write_abuffer_depth@
@@ -45,7 +45,12 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
         return false;
       }
     #else
-      frag_data[frag.x - abuf_list_offset].rgb = floatBitsToUint(shaded_color.rgb);
+      if (z + 0.000001 > opaque_depth) {
+        frag_list[current] = 0;
+        break;
+      } else {
+        frag_data[frag.x - abuf_list_offset].rgb = floatBitsToUint(shaded_color.rgb);
+      }
     #endif
 
     current = frag.x;
