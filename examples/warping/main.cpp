@@ -23,7 +23,8 @@
 #define GUI_SUPPORT     1
 
 #define POWER_WALL      0
-#define OCULUS          0
+#define OCULUS1         0
+#define OCULUS2         1
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -48,9 +49,12 @@
   #include <gua/gui.hpp>
 #endif
 
-#if OCULUS
+#if OCULUS1
   #include <OVR.h>
   #include <gua/OculusWindow.hpp>
+#elif OCULUS2
+  #include <OVR.h>
+  #include <gua/OculusSDK2Window.hpp>
 #endif
 
 #if LOAD_PITOTI
@@ -73,7 +77,7 @@ bool warp_perspective       = false;
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
 
-#if OCULUS
+#if OCULUS1
   OVR::SensorFusion* init_oculus() {
     OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
     OVR::DeviceManager* device_manager  = OVR::DeviceManager::Create();
@@ -93,6 +97,10 @@ std::string     current_transparency_mode("set_transparency_type_raycasting");
                             mat.M[1][0], mat.M[1][1], mat.M[1][2], mat.M[1][3],
                             mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
                             mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
+  }
+#elif OCULUS2
+  void init_oculus() {
+    gua::OculusSDK2Window::initialize_oculus_environment();
   }
 #endif
 
@@ -131,16 +139,19 @@ int main(int argc, char** argv) {
   #if POWER_WALL
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(1780, 1185);
-  #elif OCULUS
+  #elif OCULUS1
     bool fullscreen = true;
-    auto resolution = gua::math::vec2ui(640, 800);
+    auto resolution = gua::math::vec2ui(1280/2, 800);
 
-    // initialize Oculus SDK
     OVR::SensorFusion* oculus_sensor = init_oculus();
     if (!oculus_sensor) {
       gua::Logger::LOG_WARNING << "Could not connect to Oculus Rift! " << std::endl;
       return -1;
     }
+  #elif OCULUS2
+    bool fullscreen = true;
+    auto resolution = gua::math::vec2ui(1920/2, 1080);
+    init_oculus();
   #elif STEREO_MONITOR
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(2560, 1440);
@@ -225,7 +236,7 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  scene_root->scale(0.3);
+  scene_root->scale(3);
   scene_root->rotate(-90, 1, 0, 0);
   add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
@@ -512,18 +523,26 @@ int main(int argc, char** argv) {
   auto warp_navigation = graph.add_node<gua::node::TransformNode>("/navigation", "warp");
 
   // normal camera -------------------------------------------------------------
-  #if OCULUS
+  #if OCULUS1 || OCULUS2
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
     auto normal_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_left");
     auto normal_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_right");
-    normal_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
-    normal_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-    normal_screen_right->translate(0.04, 0, -0.05f);
-    normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-    normal_cam->config.set_eye_dist(0.f);
+    // normal_cam->config.set_eye_dist(0.f);
     normal_cam->config.set_resolution(resolution);
     normal_cam->config.set_left_screen_path("/navigation/normal_cam/normal_screen_left");
     normal_cam->config.set_right_screen_path("/navigation/normal_cam/normal_screen_right");
+
+    #if OCULUS1
+      normal_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+      normal_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+      // normal_screen_right->translate(0.04, 0, -0.05f);
+      // normal_screen_left->translate(0.f, 0.f, -0.05f);
+    #else
+      normal_screen_left->data.set_size(gua::math::vec2(0.17074, 0.21));
+      normal_screen_right->data.set_size(gua::math::vec2(0.17074, 0.21));
+      // normal_screen_right->translate(0.04, 0, -0.05f);
+      // normal_screen_left->translate(0.f, 0.f, -0.08f);
+    #endif
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
@@ -549,18 +568,26 @@ int main(int argc, char** argv) {
   fill_light->rotate(95, 1, 0.5, 0);
 
   // warping camera ------------------------------------------------------------
-  #if OCULUS
+  #if OCULUS1 || OCULUS2
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation", "warp_cam");
     auto warp_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/warp_cam", "warp_screen_left");
     auto warp_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/warp_cam", "warp_screen_right");
-    warp_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
-    warp_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-    warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-    warp_screen_right->translate(0.04, 0, -0.05f);
-    warp_cam->config.set_eye_dist(0.f);
     warp_cam->config.set_resolution(resolution);
     warp_cam->config.set_left_screen_path("/navigation/warp_cam/warp_screen_left");
     warp_cam->config.set_right_screen_path("/navigation/warp_cam/warp_screen_right");
+    // warp_cam->config.set_eye_dist(0.f);
+
+    #if OCULUS1
+      warp_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
+      warp_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
+      // warp_screen_right->translate(0.04, 0, -0.05f);
+      // warp_screen_left->translate(0.f, 0.f, -0.05f);
+    #else
+      warp_screen_left->data.set_size(gua::math::vec2(0.17074, 0.21));
+      warp_screen_right->data.set_size(gua::math::vec2(0.17074, 0.21));
+      // warp_screen_right->translate(0.04, 0, -0.05f);
+      // warp_screen_left->translate(0.f, 0.f, -0.08f);
+    #endif
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
@@ -630,8 +657,10 @@ int main(int argc, char** argv) {
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
 
-  #if OCULUS
+  #if OCULUS1
     auto window = std::make_shared<gua::OculusWindow>();
+  #elif OCULUS2
+    auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
   #else
     auto window = std::make_shared<gua::GlfwWindow>();
   #endif
@@ -667,9 +696,12 @@ int main(int argc, char** argv) {
 
       normal_cam->config.set_enable_stereo(true);
 
-      #if OCULUS
+      #if OCULUS1
         warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
         warp_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+      #elif OCULUS2
+        warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.03175f, 0.f, -0.08f)));
+        warp_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.03175f, 0.f, -0.08f)));
       #else
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
@@ -689,9 +721,12 @@ int main(int argc, char** argv) {
         normal_cam->config.set_eye_dist(0.f);
         warp_cam->config.set_eye_dist(0.064f);
 
-        #if OCULUS
+        #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
           normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+        #elif OCULUS2
+          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
+          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
         #endif
 
         normal_cam->set_pipeline_description(warp_pipe);
@@ -699,9 +734,12 @@ int main(int argc, char** argv) {
       } else {
         normal_cam->config.set_eye_dist(0.064f);
 
-        #if OCULUS
+        #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
           normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
+        #elif OCULUS2
+          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.03175f, 0.f, -0.08f)));
+          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.03175f, 0.f, -0.08f)));
         #endif
 
         normal_cam->set_pipeline_description(normal_pipe);
@@ -714,9 +752,12 @@ int main(int argc, char** argv) {
       warp_cam->config.set_eye_dist(0.f);
       clear_pass->set_enable_for_right_eye(true);
 
-      #if OCULUS
+      #if OCULUS1
         normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
         warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+      #elif OCULUS2
+        normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
+        warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
       #else
         window->config.set_stereo_mode(gua::StereoMode::MONO);
       #endif
@@ -1084,7 +1125,7 @@ int main(int argc, char** argv) {
   window->config.set_fullscreen_mode(fullscreen);
   window->cursor_mode(gua::GlfwWindow::CursorMode::HIDDEN);
 
-  #if (!POWER_WALL && !OCULUS && !STEREO_MONITOR)
+  #if (!POWER_WALL && !OCULUS1 && !OCULUS2 && !STEREO_MONITOR)
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
       resolution = new_size;
       window->config.set_resolution(new_size);
@@ -1179,7 +1220,7 @@ int main(int argc, char** argv) {
     window->config.set_right_resolution(gua::math::vec2ui(1780, 1185));
     window->config.set_left_position(gua::math::vec2ui(140, 0));
     window->config.set_left_resolution(gua::math::vec2ui(1780, 1185));
-  #elif !OCULUS
+  #elif !OCULUS1 && !OCULUS2
     window->config.set_size(resolution);
     window->config.set_resolution(resolution);
   #endif
@@ -1191,8 +1232,10 @@ int main(int argc, char** argv) {
   warp_pass->get_warp_state([&](){
     #if POWER_WALL
       warp_cam->set_transform(current_tracking_matrix);
-    #elif OCULUS
+    #elif OCULUS1
       warp_cam->set_transform(get_oculus_transform(oculus_sensor));
+    #elif OCULUS2
+      warp_cam->set_transform(window->get_oculus_sensor_orientation());
     #endif
 
     gua::WarpPassDescription::WarpState state;
@@ -1255,8 +1298,10 @@ int main(int argc, char** argv) {
 
     #if POWER_WALL
       normal_cam->set_transform(current_tracking_matrix);
-    #elif OCULUS
+    #elif OCULUS1
       normal_cam->set_transform(get_oculus_transform(oculus_sensor));
+    #elif OCULUS2
+      normal_cam->set_transform(window->get_oculus_sensor_orientation());
     #endif
 
     nav.update();

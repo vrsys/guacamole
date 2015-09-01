@@ -58,39 +58,6 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
   return lights;
 }
 
-void setup_scene(gua::SceneGraph& graph,
-                 std::shared_ptr<gua::node::Node> const& root_monkey,
-                 int depth_count) {
-
-  if (depth_count > 0) {
-    gua::TriMeshLoader loader;
-
-    float offset(2.f);
-    std::vector<gua::math::vec3> directions = {
-      gua::math::vec3(0, offset, 0),
-      gua::math::vec3(0, -offset, 0),
-      gua::math::vec3(offset, 0, 0),
-      gua::math::vec3(-offset, 0, 0),
-      gua::math::vec3(0, 0, offset),
-      gua::math::vec3(0, 0, -offset)
-    };
-
-    for (auto direction: directions) {
-      auto monkey_geometry(loader.create_geometry_from_file(
-        "monkey",
-        geometry
-      ));
-
-      auto monkey = root_monkey->add_child(monkey_geometry);
-      monkey->scale(0.5, 0.5, 0.5);
-      monkey->translate(direction[0], direction[1], direction[2]);
-
-      setup_scene(graph, monkey, depth_count - 1);
-    }
-  }
-}
-
-
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);

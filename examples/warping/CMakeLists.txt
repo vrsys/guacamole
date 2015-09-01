@@ -16,7 +16,9 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
                      ${GUACAMOLE_GUI_INCLUDE_DIR}
                      ${GUACAMOLE_OCULUS_INCLUDE_DIR}
-                     ${OVR_INCLUDE_DIR} 
+                     ${OVRSDK2_INCLUDE_DIR}
+                     ${GUACAMOLE_OCULUSSDK2_INCLUDE_DIR}
+                     ${OVR_INCLUDE_DIR}
 )
 
 ADD_EXECUTABLE( ${_EXE_NAME}
@@ -25,7 +27,7 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
-LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARY})
+LIST(APPEND LIBS guacamole-oculus guacamole-oculusSDK2 guacamole ${OVR_LIBRARY} ${OVRSDK2_LIBRARIES})
 
 IF (${PLUGIN_guacamole-gui})
 	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
@@ -48,9 +50,9 @@ ENDIF (MSVC)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
-    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD 
-      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
-            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
+    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD
+      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
+            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
             \n if %ERRORLEVEL% LEQ 7 (exit /b 0) else (exit /b 1)
     )
 ENDIF (MSVC)
