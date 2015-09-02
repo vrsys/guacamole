@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     1
+#define GUI_SUPPORT     0
 
 #define POWER_WALL      0
 #define OCULUS1         0
@@ -176,7 +176,8 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   #if WIN32
-    std::string opt_prefix("D:/guacamole/");
+    std::string opt_prefix("C:/Users/localadmin/Desktop/Simon/opt/");
+    //std::string opt_prefix("D:/guacamole/");
 	#else
     std::string opt_prefix("/opt/");
 	#endif
@@ -366,15 +367,15 @@ int main(int argc, char** argv) {
   // auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
   //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
   //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
+  // auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+  //  gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //  gua::TriMeshLoader::NORMALIZE_SCALE));
   // dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+  //transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
 
   // dragon->translate(0.6, -0.17, 0);
-  transp_dragon->translate(-0.6, 0, 0);
-  transp_dragon->scale(1.4);
+  //transp_dragon->translate(-0.6, 0, 0);
+  //transp_dragon->scale(1.4);
   // scene_root->add_child(dragon);
   // scene_root->add_child(transp_dragon);
   // scene_root->add_child(plane);
@@ -387,7 +388,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
   sponza->translate(0, 3, 0);
-  scene_root->add_child(transp_dragon);
+  //scene_root->add_child(transp_dragon);
   scene_root->add_child(sponza);
 
   // hairball --------------------------------------------------------------------
@@ -1147,9 +1148,9 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     if (manipulation_navigator) {
-      nav.set_key_press(static_cast<gua::Key>(key), action);
+      nav.set_key_press(key, action);
     } else if (manipulation_camera) {
-      warp_nav.set_key_press(static_cast<gua::Key>(key), action);
+      warp_nav.set_key_press(key, action);
     }
     #if GUI_SUPPORT
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);

@@ -184,7 +184,7 @@ void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) 
 
 OculusSDK2Window::OculusSDK2Window(std::string const& display):
   GlfwWindow(),
-  num_distortion_mesh_indices_{0,0} {
+  num_distortion_mesh_indices_() {
 
   // automatically register the HMDs in order
   registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);

@@ -86,21 +86,21 @@ scm::math::mat4f const& Navigator::get_transform() const {
   return transform_;
 }
 
-void Navigator::set_key_press(gua::Key key, int action) {
+void Navigator::set_key_press(int key, int action) {
   switch (key) {
-    case gua::Key::W:
+    case 87:
       w_pressed_ = action != 0;
       break;
 
-    case gua::Key::S:
+    case 83:
       s_pressed_ = action != 0;
       break;
 
-    case gua::Key::A:
+    case 65:
       a_pressed_ = action != 0;
       break;
 
-    case gua::Key::D:
+    case 68:
       d_pressed_ = action != 0;
       break;
   }
