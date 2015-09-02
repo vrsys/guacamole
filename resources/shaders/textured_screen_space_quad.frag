@@ -37,9 +37,10 @@ void main() {
   float intensity = 0.0;
   const int slices = 100;
   for (int i=0; i < slices; ++i) {
-    intensity += texture(sampler2DShadow(gua_in_texture), vec3(gua_quad_coords, i * 1.0/slices)).r;
+    float d = 1.0 - pow((i * 1.0/slices), 10);
+    intensity += texture(sampler2DShadow(gua_in_texture), vec3(gua_quad_coords, d)).r;
   }
 
-  gua_out_color = vec4(vec3(pow(intensity/slices,20)),1);
+  gua_out_color = vec4(vec3(intensity/slices),1);
 }
   
