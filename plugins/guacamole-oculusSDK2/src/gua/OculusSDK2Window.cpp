@@ -44,7 +44,7 @@ unsigned OculusSDK2Window::registered_oculus_device_count_ = 0;
 // will set up the oculus environment
 void OculusSDK2Window::initialize_oculus_environment() {
   if( !oculus_environment_initialized_ ) {
-      ovr_Initialize();
+      ovr_Initialize(nullptr);
       oculus_environment_initialized_ = true;
   } else {
       Logger::LOG_WARNING << "Attempt to initialize oculus environment multiple times!"
@@ -69,6 +69,7 @@ void OculusSDK2Window::shutdown_oculus_environment() {
 // helper functions
 // ---------------------------------------------------------------
 
+#ifndef _WIN32
 // gets the distortion meshes of the oculus API and initializes a parsing process to
 // gua buffers
 void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx) {
@@ -162,11 +163,16 @@ void OculusSDK2Window::initialize_distortion_meshes(ovrHmd const& hmd, RenderCon
   }
 
 }
+#endif
 
 // call this function to store the orientation each render frame
 void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) {
 
-  ovrTrackingState ts = ovrHmd_GetTrackingState(registered_HMD_, absolute_time);
+#ifdef _WIN32
+    ovrTrackingState ts = ovr_GetTrackingState(registered_HMD_, absolute_time);
+#else
+    ovrTrackingState ts = ovrHmd_GetTrackingState(registered_HMD_, absolute_time);
+#endif
 
   if (ts.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked)) {
     // The cpp compatibility layer is used to convert ovrPosef to Posef (see OVR_Math.h)
@@ -183,30 +189,54 @@ void OculusSDK2Window::retrieve_oculus_sensor_orientation(double absolute_time) 
 
 
 OculusSDK2Window::OculusSDK2Window(std::string const& display):
-  GlfwWindow(),
-  num_distortion_mesh_indices_() {
+  GlfwWindow() {
 
   // automatically register the HMDs in order
-  registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
+#ifdef _WIN32
+    ovrGraphicsLuid luid;
+    ovr_Create(&registered_HMD_, &luid);
 
-  // register all three sensors for sensor fusion
-  bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
-                                                                     | ovrTrackingCap_MagYawCorrection
-                                                                     | ovrTrackingCap_Position, 0);
+    // register all three sensors for sensor fusion
+    bool tracking_configured = ovr_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+        | ovrTrackingCap_MagYawCorrection
+        | ovrTrackingCap_Position, 0) == 0;
 
-  std::cout << registered_HMD_->ProductName << "\n";
+    std::cout << ovr_GetHmdDesc(registered_HMD_).ProductName << "\n";
 
-  if( !tracking_configured ) {
-    ovrHmd_Destroy(registered_HMD_);
-    registered_HMD_ = NULL;
-    gua::Logger::LOG_WARNING << "The oculus device does not support demanded tracking feature.\n";
+    if( !tracking_configured ) {
+        ovr_Destroy(registered_HMD_);
+        registered_HMD_ = NULL;
+        gua::Logger::LOG_WARNING << "The oculus device does not support demanded tracking feature.\n";
 
-    exit(-1);
-  }
+        exit(-1);
+    }
 
-  // get the resolution from the device itself
-  unsigned res_x = registered_HMD_->Resolution.w;
-  unsigned res_y = registered_HMD_->Resolution.h;
+    // get the resolution from the device itself
+    unsigned res_x = ovr_GetHmdDesc(registered_HMD_).Resolution.w;
+    unsigned res_y = ovr_GetHmdDesc(registered_HMD_).Resolution.h;
+#else
+    registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
+
+    // register all three sensors for sensor fusion
+    bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+        | ovrTrackingCap_MagYawCorrection
+        | ovrTrackingCap_Position, 0);
+
+    std::cout << registered_HMD_->ProductName << "\n";
+
+    if (!tracking_configured) {
+        ovrHmd_Destroy(registered_HMD_);
+        registered_HMD_ = NULL;
+        gua::Logger::LOG_WARNING << "The oculus device does not support demanded tracking feature.\n";
+
+        exit(-1);
+    }
+
+    // get the resolution from the device itself
+    unsigned res_x = registered_HMD_->Resolution.w;
+    unsigned res_y = registered_HMD_->Resolution.h;
+#endif
+
 
   // set up the window parameters
   config.set_size(math::vec2ui(res_x, res_y));
@@ -223,7 +253,11 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
 
 OculusSDK2Window::~OculusSDK2Window() {
   // cleanup the oculus device
+#ifdef _WIN32
+  ovr_Destroy(registered_HMD_);
+#else
   ovrHmd_Destroy(registered_HMD_);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,7 +328,9 @@ void OculusSDK2Window::init_context() {
 
   ctx_.render_window = this;
 
+#ifndef _WIN32
   initialize_distortion_meshes(registered_HMD_, *get_context());
+#endif
 
   depth_stencil_state_ = ctx_.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
@@ -314,14 +350,12 @@ void OculusSDK2Window::init_context() {
   if (config.get_debug()) {
     ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
   }
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
-
+    /*
   // right now the frame timing is not used for time warping (needs right application in rendering structure)
   auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0);
 
@@ -361,7 +395,7 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
   fullscreen_shader_.unuse(*get_context());
 
   // end frame timing (see above)
-  ovrHmd_EndFrameTiming(registered_HMD_);
+  ovrHmd_EndFrameTiming(registered_HMD_);*/
 }
 
 // retrieve the oculus sensor orientation for the application
@@ -373,9 +407,13 @@ gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
 gua::math::vec2ui OculusSDK2Window::get_full_oculus_resolution() const {
   gua::math::vec2ui oculus_resolution(0, 0);
 
+#ifdef _WIN32
+  oculus_resolution.x = ovr_GetHmdDesc(registered_HMD_).Resolution.w;
+  oculus_resolution.y = ovr_GetHmdDesc(registered_HMD_).Resolution.h;
+#else
   oculus_resolution.x = registered_HMD_->Resolution.w;
   oculus_resolution.y = registered_HMD_->Resolution.h;
-
+#endif
   return oculus_resolution;
 }
 

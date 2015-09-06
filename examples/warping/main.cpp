@@ -24,7 +24,7 @@
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         1
+#define OCULUS2         0
 #define STEREO_MONITOR  0
 
 #define SSAO            0
