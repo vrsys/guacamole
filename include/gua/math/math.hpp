@@ -138,6 +138,13 @@ inline math::mat4 get_rotation(math::mat4 const& m) {
   return q.to_matrix();
 }
 
+inline math::vec4 get_scale(math::mat4 const& m) {
+  math::vec3 x_vec(m[0], m[1], m[2]);
+  math::vec3 y_vec(m[4], m[5], m[6]);
+  math::vec3 z_vec(m[8], m[9], m[10]);
+  return math::vec3(scm::math::length(x_vec), scm::math::length(y_vec), scm::math::length(z_vec));
+}
+
 std::tuple<float_t, float_t, float_t> GUA_DLL barycentric(math::vec3 const& a,
                                                           math::vec3 const& b,
                                                           math::vec3 const& c,
