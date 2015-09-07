@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     1
+#define GUI_SUPPORT     0
 
 #define POWER_WALL      0
 #define OCULUS1         0
@@ -53,7 +53,6 @@
   #include <OVR.h>
   #include <gua/OculusWindow.hpp>
 #elif OCULUS2
-  #include <OVR.h>
   #include <gua/OculusSDK2Window.hpp>
 #endif
 
