@@ -389,10 +389,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     };
 
     // frustum
-    math::mat4 transform(node_transform * screen_transforms[face]);
+    math::vec3 scale(math::get_scale(node_transform));
+    math::mat4 scale_free(node_transform * scm::math::inverse(scm::math::make_scale(scale)));
+    math::mat4 transform(scale_free * screen_transforms[face]);
     auto frustum(
       Frustum::perspective(
-      node_transform, transform,
+      scale_free, transform,
       cube_map_node->config.near_clip(),
       cube_map_node->config.far_clip()
       )
