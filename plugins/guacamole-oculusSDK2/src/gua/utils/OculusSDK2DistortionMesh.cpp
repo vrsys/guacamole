@@ -22,6 +22,8 @@
 // guacamole headers
 #include <gua/utils/OculusSDK2DistortionMesh.hpp>
 
+#ifndef _WIN32
+
 namespace gua {
 
   OculusSDK2DistortionMesh::OculusSDK2DistortionMesh() : ndc_2d_positions(),
@@ -162,3 +164,5 @@ namespace gua {
   }
 
 };
+
+#endif

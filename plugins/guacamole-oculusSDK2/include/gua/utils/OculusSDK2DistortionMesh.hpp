@@ -32,10 +32,15 @@
   #define GUA_OCULUSSDK2_DLL
 #endif // #if defined(_MSC_VER)
 
+
+#ifndef _WIN32
+
 #include <gua/math/math.hpp>
 #include <OVR.h>
 
 #include <scm/gl_core.h>
+
+
 
 namespace gua {
 
@@ -82,5 +87,7 @@ struct OculusSDK2DistortionMesh {
 };
 
 }
+
+#endif
 
 #endif  // GUA_OCULUSSDK2_DISTORTION_MESH_HPP

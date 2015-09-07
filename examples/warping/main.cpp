@@ -24,7 +24,7 @@
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         0
+#define OCULUS2         1
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -1171,9 +1171,9 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     if (manipulation_navigator) {
-      nav.set_key_press(static_cast<gua::Key>(key), action);
+      nav.set_key_press(key, action);
     } else if (manipulation_camera) {
-      warp_nav.set_key_press(static_cast<gua::Key>(key), action);
+      warp_nav.set_key_press(key, action);
     }
     #if GUI_SUPPORT
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);

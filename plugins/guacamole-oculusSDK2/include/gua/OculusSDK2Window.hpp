@@ -36,7 +36,11 @@
 #include <gua/renderer/GlfwWindow.hpp>
 
 //for the OVR members
-#include <gua/utils/OculusSDK2DistortionMesh.hpp>
+#if defined (_WIN32)
+    #include <OVR_CAPI.h>
+#else
+    #include <gua/utils/OculusSDK2DistortionMesh.hpp>
+#endif
 
 #include <scm/gl_core/state_objects/state_objects_fwd.h>
 
@@ -69,14 +73,18 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
     static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
 
-    void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-    //void create_distortion_mesh();
-    scm::gl::buffer_ptr distortion_mesh_vertices_[2];
-    scm::gl::buffer_ptr distortion_mesh_indices_[2];
-    scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+    void retrieve_oculus_sensor_orientation(double absolute_time);
+    math::mat4 oculus_sensor_orientation_;
 
-    // for distorted rendering as a replacement of the distortion shader
-    unsigned num_distortion_mesh_indices_[2];
+    #ifndef _WIN32
+        void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
+        scm::gl::buffer_ptr distortion_mesh_vertices_[2];
+        scm::gl::buffer_ptr distortion_mesh_indices_[2];
+        scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+
+        // for distorted rendering as a replacement of the distortion shader
+        unsigned num_distortion_mesh_indices_[2];
+    #endif
 
     // oculus device associated with the window
     ovrHmd registered_HMD_;

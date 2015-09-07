@@ -40,6 +40,7 @@
 
 // external headers
 #include <iostream>
+#include <functional>
 
 namespace gua {
 
