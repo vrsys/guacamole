@@ -24,7 +24,7 @@
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         1
+#define OCULUS2         0
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -32,7 +32,7 @@
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     0
+#define LOAD_ENGINE     1
 
 #include <functional>
 
@@ -73,6 +73,7 @@ bool manipulation_object    = false;
 bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
+bool vsync                  = true;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
@@ -524,6 +525,13 @@ int main(int argc, char** argv) {
 
   // normal camera -------------------------------------------------------------
   #if OCULUS1 || OCULUS2
+
+    // auto platform = graph.add_node<gua::node::TexturedQuadNode>("/navigation", "platform");
+    // platform->scale(1);
+    // platform->rotate(-90, 1, 0, 0);
+    // platform->translate(0, -0.5, -0.4);
+    // platform->data.texture() = "data/textures/platform.png";
+
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
     auto normal_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_left");
     auto normal_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_right");
@@ -632,8 +640,8 @@ int main(int argc, char** argv) {
 
   auto warp_pipe = std::make_shared<gua::PipelineDescription>();
   warp_pipe->add_pass(clear_pass);
-  warp_pipe->add_pass(trimesh_pass);
   warp_pipe->add_pass(tex_quad_pass);
+  warp_pipe->add_pass(trimesh_pass);
   #if LOAD_PITOTI
   warp_pipe->add_pass(plod_pass);
   #endif
@@ -642,20 +650,24 @@ int main(int argc, char** argv) {
   warp_pipe->add_pass(grid_pass);
   warp_pipe->add_pass(warp_pass);
   warp_pipe->add_pass(render_grid_pass);
+  // warp_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   warp_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   warp_pipe->set_enable_abuffer(true);
+  warp_pipe->set_abuffer_size(500);
 
   auto normal_pipe = std::make_shared<gua::PipelineDescription>();
   normal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
-  normal_pipe->add_pass(trimesh_pass);
   normal_pipe->add_pass(tex_quad_pass);
+  normal_pipe->add_pass(trimesh_pass);
   #if LOAD_PITOTI
   normal_pipe->add_pass(plod_pass);
   #endif
   normal_pipe->add_pass(light_pass);
   normal_pipe->add_pass(res_pass);
+  // normal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
+  normal_pipe->set_abuffer_size(500);
 
   #if OCULUS1
     auto window = std::make_shared<gua::OculusWindow>();
@@ -779,18 +791,36 @@ int main(int argc, char** argv) {
 
   #if GUI_SUPPORT
 
-    auto gui = std::make_shared<gua::GuiResource>();
-    auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
-
-    auto stats = std::make_shared<gua::GuiResource>();
-    auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
-
     auto mouse = std::make_shared<gua::GuiResource>();
-    auto mouse_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("mouse_quad");
     mouse->init("mouse", "asset://gua/data/gui/mouse.html", gua::math::vec2ui(50, 50));
+
+    auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
+    gui_quad->data.texture() = "gui";
+    gui_quad->data.size() = gua::math::vec2ui(330, 790);
+    graph.add_node("/", gui_quad);
+
+    auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
+    stats_quad->data.texture() = "stats";
+    stats_quad->data.size() = gua::math::vec2ui(resolution.x*0.7, 60);
+    graph.add_node("/", stats_quad);
+
+    auto mouse_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("mouse_quad");
     mouse_quad->data.texture() = "mouse";
     mouse_quad->data.size() = gua::math::vec2ui(50, 50);
-    mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
+    graph.add_node("/", mouse_quad);
+
+    #if OCULUS1 || OCULUS2
+      mouse_quad->data.fake_parallax() = -0.01f;
+      stats_quad->data.fake_parallax() = -0.01f;
+      gui_quad->data.fake_parallax() = -0.01f;
+      mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
+      stats_quad->data.anchor() = gua::math::vec2(0.f, -0.7f);
+      gui_quad->data.anchor() = gua::math::vec2(0.7f, 0.f);
+    #else
+      mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
+      stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
+      gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
+    #endif
 
     gua::Interface::instance()->on_cursor_change.connect([&](gua::Cursor pointer){
       mouse->call_javascript("set_active", pointer == gua::Cursor::HAND);
@@ -798,13 +828,15 @@ int main(int argc, char** argv) {
     });
 
     // right side gui ----------------------------------------------------------
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 850));
+    auto gui = std::make_shared<gua::GuiResource>();
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 790));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
       gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
+      gui->add_javascript_getter("get_vsync", [&](){ return std::to_string(vsync);});
       gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
       gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
       gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
@@ -824,6 +856,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
       gui->add_javascript_callback("set_depth_test");
+      gui->add_javascript_callback("set_vsync");
       gui->add_javascript_callback("set_warp_perspective");
       gui->add_javascript_callback("set_warping");
       gui->add_javascript_callback("set_stereo");
@@ -915,6 +948,10 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> depth_test;
         warp_pass->depth_test(depth_test);
+      } else if (callback == "set_vsync") {
+        std::stringstream str(params[0]);
+        str >> vsync;
+        window->config.set_enable_vsync(vsync);
       } else if (callback == "set_warp_perspective") {
         std::stringstream str(params[0]);
         str >> warp_perspective;
@@ -1097,25 +1134,12 @@ int main(int argc, char** argv) {
       }
     });
 
-    gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 850);
-    gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
-
-    graph.add_node("/", gui_quad);
-
     // bottom gui --------------------------------------------------------------
+    auto stats = std::make_shared<gua::GuiResource>();
     stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x*0.7, 60));
-
     stats->on_loaded.connect([&]() {
       stats->call_javascript("init");
     });
-
-    stats_quad->data.texture() = "stats";
-    stats_quad->data.size() = gua::math::vec2ui(resolution.x*0.7, 60);
-    stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
-
-    graph.add_node("/", stats_quad);
-    graph.add_node("/", mouse_quad);
   #endif
 
   // ---------------------------------------------------------------------------
@@ -1188,9 +1212,12 @@ int main(int argc, char** argv) {
 
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     #if GUI_SUPPORT
-      mouse_quad->data.offset() = pos + gua::math::vec2i(-2, -45);
+      bool hit_gui(false);
       gua::math::vec2 hit_pos;
-      if (gui_quad->pixel_to_texcoords(pos, resolution, hit_pos) && !gui_quad->get_tags().has_tag("invisible")) {
+      mouse_quad->data.offset() = pos + gua::math::vec2i(-2, -45);
+      hit_gui = gui_quad->pixel_to_texcoords(pos, resolution, hit_pos) && !gui_quad->get_tags().has_tag("invisible");
+
+      if (hit_gui) {
         gui->inject_mouse_position_relative(hit_pos);
       } else {
         if (manipulation_object) {
@@ -1224,7 +1251,7 @@ int main(int argc, char** argv) {
     window->config.set_size(resolution);
     window->config.set_resolution(resolution);
   #endif
-  window->config.set_enable_vsync(STEREO_MONITOR);
+  window->config.set_enable_vsync(vsync);
   gua::WindowDatabase::instance()->add("window", window);
   window->open();
 
@@ -1286,7 +1313,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/200.0);
+  gua::events::Ticker ticker(loop, 1.0/300.0);
 
   int ctr=0;
 

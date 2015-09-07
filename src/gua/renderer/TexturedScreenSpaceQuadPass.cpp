@@ -47,15 +47,24 @@ void render_node(PipelinePass& pass,
   UniformValue size(scm::math::vec2f(1.0 * quad_node->data.get_size().x / width,
                                      1.0 * quad_node->data.get_size().y / height));
 
+  float fake_parallax = 0.f;
+  if (pipe.get_context().mode == CameraMode::LEFT) {
+    fake_parallax = quad_node->data.get_fake_parallax();
+  }
+  if (pipe.get_context().mode == CameraMode::RIGHT) {
+    fake_parallax = -quad_node->data.get_fake_parallax();
+  }
+
   UniformValue offset(
       scm::math::vec2f((2.0 * quad_node->data.get_offset().x +
                   quad_node->data.get_anchor().x *
-                      (width - quad_node->data.get_size().x)) / width,
+                      (width - quad_node->data.get_size().x)) / width + fake_parallax,
                  (2.0 * quad_node->data.get_offset().y +
                   quad_node->data.get_anchor().y *
                       (height - quad_node->data.get_size().y)) / height));
 
   auto const& ctx(pipe.get_context());
+
 
   pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
   pass.shader_->apply_uniform(ctx, "flip", flip);

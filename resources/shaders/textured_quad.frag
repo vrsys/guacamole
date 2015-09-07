@@ -37,7 +37,8 @@ void main() {
 
     gua_alpha = color.a;
     gua_color = color.rgb;
-    gua_emissivity = 1.0;
+    gua_normal = gua_varying_normal;
+    gua_emissivity = 0.2;
     gua_roughness = 0.0;
     gua_metalness = 0.0;
 

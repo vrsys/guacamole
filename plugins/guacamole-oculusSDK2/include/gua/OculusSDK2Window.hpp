@@ -55,18 +55,21 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
 
   void init_context() override;
 
+  void recenter();
+
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
   gua::math::mat4 get_oculus_sensor_orientation() const;
   gua::math::vec2ui get_full_oculus_resolution() const;
+
+
   private:
 
     static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
 
     void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-    void retrieve_oculus_sensor_orientation(double absolute_time);
     //void create_distortion_mesh();
     scm::gl::buffer_ptr distortion_mesh_vertices_[2];
     scm::gl::buffer_ptr distortion_mesh_indices_[2];
@@ -77,9 +80,6 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
 
     // oculus device associated with the window
     ovrHmd registered_HMD_;
-
-    // sensor orientation
-    gua::math::mat4 oculus_sensor_orientation_;
 
     scm::gl::rasterizer_state_ptr no_backface_culling_state_;
 };

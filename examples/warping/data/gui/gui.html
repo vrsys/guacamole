@@ -190,13 +190,13 @@
         init_radio("#manipulation_object", "manipulation_object");
 
         init_radio("#scene_one_oilrig", "scene_one_oilrig");
-        init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
+        // init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
         init_radio("#scene_sponza", "scene_sponza");
         init_radio("#scene_mountains", "scene_mountains");
         init_radio("#scene_bottle", "scene_bottle");
         init_radio("#scene_teapot", "scene_teapot");
         init_radio("#scene_car", "scene_car");
-        init_radio("#scene_pitoti", "scene_pitoti");
+        // init_radio("#scene_pitoti", "scene_pitoti");
         init_radio("#scene_sphere", "scene_sphere");
         init_radio("#scene_textured_quads", "scene_textured_quads");
         init_radio("#scene_buddha", "scene_buddha");
@@ -205,6 +205,7 @@
         init_radio("#scene_engine", "scene_engine");
 
         init_checkbox("#depth_test", "depth_test");
+        init_checkbox("#vsync", "vsync");
         init_checkbox("#backface_culling", "backface_culling");
         init_checkbox("#background", "background");
 
@@ -216,7 +217,6 @@
         init_radio("#gbuffer_type_points", "gbuffer_type_points");
         init_radio("#gbuffer_type_scaled_points", "gbuffer_type_scaled_points");
         init_radio("#gbuffer_type_quads_screen_aligned", "gbuffer_type_quads_screen_aligned");
-        init_radio("#gbuffer_type_quads_normal_aligned", "gbuffer_type_quads_normal_aligned");
         init_radio("#gbuffer_type_quads_depth_aligned", "gbuffer_type_quads_depth_aligned");
         init_radio("#gbuffer_type_grid_depth_theshold", "gbuffer_type_grid_depth_theshold");
         init_radio("#gbuffer_type_grid_surface_estimation", "gbuffer_type_grid_surface_estimation");
@@ -309,12 +309,12 @@
                   <span>One Oilrig</span>
                 </label>
               </div>
-              <div class="radio">
+              <!-- <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_many_oilrigs" value="">
                   <span>Many Oilrigs</span>
                 </label>
-              </div>
+              </div> -->
               <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_sponza" value="">
@@ -357,12 +357,12 @@
                   <span>Textured Quads</span>
                 </label>
               </div>
-              <div class="radio">
+              <!-- <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_pitoti" value="">
                   <span>Pitoti</span>
                 </label>
-              </div>
+              </div> -->
 
               <div class="radio">
                 <label>
@@ -425,6 +425,13 @@
                 <label>
                   <input id="depth_test" type="checkbox" value="">
                   <span>Depth Test</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="vsync" type="checkbox" value="">
+                  <span>Vsync</span>
                 </label>
               </div>
 
@@ -558,12 +565,6 @@
                 <label>
                   <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_screen_aligned" value="">
                   <span>Screen aligned</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_normal_aligned" value="">
-                  <span>Normal aligned</span>
                 </label>
               </div>
               <div class="radio">

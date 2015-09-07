@@ -71,9 +71,9 @@ hr {
 
 .side-panel {
     position: relative;
-    padding: 10px 0;
+    padding: 5px 0;
     margin: 0;
-    height: 60px;
+    height: 50px;
     -webkit-transition: height 0.5s ease;
 }
 
@@ -95,7 +95,7 @@ hr {
 }
 
 .side-panel.expanded {
-    height: 500px;
+    height: 440px;
 }
 
 #settings-bottom {
