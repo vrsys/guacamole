@@ -77,7 +77,7 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(std::string,     alternative_frustum_culling_screen_path, "");
     GUA_ADD_PROPERTY(CameraMode,      mono_mode,              CameraMode::CENTER);
 
-    // the rendering is performed with thid resolution. Usually it should match
+    // the rendering is performed with this resolution. Usually it should match
     // the output window's size.
     GUA_ADD_PROPERTY(math::vec2ui,    resolution,             math::vec2ui(800, 600));
 

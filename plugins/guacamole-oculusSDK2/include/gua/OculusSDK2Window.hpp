@@ -38,6 +38,7 @@
 //for the OVR members
 #if defined (_WIN32)
     #include <OVR_CAPI.h>
+    #include <OVR_CAPI_GL.h>
 #else
     #include <gua/utils/OculusSDK2DistortionMesh.hpp>
 #endif
@@ -64,9 +65,10 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  gua::math::mat4 get_oculus_sensor_orientation();
-  gua::math::vec2ui get_full_oculus_resolution() const;
+  gua::math::mat4 get_oculus_sensor_orientation() const;
 
+  void start_frame() override;
+  void finish_frame() override;
 
   private:
 
@@ -75,7 +77,12 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
 
     math::mat4 oculus_sensor_orientation_;
 
-    #ifndef _WIN32
+    #ifdef _WIN32
+        ovrSwapTextureSet* swap_texures_ = 0;
+        ovrLayerEyeFov color_layer_;
+        GLuint blit_fbo_read_;
+        GLuint blit_fbo_write_;
+    #else
         void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
         scm::gl::buffer_ptr distortion_mesh_vertices_[2];
         scm::gl::buffer_ptr distortion_mesh_indices_[2];

@@ -133,6 +133,7 @@ void Renderer::renderclient(Mailbox in) {
 
         window->rendering_fps = fpsc.fps;
 
+        window->start_frame();
         window->on_start_frame.emit();
 
         GUA_PUSH_GL_RANGE(*window->get_context(), "Frame");

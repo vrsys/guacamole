@@ -99,12 +99,10 @@ int main(int argc, char** argv) {
 
   window->open();
 
-  auto resolution = window->get_full_oculus_resolution();
-
   auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
   //camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
+  camera->config.set_resolution(window->config.get_left_resolution());
   camera->config.set_left_screen_path("/nav/cam/left_screen");
   camera->config.set_right_screen_path("/nav/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");

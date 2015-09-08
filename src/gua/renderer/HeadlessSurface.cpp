@@ -118,7 +118,7 @@ void HeadlessSurface::set_active(bool active) {
   }
 }
 
-void HeadlessSurface::finish_frame() const {
+void HeadlessSurface::finish_frame() {
   window_->swap_buffers(config.get_enable_vsync());
 }
 

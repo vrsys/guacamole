@@ -149,6 +149,14 @@ scm::gl::texture_image_ptr const& Texture::get_buffer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Texture::bind(RenderContext const& context, unsigned location) {
+    if (textures_[context.id]) {
+        context.render_context->bind_texture(textures_[context.id], sampler_states_[context.id], location);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Texture::make_resident(RenderContext const& context) const {
   if (textures_[context.id] && !textures_[context.id]->native_handle_resident()) {
     context.render_context->make_resident(textures_[context.id], sampler_states_[context.id]);

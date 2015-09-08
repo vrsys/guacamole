@@ -176,7 +176,8 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------------
 
   #if WIN32
-    std::string opt_prefix("D:/guacamole/");
+    //std::string opt_prefix("D:/guacamole/");
+    std::string opt_prefix("C:/Users/localadmin/Desktop/Simon/opt/");
 	#else
     std::string opt_prefix("/opt/");
 	#endif
