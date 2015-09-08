@@ -172,14 +172,17 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   // automatically register the HMDs in order
 #ifdef _WIN32
     ovrHmd_Create(registered_oculus_device_count_++, &registered_HMD_);
+    // register all three sensors for sensor fusion
+    bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+        | ovrTrackingCap_MagYawCorrection
+        | ovrTrackingCap_Position, 0) == ovrSuccess;
 #else
     registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
+    // register all three sensors for sensor fusion
+    bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+        | ovrTrackingCap_MagYawCorrection
+        | ovrTrackingCap_Position, 0);
 #endif
-
-  // register all three sensors for sensor fusion
-  bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
-      | ovrTrackingCap_MagYawCorrection
-      | ovrTrackingCap_Position, 0) == ovrSuccess;
 
   std::cout << registered_HMD_->ProductName << "\n";
 
@@ -191,22 +194,13 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
       exit(-1);
   }
 
-  // set up the window parameters
-#ifdef _WIN32
-  ovrSizei recommenedTex0Size = ovrHmd_GetFovTextureSize(registered_HMD_, ovrEye_Left,
-      registered_HMD_->DefaultEyeFov[0], 1.0f);
-  ovrSizei recommenedTex1Size = ovrHmd_GetFovTextureSize(registered_HMD_, ovrEye_Right,
-      registered_HMD_->DefaultEyeFov[1], 1.0f);
-  ovrSizei bufferSize;
-  bufferSize.w = recommenedTex0Size.w + recommenedTex1Size.w;
-  bufferSize.h = std::max(recommenedTex0Size.h, recommenedTex1Size.h);
-
-  config.set_size(math::vec2ui(bufferSize.w, bufferSize.h));
-  config.set_left_resolution(math::vec2ui(recommenedTex0Size.w, recommenedTex0Size.h));
+  config.set_size(math::vec2ui(registered_HMD_->Resolution.w, registered_HMD_->Resolution.h));
+  config.set_left_resolution(math::vec2ui(registered_HMD_->Resolution.w/2, registered_HMD_->Resolution.h));
   config.set_left_position(math::vec2ui(0, 0));
-  config.set_right_resolution(math::vec2ui(recommenedTex1Size.w, recommenedTex1Size.h));
-  config.set_right_position(math::vec2ui(recommenedTex0Size.w, 0));
+  config.set_right_resolution(math::vec2ui(registered_HMD_->Resolution.w/2, registered_HMD_->Resolution.h));
+  config.set_right_position(math::vec2ui(registered_HMD_->Resolution.w/2, 0));
 
+#ifdef _WIN32
   // Initialize VR structures, filling out description.
   ovrEyeRenderDesc eyeRenderDesc[2];
   ovrVector3f      hmdToEyeViewOffset[2];
@@ -232,22 +226,12 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   color_layer_.Viewport[0] = left_viewport;
   color_layer_.Viewport[1] = right_viewport;
 
-#else
-  // get the resolution from the device itself
-  unsigned res_x = registered_HMD_->Resolution.w;
-  unsigned res_y = registered_HMD_->Resolution.h;
-
-  config.set_size(math::vec2ui(res_x, res_y));
-  config.set_left_resolution(math::vec2ui(res_x / 2, res_y));
-  config.set_left_position(math::vec2ui(0, 0));
-  config.set_right_resolution(math::vec2ui(res_x / 2, res_y));
-  config.set_right_position(math::vec2ui(res_x / 2, 0));
 #endif
 
   config.set_title("guacamole");
   config.set_display_name(display);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,12 +248,14 @@ void OculusSDK2Window::init_context() {
 #ifdef _WIN32
 
   WindowBase::init_context();
-  
+
   auto const& glapi = ctx_.render_context->opengl_api();
   glapi.glGenFramebuffers(1, &blit_fbo_read_);
   glapi.glGenFramebuffers(1, &blit_fbo_write_);
 
-  if (ovrHmd_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_SRGBA_8, config.size().x, config.size().y, &swap_texures_) != ovrSuccess) {
+  if (ovrHmd_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_SRGBA_8,
+      config.left_resolution().x + config.right_resolution().x,
+      std::max(config.left_resolution().y, config.right_resolution().y), &swap_texures_) != ovrSuccess) {
       gua::Logger::LOG_WARNING << "Failed to create swap textures for oculus rift.\n";
   }
 
@@ -368,22 +354,20 @@ void OculusSDK2Window::init_context() {
 
 void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
-    
-
 #ifdef _WIN32
-    
+
     auto const& glapi = ctx_.render_context->opengl_api();
-    
+
     // setup draw buffer
     ovrGLTexture* tex = (ovrGLTexture*)&swap_texures_->Textures[swap_texures_->CurrentIndex];
     glapi.glBindTexture(GL_TEXTURE_2D, tex->OGL.TexId);
     glapi.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blit_fbo_write_);
     glapi.glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->OGL.TexId, 0);
     //glapi.glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
-    
+
     GLenum status = glapi.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        gua::Logger::LOG_WARNING << "Incomplete.\n";
+      gua::Logger::LOG_WARNING << "Incomplete.\n";
     }
 
     // setup read buffer
@@ -394,22 +378,22 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        gua::Logger::LOG_WARNING << "Incomplete.\n";
+      gua::Logger::LOG_WARNING << "Incomplete.\n";
     }
-    
+
     if (is_left) {
-        glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                                config.left_position().x, config.left_position().y, 
-                                config.left_resolution().x, config.left_resolution().y,
-                                GL_COLOR_BUFFER_BIT, GL_NEAREST);
+      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+                              config.left_position().x, config.left_position().y,
+                              config.left_resolution().x, config.left_resolution().y,
+                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
     } else {
-        glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                                config.right_position().x, config.right_position().y,
-                                config.right_position().x + config.right_resolution().x, config.right_resolution().y,
-                                GL_COLOR_BUFFER_BIT, GL_NEAREST);
+      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+                              config.right_position().x, config.right_position().y,
+                              config.right_position().x + config.right_resolution().x, config.right_resolution().y,
+                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
-    
-    
+
+
     glapi.glBindTexture(GL_TEXTURE_2D, 0);
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glapi.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -417,27 +401,22 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
     //WindowBase::display(texture, is_left);
 
 #else
-  auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0); 
-  
-  unsigned current_eye_num = is_left ? 0 : 1; 
+
+  unsigned current_eye_num = is_left ? 0 : 1;
 
   // use the distortion mesh shader as "fullscreen" shader
   fullscreen_shader_.use(*get_context());
   // upload the usual quad texture to be mapped on the distortion mesh
   fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
 
-  if (is_left)
+  if (is_left) {
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
-  else
+  } else {
     get_context()->render_context->set_viewport(scm::gl::viewport(config.get_right_position(), config.get_right_resolution()));
+  }
 
-    get_context()->render_context->set_depth_stencil_state(depth_stencil_state_);
-
-    get_context()->render_context->set_rasterizer_state(
-      no_backface_culling_state_
-    );
-
-  
+  get_context()->render_context->set_depth_stencil_state(depth_stencil_state_);
+  get_context()->render_context->set_rasterizer_state(no_backface_culling_state_);
 
   // bind vertex array for the currently rendered eye
   get_context()->render_context->bind_vertex_array(distortion_mesh_vertex_array_[current_eye_num]);
@@ -453,24 +432,29 @@ void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_
 
   fullscreen_shader_.unuse(*get_context());
 
-  // end frame timing (see above)
   ovrHmd_EndFrameTiming(registered_HMD_);
-    
-#endif 
+
+#endif
 }
 
 // retrieve the oculus sensor orientation for the application
 gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
-    return oculus_sensor_orientation_;
+  return oculus_sensor_orientation_;
+}
+
+math::vec2ui OculusSDK2Window::get_eye_resolution() const {
+  ovrSizei recommenedTex0Size = ovrHmd_GetFovTextureSize(registered_HMD_, ovrEye_Left,
+      registered_HMD_->DefaultEyeFov[0], 1.0f);
+  return math::vec2ui(recommenedTex0Size.w, recommenedTex0Size.h);
 }
 
 void OculusSDK2Window::start_frame() {
     GlfwWindow::start_frame();
+
   #ifdef _WIN32
-    
-    // Get both eye poses simultaneously, with IPD offset already included.
     ovrFrameTiming   ftiming = ovrHmd_GetFrameTiming(registered_HMD_, 0);
     ovrTrackingState hmdState = ovrHmd_GetTrackingState(registered_HMD_, ftiming.DisplayMidpointSeconds);
+    swap_texures_->CurrentIndex = (swap_texures_->CurrentIndex + 1) % swap_texures_->TextureCount;
 
     ovrEyeRenderDesc eyeRenderDesc[2];
     ovrVector3f      hmdToEyeViewOffset[2];
@@ -480,21 +464,22 @@ void OculusSDK2Window::start_frame() {
     hmdToEyeViewOffset[1] = eyeRenderDesc[1].HmdToEyeViewOffset;
 
     ovr_CalcEyePoses(hmdState.HeadPose.ThePose, hmdToEyeViewOffset, color_layer_.RenderPose);
+  #else
+    ovrFrameTiming   ftiming = ovrHmd_BeginFrameTiming(registered_HMD_, 0);
+    ovrTrackingState hmdState = ovrHmd_GetTrackingState(registered_HMD_, ftiming.ScanoutMidpointSeconds);
+  #endif
 
     if (hmdState.StatusFlags & (ovrStatus_OrientationTracked | ovrStatus_PositionTracked)) {
-        // The cpp compatibility layer is used to convert ovrPosef to Posef (see OVR_Math.h)
-        auto pose = hmdState.HeadPose.ThePose;
 
-        scm::math::quat<double> rot_quat(pose.Orientation.w,
-            pose.Orientation.x,
-            pose.Orientation.y,
-            pose.Orientation.z);
+      auto pose = hmdState.HeadPose.ThePose;
 
-        oculus_sensor_orientation_ = scm::math::make_translation((double)pose.Position.x, (double)pose.Position.y, (double)pose.Position.z) * rot_quat.to_matrix();
+      scm::math::quat<double> rot_quat(pose.Orientation.w,
+          pose.Orientation.x,
+          pose.Orientation.y,
+          pose.Orientation.z);
+
+      oculus_sensor_orientation_ = scm::math::make_translation((double)pose.Position.x, (double)pose.Position.y, (double)pose.Position.z) * rot_quat.to_matrix();
     }
-
-    swap_texures_->CurrentIndex = (swap_texures_->CurrentIndex + 1) % swap_texures_->TextureCount;
-  #endif
 }
 
 void OculusSDK2Window::finish_frame() {
@@ -504,6 +489,8 @@ void OculusSDK2Window::finish_frame() {
     if (result != ovrSuccess) {
         gua::Logger::LOG_WARNING << "Failed to submit frame to the oculus rift.\n";
     }
+#else
+    ovrHmd_EndFrameTiming(registered_HMD_);
 #endif
 
     GlfwWindow::finish_frame();

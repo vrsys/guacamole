@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     0
+#define GUI_SUPPORT     1
 
 #define POWER_WALL      0
 #define OCULUS1         0
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
     }
   #elif OCULUS2
     bool fullscreen = true;
-    auto resolution = window->config.get_left_resolution();
+    auto resolution = window->get_eye_resolution();
   #elif STEREO_MONITOR
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(2560, 1440);
@@ -1365,7 +1365,7 @@ int main(int argc, char** argv) {
 
 
 
-    
+
       if (ctr++ % 100 == 0) {
         double trimesh_time(0);
         double gbuffer_warp_time(0);
@@ -1396,7 +1396,7 @@ int main(int argc, char** argv) {
                              window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
                              abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
                              gbuffer_primitives, abuffer_primitives);
-      
+
       #else
         std::cout << 1000.f / window->get_rendering_fps() << " " <<
             window->get_rendering_fps() << std::endl;

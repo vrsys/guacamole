@@ -65,7 +65,8 @@ class GUA_OCULUSSDK2_DLL OculusSDK2Window : public GlfwWindow {
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  gua::math::mat4 get_oculus_sensor_orientation() const;
+  math::vec2ui get_eye_resolution() const;
+  math::mat4 get_oculus_sensor_orientation() const;
 
   void start_frame() override;
   void finish_frame() override;
