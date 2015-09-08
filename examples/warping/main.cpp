@@ -28,11 +28,13 @@
 #define STEREO_MONITOR  0
 
 #define SSAO            0
-#define SHADOWS         1
+#define SHADOWS         0
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     1
+#define LOAD_ENGINE     0
+#define LOAD_SPONZA     1
+#define LOAD_DRAGON     0
 
 #include <functional>
 
@@ -72,7 +74,7 @@ bool manipulation_object    = false;
 bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
-bool vsync                  = true;
+bool vsync                  = false;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
@@ -136,6 +138,18 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 
 int main(int argc, char** argv) {
 
+    // initialize guacamole
+    gua::init(argc, argv);
+
+  #if OCULUS1
+    auto window = std::make_shared<gua::OculusWindow>();
+  #elif OCULUS2
+    init_oculus();
+    auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
+  #else
+    auto window = std::make_shared<gua::GlfwWindow>();
+  #endif
+
   #if POWER_WALL
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(1780, 1185);
@@ -150,8 +164,7 @@ int main(int argc, char** argv) {
     }
   #elif OCULUS2
     bool fullscreen = true;
-    auto resolution = gua::math::vec2ui(1920/2, 1080);
-    init_oculus();
+    auto resolution = window->config.get_left_resolution();
   #elif STEREO_MONITOR
     bool fullscreen = true;
     auto resolution = gua::math::vec2ui(2560, 1440);
@@ -165,9 +178,6 @@ int main(int argc, char** argv) {
   Navigator nav;
   Navigator warp_nav;
   nav.set_transform(scm::math::make_translation(0.f, 0.f, 3.f));
-
-  // initialize guacamole
-  gua::init(argc, argv);
 
   gua::SceneGraph graph("main_scenegraph");
 
@@ -364,32 +374,38 @@ int main(int argc, char** argv) {
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  // auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+#if LOAD_DRAGON
+  auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
   auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
-  // dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+  dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
   transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
 
-  // dragon->translate(0.6, -0.17, 0);
+  dragon->translate(0.6, -0.17, 0);
   transp_dragon->translate(-0.6, 0, 0);
   transp_dragon->scale(1.4);
-  // scene_root->add_child(dragon);
-  // scene_root->add_child(transp_dragon);
-  // scene_root->add_child(plane);
+  scene_root->add_child(dragon);
+  scene_root->add_child(transp_dragon);
+  scene_root->add_child(plane);
+  #endif
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
+  #if LOAD_SPONZA
   auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
   sponza->translate(0, 3, 0);
+  #if LOAD_DRAGON
   scene_root->add_child(transp_dragon);
+  #endif
   scene_root->add_child(sponza);
+  #endif
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
@@ -668,14 +684,6 @@ int main(int argc, char** argv) {
   normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
   normal_pipe->set_enable_abuffer(true);
   normal_pipe->set_abuffer_size(500);
-
-  #if OCULUS1
-    auto window = std::make_shared<gua::OculusWindow>();
-  #elif OCULUS2
-    auto window = std::make_shared<gua::OculusSDK2Window>(":0.0");
-  #else
-    auto window = std::make_shared<gua::GlfwWindow>();
-  #endif
 
   auto update_view_mode([&](){
 
@@ -1357,7 +1365,7 @@ int main(int argc, char** argv) {
 
 
 
-    #if GUI_SUPPORT
+    
       if (ctr++ % 100 == 0) {
         double trimesh_time(0);
         double gbuffer_warp_time(0);
@@ -1383,12 +1391,17 @@ int main(int argc, char** argv) {
           if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
         }
 
+        #if GUI_SUPPORT
         stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                              window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
                              abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
                              gbuffer_primitives, abuffer_primitives);
-      }
-    #endif
+      
+      #else
+        std::cout << 1000.f / window->get_rendering_fps() << " " <<
+            window->get_rendering_fps() << std::endl;
+        #endif
+        }
 
     window->process_events();
     if (window->should_close()) {

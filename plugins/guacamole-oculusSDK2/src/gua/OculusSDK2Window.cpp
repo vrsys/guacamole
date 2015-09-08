@@ -179,7 +179,7 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   // register all three sensors for sensor fusion
   bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
       | ovrTrackingCap_MagYawCorrection
-      | ovrTrackingCap_Position, 0);
+      | ovrTrackingCap_Position, 0) == ovrSuccess;
 
   std::cout << registered_HMD_->ProductName << "\n";
 
@@ -218,8 +218,6 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
   // Initialize our single full screen Fov layer.
   color_layer_.Header.Type = ovrLayerType_EyeFov;
   color_layer_.Header.Flags = 0;
-  color_layer_.ColorTexture[0] = swap_texures_;
-  color_layer_.ColorTexture[1] = swap_texures_;
   color_layer_.Fov[0] = eyeRenderDesc[0].Fov;
   color_layer_.Fov[1] = eyeRenderDesc[1].Fov;
 
@@ -263,31 +261,36 @@ OculusSDK2Window::~OculusSDK2Window() {
 
 void OculusSDK2Window::init_context() {
 
-  ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
-  ctx_.render_context = ctx_.render_device->main_context();
-
-  {
-    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
-    ctx_.id = last_context_id_++;
-  }
-
-  ctx_.render_window = this;
-
-  if (config.get_debug()) {
-    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
-  }
-
 #ifdef _WIN32
+
+  WindowBase::init_context();
   
   auto const& glapi = ctx_.render_context->opengl_api();
   glapi.glGenFramebuffers(1, &blit_fbo_read_);
   glapi.glGenFramebuffers(1, &blit_fbo_write_);
 
-  if (ovrHmd_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_RGB_32F, config.size().x, config.size().y, &swap_texures_) != ovrSuccess) {
+  if (ovrHmd_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_SRGBA_8, config.size().x, config.size().y, &swap_texures_) != ovrSuccess) {
       gua::Logger::LOG_WARNING << "Failed to create swap textures for oculus rift.\n";
   }
 
+  color_layer_.ColorTexture[0] = swap_texures_;
+  color_layer_.ColorTexture[1] = swap_texures_;
+
 #else
+
+    ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
+    ctx_.render_context = ctx_.render_device->main_context();
+
+    {
+        std::lock_guard<std::mutex> lock(last_context_id_mutex_);
+        ctx_.id = last_context_id_++;
+    }
+
+    ctx_.render_window = this;
+
+    if (config.get_debug()) {
+        ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
+    }
 
   fullscreen_shader_.create_from_sources(R"(
       #version 420
@@ -359,52 +362,64 @@ void OculusSDK2Window::init_context() {
                                                                            scm::gl::ORIENT_CCW,
                                                                            true);
 #endif
-
-  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void OculusSDK2Window::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
-    unsigned current_eye_num = is_left ? 0 : 1;
+    
 
 #ifdef _WIN32
-
+    
     auto const& glapi = ctx_.render_context->opengl_api();
     
-    ovrGLTexture* tex = (ovrGLTexture*)&swap_texures_->Textures[current_eye_num];
-
-
     // setup draw buffer
+    ovrGLTexture* tex = (ovrGLTexture*)&swap_texures_->Textures[swap_texures_->CurrentIndex];
     glapi.glBindTexture(GL_TEXTURE_2D, tex->OGL.TexId);
     glapi.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blit_fbo_write_);
     glapi.glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->OGL.TexId, 0);
-    glapi.glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+    //glapi.glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
     
     GLenum status = glapi.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         gua::Logger::LOG_WARNING << "Incomplete.\n";
     }
-    
+
     // setup read buffer
-    texture->bind(ctx_, 32);
+    glapi.glBindTexture(GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id());
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, blit_fbo_read_);
-    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 32, 0);
-    glapi.glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
-    
+    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id(), 0);
+    //glapi.glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         gua::Logger::LOG_WARNING << "Incomplete.\n";
     }
     
-    glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-        0, 0, texture->width(), texture->height(),
-        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    if (is_left) {
+        glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+                                config.left_position().x, config.left_position().y, 
+                                config.left_resolution().x, config.left_resolution().y,
+                                GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    } else {
+        glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+                                config.right_position().x, config.right_position().y,
+                                config.right_position().x + config.right_resolution().x, config.right_resolution().y,
+                                GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    }
     
+    
+    glapi.glBindTexture(GL_TEXTURE_2D, 0);
+    glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glapi.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    //WindowBase::display(texture, is_left);
 
 #else
-  auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0);  
+  auto frameTiming = ovrHmd_BeginFrameTiming(registered_HMD_,0); 
+  
+  unsigned current_eye_num = is_left ? 0 : 1; 
 
   // use the distortion mesh shader as "fullscreen" shader
   fullscreen_shader_.use(*get_context());
@@ -450,6 +465,7 @@ gua::math::mat4 OculusSDK2Window::get_oculus_sensor_orientation() const {
 }
 
 void OculusSDK2Window::start_frame() {
+    GlfwWindow::start_frame();
   #ifdef _WIN32
     
     // Get both eye poses simultaneously, with IPD offset already included.
@@ -485,11 +501,12 @@ void OculusSDK2Window::finish_frame() {
 #ifdef _WIN32
     ovrLayerHeader* layers = &color_layer_.Header;
     ovrResult       result = ovrHmd_SubmitFrame(registered_HMD_, 0, nullptr, &layers, 1);
-
     if (result != ovrSuccess) {
         gua::Logger::LOG_WARNING << "Failed to submit frame to the oculus rift.\n";
     }
 #endif
+
+    GlfwWindow::finish_frame();
 }
 
 }
