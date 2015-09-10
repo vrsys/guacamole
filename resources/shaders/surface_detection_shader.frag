@@ -50,7 +50,7 @@ uint is_on_line(float a, float b, float c) {
 void main() {
 
   // ---------------------------------------------------------------------------
-  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH
+  #if WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
   // ---------------------------------------------------------------------------
 
   if (current_level == 0) {

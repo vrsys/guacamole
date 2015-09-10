@@ -22,6 +22,7 @@
 @include "common/header.glsl"
 @include "common/gua_camera_uniforms.glsl"
 @include "abuffer_warp_modes.glsl"
+@include "hole_filling_modes.glsl"
 
 layout(pixel_center_integer) in vec4 gl_FragCoord;
 
@@ -117,10 +118,10 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
   start = s.xyz * 0.5 + 0.5;
   end   = e.xyz * 0.5 + 0.5;
 
-  if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) || 
+  if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) ||
       any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) || crop_depth.x > crop_depth.y) {
     // invalid ray if either
-    // 
+    //
     // - there is no transparent surface visible at all
     return false;
   }
@@ -165,7 +166,7 @@ void draw_debug_views() {
 
   const int preview_scale = 3;
   vec2 preview_coords = gua_quad_coords*preview_scale-vec2(0.09, 0.12);
-  
+
   // center ray preview
   #if 1
     // draw mini version of depth buffer
@@ -245,7 +246,7 @@ void draw_debug_views() {
             gua_out_color = mix(vec3(0, min_max_depth.x, 0), gua_out_color, 0.7);
           }
         }
-      
+
         if (!intersects || current_level == 0) {
           pos = new_pos;
 
@@ -284,25 +285,25 @@ void draw_debug_views() {
       gua_out_color = vec3(1, 0, 1);
     }
 
-    preview_coords -= vec2(0, 1.1); 
+    preview_coords -= vec2(0, 1.1);
   #endif
-  
+
 }
 
 vec4 find_color() {
 
   float max_depth = 0;
   vec2  offset;
-  
+
   for (int i=2; i<=5; ++i) {
 
-    float radius = i*i; 
+    float radius = i*i;
 
     // vec2 offsets[] = {vec2(-radius*0.9, radius*0.9),  vec2(0, radius),  vec2(radius*0.9, radius*0.9),
     //                   vec2(-radius, 0),               vec2(radius, 0),
     //                   vec2(-radius*0.9, -radius*0.9), vec2(0, -radius), vec2(radius*0.9, -radius*0.9)};
 
-    vec2 offsets[] = {          vec2(0, radius*0.2), 
+    vec2 offsets[] = {          vec2(0, radius*0.2),
                         vec2(-radius, 0),   vec2(radius, 0),
                                 vec2(0, -radius*0.2)};
 
@@ -325,7 +326,7 @@ vec4 find_color() {
 
     // return texture2D(sampler2D(color_buffer), (p.xy*0.5+0.5));
   }
-  
+
   return vec4(0, 0, 0, 1);
 }
 
@@ -444,7 +445,7 @@ void main() {
         abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
       #endif
 
-    
+
       if (!intersects || current_level == 0) {
         pos = new_pos;
 

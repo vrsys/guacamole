@@ -220,7 +220,6 @@
         init_radio("#gbuffer_type_quads_depth_aligned", "gbuffer_type_quads_depth_aligned");
         init_radio("#gbuffer_type_grid_depth_theshold", "gbuffer_type_grid_depth_theshold");
         init_radio("#gbuffer_type_grid_surface_estimation", "gbuffer_type_grid_surface_estimation");
-        init_radio("#gbuffer_type_grid_surface_estimation_stretch", "gbuffer_type_grid_surface_estimation_stretch");
         init_radio("#gbuffer_type_grid_advanced_surface_estimation", "gbuffer_type_grid_advanced_surface_estimation");
         init_radio("#gbuffer_type_grid_non_uniform_surface_estimation", "gbuffer_type_grid_non_uniform_surface_estimation");
 
@@ -237,12 +236,14 @@
         init_checkbox("#debug_bounding_volumes", "debug_bounding_volumes");
         init_checkbox("#debug_sample_ray", "debug_sample_ray");
         init_checkbox("#debug_interpolation_borders", "debug_interpolation_borders");
+        init_checkbox("#debug_rubber_bands", "debug_rubber_bands");
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
         init_radio("#grid_depth_threshold", "grid_depth_threshold");
 
         init_slider("#preview-panel .depth_layers", "depth_layers");
+        init_slider("#preview-panel .rubber_band_threshold", "rubber_band_threshold");
         init_slider("#preview-panel .pixel_size", "pixel_size");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
@@ -251,6 +252,9 @@
 
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
         init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
+        init_radio("#hole_filling_type_rubber_band_1", "hole_filling_type_rubber_band_1");
+        init_radio("#hole_filling_type_rubber_band_2", "hole_filling_type_rubber_band_2");
+        init_radio("#hole_filling_type_rubber_band_3", "hole_filling_type_rubber_band_3");
 
         init_radio("#interpolation_mode_nearest", "interpolation_mode_nearest");
         init_radio("#interpolation_mode_linear", "interpolation_mode_linear");
@@ -597,12 +601,6 @@
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_surface_estimation_stretch" value="">
-                  <span>Surf. Est. Stretched</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
                   <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_advanced_surface_estimation" value="">
                   <span>Advanced Surf. Est.</span>
                 </label>
@@ -617,6 +615,14 @@
             </div>
           </div>
 
+          <div class="row">
+            <div class="col-xs-5">
+              Rubber Thr.:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider rubber_band_threshold" data-slider-tooltip="hide" data-slider-id="rubber_band_threshold" type="text" data-slider-min="0" data-slider-max="0.02" data-slider-step="0.001" handle="custom"/>
+            </div>
+          </div>
 
           <div class="row">
             <div class="col-xs-5">
@@ -753,6 +759,24 @@
                   <span>Inpaint</span>
                 </label>
               </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_1" value="">
+                  <span>Rubber Band 1</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_2" value="">
+                  <span>Rubber Band 2</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_3" value="">
+                  <span>Rubber Band 3</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -843,6 +867,24 @@
               </div>
             </div>
           </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Hole Filling:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="debug_rubber_bands" type="checkbox" value="">
+                  <span>Rubber Bands</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
 
           <a href="http://www.google.com">Google</a>
 

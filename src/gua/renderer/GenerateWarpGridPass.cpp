@@ -114,7 +114,6 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     if (mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
         mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
-        mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION_STRETCH ||
         mode == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
         mode == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
       renderer->render(pipe, desc);

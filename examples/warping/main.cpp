@@ -24,7 +24,7 @@
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         1
+#define OCULUS2         0
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -583,7 +583,8 @@ int main(int argc, char** argv) {
 
   normal_cam->config.set_scene_graph_name("main_scenegraph");
   normal_cam->config.mask().blacklist.add_tag("invisible");
-  normal_cam->config.set_near_clip(0.1f);
+  normal_cam->config.set_far_clip(50.f);
+  normal_cam->config.set_near_clip(0.02f);
 
   auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
   fill_light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -628,7 +629,7 @@ int main(int argc, char** argv) {
 
   warp_cam->config.set_scene_graph_name("main_scenegraph");
   warp_cam->config.set_far_clip(normal_cam->config.get_far_clip()*1.5);
-  warp_cam->config.set_near_clip(0.1f);
+  warp_cam->config.set_near_clip(normal_cam->config.get_near_clip());
 
   auto clear_pass(std::make_shared<gua::ClearPassDescription>());
   auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
@@ -857,7 +858,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_bounding_volumes", [&](){ return std::to_string(warp_pass->debug_bounding_volumes());});
       gui->add_javascript_getter("get_debug_sample_ray", [&](){ return std::to_string(warp_pass->debug_sample_ray());});
       gui->add_javascript_getter("get_debug_interpolation_borders", [&](){ return std::to_string(warp_pass->debug_interpolation_borders());});
+      gui->add_javascript_getter("get_debug_rubber_bands", [&](){ return std::to_string(warp_pass->debug_rubber_bands());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
+      gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
       gui->add_javascript_callback("set_depth_layers");
@@ -874,11 +877,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_gbuffer_type_points");
       gui->add_javascript_callback("set_gbuffer_type_scaled_points");
       gui->add_javascript_callback("set_gbuffer_type_quads_screen_aligned");
-      gui->add_javascript_callback("set_gbuffer_type_quads_normal_aligned");
       gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
       gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
       gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
-      gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation_stretch");
       gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
       gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
       gui->add_javascript_callback("set_transparency_type_none");
@@ -887,6 +888,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_inpaint");
+      gui->add_javascript_callback("set_hole_filling_type_rubber_band_1");
+      gui->add_javascript_callback("set_hole_filling_type_rubber_band_2");
+      gui->add_javascript_callback("set_hole_filling_type_rubber_band_3");
       gui->add_javascript_callback("set_interpolation_mode_nearest");
       gui->add_javascript_callback("set_interpolation_mode_linear");
       gui->add_javascript_callback("set_interpolation_mode_adaptive");
@@ -915,7 +919,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_debug_bounding_volumes");
       gui->add_javascript_callback("set_debug_sample_ray");
       gui->add_javascript_callback("set_debug_interpolation_borders");
+      gui->add_javascript_callback("set_debug_rubber_bands");
       gui->add_javascript_callback("set_pixel_size");
+      gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
       gui->add_javascript_callback("set_view_stereo_warped");
@@ -945,6 +951,11 @@ int main(int argc, char** argv) {
         float pixel_size;
         str >> pixel_size;
         warp_pass->pixel_size(pixel_size-0.5);
+      } else if (callback == "set_rubber_band_threshold") {
+        std::stringstream str(params[0]);
+        float rubber_band_threshold;
+        str >> rubber_band_threshold;
+        warp_pass->rubber_band_threshold(rubber_band_threshold);
       } else if (callback == "set_bg_tex") {
         res_pass->background_texture(params[0]);
       } else if (callback == "set_cell_size") {
@@ -1015,6 +1026,11 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_interpolation_borders(checked);
+      } else if (callback == "set_debug_rubber_bands") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->debug_rubber_bands(checked);
       } else if (callback == "set_adaptive_abuffer") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1027,11 +1043,9 @@ int main(int argc, char** argv) {
       } else if (callback == "set_gbuffer_type_points"
                | callback == "set_gbuffer_type_scaled_points"
                | callback == "set_gbuffer_type_quads_screen_aligned"
-               | callback == "set_gbuffer_type_quads_normal_aligned"
                | callback == "set_gbuffer_type_quads_depth_aligned"
                | callback == "set_gbuffer_type_grid_depth_theshold"
                | callback == "set_gbuffer_type_grid_surface_estimation"
-               | callback == "set_gbuffer_type_grid_surface_estimation_stretch"
                | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
                | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
                | callback == "set_gbuffer_type_none") {
@@ -1048,16 +1062,12 @@ int main(int argc, char** argv) {
             mode = gua::WarpPassDescription::GBUFFER_SCALED_POINTS;
           if (callback == "set_gbuffer_type_quads_screen_aligned")
             mode = gua::WarpPassDescription::GBUFFER_QUADS_SCREEN_ALIGNED;
-          if (callback == "set_gbuffer_type_quads_normal_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_NORMAL_ALIGNED;
           if (callback == "set_gbuffer_type_quads_depth_aligned")
             mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
           if (callback == "set_gbuffer_type_grid_depth_theshold")
             mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
           if (callback == "set_gbuffer_type_grid_surface_estimation")
             mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_grid_surface_estimation_stretch")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION_STRETCH;
           if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
             mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
           if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")
@@ -1078,7 +1088,10 @@ int main(int argc, char** argv) {
         update_view_mode();
 
       } else if (callback == "set_hole_filling_type_none"
-               | callback == "set_hole_filling_type_inpaint") {
+               | callback == "set_hole_filling_type_inpaint"
+               | callback == "set_hole_filling_type_rubber_band_1"
+               | callback == "set_hole_filling_type_rubber_band_2"
+               | callback == "set_hole_filling_type_rubber_band_3") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
@@ -1088,6 +1101,12 @@ int main(int argc, char** argv) {
 
           if (callback == "set_hole_filling_type_inpaint")
             mode = gua::WarpPassDescription::HOLE_FILLING_INPAINT;
+          if (callback == "set_hole_filling_type_rubber_band_1")
+            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_1;
+          if (callback == "set_hole_filling_type_rubber_band_2")
+            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_2;
+          if (callback == "set_hole_filling_type_rubber_band_3")
+            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_3;
 
           warp_pass->hole_filling_mode(mode);
         }

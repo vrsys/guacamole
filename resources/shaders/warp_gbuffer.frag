@@ -23,10 +23,16 @@
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
 @include "gbuffer_warp_modes.glsl"
+@include "hole_filling_modes.glsl"
+@include "interpolation_modes.glsl"
 @include "warp_grid_bits.glsl"
 
+#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2  || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+  flat in uint is_rubber_band;
+#endif
+
 // -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
 flat in uint cellsize;
@@ -39,22 +45,22 @@ layout(location=0) out vec3 gua_out_color;
 
 void main() {
 
-  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH
-    const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x & 1) == 1;
+  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
+    const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x & 1) == 1;
   #else
-    uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution)/2), 0).x;
+    uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x;
     const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
   #endif
 
   #if INTERPOLATION_MODE == INTERPOLATION_MODE_NEAREST
-    gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+    gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
   #elif INTERPOLATION_MODE == INTERPOLATION_MODE_LINEAR
     gua_out_color = gua_get_color(texcoords);
   #else
     if (is_surface) {
       gua_out_color = gua_get_color(texcoords);
     } else {
-      gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution), 0).rgb;
+      gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
     }
   #endif
 
@@ -67,6 +73,24 @@ void main() {
     if (!is_surface) {
       gua_out_color = mix(gua_out_color, vec3(0.0, 0.0, 0.8), 0.8);
     }
+  #endif
+
+  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1
+    if (is_rubber_band == 1) {
+      #if @debug_rubber_bands@ == 1
+        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.5);
+      #endif
+    }
+  #elif HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
+    if (is_rubber_band == 1) {
+      #if @debug_rubber_bands@ == 1
+        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.5);
+      #endif
+      gl_FragDepth = 0.9999999;
+    } else {
+      gl_FragDepth = gl_FragCoord.z;
+    }
+
   #endif
 }
 

@@ -50,11 +50,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     GBUFFER_POINTS,
     GBUFFER_SCALED_POINTS,
     GBUFFER_QUADS_SCREEN_ALIGNED,
-    GBUFFER_QUADS_NORMAL_ALIGNED,
     GBUFFER_QUADS_DEPTH_ALIGNED,
     GBUFFER_GRID_DEPTH_THRESHOLD,
     GBUFFER_GRID_SURFACE_ESTIMATION,
-    GBUFFER_GRID_SURFACE_ESTIMATION_STRETCH,
     GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION,
     GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION
   };
@@ -66,7 +64,10 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum HoleFillingMode {
     HOLE_FILLING_NONE,
-    HOLE_FILLING_INPAINT
+    HOLE_FILLING_INPAINT,
+    HOLE_FILLING_RUBBER_BAND_1,
+    HOLE_FILLING_RUBBER_BAND_2,
+    HOLE_FILLING_RUBBER_BAND_3
   };
 
   enum InterpolationMode {
@@ -104,8 +105,14 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& debug_interpolation_borders(bool val);
   bool debug_interpolation_borders() const;
 
+  WarpPassDescription& debug_rubber_bands(bool val);
+  bool debug_rubber_bands() const;
+
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
+
+  WarpPassDescription& rubber_band_threshold(float val);
+  float rubber_band_threshold() const;
 
   WarpPassDescription& gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode);
   GBufferWarpMode gbuffer_warp_mode() const;
@@ -137,8 +144,10 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool debug_bounding_volumes_;
   bool debug_sample_ray_;
   bool debug_interpolation_borders_;
+  bool debug_rubber_bands_;
   int max_layers_;
   float pixel_size_;
+  float rubber_band_threshold_;
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
   HoleFillingMode hole_filling_mode_;

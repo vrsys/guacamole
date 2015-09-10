@@ -37,7 +37,6 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
-  , max_layers_(50)
   , depth_test_(true)
   , adaptive_entry_level_(true)
   , debug_cell_colors_(false)
@@ -45,7 +44,10 @@ WarpPassDescription::WarpPassDescription()
   , debug_bounding_volumes_(false)
   , debug_sample_ray_(false)
   , debug_interpolation_borders_(false)
+  , debug_rubber_bands_(false)
+  , max_layers_(50)
   , pixel_size_(0.0f)
+  , rubber_band_threshold_(0.01f)
   , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
   , hole_filling_mode_(HOLE_FILLING_INPAINT)
@@ -200,6 +202,20 @@ bool WarpPassDescription::debug_interpolation_borders() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::debug_rubber_bands(bool val) {
+  debug_rubber_bands_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::debug_rubber_bands() const {
+  return debug_rubber_bands_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::pixel_size(float val) {
   pixel_size_ = val;
   touch();
@@ -210,6 +226,20 @@ WarpPassDescription& WarpPassDescription::pixel_size(float val) {
 
 float WarpPassDescription::pixel_size() const {
   return pixel_size_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+WarpPassDescription& WarpPassDescription::rubber_band_threshold(float val) {
+  rubber_band_threshold_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+float WarpPassDescription::rubber_band_threshold() const {
+  return rubber_band_threshold_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,8 +312,10 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["debug_sample_count"] = debug_sample_count_ ? "1" : "0";
   substitution_map["debug_bounding_volumes"] = debug_bounding_volumes_ ? "1" : "0";
   substitution_map["debug_interpolation_borders"] = debug_interpolation_borders_ ? "1" : "0";
+  substitution_map["debug_rubber_bands"] = debug_rubber_bands_ ? "1" : "0";
   substitution_map["debug_sample_ray"] = debug_sample_ray_ ? "1" : "0";
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
+  substitution_map["rubber_band_threshold"] = gua::string_utils::to_string(rubber_band_threshold_);
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
