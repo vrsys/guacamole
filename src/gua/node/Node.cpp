@@ -44,12 +44,14 @@ Node::Node(std::string const& name, math::mat4 const& transform)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 Node::~Node() {
   for (auto const& child : children_) {
     child->parent_ = nullptr;
     child->set_scenegraph(nullptr);
   }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
