@@ -113,10 +113,10 @@ void emit_quad(uvec2 offset, uvec2 size) {
       const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
       const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
 
-      depth1 = get_depth(vec2(-cont_l, -cont_b)*cont_bl*0.5*interpolation_offset + pos1+vec2( interpolation_offset,  interpolation_offset));
-      depth2 = get_depth(vec2( cont_r, -cont_b)*cont_br*0.5*interpolation_offset + pos2+vec2(-interpolation_offset,  interpolation_offset));
-      depth3 = get_depth(vec2(-cont_l,  cont_t)*cont_tl*0.5*interpolation_offset + pos3+vec2( interpolation_offset, -interpolation_offset));
-      depth4 = get_depth(vec2( cont_r,  cont_t)*cont_tr*0.5*interpolation_offset + pos4+vec2(-interpolation_offset, -interpolation_offset));
+      depth1 = get_depth(vec2(-cont_l, -cont_b)*cont_bl*interpolation_offset + pos1+vec2( interpolation_offset,  interpolation_offset));
+      depth2 = get_depth(vec2( cont_r, -cont_b)*cont_br*interpolation_offset + pos2+vec2(-interpolation_offset,  interpolation_offset));
+      depth3 = get_depth(vec2(-cont_l,  cont_t)*cont_tl*interpolation_offset + pos3+vec2( interpolation_offset, -interpolation_offset));
+      depth4 = get_depth(vec2( cont_r,  cont_t)*cont_tr*interpolation_offset + pos4+vec2(-interpolation_offset, -interpolation_offset));
 
     #endif // ------------------------------------------------------------------
 
