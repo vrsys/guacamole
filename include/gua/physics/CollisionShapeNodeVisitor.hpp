@@ -31,9 +31,7 @@
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
@@ -81,7 +79,7 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    *
    * \param node   Pointer to RigidBodyNode
    */
-  /* virtual */ void visit(RigidBodyNode* node);
+  /* virtual */ void visit(RigidBodyNode* node) override;
 
   /**
    * Visits a CollisionShapeNode
@@ -90,7 +88,7 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    *
    * \param node   Pointer to CollisionShapeNode
    */
-  /* virtual */ void visit(CollisionShapeNode* node);
+  /* virtual */ void visit(CollisionShapeNode* node) override;
 
   ///@{
   /**
@@ -101,21 +99,17 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
    * \param node    Pointer to Node
    */
 
-  /* virtual */ void visit(node::TransformNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TransformNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::GeometryNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::GeometryNode* node) override { generic_visit(node); }
   
-  /* virtual */ void visit(node::VolumeNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::LightNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::PointLightNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::ScreenNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::ScreenNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::RayNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::SpotLightNode* node) { generic_visit(node); }
-
-  /* virtual */ void visit(node::RayNode* node) { generic_visit(node); }
-
-  /* virtual */ void visit(node::TexturedQuadNode* node) { generic_visit(node); }
+  /* virtual */ void visit(node::TexturedQuadNode* node) override { generic_visit(node); }
 
   ///@}
 

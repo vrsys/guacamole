@@ -26,6 +26,8 @@
 #include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/SerializedScene.hpp>
+#include <gua/renderer/enums.hpp>
 
 #include <memory>
 #include <string>
@@ -34,10 +36,14 @@
 namespace gua {
 
 class NodeVisitor;
-class Ray;
+struct Ray;
 
 namespace node {
-class RayNode;
+  class Node;
+  class CameraNode;
+  class ClippingPlaneNode;
+  class RayNode;
+  struct SerializedCameraNode;
 }
 
 /**
@@ -264,18 +270,29 @@ class GUA_DLL SceneGraph {
    */
   void accept(NodeVisitor& visitor) const;
 
+  std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum,
+                                             Frustum const& culling_frustum,
+                                             math::vec3 const& reference_camera_position,
+                                             bool enable_frustum_culling,
+                                             Mask const& mask,
+                                             int view_id) const;
+
+  std::shared_ptr<SerializedScene> serialize(
+                                       node::SerializedCameraNode const& camera,
+                                       CameraMode mode) const;
+
   /**
    * Intersects a SceneGraph with a given RayNode.
    *
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The RayNode used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(node::RayNode const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      int options = PickResult::PICK_ALL,
+                                      Mask const& mask = Mask());
 
   /**
    * Intersects a SceneGraph with a given Ray.
@@ -283,12 +300,24 @@ class GUA_DLL SceneGraph {
    * Calls Node::ray_test() on the root Node.
    *
    * \param ray       The Ray used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   std::set<PickResult> const ray_test(Ray const& ray,
-                                      PickResult::Options options = PickResult::PICK_ALL,
-                                      std::string const& mask = "");
+                                      int options = PickResult::PICK_ALL,
+                                      Mask const& mask = Mask());
+
+  std::vector<node::CameraNode*> const& get_camera_nodes() const {
+    return camera_nodes_;
+  }
+
+  std::vector<node::ClippingPlaneNode*> const& get_clipping_plane_nodes() const {
+    return clipping_plane_nodes_;
+  }
+
+  friend class ::gua::node::Node;
+  friend class ::gua::node::CameraNode;
+  friend class ::gua::node::ClippingPlaneNode;
 
  private:
 
@@ -297,8 +326,18 @@ class GUA_DLL SceneGraph {
 
   bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
 
+  void add_camera_node(node::CameraNode* camera);
+  void remove_camera_node(node::CameraNode* camera);
+
+  void add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+  void remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+
+
   std::shared_ptr<node::Node> root_;
   std::string name_;
+
+  std::vector<node::CameraNode*> camera_nodes_;
+  std::vector<node::ClippingPlaneNode*> clipping_plane_nodes_;
 };
 
 }

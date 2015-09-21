@@ -28,7 +28,7 @@
 #include <gua/databases/Database.hpp>
 #include <gua/physics/CollisionShape.hpp>
 
-namespace gua {
+namespace gua { 
 namespace physics {
 
 /**
@@ -40,7 +40,7 @@ namespace physics {
  * \ingroup gua_databases
  */
 class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>,
-                               public Singleton<CollisionShapeDatabase> {
+                                       public Singleton<CollisionShapeDatabase> {
  public:
 
   /**

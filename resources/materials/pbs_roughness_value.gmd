@@ -1,0 +1,17 @@
+{
+  "name" : "FragmentRoughnessValue",
+  "source" : "
+    // roughness generation ------------------------------------------------
+    void FragmentRoughnessValue() {
+      gua_roughness = Roughness;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "Roughness",
+      "type" : "float",
+      "value" : "0.1"
+    }
+  ]
+}

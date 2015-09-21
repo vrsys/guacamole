@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <map>
 
 #include <gua/platform.hpp>
 #include <gua/utils/FpsCounter.hpp>
@@ -34,7 +35,10 @@
 namespace gua {
 
 class SceneGraph;
-class Pipeline;
+
+namespace node {
+  struct SerializedCameraNode;
+}
 
 /**
  * Manages the rendering on multiple contexts.
@@ -43,9 +47,7 @@ class Pipeline;
  */
 class GUA_DLL Renderer {
  public:
-  typedef std::vector<std::unique_ptr<const SceneGraph> > RenderVector;
-  typedef RenderVector const                              ConstRenderVector;
-  typedef std::shared_ptr<ConstRenderVector>              ConstRenderVectorPtr;
+  using SceneGraphs = std::vector<std::unique_ptr<const SceneGraph> >;
 
   /**
    * Constructor.
@@ -55,7 +57,7 @@ class GUA_DLL Renderer {
    * \param pipelines        A vector of Pipelines to process. For each
    *                         pipeline a RenderClient is created.
    */
-  Renderer(std::vector<Pipeline*> const& pipelines);
+  Renderer();
   Renderer(Renderer const&) = delete;
   Renderer& operator=(Renderer const&) = delete;
 
@@ -73,19 +75,32 @@ class GUA_DLL Renderer {
    */
   void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
 
+  void draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs);
+
   void stop();
+
+  inline float get_application_fps() { return application_fps_.fps; }
 
  private:
 
-  typedef std::pair<ConstRenderVectorPtr, float> Item;
-  typedef std::shared_ptr<gua::concurrent::Doublebuffer<Item> > Mailbox;
-  typedef std::pair<Mailbox, std::thread> Renderclient;
+  struct Item {
+    Item() = default;
+    Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
+          std::shared_ptr<const SceneGraphs> const& sgs)
+        : serialized_cam(sc), scene_graphs(sgs) {}
 
-  static void renderclient(Mailbox in, Pipeline* pipe);
+    std::shared_ptr<node::SerializedCameraNode> serialized_cam;
+    std::shared_ptr<const SceneGraphs>          scene_graphs;
+  };
 
-  std::vector<Renderclient> render_clients_;
+  using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
+  using Renderclient = std::pair<Mailbox, std::thread>;
+
+  static void renderclient(Mailbox in);
+
+  std::map<std::string, Renderclient> render_clients_;
+
   FpsCounter application_fps_;
-  bool stop_requested_;
 };
 
 }

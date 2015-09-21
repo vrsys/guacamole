@@ -1,0 +1,24 @@
+{
+  "name" : "FragmentNormalMap",
+  "source" : "
+    // normal mapping ------------------------------------------------------
+    void FragmentNormalMap() {
+      if (uvec2(0) != NormalMap) {
+        vec3 normalTS = normalize(texture(sampler2D(NormalMap), gua_texcoords).rgb*2.0-1.0);
+
+        gua_normal = normalize(gua_tangent*normalTS.x +
+                               gua_bitangent*normalTS.y +
+                               gua_normal*normalTS.z);
+      }
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "NormalMap",
+      "type" : "sampler2D",
+      "value" : "0"
+    }
+  ]
+}
+

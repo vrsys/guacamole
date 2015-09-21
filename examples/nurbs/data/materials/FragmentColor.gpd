@@ -1,0 +1,34 @@
+{
+  "name" : "FragmentColor",
+  "source" : "
+    void FragmentColor() {
+      gua_color = Color.rgb;
+      gua_metalness = Metalness;
+      gua_roughness = Roughness;
+      gua_alpha = Opacity;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "Color",
+      "type" : "vec4",
+      "value" : "(1.0 1.0 1.0 1.0)"
+    },
+    {
+      "name" : "Roughness",
+      "type" : "float",
+      "value" : "(0.5)"
+    },
+    {
+      "name" : "Metalness",
+      "type" : "float",
+      "value" : "(0.5)"
+    },
+    {
+      "name" : "Opacity",
+      "type" : "float",
+      "value" : "(1.0)"
+    }
+  ]
+}

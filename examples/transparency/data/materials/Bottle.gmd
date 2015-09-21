@@ -1,0 +1,54 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+        // color generation ----------------------------------------------------
+        void FragmentColor() {
+
+          vec4 color = texture(sampler2D(ColorMap), gua_texcoords);
+
+          const float contrib = 0.5;
+          const float r_ind = 1.5;
+          const float Rs = ((1.0 - r_ind) * (1.0 - r_ind)) / ((1.0 + r_ind) * (1.0 + r_ind));
+          // Schlick's approximation
+          float fresnel = Rs + (1.0 - Rs) * pow((1.0 - abs(dot(gua_normal, normalize(gua_world_position - gua_camera_position)))), 5.0);
+          gua_alpha = clamp(color.a + mix(0.0, fresnel, contrib), 0.0, 1.0);
+
+          gua_color = color.rgb * mix(vec3(0.4), vec3(1.0), vec3(gl_FrontFacing));
+          gua_metalness = 0.0;
+          gua_emissivity = 0.0;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "ColorMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    },
+    {
+      "name" : "FragmentRoughness",
+      "source" : "
+        // roughness generation ------------------------------------------------
+        void FragmentRoughness() {
+          gua_roughness = texture(sampler2D(RoughnessMap), gua_texcoords).r;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "RoughnessMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    }
+    ]
+}

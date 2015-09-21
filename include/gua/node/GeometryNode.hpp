@@ -23,14 +23,16 @@
 #define GUA_GEOMETRY_NODE_HPP
 
 // guacamole headers
-#include <gua/node/Node.hpp>
+#include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/renderer/enums.hpp>
+#include <gua/renderer/Material.hpp>
 
 // external headers
 #include <string>
 
 namespace gua {
+
 namespace node {
 
 /**
@@ -42,7 +44,7 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL GeometryNode : public Node {
+class GUA_DLL GeometryNode : public SerializableNode {
 
   public:
 
@@ -66,59 +68,23 @@ class GUA_DLL GeometryNode : public Node {
      *                       transformation.
      */
     GeometryNode(std::string const& name,
-                 std::string const& filename = "gua_default_geometry",
-                 std::string const& material = "gua_default_material",
                  math::mat4 const& transform = math::mat4::identity(),
                  ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
-
-    /**
-    * Get the string referring to an entry in guacamole's GeometryDatabase.
-    */
-    std::string const& get_filename() const;
-
-    /**
-    * Set the string referring to an entry in guacamole's GeometryDatabase.
-    */
-    void set_filename(std::string const& filename);
-
-    /**
-    * A string referring to an entry in guacamole's MaterialDatabase.
-    */
-    std::string const& get_material() const;
-    void set_material(std::string const& v);
 
     /**
     * A value describing the shadow's quality.
     */
     ShadowMode get_shadow_mode() const { return shadow_mode_; }
-    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
-
-    /**
-    * Updates bounding box by accessing the ressource in the databse
-    */
-    void update_bounding_box() const override;
+    void       set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
 
     inline void update_cache() override { Node::update_cache(); }
-
-    /**
-     * Accepts a visitor and calls concrete visit method.
-     *
-     * This method implements the visitor pattern for Nodes.
-     *
-     * \param visitor  A visitor to process the GeometryNode's data.
-     */
-    void accept(NodeVisitor& visitor) override;
 
   protected:
 
     // virtual std::shared_ptr<Node> copy() const = 0;
 
-    std::string filename_;
-    std::string material_;
-
     ShadowMode shadow_mode_;
-    bool filename_changed_;
-    bool material_changed_;
+
 };
 
 } // namespace node {

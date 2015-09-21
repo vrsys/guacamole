@@ -23,57 +23,51 @@
 #define GUA_GBUFFER_HPP
 
 // guacamole headers
-#include <gua/renderer/FrameBufferObject.hpp>
-#include <gua/renderer/enums.hpp>
+#include <gua/renderer/RenderTarget.hpp>
+#include <gua/renderer/ABuffer.hpp>
+
+#include <memory>
 
 namespace gua {
 
-/**
- *
- */
-class GBuffer : public FrameBufferObject {
+class GUA_DLL GBuffer : public RenderTarget {
  public:
 
-  /**
-   *
-   */
-  GBuffer(std::vector<std::pair<BufferComponent,
-                                scm::gl::sampler_state_desc> > const& layers,
-          unsigned width,
-          unsigned height,
-          unsigned mipmap_layers = 1);
+  GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
-  virtual ~GBuffer() {}
+  void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
+  void clear_color(RenderContext const& context);
+  
+  void bind(RenderContext const& context, bool write_depth) override;
+  void unbind(RenderContext const& context) override;
 
-  void remove_buffers(RenderContext const& ctx);
+  void toggle_ping_pong();
 
-  /**
-   *
-   */
-  void create(RenderContext const& ctx);
+  void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
+  void remove_buffers(RenderContext const& ctx) override;
 
-  /**
-   *
-   */
-  void create_UGLY(RenderContext const& ctx);
+  std::shared_ptr<Texture2D> const& get_color_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
+  std::shared_ptr<Texture2D> const& get_normal_buffer() const;
+  std::shared_ptr<Texture2D> const& get_flags_buffer()  const;
+  std::shared_ptr<Texture2D> const& get_depth_buffer()  const override;
 
-  /**
-   *
-   */
-  std::vector<std::shared_ptr<Texture2D> > const& get_color_buffers(
-      BufferComponentType type) const;
-
-  inline std::shared_ptr<Texture2D> const& get_depth_buffer() const {
-    return depth_buffer_;
-  }
+  inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
 
  private:
-  std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> >
-      layer_types_;
-  unsigned width_, height_, mipmap_layers_;
+  ABuffer abuffer_;
 
-  std::map<BufferComponentType, std::vector<std::shared_ptr<Texture2D> > >
-      color_buffers_;
+  scm::gl::frame_buffer_ptr fbo_read_;
+  scm::gl::frame_buffer_ptr fbo_write_;
+
+  scm::gl::frame_buffer_ptr fbo_read_only_color_;
+  scm::gl::frame_buffer_ptr fbo_write_only_color_;
+
+  std::shared_ptr<Texture2D> color_buffer_read_;
+  std::shared_ptr<Texture2D> color_buffer_write_;
+  std::shared_ptr<Texture2D> pbr_buffer_;
+  std::shared_ptr<Texture2D> normal_buffer_;
+  std::shared_ptr<Texture2D> flags_buffer_;
   std::shared_ptr<Texture2D> depth_buffer_;
 };
 

@@ -22,86 +22,39 @@
 #ifndef GUA_FULLSCREEN_PASS_HPP
 #define GUA_FULLSCREEN_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/Pass.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
-// external headers
-#include <scm/gl_util/primitives/quad.h>
-#include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
+#include <memory>
 
 namespace gua {
 
-class ShaderProgram;
-class SceneGraph;
+class Pipeline;
 
-/**
- * A GeometryPass which automatically renders to a fullscreen quad.
- *
- * This is especially useful for deferred shading or other post
- * processing purposes.
- *
- * Render passes are part of a rendering pipeline. Basically they encapsulate
- * some FBOs to which the scene is rendered. The user has to add some color
- * buffers to this pass and a depth stencil buffer if desired. The scene is
- * rendered frome the point of view of a given camera through a given screen.
- * With render masks a part of the scene may be hidden.
- */
-class FullscreenPass : public Pass {
+class GUA_DLL FullscreenPassDescription : public PipelinePassDescription {
  public:
+  FullscreenPassDescription();
 
-  /**
-   *
-   */
-  FullscreenPass(Pipeline* pipeline);
+  FullscreenPassDescription& source(std::string const& source);
+  std::string const& source() const;
 
-  /**
-   * Destructor.
-   *
-   * Deletes the FullscreenPass and frees all associated data.
-   */
-  virtual ~FullscreenPass();
+  FullscreenPassDescription& source_file(std::string const& source_file);
+  std::string const& source_file() const;
 
-  /**
-   *
-   */
-  void render_scene(Camera const& camera, SceneGraph const&, RenderContext const& ctx, std::size_t view) override;
+  template<typename T>
+  FullscreenPassDescription& uniform(std::string const& name, T const& val) {
+    uniforms[name] = val;
+    return *this;
+  }
 
+  template<typename T>
+  T const& uniform(std::string const& name) {
+    return boost::get<T>(uniforms[name].data);
+  }
+
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
  protected:
-
-  /**
-   *
-   */
-  virtual void set_uniforms(SerializedScene const& scene,
-                            RenderContext const& ctx) {}
-
-  /**
-   *
-   */
-  virtual void pre_rendering(Camera const& camera,
-                             SerializedScene const& scene,
-                             CameraMode eye,
-                             RenderContext const& ctx) {}
-
-  /**
-   *
-   */
-  virtual void rendering(Camera const& camera,
-                         SerializedScene const& scene,
-                         CameraMode eye,
-                         RenderContext const& ctx) = 0;
-
-  /**
-   *
-   */
-  virtual void post_rendering(Camera const& camera,
-                              SerializedScene const& scene,
-                              CameraMode eye,
-                              RenderContext const& ctx) {}
-
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-
- private:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
 }

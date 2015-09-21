@@ -1,0 +1,74 @@
+@include "resources/shaders/common/header.glsl"       
+
+///////////////////////////////////////////////////////////////////////////////
+// input
+///////////////////////////////////////////////////////////////////////////////                                                            
+layout(quads, equal_spacing, ccw) in;               
+                                                            
+flat in uint  tcIndex[];                            
+flat in vec2  tcTessCoord[];                        
+
+///////////////////////////////////////////////////////////////////////////////
+// output
+///////////////////////////////////////////////////////////////////////////////                                                            
+flat out vec3   teBitangent;                        
+flat out vec3   teTangent;                          
+flat out uint   teIndex;                            
+flat out vec2   teTessCoord;                        
+flat out vec4   teNormal;                           
+flat out vec4   tePosition;                         
+                                                            
+///////////////////////////////////////////////////////////////////////////////
+// uniforms
+///////////////////////////////////////////////////////////////////////////////
+@include "resources/shaders/common/gua_camera_uniforms.glsl"                
+                                                            
+uniform samplerBuffer parameter_texture;            
+uniform samplerBuffer attribute_texture;            
+
+///////////////////////////////////////////////////////////////////////////////
+// functions
+///////////////////////////////////////////////////////////////////////////////
+@include "resources/glsl/math/horner_surface.glsl.frag"
+@include "resources/glsl/math/horner_surface_derivatives.glsl.frag"
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void main()                                                            
+{                                                                      
+  vec4 p, du, dv;                                                      
+                                                                               
+  vec4 data = texelFetch(attribute_texture, int(tcIndex[0]) * 5);      
+  uint surface_index   = floatBitsToUint(data.x);                      
+  uint surface_order_u = floatBitsToUint(data.y);                      
+  uint surface_order_v = floatBitsToUint(data.z);                      
+                                                                               
+  vec2 p1 = mix(tcTessCoord[0].xy, tcTessCoord[1].xy, gl_TessCoord.x); 
+  vec2 p2 = mix(tcTessCoord[3].xy, tcTessCoord[2].xy, gl_TessCoord.x); 
+                                                                               
+  vec2 uv;                                                             
+                                                                               
+  uv = clamp(mix(p1, p2, gl_TessCoord.y), 0.0, 1.0);                   
+                                                                               
+  evaluateSurface(parameter_texture,                                   
+                  int(surface_index),                                  
+                  int(surface_order_u),                                
+                  int(surface_order_v),                                
+                  uv, p, du, dv);                                      
+                                                                               
+  tePosition  = vec4(p.xyz, 1.0);                                      
+  teBitangent = normalize(du.xyz);                                     
+  teTangent   = normalize(dv.xyz);                                     
+  teIndex     = tcIndex[0];                                            
+  teTessCoord = uv;                                                    
+  teNormal    = vec4(normalize(cross(du.xyz, dv.xyz)), 0.0);           
+                                                                               
+  vec4 nview  = gua_normal_matrix * teNormal;                          
+  vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;       
+                                                                               
+  if ( dot(normalize(nview.xyz), -normalize(pview.xyz)) < 0.0f ) {     
+    teNormal = -teNormal;                                              
+  }                                                                    
+}                  

@@ -29,6 +29,7 @@
 #include <gua/scenegraph/PickResult.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/events/Signal.hpp>
+#include <gua/utils/TagList.hpp>
 
 // external headers
 #include <map>
@@ -37,18 +38,24 @@
 #include <vector>
 #include <memory>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/functional/hash.hpp>
+
 namespace gua {
 
 class NodeVisitor;
 class SceneGraph;
 class Serializer;
 class DotGenerator;
-class Ray;
+struct SerializedScene;
+
+struct Ray;
 
 namespace physics { class CollisionShapeNodeVisitor; }
 
 namespace node {
 
+struct SerializedCameraNode;
 class RayNode;
 
 
@@ -82,7 +89,7 @@ class GUA_DLL Node {
    * This destructs a Node and all its children.
    *
    */
-  virtual ~Node();
+  virtual ~Node() = default;
 
 
   /**
@@ -132,6 +139,8 @@ class GUA_DLL Node {
 
     set_dirty();
 
+    new_node->set_scenegraph(scenegraph_);
+
     return new_node;
   }
 
@@ -157,45 +166,8 @@ class GUA_DLL Node {
    */
   void clear_children();
 
-  /**
-   * Adds the Node to a group.
-   *
-   * \param group     The name of the group the Node will be added to.
-   */
-  void add_to_group(std::string const& group);
-
-  /**
-   * Adds the Node to several groups.
-   *
-   * \param groups    The names of the groups the Node will be added to.
-   */
-  void add_to_groups(std::set<std::string> const& groups);
-
-  /**
-   * Removes the Node from a group.
-   *
-   * \param group     The name of the group the Node will removed from.
-   */
-  void remove_from_group(std::string const& group);
-
-  /**
-   * Checks whether the Node is in a certain group.
-   *
-   * \param group   The name of the group to be checked.
-   *
-   * \return bool   Returns true if the Node is in the given group,
-   *                else false.
-   */
-  bool is_in_group(std::string const& group) const;
-
-  /**
-   * Returns the groups the Node is in.
-   *
-   * \return std::set<std::string>  Returns all groups the Node is in.
-   */
-  inline std::set<std::string> const& get_groups() const {
-    return group_list_;
-  }
+  gua::utils::TagList const& get_tags() const;
+  gua::utils::TagList& get_tags();
 
 
   /**
@@ -220,7 +192,7 @@ class GUA_DLL Node {
    *
    * \return math::mat4  The Node's world transformation.
    */
-  math::mat4 get_world_transform() const;
+  virtual math::mat4 get_world_transform() const;
 
   math::mat4 const& get_cached_world_transform() const;
 
@@ -251,7 +223,7 @@ class GUA_DLL Node {
    * \param y         The y value of the scaling.
    * \param z         The z value of the scaling.
    */
-  virtual void scale(float x, float y, float z);
+  virtual void scale(math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a scaling on the Node's transformation.
@@ -265,7 +237,7 @@ class GUA_DLL Node {
    *
    * \param s         The scaling value for all axes.
    */
-  virtual void scale(float s);
+  virtual void scale(math::float_t s);
 
   /**
    * Applies a rotation on the Node's transformation.
@@ -275,7 +247,7 @@ class GUA_DLL Node {
    * \param y         The y factor of the rotation.
    * \param z         The z factor of the rotation.
    */
-  virtual void rotate(float angle, float x, float y, float z);
+  virtual void rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a rotation on the Node's transformation.
@@ -283,7 +255,7 @@ class GUA_DLL Node {
    * \param angle     The angle of the rotation in degrees.
    * \param axis      A vector containing the rotation's axis values.
    */
-  virtual void rotate(float angle, math::vec3 const& axis);
+  virtual void rotate(math::float_t angle, math::vec3 const& axis);
 
   /**
    * Applies a translation on the Node's transformation.
@@ -292,7 +264,7 @@ class GUA_DLL Node {
    * \param y         The y value of the translation.
    * \param z         The z value of the translation.
    */
-  virtual void translate(float x, float y, float z);
+  virtual void translate(math::float_t x, math::float_t y, math::float_t z);
 
   /**
    * Applies a translation on the Node's transformation.
@@ -361,38 +333,47 @@ class GUA_DLL Node {
   virtual void update_bounding_box() const;
 
   /**
+   * Draw a Node's BoundingBox.
+   *
+   * If set to true and the current pipeline contains a bounding box pass the
+   * node's bounding box will be drawn.
+   */
+  void set_draw_bounding_box(bool draw);
+  bool get_draw_bounding_box() const;
+
+  /**
    * Intersects a Node with a given RayNode.
    *
    * The function checks wheter a given RayNode intersects the Node or not. If
    * an intersection was found, a std::set<PickResult> is returned, containing
-   * information about individual hits. The user may specify PickResult::Options
+   * information about individual hits. The user may specify int
    * and a mask (referring to Nodes' group names) to configure the intersection
    * process.
    *
    * \param ray       The RayNode used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   virtual std::set<PickResult> const ray_test(RayNode const& ray,
-                                            PickResult::Options options = PickResult::PICK_ALL,
-                                            std::string const& mask = "");
+                                              int options = PickResult::PICK_ALL,
+                                              Mask const& mask = Mask());
 
   /**
    * Intersects a Node with a given Ray.
    *
    * The function checks wheter a given Ray intersects the Node or not. If
    * an intersection was found, a std::set<PickResult> is returned, containing
-   * information about individual hits. The user may specify PickResult::Options
+   * information about individual hits. The user may specify int
    * and a mask (referring to Nodes' group names) to configure the intersection
    * process.
    *
    * \param ray       The Ray used to check for intersections.
-   * \param options   PickResult::Options to configure the intersection process.
+   * \param options   int to configure the intersection process.
    * \param mask      A mask to restrict the intersection to certain Nodes.
    */
   virtual std::set<PickResult> const ray_test(Ray const& ray,
-                                              PickResult::Options options = PickResult::PICK_ALL,
-                                              std::string const& mask = "");
+                                              int options = PickResult::PICK_ALL,
+                                              Mask const& mask = Mask());
 
   /**
    * Accepts a visitor and calls concrete visit method
@@ -438,14 +419,14 @@ class GUA_DLL Node {
   /**
   * \return size_t unique address of node
   */
-  std::size_t const uuid() const;
+  inline std::size_t const uuid() const { return uuid_; }
 
   friend class ::gua::SceneGraph;
   friend class ::gua::Serializer;
   friend class ::gua::DotGenerator;
   friend class ::gua::physics::CollisionShapeNodeVisitor;
 
-  virtual void ray_test_impl(Ray const& ray, PickResult::Options options,
+  virtual void ray_test_impl(Ray const& ray, int options,
                              Mask const& mask, std::set<PickResult>& hits);
 
   /**
@@ -463,12 +444,17 @@ class GUA_DLL Node {
   */
   std::shared_ptr<Node> deep_copy() const;
 
+
+  SceneGraph* get_scenegraph() const {
+    return scenegraph_;
+  }
+
  protected:
 
   /**
    * Returns if the Node is Root
    *
-   * \return bool     Is root node of Scenegraph
+   * \return bool     Is root node of SceneGraph
    */
   inline bool is_root() const { return parent_ == nullptr; }
 
@@ -484,27 +470,38 @@ class GUA_DLL Node {
 
  private:
   // structure
-  Node* parent_;
+  Node* parent_ = nullptr;
   std::vector<std::shared_ptr<Node>> children_;
 
   // internal annotations
-  std::set<std::string> group_list_;
+  gua::utils::TagList tags_;
   std::vector<void*> user_data_;
   std::string name_;
-  math::mat4 transform_; // invertible affine transformation
 
  protected:
+  bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
+
   void set_dirty() const;
   void set_parent_dirty() const;
   void set_children_dirty() const;
-  mutable bool self_dirty_;
-  mutable bool child_dirty_;
+
+  virtual void set_scenegraph(SceneGraph* scenegraph);
+
+  mutable bool self_dirty_ = true;
+  mutable bool child_dirty_ = true;
+
 
   // up (cached) annotations
   mutable math::BoundingBox<math::vec3> bounding_box_;
+  bool draw_bounding_box_ = false;
 
   // down (cached) annotations
-  mutable math::mat4 world_transform_;
+  math::mat4 transform_ = math::mat4::identity(); // invertible affine transformation
+  mutable math::mat4 world_transform_ = math::mat4::identity();
+
+  SceneGraph* scenegraph_ = nullptr;
+  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
+                        boost::uuids::random_generator()());
 };
 
 } // namespace node {

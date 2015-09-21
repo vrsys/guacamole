@@ -25,13 +25,22 @@
 // guacamole headers
 #include <gua/math/BoundingBox.hpp>
 #include <gua/math/math.hpp>
+#include <gua/scenegraph/PickResult.hpp>
+
+#include <set>
 
 namespace gua {
+
+struct Ray;
+
+namespace node {
+  class RayNode;
+}
 
 /**
  *
  */
-class Frustum {
+class GUA_DLL Frustum {
 
  public:
 
@@ -63,7 +72,22 @@ class Frustum {
   inline float get_clip_near() const { return clip_near_; }
   inline float get_clip_far() const { return clip_far_; }
 
-  bool is_inside(math::BoundingBox<math::vec3> const& bbox) const;
+  bool intersects(math::BoundingBox<math::vec3> const& bbox,
+                  std::vector<math::vec4f> const& global_planes = {}) const;
+  bool contains(math::vec3 const& point) const;
+
+  std::set<PickResult> const ray_test(node::RayNode const& ray,
+                                      int options = PickResult::PICK_ALL);
+
+  std::set<PickResult> const ray_test(Ray const& ray,
+                                      int options = PickResult::PICK_ALL);
+
+  bool operator==(Frustum const& other) const {
+    return projection_==other.projection_ && clip_near_==other.clip_near_ && clip_far_==other.clip_far_;
+  }
+  bool operator!=(Frustum const& other) const {
+    return !(*this==other);
+  }
 
  private:
 
@@ -75,7 +99,7 @@ class Frustum {
   math::mat4 screen_transform_;
   math::mat4 projection_;
   math::mat4 view_;
-  std::vector<math::vec4> planes_;
+  std::vector<math::vec4f> planes_;
   float clip_near_;
   float clip_far_;
 

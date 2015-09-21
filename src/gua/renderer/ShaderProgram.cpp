@@ -33,146 +33,92 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 ShaderProgram::ShaderProgram()
-    : programs_(), upload_mutex_(), stages_(), interleaved_stream_capture_() {}
+    : program_(), stages_(), interleaved_stream_capture_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ShaderProgram::~ShaderProgram() {}
+void ShaderProgram::create_from_sources(std::string const & v_source,
+                                        std::string const & f_source,
+                                        SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
 
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::save_to_file(std::string const& directory,
-                                 std::string const& name) const {
-
-    auto save = [](std::string const & content, std::string const & file) {
-        gua::TextFile text(file);
-        //text.set_content(string_utils::format_code(content));
-        text.set_content(content);
-        text.save(true);
-    }
-    ;
-
-    for (auto const& s : stages_) {
-      std::string file_extension;
-      switch (s.type) {
-          case scm::gl::STAGE_VERTEX_SHADER:
-            file_extension = ".vert";
-            break;
-          case scm::gl::STAGE_GEOMETRY_SHADER:
-            file_extension = ".geom";
-            break;
-          case scm::gl::STAGE_FRAGMENT_SHADER:
-            file_extension = ".frag";
-            break;
-          case scm::gl::STAGE_TESS_EVALUATION_SHADER:
-            file_extension = ".teval";
-            break;
-          case scm::gl::STAGE_TESS_CONTROL_SHADER:
-            file_extension = ".tctrl";
-            break;
-          default:
-            Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
-      }
-      ;
-
-      save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void ShaderProgram::create_from_files(std::string const & v_file,
-                                      std::string const & f_file) {
-
-  for (auto p : programs_) {
-    p.reset();
-
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
+  in_rasterization_discard_ = false;
+  substitutions_ = substitutions;
 
-  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_file, false),
-              ShaderProgramStage(
-                  scm::gl::STAGE_FRAGMENT_SHADER, f_file, false) };
+  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::create_from_sources(std::string const & v_source,
-                                        std::string const & f_source) {
+                                        std::string const & g_source,
+                                        std::string const & f_source,
+                                        SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
 
-  for (auto p : programs_) {
-    p.reset();
-
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
+  in_rasterization_discard_ = false;
+  substitutions_ = substitutions;
 
-  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_source, true),
-              ShaderProgramStage(
-                  scm::gl::STAGE_FRAGMENT_SHADER, f_source, true) };
+  stages_ = { ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_source),
+              ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, g_source),
+              ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_source) };
 }
 
 ////////////////////////////////////////////////////////////////////////
 void ShaderProgram::set_shaders(
     std::vector<ShaderProgramStage> const & shaders,
     std::list<std::string> const & interleaved_stream_capture,
-    bool in_rasterization_discard) {
+    bool in_rasterization_discard,
+                           SubstitutionMap const& substitutions) {
+  program_.reset();
+  dirty_ = true;
 
-  for (auto p : programs_) {
-    p.reset();
-  }
-
-  programs_.clear();
   interleaved_stream_capture_.clear();
 
   stages_ = shaders;
   interleaved_stream_capture_ = interleaved_stream_capture;
   in_rasterization_discard_ = in_rasterization_discard;
+  substitutions_ = substitutions;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions) {
+  if (substitutions_ != substitutions) {
+    substitutions_ = substitutions;
+    program_.reset();
+    dirty_ = true;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::use(RenderContext const & context) const {
-
-    // upload to GPU if neccessary
-    upload_to(context);
-
-    auto save = [](std::string const & content, std::string const & file) {
-        gua::TextFile text(file);
-        text.set_content(string_utils::format_code(content));
-        text.save();
-    };
-
-//    if ( !programs_.empty() )
-//    {
-//      save(programs_[0]->info_log(), "program.log");
-//    }
-
-    context.render_context->bind_program(programs_[context.id]);
+  // upload to GPU if neccessary
+  upload_to(context);
+  context.render_context->bind_program(program_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::unuse(RenderContext const & context) const {
-    context.render_context->reset_program();
+  context.render_context->reset_program();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ShaderProgram::apply_uniform(RenderContext const & context,
-                                  UniformValueBase * uniform,
-                                  std::string const & name,
+                                  std::string const& name,
+                                  UniformValue const& uniform,
                                   unsigned position) const {
-
-    // upload to GPU if neccessary
-    upload_to(context);
-
-    uniform->apply(context, programs_[context.id], name, position);
+  // upload to GPU if neccessary
+  upload_to(context);
+  uniform.apply(context, name, program_, position);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,62 +128,83 @@ void ShaderProgram::set_subroutine(RenderContext const & context,
                                    std::string const & uniform_name,
                                    std::string const & routine_name) const {
 
-    // upload to GPU if neccessary
-    upload_to(context);
+  // upload to GPU if neccessary
+  upload_to(context);
 
-    programs_[context.id]
-        ->uniform_subroutine(stage, uniform_name, routine_name);
+  program_->uniform_subroutine(stage, uniform_name, routine_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ShaderProgram::upload_to(RenderContext const & context) const {
-    if (programs_.size() <= context.id || !programs_[context.id]) {
-        std::unique_lock<std::mutex> lock(upload_mutex_);
-        if (programs_.size() <= context.id) {
-            programs_.resize(context.id + 1);
-        }
 
-        std::list<scm::gl::shader_ptr> shaders;
-        for (auto const& s : stages_) {
-            shaders.push_back(
-                s.is_source
-                    ? context.render_device->create_shader(s.type, s.source)
-                    : context.render_device->create_shader_from_file(s.type,
-                                                                     s.source));
-        }
+  if ( !program_ || dirty_) {
+    std::list<scm::gl::shader_ptr> shaders;
+    ResourceFactory factory;
 
-        if (interleaved_stream_capture_.empty()) {
-            programs_[context.id] =
-                context.render_device->create_program(shaders);
-        } else {
-            scm::gl::interleaved_stream_capture capture_array(
-                interleaved_stream_capture_.front());
-            auto k = interleaved_stream_capture_.begin();
-            while (++k != interleaved_stream_capture_.end()) {
-                capture_array(*k);
-            }
+    for (auto const& s : stages_) {
+      auto source = factory.resolve_substitutions(s.source, substitutions_);
+      shaders.push_back(context.render_device->create_shader(s.type, source));
+    }
+    
+    if (interleaved_stream_capture_.empty()) {
+      program_ = context.render_device->create_program(shaders);
+    } else {
+      scm::gl::interleaved_stream_capture capture_array (interleaved_stream_capture_.front());
+      for (auto const& k : interleaved_stream_capture_)
+        capture_array(k);
 
-            programs_[context.id] = context.render_device->create_program(
-                shaders, capture_array, in_rasterization_discard_);
-            //programs_[context.id] = context.render_device->create_program (
-            //shaders, capture_array, in_rasterization_discard_ );
-        }
-
-        if (!programs_[context.id]) {
-          Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
-
-          return false;
-        }
-
-        // if (programs_[context.id]->info_log() != "")
-        //   std::cout << programs_[context.id]->info_log().c_str() << std::endl;
-
+      program_ = context.render_device->create_program(
+          shaders, capture_array, in_rasterization_discard_);
     }
 
-    return true;
+    dirty_ = false;
+
+    if (!program_) {
+      Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
+      return false;
+    }
+  }
+
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void save_to_file(ShaderProgram const& p, std::string const& directory,
+                                 std::string const& name) {
+
+  auto save = [](std::string const & content, std::string const & file) {
+    gua::TextFile text(file);
+    //text.set_content(string_utils::format_code(content));
+    text.set_content(content);
+    text.save(true);
+  };
+
+  for (auto const& s : p.get_program_stages()) {
+    std::string file_extension;
+    switch (s.type) {
+      case scm::gl::STAGE_VERTEX_SHADER:
+        file_extension = ".vert";
+        break;
+      case scm::gl::STAGE_GEOMETRY_SHADER:
+        file_extension = ".geom";
+        break;
+      case scm::gl::STAGE_FRAGMENT_SHADER:
+        file_extension = ".frag";
+        break;
+      case scm::gl::STAGE_TESS_EVALUATION_SHADER:
+        file_extension = ".teval";
+        break;
+      case scm::gl::STAGE_TESS_CONTROL_SHADER:
+        file_extension = ".tctrl";
+        break;
+      default:
+        Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
+    };
+
+    save(string_utils::format_code(s.source), directory + "/" + name + file_extension);
+  }
+}
 
 }

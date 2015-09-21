@@ -1,0 +1,19 @@
+{
+  "name" : "FragmentEmissivityMap",
+  "source" : "
+    // emissivity generation -----------------------------------------------
+    void FragmentEmissivityMap() {
+      if (uvec2(0) != EmissivityMap) {
+        gua_emissivity = texture(sampler2D(EmissivityMap), gua_texcoords).r;
+      }
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "EmissivityMap",
+      "type" : "sampler2D",
+      "value" : "0"
+    }
+  ]
+}

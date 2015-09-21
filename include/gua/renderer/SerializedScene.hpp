@@ -23,29 +23,18 @@
 #define GUA_SERIALIZED_SCENE_HPP
 
 // guacamole headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/Video3DNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
-#include <gua/node/SunLightNode.hpp>
+#include <gua/node/Node.hpp>
 #include <gua/node/ScreenNode.hpp>
-#include <gua/node/RayNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
+#include <gua/node/ClippingPlaneNode.hpp>
 #include <gua/math/BoundingBox.hpp>
 #include <gua/renderer/Frustum.hpp>
 
 // external headers
 #include <vector>
-#include <string>
-#include <map>
-#include <set>
 #include <unordered_map>
 #include <typeindex>
 
 namespace gua {
-
-class UberShader;
 
 /**
  * Stores a serialized scene graph.
@@ -53,64 +42,38 @@ class UberShader;
  * When the optimizer traverses the scene graph, it produces an SerializedScene
  * which contains relevant nodes only.
  */
-struct SerializedScene {
+struct GUA_DLL SerializedScene {
 
   /**
   * All geometry nodes.
   */
-  std::unordered_map<std::type_index, std::vector<node::GeometryNode*>> geometrynodes_;
+  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
 
   /**
-  * All Volume nodes.
-  */
-  std::vector<node::VolumeNode*> volumenodes_;
-
-  /**
-   * All point light nodes.
+   * The rendering frustum.
    */
-  std::vector<node::PointLightNode*> point_lights_;
+  Frustum rendering_frustum;
 
   /**
-   * All spot light nodes.
+   * The culling frustum. Not neccessarily the same as above.
    */
-  std::vector<node::SpotLightNode*> spot_lights_;
+  Frustum culling_frustum;
 
   /**
-   * All sun light nodes.
+   * The original camera position for which we are rendering. This stays the
+   * same even if rendering shadow maps, for example.
    */
-  std::vector<node::SunLightNode*> sun_lights_;
+  math::vec3 reference_camera_position;
 
   /**
-   * The frustum.
+   * Clipping plane parameters.
    */
-  Frustum frustum;
-  bool enable_global_clipping_plane;
-  math::vec4 global_clipping_plane;
-
-  /**
-   * The center of interest.
-   */
-  math::vec3 center_of_interest;
-
-  /**
-   * All used materials.
-   */
-  std::set<std::string> materials_;
+  std::vector<math::vec4f> clipping_planes;
 
   /**
    * All bounding boxes.
    */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes_;
-
-  /**
-   * All bounding boxes.
-   */
-  std::vector<node::RayNode*> rays_;
-
-  /**
-   * All textured quads.
-   */
-  std::vector<node::TexturedQuadNode*> textured_quads_;
+  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
 };
 
 }

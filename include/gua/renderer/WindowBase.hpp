@@ -40,8 +40,7 @@
 namespace gua {
 
 class Geometry;
-class Texture2D;
-class StereoBuffer;
+class Texture;
 
 /**
  * A base class for various windows.
@@ -89,6 +88,25 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
+
+    // convenience access to resolution
+    void set_resolution(math::vec2ui const& res) {
+      left_resolution() = right_resolution() = res;
+    }
+
+    math::vec2ui const& get_resolution() {
+      return get_left_resolution();
+    }
+
+    // convenience access to position
+    void set_position(math::vec2ui const& pos) {
+      left_position() = right_position() = pos;
+    }
+
+    math::vec2ui const& get_position() {
+      return get_left_position();
+    }
+
   } config;
 
   /**
@@ -108,12 +126,15 @@ class GUA_DLL WindowBase {
    */
   virtual ~WindowBase();
 
-  virtual void open();
+  virtual void open() = 0;
   virtual bool get_is_open() const = 0;
-
-  virtual void create_shader();
-
+  virtual bool should_close() const = 0;
   virtual void close() = 0;
+
+  virtual void process_events() = 0;
+
+  virtual void init_context();
+  void destroy_context();
 
   /**
    * Activate the context of this window.
@@ -121,7 +142,7 @@ class GUA_DLL WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active) const = 0;
+  virtual void set_active(bool active) = 0;
 
   /**
    * Starts the drawing of a new frame.
@@ -140,10 +161,10 @@ class GUA_DLL WindowBase {
   /**
    *
    */
-  virtual void display(std::shared_ptr<Texture2D> const& center_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture);
 
-  virtual void display(std::shared_ptr<Texture2D> const& left_texture,
-                       std::shared_ptr<Texture2D> const& right_texture);
+  virtual void display(std::shared_ptr<Texture> const& center_texture,
+                       bool is_left);
 
   /**
    * Get the RenderContext of this window.
@@ -155,36 +176,40 @@ class GUA_DLL WindowBase {
    */
   RenderContext* get_context();
 
+  float get_rendering_fps() { return rendering_fps; }
+  std::atomic<float> rendering_fps;
+
 protected:
 
-  struct DebugOutput : public scm::gl::render_context::debug_output {
+  std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
+
+  struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output {
     /*virtual*/ void operator()(scm::gl::debug_source source,
                                 scm::gl::debug_type type,
                                 scm::gl::debug_severity severity,
                                 const std::string& message) const;
   };
 
+  mutable RenderContext ctx_;
   ShaderProgram fullscreen_shader_;
   scm::gl::quad_geometry_ptr fullscreen_quad_;
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
-  RenderContext ctx_;
+
+  static std::atomic_uint last_context_id_;
+
+  static std::mutex last_context_id_mutex_;
+
 
  private:
-  void display(std::shared_ptr<Texture2D> const& texture,
+  void display(std::shared_ptr<Texture> const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,
                bool is_left = true,
                bool clear = true);
 
-
-  static std::atomic_uint last_context_id_;
-
-  static std::mutex last_context_id_mutex_;
-
-  std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 };
 
 }

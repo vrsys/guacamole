@@ -29,7 +29,7 @@
 namespace gua {
 namespace concurrent {
 
-// Adapted from: 
+// Adapted from:
 // http://ericniebler.com/2013/11/07/input-iterators-vs-input-ranges/
 template <class T, class Container> class pull_items_range {
   Container& sin_;
@@ -75,7 +75,7 @@ template <class T, class Container> class pull_items_range {
     pull_items_range const* rng_;
   };
   // Define const_iterator and iterator together:
-  typedef iterator const_iterator;
+  using const_iterator = iterator;
 
   explicit pull_items_range(Container& sin) : sin_(sin), obj_ {} {
     next();  // prime the pump

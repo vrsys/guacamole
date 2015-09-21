@@ -44,11 +44,10 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-template <typename T> class Database {
+template <typename T, typename K = std::string> class Database {
  public:
-
-  typedef std::string key_type;
-  typedef std::shared_ptr<T> mapped_type;
+  using key_type = K;
+  using mapped_type = std::shared_ptr<T>;
 
   /**
    * Adds a new entry to the data base.
@@ -66,6 +65,24 @@ template <typename T> class Database {
   }
 
   /**
+  * Remove entry to the data base.
+  */
+  void remove(key_type const& k) {
+    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
+    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+
+    auto entry = data_.find(k);
+    if (entry != data_.end()) {
+      data_.erase(entry);
+    }
+    
+    auto key = keys_.find(k);
+    if (key != keys_.end()) {
+      keys_.erase(key);
+    }
+  }
+
+  /**
    * Check for existance of a key.
    *
    * Returns true, if an entry with the given key exists in the Database.
@@ -73,7 +90,7 @@ template <typename T> class Database {
    * \param k    The key to check for.
    * \return     Whether the given key is stored in the Database.
    */
-  bool is_supported(key_type const& k) const {
+  bool contains(key_type const& k) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return keys_.find(k) != keys_.end();
   }
@@ -106,10 +123,6 @@ template <typename T> class Database {
     }
 
     if (result == data_.end()) {
-      Logger::LOG_WARNING << "There is no entry \""
-                          << k
-                          << "\" in the database!"
-                          << std::endl;
       return std::shared_ptr<T>();
     }
 
@@ -141,9 +154,9 @@ template <typename T> class Database {
 
 };
 
-template <typename T>
+template <typename K, typename T>
 auto lookup(Database<T>& db, typename Database<T>::key_type const& k) -> decltype(boost::make_optional(db.lookup(k))) {
-  if (db.is_supported(k))
+  if (db.contains(k))
     return boost::make_optional(db.lookup(k));
   else
     return boost::optional<typename Database<T>::mapped_type>();

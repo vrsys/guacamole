@@ -37,13 +37,15 @@ Texture3D::Texture3D(unsigned width,
                  unsigned height,
                  unsigned depth,
                  scm::gl::data_format color_format,
+                 scm::gl::data_format internal_format,
                  std::vector<void*> const& data,
                  unsigned mipmap_layers,
                  scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(color_format, data, mipmap_layers, state_descripton),
+    : Texture(color_format, internal_format, mipmap_layers, state_descripton),
       width_(width),
       height_(height),
-      depth_(depth) {}
+      depth_(depth),
+      data_(data) {}
 
 Texture3D::Texture3D(unsigned width,
                  unsigned height,
@@ -77,15 +79,16 @@ void Texture3D::upload_to(RenderContext const& context) const {
   if (file_name_ == "") {
 
 
-    if (data_.size() == 0)
+    if (data_.size() == 0) {
       textures_[context.id] = context.render_device->create_texture_3d(
           math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_);
-    else
+    } else {
       textures_[context.id] = context.render_device->create_texture_3d(
           scm::gl::texture_3d_desc(
               math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_),
           color_format_,
           data_);
+    }
   } else {
     // MESSAGE("Uploading texture file %s", file_name_.c_str());
     scm::gl::volume_loader loader;

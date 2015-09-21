@@ -24,18 +24,17 @@
 
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/GeometryLoader.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/utils/Mesh.hpp>
 
 // external headers
 #include <string>
 #include <list>
 #include <memory>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 namespace Assimp { class Importer; }
+struct aiScene;
+struct aiNode;
 
 namespace gua {
 
@@ -51,7 +50,7 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Mesh objects.
  */
-class GUA_DLL TriMeshLoader : public GeometryLoader {
+class GUA_DLL TriMeshLoader {
 
  public: // typedefs, enums
 
@@ -61,7 +60,9 @@ class GUA_DLL TriMeshLoader : public GeometryLoader {
      OPTIMIZE_GEOMETRY = 1 << 1,
      MAKE_PICKABLE = 1 << 2,
      NORMALIZE_POSITION = 1 << 3,
-     NORMALIZE_SCALE = 1 << 4
+     NORMALIZE_SCALE = 1 << 4,
+     NO_SHARED_MATERIALS = 1 << 5,
+     OPTIMIZE_MATERIALS = 1 << 6
    };
 
 public:
@@ -74,7 +75,7 @@ public:
    TriMeshLoader();
 
    /**
-   * 
+   *
    */
    std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 
@@ -83,8 +84,13 @@ public:
    */
    std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                                    std::string const& file_name,
-                                                   std::string const& fallback_material,
+                                                   std::shared_ptr<Material> const& fallback_material,
                                                    unsigned flags = DEFAULTS);
+
+   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
+                                                   std::string const& file_name,
+                                                   unsigned flags = DEFAULTS);
+
 
   /**
    * Constructor from a file.
@@ -93,7 +99,7 @@ public:
    *
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
-   */
+ */
   std::shared_ptr<node::Node> load(std::string const& file_name,
                              unsigned flags);
 
@@ -111,26 +117,31 @@ public:
   /**
   *
   */
-  bool is_supported(std::string const& file_name) const override;
+  bool is_supported(std::string const& file_name) const;
 
  private: // methods
 
-  std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
+  static std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
                 unsigned flags, unsigned& mesh_count);
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::string const& fallback_material) const;
+  static void apply_fallback_material(std::shared_ptr<node::Node> const& root,
+                std::shared_ptr<Material> const& fallback_material,
+                bool no_shared_materials);
+
+#ifdef GUACAMOLE_FBX
+  static std::shared_ptr<node::Node> get_tree(FbxNode& node,
+                std::string const& file_name,
+                unsigned flags, unsigned& mesh_count);
+
+  static FbxScene* load_fbx_file(FbxManager* manager, std::string const& file_path);
+#endif
 
 private: // attributes
 
-  std::string parent_material_name_;
-
-  unsigned node_counter_;
-
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
-  static unsigned mesh_counter_;
 };
 
 }

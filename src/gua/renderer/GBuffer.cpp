@@ -26,223 +26,175 @@
 #include <gua/platform.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
-#include <boost/optional.hpp>
 
 namespace gua {
 
-boost::optional<scm::gl::data_format>
-to_scm_data_format(BufferComponent type) {
-  switch (type) {
-    case BufferComponent::I1:
-      return boost::make_optional(scm::gl::FORMAT_R_16I);
-      break;
-    case BufferComponent::I2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16I);
-      break;
-    case BufferComponent::I3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16I);
-      break;
-    case BufferComponent::I4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16I);
-      break;
-    case BufferComponent::U1:
-      return boost::make_optional(scm::gl::FORMAT_R_16UI);
-      break;
-    case BufferComponent::U2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16UI);
-      break;
-    case BufferComponent::U3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16UI);
-      break;
-    case BufferComponent::U4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16UI);
-      break;
-    case BufferComponent::H1:
-      return boost::make_optional(scm::gl::FORMAT_R_16F);
-      break;
-    case BufferComponent::H2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16F);
-      break;
-    case BufferComponent::H3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
-      break;
-    case BufferComponent::H4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
-      break;
+////////////////////////////////////////////////////////////////////////////////
 
-    ///TODO: Make it work with 32bit
-    case BufferComponent::F1:
-      return boost::make_optional(scm::gl::FORMAT_R_16F);
-      break;
-    case BufferComponent::F2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16F);
-      break;
-    case BufferComponent::F3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
-      break;
-    case BufferComponent::F4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
-      break;
-    case BufferComponent::DEPTH_16:
-      return boost::make_optional(scm::gl::FORMAT_D16);
-      break;
-    case BufferComponent::DEPTH_24:
-      return boost::make_optional(scm::gl::FORMAT_D24);
-      break;
-    default:
-      return boost::optional<scm::gl::data_format>();
+GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
+  RenderTarget(resolution),
+  abuffer_(),
+  fbo_read_(nullptr),
+  fbo_write_(nullptr),
+  fbo_read_only_color_(nullptr),
+  fbo_write_only_color_(nullptr) {
+
+#if 0
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
+#else
+  // linear filtering, only necessary for SSAA 3.11
+  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+    scm::gl::WRAP_MIRRORED_REPEAT,
+    scm::gl::WRAP_MIRRORED_REPEAT);
+#endif
+
+  color_buffer_read_  = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 1, state);
+  color_buffer_write_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 1, state);
+  pbr_buffer_         = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_8,   1, state);
+  normal_buffer_      = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_16,  1, state);
+  flags_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_R_8UI,   1, state);
+  depth_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24_S8,  1, state);
+
+  fbo_read_ = ctx.render_device->create_frame_buffer();
+  fbo_read_->attach_color_buffer(0, color_buffer_read_->get_buffer(ctx),0,0);
+  fbo_read_->attach_color_buffer(1, pbr_buffer_->get_buffer(ctx), 0, 0);
+  fbo_read_->attach_color_buffer(2, normal_buffer_->get_buffer(ctx),0,0);
+  fbo_read_->attach_color_buffer(3, flags_buffer_->get_buffer(ctx),0,0);
+  fbo_read_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+
+  fbo_write_ = ctx.render_device->create_frame_buffer();
+  fbo_write_->attach_color_buffer(0, color_buffer_write_->get_buffer(ctx),0,0);
+  fbo_write_->attach_color_buffer(1, pbr_buffer_->get_buffer(ctx),0,0);
+  fbo_write_->attach_color_buffer(2, normal_buffer_->get_buffer(ctx),0,0);
+  fbo_write_->attach_color_buffer(3, flags_buffer_->get_buffer(ctx),0,0);
+  fbo_write_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+
+  fbo_read_only_color_ = ctx.render_device->create_frame_buffer();
+  fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_->get_buffer(ctx),0,0);
+  fbo_read_only_color_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+
+  fbo_write_only_color_ = ctx.render_device->create_frame_buffer();
+  fbo_write_only_color_->attach_color_buffer(0, color_buffer_write_->get_buffer(ctx),0,0);
+  fbo_write_only_color_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::allocate_a_buffer(RenderContext& ctx, size_t buffer_size) {
+  abuffer_.allocate(ctx, buffer_size);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::clear(RenderContext const& ctx, float depth, unsigned stencil) {
+  ctx.render_context->clear_color_buffers(
+      fbo_write_, scm::math::vec4f(0,0,0,0));
+  ctx.render_context->clear_depth_stencil_buffer(fbo_write_, depth, stencil);
+
+  abuffer_.clear(ctx, get_resolution());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::clear_color(RenderContext const& ctx) {
+  if (ctx.render_context && fbo_write_)
+    ctx.render_context->clear_color_buffer(
+    fbo_write_, 0, scm::math::vec4f(0, 0, 0, 0));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::bind(RenderContext const& ctx, bool write_depth) {
+  if (write_depth) {
+    ctx.render_context->set_frame_buffer(fbo_write_);
+  } else {
+    ctx.render_context->set_frame_buffer(fbo_write_only_color_);
   }
+  abuffer_.bind(ctx);
 }
 
-boost::optional<scm::gl::data_format>
-to_scm_data_format_forUGLY(BufferComponent type) {
-  switch (type) {
-    case BufferComponent::I1:
-      return boost::make_optional(scm::gl::FORMAT_R_16I);
-      break;
-    case BufferComponent::I2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16I);
-      break;
-    case BufferComponent::I3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16I);
-      break;
-    case BufferComponent::I4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16I);
-      break;
-    case BufferComponent::U1:
-      return boost::make_optional(scm::gl::FORMAT_R_16UI);
-      break;
-    case BufferComponent::U2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16UI);
-      break;
-    case BufferComponent::U3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16UI);
-      break;
-    case BufferComponent::U4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16UI);
-      break;
-    case BufferComponent::H1:
-      return boost::make_optional(scm::gl::FORMAT_R_16F);
-      break;
-    case BufferComponent::H2:
-      return boost::make_optional(scm::gl::FORMAT_RG_16F);
-      break;
-    case BufferComponent::H3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_16F);
-      break;
-    case BufferComponent::H4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_16F);
-      break;
-    case BufferComponent::F1:
-      return boost::make_optional(scm::gl::FORMAT_R_32F);
-      break;
-    case BufferComponent::F2:
-      return boost::make_optional(scm::gl::FORMAT_RG_32F);
-      break;
-    case BufferComponent::F3:
-      return boost::make_optional(scm::gl::FORMAT_RGB_32F);
-      break;
-    case BufferComponent::F4:
-      return boost::make_optional(scm::gl::FORMAT_RGBA_32F);
-      break;
-    case BufferComponent::DEPTH_16:
-      return boost::make_optional(scm::gl::FORMAT_D16);
-      break;
-    case BufferComponent::DEPTH_24:
-      return boost::make_optional(scm::gl::FORMAT_D24);
-      break;
-    default:
-      return boost::optional<scm::gl::data_format>();
-  }
+////////////////////////////////////////////////////////////////////////////////
+
+void GBuffer::unbind(RenderContext const& ctx) {
+  abuffer_.unbind(ctx);
+  RenderTarget::unbind(ctx);
 }
 
-GBuffer::GBuffer(
-    std::vector<std::pair<BufferComponent, scm::gl::sampler_state_desc> > const&
-        layers,
-    unsigned width,
-    unsigned height,
-    unsigned mipmap_layers)
-    : layer_types_(layers),
-      width_(width),
-      height_(height),
-      mipmap_layers_(mipmap_layers) {
+////////////////////////////////////////////////////////////////////////////////
 
-    color_buffers_[TYPE_INTEGER] = std::vector<std::shared_ptr<Texture2D> >();
-    color_buffers_[TYPE_UNSIGNED] = std::vector<std::shared_ptr<Texture2D> >();
-    color_buffers_[TYPE_HALF] = std::vector<std::shared_ptr<Texture2D> >();
-    color_buffers_[TYPE_FLOAT] = std::vector<std::shared_ptr<Texture2D> >();
+void GBuffer::toggle_ping_pong() {
+  std::swap(fbo_write_, fbo_read_);
+  std::swap(fbo_write_only_color_, fbo_read_only_color_);
+  std::swap(color_buffer_write_, color_buffer_read_);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void GBuffer::remove_buffers(RenderContext const& ctx) {
   unbind(ctx);
-  remove_attachments();
+  
+  if (fbo_write_) {
+    fbo_write_->clear_attachments();
+    fbo_write_.reset();
+  }
 
-  if (depth_buffer_)
+  if (fbo_read_) {
+    fbo_read_->clear_attachments();
+    fbo_read_.reset();
+  }
+
+  if (color_buffer_write_) {
+    color_buffer_write_->make_non_resident(ctx);
+  }
+  if (color_buffer_read_) {
+    color_buffer_read_->make_non_resident(ctx);
+  }
+  if (pbr_buffer_) {
+    pbr_buffer_->make_non_resident(ctx);
+  }
+  if (normal_buffer_) {
+    normal_buffer_->make_non_resident(ctx);
+  }
+  if (flags_buffer_) {
+    flags_buffer_->make_non_resident(ctx);
+  }
+  if (depth_buffer_) {
     depth_buffer_->make_non_resident(ctx);
-
-  for (auto const& c: color_buffers_)
-    for (auto b: c.second)
-      b->make_non_resident(ctx);
+  }
 }
 
-void GBuffer::create(RenderContext const& ctx) {
-    int color_attachment_count(0);
-    for (auto const& layer : layer_types_) {
-        BufferComponent type(layer.first);
-        scm::gl::sampler_state_desc const& state(layer.second);
+////////////////////////////////////////////////////////////////////////////////
 
-        auto format = to_scm_data_format(type);
-        if (format) {
-            if (type == BufferComponent::DEPTH_16 || type == BufferComponent::DEPTH_24) {
-                depth_buffer_ = std::make_shared<Texture2D>(
-                    width_, height_, *format, mipmap_layers_, state);
-                attach_depth_stencil_buffer(ctx, depth_buffer_);
-            } else if (type != BufferComponent::NONE) {
-                color_buffers_[enums::get_type(type)].push_back(
-                    std::make_shared<Texture2D>( width_,
-                                               height_,
-                                               *format,
-                                               mipmap_layers_,
-                                               state));
-                attach_color_buffer(
-                    ctx,
-                    color_attachment_count++,
-                    *color_buffers_[enums::get_type(type)].rbegin());
-            }
-        }
-    }
+std::shared_ptr<Texture2D> const& GBuffer::get_color_buffer() const {
+  return color_buffer_read_;
 }
 
-void GBuffer::create_UGLY(RenderContext const & ctx) {
-    int color_attachment_count(0);
-    for (auto const& layer : layer_types_) {
-        BufferComponent type(layer.first);
-        scm::gl::sampler_state_desc const& state(layer.second);
-        auto format = to_scm_data_format(type);
-        if (format) {
-            if (type == BufferComponent::DEPTH_16 || type == BufferComponent::DEPTH_24) {
-                depth_buffer_ = std::make_shared<Texture2D>(
-                    width_, height_, *format, mipmap_layers_, state);
-                attach_depth_stencil_buffer(ctx, depth_buffer_);
-            } else if (type != BufferComponent::NONE) {
-                color_buffers_[enums::get_type(type)].push_back(
-                    std::make_shared<Texture2D>( width_,
-                                               height_,
-                                               *format,
-                                               mipmap_layers_,
-                                               state));
-                attach_color_buffer(
-                    ctx,
-                    color_attachment_count++,
-                    *color_buffers_[enums::get_type(type)].rbegin());
-            }
-        }
-    }
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& GBuffer::get_pbr_buffer() const {
+  return pbr_buffer_;
 }
 
-std::vector<std::shared_ptr<Texture2D> > const& GBuffer::get_color_buffers(
-    BufferComponentType type) const {
-    return color_buffers_.find(type)->second;
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& GBuffer::get_normal_buffer() const {
+  return normal_buffer_;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& GBuffer::get_flags_buffer() const {
+  return flags_buffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<Texture2D> const& GBuffer::get_depth_buffer() const {
+  return depth_buffer_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

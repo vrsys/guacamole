@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Uniform.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
 
 // external headers
 #include <mutex>
@@ -35,21 +36,19 @@
 
 namespace gua {
 
-class UniformValueBase;
-
 /**
  *
  */
 struct ShaderProgramStage {
   ShaderProgramStage(scm::gl::shader_stage t,
-                     std::string const& src,
-                     bool is_src = true)
-      : type(t), source(src), is_source(is_src) {}
+                     std::string const& src)
+      : type(t), source(src) {}
 
   scm::gl::shader_stage type;
   std::string source;
-  bool is_source;  // if false, source is a filename
 };
+
+// TODO: this class may exploit per-context resources capability
 
 /**
  * An actual shader which can be applied to the Graphics pipeline.
@@ -60,8 +59,6 @@ struct ShaderProgramStage {
 class GUA_DLL ShaderProgram {
  public:
 
-  friend class NURBSUberShader;
-
  public:
   /**
    * Default constructor.
@@ -71,18 +68,6 @@ class GUA_DLL ShaderProgram {
   ShaderProgram();
 
   /**
-   * Constructor from shaders.
-   *
-   * This method takes a vertex shader file and a fragment shader file
-   * and combines them to a ShaderProgram.
-   *
-   * \param v_shader_file        The VertexShader file path.
-   * \param f_shader_file        The FragmentShader file path.
-   */
-  void create_from_files(std::string const& v_shader_file,
-                         std::string const& f_shader_file);
-
-  /**
    * Constructor.
    *
    * This method takes a vertex shader source and a fragment shader
@@ -90,9 +75,27 @@ class GUA_DLL ShaderProgram {
    *
    * \param v_shader_source      The vertex shader source.
    * \param f_shader_source      The fragment shader source.
+   * \param substitutions        Shader compile-time substitution map.
    */
   void create_from_sources(std::string const& v_shader_source,
-                           std::string const& f_shader_source);
+                           std::string const& f_shader_source,
+                           SubstitutionMap const& substitutions = SubstitutionMap());
+
+  /**
+   * Constructor.
+   *
+   * This method takes a vertex shader source, a geomtry shader source
+   * and a fragment shader source and combines them to a ShaderProgram.
+   *
+   * \param v_shader_source      The vertex shader source.
+   * \param g_shader_source      The geometry shader source.
+   * \param f_shader_source      The fragment shader source.
+   * \param substitutions        Shader compile-time substitution map.
+   */
+  void create_from_sources(std::string const& v_shader_source,
+                           std::string const& g_shader_source,
+                           std::string const& f_shader_source,
+                           SubstitutionMap const& substitutions = SubstitutionMap());
 
   /**
    *
@@ -100,26 +103,15 @@ class GUA_DLL ShaderProgram {
   void set_shaders(std::vector<ShaderProgramStage> const& shaders,
                    std::list<std::string> const& interleaved_stream_capture =
                        std::list<std::string>(),
-                   bool in_rasterization_discard = false);
+                   bool in_rasterization_discard = false,
+                   SubstitutionMap const& substitutions = SubstitutionMap());
 
   /**
-   * Destructor
+   * Sets compile-time substitution map
    *
-   * Cleans all associated memory.
+   * \param substitutions        Shader compile-time substitution map.
    */
-  virtual ~ShaderProgram();
-
-  /**
-   *
-   */
-  void save_to_file(std::string const& directory,
-                    std::string const& name) const;
-
-  /**
-   *
-   */
-  void save_log_to_file(std::string const& directory,
-                        std::string const& name) const;
+  void set_substitutions(SubstitutionMap const& substitutions);
 
   /**
    * Applies this shader.
@@ -147,8 +139,8 @@ class GUA_DLL ShaderProgram {
    * \param context             The context which should use this shader.
    */
   void apply_uniform(RenderContext const& context,
-                     UniformValueBase* uniform,
                      std::string const& name,
+                     UniformValue const& uniform,
                      unsigned position = 0) const;
 
   /**
@@ -160,8 +152,7 @@ class GUA_DLL ShaderProgram {
                    std::string const& name,
                    unsigned position = 0) const {
 
-    UniformValue<T> tmp(value);
-    apply_uniform(context, &tmp, name, position);
+    apply_uniform(context, name, UniformValue(value), position);
   }
 
   /**
@@ -174,21 +165,36 @@ class GUA_DLL ShaderProgram {
 
   virtual bool upload_to(RenderContext const& context) const;
 
-  inline scm::gl::program_ptr const& get_program ( RenderContext const& ctx ) const { return programs_[ctx.id]; }
+  inline scm::gl::program_ptr const& get_program ( RenderContext const&) const { return program_; }
+
+  inline std::vector<ShaderProgramStage> const& get_program_stages() const {
+    return stages_;
+  }
 
  protected:  // attributes
 
-  mutable std::vector<scm::gl::program_ptr> programs_;
+  friend class WindowBase;
+
+  mutable scm::gl::program_ptr program_;
 
  private:  // attributes
 
-  mutable std::mutex upload_mutex_;
+  mutable bool dirty_ = false;
 
   std::vector<ShaderProgramStage> stages_;
   std::list<std::string> interleaved_stream_capture_;
-  bool in_rasterization_discard_;
+  bool in_rasterization_discard_ = false;
+  SubstitutionMap substitutions_;
 
 };
+
+/**
+ *
+ */
+GUA_DLL void save_to_file(ShaderProgram const& p, std::string const& directory,
+                   std::string const& name);
+
+
 
 }
 

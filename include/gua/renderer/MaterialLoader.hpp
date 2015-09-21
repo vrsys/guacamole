@@ -23,18 +23,18 @@
 #define GUA_MATERIAL_LOADER_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/config.hpp>
+#include <gua/renderer/Material.hpp>
+#include <gua/utils/fbxfwd.hpp>
 
 // external headers
 #include <string>
-#include <list>
 #include <memory>
 
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
+
 
 namespace Assimp { class Importer; }
+struct aiMaterial;
 
 namespace gua {
 
@@ -50,30 +50,27 @@ class GeometryNode;
 class GUA_DLL MaterialLoader {
  public:
 
-  enum ShadingCapabilities {
-    DIFFUSE_MAP = 1,
-    DIFFUSE_COLOR = 2,
-    SPECULAR_MAP = 4,
-    SPECULAR_COLOR = 8,
-    EMIT_MAP = 16,
-    EMIT_COLOR = 32,
-    AMBIENT_MAP = 64,
-    AMBIENT_COLOR = 128,
-    SHININESS_MAP = 256,
-    SHININESS_COLOR = 512,
-    NORMAL_MAP = 1024,
-    REFLECTION_MAP = 2048,
-    OPACITY_MAP = 4096
-  };
+  std::shared_ptr<Material> load_material(aiMaterial const* material,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
+#ifdef GUACAMOLE_FBX
+  std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
 
-  std::string load_material(aiMaterial const* material,
-                            std::string const& file_name) const;
+	std::shared_ptr<Material> load_unreal(std::string const& file_name,
+															 	std::string const& assets_directory,
+															 	bool optimize_material = true) const;
+#endif
+  std::shared_ptr<Material> load_material(std::string const& file_name,
+                                std::string const& assets_directory,
+                                bool optimize_material = true) const;
 
- private:
-  std::string load_shading_model(unsigned capabilities) const;
-
+  static std::string get_file_name(std::string const& path);
+  inline static bool file_exists(std::string const& path);
 };
 
 }
 
 #endif  // GUA_MATERIAL_LOADER_HPP
+

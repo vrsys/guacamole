@@ -1,0 +1,51 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "uniform_color",
+      "source" : "
+        void uniform_color() 
+        {
+          float noise = texture(sampler2D(noise_texture), mod((10.0 * gua_world_position.xy), vec2(1.0)) ).r;
+          gua_color = mix(vec3(noise), color, 1.0);
+
+          gua_metalness = metalness;
+          gua_roughness = roughness; 
+          gua_emissivity = emissivity;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "metalness",
+          "type" : "float",
+          "value" : "1.0"
+        },
+        {
+          "name" : "roughness",
+          "type" : "float",
+          "value" : "0.2"
+        },
+        {
+          "name" : "emissivity",
+          "type" : "float",
+          "value" : "0.0"
+        },
+        {
+          "name" : "color",
+          "type" : "vec3",
+          "value" : "(1.0 1.0 1.0)"
+        },
+        {
+          "name" : "noise_texture",
+          "type" : "sampler2D",
+          "value" : "1"
+        }
+      ] 
+    }
+  ]
+
+}

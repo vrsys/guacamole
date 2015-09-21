@@ -22,12 +22,14 @@
 #ifndef GUA_RENDER_MASK_HPP
 #define GUA_RENDER_MASK_HPP
 
+#include <gua/platform.hpp>
+#include <gua/utils/TagList.hpp>
+
 // external headers
 #include <string>
 #include <vector>
 #include <set>
 
-#include <gua/platform.hpp>
 
 namespace gua {
 
@@ -55,7 +57,8 @@ class GUA_DLL Mask {
    *
    * \param render_mask      The Mask's string representation.
    */
-  Mask(std::string const& render_mask);
+  Mask(std::vector<std::string> const& whitelist_tags = std::vector<std::string>(),
+       std::vector<std::string> const& blacklist_tags = std::vector<std::string>());
 
   /**
    * Checks a given list of groups against this mask.
@@ -64,30 +67,26 @@ class GUA_DLL Mask {
    * \return                 true, if the given list of groups is
    *                         supported by this Mask.
    */
-  bool check(std::set<std::string> const& groups) const;
+  bool check(gua::utils::TagList const& tags) const;
+
+  gua::utils::TagList whitelist;
+  gua::utils::TagList blacklist;
+
+   void set_user_data(void* data) {
+    user_data_ = data;
+  }
+
+  void* get_user_data() const {
+    return user_data_;
+  }
+
+  bool operator==(Mask const& other) const {
+    return whitelist == other.whitelist && blacklist == other.blacklist;
+  }
 
  private:
+  void* user_data_ = nullptr;
 
-  class BasicExpression {
-   public:
-    BasicExpression(std::string const& expression);
-
-    bool check(std::set<std::string> const& groups) const;
-
-   private:
-    std::string remove_useless_brackets(std::string const& input) const;
-
-    enum Operation {
-      AND,
-      OR,
-      NOT,
-      VALUE
-    } type_;
-
-    std::vector<BasicExpression> children_;
-    std::string value_;
-
-  } expression_;
 };
 
 }
