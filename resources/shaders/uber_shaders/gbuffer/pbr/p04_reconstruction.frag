@@ -48,8 +48,8 @@ void main()
 
 
       
-        output_color = texture2D( p02_color_texture, coords.xy).rgb;
-        output_normal = texture2D( p02_normal_texture, coords.xy).rgb;
+  output_color = texture2D( p02_color_texture, coords.xy).rgb;
+  output_normal = texture2D(p02_normal_texture, coords.xy).rgb;
 
         float depthValue = texture2D( p01_depth_texture, coords.xy).r;
 
@@ -96,7 +96,7 @@ void main()
  		  //x o b    x   4
 		  //x b b    x 6 7
 		 
-		 bool pattern0 = (surrounding[1] == 0.0) && (surrounding[2] == 0.0) && (surrounding[4] == 0.0) && (surrounding[6] == 0.0) && (surrounding[7] == 0.0) ;
+		 bool pattern0 = (surrounding[1] == 1.0) && (surrounding[2] == 1.0) && (surrounding[4] == 1.0) && (surrounding[6] == 1.0) && (surrounding[7] == 1.0) ;
 		 
 		 //test against pattern 1  
 		  
@@ -104,7 +104,7 @@ void main()
  		  //b o b    3   4
 		  //x x x    x x x
 	
-		 bool pattern1 = (surrounding[0] == 0.0) && (surrounding[1] == 0.0) && (surrounding[2] == 0.0) && (surrounding[3] == 0.0) && (surrounding[4] == 0.0) ;
+		 bool pattern1 = (surrounding[0] == 1.0) && (surrounding[1] == 1.0) && (surrounding[2] == 1.0) && (surrounding[3] == 1.0) && (surrounding[4] == 1.0) ;
 
 		 //test against pattern 2  
 		  
@@ -112,7 +112,7 @@ void main()
  		  //b o x    3   x
 		  //b b x    5 6 x
 	
-		 bool pattern2 = (surrounding[0] == 0.0) && (surrounding[1] == 0.0) && (surrounding[3] == 0.0) && (surrounding[5] == 0.0) && (surrounding[6] == 0.0) ;
+		 bool pattern2 = (surrounding[0] == 1.0) && (surrounding[1] == 1.0) && (surrounding[3] == 1.0) && (surrounding[5] == 1.0) && (surrounding[6] == 1.0) ;
 
 		 //test against pattern 3  
 		  
@@ -120,7 +120,7 @@ void main()
  		  //b o b    3   4
 		  //b b b    5 6 7
 	
-		 bool pattern3 = (surrounding[3] == 0.0) && (surrounding[4] == 0.0) && (surrounding[5] == 0.0) && (surrounding[6] == 0.0) && (surrounding[7] == 0.0) ;
+		 bool pattern3 = (surrounding[3] == 1.0) && (surrounding[4] == 1.0) && (surrounding[5] == 1.0) && (surrounding[6] == 1.0) && (surrounding[7] == 1.0) ;
 
 		 //test against pattern 4  
 		  
@@ -128,7 +128,7 @@ void main()
  		  //x o b    x   4
 		  //x x b    x x 7
 	
-		 bool pattern4 = (surrounding[0] == 0.0) && (surrounding[1] == 0.0) && (surrounding[2] == 0.0) && (surrounding[4] == 0.0) && (surrounding[7] == 0.0) ;
+		 bool pattern4 = (surrounding[0] == 1.0) && (surrounding[1] == 1.0) && (surrounding[2] == 1.0) && (surrounding[4] == 1.0) && (surrounding[7] == 1.0) ;
 
 		 //test against pattern 5  
 		  
@@ -136,7 +136,7 @@ void main()
  		  //b o x    3   x
 		  //b x x    5 x x
 	
-		 bool pattern5 = (surrounding[0] == 0.0) && (surrounding[1] == 0.0) && (surrounding[2] == 0.0) && (surrounding[3] == 0.0) && (surrounding[5] == 0.0) ;
+		 bool pattern5 = (surrounding[0] == 1.0) && (surrounding[1] == 1.0) && (surrounding[2] == 1.0) && (surrounding[3] == 1.0) && (surrounding[5] == 1.0) ;
 
 		 //test against pattern 6
 		  
@@ -144,7 +144,7 @@ void main()
  		  //b o x    3   x
 		  //b b b    5 6 7
 	
-		 bool pattern6 = (surrounding[0] == 0.0) && (surrounding[3] == 0.0) && (surrounding[5] == 0.0) && (surrounding[6] == 0.0) && (surrounding[7] == 0.0) ;
+		 bool pattern6 = (surrounding[0] == 1.0) && (surrounding[3] == 1.0) && (surrounding[5] == 1.0) && (surrounding[6] == 1.0) && (surrounding[7] == 1.0) ;
 
 		 //test against pattern 7
 		  
@@ -152,19 +152,19 @@ void main()
  		  //x o b    x   4
 		  //b b b    5 6 7
 	
-		 bool pattern7 = (surrounding[2] == 0.0) && (surrounding[4] == 0.0) && (surrounding[5] == 0.0) && (surrounding[6] == 0.0) && (surrounding[7] == 0.0) ;
+		 bool pattern7 = (surrounding[2] == 1.0) && (surrounding[4] == 1.0) && (surrounding[5] == 1.0) && (surrounding[6] == 1.0) && (surrounding[7] == 1.0) ;
 
 
 
  		  if( pattern0 || pattern1 || pattern2 || pattern3 || pattern4 || pattern5 || pattern6 || pattern7  ) 
 		  {
-                         discard;
-		 	 //output_color = vec3(0.f,0.0f,0.0f);
-                         //output_color = vec3(0.0f,1.0f,0.0f);
-                         //gl_FragDepth = depthValue;
+		 	 output_color = vec3(0.f,0.0f,0.0f);
+                         output_color = vec3(0.0f,1.0f,0.0f);
+                         gl_FragDepth = depthValue;
 		  }
 		  else
 		  {
+                  /*
 			output_color = vec3(1.0,0.0,0.0);
 			
 
@@ -231,19 +231,16 @@ void main()
 					//if(renderMode == 0)
 					{
 						vec3 tempC;
-                                                vec3 tempN;
                                                 float tempD;
 						if( i == 0)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(-1,+1) )/(win_dims.xy) ).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(-1,+1) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(-1,+1) )/(win_dims.xy) ).r;
 
 						}
 						else if(i == 1)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(0,+1) )/(win_dims.xy)).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(0,+1) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(0,+1) )/(win_dims.xy) ).r;
 						}
 						else if(i == 2)
@@ -254,31 +251,26 @@ void main()
 						else if(i == 3)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(-1, 0) )/(win_dims.xy)).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(-1, 0) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(-1, 0) )/(win_dims.xy) ).r;
 						}
 						else if(i == 4)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(+1,0) )/(win_dims.xy) ).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(+1,0) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(+1,0) )/(win_dims.xy) ).r;
 						}
 						else if(i == 5)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(-1,-1) )/(win_dims.xy)).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(-1,-1) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(-1,-1) )/(win_dims.xy) ).r;
 						}
 						else if(i == 6)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2( 0,-1) )/(win_dims.xy) ).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(0,-1) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2( 0,-1) )/(win_dims.xy) ).r;
 						}
 						else if(i == 7)
 						{
 							tempC = texture2D(p02_color_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy)).rgb;
-							tempN = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy) ).rgb;
                                                         tempD = texture2D(p01_depth_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy) ).r;
 						}
 				
@@ -290,7 +282,7 @@ void main()
 						else
 						{
 							output_color = tempC;
-                                                        output_normal = normalize(tempN);
+                                                        output_normal = texture2D(p02_normal_texture, (gl_FragCoord.xy + vec2(+1,-1) )/(win_dims.xy)).rgb;
                                                        // output_color = vec3(1.0,0.0,0.0);
 
                                                         gl_FragDepth = tempD;
@@ -311,8 +303,9 @@ void main()
 
 
 
-
-		  }
+                  */
+                  discard;
+		  }//end else
 
                  
 
