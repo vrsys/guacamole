@@ -29,264 +29,285 @@
 #include <gua/databases/TextureDatabase.hpp>
 #include <gua/utils/Color3f.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/enums.hpp>
 
 // external headers
 #include <string>
 #include <scm/gl_core/shader_objects/program.h>
 #include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
 
+#include <boost/variant.hpp>
+
 namespace gua {
 
-template <typename T> class UniformValue;
-
-/**
- * Stores information on an Uniform.
- *
- */
-class UniformValueBase {
- public:
-  /**
-   * Constructor.
-   *
-   */
-  UniformValueBase() {}
-
-  /**
-   * Destructor.
-   *
-   */
-  virtual ~UniformValueBase() {}
-
-  virtual void apply(RenderContext const& context,
-                     scm::gl::program_ptr program,
-                     std::string const& name,
-                     unsigned position = 0) const = 0;
-
-  template <typename T> void set_value(T const& value) {
-
-    auto casted(dynamic_cast<UniformValue<T>*>(this));
-
-    if (casted) {
-      casted->value(value);
-    } else {
-      Logger::LOG_WARNING << "Unable to set uniform value: Types do not match!" << std::endl;
-    }
-  }
-
-  template <typename T> T const& get_value() const {
-
-    auto casted(dynamic_cast<UniformValue<T> const*>(this));
-
-    if (casted) {
-      return casted->value();
-    } else {
-      Logger::LOG_WARNING << "Unable to get value of uniform: Types do not match!" << std::endl;
-    }
-  }
+struct GUA_DLL GetGlslType : public boost::static_visitor<std::string> {
+  std::string operator()(int) const { return "int"; }
+  std::string operator()(bool) const { return "int"; }
+  std::string operator()(float) const { return "float"; }
+  std::string operator()(math::mat3f) const { return "mat3"; }
+  std::string operator()(math::mat4f) const { return "mat4"; }
+  std::string operator()(math::vec2f) const { return "vec2"; }
+  std::string operator()(math::vec3f) const { return "vec3"; }
+  std::string operator()(math::vec4f) const { return "vec4"; }
+  std::string operator()(math::vec2i) const { return "ivec2"; }
+  std::string operator()(math::vec3i) const { return "ivec3"; }
+  std::string operator()(math::vec4i) const { return "ivec4"; }
+  std::string operator()(math::vec2ui) const { return "uvec2"; }
+  std::string operator()(math::vec3ui) const { return "uvec3"; }
+  std::string operator()(math::vec4ui) const { return "uvec4"; }
+  std::string operator()(std::string) const { return "uvec2"; }
 };
 
+// struct GUA_DLL GetByteSize : public boost::static_visitor<unsigned> {
+//   unsigned operator()(int) const { return sizeof(int); }
+//   unsigned operator()(bool) const { return sizeof(int); }
+//   unsigned operator()(float) const { return sizeof(float); }
+//   unsigned operator()(scm::math::mat3) const { return sizeof(math::mat3f); }
+//   unsigned operator()(scm::math::mat4) const { return sizeof(math::mat4f); }
+//   unsigned operator()(scm::math::vec2) const { return sizeof(math::vec2f); }
+//   unsigned operator()(scm::math::vec3) const { return sizeof(math::vec3f); }
+//   unsigned operator()(scm::math::vec4) const { return sizeof(math::vec4f); }
+//   unsigned operator()(scm::math::vec2i) const { return sizeof(math::vec2i); }
+//   unsigned operator()(scm::math::vec3i) const { return sizeof(math::vec3i); }
+//   unsigned operator()(scm::math::vec4i) const { return sizeof(math::vec4i); }
+//   unsigned operator()(scm::math::vec2ui) const { return sizeof(math::vec2ui); }
+//   unsigned operator()(scm::math::vec3ui) const { return sizeof(math::vec3ui); }
+//   unsigned operator()(scm::math::vec4ui) const { return sizeof(math::vec4ui); }
+//   unsigned operator()(std::string) const { return sizeof(math::vec2ui); }
+// };
 
 
-template <typename T> class UniformValue : public UniformValueBase {
+class GUA_DLL UniformValue {
+
+  using Data = boost::variant<
+                         int,
+                         bool,
+                         float,
+                         math::mat3f,
+                         math::mat4f,
+                         math::vec2f,
+                         math::vec3f,
+                         math::vec4f,
+                         math::vec2i,
+                         math::vec3i,
+                         math::vec4i,
+                         math::vec2ui,
+                         math::vec3ui,
+                         math::vec4ui,
+                         std::string>;
+
  public:
-  UniformValue(T const& value) : UniformValueBase(), value_(value) {}
+  UniformValue() = default;
 
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_);
+  // -------------------------------------------------------------------------
+  template <typename T>
+  UniformValue(T const& val)
+      : apply_impl_(apply<T>)
+      , write_bytes_impl_(write_bytes_impl<T>)
+      , serialize_to_stream_impl_(serialize_to_stream_impl<T>) {
+    set(val);
   }
 
-  T const& value() const { return value_; }
+  UniformValue(UniformValue const& to_copy) = default;
+  // UniformValue(UniformValue const& to_copy) :
+  //   apply_impl_(to_copy.apply_impl_),
+  //   write_bytes_impl_(to_copy.write_bytes_impl_),
+  //   data(to_copy.data) {}
 
-  void value(T const& value) { value_ = value; }
+  // -------------------------------------------------------------------------
+  static UniformValue create_from_string_and_type(std::string const& value,
+                                                  UniformType const& ty);
+
+  static UniformValue create_from_strings(std::string const& value,
+                                          std::string const& ty);
+
+  static UniformValue create_from_serialized_string(std::string const& value);
+
+  // -------------------------------------------------------------------------
+  void apply(RenderContext const& ctx,
+             std::string const& name,
+             scm::gl::program_ptr const& prog,
+             unsigned location = 0) const {
+    apply_impl_(this, ctx, name, prog, location);
+  }
+
+  std::string get_glsl_type() const {
+    return boost::apply_visitor(GetGlslType(), data);
+  }
+
+  // unsigned get_byte_size() const {
+  //   return boost::apply_visitor(GetByteSize(), data);
+  // }
+
+  std::ostream& serialize_to_stream(std::ostream& os) const {
+    return serialize_to_stream_impl_(this, os);
+  }
+
+  void write_bytes(RenderContext const& ctx, char* target) const {
+    write_bytes_impl_(this, ctx, target);
+  }
+
+  void operator=(UniformValue const& to_copy) {
+    apply_impl_ = to_copy.apply_impl_;
+    write_bytes_impl_ = to_copy.write_bytes_impl_;
+    serialize_to_stream_impl_ = to_copy.serialize_to_stream_impl_;
+    data = to_copy.data;
+  }
+
+  Data data;
 
  private:
-  T value_;
+
+  template <typename T> void set(T const& val) { data = val; }
+
+  template <typename T>
+  static void apply(UniformValue const* self,
+                    RenderContext const& ctx,
+                    std::string const& name,
+                    scm::gl::program_ptr const& prog,
+                    unsigned location) {
+    prog->uniform(name, location, boost::get<T>(self->data));
+  }
+
+  template <typename T>
+  static void write_bytes_impl(UniformValue const* self,
+                               RenderContext const& ctx,
+                               char* target) {
+    memcpy(target, &boost::get<T>(self->data), sizeof(T));
+  }
+
+  template <typename T>
+  static std::ostream& serialize_to_stream_impl(UniformValue const* self,
+                                                std::ostream& os) {
+    return os;
+  }
+
+  std::function<void(UniformValue const*,
+                     RenderContext const&,
+                     std::string const&,
+                     scm::gl::program_ptr const&,
+                     unsigned)> apply_impl_;
+
+  std::function<void(UniformValue const*, RenderContext const&, char*)>
+      write_bytes_impl_;
+
+  std::function<std::ostream& (UniformValue const*, std::ostream& os)>
+      serialize_to_stream_impl_;
 };
 
+// specializations
+template <>
+GUA_DLL void UniformValue::apply<std::string>(UniformValue const* self,
+                                              RenderContext const& ctx,
+                                              std::string const& name,
+                                              scm::gl::program_ptr const& prog,
+                                              unsigned location);
+
+template <>
+GUA_DLL void UniformValue::write_bytes_impl<std::string>(
+    UniformValue const* self,
+    RenderContext const& ctx,
+    char* target);
+
+template <>
+GUA_DLL void UniformValue::write_bytes_impl<bool>(UniformValue const* self,
+                                                  RenderContext const& ctx,
+                                                  char* target);
 
 
 template <>
-class UniformValue<std::shared_ptr<Texture> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture> const& value) { value_ = value; }
-
- private:
-  std::shared_ptr<Texture> value_;
-};
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<int>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
 template <>
-class UniformValue<Texture*> : public UniformValueBase {
- public:
-  UniformValue(Texture* value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  Texture* value() const { return value_; }
-
-  void value(Texture* value) { value_ = value; }
-
- private:
-  Texture* value_;
-};
-
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<bool>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
 template <>
-class UniformValue<std::shared_ptr<Texture2D> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture2D> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture2D> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture2D> const& value) { value_ = value; }
-
- private:
-  std::shared_ptr<Texture2D> value_;
-};
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<float>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
 template <>
-class UniformValue<Texture2D*> : public UniformValueBase {
- public:
-  UniformValue(Texture2D* value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  Texture2D* value() const { return value_; }
-
-  void value(Texture2D* value) { value_ = value; }
-
- private:
-  Texture2D* value_;
-};
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat3f>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
 template <>
-class UniformValue<std::shared_ptr<Texture3D> > : public UniformValueBase {
- public:
-  UniformValue(std::shared_ptr<Texture3D> const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_->get_handle(context));
-  }
-
-  std::shared_ptr<Texture3D> const& value() const { return value_; }
-
-  void value(std::shared_ptr<Texture3D> const& value) { value_ = value; }
-
- private:
-  std::shared_ptr<Texture3D> value_;
-};
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::mat4f>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
 template <>
-class UniformValue<Texture3D*> : public UniformValueBase {
- public:
-  UniformValue(Texture3D* value)
-      : UniformValueBase(), value_(value) {}
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2f>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3f>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-    program->uniform(name, position, value_->get_handle(context));
-  }
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4f>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  Texture3D* value() const { return value_; }
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  void value(Texture3D* value) { value_ = value; }
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
- private:
-  Texture3D* value_;
-};
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4i>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-template <> class UniformValue<std::string> : public UniformValueBase {
- public:
-  UniformValue(std::string const& value) : UniformValueBase(), value_(value) {}
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec2ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec3ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-    auto texture(TextureDatabase::instance()->lookup(value_));
-    if (texture) {
-      program->uniform(name, position, texture->get_handle(context));
-    }
-  }
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<math::vec4ui>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  std::string const& value() const { return value_; }
+template <>
+GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
+                                                       UniformValue const* self,
+                                                       std::ostream& os);
 
-  void value(std::string const& value) { value_ = value; }
+//operators
+std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
- private:
-  std::string value_;
-};
+template<typename T> struct UniformCompatible { using type =T; };
 
+template <> struct UniformCompatible<math::mat4d>  { using type = math::mat4f; };
+template <> struct UniformCompatible<math::mat3d>  { using type = math::mat3f; };
 
+template <> struct UniformCompatible<math::vec4d>  { using type = math::vec4f; };
+template <> struct UniformCompatible<math::vec3d>  { using type = math::vec3f; };
+template <> struct UniformCompatible<math::vec2d>  { using type = math::vec2f; };
 
-template <> class UniformValue<utils::Color3f> : public UniformValueBase {
- public:
-  UniformValue(utils::Color3f const& value)
-      : UniformValueBase(), value_(value) {}
-
-  void apply(RenderContext const& context,
-             scm::gl::program_ptr program,
-             std::string const& name,
-             unsigned position = 0) const {
-
-    program->uniform(name, position, value_.vec3());
-  }
-
-  utils::Color3f const& value() const { return value_; }
-
-  void value(utils::Color3f const& value) { value_ = value; }
-
- private:
-  utils::Color3f value_;
-};
+template<typename T>
+typename UniformCompatible<T>::type uniform_compatible_type(T value)
+{
+  typename UniformCompatible<T>::type x(value);
+  return x;
+}
 
 }
 

@@ -25,19 +25,15 @@
 #include <gua/platform.hpp>
 
 #include <iostream>
-
-// external headers
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
+ 
 namespace gua {
 
 KDTree::KDTree() : root_(nullptr), current_visit_flag_(0) {}
 
-void KDTree::generate(aiMesh* mesh) {
-  triangles_.resize(mesh->mNumFaces);
+void KDTree::generate(Mesh const& mesh) {
+  triangles_.resize(mesh.num_triangles);
 
-  for (unsigned i(0); i < mesh->mNumFaces; ++i) {
+  for (unsigned i(0); i < mesh.num_triangles; ++i) {
     triangles_[i] = Triangle(i);
   }
 
@@ -63,7 +59,7 @@ void KDTree::generate(aiMesh* mesh) {
   root_ = build(sorted_triangles, root_bounds);
 }
 
-void KDTree::ray_test(Ray const& ray, aiMesh* mesh, PickResult::Options const& options,
+void KDTree::ray_test(Ray const& ray, Mesh const& mesh, int options,
                       node::Node* owner, std::set<PickResult>& hits) const {
 
   if (root_) {
@@ -204,8 +200,8 @@ KDTree::KDNode* KDTree::build(
 
 bool KDTree::intersect_one(KDNode* node,
                            Ray const& ray,
-                           aiMesh* mesh,
-                           PickResult::Options const& options,
+                           Mesh const& mesh,
+                           int options,
                            std::vector<Triangle> const& triangles,
                            std::set<PickResult>& hits) const {
 
@@ -323,8 +319,8 @@ bool KDTree::intersect_one(KDNode* node,
 
 void KDTree::intersect_all(KDNode* node,
                            Ray const& ray,
-                           aiMesh* mesh,
-                           PickResult::Options const& options,
+                           Mesh const& mesh,
+                           int options,
                            std::vector<Triangle> const& triangles,
                            std::set<PickResult>& hits) const {
 
@@ -423,7 +419,7 @@ bool KDTree::LeafData::Comparator::operator()(LeafData const & lhs,
 
 KDTree::LeafData::LeafData() : id_(-1), bbox_() {}
 
-KDTree::LeafData::LeafData(aiMesh* mesh, Triangle const & triangle, unsigned id)
+KDTree::LeafData::LeafData(Mesh const& mesh, Triangle const & triangle, unsigned id)
     : id_(id), bbox_() {
     for (auto i(0); i < 3; ++i) {
       bbox_.expandBy(triangle.get_vertex(mesh, i));

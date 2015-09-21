@@ -1,0 +1,25 @@
+{
+  "name" : "FragmentColorValue",
+  "source" : "
+    // color generation ----------------------------------------------------
+    void FragmentColorValue() {
+
+      vec4 color = Color;
+
+      if (color.a <= 0.0) {
+        discard;
+      }
+      gua_alpha = color.a;
+
+      gua_color = color.rgb;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "Color",
+      "type" : "vec4",
+      "value" : "(1.0 1.0 1.0 1.0)"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name" : "FragmentColorValueAndMap",
+  "source" : "
+    // color generation ----------------------------------------------------
+    void FragmentColorValueAndMap() {
+
+      vec4 color = vec4(0);
+
+      if (uvec2(0) != ColorMap) {
+        //color = pow(texture(sampler2D(ColorMap), gua_texcoords), vec4(2.2));
+        color = texture(sampler2D(ColorMap), gua_texcoords)*Color;
+      } else {
+        color = Color;
+      }
+
+      if (color.a <= 0.0) {
+        discard;
+      }
+      gua_alpha = color.a;
+
+      gua_color = color.rgb;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "ColorMap",
+      "type" : "sampler2D",
+      "value" : "0"
+    },
+    {
+      "name" : "Color",
+      "type" : "vec4",
+      "value" : "(1.0 1.0 1.0 1.0)"
+    }
+  ]
+}

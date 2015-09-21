@@ -36,6 +36,8 @@ Color3f::Color3f() : r_(0.0f), g_(0.0f), b_(0.0f) {}
 
 Color3f::Color3f(float r, float g, float b) : r_(r), g_(g), b_(b) {}
 
+Color3f::Color3f(math::vec3f const& rgb) : r_(rgb.x), g_(rgb.y), b_(rgb.z) {}
+
 float Color3f::h() const {
 
   if (s() > 0.0f) {
@@ -141,7 +143,7 @@ Color3f const Color3f::brightened() const {
   return brightened;
 }
 
-math::vec3 const Color3f::vec3() const { return math::vec3(r_, g_, b_); }
+scm::math::vec3f const Color3f::vec3f() const { return scm::math::vec3f(r_, g_, b_); }
 
 Color3f const Color3f::random() {
 

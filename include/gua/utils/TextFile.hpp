@@ -22,6 +22,8 @@
 #ifndef GUA_TEXTFILE_HPP
 #define GUA_TEXTFILE_HPP
 
+#include <gua/platform.hpp>
+
 #include <string>
 
 /**
@@ -30,7 +32,7 @@
 
 namespace gua {
 
-class TextFile {
+class GUA_DLL TextFile {
 
  public:
 

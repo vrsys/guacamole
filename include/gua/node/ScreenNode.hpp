@@ -59,7 +59,6 @@ class GUA_DLL ScreenNode : public Node {
    * This constructs an empty ScreenNode.
    *
    */
-  ScreenNode() {}
 
   /**
    * Constructor.

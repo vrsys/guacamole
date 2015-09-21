@@ -19,118 +19,119 @@
  *                                                                            *
  ******************************************************************************/
 
-// class header
 #include <gua/renderer/Material.hpp>
 
-// guacamole headers
-#include <gua/platform.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils.hpp>
-#include <gua/memory.hpp>
-
-// external headers
-#include <sstream>
 
 namespace gua {
 
-std::unique_ptr<UniformValueBase> create_from_string_and_type(
-    std::string const& value,
-    UniformType const& ty) {
-  switch (ty) {
-    case UniformType::INT:
-      return gua::make_unique<UniformValue<int> >(
-          string_utils::from_string<int>(value));
-      break;
+////////////////////////////////////////////////////////////////////////////////
 
-    case UniformType::FLOAT:
-      return gua::make_unique<UniformValue<float> >(
-          string_utils::from_string<float>(value));
-      break;
-
-    case UniformType::BOOL:
-      return gua::make_unique<UniformValue<bool> >(
-          string_utils::from_string<bool>(value));
-      break;
-
-    case UniformType::VEC2:
-      return gua::make_unique<UniformValue<math::vec2> >(
-          string_utils::from_string<math::vec2>(value));
-      break;
-
-    case UniformType::VEC3:
-      return gua::make_unique<UniformValue<math::vec3> >(
-          string_utils::from_string<math::vec3>(value));
-      break;
-
-    case UniformType::VEC4:
-      return gua::make_unique<UniformValue<math::vec4> >(
-          string_utils::from_string<math::vec4>(value));
-      break;
-
-    case UniformType::MAT3:
-      return gua::make_unique<UniformValue<math::mat3> >(
-          string_utils::from_string<math::mat3>(value));
-      break;
-
-    case UniformType::MAT4:
-      return gua::make_unique<UniformValue<math::mat4> >(
-          string_utils::from_string<math::mat4>(value));
-      break;
-
-    case UniformType::SAMPLER2D:
-      return gua::make_unique<UniformValue<std::string> >(value);
-      break;
-
-    default:
-      return nullptr;
-  }
-}
-
-unsigned Material::global_id_count_ = 0;
-
-Material::Material()
-    : uniform_values_(), name_("Unnamed Material"), description_() {}
-
-Material::Material(std::string const& name)
-    : uniform_values_(), name_(name), description_() {}
-
-Material::Material(std::string const& name,
-                   MaterialDescription const& description)
-    : uniform_values_(),
-      name_(name),
-      id_(++global_id_count_),
-      description_(description) {
-
-  load_description();
-}
-
-void Material::reload() {
-  description_.reload();
-  load_description();
-}
-
-void Material::load_description() {
-  uniform_values_.clear();
-
-  std::string shading_model(description_.get_shading_model());
-  std::shared_ptr<ShadingModel> mod;
-
-  if (!ShadingModelDatabase::instance()->is_supported(shading_model)) {
-    mod = std::make_shared<ShadingModel>(shading_model, shading_model);
-    ShadingModelDatabase::instance()->add(shading_model, mod);
-  } else {
-    mod = ShadingModelDatabase::instance()->lookup(shading_model);
+Material::Material(std::string const& shader_name):
+  shader_name_(shader_name),
+  shader_cache_(nullptr),
+  show_back_faces_(false)
+  {
+    set_shader_name(shader_name_);
   }
 
-  for (auto& stage : mod->get_stages()) {
-    for (auto const& uniform : stage.get_uniforms()) {
-      std::string value(description_.get_uniforms()[uniform.first]);
-      uniform_values_[uniform.first] =
-          create_from_string_and_type(value, uniform.second);
+////////////////////////////////////////////////////////////////////////////////
+
+Material::Material(Material const& copy):
+  shader_name_(copy.shader_name_),
+  shader_cache_(copy.shader_cache_),
+  uniforms_(copy.uniforms_),
+  show_back_faces_(copy.show_back_faces_)
+  {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string const& Material::get_shader_name() const {
+  return shader_name_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::set_shader_name(std::string const& name) {
+  boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  shader_name_ = name;
+  shader_cache_ = nullptr;
+
+  auto shader(MaterialShaderDatabase::instance()->lookup(shader_name_));
+
+  if (shader) {
+    auto new_uniforms(shader->get_default_uniforms());
+
+    for (auto const& old_uniform : uniforms_) {
+      auto it(new_uniforms.find(old_uniform.first));
+      if (it != new_uniforms.end()) {
+        it->second = old_uniform.second;
+      }
     }
+    
+    uniforms_ = new_uniforms;
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MaterialShader* Material::get_shader() const {
+  // boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  if (!shader_cache_) {
+    shader_cache_ = MaterialShaderDatabase::instance()->lookup(shader_name_).get();
+  }
+
+  return shader_cache_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const {
+  return uniforms_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+
+    for (auto const& uniform : uniforms_) {
+      uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
+    } 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& Material::serialize_uniforms_to_stream(std::ostream& os) const {
+
+  for (auto& uniform : uniforms_) {
+    os << uniform.first << "#";
+    uniform.second.serialize_to_stream(os);
+    os << ";";
+  }
+
+  return os;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Material::set_uniforms_from_serialized_string(std::string const& value) {
+
+  auto tokens(string_utils::split(value, ';'));
+
+  for (auto& token : tokens) {
+    auto parts(string_utils::split(token, '#'));
+    set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& os, Material const& val) {
+  return val.serialize_uniforms_to_stream(os);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 }

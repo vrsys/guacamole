@@ -22,6 +22,11 @@
 #ifndef GUA_RENDERCONTEXT_HPP
 #define GUA_RENDERCONTEXT_HPP
 
+#include <gua/platform.hpp>
+#include <gua/renderer/enums.hpp>
+#include <gua/utils/InstanceCollection.hpp>
+#include <gua/renderer/BoneTransformUniformBlock.hpp>
+ 
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>
@@ -34,14 +39,19 @@
 
 namespace gua {
 
+class Pipeline;
 class WindowBase;
+
+namespace node{
+  class Node;
+}
 
 /**
  * Information on a specific context.
  *
  * Stores all relevant information on a OpenGL context.
  */
-struct RenderContext {
+struct GUA_DLL RenderContext {
 
   /**
   * c'tor
@@ -49,9 +59,14 @@ struct RenderContext {
   RenderContext();
 
   /**
-  * d'tor
-  */
-  ~RenderContext();
+   * The schism render device associated with this context.
+   */
+  scm::gl::render_device_ptr render_device;
+
+  /**
+   * The schism render constext associated with this context.
+   */
+  scm::gl::render_context_ptr render_context;
 
    /**
    * The schism context of this RenderContext.
@@ -62,16 +77,6 @@ struct RenderContext {
    * The display where this context was opened.
    */
   scm::gl::wm::display_ptr display;
-
-  /**
-   * The schism render constext associated with this context.
-   */
-  scm::gl::render_context_ptr render_context;
-
-  /**
-   * The schism render device associated with this context.
-   */
-  scm::gl::render_device_ptr render_device;
 
   /**
    * The window which is rendered into.
@@ -87,8 +92,26 @@ struct RenderContext {
   * framecounter for this context
   */
   unsigned framecount;
+
+  gua::CameraMode mode;
+
+  /**
+  * Resources associated with this context
+  */
+  InstanceCollection resources;
+
+  /**
+  * Resources associated with this context
+  */
+  std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
+
+ /**
+  * Animated Bone Uniforms
+  */
+  std::unordered_map<node::Node*, std::shared_ptr<BoneTransformUniformBlock>> bone_transform_blocks;
 };
 
 }
 
 #endif  // GUA_RENDERCONTEXT_HPP
+

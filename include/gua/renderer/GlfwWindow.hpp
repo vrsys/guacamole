@@ -26,7 +26,7 @@
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/events.hpp>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace gua {
 
@@ -62,12 +62,28 @@ class GUA_DLL GlfwWindow : public WindowBase {
   void process_events();
 
   /**
+   * Control the cursor mode.
+   *
+   * NORMAL - usual cursor
+   * HIDDEN - cursor is invisible while within window
+   * DISABLED - cursor is hidden and captured in window until it is tabbed
+   */
+  enum class CursorMode {
+    NORMAL = 0,
+    HIDDEN = 1,
+    DISABLED = 2
+  };
+  
+  void cursor_mode(CursorMode mode);
+  CursorMode cursor_mode() const;
+
+  /**
    * Activate the context of this window.
    *
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  void set_active(bool active) const;
+  void set_active(bool active);
 
   /**
    * Ends the drawing of a new frame.
@@ -76,10 +92,10 @@ class GUA_DLL GlfwWindow : public WindowBase {
    */
   void finish_frame() const;
 
-  events::Signal<math::vec2ui>        on_resize;
-  events::Signal<int, int, int, int>  on_key_pres;
+  events::Signal<math::vec2ui>        on_resize;    
+  events::Signal<int, int, int, int>  on_key_press;    // int key, int scancode, int action, int mods
   events::Signal<unsigned>            on_char;
-  events::Signal<int, int, int>       on_button_press;
+  events::Signal<int, int, int>       on_button_press; // int button, int action, int mods
   events::Signal<math::vec2>          on_move_cursor;
   events::Signal<math::vec2>          on_scroll;
   events::Signal<bool>                on_enter;
@@ -88,6 +104,8 @@ class GUA_DLL GlfwWindow : public WindowBase {
 
  private:
   GLFWwindow* glfw_window_;
+
+  CursorMode cursor_mode_;
 };
 
 }

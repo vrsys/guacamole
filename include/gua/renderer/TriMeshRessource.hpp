@@ -24,8 +24,8 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
-#include <gua/renderer/GeometryRessource.hpp>
-#include <gua/renderer/TriMeshUberShader.hpp>
+#include <gua/renderer/GeometryResource.hpp>
+#include <gua/utils/Mesh.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -35,10 +35,6 @@
 #include <thread>
 
 #include <vector>
-
-struct aiMesh;
-
-namespace Assimp { class Importer; }
 
 namespace gua {
 
@@ -52,7 +48,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class TriMeshRessource : public GeometryRessource {
+class TriMeshRessource : public GeometryResource {
  public:
 
   /**
@@ -69,7 +65,7 @@ class TriMeshRessource : public GeometryRessource {
    *
    * \param mesh             The Assimp mesh to load the data from.
    */
-   TriMeshRessource(aiMesh* mesh, std::shared_ptr<Assimp::Importer> const& importer, bool build_kd_tree);
+   TriMeshRessource(Mesh const& mesh, bool build_kd_tree);
 
   /**
    * Draws the Mesh.
@@ -80,18 +76,16 @@ class TriMeshRessource : public GeometryRessource {
    */
   void draw(RenderContext const& context) const;
 
-  void ray_test(Ray const& ray, PickResult::Options options,
+  void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
 
   unsigned int num_vertices() const;
-
   unsigned int num_faces() const;
 
-  scm::math::vec3 get_vertex(unsigned int i) const;
-
+  math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-  /*virtual*/ std::shared_ptr<GeometryUberShader> create_ubershader() const;
+  friend class LightingPass;
 
  private:
 
@@ -106,8 +100,7 @@ class TriMeshRessource : public GeometryRessource {
 
   KDTree kd_tree_;
 
-  aiMesh* mesh_;
-  std::shared_ptr<Assimp::Importer> importer_;
+  Mesh mesh_;
 };
 
 }

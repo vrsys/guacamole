@@ -1,0 +1,51 @@
+@include "resources/shaders/common/header.glsl"           
+                                                            
+#define ID gl_InvocationID                          
+        
+///////////////////////////////////////////////////////////////////////////////                                         
+// input
+///////////////////////////////////////////////////////////////////////////////        
+in vec3  varying_position[];                  
+in uint  varying_index[];                    
+in vec2  varying_tesscoord[];   
+      
+///////////////////////////////////////////////////////////////////////////////
+// output
+///////////////////////////////////////////////////////////////////////////////                                                            
+layout(vertices = 4) out; 
+
+out vec3 control_position[];
+out uint control_index[];
+out vec2 control_tesscoord[];
+  
+///////////////////////////////////////////////////////////////////////////////
+// uniforms
+///////////////////////////////////////////////////////////////////////////////                                                                
+uniform samplerBuffer parameter_texture;            
+uniform samplerBuffer attribute_texture;            
+                                                            
+@include "resources/shaders/common/gua_camera_uniforms.glsl"    
+                                                       
+uniform float gua_tesselation_max_error;            
+uniform float max_pre_tesselation;         
+                                                            
+                                                                     
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void main() 
+{                                                                                
+  control_position[ID]  = varying_position[ID];                                               
+  control_index[ID]     = varying_index[ID];                                                  
+  control_tesscoord[ID] = varying_tesscoord[ID];                                              
+                                                                                         
+  mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;  
+                                                                                         
+  gl_TessLevelInner[0] = max_pre_tesselation;                                
+  gl_TessLevelInner[1] = max_pre_tesselation;                                
+                                                                                         
+  gl_TessLevelOuter[0] = max_pre_tesselation;                                
+  gl_TessLevelOuter[1] = max_pre_tesselation;                                
+  gl_TessLevelOuter[2] = max_pre_tesselation;                                
+  gl_TessLevelOuter[3] = max_pre_tesselation;             
+}

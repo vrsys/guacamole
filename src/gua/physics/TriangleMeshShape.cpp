@@ -159,7 +159,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
     TriangleMeshShape* shape = new TriangleMeshShape();
 
     TriMeshLoader factory;
-    auto node(factory.create_geometry_from_file("", file_name, "", flags));
+    auto node(factory.create_geometry_from_file("", file_name, std::make_shared<Material>(), flags));
     if (node) {
       std::vector<std::string> geom_list;
 
@@ -169,7 +169,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 
         auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
         if (gnode) {
-            geom_list.push_back(gnode->get_filename());
+            geom_list.push_back(gnode->get_geometry_description());
         }
 
         for (auto const& n: node->get_children()) {
@@ -193,7 +193,7 @@ void TriangleMeshShape::set_scaling(const math::vec3 & scaling) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* static */ long TriangleMeshShape::get_point_or_add(
-    std::vector<HACD::Vec3<double> > & points, const scm::math::vec3 & v) {
+    std::vector<HACD::Vec3<double> > & points, const math::vec3 & v) {
     HACD::Vec3<HACD::Real> vertex(v.x, v.y, v.z);
     auto it = std::find_if(points.begin(),
                            points.end(),

@@ -59,10 +59,8 @@ Ray RayNode::get_world_ray() const {
 }
 
 void RayNode::update_bounding_box() const {
-    auto geometry_bbox(GeometryDatabase::instance()->lookup("gua_ray_geometry")
-                           ->get_bounding_box());
 
-    bounding_box_ = transform(geometry_bbox, world_transform_);
+    bounding_box_ = math::BoundingBox<math::vec3>();
 
     for (auto child : get_children()) {
         bounding_box_.expandBy(child->get_bounding_box());
@@ -71,7 +69,7 @@ void RayNode::update_bounding_box() const {
 }
 
 std::shared_ptr<Node> RayNode::copy() const {
-    return std::make_shared<RayNode>(get_name(), get_transform());
+    return std::make_shared<RayNode>(*this);
 }
 
 }

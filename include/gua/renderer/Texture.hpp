@@ -55,7 +55,7 @@ class GUA_DLL Texture {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture(scm::gl::data_format color_format,
-          std::vector<void*> const& data,
+          scm::gl::data_format internal_format,
           unsigned mipmap_layers = 1,
           scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
@@ -95,6 +95,13 @@ class GUA_DLL Texture {
 
   virtual ~Texture();
 
+
+  void update_sub_data(RenderContext const& context,
+                       scm::gl::texture_region const& region,
+                       unsigned level,
+                       scm::gl::data_format format,
+                       const void* const data) const;
+
   void generate_mipmaps(RenderContext const& context);
 
   /**
@@ -116,25 +123,23 @@ class GUA_DLL Texture {
   void make_non_resident(RenderContext const& context) const;
   void make_non_resident() const;
 
+  virtual unsigned width() const = 0;
+  virtual unsigned height() const = 0;
+
   virtual void upload_to(RenderContext const& context) const = 0;
 
  protected:
 
   mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
+  scm::gl::data_format internal_format_;
   scm::gl::sampler_state_desc state_descripton_;
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
-  //mutable std::vector<scm::gl::texture_handle_ptr> texture_handles_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;
 
-
-  std::vector<void*> data_;
   std::string file_name_;
-
- private:
-
 };
 
 }

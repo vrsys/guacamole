@@ -26,10 +26,9 @@
 #include <gua/math/BoundingBox.hpp>
 
 #include <scm/gl_core/primitives/box.h>
+#include <gua/utils/Mesh.hpp>
 
 #include <vector>
-
-struct aiMesh;
 
 namespace gua {
 
@@ -38,13 +37,13 @@ namespace gua {
  *
  * It has an origin, a direction and a length.
  */
-struct Ray {
+  struct GUA_DLL Ray {
 
   Ray();
   Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
 
   Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
-  Ray const intersection(scm::gl::boxf const& box) const {
+  Ray const intersection(scm::gl::box_impl<gua::math::float_t> const& box) const {
     return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex()));
   }
 
@@ -55,25 +54,24 @@ struct Ray {
   static const float END;
 };
 
-std::pair<float, float> intersect(Ray const& ray,
-      math::BoundingBox<math::vec3> const& box);
+GUA_DLL std::pair<float, float> intersect(Ray const& ray, math::BoundingBox<math::vec3> const& box);
 
 /**
  * This helper class represents a triangle.
  *
  * It has three vertices, a normal and a visited-flag for internal KDTree usage.
  */
-struct Triangle {
+struct GUA_DLL Triangle {
 
   Triangle();
   Triangle(unsigned face_id);
 
-  float intersect(aiMesh* mesh,Ray const& ray) const;
+  float intersect(Mesh const& mesh,Ray const& ray) const;
 
-  math::vec3 get_vertex(aiMesh* mesh, unsigned vertex_id) const;
-  math::vec3 get_normal(aiMesh* mesh) const;
-  math::vec3 get_normal_interpolated(aiMesh* mesh, math::vec3 const& position) const;
-  math::vec2 get_texture_coords_interpolated(aiMesh* mesh, math::vec3 const& position) const;
+  math::vec3 get_vertex(Mesh const& mesh, unsigned vertex_id) const;
+  math::vec3 get_normal(Mesh const& mesh) const;
+  math::vec3 get_normal_interpolated(Mesh const& mesh, math::vec3 const& position) const;
+  math::vec2 get_texture_coords_interpolated(Mesh const& mesh, math::vec3 const& position) const;
 
 
   unsigned face_id_;

@@ -32,10 +32,10 @@ class Logger {
 
  public:
 
-  static bool enable_debug;
-  static bool enable_message;
-  static bool enable_warning;
-  static bool enable_error;
+  static GUA_DLL bool enable_debug;
+  static GUA_DLL bool enable_message;
+  static GUA_DLL bool enable_warning;
+  static GUA_DLL bool enable_error;
 
   #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
   #define LOG_MESSAGE message_impl(__FILE__, __LINE__)

@@ -39,22 +39,53 @@ namespace math {
 /**
  * Some basic math types, typedef'ed from schism.
  */
-typedef scm::math::mat<float, 4, 4> mat4;
-typedef scm::math::mat<float, 3, 3> mat3;
 
-typedef scm::math::vec<float, 4> vec4;
-typedef scm::math::vec<float, 3> vec3;
-typedef scm::math::vec<float, 2> vec2;
+using float_t = double;
 
-typedef scm::math::vec<int, 4> vec4i;
-typedef scm::math::vec<int, 3> vec3i;
-typedef scm::math::vec<int, 2> vec2i;
+// cpu types
+template<typename T> using M44 = scm::math::mat<T, 4, 4>;
+template<typename T> using M33 = scm::math::mat<T, 3, 3>;
+template<typename T> using M22 = scm::math::mat<T, 2, 2>;
 
-typedef scm::math::vec<unsigned, 4> vec4ui;
-typedef scm::math::vec<unsigned, 3> vec3ui;
-typedef scm::math::vec<unsigned, 2> vec2ui;
+template<typename T> using V4 = scm::math::vec<T, 4>;
+template<typename T> using V3 = scm::math::vec<T, 3>;
+template<typename T> using V2 = scm::math::vec<T, 2>;
+template<typename T> using V1 = T;
 
-typedef scm::math::quat<float> quat;
+using mat4   = M44<float_t>;
+using mat4d  = M44<double>;
+using mat4f  = M44<float>;
+
+using mat3   = M33<float_t>;
+using mat3d  = M33<double>;
+using mat3f  = M33<float>;
+
+using mat2   = M22<float_t>;
+using mat2d  = M22<double>;
+using mat2f  = M22<float>;
+
+using vec4   = V4<float_t>;
+using vec4d  = V4<double>;
+using vec4f  = V4<float>;
+using vec4i  = V4<int>;
+using vec4ui = V4<unsigned>;
+
+using vec3   = V3<float_t>;
+using vec3d  = V3<double>;
+using vec3f  = V3<float>;
+using vec3i  = V3<int>;
+using vec3ui = V3<unsigned>;
+
+using vec2   = V2<float_t>;
+using vec2d  = V2<double>;
+using vec2f  = V2<float>;
+using vec2i  = V2<int>;
+using vec2ui = V2<unsigned>;
+
+using quat = scm::math::quat<float_t>;
+using quatd = scm::math::quat<double>;
+using quatf = scm::math::quat<float>;
+
 ///@}
 
 /**
@@ -69,18 +100,18 @@ typedef scm::math::quat<float> quat;
  */
 math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float near_plane,
-                                 float far_plane);
+                                 math::mat4::value_type near_plane,
+                                 math::mat4::value_type far_plane);
 
 math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
                                  math::mat4 const& screen_transform,
-                                 float near_plane,
-                                 float far_plane);
+                                 math::mat4::value_type near_plane,
+                                 math::mat4::value_type far_plane);
 
 /**
  * Converts an assimp matrix to a schism matrix.
  *
- * \param ai_mat  A assimp matrix.
+ * \param ai_mat  An assimp matrix.
  *
  * \return        A schism matrix.
  */
@@ -103,14 +134,14 @@ inline math::vec3 get_translation(math::mat4 const& m) {
 }
 
 inline math::mat4 get_rotation(math::mat4 const& m) {
-  math::quat q = ::scm::math::quat<float>::from_matrix(m);
+  auto q = ::scm::math::quat<math::mat4d::value_type>::from_matrix(m);
   return q.to_matrix();
 }
 
-std::tuple<float, float, float> GUA_DLL barycentric(math::vec3 const& a,
-                                                    math::vec3 const& b,
-                                                    math::vec3 const& c,
-                                                    math::vec3 const& p);
+std::tuple<float_t, float_t, float_t> GUA_DLL barycentric(math::vec3 const& a,
+                                                          math::vec3 const& b,
+                                                          math::vec3 const& c,
+                                                          math::vec3 const& p);
 
 template <typename ValueType>
 ValueType interpolate(math::vec3 const& position,
@@ -128,27 +159,27 @@ ValueType interpolate(math::vec3 const& position,
 namespace gua {
 namespace traits {
 
-template <> struct scalar<math::vec2> {
-  typedef float type;
+template <> struct scalar<math::vec2d> {
+  using type = math::vec2d::value_type;
 };
 
-template <> struct scalar<math::vec3> {
-  typedef float type;
+template <> struct scalar<math::vec3d> {
+  using type = math::vec3d::value_type;
 };
 
-template <> struct scalar<math::vec4> {
-  typedef float type;
+template <> struct scalar<math::vec4d> {
+  using type = math::vec4d::value_type;
 };
 
-template <> struct dimension<math::vec2> {
+template <> struct dimension<math::vec2d> {
   static const unsigned int value = 2;
 };
 
-template <> struct dimension<math::vec3> {
+template <> struct dimension<math::vec3d> {
   static const unsigned int value = 3;
 };
 
-template <> struct dimension<math::vec4> {
+template <> struct dimension<math::vec4d> {
   static const unsigned int value = 4;
 };
 

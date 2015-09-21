@@ -26,13 +26,11 @@
 #include <gua/scenegraph/SceneGraph.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/GeometryNode.hpp>
-#include <gua/node/VolumeNode.hpp>
-#include <gua/node/PointLightNode.hpp>
-#include <gua/node/SpotLightNode.hpp>
+#include <gua/node/LightNode.hpp>
 #include <gua/node/ScreenNode.hpp>
 #include <gua/node/RayNode.hpp>
 #include <gua/node/TexturedQuadNode.hpp>
-#if GUACAMOLE_ENABLE_PHYSICS
+#ifdef GUACAMOLE_ENABLE_PHYSICS
 #include <gua/physics/RigidBodyNode.hpp>
 #include <gua/physics/CollisionShapeNode.hpp>
 #endif
@@ -79,8 +77,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(node, fillcolor);
 
-  for (auto child : node->children_)
+  for (auto child : node->children_) {
     child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,59 +92,46 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(cam, fillcolor);
 
-  for (auto child : cam->children_)
+  for (auto child : cam->children_) {
     child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DotGenerator::visit(node::GeometryNode* geometry) {
-  pre_node_info(geometry);
+  // pre_node_info(geometry);
 
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#CCCCCC\"";
-  if (geometry->get_filename() != "")
-    parse_data_ += "| geometry: " + geometry->get_filename();
-  if (geometry->get_material() != "")
-    parse_data_ += "| material: " + geometry->get_material();
+  // std::string fillcolor("[fillcolor =");
+  // fillcolor += " \"#CCCCCC\"";
+  // if (geometry->get_filename() != "") {
+  //   parse_data_ += "| geometry: " + geometry->get_filename();
+  // }
+  // if (geometry->get_material().get_shader_name() != "") {
+  //   parse_data_ += "| material: " + geometry->get_material().get_shader_name();
+  // }
 
-  fillcolor += "]";
+  // fillcolor += "]";
 
-  post_node_info(geometry, fillcolor);
+  // post_node_info(geometry, fillcolor);
 
-  for (auto child : geometry->children_)
-    child->accept(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::VolumeNode* volume) {
-	pre_node_info(volume);
-
-	std::string fillcolor("[fillcolor =");
-	fillcolor += " \"#CCEECC\"";
-	if (volume->data.get_volume() != "")
-		parse_data_ += "| volume: " + volume->data.get_volume();
-
-	fillcolor += "]";
-
-	post_node_info(volume, fillcolor);
-
-	for (auto child : volume->children_)
-		child->accept(*this);
+  // for (auto child : geometry->children_) {
+  //   child->accept(*this);
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::PointLightNode* pointlight) {
-  pre_node_info(pointlight);
+/* virtual */ void DotGenerator::visit(node::LightNode* light) {
+  pre_node_info(light);
 
   std::string fillcolor("[fillcolor =");
   fillcolor += " \"#FFDD55\"";
   fillcolor += "]";
 
-  post_node_info(pointlight, fillcolor);
+  post_node_info(light, fillcolor);
 
-  for (auto child : pointlight->children_)
+  for (auto child : light->children_) {
     child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,22 +144,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(screen, fillcolor);
 
-  for (auto child : screen->children_)
+  for (auto child : screen->children_) {
     child->accept(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void DotGenerator::visit(node::SpotLightNode* spot) {
-  pre_node_info(spot);
-
-  std::string fillcolor("[fillcolor =");
-  fillcolor += " \"#FFDD55\"";
-  fillcolor += "]";
-
-  post_node_info(spot, fillcolor);
-
-  for (auto child : spot->children_)
-    child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,8 +159,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(ray, fillcolor);
 
-  for (auto child : ray->children_)
+  for (auto child : ray->children_) {
     child->accept(*this);
+  }
 }
 
 #if 0
@@ -206,8 +180,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(rb, fillcolor);
 
-  for (auto child : rb->children_)
+  for (auto child : rb->children_) {
     child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,8 +197,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(shape, fillcolor);
 
-  for (auto child : shape->children_)
+  for (auto child : shape->children_) {
     child->accept(*this);
+  }
 }
 #endif
 
@@ -237,8 +213,9 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
 
   post_node_info(node, fillcolor);
 
-  for (auto child : node->children_)
+  for (auto child : node->children_) {
     child->accept(*this);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

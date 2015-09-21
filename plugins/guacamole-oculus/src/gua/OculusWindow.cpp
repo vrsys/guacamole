@@ -53,7 +53,7 @@ OculusWindow::~OculusWindow() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::create_shader() {
+void OculusWindow::init_context() {
   fullscreen_shader_.create_from_sources(R"(
       #version 420
       #extension GL_NV_bindless_texture : require
@@ -109,6 +109,31 @@ void OculusWindow::create_shader() {
           out_color = get_color();
       }
     )");
+
+  ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
+  ctx_.render_context = ctx_.render_device->main_context();
+
+  {
+    std::lock_guard<std::mutex> lock(last_context_id_mutex_);
+    ctx_.id = last_context_id_++;
+  }
+
+  ctx_.render_window = this;
+
+  fullscreen_quad_ = scm::gl::quad_geometry_ptr(new scm::gl::quad_geometry(
+    ctx_.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)));
+
+  depth_stencil_state_ = ctx_.render_device
+      ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER);
+
+  blend_state_ = ctx_.render_device->create_blend_state(true,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE,
+                                                        scm::gl::FUNC_ONE);
+  if (config.get_debug()) {
+    ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,31 +153,23 @@ void OculusWindow::set_distortion(float distortion0, float distortion1, float di
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OculusWindow::display(std::shared_ptr<Texture2D> const& left_texture,
-                           std::shared_ptr<Texture2D> const& right_texture) {
-
-  display(left_texture, config.get_left_resolution(), config.get_left_position(), true);
-  display(right_texture, config.get_right_resolution(), config.get_right_position(), false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void OculusWindow::display(std::shared_ptr<Texture2D> const& texture,
-                     math::vec2ui const& size,
-                     math::vec2ui const& position,
-                     bool left) {
-
+void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) {
 
   fullscreen_shader_.use(*get_context());
-  fullscreen_shader_.set_uniform(*get_context(), texture, "sampler");
+  fullscreen_shader_.set_uniform(*get_context(), texture->get_handle(ctx_), "sampler");
 
-  if (left) fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.6f, 0.5f), "lens_center");
-  else      fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.4f, 0.5f), "lens_center");
+  if (is_left)
+    fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.6f, 0.5f), "lens_center");
+  else
+    fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.5f), "lens_center");
 
-  fullscreen_shader_.set_uniform(*get_context(), math::vec2(0.4f, 0.4f), "scale");
-  fullscreen_shader_.set_uniform(*get_context(), distortion_, "hmd_warp_param");
+  fullscreen_shader_.set_uniform(*get_context(), math::vec2f(0.4f, 0.4f), "scale");
+  fullscreen_shader_.set_uniform(*get_context(), math::vec4f(distortion_), "hmd_warp_param");
 
-  get_context()->render_context->set_viewport(scm::gl::viewport(position, size));
+  if (is_left)
+    get_context()->render_context->set_viewport(scm::gl::viewport(config.get_left_position(), config.get_left_resolution()));
+  else
+    get_context()->render_context->set_viewport(scm::gl::viewport(config.get_right_position(), config.get_right_resolution()));
   get_context()->render_context->set_depth_stencil_state(depth_stencil_state_);
 
   fullscreen_quad_->draw(get_context()->render_context);

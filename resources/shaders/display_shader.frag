@@ -30,42 +30,38 @@ subroutine uniform GetColorType get_color;
 
 layout (location = 0) out vec3 out_color;
 
-sampler2D get_tex(uvec2 handle) {
-  return sampler2D(uint64_t(handle.x) + uint64_t(handle.y) * 4294967295);
-}
-
 subroutine( GetColorType )
 vec3 get_red() {
-  return vec3(texture2D( get_tex(sampler), tex_coord).r, 0.0, 0.0);
+  return vec3(texture2D( sampler2D(sampler), tex_coord).r, 0.0, 0.0);
 }
 
 subroutine( GetColorType )
 vec3 get_green() {
-  return vec3(0.0, texture2D( get_tex(sampler), tex_coord).g, 0.0);
+  return vec3(0.0, texture2D( sampler2D(sampler), tex_coord).g, 0.0);
 }
 
 subroutine( GetColorType )
 vec3 get_cyan() {
-  return vec3(0.0, texture2D( get_tex(sampler), tex_coord).gb);
+  return vec3(0.0, texture2D( sampler2D(sampler), tex_coord).gb);
 }
 
 subroutine( GetColorType )
 vec3 get_checker_even() {
   if (mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) == 0.0)
-    return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
+    return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
   else discard;
 }
 
 subroutine( GetColorType )
 vec3 get_checker_odd() {
   if (mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) == 1.0)
-    return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
+    return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
   else discard;
 }
 
 subroutine( GetColorType )
 vec3 get_full() {
-  return vec3(texture2D( get_tex(sampler), tex_coord).rgb);
+  return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
 }
 
 void main() {
