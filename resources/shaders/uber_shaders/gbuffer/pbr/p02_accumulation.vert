@@ -56,16 +56,17 @@ void main() {
 
   pass_point_color = vec3(in_r, in_g, in_b);
   pass_normal = normalize(( gua_normal_matrix * vec4(in_normal, 0.0)).xyz);
-
-  pass_transposed_inverse_normal = normalize(transposed_inverse_model_matrix * vec4(in_normal, 0.0)).xyz;
+  pass_transposed_inverse_normal = normalize( transposed_inverse_model_matrix * vec4(in_normal, 0.0)).xyz;
   pass_mv_vert_depth = pos_es.z;
   pass_scaled_radius = scaled_radius;
-  pass_screen_space_splat_size = splat_size ;
+  pass_screen_space_splat_size = splat_size;
+
 
   gl_Position.z  =  - (  ( ( pos_es.z  + 2*scaled_radius+ ( 3.0 * scaled_radius  ) )  - near_plane) / (far_minus_near_plane * 1.0f));
                  
   gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
 
   gl_Position.z *= gl_Position.w;
+
 }
 

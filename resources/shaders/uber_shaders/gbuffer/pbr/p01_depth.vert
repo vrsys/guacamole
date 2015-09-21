@@ -57,8 +57,12 @@ void main() {
 
   pass_log_depth = (gl_Position.z/gl_Position.w)/2 + 0.5;
 
-  gl_Position.z = - ( ( ( pos_es.z + 2*scaled_radius + (3.0 * scaled_radius) ) - near_plane) / (far_minus_near_plane * 1.0 ) );
-  gl_Position.z = (gl_Position.z - 0.5) * 2.0;
+  gl_Position.z  =  - (  ( ( pos_es.z  + 2*scaled_radius+ ( 3.0 * scaled_radius  ) )  - near_plane) / (far_minus_near_plane * 1.0f));
+
+                 
+  gl_Position.z = (gl_Position.z - 0.5) * 2.0; 
+
   gl_Position.z *= gl_Position.w;
+
 }
 

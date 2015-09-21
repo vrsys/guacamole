@@ -117,6 +117,5 @@ void main() {
   else {
     discard;
   }
-
 }
 
