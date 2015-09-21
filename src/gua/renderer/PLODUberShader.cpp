@@ -296,6 +296,7 @@ void PLODUberShader::update_textures(RenderContext const& context) const {
   accumulation_pass_result_fbo_->attach_color_buffer(
       1, accumulation_pass_normal_result_);
 
+
   //configure normalization FBO
   normalization_pass_result_fbo_->clear_attachments();
   normalization_pass_result_fbo_->attach_color_buffer(
@@ -768,11 +769,6 @@ void PLODUberShader::postdraw(RenderContext const& ctx,
   get_program(accumulation_pass)
       ->set_uniform(ctx, model_matrix, "gua_model_matrix");
  
-  get_program(accumulation_pass)
-      ->set_uniform(ctx,
-                    transpose(inverse(model_matrix)),
-                    "transposed_inverse_model_matrix");
-
   get_program(accumulation_pass)
       ->set_uniform(ctx,
                     transpose(inverse(model_matrix)),

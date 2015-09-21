@@ -48,8 +48,8 @@ void main()
 
 
       
-  output_color = texture2D( p02_color_texture, coords.xy).rgb;
-  output_normal = texture2D(p02_normal_texture, coords.xy).rgb;
+        output_color = texture2D( p02_color_texture, coords.xy).rgb;
+        output_normal = texture2D( p02_normal_texture, coords.xy).rgb;
 
         float depthValue = texture2D( p01_depth_texture, coords.xy).r;
 
