@@ -45,9 +45,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oit_demo)
     add_subdirectory(tiled_shading_test)
     add_subdirectory(clipping)
-    IF (${PLUGIN_guacamole-video3d})
-      add_subdirectory(video3d)
-    ENDIF (${PLUGIN_guacamole-video3d})
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 
@@ -93,6 +90,6 @@ IF (GUACAMOLE_EXAMPLES)
   # video3d example requires glfw and video3d-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
       add_subdirectory(video3d)
-    ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
+  ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
 ENDIF (GUACAMOLE_EXAMPLES)
