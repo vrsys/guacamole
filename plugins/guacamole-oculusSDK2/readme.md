@@ -1,1 +1,0 @@
-== Guacamole Material Editor ==

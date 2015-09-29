@@ -32,27 +32,65 @@
   #define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
+#include <string>
+
 // guacamole headers
 #include <gua/renderer/Window.hpp>
 
+//for the OVR members
+#include <gua/utils/OculusDistortionMesh.hpp>
+
+#include <scm/gl_core/state_objects/state_objects_fwd.h>
+
 namespace gua {
 
+
 class GUA_OCULUS_DLL OculusWindow : public Window {
- public:
+public:
+  static void initialize_oculus_environment();
+  static void shutdown_oculus_environment();
 
   OculusWindow(std::string const& display);
   virtual ~OculusWindow();
 
   void init_context() override;
 
-  void set_distortion(math::vec4 const& distortion);
-  void set_distortion(float distortion0, float distortion1, float distortion2, float distortion3);
-
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  private:
-    math::vec4 distortion_;
+  std::string get_product_name() const;
+  gua::math::mat4 get_sensor_orientation() const;
+  gua::math::vec2ui get_resolution() const;
+  gua::math::vec2ui get_eye_resolution() const;
+  gua::math::vec2 get_screen_size() const;
+  gua::math::vec2 get_screen_size_per_eye() const;
+
+private:
+    static bool oculus_environment_initialized_;
+    static unsigned registered_oculus_device_count_;
+
+    void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
+    void retrieve_oculus_sensor_orientation(double absolute_time);
+    //void create_distortion_mesh();
+    scm::gl::buffer_ptr distortion_mesh_vertices_[2];
+    scm::gl::buffer_ptr distortion_mesh_indices_[2];
+    scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+
+    // for distorted rendering as a replacement of the distortion shader
+    unsigned num_distortion_mesh_indices_[2];
+
+    // oculus device associated with the window
+    ovrHmd registered_HMD_;
+
+    // HMD params
+    std::string product_name_;
+    gua::math::vec2ui resolution_;
+    gua::math::vec2 screen_size_;
+
+    // sensor orientation
+    gua::math::mat4 oculus_sensor_orientation_;
+
+    scm::gl::rasterizer_state_ptr no_backface_culling_state_;
 };
 
 }

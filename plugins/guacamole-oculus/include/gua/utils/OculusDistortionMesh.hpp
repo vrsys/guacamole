@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_OCULUSSDK2_WINDOW_HPP
-#define GUA_OCULUSSDK2_WINDOW_HPP
+#ifndef GUA_OCULUS_DISTORTION_MESH_HPP
+#define GUA_OCULUS_DISTORTION_MESH_HPP
 
 #if defined (_MSC_VER)
   #if defined (GUA_OCULUSSDK2_LIBRARY)
@@ -32,58 +32,55 @@
   #define GUA_OCULUSSDK2_DLL
 #endif // #if defined(_MSC_VER)
 
-// guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/math/math.hpp>
+#include <OVR.h>
 
-//for the OVR members
-#include <gua/utils/OculusSDK2DistortionMesh.hpp>
-
-#include <scm/gl_core/state_objects/state_objects_fwd.h>
+#include <scm/gl_core.h>
 
 namespace gua {
 
+struct OculusDistortionMesh {
 
-class GUA_OCULUSSDK2_DLL OculusSDK2Window : public Window {
- public:
+  /* the vertex contains three different texture coordinates
+     since it has to correct chromatic abberations for each
+     wavelength (~color channel) independently
+  */
+  struct DistortionVertex {
+    scm::math::vec2f ndc_2d_pos;
+    scm::math::vec2f tex_r;
+    scm::math::vec2f tex_g;
+    scm::math::vec2f tex_b;
+    float vig_factor;
+  };
 
+  OculusDistortionMesh();
+
+  ~OculusDistortionMesh();
   
-  static void initialize_oculus_environment();
-  static void shutdown_oculus_environment();
 
-  OculusSDK2Window(std::string const& display);
-  virtual ~OculusSDK2Window();
+  void initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
+                                  ovrVector2f* UVScaleOffset,
+                                  bool isLeftEye);
 
-  void init_context() override;
+  void copy_to_buffer(DistortionVertex* d_vertex_buffer) const;
 
-  // virtual
-  void display(std::shared_ptr<Texture> const& texture, bool is_left);
+  virtual scm::gl::vertex_format get_vertex_format() const;
 
-  gua::math::mat4 get_oculus_sensor_orientation() const;
-  gua::math::vec2ui get_full_oculus_resolution() const;
-  private:
 
-    static bool oculus_environment_initialized_;
-    static unsigned registered_oculus_device_count_;
+  //member
+  std::vector<scm::math::vec2f> ndc_2d_positions;
+  std::vector<scm::math::vec2f> tex_coords_r;
+  std::vector<scm::math::vec2f> tex_coords_g;
+  std::vector<scm::math::vec2f> tex_coords_b;
+  std::vector<float> vig_factors;
+  std::vector<unsigned> indices;
 
-    void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-    void retrieve_oculus_sensor_orientation(double absolute_time);
-    //void create_distortion_mesh();
-    scm::gl::buffer_ptr distortion_mesh_vertices_[2];
-    scm::gl::buffer_ptr distortion_mesh_indices_[2];
-    scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+  unsigned int num_vertices;
+  unsigned int num_indices;
 
-    // for distorted rendering as a replacement of the distortion shader
-    unsigned num_distortion_mesh_indices_[2];
-
-    // oculus device associated with the window
-    ovrHmd registered_HMD_;
-
-    // sensor orientation
-    gua::math::mat4 oculus_sensor_orientation_;
-
-    scm::gl::rasterizer_state_ptr no_backface_culling_state_;
+  unsigned int index_buffer_component_offset;
 };
 
 }
 
-#endif  // GUA_OCULUSSDK2_WINDOW_HPP
+#endif  // GUA_OCULUS_DISTORTION_MESH_HPP
