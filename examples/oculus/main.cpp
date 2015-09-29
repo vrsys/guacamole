@@ -24,10 +24,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/OculusWindow.hpp>
 
-#include <OVR.h>
-
 const std::string geometry("data/objects/monkey.obj");
-// const std::string geometry("data/objects/cube.obj");
 
 std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
                                                   int count) {
@@ -93,38 +90,13 @@ void setup_scene(gua::SceneGraph& graph,
   }
 }
 
-OVR::SensorFusion* init_oculus() {
-  OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
-  OVR::DeviceManager* device_manager  = OVR::DeviceManager::Create();
-  OVR::SensorDevice*  sensor_device   = device_manager->EnumerateDevices<OVR::SensorDevice>().CreateDevice();
-  if (sensor_device) {
-    OVR::SensorFusion* sensor_fusion = new OVR::SensorFusion();
-    sensor_fusion->AttachToSensor(sensor_device);
-    return sensor_fusion;
-  }
-  return nullptr;
-}
-
-gua::math::mat4 const get_oculus_transform(OVR::SensorFusion* sensor) {
-  OVR::Quatf orient = sensor->GetPredictedOrientation();
-  OVR::Matrix4f mat(orient.Inverted());
-  return gua::math::mat4( mat.M[0][0], mat.M[0][1], mat.M[0][2], mat.M[0][3],
-                          mat.M[1][0], mat.M[1][1], mat.M[1][2], mat.M[1][3],
-                          mat.M[2][0], mat.M[2][1], mat.M[2][2], mat.M[2][3],
-                          mat.M[3][0], mat.M[3][1], mat.M[3][2], mat.M[3][3]);
-}
 
 int main(int argc, char** argv) {
-
   // initialize guacamole
   gua::init(argc, argv);
 
   // initialize Oculus SDK
-  OVR::SensorFusion* oculus_sensor = init_oculus();
-  if (!oculus_sensor) {
-    gua::Logger::LOG_WARNING << "Could not connect to Oculus Rift! " <<
-      "There will be not rotation input." << std::endl;
-  }
+  gua::OculusWindow::initialize_oculus_environment();
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -154,7 +126,14 @@ int main(int argc, char** argv) {
   nav->translate(0.0, 0.0, 2.0);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1280, 800);
+
+  auto window = std::make_shared<gua::OculusWindow>(":0.0");
+  gua::WindowDatabase::instance()->add("main_window", window);
+  window->config.set_enable_vsync(false);
+
+  window->open();
+
+  float eye_screen_distance = 0.08f;
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -163,7 +142,7 @@ int main(int argc, char** argv) {
   auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
   //camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
+  camera->config.set_resolution(window->get_resolution());
   camera->config.set_left_screen_path("/nav/cam/left_screen");
   camera->config.set_right_screen_path("/nav/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -174,18 +153,13 @@ int main(int argc, char** argv) {
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  left_screen->translate(-0.04, 0, -0.05f);
+  left_screen->data.set_size(window->get_screen_size_per_eye());
+  left_screen->translate(-0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(gua::math::vec2(0.08, 0.1));
-  right_screen->translate(0.04, 0, -0.05f);
+  right_screen->data.set_size(window->get_screen_size_per_eye());
+  right_screen->translate(0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
 
-  auto window = std::make_shared<gua::OculusWindow>(":0.0");
-  gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
-
-  window->open();
 
   gua::Renderer renderer;
 
@@ -221,15 +195,14 @@ int main(int argc, char** argv) {
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
-    if (oculus_sensor) {
-      camera->set_transform(get_oculus_transform(oculus_sensor));
-    }
+    camera->set_transform(window->get_sensor_orientation());
+
 
     renderer.queue_draw({&graph});
   });
 
   loop.start();
 
+  gua::OculusWindow::shutdown_oculus_environment();
   return 0;
 }
-
