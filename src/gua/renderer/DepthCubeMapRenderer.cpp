@@ -75,6 +75,7 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
       if (mode_ == DepthCubeMapRenderer::COMPLETE){
         pipe.prepare_depth_cubemap(cube_map_node);
         pipe.generate_depth_cubemap_face(0, cube_map_node);
+        pipe.generate_depth_cubemap_face(0, cube_map_node);
         pipe.generate_depth_cubemap_face(1, cube_map_node);
         pipe.generate_depth_cubemap_face(2, cube_map_node);
         pipe.generate_depth_cubemap_face(3, cube_map_node);
