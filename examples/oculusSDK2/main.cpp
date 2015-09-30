@@ -32,9 +32,9 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
   std::vector<std::shared_ptr<gua::node::TransformNode>> lights(count);
 
   for (int i(0); i < count; ++i) {
-    scm::math::vec3 randdir(gua::math::random::get(-1.f, 1.f),
-                            gua::math::random::get(-1.f, 1.f),
-                            gua::math::random::get(-1.f, 1.f));
+    scm::math::vec3 randdir(gua::math::random::get(-10.f, 10.f),
+                            gua::math::random::get(-10.f, 10.f),
+                            gua::math::random::get(-10.f, 10.f));
     scm::math::normalize(randdir);
 
     gua::TriMeshLoader loader;
@@ -44,7 +44,7 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
       "data/objects/light_sphere.obj"
     ));
 
-    sphere_geometry->scale(0.04, 0.04, 0.04);
+    sphere_geometry->scale(0.4, 0.4, 0.4);
 
     lights[i] = graph.add_node("/", std::make_shared<gua::node::TransformNode>("light" + gua::string_utils::to_string(i)));
     lights[i]->add_child(sphere_geometry);
@@ -53,6 +53,7 @@ std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGrap
     auto light = lights[i]->add_child(std::make_shared<gua::node::LightNode>("light"));
     light->data.set_type(gua::node::LightNode::Type::POINT);
     light->data.set_color(gua::utils::Color3f::random());
+    light->scale(20);
   }
 
   return lights;
@@ -70,9 +71,16 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
+#if WIN32
+  //std::string opt_prefix("D:/guacamole/");
+  std::string opt_prefix("C:/Users/localadmin/Desktop/Simon/opt/");
+#else
+  std::string opt_prefix("/opt/");
+#endif
+
   auto add_oilrig = [&](std::string const& parent) {
     auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
-    auto oilrig(loader.create_geometry_from_file("oilrig", "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+    auto oilrig(loader.create_geometry_from_file("oilrig", opt_prefix + "3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -81,12 +89,12 @@ int main(int argc, char** argv) {
   };
 
   auto scene_root = graph.add_node<gua::node::TransformNode>("/", "model");
-  scene_root->scale(0.5);
+  scene_root->scale(70);
   scene_root->rotate(-90, 1, 0, 0);
-  scene_root->translate(-0.2, -0.5, 0);
+  scene_root->translate(12, -1, -20);
   add_oilrig("/model");
 
-  auto lights = add_lights(graph, 20);
+  auto lights = add_lights(graph, 5);
 
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
   nav->translate(0.0, 0.0, 1.0);
@@ -108,9 +116,11 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(true);
-  camera->config.set_eye_dist(0.064);
+  camera->config.set_eye_dist(0.0635);
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+  camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+  camera->get_pipeline_description()->get_resolve_pass()->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
   left_screen->data.set_size(gua::math::vec2(0.17074, 0.21));
@@ -126,23 +136,27 @@ int main(int argc, char** argv) {
   timer.start();
 
   double time(0);
-  float desired_frame_time(1.0 / 60.0);
-  gua::events::MainLoop loop;
 
   // application loop
-  gua::events::Ticker ticker(loop, desired_frame_time);
-
-  ticker.on_tick.connect([&]() {
+  while (true) {
     double frame_time(timer.get_elapsed());
     time += frame_time;
     timer.reset();
 
     camera->set_transform(window->get_oculus_sensor_orientation());
 
-    renderer.queue_draw({&graph});
-  });
+    std::cout << window->get_rendering_fps() << " " << renderer.get_application_fps() << std::endl;
 
-  loop.start();
+    window->process_events();
+    if (window->should_close()) {
+      renderer.stop();
+      window->close();
+      break;
+    }
+    else {
+      renderer.draw_single_threaded({ &graph });
+    }
+  }
 
   gua::OculusSDK2Window::shutdown_oculus_environment();
   return 0;

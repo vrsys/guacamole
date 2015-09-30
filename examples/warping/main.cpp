@@ -20,11 +20,11 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     1
+#define GUI_SUPPORT     0
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         0
+#define OCULUS2         1
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -740,7 +740,7 @@ int main(int argc, char** argv) {
 
       if (warping) {
         normal_cam->config.set_eye_dist(0.f);
-        warp_cam->config.set_eye_dist(0.064f);
+        warp_cam->config.set_eye_dist(0.0635f);
 
         #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -753,7 +753,7 @@ int main(int argc, char** argv) {
         normal_cam->set_pipeline_description(warp_pipe);
 
       } else {
-        normal_cam->config.set_eye_dist(0.064f);
+          normal_cam->config.set_eye_dist(0.0635f);
 
         #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));

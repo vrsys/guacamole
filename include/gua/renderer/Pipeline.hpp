@@ -101,7 +101,7 @@ public:
 
   std::shared_ptr<Texture2D> render_scene(
     CameraMode mode, node::SerializedCameraNode const& camera,
-    std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
+    std::vector<SceneGraph const*> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
 

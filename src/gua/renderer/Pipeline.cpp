@@ -79,7 +79,7 @@ namespace gua {
 std::shared_ptr<Texture2D> Pipeline::render_scene(
     CameraMode mode,
     node::SerializedCameraNode const& camera,
-    std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs) {
+    std::vector<SceneGraph const*> const& scene_graphs) {
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
@@ -177,7 +177,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   current_viewstate_.graph = nullptr;
   for (auto& graph : scene_graphs) {
     if (graph->get_name() == camera.config.get_scene_graph_name()) {
-      current_viewstate_.graph = graph.get();
+      current_viewstate_.graph = graph;
       break;
     }
   }
