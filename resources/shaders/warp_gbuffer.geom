@@ -235,6 +235,7 @@ void main() {
   if ((varying_position[0].z & 1) > 0) {
     emit_quad(uvec2(0), uvec2(1 << (varying_position[0].z >> BIT_CURRENT_LEVEL)));
   } else {
+    // emit_quad(uvec2(0), uvec2(2));
     emit_pixel(uvec2(0, 0));
     emit_pixel(uvec2(1, 0));
     emit_pixel(uvec2(1, 1));

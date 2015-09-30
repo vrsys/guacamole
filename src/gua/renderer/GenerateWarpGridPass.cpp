@@ -38,7 +38,7 @@ namespace gua {
 GenerateWarpGridPassDescription::GenerateWarpGridPassDescription()
   : PipelinePassDescription()
   , cell_size_(32)
-  , split_threshold_(0.0005f)
+  , split_threshold_(0.0001f)
   , mode_(WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
 {
   vertex_shader_ = "";

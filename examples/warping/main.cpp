@@ -20,11 +20,11 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     0
+#define GUI_SUPPORT     1
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         1
+#define OCULUS2         0
 #define STEREO_MONITOR  0
 
 #define SSAO            0
@@ -198,15 +198,15 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(15.f);
+  light->data.set_brightness(50.f);
   light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
   light->data.set_shadow_cascaded_splits({0.1f, 1.5f, 15.f});
-  light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
-  light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+  light->data.set_shadow_near_clipping_in_sun_direction(100.0f);
+  light->data.set_shadow_far_clipping_in_sun_direction(100.0f);
   light->data.set_max_shadow_dist(30.0f);
-  light->data.set_shadow_offset(0.0007f);
+  light->data.set_shadow_offset(0.001f);
   light->data.set_enable_shadows(SHADOWS);
-  light->data.set_shadow_map_size(2048);
+  light->data.set_shadow_map_size(1024);
   light->rotate(-35, 1, 0, 0);
   light->rotate(-150, 0, 1, 0);
 
@@ -592,7 +592,7 @@ int main(int argc, char** argv) {
   normal_cam->config.set_scene_graph_name("main_scenegraph");
   normal_cam->config.mask().blacklist.add_tag("invisible");
   normal_cam->config.set_far_clip(350.f);
-  normal_cam->config.set_near_clip(0.05f);
+  normal_cam->config.set_near_clip(0.1f);
 
   auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
   fill_light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -657,6 +657,8 @@ int main(int argc, char** argv) {
             environment_lighting(gua::utils::Color3f(0.1, 0.1, 0.2)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
             ssao_enable(SSAO).
+            tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
+            tone_mapping_exposure(3.f).
             horizon_fade(0.2f).
             compositing_enable(false).
             ssao_intensity(3.f).
@@ -1414,7 +1416,7 @@ int main(int argc, char** argv) {
           if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
         }
 
-        
+
         stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                              window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
                              abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
