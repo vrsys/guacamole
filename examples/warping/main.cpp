@@ -28,7 +28,7 @@
 #define STEREO_MONITOR  0
 
 #define SSAO            0
-#define SHADOWS         0
+#define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
@@ -198,16 +198,17 @@ int main(int argc, char** argv) {
 
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(3.f);
+  light->data.set_brightness(15.f);
   light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
-  light->data.set_shadow_cascaded_splits({0.1f, 0.5f, 2.f, 10.f});
+  light->data.set_shadow_cascaded_splits({0.1f, 1.5f, 15.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
   light->data.set_max_shadow_dist(30.0f);
   light->data.set_shadow_offset(0.0007f);
   light->data.set_enable_shadows(SHADOWS);
   light->data.set_shadow_map_size(2048);
-  light->rotate(-95, 1, 0.5, 0);
+  light->rotate(-35, 1, 0, 0);
+  light->rotate(-150, 0, 1, 0);
 
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
@@ -247,9 +248,16 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  scene_root->scale(3);
-  scene_root->rotate(-90, 1, 0, 0);
-  add_oilrig(0, 0, 1, "/transform/one_oilrig");
+  //scene_root->scale(3);
+  //scene_root->rotate(-90, 1, 0, 0);
+  //add_oilrig(0, 0, 1, "/transform/one_oilrig");
+
+  auto tuscany(loader.create_geometry_from_file("tuscany", opt_prefix + "3d_models/NewTuscany/tuscany_optimized.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+  //tuscany->scale(20);
+  tuscany->translate(0, -2, -20);
+  scene_root->add_child(tuscany);
 
   // textured quads scene ------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
@@ -583,8 +591,8 @@ int main(int argc, char** argv) {
 
   normal_cam->config.set_scene_graph_name("main_scenegraph");
   normal_cam->config.mask().blacklist.add_tag("invisible");
-  normal_cam->config.set_far_clip(50.f);
-  normal_cam->config.set_near_clip(0.02f);
+  normal_cam->config.set_far_clip(350.f);
+  normal_cam->config.set_near_clip(0.05f);
 
   auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
   fill_light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -643,10 +651,11 @@ int main(int argc, char** argv) {
   #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
-            background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg").
-            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg").
+            background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg").
+            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg").
             background_color(gua::utils::Color3f(0, 0, 0)).
-            environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SKYMAP_TEXTURE).
+            environment_lighting(gua::utils::Color3f(0.1, 0.1, 0.2)).
+            environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
             ssao_enable(SSAO).
             horizon_fade(0.2f).
             compositing_enable(false).
@@ -1339,12 +1348,9 @@ int main(int argc, char** argv) {
   gua::Renderer renderer;
 
   // application loop
-  gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/300.0);
-
   int ctr=0;
 
-  ticker.on_tick.connect([&]() {
+  while(true) {
 
     #if GUI_SUPPORT
       gua::Interface::instance()->update();
@@ -1382,10 +1388,8 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
     transform->set_transform(modelmatrix);
 
-
-
-
       if (ctr++ % 100 == 0) {
+        #if GUI_SUPPORT
         double trimesh_time(0);
         double gbuffer_warp_time(0);
         double abuffer_warp_time(0);
@@ -1410,15 +1414,14 @@ int main(int argc, char** argv) {
           if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
         }
 
-        #if GUI_SUPPORT
+        
         stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
                              window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
                              abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
                              gbuffer_primitives, abuffer_primitives);
 
       #else
-        std::cout << 1000.f / window->get_rendering_fps() << " " <<
-            window->get_rendering_fps() << std::endl;
+        std::cout << window->get_rendering_fps() << std::endl;
         #endif
         }
 
@@ -1426,13 +1429,11 @@ int main(int argc, char** argv) {
     if (window->should_close()) {
       renderer.stop();
       window->close();
-      loop.stop();
+      break;
     } else {
-      renderer.queue_draw({&graph});
+      renderer.draw_single_threaded({&graph});
     }
-  });
-
-  loop.start();
+  }
 
   return 0;
 }

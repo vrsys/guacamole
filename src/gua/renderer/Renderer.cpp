@@ -229,11 +229,8 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
 
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
-      auto serialized_cam(cam->serialize());
-
       render_scene(cam->serialize(), scene_graphs, single_threaded_rendering_fps_);
-
-      }
+    }
   }
 
   application_fps_.step();
