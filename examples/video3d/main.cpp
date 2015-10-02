@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 
   gua::Video3DLoader vloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto steppo(vloader.create_geometry_from_file("steppo","/opt/kinect-resources/kinect_surfaceLCD.ks"));
+  auto steppo(vloader.create_geometry_from_file("steppo","K:/kinect-resources/shot_lcd_KV2_X_5_dist_arachne.ks"));
   graph.add_node("/transform", steppo);
 
   gua::TriMeshLoader mloader;
@@ -125,6 +125,8 @@ int main(int argc, char** argv) {
   // application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
+
+  unsigned framecount = 0;
 
   ticker.on_tick.connect([&]() {
 
