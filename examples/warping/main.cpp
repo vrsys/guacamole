@@ -252,12 +252,12 @@ int main(int argc, char** argv) {
   //scene_root->rotate(-90, 1, 0, 0);
   //add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
-  auto tuscany(loader.create_geometry_from_file("tuscany", opt_prefix + "3d_models/NewTuscany/tuscany_optimized.obj",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
-      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
-  //tuscany->scale(20);
-  tuscany->translate(0, -2, -20);
-  scene_root->add_child(tuscany);
+  // auto tuscany(loader.create_geometry_from_file("tuscany", opt_prefix + "3d_models/NewTuscany/tuscany_optimized.obj",
+  //     gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+  //     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
+  // //tuscany->scale(20);
+  // tuscany->translate(0, -2, -20);
+  // scene_root->add_child(tuscany);
 
   // textured quads scene ------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
@@ -358,12 +358,17 @@ int main(int argc, char** argv) {
 
   // spheres -------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
-  auto sphere(loader.create_geometry_from_file("sphere", "data/objects/sphere.obj",
+  auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
+  mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
+              .set_show_back_faces(true);
+  auto sphere(loader.create_geometry_from_file("sphere", "data/objects/glasses.obj", mat_glasses,
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
+  std::dynamic_pointer_cast<gua::node::TriMeshNode>(sphere->get_children()[0])->set_material(mat_glasses);
   scene_root->add_child(sphere);
-  scene_root->add_child(plane);
+  scene_root->scale(10);
+  scene_root->rotate(180, 0, 1, 0);
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
@@ -650,15 +655,15 @@ int main(int argc, char** argv) {
   auto plod_pass(std::make_shared<gua::PLODPassDescription>());
   #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
-  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
-            background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg").
-            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg").
-            background_color(gua::utils::Color3f(0, 0, 0)).
-            environment_lighting(gua::utils::Color3f(0.1, 0.1, 0.2)).
+  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR).
+            background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+            background_color(gua::utils::Color3f(1, 1, 1)).
+            environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
             ssao_enable(SSAO).
             tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
-            tone_mapping_exposure(3.f).
+            tone_mapping_exposure(2.f).
             horizon_fade(0.2f).
             compositing_enable(false).
             ssao_intensity(3.f).

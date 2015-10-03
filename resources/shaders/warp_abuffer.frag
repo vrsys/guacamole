@@ -31,7 +31,7 @@ layout(location=0) out vec3 gua_out_color;
 
 #define MAX_RAY_STEPS @warping_max_layers@
 
-uniform float gua_tone_mapping_exposure = 3.0;
+uniform float gua_tone_mapping_exposure = 2.0;
 
 @include "common/gua_abuffer.glsl"
 @include "common/gua_tone_mapping.glsl"
