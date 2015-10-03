@@ -31,6 +31,7 @@
 #include <gua/platform.hpp>
 #include <gua/utils/FpsCounter.hpp>
 #include <gua/concurrent/Doublebuffer.hpp>
+#include <gua/node/CameraNode.hpp>
 
 namespace gua {
 
@@ -85,12 +86,12 @@ class GUA_DLL Renderer {
 
   struct Item {
     Item() = default;
-    Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
+    Item( node::SerializedCameraNode const& sc,
           std::shared_ptr<const SceneGraphs> const& sgs)
         : serialized_cam(sc), scene_graphs(sgs) {}
 
-    std::shared_ptr<node::SerializedCameraNode> serialized_cam;
-    std::shared_ptr<const SceneGraphs>          scene_graphs;
+    node::SerializedCameraNode         serialized_cam;
+    std::shared_ptr<const SceneGraphs> scene_graphs;
   };
 
   using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
@@ -101,6 +102,7 @@ class GUA_DLL Renderer {
   std::map<std::string, Renderclient> render_clients_;
 
   FpsCounter application_fps_;
+  FpsCounter single_threaded_rendering_fps_;
 };
 
 }

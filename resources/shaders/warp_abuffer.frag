@@ -31,7 +31,7 @@ layout(location=0) out vec3 gua_out_color;
 
 #define MAX_RAY_STEPS @warping_max_layers@
 
-uniform float gua_tone_mapping_exposure = 1.0;
+uniform float gua_tone_mapping_exposure = 3.0;
 
 @include "common/gua_abuffer.glsl"
 @include "common/gua_tone_mapping.glsl"
@@ -120,9 +120,7 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
 
   if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) ||
       any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) || crop_depth.x > crop_depth.y) {
-    // invalid ray if either
-    //
-    // - there is no transparent surface visible at all
+    // invalid ray if there is no transparent surface visible at all
     return false;
   }
 
@@ -136,9 +134,7 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
     end.z = crop_depth.y;
   }
 
-
   return true;
-
 }
 
 void abuf_mix_frag(vec4 frag_color, inout vec4 color) {
@@ -236,11 +232,6 @@ void draw_debug_views() {
           if (inside) {
             gua_out_color = mix(vec3(min_max_depth.x, 0, 0), gua_out_color, 0.9);
           }
-
-          if (current_level == 0) {
-            // check abuffer
-          }
-
         } else {
           if (inside) {
             gua_out_color = mix(vec3(0, min_max_depth.x, 0), gua_out_color, 0.7);
@@ -260,8 +251,6 @@ void draw_debug_views() {
         if (!intersects && at_end) {
           break;
         }
-
-
       }
     }
 
@@ -334,7 +323,6 @@ void main() {
 
   vec4 color = vec4(0);
   vec4 background_color = vec4(0, 0, 0, 1);
-
 
 
   // hole filling
@@ -419,7 +407,7 @@ void main() {
 
           float z = unpack_depth24(frag.y);
           const float thickness = 0.00005;
-          if (last_depth < z-2*thickness && d_range.y > z-thickness && d_range.x <= z+thickness) {
+          if (last_depth < z-thickness && d_range.y > z && d_range.x <= z+thickness) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
             vec3  frag_color = uintBitsToFloat(data.rgb);

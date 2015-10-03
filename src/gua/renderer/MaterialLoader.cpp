@@ -169,16 +169,15 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("RoughnessMap", assets + uniform_roughness_map);
   } else if (uniform_roughness != "" && uniform_roughness != "0") {
     // specular exponent is taken to the power of 0.02 in order to move it to the desired range
-    new_mat->set_uniform("Roughness", std::min(1.f, std::pow(string_utils::from_string<float>(uniform_roughness), 0.02f)-1.f));
+      new_mat->set_uniform("Roughness", string_utils::from_string<scm::math::vec3f>(uniform_metalness)[0]);
   }
 #endif
 
-#if 0
+#if 1
   if (uniform_metalness_map != "") {
     new_mat->set_uniform("MetalnessMap", assets + uniform_metalness_map);
   } else if (uniform_metalness != "") {
-    // multiplying with 0.5, since metalness of 1.0 is seldomly wanted but specularity of 1.0 often given
-    new_mat->set_uniform("Metalness", string_utils::from_string<math::vec3>(uniform_metalness)[0]*0.5f);
+      new_mat->set_uniform("Metalness", std::max(0.f, std::min(1.f, std::pow(string_utils::from_string<float>(uniform_roughness), 0.02f))));
   }
 #endif
 

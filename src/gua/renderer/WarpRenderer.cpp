@@ -148,7 +148,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   if (ctx.mode != CameraMode::RIGHT) {
     cached_warp_state_ = description->get_warp_state()();
   }
-  math::mat4f warp_matrix(cached_warp_state_.get(ctx.mode) * scm::math::inverse(gua::math::mat4f(frustum.get_projection() * frustum.get_view())));
+  gua::math::mat4d proj(frustum.get_projection());
+  gua::math::mat4d view(frustum.get_view());
+  gua::math::mat4d warp(cached_warp_state_.get(ctx.mode));
+  math::mat4f warp_matrix(warp * scm::math::inverse(proj * view));
+  math::mat4f inv_warp_matrix(scm::math::inverse(warp * scm::math::inverse(proj * view)));
 
   // ---------------------------------------------------------------------------
   // --------------------------------- warp gbuffer ----------------------------
@@ -215,7 +219,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_primitive_query(ctx, pri_query_name_b);
 
   warp_abuffer_program_->use(ctx);
-  warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", scm::math::inverse(warp_matrix));
+  warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", inv_warp_matrix);
 
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
 

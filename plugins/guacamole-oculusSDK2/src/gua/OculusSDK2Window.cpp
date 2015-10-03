@@ -176,6 +176,8 @@ OculusSDK2Window::OculusSDK2Window(std::string const& display):
     bool tracking_configured = ovrHmd_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
         | ovrTrackingCap_MagYawCorrection
         | ovrTrackingCap_Position, 0) == ovrSuccess;
+
+    ovrHmd_SetEnabledCaps(registered_HMD_, ovrHmdCap_LowPersistence | ovrHmdCap_DynamicPrediction);
 #else
     registered_HMD_ = ovrHmd_Create(registered_oculus_device_count_++);
     // register all three sensors for sensor fusion
