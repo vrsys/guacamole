@@ -33,7 +33,7 @@
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
-#define LOAD_SPONZA     1
+#define LOAD_SPONZA     0
 #define LOAD_DRAGON     0
 
 #include <functional>
