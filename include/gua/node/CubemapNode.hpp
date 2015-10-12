@@ -116,6 +116,7 @@ class GUA_DLL CubemapNode : public SerializableNode {
   void update_bounding_box() const override;
 
   float get_min_distance();
+  float get_weighted_min_distance();
   math::vec3 get_min_distance_position();
   float get_distance_by_local_direction(math::vec3 const& dir) const;
 
@@ -124,8 +125,12 @@ class GUA_DLL CubemapNode : public SerializableNode {
  private:
 
   Distance_Info m_MinDistance;
+  Distance_Info m_WeightedMinDistance;
+
+  std::vector<float> m_Weights;
 
   void find_min_distance();
+  void create_weights();
   math::vec3 project_back_to_world_coords(Distance_Info const& di) const;
   float acces_texture_data(unsigned side, math::vec2 coords) const;
 

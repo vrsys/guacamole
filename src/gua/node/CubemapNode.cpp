@@ -43,6 +43,9 @@ CubemapNode::CubemapNode(std::string const& name,
 {
   m_NewTextureData = std::make_shared<std::atomic<bool>>(false);
   m_MinDistance.distance = -1.0;
+  m_WeightedMinDistance.distance = -1.0;
+  m_Weights = std::vector<float>(config.get_resolution()*config.get_resolution()*6, 1.0f);
+  create_weights();
   update_bounding_box();
 }
 
@@ -64,6 +67,13 @@ float CubemapNode::get_min_distance(){
     find_min_distance();
   }
   return m_MinDistance.distance;
+}
+
+float CubemapNode::get_weighted_min_distance(){
+  if (m_NewTextureData->load()){
+    find_min_distance();
+  }
+  return m_WeightedMinDistance.distance;
 }
 
 math::vec3 CubemapNode::get_min_distance_position(){
@@ -104,6 +114,18 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
   return -1.0;
 }
 
+void CubemapNode::create_weights(){
+  int _pixel_count = config.get_resolution() * config.get_resolution() * 6; 
+  for (int i = 0; i<_pixel_count; ++i){
+    if (i%(config.get_resolution()*6) < 64){
+      m_Weights[i] = 1.0;
+    }else{
+      m_Weights[i] = 10.0;
+    }
+  }
+}
+
+
 void CubemapNode::find_min_distance(){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   if (texture){
@@ -113,17 +135,27 @@ void CubemapNode::find_min_distance(){
     Distance_Info min_distance;
     min_distance.distance = std::numeric_limits<float>::max();
 
+    Distance_Info weighted_min_distance;
+    weighted_min_distance.distance = std::numeric_limits<float>::max();
+
     for (const float &f : data){
+      uint index = &f - &data[0];
+      float w_f = f * m_Weights[index];
       if ( (f < min_distance.distance) && (f!=-1.f) ){
         min_distance.distance = f;
-        uint index = &f - &data[0];
         min_distance.tex_coords = math::vec2(index%(config.resolution()*6), index/(config.resolution()*6));
       }
+      if ( (w_f < weighted_min_distance.distance) && (f!=-1.f) ){
+        weighted_min_distance.distance = w_f;
+        weighted_min_distance.tex_coords = math::vec2(index%(config.resolution()*6), index/(config.resolution()*6));
+      }
     }
+
 
     if (min_distance.distance != std::numeric_limits<float>::max()){
       min_distance.world_position = project_back_to_world_coords(min_distance);
       m_MinDistance = min_distance;
+      m_WeightedMinDistance = weighted_min_distance;
       return;
     }
 
