@@ -46,7 +46,6 @@ TextureDistance::TextureDistance(unsigned width,
   world_depth_data_ = std::vector<float>(pixel_size, -1.0f);
 }
 
-
 void TextureDistance::download_data(RenderContext const& ctx, float near_clip, float far_clip){
   ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
   unsigned size = height_*width_;
@@ -54,7 +53,7 @@ void TextureDistance::download_data(RenderContext const& ctx, float near_clip, f
     if (texture_data_[texel] == 0xFFFFFFFF){
       world_depth_data_[texel] = -1.0;
     }else{
-      float x = (float(texel%height_) / height_) - 0.5; //height = width/6 //Only for front right now
+      float x = (float(texel%height_) / height_) - 0.5; //height = width/6
       float y = (float(texel/width_) / height_) - 0.5;
       float z = (float)texture_data_[texel] / 4294967295.0;
 
