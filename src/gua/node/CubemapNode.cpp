@@ -45,7 +45,7 @@ CubemapNode::CubemapNode(std::string const& name,
   m_MinDistance.distance = -1.0;
   m_WeightedMinDistance.distance = -1.0;
   m_Weights = std::vector<float>(config.get_resolution()*config.get_resolution()*6, 1.0f);
-  create_weights();
+  create_weights(math::vec3(0.0, 0.0, 0.0), math::vec3(0.0, 0.0, 0.0));
   update_bounding_box();
 }
 
@@ -114,14 +114,46 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
   return -1.0;
 }
 
-void CubemapNode::create_weights(){
+void CubemapNode::create_weights(math::vec3 view_direction, math::vec3 move_direction){
   int _pixel_count = config.get_resolution() * config.get_resolution() * 6; 
   for (int i = 0; i<_pixel_count; ++i){
-    if (i%(config.get_resolution()*6) < 64){
-      m_Weights[i] = 1.0;
-    }else{
-      m_Weights[i] = 10.0;
+    math::vec2 tex_coords = math::vec2(i%(config.resolution()*6), i/(config.resolution()*6));
+    int side = tex_coords.x / config.resolution();
+    math::vec2 xy( float(tex_coords.x) / config.resolution(), float(tex_coords.y) / config.resolution() ); 
+    xy.x = fmod(xy.x, 1.0);
+    xy -= 0.5;
+
+    math::vec3 point_on_face;
+    switch(side){
+      case 0: point_on_face = math::vec3(xy.x, xy.y, -0.5); break;
+      case 1: point_on_face = math::vec3(-xy.x, xy.y, 0.5); break;
+      case 2: point_on_face = math::vec3(xy.x, 0.5, xy.y); break;
+      case 3: point_on_face = math::vec3(xy.x, -0.5, -xy.y); break;
+      case 4: point_on_face = math::vec3(-0.5, xy.y, -xy.x); break;
+      case 5: point_on_face = math::vec3(0.5, xy.y, xy.x); break;
     }
+    math::vec3 point_direction = scm::math::normalize(point_on_face);
+
+    m_Weights[i] = 1.0;
+
+    // Weight by ViewDirection
+    float view_lenght(scm::math::length(view_direction));
+    if (view_lenght > 0.0)
+    {
+      float cosin_factor = scm::math::dot(point_direction, scm::math::normalize(view_direction)); // alligned: 1.0  not alligned -1.0
+      float weighting_strength(1.0);
+      m_Weights[i] += weighting_strength * (cosin_factor - 1.0) * -0.5; // alligned: +0.0  not alligned +2.0
+    }
+
+    // Weight by MoveDirection
+    float move_lenght(scm::math::length(move_direction));
+    if (move_lenght > 0.0)
+    {
+      float cosin_factor = scm::math::dot(point_direction, scm::math::normalize(move_direction));
+      float weighting_strength(1.0);
+      m_Weights[i] += weighting_strength * (cosin_factor - 1.0) * -0.5;
+    }
+
   }
 }
 
@@ -160,7 +192,8 @@ void CubemapNode::find_min_distance(){
     }
 
   }
-  m_MinDistance.distance = -1.0;
+  // m_MinDistance.distance = -1.0;
+  // m_WeightedMinDistance.distance = -1.0;
 }
 
 math::vec3 CubemapNode::project_back_to_world_coords(Distance_Info const& di) const{
