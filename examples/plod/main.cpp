@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
 
 	auto light_xf = graph.add_node<gua::node::TransformNode>("/", "lightxf");
 	auto light = graph.add_node<gua::node::LightNode>("/lightxf", "light");
-	light->data.set_type(gua::node::LightNode::Type::POINT);
+	light->data.set_type(gua::node::LightNode::Type::SPOT);
 	light->data.set_enable_shadows(true);                                                         
 	light->data.set_shadow_map_size(1024);
 	light->data.set_shadow_near_clipping_in_sun_direction(0.1f);

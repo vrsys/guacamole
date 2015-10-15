@@ -26,6 +26,7 @@
 
 // guacamole headers
 #include <gua/video3d/platform.hpp>
+#include <gua/renderer/Pipeline.hpp>
 #include <gua/utils.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -49,7 +50,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
 
   Video3DRenderer();
 
-  void render(Pipeline& pipe);
+  void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
   // /*virtual*/ void draw   (RenderContext const& context,
   //                          std::string const& ksfile_name,
