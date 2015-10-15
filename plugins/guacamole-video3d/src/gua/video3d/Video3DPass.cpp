@@ -48,9 +48,9 @@ PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, Substit
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
+      PipelinePass & pass, PipelinePassDescription const& desc, Pipeline& pipe) {
 
-      renderer->render(pipe);
+      renderer->render(pipe, desc);
   };
 
   return pass;
