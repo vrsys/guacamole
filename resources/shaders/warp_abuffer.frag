@@ -397,7 +397,6 @@ void main() {
         // check abuffer
         uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(cell_origin.y) + int(cell_origin.x)]);
         while (frag.x != 0) {
-
           float z = unpack_depth24(frag.y);
           const float thickness = 0.00005;
           if (last_depth < z-thickness && d_range.y > z && d_range.x <= z+thickness) {
@@ -408,14 +407,12 @@ void main() {
             last_depth = z;
 
             if (color.a > @abuf_blending_termination_threshold@) {
-              sample_count = MAX_RAY_STEPS+1;
               break;
             }
           }
 
           frag = unpackUint2x32(frag_list[frag.x]);
         }
-
       }
 
       #if @debug_bounding_volumes@ == 1
@@ -426,13 +423,20 @@ void main() {
         abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
       #endif
 
-      if (intersects && current_level != 0) {
-        // move pos to cell boundary if entering from top
-        if (d_range.x < min_max_depth.x) {
-          pos = pos + dir.xy*(min_max_depth.x - d_range.x) / dir.z;
-        }
 
-        --current_level;
+      if (intersects) {
+
+        if (current_level == 0) {
+          pos = new_pos;
+        } else {
+
+          // move pos to cell boundary if entering from top
+          if (d_range.x < min_max_depth.x) {
+            pos = pos + dir.xy*(min_max_depth.x - d_range.x) / dir.z;
+          }
+
+          --current_level;
+        }
       } else {
         pos = new_pos;
 
@@ -444,6 +448,7 @@ void main() {
       if (!intersects && at_end) {
         break;
       }
+
     }
 
 
