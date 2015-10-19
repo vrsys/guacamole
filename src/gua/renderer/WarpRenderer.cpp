@@ -173,7 +173,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   ctx.render_context->set_frame_buffer(fbo_);
   gbuffer->set_viewport(ctx);
   ctx.render_context->clear_color_buffers(
-      fbo_, scm::math::vec4f(1,1,1,0));
+      fbo_, scm::math::vec4f(0,0,0,0));
   ctx.render_context->clear_depth_stencil_buffer(fbo_);
 
   if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {

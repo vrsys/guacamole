@@ -345,7 +345,11 @@ void main() {
     const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
     const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
 
+    // gua_out_color = vec3(get_min_max_depth(ivec2(gua_quad_coords*gua_resolution)/2, 1).x);
+    // return;
+
     int sample_count = 0;
+    int abuffer_sample_count = 0;
     int perform_ray_casting = 1;
 
     vec3 s, e;
@@ -403,10 +407,11 @@ void main() {
       if (intersects && current_level == 0) {
         // check abuffer
         uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(cell_origin.y) + int(cell_origin.x)]);
+        ++abuffer_sample_count;
         while (frag.x != 0) {
 
           float z = unpack_depth24(frag.y);
-          const float thickness = 0.00005;
+          const float thickness = 0.0005;
           if (last_depth < z-thickness && d_range.y > z && d_range.x <= z+thickness) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
@@ -429,8 +434,11 @@ void main() {
         // draw debug hierachy
         if (current_level == 0 && intersects) {
           abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
+          // color += vec4(1, 0, 0, 0);
         }
-        abuf_mix_frag(vec4(heat(1-float(current_level) / max_level), 0.03), color);
+        float intensity = 1-pow(float(current_level) / max_level, 1);
+          // color += vec4(heat(1-intensity)*0.05, 0);
+        abuf_mix_frag(vec4(heat(intensity), 0.02), color);
       #endif
 
 
@@ -453,8 +461,8 @@ void main() {
 
     #if @debug_sample_count@ == 1
       // draw debug sample count
-      color = mix(color, vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.8);
-      // gua_out_color = heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS);
+      color = mix(color, vec4(heat(float((abuffer_sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.9);
+      // color = mix(color, vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.9);
     #endif
 
     abuf_mix_frag(background_color, color);

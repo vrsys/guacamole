@@ -108,7 +108,7 @@ void WarpGridRenderer::render(Pipeline& pipe, PipelinePassDescription const& des
 
     program_->use(ctx);
 
-    ctx.render_context->set_blend_state(blend_state_);
+    // ctx.render_context->set_blend_state(blend_state_);
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
     ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
     ctx.render_context->apply();

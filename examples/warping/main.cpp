@@ -200,15 +200,15 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::SUN);
   light->data.set_brightness(50.f);
   light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
-  light->data.set_shadow_cascaded_splits({0.1f, 1.5f, 15.f});
+  light->data.set_shadow_cascaded_splits({0.1f, 1.5, 5.f, 10.f});
   light->data.set_shadow_near_clipping_in_sun_direction(100.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(100.0f);
   light->data.set_max_shadow_dist(30.0f);
-  light->data.set_shadow_offset(0.001f);
+  light->data.set_shadow_offset(0.0004f);
   light->data.set_enable_shadows(SHADOWS);
-  light->data.set_shadow_map_size(1024);
+  light->data.set_shadow_map_size(512);
   light->rotate(-35, 1, 0, 0);
-  light->rotate(-150, 0, 1, 0);
+  light->rotate(-100, 0, 1, 0);
 
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
@@ -248,9 +248,9 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  //scene_root->scale(3);
-  //scene_root->rotate(-90, 1, 0, 0);
-  //add_oilrig(0, 0, 1, "/transform/one_oilrig");
+  scene_root->scale(3);
+  scene_root->rotate(-90, 1, 0, 0);
+  add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
   // auto tuscany(loader.create_geometry_from_file("tuscany", opt_prefix + "3d_models/NewTuscany/tuscany_optimized.obj",
   //     gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(teapot);
-  scene_root->add_child(plane);
+  // scene_root->add_child(plane);
 
   // car --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
@@ -358,20 +358,28 @@ int main(int argc, char** argv) {
 
   // spheres -------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
-  auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
-  mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
-              .set_show_back_faces(true);
-  auto sphere(loader.create_geometry_from_file("sphere", "data/objects/glasses.obj", mat_glasses,
+  auto sphere(loader.create_geometry_from_file("sphere", "data/objects/sphere.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
-  std::dynamic_pointer_cast<gua::node::TriMeshNode>(sphere->get_children()[0])->set_material(mat_glasses);
   scene_root->add_child(sphere);
-  scene_root->scale(10);
-  scene_root->rotate(180, 0, 1, 0);
+  scene_root->add_child(plane);
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
+  auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
+  mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
+              .set_show_back_faces(true);
+  auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glasses.dae", mat_glasses,
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
+  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
+  scene_root->add_child(glasses);
+  scene_root->scale(10);
+  scene_root->rotate(180, 0, 1, 0);
+
   // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
   //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
   //   gua::TriMeshLoader::NORMALIZE_SCALE);
@@ -584,7 +592,7 @@ int main(int argc, char** argv) {
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
     normal_screen->data.set_size(gua::math::vec2(3, 2));
-    normal_screen->translate(0, 0, -1.7);
+    normal_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       normal_screen->translate(0, 1.5, 0);
       normal_cam->translate(0, 1.5, 0);
@@ -599,11 +607,11 @@ int main(int argc, char** argv) {
   normal_cam->config.set_far_clip(350.f);
   normal_cam->config.set_near_clip(0.1f);
 
-  auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
-  fill_light->data.set_type(gua::node::LightNode::Type::SUN);
-  fill_light->data.set_brightness(1.f);
-  fill_light->data.set_color(gua::utils::Color3f(0.5f, 1.0f, 2.f));
-  fill_light->rotate(95, 1, 0.5, 0);
+  // auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
+  // fill_light->data.set_type(gua::node::LightNode::Type::SUN);
+  // fill_light->data.set_brightness(1.f);
+  // fill_light->data.set_color(gua::utils::Color3f(0.5f, 1.0f, 2.f));
+  // fill_light->rotate(95, 1, 0.5, 0);
 
   // warping camera ------------------------------------------------------------
   #if OCULUS1 || OCULUS2
@@ -630,7 +638,7 @@ int main(int argc, char** argv) {
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
     warp_screen->data.set_size(gua::math::vec2(3, 2));
-    warp_screen->translate(0, 0, -1.7);
+    warp_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       warp_screen->translate(0, 1.5, 0);
       warp_cam->translate(0, 1.5, 0);
@@ -658,7 +666,7 @@ int main(int argc, char** argv) {
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR).
             background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
             environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
-            background_color(gua::utils::Color3f(1, 1, 1)).
+            background_color(gua::utils::Color3f(0,0,0)).
             environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
             ssao_enable(SSAO).

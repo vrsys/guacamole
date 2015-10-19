@@ -28,7 +28,7 @@ void Navigator::update() {
     frame_time_ = timer_.get_elapsed();
 
     const float rotation_speed = 0.6f;
-    const float motion_speed = 0.1f;
+    const float motion_speed = 1.f;
 
     auto y_rot(scm::math::mat4f::identity());
     auto x_rot(scm::math::mat4f::identity());
@@ -43,22 +43,22 @@ void Navigator::update() {
     auto rotation = y_rot * x_rot;
 
     if (w_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, -motion_speed))
+      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, (float)(-motion_speed*frame_time_)))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (s_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, motion_speed))
+      current_location_ += (rotation * scm::math::make_translation(0.f, 0.f, (float)(motion_speed*frame_time_)))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (a_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(-motion_speed, 0.f, 0.f))
+      current_location_ += (rotation * scm::math::make_translation((float)(-motion_speed*frame_time_), 0.f, 0.f))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 
     if (d_pressed_) {
-      current_location_ += (rotation * scm::math::make_translation(motion_speed, 0.f, 0.f))
+      current_location_ += (rotation * scm::math::make_translation((float)(motion_speed*frame_time_), 0.f, 0.f))
                            * scm::math::vec4f(0.f, 0.f, 0.f, 1.f);
     }
 

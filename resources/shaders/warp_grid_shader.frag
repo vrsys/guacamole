@@ -8,6 +8,7 @@ flat in uint cellsize;
 layout(location=0) out vec3 gua_out_color;
 
 void main() {
-  float intensity = log2(cellsize) / 7.0;
-  gua_out_color = 0.5*(vec3(0.5, 0, 0) * (1-intensity) + vec3(0.1, 1, 0.1) * intensity);
+  // float intensity = log2(cellsize) / 7.0;
+  // gua_out_color = 0.5*(vec3(0.5, 0, 0) * (1-intensity) + vec3(0.1, 1, 0.1) * intensity);
+  gua_out_color = vec3(0.4, 0, 0);
 }
