@@ -698,10 +698,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::string const& name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
-    if (ctx.framecount < 50) {
-      time_queries_.gpu_queries.clear();
-      return;
-    }
+    // if (ctx.framecount < 50) {
+    //   time_queries_.gpu_queries.clear();
+    //   return;
+    // }
 
     auto existing_query = time_queries_.gpu_queries.find(name);
 
@@ -758,10 +758,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::string const& name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
 
-    if (ctx.framecount < 50) {
-      primitive_queries_.gpu_queries.clear();
-      return;
-    }
+    // if (ctx.framecount < 50) {
+    //   primitive_queries_.gpu_queries.clear();
+    //   return;
+    // }
 
     auto existing_query = primitive_queries_.gpu_queries.find(name);
 
@@ -893,7 +893,7 @@ void Pipeline::clear_frame_cache() {
         //   std::cout << t.first << " : " << t.second << " ms" << std::endl;
         // }
         // std::cout << std::endl;
-        context_.time_query_results.clear();
+        // context_.time_query_results.clear();
       }
   #endif
 
@@ -905,7 +905,7 @@ void Pipeline::clear_frame_cache() {
         //   std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
         // }
         // std::cout << std::endl;
-        context_.primitive_query_results.clear();
+        // context_.primitive_query_results.clear();
       }
   #endif
 

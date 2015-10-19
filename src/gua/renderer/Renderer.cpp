@@ -73,7 +73,7 @@ void display_loading_screen(gua::WindowBase& window) {
 void render_scene(gua::node::SerializedCameraNode     const& serialized_cam,
                   std::vector<gua::SceneGraph const*> const& scene_graphs,
                   gua::FpsCounter& fpsc) {
-    
+
     auto window_name(serialized_cam.config.get_output_window_name());
     if (window_name != "") {
         auto window = gua::WindowDatabase::instance()->lookup(window_name);

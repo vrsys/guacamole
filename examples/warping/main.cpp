@@ -76,6 +76,10 @@ bool stereo                 = false;
 bool warp_perspective       = false;
 bool vsync                  = false;
 
+bool test_resolution_series = false;
+bool test_positional_warp_series = false;
+bool test_rotational_warp_series = false;
+
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
 
@@ -138,8 +142,10 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
 
 int main(int argc, char** argv) {
 
-    // initialize guacamole
-    gua::init(argc, argv);
+  // initialize guacamole
+  gua::init(argc, argv);
+
+  gua::Logger::enable_debug = false;
 
   #if OCULUS1
     auto window = std::make_shared<gua::OculusWindow>();
@@ -170,7 +176,7 @@ int main(int argc, char** argv) {
     auto resolution = gua::math::vec2ui(2560, 1440);
   #else
     bool fullscreen = (argc == 2);
-    auto resolution = gua::math::vec2ui(1600, 1000);
+    auto resolution = gua::math::vec2ui(1600, 900);
   #endif
 
   // add mouse interaction
@@ -591,7 +597,7 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(3, 2));
+    normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
     normal_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       normal_screen->translate(0, 1.5, 0);
@@ -637,7 +643,7 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(3, 2));
+    warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
     warp_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       warp_screen->translate(0, 1.5, 0);
@@ -671,7 +677,7 @@ int main(int argc, char** argv) {
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
             ssao_enable(SSAO).
             tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
-            tone_mapping_exposure(2.f).
+            tone_mapping_exposure(1.5f).
             horizon_fade(0.2f).
             compositing_enable(false).
             ssao_intensity(3.f).
@@ -829,7 +835,7 @@ int main(int argc, char** argv) {
 
     auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
     gui_quad->data.texture() = "gui";
-    gui_quad->data.size() = gua::math::vec2ui(330, 790);
+    gui_quad->data.size() = gua::math::vec2ui(330, 830);
     graph.add_node("/", gui_quad);
 
     auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
@@ -860,9 +866,21 @@ int main(int argc, char** argv) {
       return true;
     });
 
+    auto toggle_gui = [&](){
+      if (gui_quad->get_tags().has_tag("invisible")) {
+        gui_quad->get_tags().remove_tag("invisible");
+        stats_quad->get_tags().remove_tag("invisible");
+        mouse_quad->get_tags().remove_tag("invisible");
+      } else {
+        gui_quad->get_tags().add_tag("invisible");
+        stats_quad->get_tags().add_tag("invisible");
+        mouse_quad->get_tags().add_tag("invisible");
+      }
+    };
+
     // right side gui ----------------------------------------------------------
     auto gui = std::make_shared<gua::GuiResource>();
-    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 790));
+    gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 830));
 
     gui->on_loaded.connect([&]() {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
@@ -887,6 +905,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
+      gui->add_javascript_callback("start_resolution_series");
+      gui->add_javascript_callback("start_positional_warp_series");
+      gui->add_javascript_callback("start_rotational_warp_series");
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
@@ -959,7 +980,16 @@ int main(int argc, char** argv) {
     });
 
     gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
-      if (callback == "set_depth_layers") {
+      if (callback == "start_resolution_series") {
+        toggle_gui();
+        test_resolution_series = true;
+      } else if (callback == "start_positional_warp_series") {
+        toggle_gui();
+        test_positional_warp_series = true;
+      } else if (callback == "start_rotational_warp_series") {
+        toggle_gui();
+        test_rotational_warp_series = true;
+      } else if (callback == "set_depth_layers") {
         std::stringstream str(params[0]);
         int depth_layers;
         str >> depth_layers;
@@ -1230,13 +1260,7 @@ int main(int argc, char** argv) {
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
       if (key == 72 && action == 1) {
         // hide gui
-        if (gui_quad->get_tags().has_tag("invisible")) {
-          gui_quad->get_tags().remove_tag("invisible");
-          stats_quad->get_tags().remove_tag("invisible");
-        } else {
-          gui_quad->get_tags().add_tag("invisible");
-          stats_quad->get_tags().add_tag("invisible");
-        }
+        toggle_gui();
       }
     #else
       if (action == 1) {
@@ -1362,49 +1386,273 @@ int main(int argc, char** argv) {
   // render setup --------------------------------------------------------------
   gua::Renderer renderer;
 
-  // application loop
+  // stat display update counter
   int ctr=0;
 
+  // testcounter counter
+  int test_frame_counter = -1;
+  int test_counter = -1;
+  gua::math::vec2ui orig_resolution;
+
+  auto round = [](gua::math::vec2 input){
+    return gua::math::vec2ui((unsigned)(input.x/32)*32, (unsigned)(input.y/32)*32);
+  };
+
+  std::vector<gua::math::vec2ui> test_resolutions = {round(gua::math::vec2(1920,1080)*0.7745966692),
+                                                     round(gua::math::vec2(1920,1080)*0.894427191),
+                                                     round(gua::math::vec2(1920,1080)*1),
+                                                     round(gua::math::vec2(1920,1080)*1.095445115),
+                                                     round(gua::math::vec2(1920,1080)*1.1832159566),
+                                                     round(gua::math::vec2(1920,1080)*1.2649110641),
+                                                     round(gua::math::vec2(1920,1080)*1.3416407865),
+                                                     round(gua::math::vec2(1920,1080)*1.4142135624),
+                                                     round(gua::math::vec2(1920,1080)*1.4832396974),
+                                                     round(gua::math::vec2(1920,1080)*1.5491933385),
+                                                     round(gua::math::vec2(1920,1080)*1.6124515497),
+                                                     round(gua::math::vec2(1920,1080)*1.6733200531),
+                                                     round(gua::math::vec2(1920,1080)*1.7320508076),
+                                                     round(gua::math::vec2(1920,1080)*1.788854382),
+                                                     round(gua::math::vec2(1920,1080)*1.8439088915),
+                                                     round(gua::math::vec2(1920,1080)*1.8973665961),
+                                                     round(gua::math::vec2(1920,1080)*1.949358869),
+                                                     round(gua::math::vec2(1920,1080)*2)};
+
+  std::vector<double> test_offsets = {0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5};
+  std::vector<double> test_rotations = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
+
+  double test_trimesh_time(0);
+  double test_gbuffer_warp_time(0);
+  double test_abuffer_warp_time(0);
+  double test_gbuffer_grid_time(0);
+  double test_abuffer_grid_time(0);
+  int test_gbuffer_primitives(0);
+  int test_abuffer_primitives(0);
+
+  // application loop
   while(true) {
+
+    // test --------------------------------------------------------------------
+    gua::Timer test_timer;
+
+    // resolution --------------------------------------------------------------
+    if (test_resolution_series) {
+
+      if (test_frame_counter < 0) {
+
+        if (test_counter < (int)test_resolutions.size()-1) {
+          if (test_counter == -1) {
+            orig_resolution = normal_cam->config.get_resolution();
+          }
+          ++test_counter;
+          test_frame_counter = 20;
+          test_trimesh_time = 0;
+          test_gbuffer_warp_time = 0;
+          test_abuffer_warp_time = 0;
+          test_gbuffer_grid_time = 0;
+          test_abuffer_grid_time = 0;
+          test_gbuffer_primitives = 0;
+          test_abuffer_primitives = 0;
+          normal_cam->config.set_resolution(test_resolutions[test_counter]);
+          warp_cam->config.set_resolution(test_resolutions[test_counter]);
+        } else {
+          test_counter = -1;
+          test_resolution_series = false;
+          normal_cam->config.set_resolution(orig_resolution);
+          warp_cam->config.set_resolution(orig_resolution);
+          toggle_gui();
+
+        }
+
+      }
+      if (test_frame_counter == 10) {
+        test_timer.reset();
+      }
+      if (test_frame_counter < 10) {
+        // std::cout << test_frame_counter << test_timer.get_elapsed()/(10-test_frame_counter) << std::endl;
+        for (auto const& result: window->get_context()->time_query_results) {
+          if (result.first.find("GPU") != std::string::npos) {
+            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
+            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+          }
+        }
+
+        for (auto const& result: window->get_context()->primitive_query_results) {
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
+        }
+      }
+      if (test_frame_counter == 0) {
+        std::cout << test_resolutions[test_counter]
+                  << ", " << test_resolutions[test_counter].x*test_resolutions[test_counter].y
+                  << ", " << test_timer.get_elapsed()/10
+                  << ", " << test_gbuffer_warp_time/10
+                  << ", " << test_gbuffer_primitives/10
+                  << std::endl;
+      }
+      --test_frame_counter;
+    }
+
+
+    // warp offset -------------------------------------------------------------
+    else if (test_positional_warp_series) {
+
+      if (test_frame_counter < 0) {
+
+        if (test_counter < (int)test_offsets.size()-1) {
+          ++test_counter;
+          test_frame_counter = 60;
+          test_trimesh_time = 0;
+          test_gbuffer_warp_time = 0;
+          test_abuffer_warp_time = 0;
+          test_gbuffer_grid_time = 0;
+          test_abuffer_grid_time = 0;
+          test_gbuffer_primitives = 0;
+          test_abuffer_primitives = 0;
+          warp_navigation->set_transform(scm::math::make_translation(0.0, 0.0, test_offsets[test_counter]));
+        } else {
+          test_counter = -1;
+          test_positional_warp_series = false;
+          toggle_gui();
+        }
+
+      }
+      if (test_frame_counter == 50) {
+        test_timer.reset();
+      }
+      if (test_frame_counter < 50) {
+        // std::cout << test_frame_counter << test_timer.get_elapsed()/(50-test_frame_counter) << std::endl;
+        for (auto const& result: window->get_context()->time_query_results) {
+          if (result.first.find("GPU") != std::string::npos) {
+            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
+            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+          }
+        }
+
+        for (auto const& result: window->get_context()->primitive_query_results) {
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
+        }
+      }
+      if (test_frame_counter == 0) {
+        std::cout << test_offsets[test_counter]
+                  << ", " << test_timer.get_elapsed()/50
+                  << ", " << test_gbuffer_grid_time/50
+                  << ", " << test_gbuffer_warp_time/50
+                  << ", " << test_abuffer_grid_time/50
+                  << ", " << test_abuffer_warp_time/50
+                  << std::endl;
+      }
+      --test_frame_counter;
+    }
+
+    // warp rotations ----------------------------------------------------------
+    else if (test_rotational_warp_series) {
+
+      if (test_frame_counter < 0) {
+
+        if (test_counter < (int)test_rotations.size()-1) {
+          ++test_counter;
+          test_frame_counter = 60;
+          test_trimesh_time = 0;
+          test_gbuffer_warp_time = 0;
+          test_abuffer_warp_time = 0;
+          test_gbuffer_grid_time = 0;
+          test_abuffer_grid_time = 0;
+          test_gbuffer_primitives = 0;
+          test_abuffer_primitives = 0;
+          warp_navigation->set_transform(scm::math::make_rotation(test_rotations[test_counter], 0.0, 1.0, 0.0));
+        } else {
+          test_counter = -1;
+          test_rotational_warp_series = false;
+          toggle_gui();
+        }
+
+      }
+      if (test_frame_counter == 50) {
+        test_timer.reset();
+      }
+      if (test_frame_counter < 50) {
+        // std::cout << test_frame_counter << test_timer.get_elapsed()/(50-test_frame_counter) << std::endl;
+        for (auto const& result: window->get_context()->time_query_results) {
+          if (result.first.find("GPU") != std::string::npos) {
+            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
+            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
+            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+          }
+        }
+
+        for (auto const& result: window->get_context()->primitive_query_results) {
+          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
+          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
+        }
+      }
+      if (test_frame_counter == 0) {
+        std::cout << test_rotations[test_counter]
+                  << ", " << test_timer.get_elapsed()/50
+                  << ", " << test_gbuffer_grid_time/50
+                  << ", " << test_gbuffer_warp_time/50
+                  << ", " << test_abuffer_grid_time/50
+                  << ", " << test_abuffer_warp_time/50
+                  << std::endl;
+      }
+      --test_frame_counter;
+    }
+
+
+    else {
+
+      #if POWER_WALL
+        normal_cam->set_transform(current_tracking_matrix);
+      #elif OCULUS1
+        normal_cam->set_transform(get_oculus_transform(oculus_sensor));
+      #elif OCULUS2
+        normal_cam->set_transform(window->get_oculus_sensor_orientation());
+      #endif
+
+      nav.update();
+      warp_nav.update();
+
+      #if POWER_WALL
+        if (warp_perspective && !warping) {
+          navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
+        } else {
+          navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
+        }
+        warp_navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
+      #else
+        if (warp_perspective && !warping) {
+          navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));
+        } else {
+          navigation->set_transform(gua::math::mat4(nav.get_transform()));
+        }
+        warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
+      #endif
+    }
+
 
     #if GUI_SUPPORT
       gua::Interface::instance()->update();
     #endif
 
-    #if POWER_WALL
-      normal_cam->set_transform(current_tracking_matrix);
-    #elif OCULUS1
-      normal_cam->set_transform(get_oculus_transform(oculus_sensor));
-    #elif OCULUS2
-      normal_cam->set_transform(window->get_oculus_sensor_orientation());
-    #endif
-
-    nav.update();
-    warp_nav.update();
-
-    #if POWER_WALL
-      if (warp_perspective && !warping) {
-        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-      } else {
-        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-      }
-      warp_navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-    #else
-      if (warp_perspective && !warping) {
-        navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));
-      } else {
-        navigation->set_transform(gua::math::mat4(nav.get_transform()));
-      }
-      warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
-    #endif
 
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
     transform->set_transform(modelmatrix);
 
-      if (ctr++ % 100 == 0) {
-        #if GUI_SUPPORT
+    if (ctr++ % 10 == 0) {
+      #if GUI_SUPPORT
         double trimesh_time(0);
         double gbuffer_warp_time(0);
         double abuffer_warp_time(0);
@@ -1437,8 +1685,8 @@ int main(int argc, char** argv) {
 
       #else
         std::cout << window->get_rendering_fps() << std::endl;
-        #endif
-        }
+      #endif
+    }
 
     window->process_events();
     if (window->should_close()) {
