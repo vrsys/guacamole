@@ -31,7 +31,7 @@ layout(location=0) out vec3 gua_out_color;
 
 #define MAX_RAY_STEPS @warping_max_layers@
 
-uniform float gua_tone_mapping_exposure = 2.0;
+uniform float gua_tone_mapping_exposure = 1.5;
 
 @include "common/gua_abuffer.glsl"
 @include "common/gua_tone_mapping.glsl"
@@ -67,12 +67,6 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
   s /= s.w;
   e /= e.w;
 
-  // move end into original frustum
-  // if (s.z > 1) {
-  //   s = mix(s, e, (1 - s.z) / (e.z - s.z));
-  // }
-
-
   // viewport clipping
   if (s.x > 1) {
     s.yz = mix(s.yz, e.yz, (1 - s.x) / (e.x - s.x));
@@ -93,7 +87,6 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
     s.xz = mix(s.xz, e.xz, (-1 - s.y) / (e.y - s.y));
     s.y = -1;
   }
-
 
   if (e.x > 1) {
     e.yz = mix(e.yz, s.yz, (1 - e.x) / (s.x - e.x));
@@ -120,7 +113,7 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
 
   if ((start.z < crop_depth.x && end.z < crop_depth.x) || (start.z > crop_depth.y && end.z > crop_depth.y) ||
       any(lessThan(start.xy, vec2(0))) || any(greaterThan(start.xy, vec2(1))) || crop_depth.x > crop_depth.y) {
-    // invalid ray if there is no transparent surface visible at all
+    // invalid ray if it does not intersect with the abuffer contents at all
     return false;
   }
 
@@ -245,6 +238,9 @@ void draw_debug_views() {
             current_level = min(current_level+1, max_level);
           }
         } else {
+          if (d_range.x < min_max_depth.x) {
+            pos = pos + dir.xy*(min_max_depth.x - d_range.x) / dir.z;
+          }
           --current_level;
         }
 
@@ -337,9 +333,6 @@ void main() {
     background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #endif
 
-
-
-
   #if WARP_MODE == WARP_MODE_RAYCASTING
 
     const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
@@ -401,7 +394,7 @@ void main() {
         d_range.y = e.z;
       }
 
-      const bool intersects = !(d_range.x > min_max_depth.y || min_max_depth.x > d_range.y);
+      const bool intersects = d_range.x < min_max_depth.y && min_max_depth.x < d_range.y;
 
 
       if (intersects && current_level == 0) {
@@ -409,7 +402,6 @@ void main() {
         uvec2 frag = unpackUint2x32(frag_list[gua_resolution.x * int(cell_origin.y) + int(cell_origin.x)]);
         ++abuffer_sample_count;
         while (frag.x != 0) {
-
           float z = unpack_depth24(frag.y);
           const float thickness = 0.0005;
           if (last_depth < z-thickness && d_range.y > z && d_range.x <= z+thickness) {
@@ -419,15 +411,13 @@ void main() {
             abuf_mix_frag(vec4(frag_color, frag_alpha), color);
             last_depth = z;
 
-            // if (color.a > @abuf_blending_termination_threshold@) {
-            //   sample_count = MAX_RAY_STEPS+1;
-            //   break;
-            // }
+            if (color.a > @abuf_blending_termination_threshold@) {
+              break;
+            }
           }
 
           frag = unpackUint2x32(frag_list[frag.x]);
         }
-
       }
 
       #if @debug_bounding_volumes@ == 1
@@ -442,20 +432,31 @@ void main() {
       #endif
 
 
-      if (!intersects || current_level == 0) {
+      if (intersects) {
+
+        if (current_level == 0) {
+          pos = new_pos;
+        } else {
+
+          // move pos to cell boundary if entering from top
+          if (d_range.x < min_max_depth.x) {
+            pos = pos + dir.xy*(min_max_depth.x - d_range.x) / dir.z;
+          }
+
+          --current_level;
+        }
+      } else {
         pos = new_pos;
 
         if (any(equal(mod(pos / cell_size, 2), vec2(0)))) {
           current_level = min(current_level+1, max_level);
         }
-      } else {
-        --current_level;
       }
-
 
       if (!intersects && at_end) {
         break;
       }
+
     }
 
 
@@ -467,7 +468,6 @@ void main() {
 
     abuf_mix_frag(background_color, color);
     gua_out_color = toneMap(color.rgb);
-
 
     #if @debug_sample_ray@ == 1
       draw_debug_views();
