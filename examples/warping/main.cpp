@@ -31,9 +31,9 @@
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
-#define LOAD_MOUNTAINS  0
+#define LOAD_MOUNTAINS  1
 #define LOAD_ENGINE     0
-#define LOAD_SPONZA     0
+#define LOAD_SPONZA     1
 #define LOAD_DRAGON     0
 
 #include <functional>
@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
   light->data.set_shadow_offset(0.0004f);
   light->data.set_enable_shadows(SHADOWS);
   light->data.set_shadow_map_size(512);
-  light->rotate(-35, 1, 0, 0);
+  light->rotate(-65, 1, 0, 0);
   light->rotate(-100, 0, 1, 0);
 
   // floor
@@ -901,6 +901,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_sample_ray", [&](){ return std::to_string(warp_pass->debug_sample_ray());});
       gui->add_javascript_getter("get_debug_interpolation_borders", [&](){ return std::to_string(warp_pass->debug_interpolation_borders());});
       gui->add_javascript_getter("get_debug_rubber_bands", [&](){ return std::to_string(warp_pass->debug_rubber_bands());});
+      gui->add_javascript_getter("get_debug_epipol", [&](){ return std::to_string(warp_pass->debug_epipol());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
@@ -933,6 +934,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_inpaint");
+      gui->add_javascript_callback("set_hole_filling_type_epipolar_search");
+      gui->add_javascript_callback("set_hole_filling_type_epipolar_mirror");
       gui->add_javascript_callback("set_hole_filling_type_rubber_band_1");
       gui->add_javascript_callback("set_hole_filling_type_rubber_band_2");
       gui->add_javascript_callback("set_hole_filling_type_rubber_band_3");
@@ -965,6 +968,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_debug_sample_ray");
       gui->add_javascript_callback("set_debug_interpolation_borders");
       gui->add_javascript_callback("set_debug_rubber_bands");
+      gui->add_javascript_callback("set_debug_epipol");
       gui->add_javascript_callback("set_pixel_size");
       gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
@@ -1085,6 +1089,11 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_rubber_bands(checked);
+      } else if (callback == "set_debug_epipol") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        warp_pass->debug_epipol(checked);
       } else if (callback == "set_adaptive_abuffer") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1143,6 +1152,8 @@ int main(int argc, char** argv) {
 
       } else if (callback == "set_hole_filling_type_none"
                | callback == "set_hole_filling_type_inpaint"
+               | callback == "set_hole_filling_type_epipolar_search"
+               | callback == "set_hole_filling_type_epipolar_mirror"
                | callback == "set_hole_filling_type_rubber_band_1"
                | callback == "set_hole_filling_type_rubber_band_2"
                | callback == "set_hole_filling_type_rubber_band_3") {
@@ -1155,6 +1166,10 @@ int main(int argc, char** argv) {
 
           if (callback == "set_hole_filling_type_inpaint")
             mode = gua::WarpPassDescription::HOLE_FILLING_INPAINT;
+          if (callback == "set_hole_filling_type_epipolar_search")
+            mode = gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH;
+          if (callback == "set_hole_filling_type_epipolar_mirror")
+            mode = gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR;
           if (callback == "set_hole_filling_type_rubber_band_1")
             mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_1;
           if (callback == "set_hole_filling_type_rubber_band_2")

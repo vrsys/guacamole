@@ -45,8 +45,9 @@ WarpPassDescription::WarpPassDescription()
   , debug_sample_ray_(false)
   , debug_interpolation_borders_(false)
   , debug_rubber_bands_(false)
+  , debug_epipol_(false)
   , max_layers_(50)
-  , pixel_size_(0.0f)
+  , pixel_size_(0.2f)
   , rubber_band_threshold_(0.01f)
   , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
@@ -216,6 +217,20 @@ bool WarpPassDescription::debug_rubber_bands() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::debug_epipol(bool val) {
+  debug_epipol_ = val;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool WarpPassDescription::debug_epipol() const {
+  return debug_epipol_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::pixel_size(float val) {
   pixel_size_ = val;
   touch();
@@ -313,6 +328,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["debug_bounding_volumes"] = debug_bounding_volumes_ ? "1" : "0";
   substitution_map["debug_interpolation_borders"] = debug_interpolation_borders_ ? "1" : "0";
   substitution_map["debug_rubber_bands"] = debug_rubber_bands_ ? "1" : "0";
+  substitution_map["debug_epipol"] = debug_epipol_ ? "1" : "0";
   substitution_map["debug_sample_ray"] = debug_sample_ray_ ? "1" : "0";
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
   substitution_map["rubber_band_threshold"] = gua::string_utils::to_string(rubber_band_threshold_);

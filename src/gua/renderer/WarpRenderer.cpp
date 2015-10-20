@@ -219,7 +219,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_primitive_query(ctx, pri_query_name_b);
 
   warp_abuffer_program_->use(ctx);
-  warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", inv_warp_matrix);
+  warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
+  warp_abuffer_program_->apply_uniform(ctx, "inv_warp_matrix", inv_warp_matrix);
 
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
 

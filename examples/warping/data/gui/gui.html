@@ -237,6 +237,7 @@
         init_checkbox("#debug_sample_ray", "debug_sample_ray");
         init_checkbox("#debug_interpolation_borders", "debug_interpolation_borders");
         init_checkbox("#debug_rubber_bands", "debug_rubber_bands");
+        init_checkbox("#debug_epipol", "debug_epipol");
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
@@ -252,6 +253,8 @@
 
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
         init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
+        init_radio("#hole_filling_type_epipolar_search", "hole_filling_type_epipolar_search");
+        init_radio("#hole_filling_type_epipolar_mirror", "hole_filling_type_epipolar_mirror");
         init_radio("#hole_filling_type_rubber_band_1", "hole_filling_type_rubber_band_1");
         init_radio("#hole_filling_type_rubber_band_2", "hole_filling_type_rubber_band_2");
         init_radio("#hole_filling_type_rubber_band_3", "hole_filling_type_rubber_band_3");
@@ -617,19 +620,10 @@
 
           <div class="row">
             <div class="col-xs-5">
-              Rubber Thr.:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider rubber_band_threshold" data-slider-tooltip="hide" data-slider-id="rubber_band_threshold" type="text" data-slider-min="0" data-slider-max="0.02" data-slider-step="0.001" handle="custom"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-5">
               Pixel Size:
             </div>
             <div class="col-xs-7">
-              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="0" data-slider-max="5.0" data-slider-step="0.1" handle="custom"/>
+              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="0" data-slider-max="2.0" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 
@@ -744,7 +738,7 @@
 
           <div class="row">
             <div class="col-xs-5">
-              Mode:
+              Disable:
             </div>
             <div class="col-xs-7">
               <div class="radio">
@@ -753,30 +747,64 @@
                   <span>None</span>
                 </label>
               </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Inpainting:
+            </div>
+            <div class="col-xs-7">
               <div class="radio">
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_inpaint" value="" checked>
-                  <span>Inpaint</span>
+                  <span>Area Search</span>
+                </label>
+              </div>
+               <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_search" value="">
+                  <span>Epipolar Search</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
+                  <span>Epipolar Mirror</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Rubber Sheets:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_1" value="">
-                  <span>Rubber Band 1</span>
+                  <span>Simple</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_2" value="">
-                  <span>Rubber Band 2</span>
+                  <span>Zero Depth</span>
                 </label>
               </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_3" value="">
-                  <span>Rubber Band 3</span>
-                </label>
-              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-5">
+              Rubber Thr.:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider rubber_band_threshold" data-slider-tooltip="hide" data-slider-id="rubber_band_threshold" type="text" data-slider-min="0" data-slider-max="0.02" data-slider-step="0.001" handle="custom"/>
             </div>
           </div>
 
@@ -881,12 +909,14 @@
                   <span>Rubber Bands</span>
                 </label>
               </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_epipol" type="checkbox" value="">
+                  <span>Epipolar Geometry</span>
+                </label>
+              </div>
             </div>
           </div>
-
-          <hr />
-
-          <a href="http://www.google.com">Google</a>
 
         </div>
       </div>

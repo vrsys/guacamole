@@ -38,6 +38,7 @@ uniform float gua_tone_mapping_exposure = 1.5;
 
 in vec2 gua_quad_coords;
 
+uniform mat4 inv_warp_matrix;
 uniform mat4 warp_matrix;
 uniform uvec2 warped_depth_buffer;
 uniform uvec2 warped_color_buffer;
@@ -50,8 +51,8 @@ bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_
   vec4 s = vec4(coords, -1, 1);
   vec4 e = vec4(coords, depth*2-1, 1);
 
-  s = warp_matrix * s;
-  e = warp_matrix * e;
+  s = inv_warp_matrix * s;
+  e = inv_warp_matrix * e;
 
   // remove flip version at the back
   // if (e.w < 0) {
@@ -275,8 +276,7 @@ void draw_debug_views() {
 
 }
 
-vec4 find_color() {
-
+vec4 hole_filling_inpaint() {
   float max_depth = 0;
   vec2  offset;
 
@@ -284,35 +284,73 @@ vec4 find_color() {
 
     float radius = i*i;
 
-    // vec2 offsets[] = {vec2(-radius*0.9, radius*0.9),  vec2(0, radius),  vec2(radius*0.9, radius*0.9),
-    //                   vec2(-radius, 0),               vec2(radius, 0),
-    //                   vec2(-radius*0.9, -radius*0.9), vec2(0, -radius), vec2(radius*0.9, -radius*0.9)};
-
-    vec2 offsets[] = {          vec2(0, radius*0.2),
+    vec2 offsets[] = {          vec2(0, radius),
                         vec2(-radius, 0),   vec2(radius, 0),
-                                vec2(0, -radius*0.2)};
-
+                                vec2(0, -radius)};
 
     for (int i=0; i<offsets.length(); ++i) {
       float sample_depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords + offsets[i]/gua_resolution).x;
-      if (sample_depth > max_depth+0.000001 && sample_depth < 1.0) {
+      if (sample_depth > max_depth+0.01 && sample_depth < 1.0) {
         offset = offsets[i];
         max_depth = sample_depth;
       }
     }
-
   }
   if (max_depth > 0) {
     return texture2D(sampler2D(warped_color_buffer), gua_quad_coords + offset/gua_resolution);
-
-    // vec4 p = vec4((gua_quad_coords + offset/gua_resolution)*2-1, max_depth*2-1, 1);
-    // p = warp_matrix * p;
-    // p /= p.w;
-
-    // return texture2D(sampler2D(color_buffer), (p.xy*0.5+0.5));
   }
 
   return vec4(0, 0, 0, 1);
+}
+
+vec2 get_epipolar_direction() {
+  vec4 epipol = warp_matrix * vec4(0, 0, -1, 0);
+  vec2 epi_dir = vec2(0);
+
+  if (epipol.w < 0) {
+    epipol /= epipol.w;
+    epipol.xy = epipol.xy*0.5 + 0.5;
+    epi_dir = epipol.xy - gua_quad_coords;
+  } else {
+    epipol /= epipol.w;
+    epipol.xy = epipol.xy*0.5 + 0.5;
+    epi_dir = gua_quad_coords - epipol.xy;
+  }
+
+  return normalize(epi_dir);
+}
+
+vec4 hole_filling_epipolar_search() {
+  vec2 boundary_pos = vec2(0);
+
+  vec2 epi_dir = get_epipolar_direction();
+
+  for (int i=1; i<=50; ++i) {
+    boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
+    float sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
+
+    if (sample_depth < 1.0) break;
+  }
+
+  return texelFetch(sampler2D(warped_color_buffer), ivec2(boundary_pos*gua_resolution),0);
+}
+
+vec4 hole_filling_epipolar_mirror() {
+  vec2 boundary_pos = vec2(0);
+
+  vec2 epi_dir = get_epipolar_direction();
+
+  for (int i=1; i<=25; ++i) {
+    boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
+    float sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
+
+    if (sample_depth < 1.0) {
+      sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2((2*boundary_pos - gua_quad_coords)*gua_resolution), 0).x;
+      if (sample_depth < 1.0) break;
+    }
+  }
+
+  return texelFetch(sampler2D(warped_color_buffer), ivec2((2*boundary_pos - gua_quad_coords)*gua_resolution), 0);
 }
 
 void main() {
@@ -322,13 +360,16 @@ void main() {
 
 
   // hole filling
+  float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;
   #if HOLE_FILLING_MODE == HOLE_FILLING_MODE_INPAINT
-    float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;
-    if (depth == 1.0) {
-      background_color = find_color();
-    } else {
-      background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
-    }
+    if (depth == 1.0) background_color = hole_filling_inpaint();
+    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+  #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_SEARCH
+    if (depth == 1.0) background_color = hole_filling_epipolar_search();
+    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+  #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_MIRROR
+    if (depth == 1.0) background_color = hole_filling_epipolar_mirror();
+    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #else
     background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #endif
@@ -475,5 +516,19 @@ void main() {
 
   #else
     gua_out_color = background_color.rgb;
+  #endif
+
+  // draw epipol
+  #if @debug_epipol@
+    vec2 epi = get_epipolar_direction();
+
+    if (abs(epi.x) > abs(epi.y)) {
+      epi.xy = epi.yx;
+    }
+
+    if (mod(ceil(150.0*abs(epi.x/epi.y)), 10) == 1) {
+      gua_out_color = vec3(1, 0, 0);
+    }
+
   #endif
 }

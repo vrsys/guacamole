@@ -65,6 +65,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   enum HoleFillingMode {
     HOLE_FILLING_NONE,
     HOLE_FILLING_INPAINT,
+    HOLE_FILLING_EPIPOLAR_SEARCH,
+    HOLE_FILLING_EPIPOLAR_MIRROR,
     HOLE_FILLING_RUBBER_BAND_1,
     HOLE_FILLING_RUBBER_BAND_2,
     HOLE_FILLING_RUBBER_BAND_3
@@ -108,6 +110,9 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& debug_rubber_bands(bool val);
   bool debug_rubber_bands() const;
 
+  WarpPassDescription& debug_epipol(bool val);
+  bool debug_epipol() const;
+
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
 
@@ -145,6 +150,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   bool debug_sample_ray_;
   bool debug_interpolation_borders_;
   bool debug_rubber_bands_;
+  bool debug_epipol_;
   int max_layers_;
   float pixel_size_;
   float rubber_band_threshold_;
