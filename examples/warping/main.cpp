@@ -31,7 +31,7 @@
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
-#define LOAD_MOUNTAINS  1
+#define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
 #define LOAD_SPONZA     1
 #define LOAD_DRAGON     0
@@ -669,7 +669,7 @@ int main(int argc, char** argv) {
   auto plod_pass(std::make_shared<gua::PLODPassDescription>());
   #endif
   auto res_pass(std::make_shared<gua::ResolvePassDescription>());
-  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR).
+  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
             background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
             environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
             background_color(gua::utils::Color3f(0,0,0)).
@@ -1290,9 +1290,19 @@ int main(int argc, char** argv) {
         if (key == 56) set_scene("set_scene_engine");
         if (key == 57) set_scene("set_scene_buddha");
 
+        if (key == 72) {
+            if      (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_INPAINT) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH);
+            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR);
+            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_INPAINT);
+        }
+        if (key ==84) {
+            if (current_transparency_mode == "set_transparency_type_raycasting") current_transparency_mode = "set_transparency_type_gbuffer";
+            else if (current_transparency_mode == "set_transparency_type_gbuffer") current_transparency_mode = "set_transparency_type_abuffer";
+            else if (current_transparency_mode == "set_transparency_type_abuffer") current_transparency_mode = "set_transparency_type_raycasting";
+            update_view_mode();
+        }
         if (key == 69) {stereo = !stereo; update_view_mode();}
         if (key == 82) {warping = !warping; update_view_mode();}
-        if (key == 84) {current_transparency_mode = (current_transparency_mode == "set_transparency_type_gbuffer") ? "set_transparency_type_raycasting" : "set_transparency_type_gbuffer"; update_view_mode();}
         if (key == 89) std::swap(manipulation_navigator, manipulation_camera);
         if (key == 85) warp_nav.reset();
 
@@ -1390,12 +1400,13 @@ int main(int argc, char** argv) {
 
   #if !GUI_SUPPORT
     gua::Logger::LOG_MESSAGE << "Usage:" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Scene selection:   Press keys 1-9" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle stereo:     E" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle warping:    R" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle raycasting: T" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle camera:     Z" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Reset perspective: U" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Scene selection:     Press keys 1-9" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Toggle stereo:       E" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Toggle warping:      R" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Toggle transparency: T" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Toggle camera:       Z" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Reset perspective:   U" << std::endl;
+    gua::Logger::LOG_MESSAGE << "  Toggle Hole Filling: H" << std::endl;
   #endif
 
   // render setup --------------------------------------------------------------
@@ -1474,7 +1485,10 @@ int main(int argc, char** argv) {
           test_resolution_series = false;
           normal_cam->config.set_resolution(orig_resolution);
           warp_cam->config.set_resolution(orig_resolution);
-          toggle_gui();
+
+          #ifdef GUI_SUPPORTORT
+            toggle_gui();
+          #endif
 
         }
 
@@ -1531,7 +1545,9 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_positional_warp_series = false;
-          toggle_gui();
+          #ifdef GUI_SUPPORTORT
+            toggle_gui();
+          #endif
         }
 
       }
@@ -1587,7 +1603,9 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_rotational_warp_series = false;
-          toggle_gui();
+          #ifdef GUI_SUPPORTORT
+            toggle_gui();
+          #endif
         }
 
       }
@@ -1699,7 +1717,7 @@ int main(int argc, char** argv) {
                              gbuffer_primitives, abuffer_primitives);
 
       #else
-        std::cout << window->get_rendering_fps() << std::endl;
+        //std::cout << window->get_rendering_fps() << std::endl;
       #endif
     }
 
