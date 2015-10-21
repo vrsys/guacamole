@@ -6,4 +6,4 @@
 #define HOLE_FILLING_MODE_EPIPOLAR_MIRROR   3
 #define HOLE_FILLING_RUBBER_BAND_1          4
 #define HOLE_FILLING_RUBBER_BAND_2          5
-#define HOLE_FILLING_RUBBER_BAND_3          6
+#define HOLE_FILLING_MODE_BLUR              6

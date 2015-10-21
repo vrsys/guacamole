@@ -932,13 +932,14 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_transparency_type_gbuffer");
       gui->add_javascript_callback("set_transparency_type_abuffer");
       gui->add_javascript_callback("set_transparency_type_raycasting");
+      gui->add_javascript_callback("set_hole_filling_color");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_inpaint");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_search");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_mirror");
       gui->add_javascript_callback("set_hole_filling_type_rubber_band_1");
       gui->add_javascript_callback("set_hole_filling_type_rubber_band_2");
-      gui->add_javascript_callback("set_hole_filling_type_rubber_band_3");
+      gui->add_javascript_callback("set_hole_filling_type_blur");
       gui->add_javascript_callback("set_interpolation_mode_nearest");
       gui->add_javascript_callback("set_interpolation_mode_linear");
       gui->add_javascript_callback("set_interpolation_mode_adaptive");
@@ -1099,6 +1100,11 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         trimesh_pass->adaptive_abuffer(checked);
+      } else if (callback == "set_hole_filling_color") {
+        std::stringstream str(params[0]);
+        gua::math::vec3f color;
+        str >> color;
+        warp_pass->hole_filling_color(color/255.f);
       } else if (callback == "reset_view") {
         warp_nav.reset();
       } else if (callback == "reset_object") {
@@ -1156,7 +1162,7 @@ int main(int argc, char** argv) {
                | callback == "set_hole_filling_type_epipolar_mirror"
                | callback == "set_hole_filling_type_rubber_band_1"
                | callback == "set_hole_filling_type_rubber_band_2"
-               | callback == "set_hole_filling_type_rubber_band_3") {
+               | callback == "set_hole_filling_type_blur") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
@@ -1174,8 +1180,8 @@ int main(int argc, char** argv) {
             mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_1;
           if (callback == "set_hole_filling_type_rubber_band_2")
             mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_2;
-          if (callback == "set_hole_filling_type_rubber_band_3")
-            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_3;
+          if (callback == "set_hole_filling_type_blur")
+            mode = gua::WarpPassDescription::HOLE_FILLING_BLUR;
 
           warp_pass->hole_filling_mode(mode);
         }

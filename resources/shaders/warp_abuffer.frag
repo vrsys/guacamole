@@ -353,6 +353,12 @@ vec4 hole_filling_epipolar_mirror() {
   return texelFetch(sampler2D(warped_color_buffer), ivec2((2*boundary_pos - gua_quad_coords)*gua_resolution), 0);
 }
 
+vec4 hole_filling_blur() {
+  int level = 5;
+  // return textureLod(sampler2D(warped_color_buffer), gua_quad_coords, 1.0*level);
+  return texelFetch(sampler2D(warped_color_buffer), ivec2(gua_quad_coords*gua_resolution)/(1<<level), level);
+}
+
 void main() {
 
   vec4 color = vec4(0);
@@ -370,8 +376,12 @@ void main() {
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_MIRROR
     if (depth == 1.0) background_color = hole_filling_epipolar_mirror();
     else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+  #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_BLUR
+    if (depth == 1.0) background_color = hole_filling_blur();
+    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #else
-    background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) background_color = vec4(@hole_filling_color@, 1);
+    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #endif
 
   #if WARP_MODE == WARP_MODE_RAYCASTING

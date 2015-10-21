@@ -19,60 +19,25 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_WARP_RENDERER_HPP
-#define GUA_WARP_RENDERER_HPP
+@include "shaders/common/header.glsl"
 
-#include <map>
-#include <unordered_map>
+uniform int current_level;
+uniform uvec2 color_buffer;
 
-#include <gua/renderer/WarpPass.hpp>
-#include <gua/platform.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+in vec2 gua_quad_coords;
 
-#include <scm/gl_core/shader_objects.h>
+// layout(pixel_center_integer) in vec4 gl_FragCoord;
 
-namespace gua {
+// write output
+layout(location=0) out vec3 result;
 
-class Pipeline;
-class PipelinePassDescription;
+void main() {
+  const vec3 sample_0 = texelFetchOffset(sampler2D(color_buffer), ivec2(gl_FragCoord.xy*2), current_level, ivec2(0, 0)).rgb;
+  const vec3 sample_1 = texelFetchOffset(sampler2D(color_buffer), ivec2(gl_FragCoord.xy*2), current_level, ivec2(1, 0)).rgb;
+  const vec3 sample_2 = texelFetchOffset(sampler2D(color_buffer), ivec2(gl_FragCoord.xy*2), current_level, ivec2(0, 1)).rgb;
+  const vec3 sample_3 = texelFetchOffset(sampler2D(color_buffer), ivec2(gl_FragCoord.xy*2), current_level, ivec2(1, 1)).rgb;
 
-class WarpRenderer {
+  result = (sample_0 + sample_1 + sample_2 + sample_3) / 4;
 
- public:
-
-  WarpRenderer();
-  virtual ~WarpRenderer();
-
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
-
-  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
-
- private:
-
-  WarpPassDescription::WarpState   cached_warp_state_;
-
-  scm::gl::vertex_array_ptr        empty_vao_;
-  scm::gl::rasterizer_state_ptr    points_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_yes_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_no_;
-  SubstitutionMap                  global_substitution_map_;
-
-  std::vector<ShaderProgramStage>  warp_gbuffer_program_stages_;
-  std::shared_ptr<ShaderProgram>   warp_gbuffer_program_;
-
-  std::vector<ShaderProgramStage>  warp_abuffer_program_stages_;
-  std::shared_ptr<ShaderProgram>   warp_abuffer_program_;
-
-  scm::gl::frame_buffer_ptr fbo_;
-  std::shared_ptr<Texture2D> color_buffer_;
-  std::shared_ptr<Texture2D> depth_buffer_;
-
-  std::shared_ptr<ShaderProgram>         hole_filling_texture_program_;
-  std::vector<scm::gl::frame_buffer_ptr> hole_filling_texture_fbos_;
-
-  Pipeline* pipe_;
-};
-
+  // result = vec3(0, current_level*0.33, 1.0-current_level*0.33);
 }
-
-#endif  // GUA_WARP_RENDERER_HPP

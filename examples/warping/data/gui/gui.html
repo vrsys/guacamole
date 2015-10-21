@@ -38,17 +38,19 @@
 
       function init_color_picker(parent_selector, func) {
 
-        $(parent_selector + " ." + func).ColorPickerSliders({
+        $(parent_selector).ColorPickerSliders({
           size: "sm",
+          color: "rgb(0,0,0)",
           placement: "top",
           sliders: false,
           swatches: false,
           hsvpanel: true,
           onchange: function(container, color) {
-            var colorPicker = $(parent_selector + " ." + func);
+            var colorPicker = $(parent_selector);
             var color_string = color.tiny.toRgbString();
+            var rgb = color.tiny.toRgb();
             colorPicker.css("background-color", color_string);
-            gua["set_" + func](color_string);
+            gua["set_" + func]("(" + rgb.r + " " + rgb.g + " " + rgb.b + ")");
           }
         });
 
@@ -78,27 +80,6 @@
         $(parent_selector + ' .' + func).data('bs.popover').options.content = texture_button_popover;
 
         return {func: func, selector: parent_selector + " ." + func};
-      }
-
-      function add_color_picker_group(parent_selector, func1, func2, func3, label) {
-
-        $(parent_selector).append(
-          '<div class="row">' +
-            '<div class="col-xs-6">' +
-              label + ':' +
-            '</div>' +
-            '<div class="col-xs-6">' +
-              '<div class="btn btn-default ' + func1 + '" style="height: 20px; width: 30%; padding:0">' +
-              '</div>' +
-              '<div class="btn btn-default ' + func2 + '" style="height: 20px; width: 30%; margin-left:5%; margin-right:5%; padding:0">' +
-              '</div>' +
-              '<div class="btn btn-default ' + func3 + '" style="height: 20px; width: 30%; padding:0">' +
-              '</div>' +
-            '</div>' +
-          '</div>'
-        );
-
-        return [init_color_picker(parent_selector, func1), init_color_picker(parent_selector, func2), init_color_picker(parent_selector, func3)];
       }
 
       function add_slider(parent_selector, func, label, min, max, step) {
@@ -257,11 +238,13 @@
         init_radio("#hole_filling_type_epipolar_mirror", "hole_filling_type_epipolar_mirror");
         init_radio("#hole_filling_type_rubber_band_1", "hole_filling_type_rubber_band_1");
         init_radio("#hole_filling_type_rubber_band_2", "hole_filling_type_rubber_band_2");
-        init_radio("#hole_filling_type_rubber_band_3", "hole_filling_type_rubber_band_3");
+        init_radio("#hole_filling_type_blur", "hole_filling_type_blur");
 
         init_radio("#interpolation_mode_nearest", "interpolation_mode_nearest");
         init_radio("#interpolation_mode_linear", "interpolation_mode_linear");
         init_radio("#interpolation_mode_adaptive", "interpolation_mode_adaptive");
+
+        init_color_picker("#hole_filling_color", "hole_filling_color");
 
         $("body").addClass("on");
       }
@@ -749,6 +732,15 @@
               </div>
             </div>
           </div>
+          <div class="row">
+            <div class="col-xs-5">
+              Hole Color
+            </div>
+            <div class="col-xs-7">
+              <div id="hole_filling_color" class="btn btn-default" style="height: 20px; width:100%;">
+              </div>
+            </div>
+          </div>
 
           <hr />
 
@@ -773,6 +765,12 @@
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
                   <span>Epipolar Mirror</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_blur" value="">
+                  <span>Blur</span>
                 </label>
               </div>
             </div>

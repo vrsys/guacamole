@@ -27,7 +27,7 @@
 @include "interpolation_modes.glsl"
 @include "warp_grid_bits.glsl"
 
-#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2  || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
   flat in uint is_rubber_band;
 #endif
 

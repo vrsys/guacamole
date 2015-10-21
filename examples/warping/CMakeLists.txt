@@ -28,7 +28,7 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
 LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARY} ${OVRSDK2_LIBRARIES})
-//LIST(APPEND LIBS guacamole-oculus guacamole-oculusSDK2 guacamole ${OVR_LIBRARY} ${OVRSDK2_LIBRARIES})
+#LIST(APPEND LIBS guacamole-oculus guacamole-oculusSDK2 guacamole ${OVR_LIBRARY} ${OVRSDK2_LIBRARIES})
 
 IF (${PLUGIN_guacamole-gui})
 	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)

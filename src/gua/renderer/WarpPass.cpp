@@ -46,6 +46,7 @@ WarpPassDescription::WarpPassDescription()
   , debug_interpolation_borders_(false)
   , debug_rubber_bands_(false)
   , debug_epipol_(false)
+  , hole_filling_color_(0,0,0)
   , max_layers_(50)
   , pixel_size_(0.2f)
   , rubber_band_threshold_(0.01f)
@@ -301,6 +302,20 @@ WarpPassDescription::HoleFillingMode WarpPassDescription::hole_filling_mode() co
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WarpPassDescription& WarpPassDescription::hole_filling_color(math::vec3f const& hole_filling_color) {
+  hole_filling_color_ = hole_filling_color;
+  touch();
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::vec3f const& WarpPassDescription::hole_filling_color() const {
+  return hole_filling_color_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 WarpPassDescription& WarpPassDescription::interpolation_mode(InterpolationMode interpolation_mode) {
   interpolation_mode_ = interpolation_mode;
   touch();
@@ -335,6 +350,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
+  substitution_map["hole_filling_color"] = "vec3(" + std::to_string(hole_filling_color_.x) + ", " + std::to_string(hole_filling_color_.y) + ", " + std::to_string(hole_filling_color_.z) + ")";
   substitution_map["interpolation_mode"] = std::to_string(interpolation_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};

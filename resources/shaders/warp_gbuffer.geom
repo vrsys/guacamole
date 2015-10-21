@@ -42,7 +42,7 @@ float get_min_depth(vec2 frag_pos) {
 }
 
 float get_depth(vec2 position) {
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2  || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
     return get_min_depth(position);
   #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
     return gua_get_depth(position/gua_resolution);
@@ -69,7 +69,7 @@ layout(triangle_strip, max_vertices = 16) out;
 
 flat in  uvec3 varying_position[];
 flat out uint cellsize;
-#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
   flat out uint is_rubber_band;
 #endif
 
@@ -83,7 +83,7 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
     float depth1, depth2, depth3, depth4;
 
-    #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2  || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+    #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
       const float interpolation_offset = 0;
     #else
       const float interpolation_offset = 0.5;
@@ -150,7 +150,7 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
 void emit_pixel(uvec2 offset) {
 
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2  || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_3
+  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
     emit_quad(offset, uvec2(1));
 
   #else
