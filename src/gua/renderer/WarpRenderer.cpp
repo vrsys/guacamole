@@ -53,6 +53,9 @@ WarpRenderer::~WarpRenderer() {
   if (depth_buffer_) {
     depth_buffer_->make_non_resident(pipe_->get_context());
   }
+  if (hole_filling_texture_) {
+    hole_filling_texture_->make_non_resident(pipe_->get_context());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,22 +128,24 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       scm::gl::WRAP_MIRRORED_REPEAT,
       scm::gl::WRAP_MIRRORED_REPEAT);
 
-    int mip_map_levels = 1;
-    if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
-      mip_map_levels = 8;
-    }
-
-    color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, mip_map_levels, state);
-    depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     1, state);
+    color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 0, state);
+    depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     0, state);
 
     fbo_ = ctx.render_device->create_frame_buffer();
     fbo_->attach_color_buffer(0, color_buffer_->get_buffer(ctx),0,0);
     fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
 
     if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
-      for (int i(1); i<mip_map_levels; ++i) {
+      int holefilling_levels = 8;
+      scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
+        scm::gl::WRAP_CLAMP_TO_EDGE,
+        scm::gl::WRAP_CLAMP_TO_EDGE);
+      hole_filling_texture_ = std::make_shared<Texture2D>(resolution.x/2, resolution.y/2,
+        scm::gl::FORMAT_RGBA_32F, holefilling_levels, state);
+
+      for (int i(0); i<holefilling_levels; ++i) {
         hole_filling_texture_fbos_.push_back(ctx.render_device->create_frame_buffer());
-        hole_filling_texture_fbos_.back()->attach_color_buffer(0, color_buffer_->get_buffer(ctx),i,0);
+        hole_filling_texture_fbos_.back()->attach_color_buffer(0, hole_filling_texture_->get_buffer(ctx),i,0);
       }
 
       #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
@@ -240,8 +245,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
     hole_filling_texture_program_->use(ctx);
     hole_filling_texture_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "color_buffer");
+    hole_filling_texture_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "depth_buffer");
+    hole_filling_texture_program_->set_uniform(ctx, hole_filling_texture_->get_handle(ctx), "hole_filling_texture");
+
     for (int i(0); i<hole_filling_texture_fbos_.size(); ++i) {
-      math::vec2ui level_size(scm::gl::util::mip_level_dimensions(math::vec2ui(color_buffer_->width(), color_buffer_->height()), i+1));
+      math::vec2ui level_size(scm::gl::util::mip_level_dimensions(math::vec2ui(hole_filling_texture_->width(), hole_filling_texture_->height()), i));
       ctx.render_context->set_frame_buffer(hole_filling_texture_fbos_[i]);
       ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(level_size)));
       hole_filling_texture_program_->set_uniform(ctx, i, "current_level");
@@ -271,7 +279,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   bool write_all_layers = false;
   gbuffer->bind(ctx, write_all_layers);
 
-  warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer()->get_handle(ctx), "color_buffer");
+  if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
+    warp_abuffer_program_->set_uniform(ctx, hole_filling_texture_->get_handle(ctx), "hole_filling_texture");
+  }
   warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
   warp_abuffer_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "warped_depth_buffer");
 

@@ -42,7 +42,7 @@ uniform mat4 inv_warp_matrix;
 uniform mat4 warp_matrix;
 uniform uvec2 warped_depth_buffer;
 uniform uvec2 warped_color_buffer;
-uniform uvec2 color_buffer;
+uniform uvec2 hole_filling_texture;
 
 bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_depth) {
   vec2 coords = screen_space_pos * 2 - 1;
@@ -354,9 +354,37 @@ vec4 hole_filling_epipolar_mirror() {
 }
 
 vec4 hole_filling_blur() {
-  int level = 5;
-  // return textureLod(sampler2D(warped_color_buffer), gua_quad_coords, 1.0*level);
-  return texelFetch(sampler2D(warped_color_buffer), ivec2(gua_quad_coords*gua_resolution)/(1<<level), level);
+
+  const int levels = 6;
+  int level=levels;
+  vec4 result = vec4(0);
+  float last_depth = 0;
+
+  while (level >= 0) {
+
+    const vec2 pos = (gua_quad_coords*gua_resolution - (1<<level))/(1<<(level+1));
+
+    const float d_0 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(0,0)).a;
+    const float d_1 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(1,0)).a;
+    const float d_2 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(0,1)).a;
+    const float d_3 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(1,1)).a;
+
+    float min_depth = min(min(d_0, d_1), min(d_2, d_3));
+    float max_depth = 1.0;
+
+    if (min_depth > 0 && min_depth < 1.0) {
+      vec4 color = textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level);
+      // if (color.a < last_depth-0.05) {
+      //   break;
+      // }
+      last_depth = color.a;
+      float fac = (color.a - min_depth) / (max_depth - min_depth);
+      result = vec4(color.rgb + result.rgb*fac, 1);
+    }
+    --level;
+  }
+
+  return result;
 }
 
 void main() {
@@ -519,6 +547,7 @@ void main() {
 
     abuf_mix_frag(background_color, color);
     gua_out_color = toneMap(color.rgb);
+    // gua_out_color = color.rgb;
 
     #if @debug_sample_ray@ == 1
       draw_debug_views();

@@ -68,6 +68,7 @@ class WarpRenderer {
   std::shared_ptr<Texture2D> depth_buffer_;
 
   std::shared_ptr<ShaderProgram>         hole_filling_texture_program_;
+  std::shared_ptr<Texture2D>             hole_filling_texture_;
   std::vector<scm::gl::frame_buffer_ptr> hole_filling_texture_fbos_;
 
   Pipeline* pipe_;
