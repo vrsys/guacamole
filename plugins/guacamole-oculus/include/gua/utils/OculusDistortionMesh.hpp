@@ -23,14 +23,16 @@
 #define GUA_OCULUS_DISTORTION_MESH_HPP
 
 #if defined (_MSC_VER)
-  #if defined (GUA_OCULUSSDK2_LIBRARY)
-    #define GUA_OCULUSSDK2_DLL __declspec( dllexport )
+  #if defined (GUA_OCULUS_LIBRARY)
+    #define GUA_OCULUS_DLL __declspec( dllexport )
   #else
-#define GUA_OCULUSSDK2_DLL __declspec( dllimport )
+#define GUA_OCULUS_DLL __declspec( dllimport )
   #endif
 #else
-  #define GUA_OCULUSSDK2_DLL
+  #define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
+
+#ifndef _WIN32
 
 #include <gua/math/math.hpp>
 #include <OVR.h>
@@ -82,5 +84,8 @@ struct OculusDistortionMesh {
 };
 
 }
+
+#endif
+
 
 #endif  // GUA_OCULUS_DISTORTION_MESH_HPP
