@@ -125,8 +125,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     empty_vao_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC2F, sizeof(math::vec2)), {empty_vbo});
 
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
-      scm::gl::WRAP_MIRRORED_REPEAT,
-      scm::gl::WRAP_MIRRORED_REPEAT);
+      scm::gl::WRAP_CLAMP_TO_EDGE,
+      scm::gl::WRAP_CLAMP_TO_EDGE);
 
     color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 0, state);
     depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     0, state);
@@ -136,7 +136,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
 
     if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
-      int holefilling_levels = 8;
+      int holefilling_levels = 7;
       scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
         scm::gl::WRAP_CLAMP_TO_EDGE,
         scm::gl::WRAP_CLAMP_TO_EDGE);

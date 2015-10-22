@@ -280,9 +280,9 @@ vec4 hole_filling_inpaint() {
   float max_depth = 0;
   vec2  offset;
 
-  for (int i=2; i<=5; ++i) {
+  for (int i=1; i<=30; ++i) {
 
-    float radius = i*i;
+    float radius = i;
 
     vec2 offsets[] = {          vec2(0, radius),
                         vec2(-radius, 0),   vec2(radius, 0),
@@ -356,35 +356,73 @@ vec4 hole_filling_epipolar_mirror() {
 vec4 hole_filling_blur() {
 
   const int levels = 6;
-  int level=levels;
-  vec4 result = vec4(0);
-  float last_depth = 0;
+  vec3 colors[levels];
+  vec2 depths[levels];
 
-  while (level >= 0) {
+  for (int i=0; i<levels; ++i) {
+    const ivec2 max_res = textureSize(sampler2D(hole_filling_texture), i);
+    const vec2 origin = (gua_quad_coords*gua_resolution - (1<<(i)))/(1<<(i+1));
 
-    const vec2 pos = (gua_quad_coords*gua_resolution - (1<<level))/(1<<(level+1));
-
-    const float d_0 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(0,0)).a;
-    const float d_1 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(1,0)).a;
-    const float d_2 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(0,1)).a;
-    const float d_3 = texelFetchOffset(sampler2D(hole_filling_texture), ivec2(pos), level, ivec2(1,1)).a;
-
-    float min_depth = min(min(d_0, d_1), min(d_2, d_3));
-    float max_depth = 1.0;
-
-    if (min_depth > 0 && min_depth < 1.0) {
-      vec4 color = textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level);
-      // if (color.a < last_depth-0.05) {
-      //   break;
-      // }
-      last_depth = color.a;
-      float fac = (color.a - min_depth) / (max_depth - min_depth);
-      result = vec4(color.rgb + result.rgb*fac, 1);
+    vec4 samples[4];
+    for (int y=0; y<2; ++y) {
+      for (int x=0; x<2; ++x) {
+        const ivec2 pos = clamp(ivec2(origin) + ivec2(x,y), ivec2(0), max_res-1);
+        samples[x+2*y] = texelFetch(sampler2D(hole_filling_texture), pos, i);
+      }
     }
-    --level;
+
+    float min_depth = min(min(samples[0].a, samples[1].a), min(samples[2].a, samples[3].a));
+    float max_depth = max(max(samples[0].a, samples[1].a), max(samples[2].a, samples[3].a));
+
+    if (min_depth < 1) {
+      vec2 a = (origin - floor(abs(origin)));
+      float fac = mix(mix(floor(samples[0].a), floor(samples[1].a), a.x), mix(floor(samples[2].a), floor(samples[3].a), a.x), a.y);
+      float average_depth = mix(mix(samples[0].a, samples[1].a, a.x), mix(samples[2].a, samples[3].a, a.x), a.y);
+      colors[i] = mix(mix(samples[0].rgb, samples[1].rgb, a.x), mix(samples[2].rgb, samples[3].rgb, a.x), a.y);
+      depths[i] = vec2(min_depth, fac);
+    } else {
+      colors[i] = vec3(0);
+      depths[i] = vec2(1);
+    }
   }
 
-  return result;
+
+
+
+  // float average_depth = 0;
+  // int count = 0;
+  // for (int i=0; i<levels; ++i) {
+  //   if (depths[i].x < 1) {
+  //     ++count;
+  //     average_depth = min(average_depth, depths[i].x);
+  //     // average_depth += depths[i].x;
+  //   }
+  // }
+
+  // if (count > 0) {
+  //   average_depth /= count;
+  // }
+
+
+  // int tmp=0;
+  vec3 result = vec3(0);
+  // float last_depth = depths[levels-1].x;
+  result = colors[levels-1];
+  for (int i=levels-2; i>=0; --i) {
+    if (depths[levels-1].x - depths[i].x < 0.001) {
+      // if (depths[i].x - last_depth > 0.0001) {
+      //   break;
+      // }
+      // last_depth = depths[levels-1].x;
+      result = colors[i] + result*depths[i].y;
+      // result = vec3(average_depth);
+    // } else {
+    //   result = vec3(1,1,0);
+      // break;
+    }
+  }
+
+  return vec4(result, 1);
 }
 
 void main() {
