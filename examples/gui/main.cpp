@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<gua::GuiResource> focused_element;
 
   auto camera = screen->add_child<gua::node::CameraNode>("cam");
-  camera->translate(0, 0, 0.5);
+  camera->translate(0, 0, 1.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -176,6 +176,7 @@ int main(int argc, char** argv) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    resolution = new_size;
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
 
@@ -221,7 +222,7 @@ int main(int argc, char** argv) {
     sstr << "FPS: " << renderer.get_application_fps()
          << " / " << window->get_rendering_fps();
     fps->call_javascript("set_fps_text", sstr.str());
- 
+
     // ray->rotate(1, 0, 1, 0);
     gua::Interface::instance()->update();
     // apply trackball matrix to object
