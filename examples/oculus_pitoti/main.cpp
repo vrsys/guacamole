@@ -35,8 +35,6 @@
 #include <gua/renderer/TexturedQuadPass.hpp>
 
 #include <iomanip>
-const std::string geometry("data/objects/monkey.obj");
-// const std::string geometry("data/objects/cube.obj");
 
 #define NB_DISABLE 0
 #define NB_ENABLE 1
@@ -73,84 +71,10 @@ void nonblock( int state ) {
 }
 
 
-std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
-                                                  int count) {
-
-  std::vector<std::shared_ptr<gua::node::TransformNode>> lights(count);
-
-  for (int i(0); i < count; ++i) {
-    scm::math::vec3 randdir(gua::math::random::get(-1.f, 1.f),
-                            gua::math::random::get(-1.f, 1.f),
-                            gua::math::random::get(-1.f, 1.f));
-    scm::math::normalize(randdir);
-
-    gua::TriMeshLoader loader;
-    auto sphere_geometry(
-      loader.create_geometry_from_file(
-      "sphere" + gua::string_utils::to_string(i),
-      "data/objects/light_sphere.obj"
-    ));
-
-    sphere_geometry->scale(0.04, 0.04, 0.04);
-
-    lights[i] = graph.add_node("/", std::make_shared<gua::node::TransformNode>("light" + gua::string_utils::to_string(i)));
-    lights[i]->add_child(sphere_geometry);
-    lights[i]->scale(300.f);
-    lights[i]->translate(5.0, 5.0, 10.0);
-
-    auto light = lights[i]->add_child(std::make_shared<gua::node::LightNode>("light"));
-    light->data.set_brightness(300.f);    
-    light->data.set_type(gua::node::LightNode::Type::POINT);
-    light->data.set_color(gua::utils::Color3f(1.0, 1.0, 1.0));
-    light->data.set_max_shadow_dist(8000.0f);
-    light->data.set_shadow_offset(0.002f);
-    light->data.set_enable_shadows(true);
-    light->data.set_shadow_map_size(2048);
-
-  }
-
-  return lights;
-}
-
-void setup_scene(gua::SceneGraph& graph,
-                 std::shared_ptr<gua::node::Node> const& root_monkey,
-                 int depth_count) {
-
-  if (depth_count > 0) {
-    gua::TriMeshLoader loader;
-
-    float offset(2.f);
-    std::vector<gua::math::vec3> directions = {
-      gua::math::vec3(0, offset, 0),
-      gua::math::vec3(0, -offset, 0),
-      gua::math::vec3(offset, 0, 0),
-      gua::math::vec3(-offset, 0, 0),
-      gua::math::vec3(0, 0, offset),
-      gua::math::vec3(0, 0, -offset)
-    };
-
-    for (auto direction: directions) {
-      auto monkey_geometry(loader.create_geometry_from_file(
-        "monkey",
-        geometry
-      ));
-
-      auto monkey = root_monkey->add_child(monkey_geometry);
-      monkey->scale(0.5, 0.5, 0.5);
-      monkey->translate(direction[0], direction[1], direction[2]);
-
-      setup_scene(graph, monkey, depth_count - 1);
-    }
-  }
-}
-
-
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
-  // initialize Oculus SDK
-  gua::OculusWindow::initialize_oculus_environment();
   /////////////////////////////////////////////////////////////////////////////
   // create a set of materials
   /////////////////////////////////////////////////////////////////////////////
@@ -221,50 +145,15 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-
-  auto desc(std::make_shared<gua::MaterialShaderDescription>());
-  desc->load_from_file("data/materials/SimpleMaterial.gmd");
-
-  auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
-  gua::MaterialShaderDatabase::instance()->add(shader);
-  auto mat(shader->make_new_material());
-
-  auto add_oilrig = [&](int x, int y) {
-    auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
-    //t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
-    t->scale(5.0, 5.0, 5.0);
-    t->rotate(-90.0, 1.0, 0.0, 0.0);
-
-    auto rig(loader.create_geometry_from_file(
-      "rig",
-      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      mat,
-      gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE |
-      gua::TriMeshLoader::LOAD_MATERIALS |
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
-      gua::TriMeshLoader::OPTIMIZE_MATERIALS
-    ));
-    t->add_child(rig);
-  };
-
-
-
-  add_oilrig(0,0);
-
-
   auto root_plod_pig_model = graph.add_node("/", plod_pig_node);
-  
-
-  auto lights = add_lights(graph, 2);
 
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
   nav->translate(0.0, 0.0, 2.0);
 
 
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
-  //gua::math::vec2ui res(1080,1920);
 
+  //get the resolution from the oculus window
   gua::math::vec2ui res(window->get_window_resolution());
 
   gua::math::vec2ui eye_res(window->get_eye_resolution());
@@ -273,13 +162,12 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_fullscreen_mode(true);
   window->config.set_size(res);
-  //window->config.set_size(res);
   window->config.set_resolution( res );
   window->open();
 
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
 
   auto neck = graph.add_node<gua::node::TransformNode>("/nav", "neck");
@@ -292,7 +180,6 @@ int main(int argc, char** argv) {
   camera->translate(0.0, camera_trans_y, camera_trans_z);
 
   camera->config.set_resolution( res );
-  //camera->config.set_resolution(res);
   camera->config.set_left_screen_path("/nav/neck/cam/left_screen");
   camera->config.set_right_screen_path("/nav/neck/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");
@@ -302,15 +189,9 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  //pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-
-
-  //pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  //pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
-
 
   camera->set_pipeline_description(pipe); 
   
@@ -324,6 +205,7 @@ int main(int argc, char** argv) {
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/neck/cam", "right_screen");
   right_screen->data.set_size(window->get_right_screen_size());
   right_screen->translate(window->get_right_screen_translation());
+
   //****************/
 
   gua::Renderer renderer;
@@ -336,6 +218,7 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
 
  nonblock(NB_ENABLE);
+
  char c = '0';
  int i = 0;
  char prev_character = '\n';
@@ -356,9 +239,6 @@ int main(int argc, char** argv) {
         rotate(child, ++depth);
       }
     };
-
-
-
 
     i=kbhit();
 
