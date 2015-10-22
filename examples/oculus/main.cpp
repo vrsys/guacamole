@@ -95,9 +95,6 @@ int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
-  // initialize Oculus SDK
-  gua::OculusWindow::initialize_oculus_environment();
-
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
