@@ -130,10 +130,10 @@ int main(int argc, char** argv) {
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
-
+  window->config.set_fullscreen_mode(true);
+  window->config.set_size(window->get_window_resolution());
+  window->config.set_resolution(window->get_window_resolution());
   window->open();
-
-  float eye_screen_distance = 0.08f;
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -142,23 +142,23 @@ int main(int argc, char** argv) {
   auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
   //camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(window->get_resolution());
+  camera->config.set_resolution(window->get_window_resolution());
   camera->config.set_left_screen_path("/nav/cam/left_screen");
   camera->config.set_right_screen_path("/nav/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(true);
-  camera->config.set_eye_dist(0.064);
+  camera->config.set_eye_dist(window->get_IPD());
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
   auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(window->get_screen_size_per_eye());
-  left_screen->translate(-0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
+  left_screen->data.set_size(window->get_left_screen_size());
+  left_screen->translate(window->get_left_screen_translation());
 
   auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(window->get_screen_size_per_eye());
-  right_screen->translate(0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
+  right_screen->data.set_size(window->get_right_screen_size());
+  right_screen->translate(window->get_right_screen_translation());
 
 
   gua::Renderer renderer;
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 
     graph["/root_ape"]->rotate(15 * frame_time, 0, 1, 0);
 
-    camera->set_transform(window->get_sensor_orientation());
+    camera->set_transform(window->get_oculus_sensor_orientation());
 
 
     renderer.queue_draw({&graph});
@@ -203,6 +203,5 @@ int main(int argc, char** argv) {
 
   loop.start();
 
-  gua::OculusWindow::shutdown_oculus_environment();
   return 0;
 }

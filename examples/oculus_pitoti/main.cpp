@@ -34,8 +34,44 @@
 
 #include <gua/renderer/TexturedQuadPass.hpp>
 
+#include <iomanip>
 const std::string geometry("data/objects/monkey.obj");
 // const std::string geometry("data/objects/cube.obj");
+
+#define NB_DISABLE 0
+#define NB_ENABLE 1
+
+int kbhit() {
+  struct timeval tv;
+  fd_set fds;
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
+  FD_ZERO(&fds);
+  FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+  select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+  return FD_ISSET(STDIN_FILENO, &fds);
+}
+ 
+void nonblock( int state ) {
+  struct termios ttystate;
+
+  //get the terminal state
+  tcgetattr(STDIN_FILENO, &ttystate);
+
+  if (state==NB_ENABLE) {
+    //turn off canonical mode
+    ttystate.c_lflag &= ~ICANON;
+    //minimum of number input read.
+    ttystate.c_cc[VMIN] = 1;
+  }
+  else if (state==NB_DISABLE) {
+    //turn on canonical mode
+    ttystate.c_lflag |= ICANON;
+  }
+  //set the terminal attributes.
+  tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+}
+
 
 std::vector<std::shared_ptr<gua::node::TransformNode>> add_lights(gua::SceneGraph& graph,
                                                   int count) {
@@ -110,10 +146,8 @@ void setup_scene(gua::SceneGraph& graph,
 
 
 int main(int argc, char** argv) {
-
   // initialize guacamole
   gua::init(argc, argv);
-
 
   // initialize Oculus SDK
   gua::OculusWindow::initialize_oculus_environment();
@@ -188,6 +222,37 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
 
+  auto desc(std::make_shared<gua::MaterialShaderDescription>());
+  desc->load_from_file("data/materials/SimpleMaterial.gmd");
+
+  auto shader(std::make_shared<gua::MaterialShader>("simple_mat", desc));
+  gua::MaterialShaderDatabase::instance()->add(shader);
+  auto mat(shader->make_new_material());
+
+  auto add_oilrig = [&](int x, int y) {
+    auto t = graph.add_node<gua::node::TransformNode>("/", "rig_" + std::to_string(x) + "_" + std::to_string(y));
+    //t->translate((x - COUNT*0.5 + 0.5)/1.5, (y - COUNT*0.5 + 0.5)/2, 0);
+    t->scale(5.0, 5.0, 5.0);
+    t->rotate(-90.0, 1.0, 0.0, 0.0);
+
+    auto rig(loader.create_geometry_from_file(
+      "rig",
+      "/opt/3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      mat,
+      gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE |
+      gua::TriMeshLoader::LOAD_MATERIALS |
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+      gua::TriMeshLoader::OPTIMIZE_MATERIALS
+    ));
+    t->add_child(rig);
+  };
+
+
+
+  add_oilrig(0,0);
+
+
   auto root_plod_pig_model = graph.add_node("/", plod_pig_node);
   
 
@@ -196,51 +261,70 @@ int main(int argc, char** argv) {
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
   nav->translate(0.0, 0.0, 2.0);
 
+
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
+  //gua::math::vec2ui res(1080,1920);
+
+  gua::math::vec2ui res(window->get_window_resolution());
+
+  gua::math::vec2ui eye_res(window->get_eye_resolution());
+
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
-
+  window->config.set_fullscreen_mode(true);
+  window->config.set_size(res);
+  //window->config.set_size(res);
+  window->config.set_resolution( res );
   window->open();
 
-  // setup rendering pipeline and window
+
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
+  auto neck = graph.add_node<gua::node::TransformNode>("/nav", "neck");
 
-  //camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(window->get_resolution());
-  camera->config.set_left_screen_path("/nav/cam/left_screen");
-  camera->config.set_right_screen_path("/nav/cam/right_screen");
+  auto camera = graph.add_node<gua::node::CameraNode>("/nav/neck", "cam");
+
+  float camera_trans_y = 0.0;
+  float camera_trans_z = 0.0;
+
+  camera->translate(0.0, camera_trans_y, camera_trans_z);
+
+  camera->config.set_resolution( res );
+  //camera->config.set_resolution(res);
+  camera->config.set_left_screen_path("/nav/neck/cam/left_screen");
+  camera->config.set_right_screen_path("/nav/neck/cam/right_screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(true);
-  camera->config.set_eye_dist(0.064);
-
+  camera->config.set_eye_dist(window->get_IPD());
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
 
-  pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
-
-  float eye_screen_distance = 0.08f;
-
-  camera->set_pipeline_description(pipe);
-  auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "left_screen");
-  left_screen->data.set_size(window->get_screen_size_per_eye());
-  left_screen->translate(-0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
-
-  auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/cam", "right_screen");
-  right_screen->data.set_size(window->get_screen_size_per_eye());
-  right_screen->translate(0.5 * window->get_screen_size_per_eye().x, 0, -eye_screen_distance);
+  //pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  //pipe->get_resolve_pass()->background_texture("data/images/skymap.jpg");
 
 
+  camera->set_pipeline_description(pipe); 
+  
+ 
+  // retreive the complete viewing setup from the oculus window
+  //**************
+  auto left_screen = graph.add_node<gua::node::ScreenNode>("/nav/neck/cam", "left_screen");
+  left_screen->data.set_size(window->get_left_screen_size());
+  left_screen->translate(window->get_left_screen_translation());
+
+  auto right_screen = graph.add_node<gua::node::ScreenNode>("/nav/neck/cam", "right_screen");
+  right_screen->data.set_size(window->get_right_screen_size());
+  right_screen->translate(window->get_right_screen_translation());
+  //****************/
 
   gua::Renderer renderer;
 
@@ -250,6 +334,12 @@ int main(int argc, char** argv) {
   double time(0);
   float desired_frame_time(1.0 / 60.0);
   gua::events::MainLoop loop;
+
+ nonblock(NB_ENABLE);
+ char c = '0';
+ int i = 0;
+ char prev_character = '\n';
+  // application loop
 
   // application loop
   gua::events::Ticker ticker(loop, desired_frame_time);
@@ -268,8 +358,47 @@ int main(int argc, char** argv) {
     };
 
 
-    camera->set_transform(window->get_sensor_orientation());
-    
+
+
+    i=kbhit();
+
+    float frame_offset = 1.0 * frame_time;
+
+    if (i!=0){
+      prev_character = c;
+      c=fgetc(stdin);
+        
+      if(c == 'w' || c == 'W') {
+          camera->translate(0.0, 0.01, 0.0);
+          camera_trans_y += 0.01;
+          std::cout << "Increased y to: " << camera_trans_y << "  \n";
+      } else if(c == 's' || c == 'S') {
+          camera->translate(0.0, -0.01, 0.0);
+          camera_trans_y += -0.01;  
+          std::cout << "Decreased y to: " << camera_trans_y << "  \n";
+      } else if(c == 'a' || c == 'A') {
+          camera->translate(0.0, 0.0, -0.01);
+          camera_trans_z += -0.01;
+          std::cout << "Decreased z to: " << camera_trans_z << " \n";
+      } else if(c == 'd' || c == 'D') {
+          camera->translate(0.0, 0.0, 0.01);
+          camera_trans_z += 0.01;
+          std::cout << "Increased z to: " << camera_trans_z << " \n";
+      } else if( c == 'u' || c == 'U') {
+        nav->translate(0.0, 0.0, -frame_offset);
+      } else if( c == 'j' || c == 'J') {
+        nav->translate(0.0, 0.0, frame_offset);
+      } else if( c == 'h' || c == 'H') {
+        nav->translate(-frame_offset, 0.0, 0.0);
+      } else if( c == 'k' || c == 'K') {
+        nav->translate(frame_offset, 0.0, 0.0);
+      }
+      else {
+        i=0;
+      }
+    }
+
+    neck->set_transform(window->get_oculus_sensor_orientation());
 
     renderer.queue_draw({&graph});
   });

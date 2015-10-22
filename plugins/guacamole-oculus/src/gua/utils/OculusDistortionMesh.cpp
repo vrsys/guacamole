@@ -22,6 +22,8 @@
 // guacamole headers
 #include <gua/utils/OculusDistortionMesh.hpp>
 
+#ifndef _WIN32
+
 namespace gua {
 
   OculusDistortionMesh::OculusDistortionMesh() : ndc_2d_positions(),
@@ -59,14 +61,15 @@ namespace gua {
       //get vertex in oculus sdk format
       ovrDistortionVertex const& distortion_vertex = mesh_component.pVertexData[vertex_idx];
 
-      float corrected_x_pos = 0.0;
+      float corrected_x_pos = distortion_vertex.ScreenPosNDC.x;
 
+/*
       if(isLeftEye) {
         corrected_x_pos = (distortion_vertex.ScreenPosNDC.x + 1.0) * 2.0 - 1.0;
       } else {
         corrected_x_pos = (distortion_vertex.ScreenPosNDC.x - 1.0) * 2.0 + 1.0;        
       }
-
+*/
       scm::math::vec2f vPos( corrected_x_pos ,
                             distortion_vertex.ScreenPosNDC.y);
 
@@ -162,3 +165,5 @@ namespace gua {
   }
 
 };
+
+#endif
