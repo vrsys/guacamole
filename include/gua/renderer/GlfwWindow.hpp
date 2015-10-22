@@ -90,7 +90,7 @@ class GUA_DLL GlfwWindow : public WindowBase {
    *
    * This should be called when drawing a frame has been done.
    */
-  void finish_frame() const;
+  void finish_frame();
 
   events::Signal<math::vec2ui>        on_resize;    
   events::Signal<int, int, int, int>  on_key_press;    // int key, int scancode, int action, int mods

@@ -228,7 +228,7 @@ void GlfwWindow::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::finish_frame() const {
+void GlfwWindow::finish_frame() {
   WindowBase::finish_frame();
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
