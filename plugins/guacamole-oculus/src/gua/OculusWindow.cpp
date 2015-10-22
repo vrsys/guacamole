@@ -168,6 +168,8 @@ void OculusWindow::initialize_distortion_meshes(ovrHmd const& hmd, RenderContext
 OculusWindow::OculusWindow(std::string const& display):
   GlfwWindow() {
 
+  initialize_oculus_environment();
+
   // automatically register the HMDs in order
 #ifdef _WIN32
     ovrHmd_Create(registered_oculus_device_count_++, &registered_HMD_);
@@ -467,7 +469,7 @@ float const OculusWindow::get_IPD() const {
   hmdToEyeViewOffset[0] = eyeRenderDesc[0].HmdToEyeViewOffset;
   hmdToEyeViewOffset[1] = eyeRenderDesc[1].HmdToEyeViewOffset;
 
-  return std::fabs(hmdToEyeViewOffset[0].x + hmdToEyeViewOffset[1].x);
+  return std::fabs(hmdToEyeViewOffset[0].x) + std::fabs(hmdToEyeViewOffset[1].x);
 }
 
 math::vec2ui OculusWindow::get_eye_resolution() const {
