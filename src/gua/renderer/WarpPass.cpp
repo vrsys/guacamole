@@ -350,7 +350,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
-  substitution_map["hole_filling_color"] = "vec3(" + std::to_string(hole_filling_color_.x) + ", " + std::to_string(hole_filling_color_.y) + ", " + std::to_string(hole_filling_color_.z) + ")";
+  substitution_map["hole_filling_color"] = "vec3(" + gua::string_utils::to_string(hole_filling_color_.x) + ", " + gua::string_utils::to_string(hole_filling_color_.y) + ", " + gua::string_utils::to_string(hole_filling_color_.z) + ")";
   substitution_map["interpolation_mode"] = std::to_string(interpolation_mode_);
   substitution_map["warping_max_layers"] = std::to_string(max_layers_);
   PipelinePass pass{*this, ctx, substitution_map};

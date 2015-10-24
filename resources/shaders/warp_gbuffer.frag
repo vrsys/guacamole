@@ -78,7 +78,7 @@ void main() {
   #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1
     if (is_rubber_band == 1) {
       #if @debug_rubber_bands@ == 1
-        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.5);
+        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.9);
       #endif
     }
   #elif HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2

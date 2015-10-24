@@ -125,7 +125,7 @@ void emit_quad(uvec2 offset, uvec2 size) {
     #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
       const float max_depth = max(depth1, max(depth2, max(depth3, depth4)));
       const float min_depth = min(depth1, min(depth2, min(depth3, depth4)));
-      if (max_depth - min_depth > @rubber_band_threshold@) {
+      if (max_depth - min_depth > @rubber_band_threshold@ && size.x == 1 && size.y == 1) {
         is_rubber_band = 1;
       } else {
         is_rubber_band = 0;
