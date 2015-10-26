@@ -178,7 +178,7 @@ void WindowBase::init_context() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::start_frame() const {
+void WindowBase::start_frame() {
   ctx_.render_context->clear_default_color_buffer(
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
 
@@ -187,7 +187,7 @@ void WindowBase::start_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::finish_frame() const {
+void WindowBase::finish_frame() {
   ++display_count_;
 }
 

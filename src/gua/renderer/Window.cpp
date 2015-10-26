@@ -114,7 +114,7 @@ void Window::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::finish_frame() const {
+void Window::finish_frame() {
   WindowBase::finish_frame();
   window_->swap_buffers(config.get_enable_vsync());
 }

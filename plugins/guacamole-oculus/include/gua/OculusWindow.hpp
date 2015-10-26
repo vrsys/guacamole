@@ -32,21 +32,26 @@
   #define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
-#include <string>
-
 // guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
 
 //for the OVR members
-#include <gua/utils/OculusDistortionMesh.hpp>
+#if defined (_WIN32)
+    #include <OVR_CAPI.h>
+    #include <OVR_CAPI_GL.h>
+#else
+    #include <gua/utils/OculusDistortionMesh.hpp>
+#endif
 
 #include <scm/gl_core/state_objects/state_objects_fwd.h>
 
 namespace gua {
 
 
-class GUA_OCULUS_DLL OculusWindow : public Window {
-public:
+class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
+ public:
+
+
   static void initialize_oculus_environment();
   static void shutdown_oculus_environment();
 
@@ -55,42 +60,56 @@ public:
 
   void init_context() override;
 
+  void recenter();
+
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  std::string get_product_name() const;
-  gua::math::mat4 get_sensor_orientation() const;
-  gua::math::vec2ui get_resolution() const;
-  gua::math::vec2ui get_eye_resolution() const;
-  gua::math::vec2 get_screen_size() const;
-  gua::math::vec2 get_screen_size_per_eye() const;
+  math::vec2 const get_left_screen_size() const;
+  math::vec2 const get_right_screen_size() const;
+  math::vec3 const get_left_screen_translation() const;
+  math::vec3 const get_right_screen_translation() const;
+  float const get_IPD() const;
+  
 
-private:
+  math::vec2ui get_eye_resolution() const;
+  math::vec2ui get_window_resolution() const;
+  math::mat4 get_oculus_sensor_orientation() const;
+
+  void start_frame() override;
+  void finish_frame() override;
+
+
+  private:
+
+    void calculate_viewing_setup();
+
     static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
 
-    void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-    void retrieve_oculus_sensor_orientation(double absolute_time);
-    //void create_distortion_mesh();
-    scm::gl::buffer_ptr distortion_mesh_vertices_[2];
-    scm::gl::buffer_ptr distortion_mesh_indices_[2];
-    scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+    math::vec2 screen_size_[2];
+    math::vec3 screen_translation_[2];
 
-    // for distorted rendering as a replacement of the distortion shader
-    unsigned num_distortion_mesh_indices_[2];
+    math::mat4 oculus_sensor_orientation_;
 
+    #ifdef _WIN32
+        ovrSwapTextureSet* swap_texures_ = 0;
+        ovrLayerEyeFov color_layer_;
+        GLuint blit_fbo_read_;
+        GLuint blit_fbo_write_;
+    #else
+        void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
+        scm::gl::buffer_ptr distortion_mesh_vertices_[2];
+        scm::gl::buffer_ptr distortion_mesh_indices_[2];
+        scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+
+        // for distorted rendering as a replacement of the distortion shader
+        unsigned num_distortion_mesh_indices_[2];
+        scm::gl::rasterizer_state_ptr no_backface_culling_state_;
+        bool has_vertical_display_;
+    #endif
     // oculus device associated with the window
     ovrHmd registered_HMD_;
-
-    // HMD params
-    std::string product_name_;
-    gua::math::vec2ui resolution_;
-    gua::math::vec2 screen_size_;
-
-    // sensor orientation
-    gua::math::mat4 oculus_sensor_orientation_;
-
-    scm::gl::rasterizer_state_ptr no_backface_culling_state_;
 };
 
 }
