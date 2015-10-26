@@ -37,11 +37,21 @@
 
 flat in uint cellsize;
 in vec2 texcoords;
+in vec2 cellcoords;
 
 uniform uvec2 gua_warp_grid_tex;
 
 // output
 layout(location=0) out vec3 gua_out_color;
+
+vec3 heat(float v) {
+  float value = 1.0-v;
+  return (0.5+0.5*smoothstep(0.0, 0.1, value))*vec3(
+    smoothstep(0.5, 0.3, value),
+    value < 0.3 ? smoothstep(0.0, 0.3, value) : smoothstep(1.0, 0.6, value),
+    smoothstep(0.4, 0.6, value)
+  );
+}
 
 void main() {
 
@@ -66,7 +76,12 @@ void main() {
 
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;
-    gua_out_color = mix(gua_out_color, vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity, 0.9);
+    gua_out_color = heat(1-intensity);
+    // gua_out_color = vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity;
+
+    if (any(lessThan(cellcoords, vec2(0.6/float(cellsize)))) || any(greaterThan(cellcoords, vec2(1.0-0.6/float(cellsize))))) {
+      gua_out_color = mix(gua_out_color, vec3(0), 0.7);
+    }
   #endif
 
   #if @debug_interpolation_borders@ == 1

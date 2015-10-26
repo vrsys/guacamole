@@ -27,13 +27,14 @@
 #define OCULUS2         0
 #define STEREO_MONITOR  0
 
-#define SSAO            0
+#define SSAO            1
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
-#define LOAD_SPONZA     0
+#define LOAD_SPONZA     1
+#define LOAD_HAIRBALL   1
 #define LOAD_DRAGON     0
 
 #include <functional>
@@ -202,19 +203,18 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   transform->get_tags().add_tag("scene");
 
-  auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(50.f);
-  light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
-  light->data.set_shadow_cascaded_splits({0.1f, 1.5, 5.f, 10.f});
-  light->data.set_shadow_near_clipping_in_sun_direction(100.0f);
-  light->data.set_shadow_far_clipping_in_sun_direction(100.0f);
-  light->data.set_max_shadow_dist(30.0f);
-  light->data.set_shadow_offset(0.0004f);
-  light->data.set_enable_shadows(SHADOWS);
-  light->data.set_shadow_map_size(512);
-  light->rotate(-65, 1, 0, 0);
-  light->rotate(-100, 0, 1, 0);
+  auto sun_light = graph.add_node<gua::node::LightNode>("/", "sun_light");
+  sun_light->data.set_type(gua::node::LightNode::Type::SUN);
+  sun_light->data.set_color(gua::utils::Color3f(1.5f, 1.2f, 1.f));
+  sun_light->data.set_shadow_cascaded_splits({0.1f, 1.5, 5.f, 10.f});
+  sun_light->data.set_shadow_near_clipping_in_sun_direction(100.0f);
+  sun_light->data.set_shadow_far_clipping_in_sun_direction(100.0f);
+  sun_light->data.set_max_shadow_dist(30.0f);
+  sun_light->data.set_shadow_offset(0.0004f);
+  sun_light->data.set_enable_shadows(SHADOWS);
+  sun_light->data.set_shadow_map_size(512);
+  sun_light->rotate(-65, 1, 0, 0);
+  sun_light->rotate(-100, 0, 1, 0);
 
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
@@ -422,24 +422,52 @@ int main(int argc, char** argv) {
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
   #if LOAD_SPONZA
-  auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
+  auto sponza(loader.create_geometry_from_file("sponza","data/objects/sponza/sponza.obj",
+  // auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
-  sponza->translate(0, 3, 0);
+  sponza->translate(0, 2, 0);
   #if LOAD_DRAGON
   scene_root->add_child(transp_dragon);
   #endif
   scene_root->add_child(sponza);
+
+  auto sponza_light_01 = std::make_shared<gua::node::LightNode>("sponza_light_01");
+  sponza_light_01->data.set_type(gua::node::LightNode::Type::POINT);
+  sponza_light_01->data.set_brightness(10.f);
+  sponza_light_01->data.set_falloff(2.f);
+  sponza_light_01->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.1f));
+  sponza_light_01->translate(1.9, 0.2, 0.6);
+  sponza_light_01->scale(1.5);
+  scene_root->add_child(sponza_light_01);
+
+  auto sponza_light_05 = std::make_shared<gua::node::TransformNode>("sponza_light_05");
+  auto light = std::make_shared<gua::node::LightNode>("light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_brightness(10.f);
+  light->data.set_falloff(2.f);
+  // light->data.set_max_shadow_dist(30.0f);
+  // light->data.set_shadow_offset(0.003f);
+  // light->data.set_enable_shadows(SHADOWS);
+  // light->data.set_shadow_map_size(256);
+  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->translate(2.1, 0.2, 0.8);
+  light->scale(3.0);
+  scene_root->add_child(sponza_light_05);
+  sponza_light_05->add_child(light);
   #endif
 
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
-  // auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // scene_root->add_child(hairball);
+  #if LOAD_HAIRBALL
+    auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    hairball->scale(5.0);
+    scene_root->add_child(hairball);
+  #endif
 
   // engine --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "engine");
@@ -524,7 +552,7 @@ int main(int argc, char** argv) {
     graph["/transform/buddha"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
-    light->data.set_brightness(3.f);
+    sun_light->data.set_brightness(3.f);
 
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
@@ -532,7 +560,7 @@ int main(int argc, char** argv) {
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_sponza") {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
-      light->data.set_brightness(6.f);
+      sun_light->data.set_brightness(6.f);
     }
     if (name == "set_scene_textured_quads")
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
@@ -1460,11 +1488,14 @@ int main(int argc, char** argv) {
   int test_gbuffer_primitives(0);
   int test_abuffer_primitives(0);
 
+  gua::Timer test_timer;
+  gua::Timer frame_timer;
+  frame_timer.start();
+
   // application loop
   while(true) {
 
     // test --------------------------------------------------------------------
-    gua::Timer test_timer;
 
     // resolution --------------------------------------------------------------
     if (test_resolution_series) {
@@ -1726,6 +1757,13 @@ int main(int argc, char** argv) {
         //std::cout << window->get_rendering_fps() << std::endl;
       #endif
     }
+
+    #if LOAD_SPONZA
+      double t = frame_timer.get_elapsed()*2;
+      auto movement = gua::math::vec3(std::sin(t), std::sin(t*3.123+1), std::sin(t*5.34+3));
+      movement += gua::math::vec3(std::sin(t*0.32+2)*0.4, std::sin(t*2.123)*0.5, std::sin(t*2.34+2)*0.7);
+      sponza_light_05->set_transform(scm::math::make_translation(movement*0.1));
+    #endif
 
     window->process_events();
     if (window->should_close()) {

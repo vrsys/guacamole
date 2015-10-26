@@ -289,6 +289,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // cascades are aligned horizontally on the shadow map
     unsigned map_width(viewport_size * cascade_count);
+    unsigned map_height(viewport_size);
 
     light_block.cascade_count = cascade_count;
 
@@ -296,7 +297,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     if (!shadow_map) {
       needs_redraw = true;
       for (auto it(shadow_map_res_->unused_shadow_maps.begin()); it != shadow_map_res_->unused_shadow_maps.end(); ++it) {
-        if ((*it)->get_width() == map_width) {
+        if ((*it)->get_width() == map_width && (*it)->get_height() == map_height) {
           shadow_map = *it;
           shadow_map_res_->unused_shadow_maps.erase(it);
           break;

@@ -74,6 +74,7 @@ flat out uint cellsize;
 #endif
 
 out vec2 texcoords;
+out vec2 cellcoords;
 
 
 
@@ -133,15 +134,19 @@ void emit_quad(uvec2 offset, uvec2 size) {
     #endif
 
     texcoords = pos1 / gua_resolution;
+    cellcoords = vec2(0, 0);
     emit_grid_vertex(pos1 + vec2(-GAP, -GAP), depth1);
 
     texcoords = pos2 / gua_resolution;
+    cellcoords = vec2(1, 0);
     emit_grid_vertex(pos2 + vec2( GAP, -GAP), depth2);
 
     texcoords = pos3 / gua_resolution;
+    cellcoords = vec2(0, 1);
     emit_grid_vertex(pos3 + vec2(-GAP,  GAP), depth3);
 
     texcoords = pos4 / gua_resolution;
+    cellcoords = vec2(1, 1);
     emit_grid_vertex(pos4 + vec2( GAP,  GAP), depth4);
 
     EndPrimitive();
@@ -159,9 +164,13 @@ void emit_pixel(uvec2 offset) {
     texcoords = position / gua_resolution;
     const float depth = get_depth_raw(position);
 
+    cellcoords = vec2(0, 0);
     emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
+    cellcoords = vec2(1, 0);
     emit_grid_vertex(position + vec2(1, 0) + vec2( GAP, -GAP), depth);
+    cellcoords = vec2(1, 1);
     emit_grid_vertex(position + vec2(0, 1) + vec2(-GAP,  GAP), depth);
+    cellcoords = vec2(0, 1);
     emit_grid_vertex(position + vec2(1, 1) + vec2( GAP,  GAP), depth);
 
     EndPrimitive();

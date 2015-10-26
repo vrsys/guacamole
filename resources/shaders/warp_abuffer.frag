@@ -276,33 +276,6 @@ void draw_debug_views() {
 
 }
 
-vec4 hole_filling_inpaint() {
-  float max_depth = 0;
-  vec2  offset;
-
-  for (int i=1; i<=30; ++i) {
-
-    float radius = i;
-
-    vec2 offsets[] = {          vec2(0, radius),
-                        vec2(-radius, 0),   vec2(radius, 0),
-                                vec2(0, -radius)};
-
-    for (int i=0; i<offsets.length(); ++i) {
-      float sample_depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords + offsets[i]/gua_resolution).x;
-      if (sample_depth > max_depth+0.01 && sample_depth < 1.0) {
-        offset = offsets[i];
-        max_depth = sample_depth;
-      }
-    }
-  }
-  if (max_depth > 0) {
-    return texture2D(sampler2D(warped_color_buffer), gua_quad_coords + offset/gua_resolution);
-  }
-
-  return vec4(0, 0, 0, 1);
-}
-
 vec2 get_epipolar_direction() {
   vec4 epipol = warp_matrix * vec4(0, 0, -1, 0);
   vec2 epi_dir = vec2(0);
@@ -320,16 +293,54 @@ vec2 get_epipolar_direction() {
   return normalize(epi_dir);
 }
 
+vec4 hole_filling_bidirectional_epipolar_search() {
+  vec2 boundary_pos = vec2(0);
+
+  vec2 epi_dir = get_epipolar_direction();
+  float sample_depth = 1.0;
+
+  for (int i=1; i<=50; ++i) {
+    boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
+    sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
+
+    if (sample_depth < 1.0) break;
+  }
+
+  for (int i=1; i<=50; ++i) {
+    vec2 pos = gua_quad_coords - i*epi_dir/gua_resolution;
+    float depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(pos*gua_resolution), 0).x;
+
+    if (depth < 1.0) {
+      if (depth > sample_depth || sample_depth == 1.0) {
+        boundary_pos = pos;
+        sample_depth = depth;
+      }
+      break;
+    }
+  }
+
+  if (sample_depth == 1.0) {
+    return vec4(@hole_filling_color@, 1);
+  }
+
+  return texelFetch(sampler2D(warped_color_buffer), ivec2(boundary_pos*gua_resolution),0);
+}
+
 vec4 hole_filling_epipolar_search() {
   vec2 boundary_pos = vec2(0);
 
   vec2 epi_dir = get_epipolar_direction();
+  float sample_depth = 1.0;
 
   for (int i=1; i<=50; ++i) {
     boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
-    float sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
+    sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
 
     if (sample_depth < 1.0) break;
+  }
+
+  if (sample_depth == 1.0) {
+    return vec4(@hole_filling_color@, 1);
   }
 
   return texelFetch(sampler2D(warped_color_buffer), ivec2(boundary_pos*gua_resolution),0);
@@ -355,74 +366,77 @@ vec4 hole_filling_epipolar_mirror() {
 
 vec4 hole_filling_blur() {
 
-  const int levels = 6;
-  vec3 colors[levels];
-  vec2 depths[levels];
+  vec2 epi_dir = get_epipolar_direction();
+  float sample_depth = 1.0;
+  int dist = 0;
 
-  for (int i=0; i<levels; ++i) {
-    const ivec2 max_res = textureSize(sampler2D(hole_filling_texture), i);
-    const vec2 origin = (gua_quad_coords*gua_resolution - (1<<(i)))/(1<<(i+1));
+  for (int i=1; i<=50; ++i) {
+    vec2 pos = gua_quad_coords + i*epi_dir/gua_resolution;
+    sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(pos*gua_resolution), 0).x;
 
-    vec4 samples[4];
-    for (int y=0; y<2; ++y) {
-      for (int x=0; x<2; ++x) {
-        const ivec2 pos = clamp(ivec2(origin) + ivec2(x,y), ivec2(0), max_res-1);
-        samples[x+2*y] = texelFetch(sampler2D(hole_filling_texture), pos, i);
-      }
-    }
-
-    float min_depth = min(min(samples[0].a, samples[1].a), min(samples[2].a, samples[3].a));
-    float max_depth = max(max(samples[0].a, samples[1].a), max(samples[2].a, samples[3].a));
-
-    if (min_depth < 1) {
-      vec2 a = (origin - floor(abs(origin)));
-      float fac = mix(mix(floor(samples[0].a), floor(samples[1].a), a.x), mix(floor(samples[2].a), floor(samples[3].a), a.x), a.y);
-      float average_depth = mix(mix(samples[0].a, samples[1].a, a.x), mix(samples[2].a, samples[3].a, a.x), a.y);
-      colors[i] = mix(mix(samples[0].rgb, samples[1].rgb, a.x), mix(samples[2].rgb, samples[3].rgb, a.x), a.y);
-      depths[i] = vec2(min_depth, fac);
-    } else {
-      colors[i] = vec3(0);
-      depths[i] = vec2(1);
+    if (sample_depth < 1.0) {
+      dist = i;
+      break;
     }
   }
 
+  for (int i=1; i<=50; ++i) {
+    vec2 pos = gua_quad_coords - i*epi_dir/gua_resolution;
+    float depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(pos*gua_resolution), 0).x;
+
+    if (depth < 1.0) {
+      if (depth > sample_depth || sample_depth == 1.0) {
+        dist = i;
+      }
+      break;
+    }
+  }
+
+  return textureLod(sampler2D(hole_filling_texture), gua_quad_coords, log2(dist));
 
 
 
-  // float average_depth = 0;
-  // int count = 0;
+  // const int levels = 6;
+  // vec3 colors[levels];
+  // vec2 depths[levels];
+
   // for (int i=0; i<levels; ++i) {
-  //   if (depths[i].x < 1) {
-  //     ++count;
-  //     average_depth = min(average_depth, depths[i].x);
-  //     // average_depth += depths[i].x;
+  //   const ivec2 max_res = textureSize(sampler2D(hole_filling_texture), i);
+  //   const vec2 origin = (gua_quad_coords*gua_resolution - (1<<(i)))/(1<<(i+1));
+
+  //   vec4 samples[4];
+  //   for (int y=0; y<2; ++y) {
+  //     for (int x=0; x<2; ++x) {
+  //       const ivec2 pos = clamp(ivec2(origin) + ivec2(x,y), ivec2(0), max_res-1);
+  //       samples[x+2*y] = texelFetch(sampler2D(hole_filling_texture), pos, i);
+  //     }
+  //   }
+
+  //   float min_depth = min(min(samples[0].a, samples[1].a), min(samples[2].a, samples[3].a));
+  //   float max_depth = max(max(samples[0].a, samples[1].a), max(samples[2].a, samples[3].a));
+
+  //   if (min_depth < 1) {
+  //     vec2 a = (origin - floor(abs(origin)));
+  //     float fac = mix(mix(floor(samples[0].a), floor(samples[1].a), a.x), mix(floor(samples[2].a), floor(samples[3].a), a.x), a.y);
+  //     float average_depth = mix(mix(samples[0].a, samples[1].a, a.x), mix(samples[2].a, samples[3].a, a.x), a.y);
+  //     colors[i] = mix(mix(samples[0].rgb, samples[1].rgb, a.x), mix(samples[2].rgb, samples[3].rgb, a.x), a.y);
+  //     depths[i] = vec2(min_depth, fac);
+  //   } else {
+  //     colors[i] = vec3(0);
+  //     depths[i] = vec2(1);
   //   }
   // }
 
-  // if (count > 0) {
-  //   average_depth /= count;
+
+  // vec3 result = vec3(0);
+  // result = colors[levels-1];
+  // for (int i=levels-2; i>=0; --i) {
+  //   if (depths[levels-1].x - depths[i].x < 0.001) {
+  //     result = colors[i] + result*depths[i].y;
+  //   }
   // }
 
-
-  // int tmp=0;
-  vec3 result = vec3(0);
-  // float last_depth = depths[levels-1].x;
-  result = colors[levels-1];
-  for (int i=levels-2; i>=0; --i) {
-    if (depths[levels-1].x - depths[i].x < 0.001) {
-      // if (depths[i].x - last_depth > 0.0001) {
-      //   break;
-      // }
-      // last_depth = depths[levels-1].x;
-      result = colors[i] + result*depths[i].y;
-      // result = vec3(average_depth);
-    // } else {
-    //   result = vec3(1,1,0);
-      // break;
-    }
-  }
-
-  return vec4(result, 1);
+  // return vec4(result, 1);
 }
 
 void main() {
@@ -434,7 +448,7 @@ void main() {
   // hole filling
   float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;
   #if HOLE_FILLING_MODE == HOLE_FILLING_MODE_INPAINT
-    if (depth == 1.0) background_color = hole_filling_inpaint();
+    if (depth == 1.0) background_color = hole_filling_bidirectional_epipolar_search();
     else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_SEARCH
     if (depth == 1.0) background_color = hole_filling_epipolar_search();
