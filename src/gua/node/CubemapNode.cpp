@@ -114,7 +114,7 @@ float CubemapNode::get_distance_by_local_direction(math::vec3 const& dir) const{
   return -1.0;
 }
 
-void CubemapNode::create_weights(math::vec3 view_direction, math::vec3 move_direction){
+void CubemapNode::create_weights(math::vec3 const& view_direction, math::vec3 const& move_direction){
   int _pixel_count = config.get_resolution() * config.get_resolution() * 6; 
   for (int i = 0; i<_pixel_count; ++i){
     math::vec2 tex_coords = math::vec2(i%(config.resolution()*6), i/(config.resolution()*6));
@@ -141,7 +141,7 @@ void CubemapNode::create_weights(math::vec3 view_direction, math::vec3 move_dire
     if (view_lenght > 0.0)
     {
       float cosin_factor = scm::math::dot(point_direction, scm::math::normalize(view_direction)); // alligned: 1.0  not alligned -1.0
-      float weighting_strength(1.0);
+      float weighting_strength(5.0);
       m_Weights[i] += weighting_strength * (cosin_factor - 1.0) * -0.5; // alligned: +0.0  not alligned +2.0
     }
 
@@ -150,13 +150,43 @@ void CubemapNode::create_weights(math::vec3 view_direction, math::vec3 move_dire
     if (move_lenght > 0.0)
     {
       float cosin_factor = scm::math::dot(point_direction, scm::math::normalize(move_direction));
-      float weighting_strength(1.0);
+      float weighting_strength(5.0);
       m_Weights[i] += weighting_strength * (cosin_factor - 1.0) * -0.5;
     }
 
   }
 }
 
+math::vec3f CubemapNode::get_push_back(float radius){
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
+  math::vec3f pushback(0.0, 0.0, 0.0);
+
+  if (texture){
+    std::vector<float> const& data = texture->get_data();
+
+
+    for (const float &f : data){
+      uint index = &f - &data[0];
+
+      if ( (f < radius) && (f!=-1.f) ){
+          math::vec2ui tex_coords( index%(config.resolution()*6), index/(config.resolution()*6) );
+          math::vec3f direction( calculate_direction_from_tex_coords(tex_coords) );
+          direction *= -1.0;
+
+          float intrusion_factor = (radius - f) / radius;
+          intrusion_factor = pow(intrusion_factor, 2);
+
+          pushback += direction * intrusion_factor;
+
+      }
+    }
+  }
+  if (scm::math::length(pushback) == 0.0){
+    return pushback;
+  }else{
+    return pushback /= pow(config.get_resolution(), 2) * 6;
+  }
+}
 
 void CubemapNode::find_min_distance(){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
@@ -197,8 +227,22 @@ void CubemapNode::find_min_distance(){
 }
 
 math::vec3 CubemapNode::project_back_to_world_coords(Distance_Info const& di) const{
-  int side = di.tex_coords.x / config.resolution();
-  math::vec2 xy( float(di.tex_coords.x) / config.resolution(), float(di.tex_coords.y) / config.resolution() ); 
+  math::vec3 direction( calculate_direction_from_tex_coords(di.tex_coords));
+
+  math::vec4 v4_direction(direction.x, direction.y, direction.z, 0.0);
+  math::mat4 rotation( math::get_rotation(world_transform_) );
+
+  v4_direction = rotation * v4_direction;
+  direction = scm::math::normalize( math::vec3(v4_direction.x, v4_direction.y, v4_direction.z) );
+
+  math::vec3 center( gua::math::get_translation(world_transform_) );
+
+  return center + (direction*di.distance);
+}
+
+math::vec3 CubemapNode::calculate_direction_from_tex_coords(math::vec2ui const& tex_coords) const{
+  int side = tex_coords.x / config.resolution();
+  math::vec2 xy( float(tex_coords.x) / config.resolution(), float(tex_coords.y) / config.resolution() );
   xy.x = fmod(xy.x, 1.0);
   xy -= 0.5;
 
@@ -212,13 +256,13 @@ math::vec3 CubemapNode::project_back_to_world_coords(Distance_Info const& di) co
     case 5: point_on_face = math::vec4(0.5, xy.y, xy.x, 1.0); break;
   }
 
-  point_on_face = world_transform_ *  point_on_face;
+  // point_on_face = world_transform_ *  point_on_face;
 
-  math::vec3 center( gua::math::get_translation(world_transform_) );
-  math::vec3 direction( math::vec3(point_on_face.x, point_on_face.y, point_on_face.z) - center);
-  direction = scm::math::normalize(direction);
+  // math::vec3 center( gua::math::get_translation(world_transform_) );
+  // math::vec3 direction( math::vec3(point_on_face.x, point_on_face.y, point_on_face.z) - center );
+  math::vec3 direction( math::vec3(point_on_face.x, point_on_face.y, point_on_face.z));
 
-  return center + (direction*di.distance);
+  return scm::math::normalize(direction);
 }
 
 float CubemapNode::acces_texture_data(unsigned side, math::vec2 coords) const{
