@@ -76,10 +76,17 @@ bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
 bool vsync                  = false;
+float eye_offset            = 0.f;
 
 bool test_resolution_series = false;
 bool test_positional_warp_series = false;
 bool test_rotational_warp_series = false;
+
+#if OCULUS1 || OCULUS2
+  float eye_dist = 0.0635f;
+#else
+  float eye_dist = 0.1f;
+#endif
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
@@ -254,7 +261,7 @@ int main(int argc, char** argv) {
 
   // one oilrig ----------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  scene_root->scale(3);
+  scene_root->scale(20);
   scene_root->rotate(-90, 1, 0, 0);
   add_oilrig(0, 0, 1, "/transform/one_oilrig");
 
@@ -373,30 +380,31 @@ int main(int argc, char** argv) {
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
-  mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
-              .set_show_back_faces(true);
-  auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glasses.dae", mat_glasses,
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
-  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
-  scene_root->add_child(glasses);
-  scene_root->scale(10);
-  scene_root->rotate(180, 0, 1, 0);
-
-  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+  // auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
+  // mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
+  //             .set_show_back_faces(true);
+  // auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glasses.dae", mat_glasses,
   //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE);
-  // buddha->translate(0, -0.16, 0);
-  // for (auto c: buddha->get_children()) {
-  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
-  //   node->get_material()->set_uniform("Roughness", 0.2f);
-  //   node->get_material()->set_uniform("Metalness", 1.0f);
-  // }
-  // scene_root->add_child(buddha);
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
+  // // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
+  // scene_root->add_child(glasses);
+  // scene_root->scale(10);
+  // scene_root->rotate(180, 0, 1, 0);
+
+  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE);
+  buddha->translate(0, -0.16, 0);
+  for (auto c: buddha->get_children()) {
+    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+    node->get_material()->set_uniform("Roughness", 0.2f);
+    node->get_material()->set_uniform("Metalness", 1.0f);
+  }
+  scene_root->scale(10);
+  scene_root->add_child(buddha);
   // scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
@@ -448,15 +456,44 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_brightness(10.f);
   light->data.set_falloff(2.f);
-  // light->data.set_max_shadow_dist(30.0f);
-  // light->data.set_shadow_offset(0.003f);
-  // light->data.set_enable_shadows(SHADOWS);
-  // light->data.set_shadow_map_size(256);
   light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
   light->translate(2.1, 0.2, 0.8);
   light->scale(3.0);
   scene_root->add_child(sponza_light_05);
   sponza_light_05->add_child(light);
+
+  auto sponza_light_06 = std::make_shared<gua::node::TransformNode>("sponza_light_06");
+  light = std::make_shared<gua::node::LightNode>("light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_brightness(10.f);
+  light->data.set_falloff(2.f);
+  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->translate(-2.1, 0.2, 0.8);
+  light->scale(3.0);
+  scene_root->add_child(sponza_light_06);
+  sponza_light_06->add_child(light);
+
+  auto sponza_light_07 = std::make_shared<gua::node::TransformNode>("sponza_light_07");
+  light = std::make_shared<gua::node::LightNode>("light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_brightness(10.f);
+  light->data.set_falloff(2.f);
+  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->translate(-2.1, 0.2, -0.8);
+  light->scale(3.0);
+  scene_root->add_child(sponza_light_07);
+  sponza_light_07->add_child(light);
+
+  auto sponza_light_08 = std::make_shared<gua::node::TransformNode>("sponza_light_08");
+  light = std::make_shared<gua::node::LightNode>("light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_brightness(10.f);
+  light->data.set_falloff(2.f);
+  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->translate(2.1, 0.2, -0.8);
+  light->scale(3.0);
+  scene_root->add_child(sponza_light_08);
+  sponza_light_08->add_child(light);
   #endif
 
   // hairball --------------------------------------------------------------------
@@ -796,9 +833,12 @@ int main(int argc, char** argv) {
       grid_pass->set_enable_for_right_eye(!warping);
       render_grid_pass->set_enable_for_right_eye(!warping);
 
+      normal_cam->config.set_eye_offset(0.f);
+      warp_cam->config.set_eye_offset(0.f);
+
       if (warping) {
         normal_cam->config.set_eye_dist(0.f);
-        warp_cam->config.set_eye_dist(0.0635f);
+        warp_cam->config.set_eye_dist(eye_dist);
 
         #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -811,7 +851,7 @@ int main(int argc, char** argv) {
         normal_cam->set_pipeline_description(warp_pipe);
 
       } else {
-          normal_cam->config.set_eye_dist(0.0635f);
+        normal_cam->config.set_eye_dist(eye_dist);
 
         #if OCULUS1
           normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
@@ -843,8 +883,15 @@ int main(int argc, char** argv) {
 
       if (warping) {
         normal_cam->set_pipeline_description(warp_pipe);
+        normal_cam->config.set_eye_offset(0.f);
+        warp_cam->config.set_eye_offset(eye_offset);
       } else {
         normal_cam->set_pipeline_description(normal_pipe);
+        if (warp_perspective) {
+          normal_cam->config.set_eye_offset(eye_offset);
+        } else {
+          normal_cam->config.set_eye_offset(0.f);
+        }
       }
     }
 
@@ -1007,6 +1054,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_view_stereo");
 
       gui->add_javascript_callback("reset_view");
+      gui->add_javascript_callback("set_left_view");
+      gui->add_javascript_callback("set_right_view");
       gui->add_javascript_callback("reset_object");
 
       gui->call_javascript("init");
@@ -1061,6 +1110,7 @@ int main(int argc, char** argv) {
       } else if (callback == "set_warp_perspective") {
         std::stringstream str(params[0]);
         str >> warp_perspective;
+        update_view_mode();
       } else if (callback == "set_warping") {
         std::stringstream str(params[0]);
         str >> warping;
@@ -1135,6 +1185,14 @@ int main(int argc, char** argv) {
         warp_pass->hole_filling_color(color/255.f);
       } else if (callback == "reset_view") {
         warp_nav.reset();
+        eye_offset = 0;
+        update_view_mode();
+      } else if (callback == "set_left_view") {
+        eye_offset = eye_dist*-0.5;
+        update_view_mode();
+      } else if (callback == "set_right_view") {
+        eye_offset = eye_dist*0.5;
+        update_view_mode();
       } else if (callback == "reset_object") {
         object_trackball.reset();
       } else if (callback == "set_gbuffer_type_points"
@@ -1766,6 +1824,9 @@ int main(int argc, char** argv) {
       auto movement = gua::math::vec3(std::sin(t), std::sin(t*3.123+1), std::sin(t*5.34+3));
       movement += gua::math::vec3(std::sin(t*0.32+2)*0.4, std::sin(t*2.123)*0.5, std::sin(t*2.34+2)*0.7);
       sponza_light_05->set_transform(scm::math::make_translation(movement*0.1));
+      sponza_light_06->set_transform(scm::math::make_translation(movement*0.1));
+      sponza_light_07->set_transform(scm::math::make_translation(movement*0.1));
+      sponza_light_08->set_transform(scm::math::make_translation(movement*0.1));
     #endif
 
     window->process_events();

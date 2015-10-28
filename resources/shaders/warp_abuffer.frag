@@ -280,7 +280,10 @@ vec2 get_epipolar_direction() {
   vec4 epipol = warp_matrix * vec4(0, 0, -1, 0);
   vec2 epi_dir = vec2(0);
 
-  if (epipol.w < 0) {
+  if (epipol.w == 0) {
+    epipol.xy = epipol.xy*0.5 + 0.5;
+    epi_dir = epipol.xy - gua_quad_coords;
+  } else if (epipol.w < 0) {
     epipol /= epipol.w;
     epipol.xy = epipol.xy*0.5 + 0.5;
     epi_dir = epipol.xy - gua_quad_coords;

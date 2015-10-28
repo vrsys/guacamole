@@ -487,11 +487,23 @@
 
           <div class="row">
             <div class="col-xs-5">
-            Reset:
+            Warp Camera:
             </div>
             <div class="col-xs-7">
-              <button onclick="gua.reset_view()" class="btn btn-block"><i class="fa fa-undo"></i> Warp Camera</button>
-              <button onclick="gua.reset_object()" class="btn btn-block"><i class="fa fa-undo"></i> Object</button>
+              <button onclick="gua.reset_view()" style="width:32%" class="btn"><i class="fa fa-undo"></i></button>
+              <button onclick="gua.set_left_view()" style="width:32%" class="btn"><i class="fa fa-arrow-circle-left"></i></button>
+              <button onclick="gua.set_right_view()" style="width:32%" class="btn"><i class="fa fa-arrow-circle-right"></i></button>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Object:
+            </div>
+            <div class="col-xs-7">
+              <button onclick="gua.reset_object()" style="width:100%"class="btn btn-block"><i class="fa fa-undo"></i></button>
             </div>
           </div>
 
