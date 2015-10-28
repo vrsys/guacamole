@@ -73,13 +73,12 @@ elseif (WIN32)
 endif (UNIX)
 
 include(FindSchism)
-include(FindBoost)
-#find_package(Boost COMPONENTS
-#  system
-#  regex
-#  thread
-#  REQUIRED
-#  )
+find_package(Boost COMPONENTS
+  system
+  regex
+  thread
+  REQUIRED
+  )
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)
