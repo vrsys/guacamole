@@ -157,35 +157,41 @@ void CubemapNode::create_weights(math::vec3 const& view_direction, math::vec3 co
   }
 }
 
-math::vec3f CubemapNode::get_push_back(float radius){
+math::vec3 CubemapNode::get_push_back(float radius){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
-  math::vec3f pushback(0.0, 0.0, 0.0);
+  math::vec3 pushback(0.0, 0.0, 0.0);
 
   if (texture){
     std::vector<float> const& data = texture->get_data();
 
+    uint samples(0);
 
     for (const float &f : data){
       uint index = &f - &data[0];
 
       if ( (f < radius) && (f!=-1.f) ){
           math::vec2ui tex_coords( index%(config.resolution()*6), index/(config.resolution()*6) );
-          math::vec3f direction( calculate_direction_from_tex_coords(tex_coords) );
+          math::vec3 direction( calculate_direction_from_tex_coords(tex_coords) );
           direction *= -1.0;
 
           float intrusion_factor = (radius - f) / radius;
           intrusion_factor = pow(intrusion_factor, 2);
 
           pushback += direction * intrusion_factor;
+          ++samples;
 
       }
     }
+    // if (samples > 0){
+    //   pushback /= samples;
+    // }
   }
   if (scm::math::length(pushback) == 0.0){
     return pushback;
   }else{
     return pushback /= pow(config.get_resolution(), 2) * 6;
   }
+  // return pushback;
 }
 
 void CubemapNode::find_min_distance(){
