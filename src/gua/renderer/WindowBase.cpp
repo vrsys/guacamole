@@ -76,7 +76,8 @@ WindowBase::WindowBase(Configuration const& configuration)
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr) {}
+      warpBL_(nullptr),
+      display_count_(0) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +119,7 @@ void WindowBase::init_context() {
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader.frag"));
-#else 
+#else
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_frag));
@@ -141,7 +142,7 @@ void WindowBase::init_context() {
     fullscreen_shader_.create_from_sources(
       factory.read_shader_file("resources/shaders/display_shader.vert"),
       factory.read_shader_file("resources/shaders/display_shader_warped.frag"));
-#else 
+#else
     fullscreen_shader_.create_from_sources(
       Resources::lookup_shader(Resources::shaders_display_shader_vert),
       Resources::lookup_shader(Resources::shaders_display_shader_warped_frag)
@@ -177,7 +178,7 @@ void WindowBase::init_context() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::start_frame() const {
+void WindowBase::start_frame() {
   ctx_.render_context->clear_default_color_buffer(
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
 
@@ -186,13 +187,21 @@ void WindowBase::start_frame() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void WindowBase::finish_frame() {
+  ++display_count_;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
   display(center_texture, true);
-  
+
   if (config.get_stereo_mode() != StereoMode::MONO) {
     display(center_texture, false);
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +238,24 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
               is_left, true);
       break;
+    case StereoMode::ACTIVE: {
+      if ((display_count_ % 2) == 0 && is_left) {
+        display(texture,
+                config.get_left_resolution(),
+                config.get_left_position(),
+                WindowBase::FULL,
+                true, true);
+      } else if ((display_count_ % 2) == 1 && !is_left) {
+        display(texture,
+                config.get_right_resolution(),
+                config.get_right_position(),
+                WindowBase::FULL,
+                false, true);
+      }
+      break;
+    }
   }
+
 
 }
 

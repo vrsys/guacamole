@@ -110,6 +110,7 @@ void Renderer::renderclient(Mailbox in) {
       // update window if one is assigned
       if (window && window->get_is_open()) {
         window->set_active(true);
+        window->start_frame();
 
         if (window->get_context()->framecount == 0) {
           display_loading_screen(*window);

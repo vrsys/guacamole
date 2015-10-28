@@ -23,8 +23,8 @@ option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
-# We require at least version 2.8.0
-cmake_minimum_required(VERSION 2.8.0)
+# We require at least version 3.0.2
+cmake_minimum_required(VERSION 3.0.2)
 
 if (UNIX)
   find_package(PkgConfig)
@@ -73,13 +73,12 @@ elseif (WIN32)
 endif (UNIX)
 
 include(FindSchism)
-include(FindBoost)
-#find_package(Boost COMPONENTS
-#  system
-#  regex
-#  thread
-#  REQUIRED
-#  )
+find_package(Boost COMPONENTS
+  system
+  regex
+  thread
+  REQUIRED
+  )
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)

@@ -149,14 +149,14 @@ class GUA_DLL WindowBase {
    *
    * This should be called when a new frame is about to be drawn.
    */
-  virtual void start_frame() const;
+  virtual void start_frame();
 
   /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
    */
-  virtual void finish_frame() const = 0;
+  virtual void finish_frame();
 
   /**
    *
@@ -200,6 +200,7 @@ protected:
   static std::atomic_uint last_context_id_;
 
   static std::mutex last_context_id_mutex_;
+  mutable int display_count_;
 
 
  private:

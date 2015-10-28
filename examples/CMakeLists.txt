@@ -41,7 +41,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(smooth_lighting)
-    add_subdirectory(video3d)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
     add_subdirectory(oit_demo)
@@ -65,14 +64,9 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
-  # oculusSDK2 example requires oculusSDK-plugin
-  IF (${PLUGIN_guacamole-oculusSDK2})
-    add_subdirectory(oculusSDK2)
-  ENDIF (${PLUGIN_guacamole-oculusSDK2})
-
-  IF(${PLUGIN_guacamole-oculusSDK2} AND ${PLUGIN_guacamole-plod})
-    add_subdirectory(oculusSDK2_Pitoti)
-  ENDIF (${PLUGIN_guacamole-oculusSDK2} AND ${PLUGIN_guacamole-plod})
+  IF(${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
+    add_subdirectory(oculus_pitoti)
+  ENDIF (${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
 
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod})
@@ -89,9 +83,14 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${PLUGIN_guacamole-gui})
 
 
-  # multicontext example requires nurbs-plugin
-  # IF (${PLUGIN_guacamole-nurbs})
+  # multicontext example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
     add_subdirectory(multicontext)
-  # ENDIF (${PLUGIN_guacamole-nurbs})
+  ENDIF (${PLUGIN_guacamole-plod})
+
+  # video3d example requires glfw and video3d-plugin
+  IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
+      add_subdirectory(video3d)
+  ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
 ENDIF (GUACAMOLE_EXAMPLES)
