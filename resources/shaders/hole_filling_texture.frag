@@ -63,12 +63,6 @@ void main() {
     if (samples[i].a == 1.0) ++hole_count;
   }
 
-  // if (hole_count == 0) {
-  //   result = vec4(0, 0, 0, 1);
-  //   return;
-  // }
-
-
   // calculate average depth of none hole pixels
   if (hole_count < 4*4) {
     float average_depth = 0;

@@ -708,7 +708,7 @@ int main(int argc, char** argv) {
             tone_mapping_exposure(1.5f).
             horizon_fade(0.2f).
             compositing_enable(false).
-            ssao_intensity(3.f).
+            ssao_intensity(1.5f).
             ssao_radius(2.f);
 
   normal_cam->config.set_output_window_name("window");
@@ -1483,8 +1483,8 @@ int main(int argc, char** argv) {
   double test_trimesh_time(0);
   double test_gbuffer_warp_time(0);
   double test_abuffer_warp_time(0);
-  double test_gbuffer_grid_time(0);
-  double test_abuffer_grid_time(0);
+  double test_gbuffer_pre_time(0);
+  double test_abuffer_pre_time(0);
   int test_gbuffer_primitives(0);
   int test_abuffer_primitives(0);
 
@@ -1511,8 +1511,8 @@ int main(int argc, char** argv) {
           test_trimesh_time = 0;
           test_gbuffer_warp_time = 0;
           test_abuffer_warp_time = 0;
-          test_gbuffer_grid_time = 0;
-          test_abuffer_grid_time = 0;
+          test_gbuffer_pre_time = 0;
+          test_abuffer_pre_time = 0;
           test_gbuffer_primitives = 0;
           test_abuffer_primitives = 0;
           normal_cam->config.set_resolution(test_resolutions[test_counter]);
@@ -1541,8 +1541,8 @@ int main(int argc, char** argv) {
             if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
             if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
             if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
           }
         }
 
@@ -1574,8 +1574,8 @@ int main(int argc, char** argv) {
           test_trimesh_time = 0;
           test_gbuffer_warp_time = 0;
           test_abuffer_warp_time = 0;
-          test_gbuffer_grid_time = 0;
-          test_abuffer_grid_time = 0;
+          test_gbuffer_pre_time = 0;
+          test_abuffer_pre_time = 0;
           test_gbuffer_primitives = 0;
           test_abuffer_primitives = 0;
           warp_navigation->set_transform(scm::math::make_translation(0.0, 0.0, test_offsets[test_counter]));
@@ -1599,8 +1599,8 @@ int main(int argc, char** argv) {
             if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
             if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
             if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
           }
         }
 
@@ -1612,9 +1612,9 @@ int main(int argc, char** argv) {
       if (test_frame_counter == 0) {
         std::cout << test_offsets[test_counter]
                   << ", " << test_timer.get_elapsed()/50
-                  << ", " << test_gbuffer_grid_time/50
+                  << ", " << test_gbuffer_pre_time/50
                   << ", " << test_gbuffer_warp_time/50
-                  << ", " << test_abuffer_grid_time/50
+                  << ", " << test_abuffer_pre_time/50
                   << ", " << test_abuffer_warp_time/50
                   << std::endl;
       }
@@ -1632,8 +1632,8 @@ int main(int argc, char** argv) {
           test_trimesh_time = 0;
           test_gbuffer_warp_time = 0;
           test_abuffer_warp_time = 0;
-          test_gbuffer_grid_time = 0;
-          test_abuffer_grid_time = 0;
+          test_gbuffer_pre_time = 0;
+          test_abuffer_pre_time = 0;
           test_gbuffer_primitives = 0;
           test_abuffer_primitives = 0;
           warp_navigation->set_transform(scm::math::make_rotation(test_rotations[test_counter], 0.0, 1.0, 0.0));
@@ -1657,8 +1657,8 @@ int main(int argc, char** argv) {
             if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
             if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
             if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_grid_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_grid_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
           }
         }
 
@@ -1670,9 +1670,9 @@ int main(int argc, char** argv) {
       if (test_frame_counter == 0) {
         std::cout << test_rotations[test_counter]
                   << ", " << test_timer.get_elapsed()/50
-                  << ", " << test_gbuffer_grid_time/50
+                  << ", " << test_gbuffer_pre_time/50
                   << ", " << test_gbuffer_warp_time/50
-                  << ", " << test_abuffer_grid_time/50
+                  << ", " << test_abuffer_pre_time/50
                   << ", " << test_abuffer_warp_time/50
                   << std::endl;
       }
@@ -1726,8 +1726,9 @@ int main(int argc, char** argv) {
         double trimesh_time(0);
         double gbuffer_warp_time(0);
         double abuffer_warp_time(0);
-        double gbuffer_grid_time(0);
-        double abuffer_grid_time(0);
+        double gbuffer_pre_time(0);
+        double abuffer_pre_time(0);
+        double hole_filling_pre_time(0);
         int gbuffer_primitives(0);
         int abuffer_primitives(0);
 
@@ -1737,10 +1738,12 @@ int main(int argc, char** argv) {
             if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
             if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time += result.second;
             if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) gbuffer_grid_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) abuffer_grid_time += result.second;
+            if (result.first.find("WarpGridGenerator") != std::string::npos) gbuffer_pre_time += result.second;
+            if (result.first.find("MinMaxMap") != std::string::npos) abuffer_pre_time += result.second;
+            if (result.first.find("Generate Hole Filling Texture") != std::string::npos) hole_filling_pre_time += result.second;
           }
         }
+
 
         for (auto const& result: window->get_context()->primitive_query_results) {
           if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives += result.second.first;
@@ -1749,9 +1752,9 @@ int main(int argc, char** argv) {
 
 
         stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
-                             window->get_rendering_fps(), trimesh_time, gbuffer_grid_time,
-                             abuffer_grid_time, gbuffer_warp_time, abuffer_warp_time,
-                             gbuffer_primitives, abuffer_primitives);
+                             window->get_rendering_fps(), trimesh_time, gbuffer_pre_time,
+                             abuffer_pre_time, gbuffer_warp_time, abuffer_warp_time,
+                             hole_filling_pre_time, gbuffer_primitives, abuffer_primitives);
 
       #else
         //std::cout << window->get_rendering_fps() << std::endl;

@@ -136,7 +136,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
 
     if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
-      int holefilling_levels = 7;
+      int holefilling_levels = 6;
       scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
         scm::gl::WRAP_CLAMP_TO_EDGE,
         scm::gl::WRAP_CLAMP_TO_EDGE);
