@@ -89,7 +89,7 @@ class GUA_DLL Node {
    * This destructs a Node and all its children.
    *
    */
-  virtual ~Node();
+  virtual ~Node() = default;
 
 
   /**

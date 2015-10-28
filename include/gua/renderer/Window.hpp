@@ -72,7 +72,7 @@ class GUA_DLL Window : public WindowBase {
    *
    * This should be called when drawing a frame has been done.
    */
-  virtual void finish_frame() const;
+  virtual void finish_frame();
 
  private:
   scm::gl::wm::window_ptr window_;

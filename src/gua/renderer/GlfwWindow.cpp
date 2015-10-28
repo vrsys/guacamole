@@ -129,7 +129,7 @@ void GlfwWindow::open() {
 
   glfw_window_ = glfwCreateWindow(
     config.get_size().x, config.get_size().y,
-    config.get_title().c_str(), 
+    config.get_title().c_str(),
     config.get_fullscreen_mode()? glfwGetPrimaryMonitor(): nullptr, nullptr
   );
 
@@ -143,7 +143,7 @@ void GlfwWindow::open() {
   glfwSetScrollCallback(      glfw_window_, &on_window_scroll);
   glfwSetCursorEnterCallback( glfw_window_, &on_window_enter);
 
-  switch(cursor_mode_) { 
+  switch(cursor_mode_) {
     case CursorMode::NORMAL:
      glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     break;
@@ -192,8 +192,8 @@ void GlfwWindow::process_events() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::cursor_mode(CursorMode mode) {
-  
-  switch(mode) { 
+
+  switch(mode) {
     case CursorMode::NORMAL:
       if(get_is_open()) glfwSetInputMode(glfw_window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
       cursor_mode_ = mode;
@@ -228,7 +228,8 @@ void GlfwWindow::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::finish_frame() const {
+void GlfwWindow::finish_frame() {
+  WindowBase::finish_frame();
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
 }

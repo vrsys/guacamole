@@ -56,15 +56,15 @@ class GUA_DLL PipelineDescription {
 
   std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
 
-  std::shared_ptr<TriMeshPassDescription> const& get_tri_mesh_pass() const;
-  // std::shared_ptr<SkeletalAnimationPassDescription> const& get_skel_anim_pass() const;
-  std::shared_ptr<TexturedQuadPassDescription> const& get_textured_quad_pass() const;
-  std::shared_ptr<LightVisibilityPassDescription> const& get_light_visibility_pass() const;
-  std::shared_ptr<BBoxPassDescription> const& get_bbox_pass() const;
-  std::shared_ptr<ResolvePassDescription> const& get_resolve_pass() const;
-  std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& get_textured_screen_space_quad_pass() const;
-  std::shared_ptr<DebugViewPassDescription> const& get_debug_view_pass() const;
-  std::shared_ptr<SSAAPassDescription> const& get_ssaa_pass() const;
+  std::shared_ptr<TriMeshPassDescription> const get_tri_mesh_pass() const;
+  // std::shared_ptr<SkeletalAnimationPassDescription> const get_skel_anim_pass() const;
+  std::shared_ptr<TexturedQuadPassDescription> const get_textured_quad_pass() const;
+  std::shared_ptr<LightVisibilityPassDescription> const get_light_visibility_pass() const;
+  std::shared_ptr<BBoxPassDescription> const get_bbox_pass() const;
+  std::shared_ptr<ResolvePassDescription> const get_resolve_pass() const;
+  std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const get_textured_screen_space_quad_pass() const;
+  std::shared_ptr<DebugViewPassDescription> const get_debug_view_pass() const;
+  std::shared_ptr<SSAAPassDescription> const get_ssaa_pass() const;
 
   void set_enable_abuffer(bool value) {
     enable_abuffer_ = value;
@@ -110,8 +110,8 @@ class GUA_DLL PipelineDescription {
   bool operator!=(PipelineDescription const& other) const;
   PipelineDescription& operator=(PipelineDescription const& other);
 
-  template <typename T> 
-  std::shared_ptr<T> const& get_pass_by_type() const {
+  template <typename T>
+  std::shared_ptr<T> const get_pass_by_type() const {
     for (auto const& pass : passes_) {
       auto const& casted_pass = std::dynamic_pointer_cast<T>(pass);
       if (casted_pass) {
