@@ -392,18 +392,30 @@ int main(int argc, char** argv) {
   // scene_root->add_child(glasses);
   // scene_root->scale(10);
   // scene_root->rotate(180, 0, 1, 0);
+  scene_root->scale(10);
 
   auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE);
-  buddha->translate(0, -0.16, 0);
+  buddha->translate(0, -0.16, -1);
   for (auto c: buddha->get_children()) {
     auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
     node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
     node->get_material()->set_uniform("Roughness", 0.2f);
-    node->get_material()->set_uniform("Metalness", 1.0f);
+    node->get_material()->set_uniform("Metalness", 0.5f);
   }
-  scene_root->scale(10);
+  scene_root->add_child(buddha);
+
+  buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE);
+  buddha->translate(0, -0.16, 1);
+  for (auto c: buddha->get_children()) {
+    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 0.5f));
+    node->get_material()->set_uniform("Roughness", 0.2f);
+    node->get_material()->set_uniform("Metalness", 0.5f);
+  }
   scene_root->add_child(buddha);
   // scene_root->add_child(plane);
 
@@ -503,6 +515,18 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE));
     hairball->scale(5.0);
+    hairball->translate(0, 0, -7);
+    scene_root->add_child(hairball);
+
+    hairball = loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE);
+    for (auto c: hairball->get_children()) {
+      auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+      node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.5f));
+    }
+    hairball->scale(5.0);
+    hairball->translate(0, 0, 7);
     scene_root->add_child(hairball);
   #endif
 

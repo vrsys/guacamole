@@ -502,7 +502,7 @@ void main() {
         ++abuffer_sample_count;
         while (frag.x != 0) {
           float z = unpack_depth24(frag.y);
-          const float thickness = 0.0005;
+          const float thickness = 0.0001;
           if (last_depth < z-thickness && d_range.y > z && d_range.x <= z+thickness) {
             uvec4 data = frag_data[frag.x - abuf_list_offset];
             float frag_alpha = float(bitfieldExtract(frag.y, 0, 8)) / 255.0;
@@ -558,16 +558,14 @@ void main() {
 
     }
 
+    abuf_mix_frag(background_color, color);
+    gua_out_color = toneMap(color.rgb);
 
     #if @debug_sample_count@ == 1
       // draw debug sample count
-      color = mix(color, vec4(heat(float((abuffer_sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.9);
-      // color = mix(color, vec4(heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 1), 0.9);
+      // gua_out_color = mix(gua_out_color, heat(float((abuffer_sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
+      gua_out_color = mix(gua_out_color, heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
     #endif
-
-    abuf_mix_frag(background_color, color);
-    gua_out_color = toneMap(color.rgb);
-    // gua_out_color = color.rgb;
 
     #if @debug_sample_ray@ == 1
       draw_debug_views();
