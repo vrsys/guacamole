@@ -27,7 +27,6 @@
 #define OCULUS2         0
 #define STEREO_MONITOR  0
 
-#define SSAO            1
 #define SHADOWS         1
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
@@ -35,7 +34,7 @@
 #define LOAD_ENGINE     0
 #define LOAD_SPONZA     1
 #define LOAD_HAIRBALL   1
-#define LOAD_DRAGON     0
+#define LOAD_DRAGON     1
 
 #include <functional>
 
@@ -67,8 +66,6 @@
 
 #include "Navigator.hpp"
 
-bool depth_test             = true;
-bool backface_culling       = true;
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
@@ -81,6 +78,11 @@ float eye_offset            = 0.f;
 bool test_resolution_series = false;
 bool test_positional_warp_series = false;
 bool test_rotational_warp_series = false;
+
+int quad_count = 5;
+float quad_spacing = 0.5;
+float quad_start = 2.5;
+
 
 #if OCULUS1 || OCULUS2
   float eye_dist = 0.0635f;
@@ -137,14 +139,14 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-void show_backfaces(std::shared_ptr<gua::node::Node> const& node) {
+void show_backfaces(std::shared_ptr<gua::node::Node> const& node, bool show) {
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(node));
   if (casted) {
-    casted->get_material()->set_show_back_faces(!backface_culling);
+    casted->get_material()->set_show_back_faces(show);
   }
 
   for (auto& child: node->get_children()) {
-    show_backfaces(child);
+    show_backfaces(child, show);
   }
 }
 
@@ -223,6 +225,22 @@ int main(int argc, char** argv) {
   sun_light->rotate(-65, 1, 0, 0);
   sun_light->rotate(-100, 0, 1, 0);
 
+  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+  light2->data.set_type(gua::node::LightNode::Type::SUN);
+  light2->data.set_color(gua::utils::Color3f(0.8f, 1.0f, 1.5f));
+  light2->data.set_brightness(0.5f);
+  light2->data.set_enable_specular_shading(false);
+  light2->rotate(45, 1, 0, 0);
+  light2->rotate(-120, 0, 1, 0);
+
+  auto light3 = graph.add_node<gua::node::LightNode>("/", "light3");
+  light3->data.set_type(gua::node::LightNode::Type::SUN);
+  light3->data.set_color(gua::utils::Color3f(0.9f, 1.3f, 1.1f));
+  light3->data.set_brightness(1.0f);
+  light3->data.set_enable_specular_shading(false);
+  light3->rotate(45, 1, 0, 0);
+  light3->rotate(80, 0, 1, 0);
+
   // floor
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
@@ -273,12 +291,20 @@ int main(int argc, char** argv) {
   // scene_root->add_child(tuscany);
 
   // textured quads scene ------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
-  for (int x(0); x<10; ++x) {
-    auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
-    node->translate(0, 0, -x);
-    node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
-  }
+  auto texured_quad_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
+
+  auto setup_textured_quad_scene = [&](){
+    texured_quad_root->clear_children();
+    for (int x(0); x<quad_count; ++x) {
+      auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
+      node->data.set_texture("data/textures/test_grid.png");
+      node->translate(0, 0, -x*quad_spacing-quad_start);
+      node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+    }
+  };
+
+  setup_textured_quad_scene();
+
 
   // teapot --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
@@ -417,30 +443,40 @@ int main(int argc, char** argv) {
     node->get_material()->set_uniform("Metalness", 0.5f);
   }
   scene_root->add_child(buddha);
-  // scene_root->add_child(plane);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-#if LOAD_DRAGON
-  auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-  transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+  scene_root->rotate(60, 0, 1, 0);
+  scene_root->translate(0.6, -0.17, 0);
+  #if LOAD_DRAGON
+    auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    scene_root->add_child(dragon);
 
-  dragon->translate(0.6, -0.17, 0);
-  transp_dragon->translate(-0.6, 0, 0);
-  transp_dragon->scale(1.4);
-  scene_root->add_child(dragon);
-  scene_root->add_child(transp_dragon);
-  scene_root->add_child(plane);
+    auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+    transp_dragon->translate(0, 0, 4);
+    scene_root->add_child(transp_dragon);
+
+    for (int i=0; i<8; ++i) {
+      auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
+        gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+        gua::TriMeshLoader::NORMALIZE_SCALE));
+      transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
+      transp_dragon->rotate(42*i, 0, 1, 0);
+      transp_dragon->translate(i*0.5, 0, ((i%2)-0.5)*i*0.5+15);
+      scene_root->add_child(transp_dragon);
+      show_backfaces(transp_dragon, true);
+    }
   #endif
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
+  scene_root->rotate(40, 0, 1, 0);
   #if LOAD_SPONZA
   auto sponza(loader.create_geometry_from_file("sponza","data/objects/sponza/sponza.obj",
   // auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
@@ -449,9 +485,6 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::NORMALIZE_SCALE));
   sponza->scale(20);
   sponza->translate(0, 2, 0);
-  #if LOAD_DRAGON
-  scene_root->add_child(transp_dragon);
-  #endif
   scene_root->add_child(sponza);
 
   auto sponza_light_01 = std::make_shared<gua::node::LightNode>("sponza_light_01");
@@ -468,7 +501,7 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_brightness(10.f);
   light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
   light->translate(2.1, 0.2, 0.8);
   light->scale(3.0);
   scene_root->add_child(sponza_light_05);
@@ -479,7 +512,7 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_brightness(10.f);
   light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
   light->translate(-2.1, 0.2, 0.8);
   light->scale(3.0);
   scene_root->add_child(sponza_light_06);
@@ -490,7 +523,7 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_brightness(10.f);
   light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
   light->translate(-2.1, 0.2, -0.8);
   light->scale(3.0);
   scene_root->add_child(sponza_light_07);
@@ -501,7 +534,7 @@ int main(int argc, char** argv) {
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.set_brightness(10.f);
   light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(0.5f, 1.5f, 1.0f));
+  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
   light->translate(2.1, 0.2, -0.8);
   light->scale(3.0);
   scene_root->add_child(sponza_light_08);
@@ -534,20 +567,6 @@ int main(int argc, char** argv) {
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "engine");
   #if LOAD_ENGINE
     scene_root->scale(0.05);
-
-    auto light2 = std::make_shared<gua::node::LightNode>("light2");
-    light2->data.set_type(gua::node::LightNode::Type::POINT);
-    light2->data.set_brightness(10.0f);
-    light2->scale(50.f);
-    light2->translate(14.f, 20.f, -25.f);
-    scene_root->add_child(light2);
-
-    auto light3 = std::make_shared<gua::node::LightNode>("light3");
-    light3->data.set_type(gua::node::LightNode::Type::POINT);
-    light3->data.set_brightness(10.0f);
-    light3->scale(50.f);
-    light3->translate(-10.f, -20.f, 20.f);
-    scene_root->add_child(light3);
 
     // material
     auto desc(std::make_shared<gua::MaterialShaderDescription>());
@@ -593,9 +612,11 @@ int main(int argc, char** argv) {
                                                  gua::TriMeshLoader::DEFAULTS));
       scene_root->add_child(part);
     }
+    show_backfaces(scene_root, true);
   #endif
 
-  show_backfaces(transform);
+
+  auto res_pass(std::make_shared<gua::ResolvePassDescription>());
 
   auto set_scene = [&](std::string const& name) {
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
@@ -614,17 +635,55 @@ int main(int argc, char** argv) {
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
     sun_light->data.set_brightness(3.f);
+    res_pass->ssao_enable(true);
+    res_pass->ssao_intensity(1.5f);
+    res_pass->ssao_radius(2.0f);
 
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_one_oilrig")
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sponza") {
+    if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
-      sun_light->data.set_brightness(6.f);
+      sun_light->data.set_brightness(10.f);
+      res_pass->ssao_intensity(5.0f);
+      res_pass->ssao_radius(5.0f);
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg");
+
+      if (name == "set_scene_sponza0")
+        nav.set_transform(scm::math::mat4f(-0.115, -0.010, -0.993, -6.283,
+                                           0.000, 1.000, -0.010, 2.764,
+                                           0.993, -0.001, -0.115, 1.126,
+                                           0.000, 0.000, 0.000, 1.000));
+      if (name == "set_scene_sponza1")
+        nav.set_transform(scm::math::mat4f(0.637, 0.067, -0.768, -4.160,
+                                           0.000, 0.996, 0.086, 2.715,
+                                           0.771, -0.055, 0.635, 2.682,
+                                           0.000, 0.000, 0.000, 1.000));
+      if (name == "set_scene_sponza2")
+        nav.set_transform(scm::math::mat4f(-0.750, -0.126, -0.649, -3.217,
+                                           0.000, 0.982, -0.191, 2.467,
+                                           0.661, -0.143, -0.736, -0.661,
+                                           0.000, 0.000, 0.000, 1.000));
+      if (name == "set_scene_sponza3")
+        nav.set_transform(scm::math::mat4f(0.093, 0.069, -0.993, -5.685,
+                                           0.000, 0.998, 0.069, 0.831,
+                                           0.996, -0.006, 0.092, 3.059,
+                                           0.000, 0.000, 0.000, 1.000));
+      if (name == "set_scene_sponza4")
+        nav.set_transform(scm::math::mat4f(-0.621, 0.088, 0.779, -4.251,
+                                           0.000, 0.994, -0.112, 0.158,
+                                           -0.784, -0.070, -0.617, 3.676,
+                                           0.000, 0.000, 0.000, 1.000));
     }
-    if (name == "set_scene_textured_quads")
+    if (name == "set_scene_textured_quads") {
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
+      nav.set_transform(scm::math::mat4f(1, 0, 0, 0,
+                                         0, 1, 0, 0,
+                                         0, 0, 1, 0,
+                                         0, 0, 0, 1));
+    }
     if (name == "set_scene_teapot")
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_car")
@@ -639,10 +698,39 @@ int main(int argc, char** argv) {
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_engine")
       graph["/transform/engine"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_dragon")
+    if (name == "set_scene_transp_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_hairball")
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/checker.png");
+      nav.set_transform(scm::math::mat4f(0.914, 0.114, -0.388, 3.625,
+                                         0.000, 0.959, 0.283, 0.060,
+                                         0.405, -0.259, 0.877, 2.961,
+                                         0.000, 0.000, 0.000, 1.000));
+    }
+    if (name == "set_scene_many_transp_dragon") {
+      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/checker.png");
+      nav.set_transform(scm::math::mat4f(0.988, 0.007, -0.154, 1.457,
+                                         0.000, 0.999, 0.046, -0.155,
+                                         0.154, -0.045, 0.987, 1.278,
+                                         0.000, 0.000, 0.000, 1.000));
+    }
+    if (name == "set_scene_dragon") {
+      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
+      nav.set_transform(scm::math::mat4f(0.846, 0.019, -0.534, -0.009,
+                                         0.000, 0.999, 0.035, -0.186,
+                                         0.534, -0.030, 0.845, 0.881,
+                                         0.000, 0.000, 0.000, 1.000));
+    }
+    if (name == "set_scene_hairball") {
       graph["/transform/hairball"]->get_tags().remove_tag("invisible");
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
+      res_pass->ssao_enable(false);
+      nav.set_transform(scm::math::mat4f(1.000, 0.007, -0.031, -0.269,
+                                         0.000, 0.974, 0.228, 0.758,
+                                         0.031, -0.228, 0.973, -3.367,
+                                         0.000, 0.000, 0.000, 1.000));
+    }
     if (name == "set_scene_buddha")
       graph["/transform/buddha"]->get_tags().remove_tag("invisible");
   };
@@ -686,9 +774,10 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
+    normal_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
     normal_screen->translate(0, 0, -2.5);
     #if POWER_WALL
+      normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
       normal_screen->translate(0, 1.5, 0);
       normal_cam->translate(0, 1.5, 0);
     #endif
@@ -732,9 +821,10 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
+    warp_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
     warp_screen->translate(0, 0, -2.5);
     #if POWER_WALL
+      warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
       warp_screen->translate(0, 1.5, 0);
       warp_cam->translate(0, 1.5, 0);
     #endif
@@ -757,14 +847,13 @@ int main(int argc, char** argv) {
   #if LOAD_PITOTI
   auto plod_pass(std::make_shared<gua::PLODPassDescription>());
   #endif
-  auto res_pass(std::make_shared<gua::ResolvePassDescription>());
   res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
             background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
             environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
             background_color(gua::utils::Color3f(0,0,0)).
             environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
             environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
-            ssao_enable(SSAO).
+            ssao_enable(true).
             tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
             tone_mapping_exposure(1.5f).
             horizon_fade(0.2f).
@@ -985,12 +1074,10 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
       gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
-      gui->add_javascript_getter("get_depth_test", [&](){ return std::to_string(depth_test);});
       gui->add_javascript_getter("get_vsync", [&](){ return std::to_string(vsync);});
       gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
       gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
       gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
-      gui->add_javascript_getter("get_backface_culling", [&](){ return std::to_string(backface_culling);});
       gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
       gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
       gui->add_javascript_getter("get_adaptive_entry_level", [&](){ return std::to_string(warp_pass->adaptive_entry_level());});
@@ -1002,6 +1089,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_rubber_bands", [&](){ return std::to_string(warp_pass->debug_rubber_bands());});
       gui->add_javascript_getter("get_debug_epipol", [&](){ return std::to_string(warp_pass->debug_epipol());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
+      gui->add_javascript_getter("get_quad_count", [&](){ return gua::string_utils::to_string(quad_count);});
+      gui->add_javascript_getter("get_quad_spacing", [&](){ return gua::string_utils::to_string(quad_spacing);});
+      gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
@@ -1011,12 +1101,10 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
-      gui->add_javascript_callback("set_depth_test");
       gui->add_javascript_callback("set_vsync");
       gui->add_javascript_callback("set_warp_perspective");
       gui->add_javascript_callback("set_warping");
       gui->add_javascript_callback("set_stereo");
-      gui->add_javascript_callback("set_backface_culling");
       gui->add_javascript_callback("set_background");
       gui->add_javascript_callback("set_gbuffer_type_none");
       gui->add_javascript_callback("set_gbuffer_type_points");
@@ -1045,7 +1133,11 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_adaptive_abuffer");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
-      gui->add_javascript_callback("set_scene_sponza");
+      gui->add_javascript_callback("set_scene_sponza0");
+      gui->add_javascript_callback("set_scene_sponza1");
+      gui->add_javascript_callback("set_scene_sponza2");
+      gui->add_javascript_callback("set_scene_sponza3");
+      gui->add_javascript_callback("set_scene_sponza4");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_pitoti");
       gui->add_javascript_callback("set_scene_car");
@@ -1057,6 +1149,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_buddha");
       gui->add_javascript_callback("set_scene_hairball");
       gui->add_javascript_callback("set_scene_engine");
+      gui->add_javascript_callback("set_scene_many_transp_dragon");
+      gui->add_javascript_callback("set_scene_transp_dragon");
       gui->add_javascript_callback("set_manipulation_navigator");
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
@@ -1070,6 +1164,9 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_debug_rubber_bands");
       gui->add_javascript_callback("set_debug_epipol");
       gui->add_javascript_callback("set_pixel_size");
+      gui->add_javascript_callback("set_quad_count");
+      gui->add_javascript_callback("set_quad_start");
+      gui->add_javascript_callback("set_quad_spacing");
       gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
@@ -1111,6 +1208,18 @@ int main(int argc, char** argv) {
         float pixel_size;
         str >> pixel_size;
         warp_pass->pixel_size(pixel_size-0.5);
+      } else if (callback == "set_quad_count") {
+        std::stringstream str(params[0]);
+        str >> quad_count;
+        setup_textured_quad_scene();
+      } else if (callback == "set_quad_spacing") {
+        std::stringstream str(params[0]);
+        str >> quad_spacing;
+        setup_textured_quad_scene();
+      } else if (callback == "set_quad_start") {
+        std::stringstream str(params[0]);
+        str >> quad_start;
+        setup_textured_quad_scene();
       } else if (callback == "set_rubber_band_threshold") {
         std::stringstream str(params[0]);
         float rubber_band_threshold;
@@ -1123,10 +1232,6 @@ int main(int argc, char** argv) {
         int cell_size;
         str >> cell_size;
         grid_pass->cell_size(std::pow(2, cell_size));
-      } else if (callback == "set_depth_test") {
-        std::stringstream str(params[0]);
-        str >> depth_test;
-        warp_pass->depth_test(depth_test);
       } else if (callback == "set_vsync") {
         std::stringstream str(params[0]);
         str >> vsync;
@@ -1143,10 +1248,6 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> stereo;
         update_view_mode();
-      } else if (callback == "set_backface_culling") {
-        std::stringstream str(params[0]);
-        str >> backface_culling;
-        show_backfaces(transform);
       } else if (callback == "set_background") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1330,7 +1431,11 @@ int main(int argc, char** argv) {
         }
       } else if (callback == "set_scene_one_oilrig"        ||
                  callback == "set_scene_many_oilrigs"      ||
-                 callback == "set_scene_sponza"            ||
+                 callback == "set_scene_sponza0"           ||
+                 callback == "set_scene_sponza1"           ||
+                 callback == "set_scene_sponza2"           ||
+                 callback == "set_scene_sponza3"           ||
+                 callback == "set_scene_sponza4"           ||
                  callback == "set_scene_teapot"            ||
                  callback == "set_scene_pitoti"            ||
                  callback == "set_scene_car"               ||
@@ -1340,6 +1445,8 @@ int main(int argc, char** argv) {
                  callback == "set_scene_dragon"            ||
                  callback == "set_scene_hairball"          ||
                  callback == "set_scene_engine"            ||
+                 callback == "set_scene_many_transp_dragon"||
+                 callback == "set_scene_transp_dragon"     ||
                  callback == "set_scene_buddha"            ||
                  callback == "set_scene_textured_quads") {
         set_scene(callback);
@@ -1788,6 +1895,7 @@ int main(int argc, char** argv) {
         } else {
           navigation->set_transform(gua::math::mat4(nav.get_transform()));
         }
+        // std::cout << nav.get_transform() << std::endl;
         warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
       #endif
     }

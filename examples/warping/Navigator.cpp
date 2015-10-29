@@ -73,7 +73,14 @@ void Navigator::update() {
 
 void Navigator::set_transform(scm::math::mat4f const& transform) {
   transform_ = transform;
-  current_location_ = scm::math::vec4f(transform_[12], transform_[13], transform_[14], 1.0f);
+  current_location_ = scm::math::vec4f(transform[3], transform[7], transform[11], 1.0f);
+
+  auto quat = gua::math::quat::from_matrix(gua::math::mat4(transform));
+  gua::math::quat::value_type angle;
+  gua::math::vec3 axis;
+  quat.retrieve_axis_angle(angle, axis);
+
+  current_rotation_ = gua::math::vec2(-axis.y*angle, axis.x*angle);
 }
 
 void Navigator::reset() {

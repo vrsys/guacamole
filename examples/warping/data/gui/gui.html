@@ -171,23 +171,25 @@
         init_radio("#manipulation_object", "manipulation_object");
 
         init_radio("#scene_one_oilrig", "scene_one_oilrig");
-        // init_radio("#scene_many_oilrigs", "scene_many_oilrigs");
-        init_radio("#scene_sponza", "scene_sponza");
+        init_radio("#scene_sponza0", "scene_sponza0");
+        init_radio("#scene_sponza1", "scene_sponza1");
+        init_radio("#scene_sponza2", "scene_sponza2");
+        init_radio("#scene_sponza3", "scene_sponza3");
+        init_radio("#scene_sponza4", "scene_sponza4");
         init_radio("#scene_mountains", "scene_mountains");
         init_radio("#scene_bottle", "scene_bottle");
         init_radio("#scene_teapot", "scene_teapot");
         init_radio("#scene_car", "scene_car");
-        // init_radio("#scene_pitoti", "scene_pitoti");
         init_radio("#scene_sphere", "scene_sphere");
         init_radio("#scene_textured_quads", "scene_textured_quads");
         init_radio("#scene_buddha", "scene_buddha");
         init_radio("#scene_dragon", "scene_dragon");
         init_radio("#scene_hairball", "scene_hairball");
         init_radio("#scene_engine", "scene_engine");
+        init_radio("#scene_many_transp_dragon", "scene_many_transp_dragon");
+        init_radio("#scene_transp_dragon", "scene_transp_dragon");
 
-        init_checkbox("#depth_test", "depth_test");
         init_checkbox("#vsync", "vsync");
-        init_checkbox("#backface_culling", "backface_culling");
         init_checkbox("#background", "background");
 
         init_checkbox("#warp_perspective", "warp_perspective");
@@ -230,7 +232,10 @@
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
 
-        add_texture_select("#control-panel", "bg_tex", "Texture");
+        add_texture_select("#scene-panel", "bg_tex", "Texture");
+        init_slider("#scene-panel .quad_count", "quad_count");
+        init_slider("#scene-panel .quad_start", "quad_start");
+        init_slider("#scene-panel .quad_spacing", "quad_spacing");
 
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
         init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
@@ -284,31 +289,74 @@
     <div id="settings-right">
 
       <div class="side-panel">
-        <div id="control-panel" class="panel-inner">
+        <div id="scene-panel" class="panel-inner">
 
           <h4><i class="fa fa-picture-o"></i> Scene Selection</h4>
 
           <div class="row">
-            <div class="col-xs-5">
-            Scene:
+            <div class="col-xs-6">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_bottle" value="">
+                  <span>Bottle</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_engine" value="">
+                  <span>Engine</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_transp_dragon" value="">
+                  <span>Trsp. Dragon</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_many_transp_dragon" value="">
+                  <span>Many trsp. Dragons</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza0" value="">
+                  <span>Sponza 0</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza1" value="">
+                  <span>Sponza 1</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza2" value="">
+                  <span>Sponza 2</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza3" value="">
+                  <span>Sponza 3</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza4" value="">
+                  <span>Sponza 4</span>
+                </label>
+              </div>
+
             </div>
-            <div class="col-xs-7">
+
+            <div class="col-xs-6">
               <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_one_oilrig" value="" checked="">
                   <span>One Oilrig</span>
-                </label>
-              </div>
-              <!-- <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_many_oilrigs" value="">
-                  <span>Many Oilrigs</span>
-                </label>
-              </div> -->
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_sponza" value="">
-                  <span>Sponza</span>
                 </label>
               </div>
               <div class="radio">
@@ -317,12 +365,7 @@
                   <span>Mountains</span>
                 </label>
               </div>
-               <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_bottle" value="">
-                  <span>Bottle</span>
-                </label>
-              </div>
+
               <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_teapot" value="">
@@ -347,13 +390,6 @@
                   <span>Textured Quads</span>
                 </label>
               </div>
-              <!-- <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_pitoti" value="">
-                  <span>Pitoti</span>
-                </label>
-              </div> -->
-
               <div class="radio">
                 <label>
                   <input type="radio" name="sceneRadios" id="scene_buddha" value="">
@@ -372,13 +408,37 @@
                   <span>Hairball</span>
                 </label>
               </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_engine" value="">
-                  <span>Engine</span>
-                </label>
-              </div>
 
+
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Quad Count:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider quad_count" data-slider-tooltip="hide" data-slider-id="quad_count" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Quad Start:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider quad_start" data-slider-tooltip="hide" data-slider-id="quad_start" type="text" data-slider-min="0" data-slider-max="5" data-slider-step="0.1" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Quad Spacing:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider quad_spacing" data-slider-tooltip="hide" data-slider-id="quad_spacing" type="text" data-slider-min="0.1" data-slider-max="20" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 
@@ -397,6 +457,7 @@
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -413,25 +474,10 @@
 
               <div class="checkbox">
                 <label>
-                  <input id="depth_test" type="checkbox" value="">
-                  <span>Depth Test</span>
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label>
                   <input id="vsync" type="checkbox" value="">
                   <span>Vsync</span>
                 </label>
               </div>
-
-              <div class="checkbox">
-                <label>
-                  <input id="backface_culling" type="checkbox" value="">
-                  <span>Backface Culling</span>
-                </label>
-              </div>
-
 
               <div class="checkbox">
                 <label>
