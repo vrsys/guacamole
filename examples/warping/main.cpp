@@ -78,9 +78,11 @@ float eye_offset            = 0.f;
 bool test_resolution_series = false;
 bool test_positional_warp_series = false;
 bool test_rotational_warp_series = false;
+bool test_quad_series = false;
+bool test_print_current_times = false;
 
 int quad_count = 5;
-float quad_spacing = 0.5;
+float quad_range = 20;
 float quad_start = 2.5;
 
 
@@ -92,6 +94,104 @@ float quad_start = 2.5;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
+
+
+
+
+
+
+class QueryResults {
+ public:
+  enum class Type {
+    FPS = 0,
+    RENDER_TIME,
+    GBUFFER_PRE_TIME,
+    ABUFFER_PRE_TIME,
+    HOLE_FILLING_PRE_TIME,
+    GBUFFER_WARP_TIME,
+    ABUFFER_WARP_TIME,
+    GBUFFER_PRIMITIVES,
+    COUNT
+  };
+
+  QueryResults() {
+    reset();
+  }
+
+  void update(std::shared_ptr<gua::WindowBase> const& window) {
+
+    add(Type::FPS, window->get_rendering_fps());
+
+    for (auto const& result: window->get_context()->time_query_results) {
+      if (result.first.find("GPU") != std::string::npos) {
+        if (result.first.find("Trimesh") != std::string::npos)
+          add(Type::RENDER_TIME, result.second);
+        if (result.first.find("Resolve") != std::string::npos)
+          add(Type::RENDER_TIME, result.second);
+        if (result.first.find("WarpPass GBuffer") != std::string::npos)
+          add(Type::GBUFFER_WARP_TIME, result.second);
+        if (result.first.find("WarpPass ABuffer") != std::string::npos)
+          add(Type::ABUFFER_WARP_TIME, result.second);
+        if (result.first.find("WarpGridGenerator") != std::string::npos)
+          add(Type::GBUFFER_PRE_TIME, result.second);
+        if (result.first.find("MinMaxMap") != std::string::npos)
+          add(Type::ABUFFER_PRE_TIME, result.second);
+        if (result.first.find("Generate Hole Filling Texture") != std::string::npos)
+          add(Type::HOLE_FILLING_PRE_TIME, result.second);
+      }
+    }
+
+    for (auto const& result: window->get_context()->primitive_query_results) {
+      if (result.first.find("WarpPass GBuffer") != std::string::npos)
+        add(Type::GBUFFER_PRIMITIVES, result.second.first);
+    }
+
+    ++update_count_;
+  }
+
+  double get(Type type) {
+    auto value(values_[static_cast<int>(type)]);
+    return value / update_count_;
+  }
+
+  void print_to_console() {
+    for (auto& value: values_) {
+      std::cout << value / update_count_ << " ";
+    }
+    std::cout << std::endl;
+  }
+
+  void print_to_gui(std::shared_ptr<gua::GuiResource> const& gui) {
+    gui->call_javascript("set_stats", 1000.f / get(Type::FPS), get(Type::FPS),
+                         get(Type::RENDER_TIME), get(Type::GBUFFER_PRE_TIME),
+                         get(Type::ABUFFER_PRE_TIME), get(Type::GBUFFER_WARP_TIME),
+                         get(Type::ABUFFER_WARP_TIME), get(Type::HOLE_FILLING_PRE_TIME),
+                         get(Type::GBUFFER_PRIMITIVES));
+  }
+
+  void reset() {
+    for (auto& value: values_) {
+      value = 0;
+    }
+    update_count_ = 0;
+  }
+
+ private:
+  void add(Type type, double value) {
+    auto last(values_[static_cast<int>(type)]);
+    values_[static_cast<int>(type)] = last + value;
+  }
+
+  std::array<double, static_cast<int>(Type::COUNT)> values_;
+  int update_count_;
+};
+
+
+
+
+
+
+
 
 #if OCULUS1
   OVR::SensorFusion* init_oculus() {
@@ -296,10 +396,13 @@ int main(int argc, char** argv) {
   auto setup_textured_quad_scene = [&](){
     texured_quad_root->clear_children();
     for (int x(0); x<quad_count; ++x) {
+      float offset(quad_count <= 1 ? quad_start : x*quad_range/(quad_count-1)+quad_start);
+      float scale(offset/2.5);
       auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
       node->data.set_texture("data/textures/test_grid.png");
-      node->translate(0, 0, -x*quad_spacing-quad_start);
-      node->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+      node->translate(0, 0, -offset);
+      node->data.set_size(gua::math::vec2(4.f, 4.f*1.08f/1.92f) * scale);
+      node->data.set_repeat(gua::math::vec2(4.f, 4.f*1.08f/1.92f) * scale);
     }
   };
 
@@ -774,7 +877,7 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+    normal_screen->data.set_size(gua::math::vec2(4.f,4*1.08f/1.92f));
     normal_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
@@ -821,7 +924,7 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(1.92f*2, 1.08f*2));
+    warp_screen->data.set_size(gua::math::vec2(4.f,4*1.08f/1.92f));
     warp_screen->translate(0, 0, -2.5);
     #if POWER_WALL
       warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
@@ -1090,7 +1193,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_debug_epipol", [&](){ return std::to_string(warp_pass->debug_epipol());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
       gui->add_javascript_getter("get_quad_count", [&](){ return gua::string_utils::to_string(quad_count);});
-      gui->add_javascript_getter("get_quad_spacing", [&](){ return gua::string_utils::to_string(quad_spacing);});
+      gui->add_javascript_getter("get_quad_range", [&](){ return gua::string_utils::to_string(quad_range);});
       gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
@@ -1098,6 +1201,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("start_resolution_series");
       gui->add_javascript_callback("start_positional_warp_series");
       gui->add_javascript_callback("start_rotational_warp_series");
+      gui->add_javascript_callback("start_quad_series");
+      gui->add_javascript_callback("print_current_times");
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
@@ -1166,7 +1271,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_pixel_size");
       gui->add_javascript_callback("set_quad_count");
       gui->add_javascript_callback("set_quad_start");
-      gui->add_javascript_callback("set_quad_spacing");
+      gui->add_javascript_callback("set_quad_range");
       gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
@@ -1192,6 +1297,11 @@ int main(int argc, char** argv) {
       } else if (callback == "start_rotational_warp_series") {
         toggle_gui();
         test_rotational_warp_series = true;
+      } else if (callback == "start_quad_series") {
+        toggle_gui();
+        test_quad_series = true;
+      } else if (callback == "print_current_times") {
+        test_print_current_times = true;
       } else if (callback == "set_depth_layers") {
         std::stringstream str(params[0]);
         int depth_layers;
@@ -1212,9 +1322,9 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> quad_count;
         setup_textured_quad_scene();
-      } else if (callback == "set_quad_spacing") {
+      } else if (callback == "set_quad_range") {
         std::stringstream str(params[0]);
-        str >> quad_spacing;
+        str >> quad_range;
         setup_textured_quad_scene();
       } else if (callback == "set_quad_start") {
         std::stringstream str(params[0]);
@@ -1473,8 +1583,8 @@ int main(int argc, char** argv) {
       resolution = new_size;
       window->config.set_resolution(new_size);
       normal_cam->config.set_resolution(new_size);
-      normal_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
-      warp_screen->data.set_size(gua::math::vec2(1.08*2 * new_size.x / new_size.y, 1.08*2));
+      normal_screen->data.set_size(gua::math::vec2(4.f, 4.f * new_size.y / new_size.x));
+      warp_screen->data.set_size(gua::math::vec2(4.f, 4.f * new_size.y / new_size.x));
     });
   #endif
 
@@ -1666,28 +1776,55 @@ int main(int argc, char** argv) {
                                                      round(gua::math::vec2(1920,1080)*1.949358869),
                                                      round(gua::math::vec2(1920,1080)*2)};
 
-  std::vector<double> test_offsets = {0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5};
+  float max_test_disparity(4.f/10.f);
+  std::vector<double> test_offsets;
+  for (int i=0; i<20; ++i) {
+    test_offsets.push_back(i*max_test_disparity/(20-1));
+  }
+
+
   std::vector<double> test_rotations = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
 
-  double test_trimesh_time(0);
-  double test_gbuffer_warp_time(0);
-  double test_abuffer_warp_time(0);
-  double test_gbuffer_pre_time(0);
-  double test_abuffer_pre_time(0);
-  int test_gbuffer_primitives(0);
-  int test_abuffer_primitives(0);
+  std::vector<gua::math::vec2> test_quad_positions;
+  for (float i=0; i<30; ++i) {
+    float offset(i*max_test_disparity/(30-1));
 
-  gua::Timer test_timer;
+    for (float j=0.1; j<20; j=j*1.3+0.2) {
+      test_quad_positions.push_back(gua::math::vec2(offset, j));
+    }
+  }
+
   gua::Timer frame_timer;
   frame_timer.start();
+
+  QueryResults query_results;
 
   // application loop
   while(true) {
 
-    // test --------------------------------------------------------------------
+    query_results.update(window);
 
+    // test --------------------------------------------------------------------
+    if (test_print_current_times) {
+      if (test_frame_counter < 0) {
+        #ifdef GUI_SUPPORT
+          toggle_gui();
+        #endif
+        query_results.reset();
+        test_frame_counter = 10;
+      }
+      if (test_frame_counter == 0) {
+        #ifdef GUI_SUPPORT
+          toggle_gui();
+        #endif
+        query_results.print_to_console();
+        test_print_current_times = false;
+      }
+
+      --test_frame_counter;
+    }
     // resolution --------------------------------------------------------------
-    if (test_resolution_series) {
+    else if (test_resolution_series) {
 
       if (test_frame_counter < 0) {
 
@@ -1697,13 +1834,6 @@ int main(int argc, char** argv) {
           }
           ++test_counter;
           test_frame_counter = 20;
-          test_trimesh_time = 0;
-          test_gbuffer_warp_time = 0;
-          test_abuffer_warp_time = 0;
-          test_gbuffer_pre_time = 0;
-          test_abuffer_pre_time = 0;
-          test_gbuffer_primitives = 0;
-          test_abuffer_primitives = 0;
           normal_cam->config.set_resolution(test_resolutions[test_counter]);
           warp_cam->config.set_resolution(test_resolutions[test_counter]);
         } else {
@@ -1712,42 +1842,17 @@ int main(int argc, char** argv) {
           normal_cam->config.set_resolution(orig_resolution);
           warp_cam->config.set_resolution(orig_resolution);
 
-          #ifdef GUI_SUPPORTORT
+          #ifdef GUI_SUPPORT
             toggle_gui();
           #endif
-
-        }
-
-      }
-      if (test_frame_counter == 10) {
-        test_timer.reset();
-      }
-      if (test_frame_counter < 10) {
-        // std::cout << test_frame_counter << test_timer.get_elapsed()/(10-test_frame_counter) << std::endl;
-        for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
-            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
-          }
-        }
-
-        for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
         }
       }
+      if (test_frame_counter == 10)  query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << test_resolutions[test_counter]
-                  << ", " << test_resolutions[test_counter].x*test_resolutions[test_counter].y
-                  << ", " << test_timer.get_elapsed()/10
-                  << ", " << test_gbuffer_warp_time/10
-                  << ", " << test_gbuffer_primitives/10
-                  << std::endl;
+        std::cout << test_resolutions[test_counter].x*test_resolutions[test_counter].y << " ";
+        query_results.print_to_console();
       }
+
       --test_frame_counter;
     }
 
@@ -1759,53 +1864,20 @@ int main(int argc, char** argv) {
 
         if (test_counter < (int)test_offsets.size()-1) {
           ++test_counter;
-          test_frame_counter = 60;
-          test_trimesh_time = 0;
-          test_gbuffer_warp_time = 0;
-          test_abuffer_warp_time = 0;
-          test_gbuffer_pre_time = 0;
-          test_abuffer_pre_time = 0;
-          test_gbuffer_primitives = 0;
-          test_abuffer_primitives = 0;
-          warp_navigation->set_transform(scm::math::make_translation(0.0, 0.0, test_offsets[test_counter]));
+          test_frame_counter = 20;
+          warp_navigation->set_transform(scm::math::make_translation(test_offsets[test_counter], 0.0, 0.0));
         } else {
           test_counter = -1;
           test_positional_warp_series = false;
-          #ifdef GUI_SUPPORTORT
+          #ifdef GUI_SUPPORT
             toggle_gui();
           #endif
         }
-
       }
-      if (test_frame_counter == 50) {
-        test_timer.reset();
-      }
-      if (test_frame_counter < 50) {
-        // std::cout << test_frame_counter << test_timer.get_elapsed()/(50-test_frame_counter) << std::endl;
-        for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
-            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
-          }
-        }
-
-        for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
-        }
-      }
+      if (test_frame_counter == 10)  query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << test_offsets[test_counter]
-                  << ", " << test_timer.get_elapsed()/50
-                  << ", " << test_gbuffer_pre_time/50
-                  << ", " << test_gbuffer_warp_time/50
-                  << ", " << test_abuffer_pre_time/50
-                  << ", " << test_abuffer_warp_time/50
-                  << std::endl;
+        std::cout << test_offsets[test_counter] << " ";
+        query_results.print_to_console();
       }
       --test_frame_counter;
     }
@@ -1817,57 +1889,52 @@ int main(int argc, char** argv) {
 
         if (test_counter < (int)test_rotations.size()-1) {
           ++test_counter;
-          test_frame_counter = 60;
-          test_trimesh_time = 0;
-          test_gbuffer_warp_time = 0;
-          test_abuffer_warp_time = 0;
-          test_gbuffer_pre_time = 0;
-          test_abuffer_pre_time = 0;
-          test_gbuffer_primitives = 0;
-          test_abuffer_primitives = 0;
+          test_frame_counter = 20;
           warp_navigation->set_transform(scm::math::make_rotation(test_rotations[test_counter], 0.0, 1.0, 0.0));
         } else {
           test_counter = -1;
           test_rotational_warp_series = false;
-          #ifdef GUI_SUPPORTORT
+          #ifdef GUI_SUPPORT
             toggle_gui();
           #endif
         }
-
       }
-      if (test_frame_counter == 50) {
-        test_timer.reset();
-      }
-      if (test_frame_counter < 50) {
-        // std::cout << test_frame_counter << test_timer.get_elapsed()/(50-test_frame_counter) << std::endl;
-        for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("Resolve") != std::string::npos) test_trimesh_time += result.second;
-            if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_warp_time += result.second;
-            if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) test_gbuffer_pre_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) test_abuffer_pre_time += result.second;
-          }
-        }
-
-        for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) test_gbuffer_primitives += result.second.first;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) test_abuffer_primitives += result.second.first;
-        }
-      }
+      if (test_frame_counter == 10)  query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << test_rotations[test_counter]
-                  << ", " << test_timer.get_elapsed()/50
-                  << ", " << test_gbuffer_pre_time/50
-                  << ", " << test_gbuffer_warp_time/50
-                  << ", " << test_abuffer_pre_time/50
-                  << ", " << test_abuffer_warp_time/50
-                  << std::endl;
+        std::cout << test_rotations[test_counter] << " ";
+        query_results.print_to_console();
       }
       --test_frame_counter;
     }
 
+    // textured quads ----------------------------------------------------------
+    else if (test_quad_series) {
+
+      if (test_frame_counter < 0) {
+
+        if (test_counter < (int)test_quad_positions.size()-1) {
+          ++test_counter;
+          test_frame_counter = 15;
+          quad_range = test_quad_positions[test_counter].y;
+          warp_navigation->set_transform(scm::math::make_translation(test_quad_positions[test_counter].x, 0.0, 0.0));
+          setup_textured_quad_scene();
+        } else {
+          test_counter = -1;
+          test_quad_series = false;
+          #ifdef GUI_SUPPORT
+            toggle_gui();
+          #endif
+        }
+      }
+      if (test_frame_counter == 5) query_results.reset();
+      if (test_frame_counter == 0) {
+        std::cout << test_quad_positions[test_counter].x << " "
+                  << test_quad_positions[test_counter].y << " "
+                  << test_quad_positions[test_counter].x/((test_quad_positions[test_counter].y+2.5)/2.5) << " ";
+        query_results.print_to_console();
+      }
+      --test_frame_counter;
+    }
 
     else {
 
@@ -1913,42 +1980,12 @@ int main(int argc, char** argv) {
 
     if (ctr++ % 10 == 0) {
       #if GUI_SUPPORT
-        double trimesh_time(0);
-        double gbuffer_warp_time(0);
-        double abuffer_warp_time(0);
-        double gbuffer_pre_time(0);
-        double abuffer_pre_time(0);
-        double hole_filling_pre_time(0);
-        int gbuffer_primitives(0);
-        int abuffer_primitives(0);
-
-        for (auto const& result: window->get_context()->time_query_results) {
-          if (result.first.find("GPU") != std::string::npos) {
-            if (result.first.find("Trimesh") != std::string::npos) trimesh_time += result.second;
-            if (result.first.find("Resolve") != std::string::npos) trimesh_time += result.second;
-            if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_warp_time += result.second;
-            if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_warp_time += result.second;
-            if (result.first.find("WarpGridGenerator") != std::string::npos) gbuffer_pre_time += result.second;
-            if (result.first.find("MinMaxMap") != std::string::npos) abuffer_pre_time += result.second;
-            if (result.first.find("Generate Hole Filling Texture") != std::string::npos) hole_filling_pre_time += result.second;
-          }
-        }
-
-
-        for (auto const& result: window->get_context()->primitive_query_results) {
-          if (result.first.find("WarpPass GBuffer") != std::string::npos) gbuffer_primitives += result.second.first;
-          if (result.first.find("WarpPass ABuffer") != std::string::npos) abuffer_primitives += result.second.first;
-        }
-
-
-        stats->call_javascript("set_stats", 1000.f / window->get_rendering_fps(),
-                             window->get_rendering_fps(), trimesh_time, gbuffer_pre_time,
-                             abuffer_pre_time, gbuffer_warp_time, abuffer_warp_time,
-                             hole_filling_pre_time, gbuffer_primitives, abuffer_primitives);
-
+        query_results.print_to_gui(stats);
       #else
-        //std::cout << window->get_rendering_fps() << std::endl;
+        query_results.print_to_console();
       #endif
+
+      query_results.reset();
     }
 
     #if LOAD_SPONZA

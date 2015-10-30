@@ -37,7 +37,7 @@
         return num;
       }
 
-      function set_stats (render_time, render_fps, rendering, gbuffer_grid, abuffer_grid, gbuffer_warping, abuffer_warping, hole_filling_pre_time, gbuffer_primitives, abuffer_primitives) {
+      function set_stats (render_time, render_fps, rendering, gbuffer_grid, abuffer_grid, gbuffer_warping, abuffer_warping, hole_filling_pre_time, gbuffer_primitives) {
         $("#time-render-time").text(parseFloat(render_time).toFixed(2));
         $("#time-render-fps").text(parseFloat(render_fps).toFixed(2));
         $("#time-rendering").text(parseFloat(rendering).toFixed(2));
@@ -46,8 +46,7 @@
         $("#time-gbuffer-warping").text(parseFloat(gbuffer_warping).toFixed(2));
         $("#time-abuffer-warping").text(parseFloat(abuffer_warping).toFixed(2));
         $("#time-hole-filling-pre").text(parseFloat(hole_filling_pre_time).toFixed(2));
-        $("#gbuffer_primitives").text(format_int(parseInt(gbuffer_primitives)));
-        $("#abuffer_primitives").text(format_int(parseInt(abuffer_primitives)));
+        $("#gbuffer_primitives").text(format_int(parseFloat(gbuffer_primitives)));
       }
 
       function init() {
@@ -74,7 +73,7 @@
         </div>
 
         <div class="col-lg-2 col-xs-4">
-          Primitives ABuffer: <span id="abuffer_primitives">0</span>
+          Hole Filling Pre: <span id="time-hole-filling-pre">0</span>
         </div>
 
         <div class="col-lg-2 col-xs-4">
@@ -86,7 +85,7 @@
         </div>
 
         <div class="col-lg-2 col-xs-4">
-          Warp: <span id="time-gbuffer-warping">0.0</span> + <span id="time-hole-filling-pre">0.0</span> + <span id="time-abuffer-warping">0.0</span> ms
+          Warp: <span id="time-gbuffer-warping">0.0</span> + <span id="time-abuffer-warping">0.0</span> ms
         </div>
 
 

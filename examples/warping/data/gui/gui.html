@@ -235,7 +235,7 @@
         add_texture_select("#scene-panel", "bg_tex", "Texture");
         init_slider("#scene-panel .quad_count", "quad_count");
         init_slider("#scene-panel .quad_start", "quad_start");
-        init_slider("#scene-panel .quad_spacing", "quad_spacing");
+        init_slider("#scene-panel .quad_range", "quad_range");
 
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
         init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
@@ -435,10 +435,10 @@
 
           <div class="row">
             <div class="col-xs-5">
-              Quad Spacing:
+              Quad Range:
             </div>
             <div class="col-xs-7">
-              <input class="slider quad_spacing" data-slider-tooltip="hide" data-slider-id="quad_spacing" type="text" data-slider-min="0.1" data-slider-max="20" data-slider-step="0.1" handle="custom"/>
+              <input class="slider quad_range" data-slider-tooltip="hide" data-slider-id="quad_range" type="text" data-slider-min="0.1" data-slider-max="20" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 
@@ -987,6 +987,8 @@
               <button onclick="gua.start_resolution_series()" class="btn btn-block"><i class="fa fa-gears"></i> Resolution Series</button>
               <button onclick="gua.start_positional_warp_series()" class="btn btn-block"><i class="fa fa-gears"></i> Positional Warp Series</button>
               <button onclick="gua.start_rotational_warp_series()" class="btn btn-block"><i class="fa fa-gears"></i> Rotational Warp Series</button>
+              <button onclick="gua.start_quad_series()" class="btn btn-block"><i class="fa fa-gears"></i> Quad Series</button>
+              <button onclick="gua.print_current_times()" class="btn btn-block"><i class="fa fa-pencil"></i> Print Current Times</button>
             </div>
 
           </div>

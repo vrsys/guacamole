@@ -62,6 +62,7 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
       UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
       UniformValue tex(quad_node->data.get_texture());
       UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
+      UniformValue repeat(scm::math::vec2(quad_node->data.get_repeat()));
 
       auto const& ctx(pipe.get_context());
 
@@ -72,6 +73,7 @@ TexturedQuadPassDescription::TexturedQuadPassDescription()
       pass.shader_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
       pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
       pass.shader_->apply_uniform(ctx, "flip", flip);
+      pass.shader_->apply_uniform(ctx, "repeat", repeat);
 
       pipe.draw_quad();
     }
