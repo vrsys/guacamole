@@ -42,6 +42,11 @@ class GUA_DLL CubemapNode : public SerializableNode {
 
   struct Configuration {
     /**
+     * Sets wether for this node is a depth map created or not
+     */
+    GUA_ADD_PROPERTY(bool,            active,                  true);
+
+    /**
      * Sets the size in pixel of each side of the texture used for depth cube map generation.
      */
     GUA_ADD_PROPERTY(unsigned,        resolution,                  64);
