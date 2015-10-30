@@ -72,22 +72,26 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
 
     for (auto const& object : cube_map_nodes->second){
       auto cube_map_node(reinterpret_cast<node::CubemapNode*>(object));
-      if (mode_ == DepthCubeMapRenderer::COMPLETE){
-        pipe.prepare_depth_cubemap(cube_map_node);
-        pipe.generate_depth_cubemap_face(0, cube_map_node);
-        pipe.generate_depth_cubemap_face(0, cube_map_node);
-        pipe.generate_depth_cubemap_face(1, cube_map_node);
-        pipe.generate_depth_cubemap_face(2, cube_map_node);
-        pipe.generate_depth_cubemap_face(3, cube_map_node);
-        pipe.generate_depth_cubemap_face(4, cube_map_node);
-        pipe.generate_depth_cubemap_face(5, cube_map_node);
-        pipe.reset_depth_cubemap(cube_map_node);
-      } else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
-        if (face_counter_ == 0){
+      if (cube_map_node->config.get_active()){
+
+        if (mode_ == DepthCubeMapRenderer::COMPLETE){
+          pipe.prepare_depth_cubemap(cube_map_node);
+          pipe.generate_depth_cubemap_face(0, cube_map_node);
+          pipe.generate_depth_cubemap_face(0, cube_map_node);
+          pipe.generate_depth_cubemap_face(1, cube_map_node);
+          pipe.generate_depth_cubemap_face(2, cube_map_node);
+          pipe.generate_depth_cubemap_face(3, cube_map_node);
+          pipe.generate_depth_cubemap_face(4, cube_map_node);
+          pipe.generate_depth_cubemap_face(5, cube_map_node);
           pipe.reset_depth_cubemap(cube_map_node);
+        } else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
+          if (face_counter_ == 0){
+            pipe.reset_depth_cubemap(cube_map_node);
+          }
+          pipe.generate_depth_cubemap_face(face_counter_, cube_map_node);
+          face_counter_ = (face_counter_+1)%6;
         }
-        pipe.generate_depth_cubemap_face(face_counter_, cube_map_node);
-        face_counter_ = (face_counter_+1)%6;
+
       }
     }
 
