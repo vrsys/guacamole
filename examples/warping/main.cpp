@@ -1789,7 +1789,7 @@ int main(int argc, char** argv) {
   for (float i=0; i<30; ++i) {
     float offset(i*max_test_disparity/(30-1));
 
-    for (float j=0.1; j<20; j=j*1.3+0.2) {
+    for (float j=0; j<200; j=j*1.5+0.1) {
       test_quad_positions.push_back(gua::math::vec2(offset, j));
     }
   }
@@ -1928,9 +1928,8 @@ int main(int argc, char** argv) {
       }
       if (test_frame_counter == 5) query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << test_quad_positions[test_counter].x << " "
-                  << test_quad_positions[test_counter].y << " "
-                  << test_quad_positions[test_counter].x/((test_quad_positions[test_counter].y+2.5)/2.5) << " ";
+        std::cout << (int)(resolution.x*test_quad_positions[test_counter].x) << " "
+                  << (int)(resolution.x*test_quad_positions[test_counter].x/((test_quad_positions[test_counter].y+2.5)/2.5)) << " ";
         query_results.print_to_console();
       }
       --test_frame_counter;
