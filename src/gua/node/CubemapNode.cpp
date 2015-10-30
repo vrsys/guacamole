@@ -157,7 +157,7 @@ void CubemapNode::create_weights(math::vec3 const& view_direction, math::vec3 co
   }
 }
 
-math::vec3 CubemapNode::get_push_back(float radius){
+math::vec3 CubemapNode::get_push_back(float radius, float softness){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   math::vec3 pushback(0.0, 0.0, 0.0);
 
@@ -177,7 +177,11 @@ math::vec3 CubemapNode::get_push_back(float radius){
           float intrusion_factor = (radius - f) / radius;
           intrusion_factor = pow(intrusion_factor, 2);
 
-          pushback += direction * intrusion_factor;
+          float _softness = pow(softness, 2);
+
+          float weight = -1.0 * exp( -1.0 * intrusion_factor / _softness) + 1.0;
+
+          pushback += direction * weight;
           ++samples;
 
       }
