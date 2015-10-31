@@ -302,14 +302,14 @@ vec4 hole_filling_bidirectional_epipolar_search() {
   vec2 epi_dir = get_epipolar_direction();
   float sample_depth = 1.0;
 
-  for (int i=1; i<=50; ++i) {
+  for (int i=1; i<=75; ++i) {
     boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
     sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
 
     if (sample_depth < 1.0) break;
   }
 
-  for (int i=1; i<=50; ++i) {
+  for (int i=1; i<=75; ++i) {
     vec2 pos = gua_quad_coords - i*epi_dir/gua_resolution;
     float depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(pos*gua_resolution), 0).x;
 
@@ -335,7 +335,7 @@ vec4 hole_filling_epipolar_search() {
   vec2 epi_dir = get_epipolar_direction();
   float sample_depth = 1.0;
 
-  for (int i=1; i<=50; ++i) {
+  for (int i=1; i<=75; ++i) {
     boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
     sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
 
@@ -355,7 +355,7 @@ vec4 hole_filling_epipolar_mirror() {
   vec2 epi_dir = get_epipolar_direction();
   float sample_depth = 1.0;
 
-  for (int i=1; i<=50; ++i) {
+  for (int i=1; i<=75; ++i) {
     boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
     sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
 

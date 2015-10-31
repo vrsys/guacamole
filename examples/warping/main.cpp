@@ -1994,13 +1994,13 @@ int main(int argc, char** argv) {
     }
 
     #if LOAD_SPONZA
-      double t = frame_timer.get_elapsed()*2;
-      auto movement = gua::math::vec3(std::sin(t), std::sin(t*3.123+1), std::sin(t*5.34+3));
-      movement += gua::math::vec3(std::sin(t*0.32+2)*0.4, std::sin(t*2.123)*0.5, std::sin(t*2.34+2)*0.7);
-      sponza_light_05->set_transform(scm::math::make_translation(movement*0.1));
-      sponza_light_06->set_transform(scm::math::make_translation(movement*0.1));
-      sponza_light_07->set_transform(scm::math::make_translation(movement*0.1));
-      sponza_light_08->set_transform(scm::math::make_translation(movement*0.1));
+      // double t = frame_timer.get_elapsed()*2;
+      // auto movement = gua::math::vec3(std::sin(t), std::sin(t*3.123+1), std::sin(t*5.34+3));
+      // movement += gua::math::vec3(std::sin(t*0.32+2)*0.4, std::sin(t*2.123)*0.5, std::sin(t*2.34+2)*0.7);
+      // sponza_light_05->set_transform(scm::math::make_translation(movement*0.1));
+      // sponza_light_06->set_transform(scm::math::make_translation(movement*0.1));
+      // sponza_light_07->set_transform(scm::math::make_translation(movement*0.1));
+      // sponza_light_08->set_transform(scm::math::make_translation(movement*0.1));
     #endif
 
     window->process_events();
