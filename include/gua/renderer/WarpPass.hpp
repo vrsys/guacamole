@@ -59,6 +59,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum ABufferWarpMode {
     ABUFFER_NONE,
+    ABUFFER_HIDDEN,
     ABUFFER_RAYCASTING
   };
 

@@ -571,6 +571,8 @@ void main() {
       draw_debug_views();
     #endif
 
+  #elif WARP_MODE == WARP_MODE_HIDDEN
+    gua_out_color = toneMap(background_color.rgb);
   #elif @enable_abuffer@
     gua_out_color = background_color.rgb;
   #else

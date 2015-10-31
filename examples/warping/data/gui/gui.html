@@ -207,6 +207,7 @@
         init_radio("#gbuffer_type_grid_non_uniform_surface_estimation", "gbuffer_type_grid_non_uniform_surface_estimation");
 
         init_radio("#transparency_type_none", "transparency_type_none");
+        init_radio("#transparency_type_hidden", "transparency_type_hidden");
         init_radio("#transparency_type_gbuffer", "transparency_type_gbuffer");
         init_radio("#transparency_type_abuffer", "transparency_type_abuffer");
         init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
@@ -703,6 +704,12 @@
                 <label>
                   <input type="radio" name="transparencyRadios" id="transparency_type_none" value="">
                   <span>None</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="transparencyRadios" id="transparency_type_hidden" value="">
+                  <span>Hidden</span>
                 </label>
               </div>
             </div>

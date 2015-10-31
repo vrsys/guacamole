@@ -1005,7 +1005,8 @@ int main(int argc, char** argv) {
       res_pass->compositing_enable(false);
       res_pass->write_abuffer_depth(false);
 
-      if (current_transparency_mode == "set_transparency_type_raycasting")    warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
+      if (current_transparency_mode == "set_transparency_type_raycasting")
+        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
       if (current_transparency_mode == "set_transparency_type_none") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
         warp_pipe->set_enable_abuffer(false);
@@ -1013,6 +1014,9 @@ int main(int argc, char** argv) {
       if (current_transparency_mode == "set_transparency_type_gbuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
         res_pass->compositing_enable(true);
+      }
+      if (current_transparency_mode == "set_transparency_type_hidden") {
+        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_HIDDEN);
       }
       if (current_transparency_mode == "set_transparency_type_abuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
@@ -1222,6 +1226,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
       gui->add_javascript_callback("set_transparency_type_none");
       gui->add_javascript_callback("set_transparency_type_gbuffer");
+      gui->add_javascript_callback("set_transparency_type_hidden");
       gui->add_javascript_callback("set_transparency_type_abuffer");
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_color");
@@ -1470,6 +1475,7 @@ int main(int argc, char** argv) {
           render_grid_pass->mode(mode);
         }
       } else if (callback == "set_transparency_type_gbuffer"
+               | callback == "set_transparency_type_hidden"
                | callback == "set_transparency_type_abuffer"
                | callback == "set_transparency_type_raycasting"
                | callback == "set_transparency_type_none") {
