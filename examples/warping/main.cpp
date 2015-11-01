@@ -590,15 +590,6 @@ int main(int argc, char** argv) {
   sponza->translate(0, 2, 0);
   scene_root->add_child(sponza);
 
-  auto sponza_light_01 = std::make_shared<gua::node::LightNode>("sponza_light_01");
-  sponza_light_01->data.set_type(gua::node::LightNode::Type::POINT);
-  sponza_light_01->data.set_brightness(10.f);
-  sponza_light_01->data.set_falloff(2.f);
-  sponza_light_01->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.1f));
-  sponza_light_01->translate(1.9, 0.2, 0.6);
-  sponza_light_01->scale(1.5);
-  scene_root->add_child(sponza_light_01);
-
   auto sponza_light_05 = std::make_shared<gua::node::TransformNode>("sponza_light_05");
   auto light = std::make_shared<gua::node::LightNode>("light");
   light->data.set_type(gua::node::LightNode::Type::POINT);
@@ -744,8 +735,14 @@ int main(int argc, char** argv) {
 
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_one_oilrig")
+    if (name == "set_scene_one_oilrig") {
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
+      res_pass->background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg");
+      nav.set_transform(scm::math::mat4f(-0.228, -0.031, 0.973, 2.404,
+                                         0.000, 1.000, 0.031, 1.568,
+                                         -0.974, 0.007, -0.228, -1.231,
+                                         0.000, 0.000, 0.000, 1.000));
+    }
     if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
       sun_light->data.set_brightness(10.f);
@@ -753,11 +750,6 @@ int main(int argc, char** argv) {
       res_pass->ssao_radius(5.0f);
       res_pass->background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg");
 
-      if (name == "set_scene_sponza0")
-        nav.set_transform(scm::math::mat4f(-0.115, -0.010, -0.993, -6.283,
-                                           0.000, 1.000, -0.010, 2.764,
-                                           0.993, -0.001, -0.115, 1.126,
-                                           0.000, 0.000, 0.000, 1.000));
       if (name == "set_scene_sponza1")
         nav.set_transform(scm::math::mat4f(0.637, 0.067, -0.768, -4.160,
                                            0.000, 0.996, 0.086, 2.715,
@@ -769,14 +761,9 @@ int main(int argc, char** argv) {
                                            0.661, -0.143, -0.736, -0.661,
                                            0.000, 0.000, 0.000, 1.000));
       if (name == "set_scene_sponza3")
-        nav.set_transform(scm::math::mat4f(0.093, 0.069, -0.993, -5.685,
-                                           0.000, 0.998, 0.069, 0.831,
-                                           0.996, -0.006, 0.092, 3.059,
-                                           0.000, 0.000, 0.000, 1.000));
-      if (name == "set_scene_sponza4")
-        nav.set_transform(scm::math::mat4f(-0.621, 0.088, 0.779, -4.251,
-                                           0.000, 0.994, -0.112, 0.158,
-                                           -0.784, -0.070, -0.617, 3.676,
+        nav.set_transform(scm::math::mat4f(-0.980, -0.028, 0.196, 3.754,
+                                           0.000, 0.990, 0.139, 0.730,
+                                           -0.198, 0.136, -0.971, -4.748,
                                            0.000, 0.000, 0.000, 1.000));
     }
     if (name == "set_scene_textured_quads") {
@@ -1967,7 +1954,7 @@ int main(int argc, char** argv) {
         } else {
           navigation->set_transform(gua::math::mat4(nav.get_transform()));
         }
-        // std::cout << nav.get_transform() << std::endl;
+        std::cout << nav.get_transform() << std::endl;
         warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
       #endif
     }
