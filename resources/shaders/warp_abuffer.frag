@@ -373,10 +373,10 @@ vec4 hole_filling_epipolar_mirror() {
 }
 
 vec4 hole_filling_blur() {
-  const float step_size = 0.5;
-  const float max_level = 8;
+  const float step_size = 0.25;
+  const float max_level = 7;
   const vec2  epi_dir = get_epipolar_direction();
-  const vec2  dirs[4] = {
+  const vec2  dirs[2] = {
     vec2( epi_dir.x,  epi_dir.y),
     vec2(-epi_dir.x, -epi_dir.y)
     // vec2( epi_dir.y, -epi_dir.x),
@@ -392,7 +392,7 @@ vec4 hole_filling_blur() {
       float d = texelFetch(sampler2D(warped_depth_buffer), ivec2(p*gua_resolution), 0).x;
 
       if (d < 1.0) {
-        if (d > depth+0.000001 || (abs(d-depth)<0.000001 && l<level)) {
+        if (d > depth+0.0001 || (abs(d-depth)<0.0001 && l<level)) {
           level = l;
           depth = d;
         }

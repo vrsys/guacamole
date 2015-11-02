@@ -79,7 +79,11 @@ bool test_resolution_series = false;
 bool test_positional_warp_series = false;
 bool test_rotational_warp_series = false;
 bool test_quad_series = false;
+bool test_quad_count_series = false;
 bool test_print_current_times = false;
+
+const float screen_width = 4.f;
+const float screen_dist = 2.5f;
 
 int quad_count = 5;
 float quad_range = 20;
@@ -286,7 +290,11 @@ int main(int argc, char** argv) {
     auto resolution = gua::math::vec2ui(2560, 1440);
   #else
     bool fullscreen = (argc == 2);
+
     auto resolution = gua::math::vec2ui(1600, 900);
+    if (fullscreen) {
+      resolution = gua::math::vec2ui(1920, 1080);
+    }
   #endif
 
   // add mouse interaction
@@ -397,12 +405,12 @@ int main(int argc, char** argv) {
     texured_quad_root->clear_children();
     for (int x(0); x<quad_count; ++x) {
       float offset(quad_count <= 1 ? quad_start : x*quad_range/(quad_count-1)+quad_start);
-      float scale(offset/2.5);
+      float scale(offset/screen_dist);
       auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
       node->data.set_texture("data/textures/test_grid.png");
       node->translate(0, 0, -offset);
-      node->data.set_size(gua::math::vec2(4.f, 4.f*1.08f/1.92f) * scale);
-      node->data.set_repeat(gua::math::vec2(4.f, 4.f*1.08f/1.92f) * scale);
+      node->data.set_size(gua::math::vec2(screen_width, screen_width*1.08f/1.92f) * scale);
+      node->data.set_repeat(gua::math::vec2(screen_width, screen_width*1.08f/1.92f) * scale);
     }
   };
 
@@ -864,8 +872,8 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(4.f,4*1.08f/1.92f));
-    normal_screen->translate(0, 0, -2.5);
+    normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*1.08f/1.92f));
+    normal_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
       normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
       normal_screen->translate(0, 1.5, 0);
@@ -911,8 +919,8 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(4.f,4*1.08f/1.92f));
-    warp_screen->translate(0, 0, -2.5);
+    warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*1.08f/1.92f));
+    warp_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
       warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
       warp_screen->translate(0, 1.5, 0);
@@ -1193,6 +1201,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("start_positional_warp_series");
       gui->add_javascript_callback("start_rotational_warp_series");
       gui->add_javascript_callback("start_quad_series");
+      gui->add_javascript_callback("start_quad_count_series");
       gui->add_javascript_callback("print_current_times");
       gui->add_javascript_callback("set_depth_layers");
       gui->add_javascript_callback("set_split_threshold");
@@ -1292,6 +1301,9 @@ int main(int argc, char** argv) {
       } else if (callback == "start_quad_series") {
         toggle_gui();
         test_quad_series = true;
+      } else if (callback == "start_quad_count_series") {
+        toggle_gui();
+        test_quad_count_series = true;
       } else if (callback == "print_current_times") {
         test_print_current_times = true;
       } else if (callback == "set_depth_layers") {
@@ -1576,8 +1588,8 @@ int main(int argc, char** argv) {
       resolution = new_size;
       window->config.set_resolution(new_size);
       normal_cam->config.set_resolution(new_size);
-      normal_screen->data.set_size(gua::math::vec2(4.f, 4.f * new_size.y / new_size.x));
-      warp_screen->data.set_size(gua::math::vec2(4.f, 4.f * new_size.y / new_size.x));
+      normal_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
+      warp_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
     });
   #endif
 
@@ -1769,7 +1781,7 @@ int main(int argc, char** argv) {
                                                      round(gua::math::vec2(1920,1080)*1.949358869),
                                                      round(gua::math::vec2(1920,1080)*2)};
 
-  float max_test_disparity(4.f/10.f);
+  float max_test_disparity(screen_width/10.f);
   std::vector<double> test_offsets;
   for (int i=0; i<20; ++i) {
     test_offsets.push_back(i*max_test_disparity/(20-1));
@@ -1900,7 +1912,7 @@ int main(int argc, char** argv) {
       --test_frame_counter;
     }
 
-    // textured quads ----------------------------------------------------------
+    // textured quads disparity ------------------------------------------------
     else if (test_quad_series) {
 
       if (test_frame_counter < 0) {
@@ -1921,8 +1933,34 @@ int main(int argc, char** argv) {
       }
       if (test_frame_counter == 5) query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << (int)(resolution.x*test_quad_positions[test_counter].x) << " "
-                  << (int)(resolution.x*test_quad_positions[test_counter].x/((test_quad_positions[test_counter].y+2.5)/2.5)) << " ";
+        std::cout << resolution.x*test_quad_positions[test_counter].x/screen_width << " "
+                  << resolution.x*test_quad_positions[test_counter].x/(screen_width*(test_quad_positions[test_counter].y+screen_dist)/screen_dist) << " ";
+        query_results.print_to_console();
+      }
+      --test_frame_counter;
+    }
+
+    // textured quads count ----------------------------------------------------
+    else if (test_quad_count_series) {
+
+      if (test_frame_counter < 0) {
+
+        if (test_counter < 5) {
+          ++test_counter;
+          test_frame_counter = 15;
+          quad_count = test_counter + 1;
+          setup_textured_quad_scene();
+        } else {
+          test_counter = -1;
+          test_quad_count_series = false;
+          #ifdef GUI_SUPPORT
+            toggle_gui();
+          #endif
+        }
+      }
+      if (test_frame_counter == 5) query_results.reset();
+      if (test_frame_counter == 0) {
+        std::cout << test_counter + 1 << " ";
         query_results.print_to_console();
       }
       --test_frame_counter;
@@ -1954,7 +1992,7 @@ int main(int argc, char** argv) {
         } else {
           navigation->set_transform(gua::math::mat4(nav.get_transform()));
         }
-        std::cout << nav.get_transform() << std::endl;
+        // std::cout << nav.get_transform() << std::endl;
         warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
       #endif
     }
