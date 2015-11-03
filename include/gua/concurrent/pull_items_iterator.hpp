@@ -39,7 +39,7 @@ template <class T, class Container> class pull_items_range {
     boost::optional<T> v = sin_->read();
     if (v)
       obj_ = *v;
-    return v;
+    return bool(v);
   }
 
  public:
