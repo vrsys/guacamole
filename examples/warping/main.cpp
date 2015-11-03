@@ -20,11 +20,11 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     1
+#define GUI_SUPPORT     0
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         0
+#define OCULUS2         1
 #define STEREO_MONITOR  0
 
 #define SHADOWS         1
@@ -165,13 +165,17 @@ class QueryResults {
     std::cout << std::endl;
   }
 
-  void print_to_gui(std::shared_ptr<gua::GuiResource> const& gui) {
-    gui->call_javascript("set_stats", 1000.f / get(Type::FPS), get(Type::FPS),
-                         get(Type::RENDER_TIME), get(Type::GBUFFER_PRE_TIME),
-                         get(Type::ABUFFER_PRE_TIME), get(Type::GBUFFER_WARP_TIME),
-                         get(Type::ABUFFER_WARP_TIME), get(Type::HOLE_FILLING_PRE_TIME),
-                         get(Type::GBUFFER_PRIMITIVES));
-  }
+  #if GUI_SUPPORT
+    void print_to_gui(std::shared_ptr<gua::GuiResource> const& gui) {
+    
+      gui->call_javascript("set_stats", 1000.f / get(Type::FPS), get(Type::FPS),
+                           get(Type::RENDER_TIME), get(Type::GBUFFER_PRE_TIME),
+                           get(Type::ABUFFER_PRE_TIME), get(Type::GBUFFER_WARP_TIME),
+                           get(Type::ABUFFER_WARP_TIME), get(Type::HOLE_FILLING_PRE_TIME),
+                           get(Type::GBUFFER_PRIMITIVES));
+    
+    }
+  #endif
 
   void reset() {
     for (auto& value: values_) {
@@ -1812,14 +1816,14 @@ int main(int argc, char** argv) {
     // test --------------------------------------------------------------------
     if (test_print_current_times) {
       if (test_frame_counter < 0) {
-        #ifdef GUI_SUPPORT
+        #if GUI_SUPPORT
           toggle_gui();
         #endif
         query_results.reset();
         test_frame_counter = 10;
       }
       if (test_frame_counter == 0) {
-        #ifdef GUI_SUPPORT
+        #if GUI_SUPPORT
           toggle_gui();
         #endif
         query_results.print_to_console();
@@ -1847,7 +1851,7 @@ int main(int argc, char** argv) {
           normal_cam->config.set_resolution(orig_resolution);
           warp_cam->config.set_resolution(orig_resolution);
 
-          #ifdef GUI_SUPPORT
+          #if GUI_SUPPORT
             toggle_gui();
           #endif
         }
@@ -1874,7 +1878,7 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_positional_warp_series = false;
-          #ifdef GUI_SUPPORT
+          #if GUI_SUPPORT
             toggle_gui();
           #endif
         }
@@ -1899,7 +1903,7 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_rotational_warp_series = false;
-          #ifdef GUI_SUPPORT
+          #if GUI_SUPPORT
             toggle_gui();
           #endif
         }
@@ -1926,7 +1930,7 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_quad_series = false;
-          #ifdef GUI_SUPPORT
+          #if GUI_SUPPORT
             toggle_gui();
           #endif
         }
@@ -1953,7 +1957,7 @@ int main(int argc, char** argv) {
         } else {
           test_counter = -1;
           test_quad_count_series = false;
-          #ifdef GUI_SUPPORT
+          #if GUI_SUPPORT
             toggle_gui();
           #endif
         }
