@@ -24,7 +24,7 @@
 
 #define POWER_WALL      0
 #define OCULUS1         0
-#define OCULUS2         1
+#define OCULUS2         0
 #define STEREO_MONITOR  0
 
 #define SHADOWS         1
@@ -749,7 +749,7 @@ int main(int argc, char** argv) {
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_one_oilrig") {
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
       nav.set_transform(scm::math::mat4f(-0.228, -0.031, 0.973, 2.404,
                                          0.000, 1.000, 0.031, 1.568,
                                          -0.974, 0.007, -0.228, -1.231,
@@ -758,9 +758,10 @@ int main(int argc, char** argv) {
     if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
       sun_light->data.set_brightness(10.f);
+      //res_pass->ssao_enable(false);
       res_pass->ssao_intensity(5.0f);
       res_pass->ssao_radius(5.0f);
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/cycles_island.jpg");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
 
       if (name == "set_scene_sponza1")
         nav.set_transform(scm::math::mat4f(0.637, 0.067, -0.768, -4.160,
@@ -779,7 +780,7 @@ int main(int argc, char** argv) {
                                            0.000, 0.000, 0.000, 1.000));
     }
     if (name == "set_scene_textured_quads") {
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
+        res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
       nav.set_transform(scm::math::mat4f(1, 0, 0, 0,
                                          0, 1, 0, 0,
@@ -802,7 +803,7 @@ int main(int argc, char** argv) {
       graph["/transform/engine"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_transp_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/checker.png");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
       nav.set_transform(scm::math::mat4f(0.914, 0.114, -0.388, 3.625,
                                          0.000, 0.959, 0.283, 0.060,
                                          0.405, -0.259, 0.877, 2.961,
@@ -810,7 +811,7 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_many_transp_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/checker.png");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
       nav.set_transform(scm::math::mat4f(0.988, 0.007, -0.154, 1.457,
                                          0.000, 0.999, 0.046, -0.155,
                                          0.154, -0.045, 0.987, 1.278,
@@ -818,7 +819,7 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       nav.set_transform(scm::math::mat4f(0.846, 0.019, -0.534, -0.009,
                                          0.000, 0.999, 0.035, -0.186,
                                          0.534, -0.030, 0.845, 0.881,
@@ -826,7 +827,7 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_hairball") {
       graph["/transform/hairball"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture("/opt/guacamole/resources/skymaps/uffizi.jpg");
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       res_pass->ssao_enable(false);
       nav.set_transform(scm::math::mat4f(1.000, 0.007, -0.031, -0.269,
                                          0.000, 0.974, 0.228, 0.758,
@@ -1621,21 +1622,20 @@ int main(int argc, char** argv) {
       }
     #else
       if (action == 1) {
-        if (key == 48) set_scene("set_scene_one_oilrig");
-        if (key == 49) set_scene("set_scene_sponza");
-        if (key == 50) set_scene("set_scene_teapot");
-        if (key == 51) set_scene("set_scene_car");
-        if (key == 52) set_scene("set_scene_bottle");
-        if (key == 53) set_scene("set_scene_mountains");
-        if (key == 54) set_scene("set_scene_sphere");
-        if (key == 55) set_scene("set_scene_dragon");
+        if (key == 49) set_scene("set_scene_one_oilrig");
+        if (key == 50) set_scene("set_scene_dragon");
+        if (key == 51) set_scene("set_scene_hairball");
+        if (key == 52) set_scene("set_scene_sponza_1");
+        if (key == 53) set_scene("set_scene_sponza_2");
+        if (key == 54) set_scene("set_scene_sponza_3");
+        if (key == 55) set_scene("set_scene_bottle");
         if (key == 56) set_scene("set_scene_engine");
-        if (key == 57) set_scene("set_scene_buddha");
 
         if (key == 72) {
             if      (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_INPAINT) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH);
             else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR);
-            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_INPAINT);
+            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_BLUR);
+            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_BLUR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_INPAINT);
         }
         if (key ==84) {
             if (current_transparency_mode == "set_transparency_type_raycasting") current_transparency_mode = "set_transparency_type_gbuffer";
