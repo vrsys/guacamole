@@ -529,7 +529,7 @@ int main(int argc, char** argv) {
   // scene_root->add_child(glasses);
   // scene_root->scale(10);
   // scene_root->rotate(180, 0, 1, 0);
-  scene_root->scale(10);
+  scene_root->scale(2);
 
   auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
@@ -537,23 +537,23 @@ int main(int argc, char** argv) {
   buddha->translate(0, -0.16, -1);
   for (auto c: buddha->get_children()) {
     auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 1.f));
+    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.5f, 1.f));
     node->get_material()->set_uniform("Roughness", 0.2f);
     node->get_material()->set_uniform("Metalness", 0.5f);
   }
   scene_root->add_child(buddha);
 
-  buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE);
-  buddha->translate(0, -0.16, 1);
-  for (auto c: buddha->get_children()) {
-    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 0.5f));
-    node->get_material()->set_uniform("Roughness", 0.2f);
-    node->get_material()->set_uniform("Metalness", 0.5f);
-  }
-  scene_root->add_child(buddha);
+  // buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE);
+  // buddha->translate(0, -0.16, 1);
+  // for (auto c: buddha->get_children()) {
+  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 0.5f));
+  //   node->get_material()->set_uniform("Roughness", 0.2f);
+  //   node->get_material()->set_uniform("Metalness", 0.5f);
+  // }
+  // scene_root->add_child(buddha);
 
   // dragon --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
@@ -1992,7 +1992,7 @@ int main(int argc, char** argv) {
         } else {
           navigation->set_transform(gua::math::mat4(nav.get_transform()));
         }
-        // std::cout << nav.get_transform() << std::endl;
+        std::cout << nav.get_transform() << std::endl;
         warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
       #endif
     }
