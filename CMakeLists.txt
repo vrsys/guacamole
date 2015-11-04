@@ -73,6 +73,13 @@ elseif (WIN32)
 endif (UNIX)
 
 include(FindSchism)
+
+if (UNIX)
+  set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
+elseif (WIN32)
+  set (BOOST_ROOT "externals/" CACHE PATH "Set to your boost install path.")
+endif (UNIX)
+
 find_package(Boost COMPONENTS
   system
   regex
