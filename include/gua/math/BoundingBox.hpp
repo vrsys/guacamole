@@ -34,7 +34,8 @@ namespace math {
 /**
  * A math representation of a bounding box.
  */
-template <typename V> struct BoundingBox {
+template <typename V>
+struct BoundingBox {
   using scalar_type = typename traits::scalar<V>::type;
   using point_type = V;
 
@@ -122,11 +123,11 @@ template <typename V> struct BoundingBox {
 
   point_type center() const { return (max + min) / 2; }
 
-  bool operator== (BoundingBox<V> const& rhs) const {
+  bool operator==(BoundingBox<V> const& rhs) const {
     return rhs.min == min && rhs.max == max;
   }
 
-  bool operator!= (BoundingBox<V> const& rhs) const {
+  bool operator!=(BoundingBox<V> const& rhs) const {
     return rhs.min != min && rhs.max != max;
   }
 };
@@ -156,7 +157,7 @@ BoundingBox<V> intersection(BoundingBox<V> const& lhs,
   return tmp;
 }
 
-} // namespace math
+}  // namespace math
 
 }  // namespace gua
 

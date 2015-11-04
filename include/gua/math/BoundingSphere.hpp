@@ -35,7 +35,8 @@ namespace math {
 /**
  * A math representation of a bounding sphere.
  */
-template <typename V> struct BoundingSphere {
+template <typename V>
+struct BoundingSphere {
   using scalar_type = typename traits::scalar<V>::type;
   using point_type = V;
 
@@ -63,7 +64,7 @@ template <typename V> struct BoundingSphere {
     for (unsigned int i = 0; i < traits::dimension<V>::value; ++i)
       sqDistance += (p[i] - center[i]) * (p[i] - center[i]);
 
-    return sqDistance <= radius*radius;
+    return sqDistance <= radius * radius;
   }
 
   bool intersects(BoundingSphere<V> const& rhs) const {
@@ -71,7 +72,7 @@ template <typename V> struct BoundingSphere {
     for (unsigned int i = 0; i < traits::dimension<V>::value; ++i)
       sqDistance += (rhs.center[i] - center[i]) * (rhs.center[i] - center[i]);
 
-    return sqDistance <= (radius+rhs.radius)*(radius+rhs.radius);
+    return sqDistance <= (radius + rhs.radius) * (radius + rhs.radius);
   }
 
 #if 0
@@ -95,24 +96,25 @@ template <typename V> struct BoundingSphere {
 
   inline bool isEmpty() const { return point_type(0) == center; }
 
-  bool operator== (BoundingSphere<V> const& rhs) const {
+  bool operator==(BoundingSphere<V> const& rhs) const {
     return rhs.center == center && rhs.radius == radius;
   }
 
-  bool operator!= (BoundingSphere<V> const& rhs) const {
+  bool operator!=(BoundingSphere<V> const& rhs) const {
     return !(*this == rhs);
   }
 };
 
 /** union of two bounding spheres */
 template <typename V>
-BoundingSphere<V> combine(BoundingSphere<V> const& lhs, BoundingSphere<V> const& rhs) {
+BoundingSphere<V> combine(BoundingSphere<V> const& lhs,
+                          BoundingSphere<V> const& rhs) {
   BoundingSphere<V> tmp(lhs);
   tmp.expandBy(rhs);
   return tmp;
 }
 
-} // namespace math
+}  // namespace math
 
 }  // namespace gua
 
