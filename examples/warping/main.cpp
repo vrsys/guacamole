@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-#define GUI_SUPPORT     0
+#define GUI_SUPPORT     1
 
 #define POWER_WALL      0
 #define OCULUS1         0
@@ -88,6 +88,7 @@ const float screen_dist = 2.5f;
 int quad_count = 5;
 float quad_range = 20;
 float quad_start = 2.5;
+float quad_scale = 1.0;
 
 
 #if OCULUS1 || OCULUS2
@@ -167,13 +168,13 @@ class QueryResults {
 
   #if GUI_SUPPORT
     void print_to_gui(std::shared_ptr<gua::GuiResource> const& gui) {
-    
+
       gui->call_javascript("set_stats", 1000.f / get(Type::FPS), get(Type::FPS),
                            get(Type::RENDER_TIME), get(Type::GBUFFER_PRE_TIME),
                            get(Type::ABUFFER_PRE_TIME), get(Type::GBUFFER_WARP_TIME),
                            get(Type::ABUFFER_WARP_TIME), get(Type::HOLE_FILLING_PRE_TIME),
                            get(Type::GBUFFER_PRIMITIVES));
-    
+
     }
   #endif
 
@@ -409,7 +410,7 @@ int main(int argc, char** argv) {
     texured_quad_root->clear_children();
     for (int x(0); x<quad_count; ++x) {
       float offset(quad_count <= 1 ? quad_start : x*quad_range/(quad_count-1)+quad_start);
-      float scale(offset/screen_dist);
+      float scale(offset/screen_dist*quad_scale);
       auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
       node->data.set_texture("data/textures/test_grid.png");
       node->translate(0, 0, -offset);
@@ -1199,6 +1200,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_quad_count", [&](){ return gua::string_utils::to_string(quad_count);});
       gui->add_javascript_getter("get_quad_range", [&](){ return gua::string_utils::to_string(quad_range);});
       gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
+      gui->add_javascript_getter("get_quad_scale", [&](){ return gua::string_utils::to_string(quad_scale);});
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
       gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
@@ -1277,6 +1279,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_pixel_size");
       gui->add_javascript_callback("set_quad_count");
       gui->add_javascript_callback("set_quad_start");
+      gui->add_javascript_callback("set_quad_scale");
       gui->add_javascript_callback("set_quad_range");
       gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
@@ -1338,6 +1341,10 @@ int main(int argc, char** argv) {
       } else if (callback == "set_quad_start") {
         std::stringstream str(params[0]);
         str >> quad_start;
+        setup_textured_quad_scene();
+      } else if (callback == "set_quad_scale") {
+        std::stringstream str(params[0]);
+        str >> quad_scale;
         setup_textured_quad_scene();
       } else if (callback == "set_rubber_band_threshold") {
         std::stringstream str(params[0]);
@@ -1803,6 +1810,13 @@ int main(int argc, char** argv) {
     }
   }
 
+  std::vector<gua::math::vec2> test_quad_ranges;
+  for (float i=2; i<10; ++i) {
+    for (float j=0; j<200; j=j*1.7+0.02) {
+      test_quad_ranges.push_back(gua::math::vec2(i, j));
+    }
+  }
+
   gua::Timer frame_timer;
   frame_timer.start();
 
@@ -1949,10 +1963,12 @@ int main(int argc, char** argv) {
 
       if (test_frame_counter < 0) {
 
-        if (test_counter < 5) {
+        if (test_counter < (int)test_quad_ranges.size()-1) {
           ++test_counter;
           test_frame_counter = 15;
-          quad_count = test_counter + 1;
+          quad_range = test_quad_ranges[test_counter].y;
+          quad_count = test_quad_ranges[test_counter].x;
+          warp_navigation->set_transform(scm::math::make_translation(0.125, 0.0, 0.0));
           setup_textured_quad_scene();
         } else {
           test_counter = -1;
@@ -1964,7 +1980,9 @@ int main(int argc, char** argv) {
       }
       if (test_frame_counter == 5) query_results.reset();
       if (test_frame_counter == 0) {
-        std::cout << test_counter + 1 << " ";
+        std::cout << quad_count << " "
+                  << resolution.x*0.125/screen_width << " "
+                  << resolution.x*0.125/(screen_width*(test_quad_ranges[test_counter].y+screen_dist)/screen_dist) << " ";
         query_results.print_to_console();
       }
       --test_frame_counter;
@@ -1996,7 +2014,7 @@ int main(int argc, char** argv) {
         } else {
           navigation->set_transform(gua::math::mat4(nav.get_transform()));
         }
-        std::cout << nav.get_transform() << std::endl;
+        // std::cout << nav.get_transform() << std::endl;
         warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
       #endif
     }

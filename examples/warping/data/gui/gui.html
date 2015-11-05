@@ -234,6 +234,7 @@
         add_texture_select("#scene-panel", "bg_tex", "Texture");
         init_slider("#scene-panel .quad_count", "quad_count");
         init_slider("#scene-panel .quad_start", "quad_start");
+        init_slider("#scene-panel .quad_scale", "quad_scale");
         init_slider("#scene-panel .quad_range", "quad_range");
 
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
@@ -408,6 +409,15 @@
             </div>
             <div class="col-xs-7">
               <input class="slider quad_count" data-slider-tooltip="hide" data-slider-id="quad_count" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Quad Scale:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider quad_scale" data-slider-tooltip="hide" data-slider-id="quad_scale" type="text" data-slider-min="0" data-slider-max="5" data-slider-step="0.1" handle="custom"/>
             </div>
           </div>
 
@@ -803,19 +813,19 @@
                <div class="radio">
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_search" value="">
-                  <span>Epipolar Search</span>
+                  <span>Stretch</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_inpaint" value="" checked>
-                  <span>Bi-Epipolar Search</span>
+                  <span>Bi-Stretch</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
                   <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
-                  <span>Epipolar Mirror</span>
+                  <span>Mirror</span>
                 </label>
               </div>
               <div class="radio">
