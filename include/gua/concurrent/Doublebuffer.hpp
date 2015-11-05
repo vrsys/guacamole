@@ -28,6 +28,7 @@
 #include <iostream>
 #include <condition_variable>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 
 namespace gua {
 namespace concurrent {
@@ -66,7 +67,7 @@ template <typename T> class Doublebuffer {
         copy_cond_var_.wait(lock);
       }
       if (shutdown_) {
-        return boost::optional<T>();
+        return boost::none;
       }
       updated_ = false;
       std::swap(front_, back_);

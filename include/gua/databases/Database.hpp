@@ -28,6 +28,7 @@
 // external headers
 #include <boost/thread.hpp>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #include <thread>
 #include <memory>
 #include <string>
@@ -159,7 +160,7 @@ auto lookup(Database<T>& db, typename Database<T>::key_type const& k) -> decltyp
   if (db.contains(k))
     return boost::make_optional(db.lookup(k));
   else
-    return boost::optional<typename Database<T>::mapped_type>();
+    return boost::none;
 }
 
 }
