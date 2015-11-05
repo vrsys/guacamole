@@ -24,6 +24,7 @@
 #include <gua/math/math.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 
 namespace gua {
 
@@ -115,7 +116,7 @@ boost::optional<BufferComponent> parse_output_type(std::string const& type) {
   if (type == "depth24")
     return boost::make_optional(BufferComponent::DEPTH_24);
 
-  return boost::optional<BufferComponent>();
+  return boost::none;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +204,7 @@ boost::optional<UniformType> parse_uniform_type(std::string const& type) {
   if (type == "samplerCube")
     return boost::make_optional(UniformType::SAMPLERCUBE);
 
-  return boost::optional<UniformType>();
+  return boost::none;
 }
 
 std::string buffer_component_type_to_string(BufferComponentType type) {
@@ -235,7 +236,7 @@ boost::optional<BufferComponentType> parse_buffer_component_type(std::string con
   if (type == "depth")
     return boost::make_optional(TYPE_DEPTH);
 
-  return boost::optional<BufferComponentType>();
+  return boost::none;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
