@@ -44,8 +44,13 @@ CubemapNode::CubemapNode(std::string const& name,
   m_NewTextureData = std::make_shared<std::atomic<bool>>(false);
   m_MinDistance.distance = -1.0;
   m_WeightedMinDistance.distance = -1.0;
+
   m_Weights = std::vector<float>(config.get_resolution()*config.get_resolution()*6, 1.0f);
   create_weights(math::vec3(0.0, 0.0, 0.0), math::vec3(0.0, 0.0, 0.0));
+
+  m_DistortionWeights = std::vector<float>(config.get_resolution()*config.get_resolution(), 1.0f);
+  create_distortion_weights();
+
   update_bounding_box();
 }
 
@@ -157,6 +162,49 @@ void CubemapNode::create_weights(math::vec3 const& view_direction, math::vec3 co
   }
 }
 
+void CubemapNode::create_distortion_weights(){
+
+  int _res = config.resolution();
+
+  float sum_of_angle_areas(0.0);
+
+  for (int x = 0; x<_res; ++x){
+    for (int y = 0; y<_res; ++y){
+
+      float l_x = float(x)       / _res - 0.5;
+      float u_x = float(x + 1.0) / _res - 0.5;
+      float l_y = float(y)       / _res - 0.5;
+      float u_y = float(y + 1.0) / _res - 0.5;
+
+      float l_x_a = atan(l_x / 0.5);
+      float u_x_a = atan(u_x / 0.5);
+      float l_y_a = atan(l_y / 0.5);
+      float u_y_a = atan(u_y / 0.5);
+
+      l_x_a = (l_x_a / (2*M_PI)) * 360.0;
+      u_x_a = (u_x_a / (2*M_PI)) * 360.0;
+      l_y_a = (l_y_a / (2*M_PI)) * 360.0;
+      u_y_a = (u_y_a / (2*M_PI)) * 360.0;
+
+      float dxa = fabs(u_x_a - l_x_a);
+      float dya = fabs(u_y_a - l_y_a);
+
+      float angle_area = dxa * dya;
+      sum_of_angle_areas += angle_area;
+
+      m_DistortionWeights[y * _res + x] = angle_area;
+    }
+  }
+
+  float mean_area = sum_of_angle_areas / (_res*_res);
+
+  for (int x = 0; x<_res; ++x){
+    for (int y = 0; y<_res; ++y){
+      m_DistortionWeights[y * _res + x] = m_DistortionWeights[y * _res + x] / mean_area;
+    }
+  }
+}
+
 math::vec3 CubemapNode::get_push_back(float radius, float softness){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   math::vec3 pushback(0.0, 0.0, 0.0);
@@ -179,9 +227,10 @@ math::vec3 CubemapNode::get_push_back(float radius, float softness){
 
           float _softness = pow(softness, 2);
 
+          int distortion_index = (tex_coords.y * config.resolution()) + (tex_coords.x % config.resolution());
           float weight = -1.0 * exp( -1.0 * intrusion_factor / _softness) + 1.0;
 
-          pushback += direction * weight;
+          pushback += direction * weight * m_DistortionWeights[distortion_index];
           ++samples;
 
       }

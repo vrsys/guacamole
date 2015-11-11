@@ -137,11 +137,14 @@ class GUA_DLL CubemapNode : public SerializableNode {
   Distance_Info m_WeightedMinDistance;
 
   std::vector<float> m_Weights;
+  std::vector<float> m_DistortionWeights;
 
   void find_min_distance();
   math::vec3 calculate_direction_from_tex_coords(math::vec2ui const& tex_coords) const;
   math::vec3 project_back_to_world_coords(Distance_Info const& di) const;
   float acces_texture_data(unsigned side, math::vec2 coords) const;
+
+  void create_distortion_weights();
 
   std::shared_ptr<Node> copy() const override;
 };
