@@ -83,7 +83,7 @@ if (UNIX)
     REQUIRED
     )
 elseif (WIN32)
-  include(FindBoost)
+  include(FindBoostWindows)
 endif (UNIX)
 
 include(FindZMQ)
