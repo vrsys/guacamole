@@ -45,8 +45,7 @@ class GUA_DLL GuiTexture : public Texture2D {
    */
   GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view);
 
-  /*virtual*/ math::vec2ui const get_handle(RenderContext const& context) const;
-
+  math::vec2ui const get_handle(RenderContext const& context) const override;
 
  protected:
   Awesomium::WebView* view_;
