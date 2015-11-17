@@ -112,10 +112,10 @@ namespace gua {
    *
    * Returns the size of the Texture2D.
    */
-  unsigned width() const { return width_; }
-  unsigned height() const { return height_; }
+  unsigned width() const override { return width_; }
+  unsigned height() const override { return height_; }
 
-  virtual void upload_to(RenderContext const& context) const;
+  void upload_to(RenderContext const& context) const override;
 
   ///@}
 

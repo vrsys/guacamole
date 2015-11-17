@@ -116,8 +116,7 @@ class GUA_DLL Texture {
    *                         returned.
    * \return                 A pointer to the schism texture.
    */
-  virtual scm::gl::texture_image_ptr const& get_buffer(
-      RenderContext const& context) const;
+  scm::gl::texture_image_ptr const& get_buffer(RenderContext const& context) const;
 
   void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
