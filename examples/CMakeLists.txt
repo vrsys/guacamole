@@ -1,6 +1,7 @@
 # guacamole examples
 
 set(LIB_PATH
+  ${PROJECT_SOURCE_DIR}/lib
   ${SCHISM_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIRS}
   ${BULLET_LIBRARY_DIRS}
@@ -23,6 +24,7 @@ set(LIBS
 #link_libraries(${LIBS})
 
 set(INCLUDE_PATHS
+  ${PROJECT_SOURCE_DIR}/externals
   ${SCHISM_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${BULLET_INCLUDE_DIRS}
@@ -52,7 +54,7 @@ IF (GUACAMOLE_EXAMPLES)
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
     add_subdirectory(animation)
   endif(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
-  
+
   # nurbs example requires GLFW3 and nurbs-plugin
   IF (${PLUGIN_guacamole-nurbs} AND ${GUACAMOLE_GLFW3})
     add_subdirectory(nurbs)
@@ -71,7 +73,7 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-plod})
     add_subdirectory(plod)
   ENDIF (${PLUGIN_guacamole-plod})
-  
+
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
    add_subdirectory(gui)

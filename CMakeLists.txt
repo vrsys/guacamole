@@ -36,7 +36,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Default install
                  prefix" FORCE)
-ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT) 
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 ###############################################################################
 # write Config.h
@@ -116,6 +116,7 @@ endif (GUACAMOLE_GLFW3)
 find_package(Json REQUIRED)
 
 set(LIB_PATHS
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
     ${GL_LIBRARY_DIRS}
@@ -130,6 +131,7 @@ set(LIB_PATHS
 
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
+    ${CMAKE_CURRENT_SOURCE_DIR}/externals
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
@@ -153,7 +155,6 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-
 	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
@@ -219,6 +220,14 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   ENDIF(UNIX)
 
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+
+################################################################
+# Build external sources
+################################################################
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+add_subdirectory(externals)
 
 ################################################################
 # Create libraries
