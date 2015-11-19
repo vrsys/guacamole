@@ -33,7 +33,9 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
+extern "C" {
 #include <nvstusb/nvstusb.h>
+}
 
 #include <X11/Xlib.h>
 #include <X11/extensions/xf86vmode.h>

@@ -139,8 +139,6 @@ ADD_LIBRARY( guacamole SHARED
     ${GUACAMOLE_SHADERS_GLSL}
 )
 
-TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.a)
-
 
 IF (MSVC)
     GET_WIN32_WINNT(WIN_VERSION)
@@ -206,6 +204,9 @@ ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   ADD_DEPENDENCIES(guacamole guarc CompileResources)
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+
+add_dependencies(guacamole nvstusb)
+TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
 
 ###############################################################################
 # install
