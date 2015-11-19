@@ -23,7 +23,6 @@
 #include <gua/renderer/Uniform.hpp>
 
 #include <gua/math/math.hpp>
-#include <gua/memory.hpp>
 
 namespace gua {
 
