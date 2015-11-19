@@ -20,8 +20,10 @@ set(LIBS
   ${FBX_LIBRARIES}
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
+  ${LIBUSB_LIBRARIES}
+  -lnvstusb
   )
-#link_libraries(${LIBS})
+# link_libraries(${LIBS})
 
 set(INCLUDE_PATHS
   ${PROJECT_SOURCE_DIR}/externals
