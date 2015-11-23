@@ -53,7 +53,7 @@ enum class StereoMode {
   ANAGLYPH_RED_GREEN,
   ANAGLYPH_RED_CYAN,
   CHECKERBOARD,
-  ACTIVE
+  NVIDIA_3D_VISION
 };
 
 /**
