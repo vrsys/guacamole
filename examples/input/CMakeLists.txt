@@ -21,9 +21,9 @@ target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
-    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD 
-      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
-            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP 
+    ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD
+      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
+            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP
             \n if %ERRORLEVEL% LEQ 7 (exit /b 0) else (exit /b 1)
     )
 ENDIF (MSVC)

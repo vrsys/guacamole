@@ -160,6 +160,8 @@ void GlfwWindow::open() {
     glfwTerminate();
     return;
   }
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,6 +222,7 @@ GlfwWindow::CursorMode GlfwWindow::cursor_mode() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::set_active(bool active) {
+
   glfwMakeContextCurrent(glfw_window_);
   if (!ctx_.render_device) {
     init_context();
@@ -228,8 +231,7 @@ void GlfwWindow::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::finish_frame() {
-  WindowBase::finish_frame();
+void GlfwWindow::swap_buffers_impl() {
   glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
 }
