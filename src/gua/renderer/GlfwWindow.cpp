@@ -33,13 +33,6 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
-extern "C" {
-#include <nvstusb/nvstusb.h>
-}
-
-#include <X11/Xlib.h>
-#include <X11/extensions/xf86vmode.h>
-
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +95,6 @@ void on_window_enter(GLFWwindow* glfw_window, int enter) {
 GlfwWindow::GlfwWindow(Configuration const& configuration)
   : WindowBase(configuration),
     glfw_window_(nullptr),
-    nv_context_(nullptr),
     cursor_mode_{CursorMode::NORMAL} {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,19 +161,7 @@ void GlfwWindow::open() {
     return;
   }
 
-  nv_context_ = nvstusb_init();
-  if (nv_context_ == nullptr) {
-    Logger::LOG_ERROR << "Could not initialize NVIDIA 3D Vision IR emitter!" << std::endl;
-  } else {
-    Display *display = XOpenDisplay(0);
-    double display_num = DefaultScreen(display);
-    XF86VidModeModeLine mode_line;
-    int pixel_clk = 0;
-    XF86VidModeGetModeLine(display, display_num, &pixel_clk, &mode_line);
-    double frame_rate = (double) pixel_clk * 1000.0 / mode_line.htotal / mode_line.vtotal;
-    Logger::LOG_MESSAGE << "Detected refresh rate of " << frame_rate << " Hz." << std::endl;
-    nvstusb_set_rate(nv_context_, frame_rate);
-  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +222,7 @@ GlfwWindow::CursorMode GlfwWindow::cursor_mode() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::set_active(bool active) {
+
   glfwMakeContextCurrent(glfw_window_);
   if (!ctx_.render_device) {
     init_context();
@@ -250,17 +231,8 @@ void GlfwWindow::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GlfwWindow::finish_frame() {
-  WindowBase::finish_frame();
-  // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
-  // glfwSwapBuffers(glfw_window_);
-  // nvstusb_swap
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GlfwWindow::swap_buffers() {
-  // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
+void GlfwWindow::swap_buffers_impl() {
+  glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   glfwSwapBuffers(glfw_window_);
 }
 
