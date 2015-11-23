@@ -8,7 +8,7 @@ PROJECT(GUACAMOLE CXX)
 ENABLE_LANGUAGE(C)
 
 # version number
-set(GUACAMOLE_MAJOR 0)
+set(GUACAMOLE_MAJOR 1)
 set(GUACAMOLE_MINOR 8)
 set(GUACAMOLE_PATCH 18)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
@@ -21,6 +21,7 @@ option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
+option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." ON)
 option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
 # We require at least version 3.0.2
@@ -38,6 +39,14 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
                  prefix" FORCE)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+
+if(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+  set(GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH "${CMAKE_INSTALL_PREFIX}/lib_external/nvstusb.fw")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/externals/nvstusb/ DESTINATION lib_external
+          FILES_MATCHING
+          PATTERN "*.fw"
+         )
+endif(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
 ###############################################################################
 # write Config.h
 ###############################################################################

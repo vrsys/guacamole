@@ -26,8 +26,6 @@
 #include <gua/renderer/WindowBase.hpp>
 #include <gua/events.hpp>
 
-struct nvstusb_context;
-
 struct GLFWwindow;
 
 namespace gua {
@@ -87,13 +85,6 @@ class GUA_DLL GlfwWindow : public WindowBase {
    */
   void set_active(bool active);
 
-  /**
-   * Ends the drawing of a new frame.
-   *
-   * This should be called when drawing a frame has been done.
-   */
-  void finish_frame();
-
   events::Signal<math::vec2ui>        on_resize;
   events::Signal<int, int, int, int>  on_key_press;    // int key, int scancode, int action, int mods
   events::Signal<unsigned>            on_char;
@@ -106,11 +97,10 @@ class GUA_DLL GlfwWindow : public WindowBase {
 
  private:
   GLFWwindow* glfw_window_;
-  nvstusb_context* nv_context_;
 
   CursorMode cursor_mode_;
 
-  void swap_buffers();
+  void swap_buffers_impl() override;
 };
 
 }
