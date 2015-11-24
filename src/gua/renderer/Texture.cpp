@@ -42,11 +42,12 @@ Texture::Texture(scm::gl::data_format color_format,
     : mipmap_layers_(mipmap_layers),
       color_format_(color_format),
       internal_format_(internal_format),
-      file_name_(""),
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
-      upload_mutex_() {}
+      render_contexts_(),
+      upload_mutex_(), 
+      file_name_("") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,11 +57,12 @@ Texture::Texture(scm::gl::data_format color_format,
     : mipmap_layers_(mipmap_layers),
       color_format_(color_format),
       internal_format_(color_format),
-      file_name_(""),
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
-      upload_mutex_() {}
+      render_contexts_(),
+      upload_mutex_(), 
+      file_name_("") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,11 +73,12 @@ Texture::Texture(std::string const& file,
       mipmap_layers_(generate_mipmaps ? 1 : 0),
       color_format_(scm::gl::FORMAT_NULL),
       internal_format_(scm::gl::FORMAT_NULL),
-      file_name_(file),
       state_descripton_(state_descripton),
       textures_(),
       sampler_states_(),
-      upload_mutex_() {}
+      render_contexts_(),
+      upload_mutex_(),
+      file_name_(file) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,11 +152,11 @@ scm::gl::texture_image_ptr const& Texture::get_buffer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Texture::bind(RenderContext const& context, unsigned location) {
-    if (textures_.size() > context.id && textures_[context.id]) {
-        context.render_context->bind_texture(textures_[context.id], sampler_states_[context.id], location);
-    }
-}
+// void Texture::bind(RenderContext const& context, unsigned location) {
+//     if (textures_.size() > context.id && textures_[context.id]) {
+//         context.render_context->bind_texture(textures_[context.id], sampler_states_[context.id], location);
+//     }
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 

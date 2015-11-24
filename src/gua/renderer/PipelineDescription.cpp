@@ -98,55 +98,55 @@ std::shared_ptr<PipelinePassDescription> const& PipelineDescription::get_pass(st
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<TriMeshPassDescription> const& PipelineDescription::get_tri_mesh_pass() const
+std::shared_ptr<TriMeshPassDescription> const PipelineDescription::get_tri_mesh_pass() const
 {
   return get_pass_by_type<TriMeshPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// std::shared_ptr<SkeletalAnimationPassDescription> const& PipelineDescription::get_skel_anim_pass() const
+// std::shared_ptr<SkeletalAnimationPassDescription> const PipelineDescription::get_skel_anim_pass() const
 // {
 //   return get_pass_by_type<SkeletalAnimationPassDescription>();
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<TexturedQuadPassDescription> const& PipelineDescription::get_textured_quad_pass() const
+std::shared_ptr<TexturedQuadPassDescription> const PipelineDescription::get_textured_quad_pass() const
 {
   return get_pass_by_type<TexturedQuadPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<LightVisibilityPassDescription> const& PipelineDescription::get_light_visibility_pass() const
+std::shared_ptr<LightVisibilityPassDescription> const PipelineDescription::get_light_visibility_pass() const
 {
   return get_pass_by_type<LightVisibilityPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BBoxPassDescription> const& PipelineDescription::get_bbox_pass() const
+std::shared_ptr<BBoxPassDescription> const PipelineDescription::get_bbox_pass() const
 {
   return get_pass_by_type<BBoxPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ResolvePassDescription> const& PipelineDescription::get_resolve_pass() const
+std::shared_ptr<ResolvePassDescription> const PipelineDescription::get_resolve_pass() const
 {
   return get_pass_by_type<ResolvePassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const& PipelineDescription::get_textured_screen_space_quad_pass() const
+std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const PipelineDescription::get_textured_screen_space_quad_pass() const
 {
   return get_pass_by_type<TexturedScreenSpaceQuadPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<DebugViewPassDescription> const& PipelineDescription::get_debug_view_pass() const {
+std::shared_ptr<DebugViewPassDescription> const PipelineDescription::get_debug_view_pass() const {
   return get_pass_by_type<DebugViewPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<SSAAPassDescription> const& PipelineDescription::get_ssaa_pass() const {
+std::shared_ptr<SSAAPassDescription> const PipelineDescription::get_ssaa_pass() const {
   return get_pass_by_type<SSAAPassDescription>();
 }
 

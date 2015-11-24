@@ -36,9 +36,9 @@ src/gua/generated/*
 .nfs*
 .vim.custom
 tests/tests
-plugins/guacamole-oculus/example-oculus/example-oculus
 examples/oculus/example-oculus
 examples/oculusSDK2/example-oculusSDK2
+examples/oculus_pitoti/example-oculus_pitoti
 examples/multicontext/example-multicontext
 examples/input/example-input
 examples/gui/example-gui

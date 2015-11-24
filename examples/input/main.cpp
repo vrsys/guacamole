@@ -27,27 +27,38 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
-{
+void mouse_button(gua::utils::Trackball& trackball,
+                  int mousebutton,
+                  int action,
+                  int mods) {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
 
   switch (mousebutton) {
-    case 0: button = gua::utils::Trackball::left; break;
-    case 2: button = gua::utils::Trackball::middle; break;
-    case 1: button = gua::utils::Trackball::right; break;
+    case 0:
+      button = gua::utils::Trackball::left;
+      break;
+    case 2:
+      button = gua::utils::Trackball::middle;
+      break;
+    case 1:
+      button = gua::utils::Trackball::right;
+      break;
   };
 
   switch (action) {
-    case 0: state = gua::utils::Trackball::released; break;
-    case 1: state = gua::utils::Trackball::pressed; break;
+    case 0:
+      state = gua::utils::Trackball::released;
+      break;
+    case 1:
+      state = gua::utils::Trackball::pressed;
+      break;
   };
 
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
 int main(int argc, char** argv) {
-
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -57,7 +68,10 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto teapot(loader.create_geometry_from_file(
+      "teapot", "data/objects/teapot.obj",
+      gua::TriMeshLoader::NORMALIZE_POSITION |
+          gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 
@@ -66,13 +80,6 @@ int main(int argc, char** argv) {
   portal->data.set_texture("portal");
   portal->translate(0.5f, 0.f, -0.2f);
   portal->rotate(-30, 0.f, 1.f, 0.f);
-
-  //auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  //light->data.set_type(gua::node::LightNode::Type::SPOT);
-  //light->data.set_enable_shadows(true);
-  //light->scale(10.f);
-  //light->rotate(-20, 0.f, 1.f, 0.f);
-  //light->translate(-1.f, 0.f,  3.f);
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
@@ -84,11 +91,8 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  //gua::VolumeLoader vloader;
-  //auto volume(vloader.create_volume_from_file("volume", "/opt/gua_vrgeo_2013/data/objects/head_w256_h256_d225_c1_b8.raw", 0));
-  //graph.add_node("/transform", volume);
-
-  auto portal_screen = graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
+  auto portal_screen =
+      graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
   portal_screen->translate(0.0, 0.0, 5.0);
   portal_screen->rotate(90, 0.0, 1.0, 0.0);
   portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -99,7 +103,8 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
+  auto portal_camera =
+      graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
   portal_camera->translate(0, 0, 2.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
   portal_camera->config.set_screen_path("/portal_screen");
@@ -109,10 +114,12 @@ int main(int argc, char** argv) {
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  portal_pipe->add_pass(
+      std::make_shared<gua::LightVisibilityPassDescription>());
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->background_mode(
+      gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
@@ -129,8 +136,10 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
+      1.0f);
+  camera->get_pipeline_description()->add_pass(
+      std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -141,28 +150,30 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    screen->data.set_size(
+        gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
-  });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  window->on_move_cursor.connect(
+      [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+  window->on_button_press.connect(
+      std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
+                std::placeholders::_2, std::placeholders::_3));
 
   window->open();
-
 
   gua::Renderer renderer;
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+  gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-                                                              gua::math::float_t(trackball.shifty()),
-                                                              gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+    gua::math::mat4 modelmatrix =
+        scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
+                                    trackball.distance()) *
+        gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
 

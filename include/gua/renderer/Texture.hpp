@@ -116,10 +116,11 @@ class GUA_DLL Texture {
    *                         returned.
    * \return                 A pointer to the schism texture.
    */
+  // TODO: virtual required???
   virtual scm::gl::texture_image_ptr const& get_buffer(
       RenderContext const& context) const;
 
-  void bind(RenderContext const& context, unsigned location);
+  // void bind(RenderContext const& context, unsigned location);
 
   void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
@@ -136,6 +137,7 @@ class GUA_DLL Texture {
   scm::gl::data_format color_format_;
   scm::gl::data_format internal_format_;
   scm::gl::sampler_state_desc state_descripton_;
+  
   mutable std::vector<scm::gl::texture_image_ptr> textures_;
   mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
   mutable std::vector<scm::gl::render_context_ptr> render_contexts_;

@@ -1,6 +1,7 @@
 # guacamole examples
 
 set(LIB_PATH
+  ${PROJECT_SOURCE_DIR}/lib
   ${SCHISM_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIRS}
   ${BULLET_LIBRARY_DIRS}
@@ -19,9 +20,15 @@ set(LIBS
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
   ${Boost_LIBRARIES}
-  )
+  ${LIBUSB_LIBRARIES}
+)
+
+if(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+  LIST(APPEND LIBS -lnvstusb)
+endif(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
 
 set(INCLUDE_PATHS
+  ${PROJECT_SOURCE_DIR}/externals
   ${SCHISM_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${BULLET_INCLUDE_DIRS}
@@ -63,14 +70,9 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus)
   ENDIF (${PLUGIN_guacamole-oculus})
 
-  # oculusSDK2 example requires oculusSDK-plugin
-  IF (${PLUGIN_guacamole-oculusSDK2})
-    add_subdirectory(oculusSDK2)
-  ENDIF (${PLUGIN_guacamole-oculusSDK2})
-
-  IF(${PLUGIN_guacamole-oculusSDK2} AND ${PLUGIN_guacamole-plod})
-    add_subdirectory(oculusSDK2_Pitoti)
-  ENDIF (${PLUGIN_guacamole-oculusSDK2} AND ${PLUGIN_guacamole-plod})
+  IF(${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
+    add_subdirectory(oculus_pitoti)
+  ENDIF (${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
 
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
@@ -91,5 +93,15 @@ IF (GUACAMOLE_EXAMPLES)
       add_subdirectory(volume)
     ENDIF (${PLUGIN_guacamole-volume})
   ENDIF (${PLUGIN_guacamole-gui})
+
+  # multicontext example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
+    add_subdirectory(multicontext)
+  ENDIF (${PLUGIN_guacamole-plod})
+
+  # video3d example requires glfw and video3d-plugin
+  IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
+      add_subdirectory(video3d)
+  ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
 ENDIF (GUACAMOLE_EXAMPLES)

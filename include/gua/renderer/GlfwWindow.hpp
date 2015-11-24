@@ -73,7 +73,7 @@ class GUA_DLL GlfwWindow : public WindowBase {
     HIDDEN = 1,
     DISABLED = 2
   };
-  
+
   void cursor_mode(CursorMode mode);
   CursorMode cursor_mode() const;
 
@@ -85,14 +85,7 @@ class GUA_DLL GlfwWindow : public WindowBase {
    */
   void set_active(bool active);
 
-  /**
-   * Ends the drawing of a new frame.
-   *
-   * This should be called when drawing a frame has been done.
-   */
-  void finish_frame();
-
-  events::Signal<math::vec2ui>        on_resize;    
+  events::Signal<math::vec2ui>        on_resize;
   events::Signal<int, int, int, int>  on_key_press;    // int key, int scancode, int action, int mods
   events::Signal<unsigned>            on_char;
   events::Signal<int, int, int>       on_button_press; // int button, int action, int mods
@@ -106,6 +99,8 @@ class GUA_DLL GlfwWindow : public WindowBase {
   GLFWwindow* glfw_window_;
 
   CursorMode cursor_mode_;
+
+  void swap_buffers_impl() override;
 };
 
 }

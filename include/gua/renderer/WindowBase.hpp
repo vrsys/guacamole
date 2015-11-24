@@ -30,6 +30,7 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/config.hpp>
 #include <gua/events/Signal.hpp>
 
 // external headers
@@ -37,6 +38,11 @@
 #include <memory>
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
+
+
+#ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+struct nvstusb_context;
+#endif
 
 namespace gua {
 
@@ -92,7 +98,6 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
     GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
-    GUA_ADD_PROPERTY(std::string, context_share, "");
 
     // convenience access to resolution
     void set_resolution(math::vec2ui const& res) {
@@ -154,14 +159,14 @@ class GUA_DLL WindowBase {
    *
    * This should be called when a new frame is about to be drawn.
    */
-  virtual void start_frame() {};
+  virtual void start_frame();
 
   /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
    */
-  virtual void finish_frame() {};
+  virtual void finish_frame();
 
   /**
    *
@@ -187,6 +192,9 @@ class GUA_DLL WindowBase {
 protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
+
+
+  virtual void swap_buffers_impl() {};
 
   struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output {
     /*virtual*/ void operator()(scm::gl::debug_source source,
@@ -215,6 +223,14 @@ protected:
                bool is_left = true,
                bool clear = true);
 
+  void swap_buffers();
+
+  static void swap_buffers_callback();
+  static WindowBase* current_instance_;
+
+  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+  nvstusb_context* nv_context_;
+  #endif
 };
 
 }

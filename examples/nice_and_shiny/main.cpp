@@ -136,6 +136,7 @@ int main(int argc, char** argv) {
 
   // TODO: old pipes wont work anymore
   auto standardPipe(std::make_shared<gua::PipelineDescription>());
+  standardPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   standardPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   standardPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
   // standardPipe->add_pass<gua::BackgroundPassDescription>()
@@ -144,6 +145,7 @@ int main(int argc, char** argv) {
     // ;
 
   auto pbrPipe(std::make_shared<gua::PipelineDescription>());
+  pbrPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
@@ -155,6 +157,7 @@ int main(int argc, char** argv) {
 #endif
 
   auto tiledPipe(std::make_shared<gua::PipelineDescription>());
+  tiledPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::ResolvePassDescription>());

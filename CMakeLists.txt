@@ -8,7 +8,7 @@ PROJECT(GUACAMOLE CXX)
 ENABLE_LANGUAGE(C)
 
 # version number
-set(GUACAMOLE_MAJOR 0)
+set(GUACAMOLE_MAJOR 1)
 set(GUACAMOLE_MINOR 8)
 set(GUACAMOLE_PATCH 18)
 set(GUACAMOLE_VERSION ${GUACAMOLE_MAJOR}.${GUACAMOLE_MINOR}.${GUACAMOLE_PATCH})
@@ -20,12 +20,12 @@ set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
-option (GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES "Set to enable profile using per-pass primitive queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
+option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." ON)
 option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
-# We require at least version 2.8.0
-cmake_minimum_required(VERSION 2.8.0)
+# We require at least version 3.0.2
+cmake_minimum_required(VERSION 3.0.2)
 
 if (UNIX)
   find_package(PkgConfig)
@@ -39,6 +39,14 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
                  prefix" FORCE)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+
+if(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+  set(GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH "${CMAKE_INSTALL_PREFIX}/lib_external/nvstusb.fw")
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/externals/nvstusb/ DESTINATION lib_external
+          FILES_MATCHING
+          PATTERN "*.fw"
+         )
+endif(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
 ###############################################################################
 # write Config.h
 ###############################################################################
@@ -66,6 +74,7 @@ if (UNIX)
   pkg_check_modules(ASSIMP REQUIRED assimp)
   pkg_check_modules(GL REQUIRED gl)
   pkg_check_modules(GLEW REQUIRED glew)
+  pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
   include(find_x11)
 elseif (WIN32)
   include(FindAssimp)
@@ -74,12 +83,19 @@ elseif (WIN32)
 endif (UNIX)
 
 include(FindSchism)
-include(FindBoost)
-# find_package(Boost REQUIRED COMPONENTS
-#  system
-#  regex
-#  thread
-# )
+
+if (UNIX)
+  set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
+  find_package(Boost COMPONENTS
+    system
+    regex
+    thread
+    REQUIRED
+    )
+elseif (WIN32)
+  include(FindBoostWindows)
+endif (UNIX)
+
 include(FindZMQ)
 
 if (GUACAMOLE_ENABLE_PHYSICS)
@@ -110,6 +126,7 @@ endif (GUACAMOLE_GLFW3)
 find_package(Json REQUIRED)
 
 set(LIB_PATHS
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
     ${ASSIMP_LIBRARY_DIRS}
     ${JSON_LIBRARY_DIRS}
     ${GL_LIBRARY_DIRS}
@@ -124,6 +141,7 @@ set(LIB_PATHS
 
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
+    ${CMAKE_CURRENT_SOURCE_DIR}/externals
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${SCHISM_INCLUDE_DIRS}
@@ -147,13 +165,12 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-
 	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D NOMINMAX -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
-	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D NOMINMAX -D _USE_MATH_DEFINES /MDd /Zi /MP")
+	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
+	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
 ENDIF(UNIX)
 
 ################################################################
@@ -213,6 +230,14 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   ENDIF(UNIX)
 
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+
+################################################################
+# Build external sources
+################################################################
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+add_subdirectory(externals)
 
 ################################################################
 # Create libraries

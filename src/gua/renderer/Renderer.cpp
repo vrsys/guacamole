@@ -36,6 +36,7 @@
 #include <gua/concurrent/Doublebuffer.hpp>
 #include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
+#include <gua/config.hpp>
 
 namespace {
 
@@ -114,21 +115,38 @@ void render_scene(gua::node::SerializedCameraNode     const& serialized_cam,
             GUA_PUSH_GL_RANGE(*window->get_context(), "Frame");
 
             if (serialized_cam.config.get_enable_stereo()) {
+              if (window->config.get_stereo_mode() == gua::StereoMode::NVIDIA_3D_VISION) {
+                #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+                  if ((window->get_context()->framecount % 2) == 0) {
+                    GUA_PUSH_GL_RANGE(*window->get_context(), "Left eye");
+                    auto img(pipe->render_scene(gua::CameraMode::LEFT,  serialized_cam, scene_graphs));
+                    if (img) window->display(img, true);
+                    GUA_POP_GL_RANGE(*window->get_context());
+                  } else {
+                    GUA_PUSH_GL_RANGE(*window->get_context(), "Right eye");
+                    auto img(pipe->render_scene(gua::CameraMode::RIGHT,  serialized_cam, scene_graphs));
+                    if (img) window->display(img, false);
+                    GUA_POP_GL_RANGE(*window->get_context());
+                  }
+                #else
+                  gua::Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+                #endif
+              } else {
                 GUA_PUSH_GL_RANGE(*window->get_context(), "Left eye");
-                auto img(pipe->render_scene(gua::CameraMode::LEFT, serialized_cam, scene_graphs));
+                auto img(pipe->render_scene(gua::CameraMode::LEFT,  serialized_cam, scene_graphs));
                 if (img) window->display(img, true);
                 GUA_POP_GL_RANGE(*window->get_context());
                 GUA_PUSH_GL_RANGE(*window->get_context(), "Right eye");
-                img = pipe->render_scene(gua::CameraMode::RIGHT, serialized_cam, scene_graphs);
+                img = pipe->render_scene(gua::CameraMode::RIGHT,  serialized_cam, scene_graphs);
                 if (img) window->display(img, false);
                 GUA_POP_GL_RANGE(*window->get_context());
-            }
-            else {
-                GUA_PUSH_GL_RANGE(*window->get_context(), "Cyclops eye");
-                auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
-                         serialized_cam, scene_graphs));
-                if (img) window->display(img, serialized_cam.config.get_mono_mode() != gua::CameraMode::RIGHT);
-                GUA_POP_GL_RANGE(*window->get_context());
+              }
+            } else {
+              GUA_PUSH_GL_RANGE(*window->get_context(), "Cyclops eye");
+              auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
+                       serialized_cam, scene_graphs));
+              if (img) window->display(img, serialized_cam.config.get_mono_mode() != gua::CameraMode::RIGHT);
+              GUA_POP_GL_RANGE(*window->get_context());
             }
 
             pipe->clear_frame_cache();
@@ -180,7 +198,7 @@ void Renderer::renderclient(Mailbox in) {
     std::vector<SceneGraph const*> graphs;
 
     for (auto& g : *cmd.scene_graphs) {
-        graphs.push_back(g.get());
+      graphs.push_back(g.get());
     }
 
     render_scene(cmd.serialized_cam, graphs, fpsc);
@@ -188,7 +206,11 @@ void Renderer::renderclient(Mailbox in) {
 }
 
 
-Renderer::Renderer() : render_clients_(), application_fps_(20), single_threaded_rendering_fps_(20) {
+Renderer::Renderer() 
+ : render_clients_(), 
+   application_fps_(20), 
+   single_threaded_rendering_fps_(20) {
+
   application_fps_.start();
 }
 
