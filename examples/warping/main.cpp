@@ -31,10 +31,10 @@
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     0
+#define LOAD_ENGINE     1
 #define LOAD_SPONZA     1
 #define LOAD_HAIRBALL   1
-#define LOAD_DRAGON     1
+#define LOAD_DRAGON     1 
 
 #include <functional>
 
@@ -82,6 +82,8 @@ bool test_quad_series = false;
 bool test_quad_count_series = false;
 bool test_print_current_times = false;
 
+const float aspect = 1.0f/1.6f;
+// const float aspect = 1.08f/1.92f;
 const float screen_width = 4.f;
 const float screen_dist = 2.5f;
 
@@ -296,7 +298,7 @@ int main(int argc, char** argv) {
   #else
     bool fullscreen = (argc == 2);
 
-    auto resolution = gua::math::vec2ui(1600, 900);
+    auto resolution = gua::math::vec2ui(1920, 1920*aspect);
     if (fullscreen) {
       resolution = gua::math::vec2ui(1920, 1080);
     }
@@ -414,8 +416,8 @@ int main(int argc, char** argv) {
       auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
       node->data.set_texture("data/textures/test_grid.png");
       node->translate(0, 0, -offset);
-      node->data.set_size(gua::math::vec2(screen_width, screen_width*1.08f/1.92f) * scale);
-      node->data.set_repeat(gua::math::vec2(screen_width, screen_width*1.08f/1.92f) * scale);
+      node->data.set_size(gua::math::vec2(screen_width, screen_width*aspect) * scale);
+      node->data.set_repeat(gua::math::vec2(screen_width, screen_width*aspect) * scale);
     }
   };
 
@@ -878,7 +880,7 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*1.08f/1.92f));
+    normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
     normal_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
       normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
@@ -925,7 +927,7 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*1.08f/1.92f));
+    warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
     warp_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
       warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
