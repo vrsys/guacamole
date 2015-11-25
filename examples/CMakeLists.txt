@@ -21,7 +21,6 @@ set(LIBS
   ${ASSIMP_LIBRARIES}
   ${JSON_LIBRARIES}
   ${LIBUSB_LIBRARIES}
-  -lnvstusb
   )
 # link_libraries(${LIBS})
 
