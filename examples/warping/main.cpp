@@ -69,6 +69,8 @@
 bool manipulation_navigator = true;
 bool manipulation_camera    = false;
 bool manipulation_object    = false;
+bool stereotype_spatial     = true;
+bool stereotype_temporal    = false;
 bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
@@ -1045,47 +1047,55 @@ int main(int argc, char** argv) {
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
-      clear_pass->set_enable_for_right_eye(!warping);
-      trimesh_pass->set_enable_for_right_eye(!warping);
+      clear_pass->set_enable_for_right_eye(true);
+      trimesh_pass->set_enable_for_right_eye(true);
       #if LOAD_PITOTI
-        plod_pass->set_enable_for_right_eye(!warping);
+        plod_pass->set_enable_for_right_eye(true);
       #endif
-      tex_quad_pass->set_enable_for_right_eye(!warping);
-      light_pass->set_enable_for_right_eye(!warping);
-      res_pass->set_enable_for_right_eye(!warping);
-      grid_pass->set_enable_for_right_eye(!warping);
-      render_grid_pass->set_enable_for_right_eye(!warping);
-
-      normal_cam->config.set_eye_offset(0.f);
-      warp_cam->config.set_eye_offset(0.f);
+      tex_quad_pass->set_enable_for_right_eye(true);
+      light_pass->set_enable_for_right_eye(true);
+      res_pass->set_enable_for_right_eye(true);
+      grid_pass->set_enable_for_right_eye(true);
+      render_grid_pass->set_enable_for_right_eye(true);
 
       if (warping) {
-        normal_cam->config.set_eye_dist(0.f);
-        warp_cam->config.set_eye_dist(eye_dist);
-
-        #if OCULUS1
-          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
-        #elif OCULUS2
-          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
-          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
-        #endif
 
         normal_cam->set_pipeline_description(warp_pipe);
 
+        if (stereotype_spatial) {
+          clear_pass->set_enable_for_right_eye(false);
+          trimesh_pass->set_enable_for_right_eye(false);
+          #if LOAD_PITOTI
+            plod_pass->set_enable_for_right_eye(false);
+          #endif
+          tex_quad_pass->set_enable_for_right_eye(false);
+          light_pass->set_enable_for_right_eye(false);
+          res_pass->set_enable_for_right_eye(false);
+          grid_pass->set_enable_for_right_eye(false);
+          render_grid_pass->set_enable_for_right_eye(false);
+
+          normal_cam->config.set_eye_dist(0.f);
+          warp_cam->config.set_eye_dist(eye_dist);
+
+          #if OCULUS1
+            normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+            normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
+          #elif OCULUS2
+            normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
+            normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.08f)));
+          #endif
+
+        } else if (stereotype_temporal) {
+          normal_cam->config.set_eye_dist(eye_dist);
+          warp_cam->config.set_eye_dist(eye_dist);
+        }
+
+
+
       } else {
         normal_cam->config.set_eye_dist(eye_dist);
-
-        #if OCULUS1
-          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.04f, 0.f, -0.05f)));
-          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.04f, 0.f, -0.05f)));
-        #elif OCULUS2
-          normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.03175f, 0.f, -0.08f)));
-          normal_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.03175f, 0.f, -0.08f)));
-        #endif
-
         normal_cam->set_pipeline_description(normal_pipe);
-      }
+      } 
 
     } else {
 
@@ -1269,6 +1279,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_manipulation_navigator");
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
+      gui->add_javascript_callback("set_stereotype_spatial");
+      gui->add_javascript_callback("set_stereotype_temporal");
       gui->add_javascript_callback("set_show_warp_grid");
       gui->add_javascript_callback("set_adaptive_entry_level");
       gui->add_javascript_callback("set_debug_cell_colors");
@@ -1557,6 +1569,18 @@ int main(int argc, char** argv) {
           if (callback == "set_manipulation_camera") manipulation_camera = true;
           if (callback == "set_manipulation_object") manipulation_object = true;
           if (callback == "set_manipulation_navigator") manipulation_navigator = true;
+        }
+      } else if (callback == "set_stereotype_spatial"
+              || callback == "set_stereotype_temporal") {
+        std::stringstream str(params[0]);
+        bool checked;
+        str >> checked;
+        if (checked) {
+          stereotype_spatial = false;
+          stereotype_temporal = false;
+
+          if (callback == "set_stereotype_temporal") stereotype_temporal = true;
+          if (callback == "set_stereotype_spatial") stereotype_spatial = true;
         }
       } else if (callback == "set_scene_one_oilrig"        ||
                  callback == "set_scene_many_oilrigs"      ||

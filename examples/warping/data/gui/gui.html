@@ -170,6 +170,9 @@
         init_radio("#manipulation_camera", "manipulation_camera");
         init_radio("#manipulation_object", "manipulation_object");
 
+        init_radio("#stereotype_spatial", "stereotype_spatial");
+        init_radio("#stereotype_temporal", "stereotype_temporal");
+
         init_radio("#scene_one_oilrig", "scene_one_oilrig");
         init_radio("#scene_sponza1", "scene_sponza1");
         init_radio("#scene_sponza2", "scene_sponza2");
@@ -495,6 +498,28 @@
                 </label>
               </div>
 
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Warp Stereo Type:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereotypeRadios" id="stereotype_spatial" value="" checked>
+                  <span>Spatial</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereotypeRadios" id="stereotype_temporal" value="">
+                  <span>Temporal</span>
+                </label>
+              </div>
             </div>
           </div>
 
