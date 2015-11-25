@@ -30,8 +30,11 @@
 // external headers
 #include <sstream>
 #include <iostream>
+#include <cstdint>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <gua/renderer/Texture2D.hpp>
 
 namespace gua {
 
@@ -46,7 +49,12 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
-    instance()->add(filename, std::make_shared<Texture2D>(filename, true));
+    auto image = gua::load_image_2d(filename, true);
+
+    instance()->add(filename, std::make_shared<Texture2D>(image, 1,
+          scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                      scm::gl::WRAP_REPEAT,
+                                      scm::gl::WRAP_REPEAT)));
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   }
