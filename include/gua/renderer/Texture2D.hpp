@@ -126,5 +126,7 @@ namespace gua {
 
 };
 
+scm::gl::texture_image_data_ptr load_image_2d(std::string const& file, bool create_mips);
+
 }
 #endif  // GUA_TEXTURE2D_HPP
