@@ -87,11 +87,6 @@ void Texture2D::upload_to(RenderContext const& context) const {
     textures_[context.id] = context.render_device->create_texture_2d(
         image_->mip_level(0).size(), image_->format(),
         image_->mip_level_count(), 1, 1, image_->format(), data);
-
-    if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
-    }
   } else if (file_name_ == "") {
     if (image_ == nullptr) {
       textures_[context.id] = context.render_device->create_texture_2d(
