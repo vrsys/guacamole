@@ -21,7 +21,7 @@ option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
-option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." ON)
+option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
 option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 
 # We require at least version 3.0.2
@@ -46,6 +46,9 @@ if(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
           FILES_MATCHING
           PATTERN "*.fw"
          )
+  if (UNIX)
+    pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+  endif (UNIX)
 endif(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
 ###############################################################################
 # write Config.h
@@ -74,7 +77,6 @@ if (UNIX)
   pkg_check_modules(ASSIMP REQUIRED assimp)
   pkg_check_modules(GL REQUIRED gl)
   pkg_check_modules(GLEW REQUIRED glew)
-  pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
   include(find_x11)
 elseif (WIN32)
   include(FindAssimp)
