@@ -67,22 +67,6 @@ void UniformValue::write_bytes_impl<std::string>(UniformValue const* self,
     if (texture) {
       auto& handle(texture->get_handle(ctx));
       memcpy(target, &handle, sizeof(math::vec2ui));
-    } else if (ctx.mode != CameraMode::CENTER) {
-      if ((ctx.mode != CameraMode::LEFT)) {
-        auto left_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_left"));
-        if (left_texture) {
-          auto& handle(left_texture->get_handle(ctx));
-          memcpy(target, &handle, sizeof(math::vec2ui));
-        }
-      } else {
-        auto right_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_right"));
-        if (right_texture) {
-          auto& handle(right_texture->get_handle(ctx));
-          memcpy(target, &handle, sizeof(math::vec2ui));
-        }
-      }
     }
   }
 }
