@@ -35,8 +35,8 @@
 
 namespace gua {
 
-void TextureDatabase::load(std::string const& id) {
-  boost::filesystem::path fp(id);
+void TextureDatabase::load(std::string const& filename) {
+  boost::filesystem::path fp(filename);
   std::string extension(fp.extension().string());
   boost::algorithm::to_lower(extension);
 
@@ -46,9 +46,9 @@ void TextureDatabase::load(std::string const& id) {
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
-    instance()->add(id, std::make_shared<Texture2D>(id, true));
+    instance()->add(filename, std::make_shared<Texture2D>(filename, true));
   } else if (extension == ".vol") {
-    instance()->add(id, std::make_shared<Texture3D>(id, true));
+    instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   }
 }
 
