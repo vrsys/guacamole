@@ -47,9 +47,8 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-  class GUA_DLL Texture2D : public Texture {
+class GUA_DLL Texture2D : public Texture {
  public:
-
   /**
    * Constructor.
    *
@@ -59,14 +58,12 @@ namespace gua {
    * \param state_descripton The sampler state for the loaded texture.
    */
   Texture2D(scm::gl::texture_image_data_ptr image_data,
-            //bool generate_mipmaps = false,
+            // bool generate_mipmaps = false,
             unsigned mipmap_layers = 1,
             scm::gl::sampler_state_desc const& state_descripton =
                 scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                             scm::gl::WRAP_REPEAT,
                                             scm::gl::WRAP_REPEAT));
-
-
 
   /**
    * Constructor.
@@ -122,11 +119,11 @@ namespace gua {
   mutable unsigned width_;
   mutable unsigned height_;
   mutable scm::gl::texture_image_data_ptr image_ = nullptr;
- private:
 
+ private:
 };
 
-scm::gl::texture_image_data_ptr load_image_2d(std::string const& file, bool create_mips);
-
+scm::gl::texture_image_data_ptr load_image_2d(std::string const& file,
+                                              bool create_mips);
 }
 #endif  // GUA_TEXTURE2D_HPP
