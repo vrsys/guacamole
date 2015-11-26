@@ -24,7 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
-#include <gua/renderer/PipelineDescription.hpp>
+#include <gua/renderer/PipelineFactory.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/renderer/Frustum.hpp>
@@ -136,7 +136,7 @@ class GUA_DLL CameraNode : public Node {
    *                       with the xy-plane and facing in +z direction.
    */
   CameraNode(std::string const& name,
-             std::shared_ptr<PipelineDescription> const& description = PipelineDescription::make_default(),
+             std::shared_ptr<PipelineDescription> const& description = PipelineFactory::make_pipeline(),
              Configuration const& configuration = Configuration(),
              math::mat4 const& transform = math::mat4::identity());
 

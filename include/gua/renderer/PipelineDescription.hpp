@@ -42,8 +42,6 @@ namespace gua {
 class GUA_DLL PipelineDescription {
  public:
 
-  static std::shared_ptr<PipelineDescription> make_default();
-
   PipelineDescription() {}
   PipelineDescription(PipelineDescription const& other);
 

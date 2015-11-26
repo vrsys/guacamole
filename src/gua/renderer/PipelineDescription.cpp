@@ -42,25 +42,6 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
-
-  auto pipe(std::make_shared<PipelineDescription>());
-
-  pipe->add_pass(std::make_shared<ClearPassDescription>());
-  pipe->add_pass(std::make_shared<TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
-  pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<TexturedScreenSpaceQuadPassDescription>());
-
-  pipe->set_enable_abuffer(false);
-
-  return pipe;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 PipelineDescription::PipelineDescription(PipelineDescription const& other) {
   for (auto pass: other.passes_) {
     passes_.push_back(pass->make_copy());

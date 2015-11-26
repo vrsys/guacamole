@@ -727,7 +727,71 @@ int main(int argc, char** argv) {
   #endif
 
 
-  auto res_pass(std::make_shared<gua::ResolvePassDescription>());
+  auto warp_pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    #if LOAD_PITOTI
+      gua::PipelineFactory::DRAW_PLODS |
+    #endif
+    gua::PipelineFactory::ABUFFER |
+    gua::PipelineFactory::DEBUG_WARPING |
+    gua::PipelineFactory::WARPING
+  );
+
+  auto normal_pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    #if LOAD_PITOTI
+      gua::PipelineFactory::DRAW_PLODS |
+    #endif
+    // gua::PipelineFactory::WARPING |
+    // gua::PipelineFactory::DEBUG_WARPING |
+    gua::PipelineFactory::ABUFFER
+  );
+
+  normal_pipe->get_resolve_pass()->
+    background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
+    background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+    environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+    background_color(gua::utils::Color3f(0,0,0)).
+    environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
+    environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
+    ssao_enable(true).
+    tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
+    tone_mapping_exposure(1.5f).
+    horizon_fade(0.2f).
+    ssao_intensity(1.5f).
+    ssao_radius(2.f);
+
+  warp_pipe->get_resolve_pass()->
+    background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
+    background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+    environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
+    background_color(gua::utils::Color3f(0,0,0)).
+    environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
+    environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
+    ssao_enable(true).
+    tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
+    tone_mapping_exposure(1.5f).
+    horizon_fade(0.2f).
+    compositing_enable(false).
+    ssao_intensity(1.5f).
+    ssao_radius(2.f);
+
+  auto warp_res_pass(warp_pipe->get_resolve_pass());
+  auto normal_res_pass(normal_pipe->get_resolve_pass());
+  auto warp_pass(warp_pipe->get_pass_by_type<gua::WarpPassDescription>());
+  auto grid_pass(warp_pipe->get_pass_by_type<gua::GenerateWarpGridPassDescription>());
+  auto render_grid_pass(warp_pipe->get_pass_by_type<gua::RenderWarpGridPassDescription>());
+
+  warp_pipe->get_pass_by_type<gua::ClearPassDescription>()->set_enable_for_right_eye(false);
+  warp_pipe->get_tri_mesh_pass()->set_enable_for_right_eye(false);
+  #if LOAD_PITOTI
+    warp_pipe->warp_pipe->get_pass_by_type<gua::PLODPassDescription>()->set_enable_for_right_eye(false);
+  #endif
+  warp_pipe->get_textured_quad_pass()->set_enable_for_right_eye(false);
+  warp_pipe->get_light_visibility_pass()->set_enable_for_right_eye(false);
+  warp_pipe->get_resolve_pass()->set_enable_for_right_eye(false);
+  grid_pass->set_enable_for_right_eye(false);
+  render_grid_pass->set_enable_for_right_eye(false);
 
   auto set_scene = [&](std::string const& name) {
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
@@ -746,15 +810,19 @@ int main(int argc, char** argv) {
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
     sun_light->data.set_brightness(3.f);
-    res_pass->ssao_enable(true);
-    res_pass->ssao_intensity(1.5f);
-    res_pass->ssao_radius(2.0f);
+    warp_res_pass->ssao_enable(true);
+    normal_res_pass->ssao_enable(true);
+    warp_res_pass->ssao_intensity(1.5f);
+    normal_res_pass->ssao_intensity(1.5f);
+    warp_res_pass->ssao_radius(2.0f);
+    normal_res_pass->ssao_radius(2.0f);
 
     if (name == "set_scene_many_oilrigs")
       graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_one_oilrig") {
       graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
       nav.set_transform(scm::math::mat4f(-0.228, -0.031, 0.973, 2.404,
                                          0.000, 1.000, 0.031, 1.568,
                                          -0.974, 0.007, -0.228, -1.231,
@@ -763,10 +831,14 @@ int main(int argc, char** argv) {
     if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
       sun_light->data.set_brightness(10.f);
-      //res_pass->ssao_enable(false);
-      res_pass->ssao_intensity(5.0f);
-      res_pass->ssao_radius(5.0f);
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
+      //warp_res_pass->ssao_enable(false);
+      //normal_res_pass->ssao_enable(false);
+      warp_res_pass->ssao_intensity(5.0f);
+      normal_res_pass->ssao_intensity(5.0f);
+      warp_res_pass->ssao_radius(5.0f);
+      normal_res_pass->ssao_radius(5.0f);
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
 
       if (name == "set_scene_sponza1")
         nav.set_transform(scm::math::mat4f(0.637, 0.067, -0.768, -4.160,
@@ -785,7 +857,8 @@ int main(int argc, char** argv) {
                                            0.000, 0.000, 0.000, 1.000));
     }
     if (name == "set_scene_textured_quads") {
-        res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+        warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+        normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
       nav.set_transform(scm::math::mat4f(1, 0, 0, 0,
                                          0, 1, 0, 0,
@@ -808,7 +881,8 @@ int main(int argc, char** argv) {
       graph["/transform/engine"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_transp_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
       nav.set_transform(scm::math::mat4f(0.914, 0.114, -0.388, 3.625,
                                          0.000, 0.959, 0.283, 0.060,
                                          0.405, -0.259, 0.877, 2.961,
@@ -816,7 +890,8 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_many_transp_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
       nav.set_transform(scm::math::mat4f(0.988, 0.007, -0.154, 1.457,
                                          0.000, 0.999, 0.046, -0.155,
                                          0.154, -0.045, 0.987, 1.278,
@@ -824,7 +899,8 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_dragon") {
       graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       nav.set_transform(scm::math::mat4f(0.846, 0.019, -0.534, -0.009,
                                          0.000, 0.999, 0.035, -0.186,
                                          0.534, -0.030, 0.845, 0.881,
@@ -832,8 +908,10 @@ int main(int argc, char** argv) {
     }
     if (name == "set_scene_hairball") {
       graph["/transform/hairball"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
-      res_pass->ssao_enable(false);
+      warp_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+      normal_res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
+      warp_res_pass->ssao_enable(false);
+      normal_res_pass->ssao_enable(false);
       nav.set_transform(scm::math::mat4f(1.000, 0.007, -0.031, -0.269,
                                          0.000, 0.974, 0.228, 0.758,
                                          0.031, -0.228, 0.973, -3.367,
@@ -945,70 +1023,17 @@ int main(int argc, char** argv) {
   warp_cam->config.set_far_clip(normal_cam->config.get_far_clip()*1.5);
   warp_cam->config.set_near_clip(normal_cam->config.get_near_clip());
 
-  auto clear_pass(std::make_shared<gua::ClearPassDescription>());
-  auto tex_quad_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-  auto light_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  auto warp_pass(std::make_shared<gua::WarpPassDescription>());
-  auto grid_pass(std::make_shared<gua::GenerateWarpGridPassDescription>());
-  auto render_grid_pass(std::make_shared<gua::RenderWarpGridPassDescription>());
-  auto trimesh_pass(std::make_shared<gua::TriMeshPassDescription>());
-  #if LOAD_PITOTI
-  auto plod_pass(std::make_shared<gua::PLODPassDescription>());
-  #endif
-  res_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
-            background_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
-            environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
-            background_color(gua::utils::Color3f(0,0,0)).
-            environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
-            environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
-            ssao_enable(true).
-            tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
-            tone_mapping_exposure(1.5f).
-            horizon_fade(0.2f).
-            compositing_enable(false).
-            ssao_intensity(1.5f).
-            ssao_radius(2.f);
-
   normal_cam->config.set_output_window_name("window");
 
-  auto warp_pipe = std::make_shared<gua::PipelineDescription>();
-  warp_pipe->add_pass(clear_pass);
-  warp_pipe->add_pass(tex_quad_pass);
-  warp_pipe->add_pass(trimesh_pass);
-  #if LOAD_PITOTI
-  warp_pipe->add_pass(plod_pass);
-  #endif
-  warp_pipe->add_pass(light_pass);
-  warp_pipe->add_pass(res_pass);
-  warp_pipe->add_pass(grid_pass);
-  warp_pipe->add_pass(warp_pass);
-  warp_pipe->add_pass(render_grid_pass);
-  // warp_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  warp_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
-  warp_pipe->set_enable_abuffer(true);
-  warp_pipe->set_abuffer_size(500);
-
-  auto normal_pipe = std::make_shared<gua::PipelineDescription>();
-  normal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
-  normal_pipe->add_pass(tex_quad_pass);
-  normal_pipe->add_pass(trimesh_pass);
-  #if LOAD_PITOTI
-  normal_pipe->add_pass(plod_pass);
-  #endif
-  normal_pipe->add_pass(light_pass);
-  normal_pipe->add_pass(res_pass);
-  // normal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  normal_pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
-  normal_pipe->set_enable_abuffer(true);
-  normal_pipe->set_abuffer_size(500);
+  
 
   auto update_view_mode([&](){
 
     // set transparency mode
     if (warping) {
       warp_pipe->set_enable_abuffer(true);
-      res_pass->compositing_enable(false);
-      res_pass->write_abuffer_depth(false);
+      warp_res_pass->compositing_enable(false);
+      warp_res_pass->write_abuffer_depth(false);
 
       if (current_transparency_mode == "set_transparency_type_raycasting")
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
@@ -1018,18 +1043,16 @@ int main(int argc, char** argv) {
       }
       if (current_transparency_mode == "set_transparency_type_gbuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        res_pass->compositing_enable(true);
+        warp_res_pass->compositing_enable(true);
       }
       if (current_transparency_mode == "set_transparency_type_hidden") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_HIDDEN);
       }
       if (current_transparency_mode == "set_transparency_type_abuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        res_pass->write_abuffer_depth(true);
-        res_pass->compositing_enable(true);
+        warp_res_pass->write_abuffer_depth(true);
+        warp_res_pass->compositing_enable(true);
       }
-    } else {
-      res_pass->compositing_enable(true);
     }
 
     // set stereo options
@@ -1047,33 +1070,13 @@ int main(int argc, char** argv) {
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
-      clear_pass->set_enable_for_right_eye(true);
-      trimesh_pass->set_enable_for_right_eye(true);
-      #if LOAD_PITOTI
-        plod_pass->set_enable_for_right_eye(true);
-      #endif
-      tex_quad_pass->set_enable_for_right_eye(true);
-      light_pass->set_enable_for_right_eye(true);
-      res_pass->set_enable_for_right_eye(true);
-      grid_pass->set_enable_for_right_eye(true);
-      render_grid_pass->set_enable_for_right_eye(true);
 
       if (warping) {
 
         normal_cam->set_pipeline_description(warp_pipe);
+        normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
 
         if (stereotype_spatial) {
-          clear_pass->set_enable_for_right_eye(false);
-          trimesh_pass->set_enable_for_right_eye(false);
-          #if LOAD_PITOTI
-            plod_pass->set_enable_for_right_eye(false);
-          #endif
-          tex_quad_pass->set_enable_for_right_eye(false);
-          light_pass->set_enable_for_right_eye(false);
-          res_pass->set_enable_for_right_eye(false);
-          grid_pass->set_enable_for_right_eye(false);
-          render_grid_pass->set_enable_for_right_eye(false);
-
           normal_cam->config.set_eye_dist(0.f);
           warp_cam->config.set_eye_dist(eye_dist);
 
@@ -1095,6 +1098,7 @@ int main(int argc, char** argv) {
       } else {
         normal_cam->config.set_eye_dist(eye_dist);
         normal_cam->set_pipeline_description(normal_pipe);
+        normal_cam->config.set_stereo_type(gua::StereoType::RENDER_TWICE);
       } 
 
     } else {
@@ -1102,7 +1106,6 @@ int main(int argc, char** argv) {
       normal_cam->config.set_enable_stereo(false);
       normal_cam->config.set_eye_dist(0.f);
       warp_cam->config.set_eye_dist(0.f);
-      clear_pass->set_enable_for_right_eye(true);
 
       #if OCULUS1
         normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -1116,10 +1119,12 @@ int main(int argc, char** argv) {
 
       if (warping) {
         normal_cam->set_pipeline_description(warp_pipe);
+        normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
         normal_cam->config.set_eye_offset(0.f);
         warp_cam->config.set_eye_offset(eye_offset);
       } else {
         normal_cam->set_pipeline_description(normal_pipe);
+        normal_cam->config.set_stereo_type(gua::StereoType::RENDER_TWICE);
         if (warp_perspective) {
           normal_cam->config.set_eye_offset(eye_offset);
         } else {
@@ -1198,7 +1203,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
       gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
       gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
-      gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
+      gui->add_javascript_getter("get_background", [&](){ return std::to_string(warp_res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
       gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
       gui->add_javascript_getter("get_adaptive_entry_level", [&](){ return std::to_string(warp_pass->adaptive_entry_level());});
       gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
@@ -1214,7 +1219,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
       gui->add_javascript_getter("get_quad_scale", [&](){ return gua::string_utils::to_string(quad_scale);});
       gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
-      gui->add_javascript_getter("get_adaptive_abuffer", [&](){ return std::to_string(trimesh_pass->adaptive_abuffer());});
 
       gui->add_javascript_callback("start_resolution_series");
       gui->add_javascript_callback("start_positional_warp_series");
@@ -1255,7 +1259,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_interpolation_mode_nearest");
       gui->add_javascript_callback("set_interpolation_mode_linear");
       gui->add_javascript_callback("set_interpolation_mode_adaptive");
-      gui->add_javascript_callback("set_adaptive_abuffer");
       gui->add_javascript_callback("set_scene_one_oilrig");
       gui->add_javascript_callback("set_scene_many_oilrigs");
       gui->add_javascript_callback("set_scene_sponza0");
@@ -1366,7 +1369,8 @@ int main(int argc, char** argv) {
         str >> rubber_band_threshold;
         warp_pass->rubber_band_threshold(rubber_band_threshold);
       } else if (callback == "set_bg_tex") {
-        res_pass->background_texture(params[0]);
+        warp_res_pass->background_texture(params[0]);
+        normal_res_pass->background_texture(params[0]);
       } else if (callback == "set_cell_size") {
         std::stringstream str(params[0]);
         int cell_size;
@@ -1392,7 +1396,8 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
-        res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
+        warp_res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
+        normal_res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
       } else if (callback == "set_show_warp_grid") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1438,11 +1443,6 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_epipol(checked);
-      } else if (callback == "set_adaptive_abuffer") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        trimesh_pass->adaptive_abuffer(checked);
       } else if (callback == "set_hole_filling_color") {
         std::stringstream str(params[0]);
         gua::math::vec3f color;

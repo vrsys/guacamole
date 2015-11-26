@@ -37,8 +37,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshPassDescription::TriMeshPassDescription()
-  : PipelinePassDescription()
-  , adaptive_abuffer_(false) {
+  : PipelinePassDescription() {
   vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
   fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
   name_ = "TriMeshPass";
@@ -58,20 +57,6 @@ TriMeshPassDescription::TriMeshPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshPassDescription& TriMeshPassDescription::adaptive_abuffer(bool val) {
-  adaptive_abuffer_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool TriMeshPassDescription::adaptive_abuffer() const {
-  return adaptive_abuffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() const {
   return std::make_shared<TriMeshPassDescription>(*this);
 }
@@ -81,8 +66,6 @@ std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() con
 
 PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  substitution_map["adaptive_abuffer"] = adaptive_abuffer_ ? "1" : "0";
-
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<TriMeshRenderer>();

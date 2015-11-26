@@ -271,16 +271,11 @@ int main(int argc, char** argv) {
 	camera->config.set_output_window_name("main_window");
 	camera->config.set_enable_stereo(false);
 
-	auto pipe = std::make_shared<gua::PipelineDescription>();
-
-	pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
-	pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-	pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
-	pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-	pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-	pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-	pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
-	pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+	auto pipe = gua::PipelineFactory::make_pipeline(
+		gua::PipelineFactory::DEFAULT | 
+		gua::PipelineFactory::DRAW_PLODS |
+		gua::PipelineFactory::DEBUG_GBUFFER 
+	);
 
 	camera->set_pipeline_description(pipe);
 

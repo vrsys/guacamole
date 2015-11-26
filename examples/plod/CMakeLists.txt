@@ -14,11 +14,11 @@ include_directories( ${INCLUDE_PATHS}
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole guacamole-PLOD)
+add_dependencies(${_EXE_NAME} guacamole guacamole-plod)
 
 list(APPEND LIBS guacamole)
 
-target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-PLOD)
+target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-plod)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

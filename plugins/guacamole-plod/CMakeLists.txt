@@ -65,8 +65,11 @@ message(STATUS "" )
 # compiling and linking
 ###############################################################################
 IF (MSVC)
-	set_target_properties(guacamole-plod PROPERTIES COMPILE_FLAGS "-D GUA_PLOD_LIBRARY")
+  set_target_properties(guacamole-plod PROPERTIES COMPILE_FLAGS "-D GUA_PLOD_LIBRARY")
 ENDIF (MSVC)
+
+set_target_properties(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_ENABLE_PLOD")
+
 
 IF (UNIX)
     LIST(APPEND LIBS udev Xinerama guacamole)

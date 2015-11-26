@@ -36,15 +36,10 @@ class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
  public:
   TriMeshPassDescription();
 
-  TriMeshPassDescription& adaptive_abuffer(bool val);
-  bool adaptive_abuffer() const;
-
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-
-  bool adaptive_abuffer_;
 };
 
 }

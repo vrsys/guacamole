@@ -147,4 +147,4 @@ class GUA_DLL Texture {
 };
 
 }
-#endif  // GUA_TEXTURE2D_HPP
+#endif  // GUA_TEXTURE_HPP

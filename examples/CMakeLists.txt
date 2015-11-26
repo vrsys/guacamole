@@ -75,6 +75,10 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
 
   # plod example requires plod-plugin
+  IF (${PLUGIN_guacamole-plod})
+    LIST(APPEND LIBS -lguacamole-plod)
+  ENDIF (${PLUGIN_guacamole-plod})
+  
   IF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})
     add_subdirectory(plod)
   ENDIF (${PLUGIN_guacamole-plod} AND ${GUACAMOLE_GLFW3})

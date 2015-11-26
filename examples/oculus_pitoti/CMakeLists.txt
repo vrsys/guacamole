@@ -21,7 +21,7 @@ ADD_EXECUTABLE( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole guacamole-PLOD guacamole-oculus)
+ADD_DEPENDENCIES(${_EXE_NAME} guacamole guacamole-plod guacamole-oculus)
 
 LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARIES})
 
@@ -35,7 +35,7 @@ ELSEIF (UNIX)
                        )
 ENDIF (MSVC)
 
-target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-PLOD guacamole-oculus)
+target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-plod guacamole-oculus)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

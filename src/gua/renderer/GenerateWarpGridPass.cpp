@@ -112,11 +112,15 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
 
   pass.process_ = [renderer, mode](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    if (mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
-        mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
-        mode == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
-        mode == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
-      renderer->render(pipe, desc);
+
+    if (pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SPATIAL_WARP ||
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP) {
+      if (mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
+          mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
+          mode == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
+          mode == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
+        renderer->render(pipe, desc);
+      }
     }
   };
 

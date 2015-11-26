@@ -18,60 +18,40 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-// class header
-#include <gua/renderer/PLODPass.hpp>
+
+#ifndef GUA_PIPELINE_FACTORY_HPP
+#define GUA_PIPELINE_FACTORY_HPP
 
 // guacamole headers
-#include <gua/renderer/PLODResource.hpp>
-#include <gua/renderer/PLODRenderer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils/Logger.hpp>
-
-#include <gua/config.hpp>
-
-#include <scm/gl_core/shader_objects.h>
-
-// external headers
-#include <sstream>
-#include <fstream>
-#include <regex>
-#include <list>
+#include <gua/renderer/PipelineDescription.hpp>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+class GUA_DLL PipelineFactory {
+ public:
 
-PLODPassDescription::PLODPassDescription() 
-  : PipelinePassDescription()
-{
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const {
-  return std::make_shared<PLODPassDescription>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
-{
-  PipelinePass pass{ *this, ctx, substitution_map };
-
-  auto renderer = std::make_shared<PLODRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
+  enum Capabilities {
+    NONE                              = 0,
+    DRAW_BBOXES                       = 1 << 0,
+    DRAW_TRIMESHES                    = 1 << 1,
+    DRAW_PLODS                        = 1 << 2,
+    DRAW_NURBS                        = 1 << 3,
+    DRAW_VIDEO3D                      = 1 << 4,
+    DRAW_TEXTURED_QUADS               = 1 << 5,
+    DRAW_SCREEN_SPACE_TEXTURED_QUADS  = 1 << 6,
+    DRAW_VOLUMES                      = 1 << 7,
+    WARPING                           = 1 << 8,
+    DEBUG_GBUFFER                     = 1 << 9,
+    DEBUG_WARPING                     = 1 << 10,
+    ABUFFER                           = 1 << 11,
+    DEFAULT                           = DRAW_TRIMESHES | DRAW_TEXTURED_QUADS |
+                                        DRAW_SCREEN_SPACE_TEXTURED_QUADS
   };
 
-  return pass;
-}
+  static std::shared_ptr<PipelineDescription> make_pipeline(int caps = Capabilities::DEFAULT);
+
+
+};
 
 }
+#endif  // GUA_PIPELINE_FACTORY_HPP
