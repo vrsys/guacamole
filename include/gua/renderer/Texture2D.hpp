@@ -116,9 +116,9 @@ class GUA_DLL Texture2D : public Texture {
   ///@}
 
  protected:
+  scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned width_;
   unsigned height_;
-  scm::gl::texture_image_data_ptr image_ = nullptr;
 
  private:
 };
