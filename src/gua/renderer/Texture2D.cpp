@@ -49,9 +49,9 @@ Texture2D::Texture2D(scm::gl::texture_image_data_ptr image,
               image->format(),
               mipmap_layers,
               state_descripton),
-      width_(image->mip_level(0).size().x),
-      height_(image->mip_level(0).size().y),
-      image_(image) {
+      image_(image),
+      width_(image ? image->mip_level(0).size().x : 0),
+      height_(image ? image->mip_level(0).size().y : 0) {
 }
 
 Texture2D::Texture2D(unsigned width,
@@ -60,6 +60,7 @@ Texture2D::Texture2D(unsigned width,
                      unsigned mipmap_layers,
                      scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, mipmap_layers, state_descripton),
+      image_(nullptr),
       width_(width),
       height_(height) {
 }
@@ -67,10 +68,10 @@ Texture2D::Texture2D(unsigned width,
 Texture2D::Texture2D(std::string const& file,
                      bool generate_mipmaps,
                      scm::gl::sampler_state_desc const& state_descripton)
-    : Texture(file, generate_mipmaps, state_descripton), width_(0), height_(0) {
-    image_ = load_image_2d(file, mipmap_layers_ > 0);
-    width_ = image_->mip_level(0).size().x;
-    height_ = image_->mip_level(0).size().y;
+    : Texture(file, generate_mipmaps, state_descripton),
+      image_(load_image_2d(file, mipmap_layers_ > 0)),
+      width_(image_ ? image_->mip_level(0).size().x : 0),
+      height_(image_ ? image_->mip_level(0).size().y : 0) {
 }
 
 void Texture2D::upload_to(RenderContext const& context) const {
