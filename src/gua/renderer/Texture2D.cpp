@@ -68,6 +68,9 @@ Texture2D::Texture2D(std::string const& file,
                      bool generate_mipmaps,
                      scm::gl::sampler_state_desc const& state_descripton)
     : Texture(file, generate_mipmaps, state_descripton), width_(0), height_(0) {
+    image_ = load_image_2d(file, mipmap_layers_ > 0);
+    width_ = image_->mip_level(0).size().x;
+    height_ = image_->mip_level(0).size().y;
 }
 
 void Texture2D::upload_to(RenderContext const& context) const {
@@ -87,20 +90,9 @@ void Texture2D::upload_to(RenderContext const& context) const {
     textures_[context.id] = context.render_device->create_texture_2d(
         image_->mip_level(0).size(), image_->format(),
         image_->mip_level_count(), 1, 1, image_->format(), data);
-  } else if (file_name_ == "") {
-    if (image_ == nullptr) {
-      textures_[context.id] = context.render_device->create_texture_2d(
-          math::vec2ui(width_, height_), color_format_, mipmap_layers_);
-    }
   } else {
-    scm::gl::texture_loader loader;
-    textures_[context.id] = loader.load_texture_2d(
-        *context.render_device, file_name_, mipmap_layers_ > 0);
-
-    if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
-    }
+    textures_[context.id] = context.render_device->create_texture_2d(
+        math::vec2ui(width_, height_), color_format_, mipmap_layers_);
   }
 
   if (textures_[context.id]) {
