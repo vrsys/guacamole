@@ -175,17 +175,24 @@ std::shared_ptr<Texture2D> Volume::create_color_map(RenderContext const& ctx,
     combined_lut[i * 4 + 3] = alpha_lut[i];
   }
 
-  std::vector<void*> in_data;
-  in_data.push_back(combined_lut.get());
+  scm::shared_array<unsigned char> data(new unsigned char[in_size * 4 * 4]);
+  std::memcpy(data.get(), combined_lut.get(), in_size * 4 * 4);
 
-  auto new_tex = std::make_shared<Texture2D>(in_size, 1, FORMAT_RGBA_32F, FORMAT_RGBA_32F, in_data);// ctx.render_device->create_texture_2d(scm::math::vec2ui(in_size, 1), FORMAT_RGBA_8, 1, 1, 1, FORMAT_RGBA_32F, in_data);
+  scm::gl::texture_image_data::level_vector    mip_vec;
+  mip_vec.push_back(scm::gl::texture_image_data::level(math::vec3ui(in_size, 1, 1), data));
+  scm::gl::texture_image_data_ptr image(new scm::gl::texture_image_data(scm::gl::texture_image_data::ORIGIN_LOWER_LEFT, scm::gl::FORMAT_RGBA_32F, mip_vec));
+
+  scm::gl::sampler_state_desc sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE);
+  auto new_tex = std::make_shared<Texture2D>(image, 1, sampler_state);
 
   if (!new_tex) {
     std::cerr << "Volume::create_color_map(): error during color map texture generation." << std::endl;
     return std::make_shared<Texture2D>(in_size, 1);
   }
 
-  return (new_tex);
+  return new_tex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
