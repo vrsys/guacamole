@@ -43,11 +43,6 @@ class GUA_DLL Material {
 
     MaterialShader* get_shader() const;
 
-    Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
-      uniforms_[name] = value;
-      return *this;
-    }
-
     template <typename T>
     Material& set_uniform(std::string const& name, T const& value) {
       return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
@@ -91,6 +86,12 @@ class GUA_DLL Material {
     void set_uniforms_from_serialized_string(std::string const& value);
 
   private:
+
+    Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
+      uniforms_[name] = value;
+      return *this;
+    }
+
     friend class MaterialShader;
 
     std::string shader_name_;
@@ -100,6 +101,12 @@ class GUA_DLL Material {
 
     mutable boost::shared_mutex mutex_;
 };
+
+template <>
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& val, int view_id);
+
+template <>
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value);
 
 //operators
 std::ostream& operator<<(std::ostream& os, Material const& val);
