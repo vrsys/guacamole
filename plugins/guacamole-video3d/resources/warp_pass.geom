@@ -24,8 +24,7 @@ uniform int layer;
 in VertexData {
     vec2 texture_coord;
     vec3 pos_es;
-    vec3 pos_d;
-    vec3 pos_ws;
+    vec3 pos_cs;
     float depth;
 } VertexIn[3];
 
@@ -35,8 +34,7 @@ in VertexData {
 ///////////////////////////////////////////////////////////////////////////////
 out vec2  texture_coord;
 out vec3  pos_es;
-out vec3  pos_d;
-out vec3  pos_ws;
+out vec3  pos_cs;
 out float depth;
 out vec3  normal_es;
 
@@ -84,11 +82,11 @@ void main()
   float depth_b = VertexIn[1].depth;
   float depth_c = VertexIn[2].depth;
 
-  vec3 a_ws = VertexIn[1].pos_ws - VertexIn[0].pos_ws;
-  vec3 b_ws = VertexIn[2].pos_ws - VertexIn[0].pos_ws;
-  vec3 c_ws = VertexIn[2].pos_ws - VertexIn[1].pos_ws;
+  vec3 a_cs = VertexIn[1].pos_cs - VertexIn[0].pos_cs;
+  vec3 b_cs = VertexIn[2].pos_cs - VertexIn[0].pos_cs;
+  vec3 c_cs = VertexIn[2].pos_cs - VertexIn[1].pos_cs;
 
-  bool valid = validSurface(a_ws, b_ws, c_ws, depth_a, depth_b, depth_c);
+  bool valid = validSurface(a_cs, b_cs, c_cs, depth_a, depth_b, depth_c);
 
   if (valid)
   {      
@@ -96,8 +94,7 @@ void main()
       {
         texture_coord = VertexIn[i].texture_coord;
         pos_es        = VertexIn[i].pos_es;
-        pos_d         = VertexIn[i].pos_d;
-        pos_ws        = VertexIn[i].pos_ws;
+        pos_cs        = VertexIn[i].pos_cs;
         depth         = VertexIn[i].depth;
         normal_es     = tri_normal;
 
