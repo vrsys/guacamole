@@ -139,6 +139,7 @@ ADD_LIBRARY( guacamole SHARED
     ${GUACAMOLE_SHADERS_GLSL}
 )
 
+
 IF (MSVC)
     GET_WIN32_WINNT(WIN_VERSION)
     SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
@@ -148,7 +149,7 @@ TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRAR
 
 # link static libraries,
 IF (MSVC)
-  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})  
+  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
   TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
@@ -204,8 +205,13 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   ADD_DEPENDENCIES(guacamole guarc CompileResources)
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
+IF (GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+  add_dependencies(guacamole nvstusb)
+  TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
+ENDIF(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+
 ###############################################################################
-# install 
+# install
 ###############################################################################
 
 IF (MSVC)
@@ -223,23 +229,23 @@ IF (MSVC)
     ARCHIVE DESTINATION lib/Debug
   )
 ELSEIF (UNIX)
-  install (TARGETS guacamole 
+  install (TARGETS guacamole
     RUNTIME DESTINATION lib
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
   )
 ENDIF (MSVC)
 
-# header files 
+# header files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include/gua/ DESTINATION include/gua FILES_MATCHING PATTERN "*.hpp")
 
 # shader and material resources
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resources 
-        FILES_MATCHING 
-        PATTERN "*.frag" 
-        PATTERN "*.vert" 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../resources/ DESTINATION resources
+        FILES_MATCHING
+        PATTERN "*.frag"
+        PATTERN "*.vert"
         PATTERN "*.geom"
-        PATTERN "*.glsl" 
-        PATTERN "*.gmd" 
+        PATTERN "*.glsl"
+        PATTERN "*.gmd"
         PATTERN "*.obj"
         )

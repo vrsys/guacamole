@@ -30,12 +30,18 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
+#include <gua/config.hpp>
 
 // external headers
 #include <atomic>
 #include <memory>
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
+
+
+#ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+struct nvstusb_context;
+#endif
 
 namespace gua {
 
@@ -149,14 +155,14 @@ class GUA_DLL WindowBase {
    *
    * This should be called when a new frame is about to be drawn.
    */
-  virtual void start_frame() const;
+  virtual void start_frame();
 
   /**
    * Ends the drawing of a new frame.
    *
    * This should be called when drawing a frame has been done.
    */
-  virtual void finish_frame() const;
+  virtual void finish_frame();
 
   /**
    *
@@ -183,6 +189,9 @@ protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 
+
+  virtual void swap_buffers_impl() {};
+
   struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output {
     /*virtual*/ void operator()(scm::gl::debug_source source,
                                 scm::gl::debug_type type,
@@ -200,7 +209,6 @@ protected:
   static std::atomic_uint last_context_id_;
 
   static std::mutex last_context_id_mutex_;
-  mutable int display_count_;
 
 
  private:
@@ -211,6 +219,14 @@ protected:
                bool is_left = true,
                bool clear = true);
 
+  void swap_buffers();
+
+  static void swap_buffers_callback();
+  static WindowBase* current_instance_;
+
+  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+  nvstusb_context* nv_context_;
+  #endif
 };
 
 }

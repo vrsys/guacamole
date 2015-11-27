@@ -67,14 +67,10 @@ class GUA_DLL Window : public WindowBase {
    */
   virtual void set_active(bool active);
 
-  /**
-   * Ends the drawing of a new frame.
-   *
-   * This should be called when drawing a frame has been done.
-   */
-  virtual void finish_frame() const;
 
  private:
+  void swap_buffers_impl() override;
+
   scm::gl::wm::window_ptr window_;
 };
 
