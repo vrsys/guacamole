@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/renderer/opengl_debugging.hpp>
 
 namespace gua {
 
@@ -89,6 +90,7 @@ ABuffer& GBuffer::get_abuffer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GBuffer::clear(RenderContext const& ctx, float depth, unsigned stencil) {
+  ctx.render_context->set_frame_buffer(fbo_write_);
   ctx.render_context->clear_color_buffers(
       fbo_write_, scm::math::vec4f(0,0,0,0));
   ctx.render_context->clear_depth_stencil_buffer(fbo_write_, depth, stencil);
@@ -102,13 +104,28 @@ void GBuffer::clear_abuffer(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::bind(RenderContext const& ctx, bool write_all_layers) {
+void GBuffer::bind(RenderContext const& ctx, bool write_all_layers, bool do_clear, bool do_swap) {
+  if (do_swap) {
+    std::swap(fbo_write_, fbo_read_);
+    std::swap(fbo_write_only_color_, fbo_read_only_color_);
+    std::swap(color_buffer_w_, color_buffer_r_);
+    std::swap(pbr_buffer_w_, pbr_buffer_r_);
+    std::swap(normal_buffer_w_, normal_buffer_r_);
+    std::swap(depth_buffer_w_, depth_buffer_r_);
+  }
+
   if (write_all_layers) {
     ctx.render_context->set_frame_buffer(fbo_write_);
   } else {
     ctx.render_context->set_frame_buffer(fbo_write_only_color_);
   }
   abuffer_.bind(ctx);
+
+  if (do_clear) {
+    GUA_PUSH_GL_RANGE(ctx, "Clear G-Buffer");
+    clear(ctx, 1.f, 1);
+    GUA_POP_GL_RANGE(ctx);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,17 +133,6 @@ void GBuffer::bind(RenderContext const& ctx, bool write_all_layers) {
 void GBuffer::unbind(RenderContext const& ctx) {
   abuffer_.unbind(ctx);
   RenderTarget::unbind(ctx);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GBuffer::toggle_ping_pong() {
-  std::swap(fbo_write_, fbo_read_);
-  std::swap(fbo_write_only_color_, fbo_read_only_color_);
-  std::swap(color_buffer_w_, color_buffer_r_);
-  std::swap(pbr_buffer_w_, pbr_buffer_r_);
-  std::swap(normal_buffer_w_, normal_buffer_r_);
-  std::swap(depth_buffer_w_, depth_buffer_r_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

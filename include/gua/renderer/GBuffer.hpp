@@ -40,10 +40,8 @@ class GUA_DLL GBuffer : public RenderTarget {
   void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
   void clear_abuffer(RenderContext const& context);
   
-  void bind(RenderContext const& context, bool write_all_layers) override;
+  void bind(RenderContext const& context, bool write_all_layers, bool do_clear, bool do_swap) override;
   void unbind(RenderContext const& context) override;
-
-  void toggle_ping_pong();
 
   ABuffer& get_abuffer();
 

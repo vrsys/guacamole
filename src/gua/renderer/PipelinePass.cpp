@@ -99,7 +99,10 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   } else {
     auto& target = *pipe.current_viewstate().target;
 
-    target.bind(ctx, !writes_only_color_buffer_);
+    bool write_all_layers = !writes_only_color_buffer_;
+    bool do_clear = needs_color_buffer_as_input_;
+    bool do_swap = needs_color_buffer_as_input_;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
     if (depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);

@@ -45,7 +45,7 @@ class ShadowMap : public RenderTarget {
   ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution);
 
   virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
-  virtual void bind(RenderContext const& context, bool write_depth) override;
+  virtual void bind(RenderContext const& context, bool write_depth, bool do_clear, bool do_swap) override;
 
   virtual void set_viewport(RenderContext const& context) override;
   void set_viewport_offset(math::vec2f const& offset);

@@ -205,7 +205,21 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     warp_gbuffer_program_->use(ctx);
     warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
 
-    pipe.bind_gbuffer_input(warp_gbuffer_program_);
+    if (ctx.mode != CameraMode::RIGHT) {
+      warp_gbuffer_program_->set_uniform(ctx,
+                          gbuffer->get_color_buffer_write()->get_handle(ctx),
+                          "gua_gbuffer_color");
+      warp_gbuffer_program_->set_uniform(ctx,
+                          gbuffer->get_depth_buffer_write()->get_handle(ctx),
+                          "gua_gbuffer_depth");
+    } else {
+      warp_gbuffer_program_->set_uniform(ctx,
+                          gbuffer->get_color_buffer()->get_handle(ctx),
+                          "gua_gbuffer_color");
+      warp_gbuffer_program_->set_uniform(ctx,
+                          gbuffer->get_depth_buffer()->get_handle(ctx),
+                          "gua_gbuffer_depth");
+    }
 
     if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
         description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
@@ -277,7 +291,9 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
 
   bool write_all_layers = false;
-  gbuffer->bind(ctx, write_all_layers);
+  bool do_clear = false;
+  bool do_swap = true;
+  gbuffer->bind(ctx, write_all_layers, do_clear, do_swap);
 
   if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
     warp_abuffer_program_->set_uniform(ctx, hole_filling_texture_->get_handle(ctx), "hole_filling_texture");

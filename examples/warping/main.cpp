@@ -31,10 +31,10 @@
 #define LOAD_CAR        0
 #define LOAD_PITOTI     0
 #define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     1
-#define LOAD_SPONZA     1
-#define LOAD_HAIRBALL   1
-#define LOAD_DRAGON     1 
+#define LOAD_ENGINE     0
+#define LOAD_SPONZA     0
+#define LOAD_HAIRBALL   0
+#define LOAD_DRAGON     0 
 
 #include <functional>
 
@@ -742,8 +742,8 @@ int main(int argc, char** argv) {
     #if LOAD_PITOTI
       gua::PipelineFactory::DRAW_PLODS |
     #endif
-    // gua::PipelineFactory::WARPING |
-    // gua::PipelineFactory::DEBUG_WARPING |
+    gua::PipelineFactory::WARPING |
+    gua::PipelineFactory::DEBUG_WARPING |
     gua::PipelineFactory::ABUFFER
   );
 

@@ -141,6 +141,11 @@ int main(int argc, char** argv) {
   std::shared_ptr<gua::GuiResource> focused_element;
 
   auto camera = screen->add_child<gua::node::CameraNode>("cam");
+  camera->set_pipeline_description(gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DRAW_TRIMESHES |
+    gua::PipelineFactory::DEBUG_GBUFFER | 
+    gua::PipelineFactory::DRAW_SCREEN_SPACE_TEXTURED_QUADS  
+  ));
   camera->translate(0, 0, 1.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");

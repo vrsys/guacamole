@@ -95,8 +95,10 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
     pipe.begin_gpu_query(ctx, gpu_query_name);
     // pipe.begin_cpu_query(cpu_query_name);
 
-    bool write_depth = true;
-    target.bind(ctx, write_depth);
+    bool write_all_layers = true;
+    bool do_clear = false;
+    bool do_swap = false;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
 
     int view_id(camera.config.get_view_id());

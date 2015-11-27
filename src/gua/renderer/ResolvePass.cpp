@@ -483,7 +483,10 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
     auto& target = *pipe.current_viewstate().target;
     auto const& ctx(pipe.get_context());
 
-    target.bind(ctx, !pass.writes_only_color_buffer_);
+    bool write_all_layers = false;
+    bool do_clear = true;
+    bool do_swap = true;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
     if (pass.depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);

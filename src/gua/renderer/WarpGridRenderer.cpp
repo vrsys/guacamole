@@ -103,7 +103,9 @@ void WarpGridRenderer::render(Pipeline& pipe, PipelinePassDescription const& des
     auto& target = *pipe.current_viewstate().target;
 
     bool write_all_layers = false;
-    target.bind(ctx, write_all_layers);
+    bool do_clear = false;
+    bool do_swap = false;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
 
     program_->use(ctx);

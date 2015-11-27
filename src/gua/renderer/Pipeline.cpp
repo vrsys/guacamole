@@ -207,33 +207,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
      || (mode == CameraMode::CENTER && passes_[i].get_enable_for_cyclops_eye())) {
 
       GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
-
-      GUA_PUSH_GL_RANGE(context_, "Bind G-Buffer");
-      if (passes_[i].needs_color_buffer_as_input()) {
-        GUA_PUSH_GL_RANGE(context_, "Pingpong G-Buffer");
-        gbuffer_->toggle_ping_pong();
-        GUA_POP_GL_RANGE(context_);
-      }
-
-      gbuffer_->bind(context_, !passes_[i].writes_only_color_buffer());
-
-      if (passes_[i].needs_color_buffer_as_input()) {
-        GUA_PUSH_GL_RANGE(context_, "Clear G-Buffer");
-        gbuffer_->clear(context_, 1.f, 1);
-        GUA_POP_GL_RANGE(context_);
-      }
-      GUA_POP_GL_RANGE(context_);
-
       passes_[i].process(*last_description_.get_passes()[i], *this);
       GUA_POP_GL_RANGE(context_);
     }
   }
 
-  gbuffer_->toggle_ping_pong();
-
   // add texture to texture database
-  auto const& tex(gbuffer_->get_color_buffer());
-  auto const& depth_tex(gbuffer_->get_depth_buffer());
+  auto const& tex(gbuffer_->get_color_buffer_write());
+  auto const& depth_tex(gbuffer_->get_depth_buffer_write());
   auto tex_name(camera.config.get_output_texture_name());
 
   if (tex_name != "") {
