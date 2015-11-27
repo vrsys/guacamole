@@ -24,6 +24,7 @@
 #include <iostream>
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/databases/TextureDatabase.hpp>
 
 int main(int argc, char** argv) {
 
@@ -87,6 +88,9 @@ int main(int argc, char** argv) {
   //
   // Load bottle
   auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
+  gua::TextureDatabase::instance()->load("data/objects/bottle/albedo.png");
+  gua::TextureDatabase::instance()->load("data/objects/bottle/roughness.jpg");
+
   mat_bottle->set_uniform("ColorMap",     std::string("data/objects/bottle/albedo.png"))
              .set_uniform("RoughnessMap", std::string("data/objects/bottle/roughness.jpg"))
              .set_show_back_faces(true);
@@ -98,6 +102,11 @@ int main(int argc, char** argv) {
 
   // Load box (texture originals are taken from http://texturise.blogspot.de/)
   auto mat_box(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+
+  gua::TextureDatabase::instance()->load("data/textures/parquet2/albedo.jpg");
+  gua::TextureDatabase::instance()->load("data/textures/parquet2/normal.jpg");
+  gua::TextureDatabase::instance()->load("data/textures/parquet2/roughness.jpg");
+
   mat_box->set_uniform("ColorMap", std::string("data/textures/parquet2/albedo.jpg"))
     .set_uniform("NormalMap", std::string("data/textures/parquet2/normal.jpg"))
     .set_uniform("RoughnessMap", std::string("data/textures/parquet2/roughness.jpg"));
@@ -150,7 +159,7 @@ int main(int argc, char** argv) {
   portal_camera->config.set_output_texture_name("portal");
   portal_camera->config.set_enable_stereo(false);
 
-  gua::TextureDatabase::instance()->load("data/checkerboard->png");
+  gua::TextureDatabase::instance()->load("data/checkerboard.png");
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());

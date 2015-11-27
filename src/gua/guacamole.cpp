@@ -47,9 +47,15 @@ void init(int argc, char** argv) {
   }
 #endif
 
-  gua::TextureDatabase::instance()->add("gua_default_texture", std::make_shared<DefaultTexture>());
-  gua::TextureDatabase::instance()->add("gua_noise_texture", std::make_shared<NoiseTexture>());
-  gua::TextureDatabase::instance()->add("gua_loading_texture", std::make_shared<LoadingTexture>());
+  scm::gl::sampler_state_desc sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE,
+                                            scm::gl::WRAP_CLAMP_TO_EDGE);
+  gua::TextureDatabase::instance()->add("gua_loading_texture",
+      std::make_shared<Texture2D>(gua::make_loading_image(), 1, sampler_state));
+  gua::TextureDatabase::instance()->add("gua_default_texture",
+      std::make_shared<Texture2D>(gua::make_default_image(), 1, sampler_state));
+  gua::TextureDatabase::instance()->add("gua_noise_texture",
+      std::make_shared<Texture2D>(gua::make_noise_image(), 1, sampler_state));
 
   TriMeshLoader mesh_loader;
 

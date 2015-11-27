@@ -157,6 +157,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   if (uniform_color_map != "") {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+    TextureDatabase::instance()->load(assets + uniform_color_map);
   }
 
   if (uniform_color != "") {
@@ -297,6 +298,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   if(capabilities & PBSMaterialFactory::COLOR_MAP || capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+    TextureDatabase::instance()->load(assets + uniform_color_map);
   }
   // fbx shader always contains a color value
   FbxDouble3 color = lambert->Diffuse.Get();
@@ -408,6 +410,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
 
   if(capabilities & PBSMaterialFactory::COLOR_MAP) {
     new_mat->set_uniform("ColorMap", uniform_color_map);
+    TextureDatabase::instance()->load(uniform_color_map);
   }
 
   if(capabilities & PBSMaterialFactory::NORMAL_MAP) {
@@ -542,6 +545,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   // color
   if (capabilities & PBSMaterialFactory::COLOR_MAP || capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
+    TextureDatabase::instance()->load(assets + uniform_color_map);
     if (capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
       new_mat->set_uniform("Color", uniform_color);
     }
