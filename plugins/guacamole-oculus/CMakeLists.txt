@@ -13,9 +13,9 @@ SET(GUACAMOLE_OCULUS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTER
 LINK_DIRECTORIES(${LIB_PATHS} ${OVR_LIBRARY_DIRS})
 
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${OVR_INCLUDE_DIRS}
-                     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
+		     ${GUACAMOLE_SOURCE_DIR}
+		     ${OVR_INCLUDE_DIR}
+		     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
 )
 
 ADD_LIBRARY( guacamole-oculus SHARED
@@ -25,13 +25,13 @@ ADD_LIBRARY( guacamole-oculus SHARED
 ADD_DEPENDENCIES(guacamole-oculus guacamole)
 
 IF (MSVC)
-	set_target_properties(guacamole-oculus PROPERTIES COMPILE_FLAGS "-D GUA_OCULUS_LIBRARY")
+  set_target_properties(guacamole-oculus PROPERTIES COMPILE_FLAGS "-D GUA_OCULUS_LIBRARY")
 ENDIF (MSVC)
 
 IF (UNIX)
-    LIST(APPEND LIBS udev Xinerama pthread guacamole optimized ${OVR_LIBRARY} debug ${OVR_LIBRARY_DEBUG})
+  LIST(APPEND LIBS udev Xinerama pthread guacamole optimized ${OVR_LIBRARY} debug ${OVR_LIBRARY_DEBUG})
 ELSEIF (MSVC)
-    LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARY})
+  LIST(APPEND LIBS winmm.lib guacamole ${OVR_LIBRARY})
 ENDIF(UNIX)
 
 find_package (Threads)

@@ -114,8 +114,8 @@ void Window::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::finish_frame() const {
-  WindowBase::finish_frame();
+void Window::swap_buffers_impl() {
+  // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   window_->swap_buffers(config.get_enable_vsync());
 }
 

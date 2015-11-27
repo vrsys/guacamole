@@ -29,12 +29,15 @@
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <scm/gl_util/data/imaging/texture_image_data.h>
+
 // external headers
 #include <string>
 #include <vector>
 
 #include <mutex>
 #include <thread>
+#include <memory>
 
 namespace gua {
 
@@ -44,30 +47,23 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-  class GUA_DLL Texture2D : public Texture {
+class GUA_DLL Texture2D : public Texture {
  public:
-
   /**
    * Constructor.
    *
-   * This constructs a new texture with the given parameters.
+   * This constructs a new texture from a scm::texture_image_data_ptr
    *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
-   * \param color_format     The color format of the resulting
-   *                         texture.
+   * \param image_data       The image which contains the texture data.
    * \param state_descripton The sampler state for the loaded texture.
    */
-  Texture2D(unsigned width,
-            unsigned height,
-            scm::gl::data_format color_format,
-            scm::gl::data_format internal_format,
-            std::vector<void*> const& data,
+  Texture2D(scm::gl::texture_image_data_ptr image_data,
+            // bool generate_mipmaps = false,
             unsigned mipmap_layers = 1,
             scm::gl::sampler_state_desc const& state_descripton =
-                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE));
+                scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                            scm::gl::WRAP_REPEAT,
+                                            scm::gl::WRAP_REPEAT));
 
   /**
    * Constructor.
@@ -112,23 +108,22 @@ namespace gua {
    *
    * Returns the size of the Texture2D.
    */
-  unsigned width() const { return width_; }
-  unsigned height() const { return height_; }
+  unsigned width() const override { return width_; }
+  unsigned height() const override { return height_; }
 
-  virtual void upload_to(RenderContext const& context) const;
+  void upload_to(RenderContext const& context) const override;
 
   ///@}
 
  protected:
-  std::vector<void*>& get_data();
-
-  mutable unsigned width_;
-  mutable unsigned height_;
-  mutable std::vector<void*> data_;
+  scm::gl::texture_image_data_ptr image_ = nullptr;
+  unsigned width_;
+  unsigned height_;
 
  private:
-
 };
 
+scm::gl::texture_image_data_ptr load_image_2d(std::string const& file,
+                                              bool create_mips);
 }
 #endif  // GUA_TEXTURE2D_HPP

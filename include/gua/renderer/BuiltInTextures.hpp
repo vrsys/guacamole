@@ -26,39 +26,13 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/Texture2D.hpp>
 
+#include <scm/gl_util/data/imaging/texture_image_data.h>
+
 namespace gua {
 
-class GUA_DLL NoiseTexture : public Texture2D {
- public:
-
-  NoiseTexture();
-
- private:
-  static unsigned char pixel_data[64 * 64 * 3 + 1];
-};
-
-class GUA_DLL DefaultTexture : public Texture2D {
- public:
-
-  DefaultTexture();
-
- private:
-
-#if WIN32
-  static unsigned char pixel_data[64 * 64 * 3 + 1];
-#else
-  static unsigned char pixel_data[256 * 256 * 3 + 1];
-#endif
-};
-
-class GUA_DLL LoadingTexture : public Texture2D {
- public:
-
-  LoadingTexture();
-
- private:
-  static unsigned char pixel_data[128 * 39 * 3 + 1];
-};
+scm::gl::texture_image_data_ptr make_loading_image();
+scm::gl::texture_image_data_ptr make_noise_image();
+scm::gl::texture_image_data_ptr make_default_image();
 
 }
 

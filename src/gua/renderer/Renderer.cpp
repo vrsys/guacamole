@@ -35,6 +35,7 @@
 #include <gua/concurrent/Doublebuffer.hpp>
 #include <gua/concurrent/pull_items_iterator.hpp>
 #include <gua/memory.hpp>
+#include <gua/config.hpp>
 
 namespace {
 
@@ -110,6 +111,7 @@ void Renderer::renderclient(Mailbox in) {
       // update window if one is assigned
       if (window && window->get_is_open()) {
         window->set_active(true);
+        window->start_frame();
 
         if (window->get_context()->framecount == 0) {
           display_loading_screen(*window);
@@ -133,10 +135,24 @@ void Renderer::renderclient(Mailbox in) {
         window->rendering_fps = fpsc.fps;
 
         if (cmd.serialized_cam->config.get_enable_stereo()) {
-          auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
-          if (img) window->display(img, true);
-          img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
-          if (img) window->display(img, false);
+          if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
+            #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+            if ((window->get_context()->framecount % 2) == 0) {
+              auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
+              if (img) window->display(img, true);
+            } else {
+              auto img(pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs));
+              if (img) window->display(img, false);
+            }
+            #else
+            Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+            #endif
+          } else {
+            auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
+            if (img) window->display(img, true);
+            img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
+            if (img) window->display(img, false);
+          }
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
                    *cmd.serialized_cam, *cmd.scene_graphs));
@@ -155,7 +171,10 @@ void Renderer::renderclient(Mailbox in) {
   }
 }
 
-Renderer::Renderer() : render_clients_(), application_fps_(20) {
+Renderer::Renderer() :
+  render_clients_(),
+  application_fps_(20) {
+
   application_fps_.start();
 }
 
@@ -213,6 +232,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
         // update window if one is assigned
         if (window && window->get_is_open()) {
           window->set_active(true);
+          window->start_frame();
 
           if (window->get_context()->framecount == 0) {
             display_loading_screen(*window);
@@ -236,10 +256,25 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           window->rendering_fps = application_fps_.fps;
 
           if (serialized_cam.config.get_enable_stereo()) {
-            auto img(pipe->render_scene(CameraMode::LEFT,  serialized_cam, *sgs));
-            if (img) window->display(img, true);
-            img = pipe->render_scene(CameraMode::RIGHT,  serialized_cam, *sgs);
-            if (img) window->display(img, false);
+
+            if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
+              #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+              if ((window->get_context()->framecount % 2) == 0) {
+                auto img(pipe->render_scene(CameraMode::LEFT, serialized_cam, *sgs));
+                if (img) window->display(img, true);
+              } else {
+                auto img(pipe->render_scene(CameraMode::RIGHT, serialized_cam, *sgs));
+                if (img) window->display(img, false);
+              }
+              #else
+              Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+              #endif
+            } else {
+              auto img(pipe->render_scene(CameraMode::LEFT, serialized_cam, *sgs));
+              if (img) window->display(img, true);
+              img = pipe->render_scene(CameraMode::RIGHT, serialized_cam, *sgs);
+              if (img) window->display(img, false);
+            }
           } else {
             auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
                      serialized_cam, *sgs));

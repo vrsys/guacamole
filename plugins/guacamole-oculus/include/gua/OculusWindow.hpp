@@ -33,26 +33,83 @@
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
-#include <gua/renderer/Window.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
+
+//for the OVR members
+#if defined (_WIN32)
+    #include <OVR_CAPI.h>
+    #include <OVR_CAPI_GL.h>
+#else
+    #include <gua/utils/OculusDistortionMesh.hpp>
+#endif
+
+#include <scm/gl_core/state_objects/state_objects_fwd.h>
 
 namespace gua {
 
-class GUA_OCULUS_DLL OculusWindow : public Window {
+
+class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
  public:
+
+
+  static void initialize_oculus_environment();
+  static void shutdown_oculus_environment();
 
   OculusWindow(std::string const& display);
   virtual ~OculusWindow();
 
   void init_context() override;
 
-  void set_distortion(math::vec4 const& distortion);
-  void set_distortion(float distortion0, float distortion1, float distortion2, float distortion3);
+  void recenter();
 
   // virtual
   void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
+  math::vec2 const get_left_screen_size() const;
+  math::vec2 const get_right_screen_size() const;
+  math::vec3 const get_left_screen_translation() const;
+  math::vec3 const get_right_screen_translation() const;
+  float const get_IPD() const;
+  
+
+  math::vec2ui get_eye_resolution() const;
+  math::vec2ui get_window_resolution() const;
+  math::mat4 get_oculus_sensor_orientation() const;
+
+  void start_frame() override;
+  void finish_frame() override;
+
+
   private:
-    math::vec4 distortion_;
+
+    void calculate_viewing_setup();
+
+    static bool oculus_environment_initialized_;
+    static unsigned registered_oculus_device_count_;
+
+    math::vec2 screen_size_[2];
+    math::vec3 screen_translation_[2];
+
+    math::mat4 oculus_sensor_orientation_;
+
+    #ifdef _WIN32
+        ovrSwapTextureSet* swap_texures_ = 0;
+        ovrLayerEyeFov color_layer_;
+        GLuint blit_fbo_read_;
+        GLuint blit_fbo_write_;
+    #else
+        void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
+        scm::gl::buffer_ptr distortion_mesh_vertices_[2];
+        scm::gl::buffer_ptr distortion_mesh_indices_[2];
+        scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+
+        // for distorted rendering as a replacement of the distortion shader
+        unsigned num_distortion_mesh_indices_[2];
+        scm::gl::rasterizer_state_ptr no_backface_culling_state_;
+        bool has_vertical_display_;
+    #endif
+    // oculus device associated with the window
+    ovrHmd registered_HMD_;
 };
 
 }
