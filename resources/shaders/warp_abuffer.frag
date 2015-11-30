@@ -38,6 +38,7 @@ uniform float gua_tone_mapping_exposure = 1.5;
 
 in vec2 gua_quad_coords;
 
+uniform bool perform_warp;
 uniform mat4 inv_warp_matrix;
 uniform mat4 warp_matrix;
 uniform uvec2 warped_depth_buffer;
@@ -412,6 +413,11 @@ void main() {
 
   vec4 color = vec4(0);
   vec4 background_color = vec4(0, 0, 0, 1);
+
+  if (!perform_warp) {
+    gua_out_color = toneMap(texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb);
+    return;
+  }
 
   // hole filling
   float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;

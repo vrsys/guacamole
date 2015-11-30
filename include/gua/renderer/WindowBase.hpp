@@ -174,7 +174,7 @@ class GUA_DLL WindowBase {
   virtual void display(std::shared_ptr<Texture> const& center_texture);
 
   virtual void display(std::shared_ptr<Texture> const& center_texture,
-                       bool is_left);
+                       bool is_left, bool is_first);
 
   /**
    * Get the RenderContext of this window.

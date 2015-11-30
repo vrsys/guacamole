@@ -362,7 +362,8 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
     if (pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SPATIAL_WARP ||
-        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP) {
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP ||
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
       renderer->render(pipe, desc);
     }
   };

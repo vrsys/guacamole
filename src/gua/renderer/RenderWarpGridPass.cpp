@@ -98,7 +98,8 @@ PipelinePass RenderWarpGridPassDescription::make_pass(RenderContext const& ctx, 
     auto description(dynamic_cast<RenderWarpGridPassDescription const*>(&desc));
 
     if (pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SPATIAL_WARP ||
-        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP) {
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP ||
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
       if (description->show_warp_grid() && (
           mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
           mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||

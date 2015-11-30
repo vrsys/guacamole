@@ -201,32 +201,29 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   GUA_POP_GL_RANGE(context_);
 
-  bool skip_passes(
-    camera.config.enable_stereo() && 
-    camera.config.stereo_type() == StereoType::SPATIAL_WARP &&
-    mode == CameraMode::RIGHT
-  );
+  bool skip_passes(false);
 
-
-  // std::cout << "-----------------------------------" << std::endl;
-  // std::cout << "----------- mode: " << (int)mode << std::endl;
-  // std::cout << "---- skip_passes: " << skip_passes << std::endl;
+  if (camera.config.enable_stereo()) {
+    if (camera.config.stereo_type() == StereoType::SPATIAL_WARP) {
+      skip_passes = (mode == CameraMode::RIGHT);
+    } else if (camera.config.stereo_type() == StereoType::TEMPORAL_WARP) {
+      skip_passes = (((context_.framecount % 2) == 0) == (mode == CameraMode::RIGHT));
+    } else if (camera.config.stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
+      skip_passes = (((context_.framecount % 2) == 0) == (mode == CameraMode::RIGHT));
+    }
+  } 
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
     GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
     
-    // std::cout << "  " << last_description_.get_passes()[i]->name() << ": ";
-
     if (skip_passes) {
       auto warp_pass(std::dynamic_pointer_cast<GenerateWarpGridPassDescription>(last_description_.get_passes()[i]));
-      // std::cout << "skip!" << std::endl;
       if (warp_pass) {
         skip_passes = false;
       }
       
     } else {
-      // std::cout << "render!" << std::endl;
       passes_[i].process(*last_description_.get_passes()[i], *this);
     }
     GUA_POP_GL_RANGE(context_);

@@ -64,7 +64,8 @@ enum class StereoMode {
 enum class StereoType {
   RENDER_TWICE = 0,
   SPATIAL_WARP,
-  TEMPORAL_WARP
+  TEMPORAL_WARP,
+  SINGLE_TEMPORAL_WARP
 };
 
 /**

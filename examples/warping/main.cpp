@@ -71,6 +71,7 @@ bool manipulation_camera    = false;
 bool manipulation_object    = false;
 bool stereotype_spatial     = true;
 bool stereotype_temporal    = false;
+bool stereotype_single_temporal = false;
 bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
@@ -1015,14 +1016,14 @@ int main(int argc, char** argv) {
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
+      normal_cam->config.set_eye_dist(eye_dist);
+      warp_cam->config.set_eye_dist(eye_dist);
 
       if (warping) {
 
-        normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
-
         if (stereotype_spatial) {
+          normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
           normal_cam->config.set_eye_dist(0.f);
-          warp_cam->config.set_eye_dist(eye_dist);
 
           #if OCULUS1
             normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -1033,12 +1034,12 @@ int main(int argc, char** argv) {
           #endif
 
         } else if (stereotype_temporal) {
-          normal_cam->config.set_eye_dist(eye_dist);
-          warp_cam->config.set_eye_dist(eye_dist);
+          normal_cam->config.set_stereo_type(gua::StereoType::TEMPORAL_WARP);
+        } else if (stereotype_single_temporal) {
+          normal_cam->config.set_stereo_type(gua::StereoType::SINGLE_TEMPORAL_WARP);
         }
 
       } else {
-        normal_cam->config.set_eye_dist(eye_dist);
         normal_cam->config.set_stereo_type(gua::StereoType::RENDER_TWICE);
       } 
 
@@ -1223,6 +1224,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_manipulation_object");
       gui->add_javascript_callback("set_stereotype_spatial");
       gui->add_javascript_callback("set_stereotype_temporal");
+      gui->add_javascript_callback("set_stereotype_single_temporal");
       gui->add_javascript_callback("set_show_warp_grid");
       gui->add_javascript_callback("set_adaptive_entry_level");
       gui->add_javascript_callback("set_debug_cell_colors");
@@ -1247,7 +1249,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("reset_view");
       gui->add_javascript_callback("set_left_view");
       gui->add_javascript_callback("set_right_view");
-      gui->add_javascript_callback("reset_object");
 
       gui->call_javascript("init");
     });
@@ -1395,8 +1396,6 @@ int main(int argc, char** argv) {
       } else if (callback == "set_right_view") {
         eye_offset = eye_dist*0.5;
         update_view_mode();
-      } else if (callback == "reset_object") {
-        object_trackball.reset();
       } else if (callback == "set_gbuffer_type_points"
                | callback == "set_gbuffer_type_scaled_points"
                | callback == "set_gbuffer_type_quads_screen_aligned"
@@ -1508,17 +1507,21 @@ int main(int argc, char** argv) {
           if (callback == "set_manipulation_navigator") manipulation_navigator = true;
         }
       } else if (callback == "set_stereotype_spatial"
-              || callback == "set_stereotype_temporal") {
+              || callback == "set_stereotype_temporal"
+              || callback == "set_stereotype_single_temporal") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
           stereotype_spatial = false;
           stereotype_temporal = false;
+          stereotype_single_temporal = false;
 
-          if (callback == "set_stereotype_temporal") stereotype_temporal = true;
           if (callback == "set_stereotype_spatial") stereotype_spatial = true;
+          if (callback == "set_stereotype_temporal") stereotype_temporal = true;
+          if (callback == "set_stereotype_single_temporal") stereotype_single_temporal = true;
         }
+        update_view_mode();
       } else if (callback == "set_scene_one_oilrig"        ||
                  callback == "set_scene_many_oilrigs"      ||
                  callback == "set_scene_sponza0"           ||

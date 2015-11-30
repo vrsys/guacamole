@@ -236,10 +236,10 @@ void WindowBase::finish_frame() {
 
 void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
-  display(center_texture, true);
+  display(center_texture, true, true);
 
   if (config.get_stereo_mode() != StereoMode::MONO) {
-    display(center_texture, false);
+    display(center_texture, false, false);
   }
 
 }
@@ -247,7 +247,7 @@ void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::display(std::shared_ptr<Texture> const& texture,
-                         bool is_left) {
+                         bool is_left, bool is_first) {
 
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
@@ -265,14 +265,14 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
               is_left ? config.get_left_position() : config.get_right_position(),
               is_left ? WindowBase::RED : WindowBase::CYAN,
-              is_left, is_left);
+              is_left, is_first);
       break;
     case StereoMode::ANAGLYPH_RED_GREEN:
       display(texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
               is_left ? config.get_left_position() : config.get_right_position(),
               is_left ? WindowBase::RED : WindowBase::GREEN,
-              is_left, is_left);
+              is_left, is_first);
       break;
     case StereoMode::CHECKERBOARD:
       display(texture,
@@ -282,8 +282,6 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left, true);
       break;
   }
-
-
 }
 
 

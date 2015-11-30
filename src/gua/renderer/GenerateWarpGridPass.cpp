@@ -114,7 +114,8 @@ PipelinePass GenerateWarpGridPassDescription::make_pass(RenderContext const& ctx
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
     if (pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SPATIAL_WARP ||
-        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP) {
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP ||
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
       if (mode == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
           mode == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
           mode == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
