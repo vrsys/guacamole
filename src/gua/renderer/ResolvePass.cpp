@@ -486,7 +486,11 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
     bool compositing(pipe.current_viewstate().camera.config.stereo_type() == StereoType::RENDER_TWICE);
 
     if (!compositing) {
-      // hack: disable compositing when using WarpPassDescription::ABUFFER_NONE
+      compositing = !pipe.current_viewstate().camera.pipeline_description->get_enable_abuffer();
+    }
+
+    if (!compositing) {
+      // hack: enable compositing when using WarpPassDescription::ABUFFER_NONE
       for (auto pass: pipe.current_viewstate().camera.pipeline_description->get_passes()) {
         auto warp_pass(std::dynamic_pointer_cast<WarpPassDescription>(pass));
         if (warp_pass && warp_pass->abuffer_warp_mode() == WarpPassDescription::ABUFFER_NONE &&

@@ -1,6 +1,7 @@
 # determine source and header files
 
-get_filename_component(_EXE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+get_filename_component(_EXAMPLE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -14,7 +15,7 @@ add_executable( ${_EXE_NAME} main.cpp)
 
 add_dependencies(${_EXE_NAME} guacamole)
 
-target_link_libraries( ${_EXE_NAME} guacamole)
+target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

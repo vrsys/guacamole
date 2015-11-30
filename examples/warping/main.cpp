@@ -29,7 +29,7 @@
 
 #define SHADOWS         1
 #define LOAD_CAR        0
-#define LOAD_PITOTI     0
+#define LOAD_PITOTI     1
 #define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
 #define LOAD_SPONZA     0
@@ -460,6 +460,9 @@ int main(int argc, char** argv) {
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
   #if LOAD_PITOTI
     gua::PLODLoader plodloader;
+    plodloader.set_out_of_core_budget_in_mb(5000);
+    plodloader.set_render_budget_in_mb(1000);
+    plodloader.set_upload_budget_in_mb(20);
     for (int i(1); i<=8; ++i) {
       auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
         gua::PLODLoader::DEFAULTS));
@@ -773,6 +776,7 @@ int main(int argc, char** argv) {
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
 
     sun_light->data.set_brightness(3.f);
+    sun_light->data.set_enable_shadows(true);
     res_pass->ssao_enable(true);
     res_pass->ssao_intensity(1.5f);
     res_pass->ssao_radius(2.0f);
@@ -823,8 +827,10 @@ int main(int argc, char** argv) {
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_car")
       graph["/transform/car"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_pitoti")
+    if (name == "set_scene_pitoti") {
+      sun_light->data.set_enable_shadows(false);
       graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
+    }
     if (name == "set_scene_bottle")
       graph["/transform/bottle"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_mountains")

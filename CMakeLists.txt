@@ -90,6 +90,7 @@ if (UNIX)
     system
     regex
     thread
+    filesystem
     REQUIRED
     )
 elseif (WIN32)
@@ -145,6 +146,7 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-plod/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-volume/include
     ${SCHISM_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
@@ -166,7 +168,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+	set(CMAKE_CXX_FLAGS_RELEASE "-fPIC -s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)

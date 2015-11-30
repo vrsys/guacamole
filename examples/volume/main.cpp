@@ -103,7 +103,11 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   auto camera = screen->add_child<gua::node::CameraNode>("cam");
-  camera->set_pipeline_description(gua::PipelineFactory::make_pipeline(gua::PipelineFactory::DEFAULT | gua::PipelineFactory::DRAW_VOLUMES));
+  camera->set_pipeline_description(gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    gua::PipelineFactory::DRAW_VOLUMES |
+    gua::PipelineFactory::DEBUG_GBUFFER)
+  );
   camera->translate(0, 0, 0.5);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");

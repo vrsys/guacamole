@@ -98,6 +98,17 @@ void GBuffer::clear(RenderContext const& ctx, float depth, unsigned stencil) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void GBuffer::clear_all(RenderContext const& ctx, float depth, unsigned stencil) {
+  ctx.render_context->set_frame_buffer(fbo_read_);
+  ctx.render_context->clear_color_buffers(
+      fbo_read_, scm::math::vec4f(0,0,0,0));
+  ctx.render_context->clear_depth_stencil_buffer(fbo_read_, depth, stencil);
+
+  clear(ctx, depth, stencil);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void GBuffer::clear_abuffer(RenderContext const& ctx) {
   abuffer_.clear(ctx, get_resolution());
 }

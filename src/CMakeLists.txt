@@ -100,7 +100,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES(guacamole ${INCLUDE_PATHS})
 
-ADD_LIBRARY( guacamole SHARED
+ADD_LIBRARY( guacamole STATIC
     ${GUACAMOLE_CORE_INC}
     ${GUACAMOLE_CORE_SRC}
     ${GUACAMOLE_RENDERER_INC}
@@ -132,20 +132,26 @@ IF (MSVC)
     SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
 ENDIF(MSVC)
 
-TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
-
 # link static libraries,
-IF (MSVC)
-  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
-ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
-  TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
-  TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
-ENDIF (MSVC)
 
 if (GUACAMOLE_GLFW3)
   TARGET_LINK_LIBRARIES( guacamole general ${GLFW_LIBRARIES})
 endif (GUACAMOLE_GLFW3)
+
+IF (GUACAMOLE_FBX)
+  TARGET_LINK_LIBRARIES( guacamole optimized ${FBX_LIBRARY} debug ${FBX_LIBRARY_DEBUG})
+ENDIF (GUACAMOLE_FBX)
+
+TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
+
+IF (MSVC)
+  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
+ELSEIF (UNIX)
+  TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
+  TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
+ENDIF (MSVC)
+
+
 
 IF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general ${Boost_LIBRARIES})
@@ -158,9 +164,6 @@ ENDIF (UNIX)
 # link general libraries
 TARGET_LINK_LIBRARIES( guacamole general ${ZMQ_LIBRARIES})
 
-IF (GUACAMOLE_FBX)
-  TARGET_LINK_LIBRARIES( guacamole optimized ${FBX_LIBRARY} debug ${FBX_LIBRARY_DEBUG})
-ENDIF (GUACAMOLE_FBX)
 
 # link release libraries
 TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
@@ -189,6 +192,24 @@ IF (GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
   add_dependencies(guacamole nvstusb)
   TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
 ENDIF(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+
+
+# plugins
+IF (PLUGIN_guacamole-plod)
+  add_definitions(-DGUA_ENABLE_PLOD)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-plod)
+ENDIF(PLUGIN_guacamole-plod)
+
+IF (PLUGIN_guacamole-volume)
+  add_definitions(-DGUA_ENABLE_VOLUME)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-volume)
+ENDIF(PLUGIN_guacamole-volume)
+
+IF (PLUGIN_guacamole-gui)
+  add_definitions(-DGUA_ENABLE_GUI)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-gui)
+ENDIF(PLUGIN_guacamole-gui)
+
 
 ###############################################################################
 # install

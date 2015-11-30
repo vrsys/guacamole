@@ -582,7 +582,7 @@ void main() {
   #elif @enable_abuffer@
     gua_out_color = background_color.rgb;
   #else
-    gua_out_color = toneMap(background_color.rgb);
+    gua_out_color = background_color.rgb;
   #endif
 
   // draw epipol
