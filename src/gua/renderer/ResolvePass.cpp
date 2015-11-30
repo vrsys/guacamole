@@ -25,6 +25,7 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/WarpPass.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
@@ -90,17 +91,6 @@ ResolvePassDescription::ResolvePassDescription()
 
   // default tone mapping exposure
   uniforms["gua_tone_mapping_exposure"] = 1.0f;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-ResolvePassDescription& ResolvePassDescription::compositing_enable(bool value) {
-  compositing_enable_ = value;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-bool ResolvePassDescription::compositing_enable() const {
-  return compositing_enable_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -472,7 +462,6 @@ std::shared_ptr<PipelinePassDescription> ResolvePassDescription::make_copy() con
 PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   substitution_map["gua_debug_tiles"] = debug_tiles() ? "1" : "0";
-  substitution_map["gua_compositing_enable"] = compositing_enable() ? "1" : "0";
   substitution_map["gua_write_abuffer_depth"] = write_abuffer_depth() ? "1" : "0";
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
@@ -488,10 +477,28 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
     bool do_swap = true;
     target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
-    if (pass.depth_stencil_state_)
+    if (pass.depth_stencil_state_) {
       ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    }
 
     pass.shader_->use(ctx);
+
+    bool compositing(pipe.current_viewstate().camera.config.stereo_type() == StereoType::RENDER_TWICE);
+
+    if (!compositing) {
+      // hack: disable compositing when using WarpPassDescription::ABUFFER_NONE
+      for (auto pass: pipe.current_viewstate().camera.pipeline_description->get_passes()) {
+        auto warp_pass(std::dynamic_pointer_cast<WarpPassDescription>(pass));
+        if (warp_pass && warp_pass->abuffer_warp_mode() == WarpPassDescription::ABUFFER_NONE &&
+            pipe.current_viewstate().camera.pipeline_description->get_enable_abuffer()) {
+          compositing = true;
+          break;
+        }
+      }
+    }
+
+
+    pass.shader_->set_uniform(ctx, compositing, "gua_compositing_enable");
 
     for (auto const& u : desc.uniforms) {
       u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);

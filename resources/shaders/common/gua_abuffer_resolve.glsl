@@ -29,7 +29,7 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
     float z = unpack_depth24(frag.y);
     vec4 shaded_color = ABUF_SHADE_FUNC(frag.x - abuf_list_offset, fma(z, 2.0, -1.0));
 
-    #if @gua_compositing_enable@
+    if (gua_compositing_enable) {
       if (z + 0.000001 > opaque_depth) { // fix depth-fighting artifacts
         break;
       }
@@ -44,14 +44,14 @@ bool abuf_blend(inout vec4 color, inout float emissivity, float opaque_depth) {
       if (color.a > @abuf_blending_termination_threshold@) {
         return false;
       }
-    #else
+    } else {
       if (z + 0.000001 > opaque_depth) {
         frag_list[current] = 0;
         break;
       } else {
         frag_data[frag.x - abuf_list_offset].rgb = floatBitsToUint(shaded_color.rgb);
       }
-    #endif
+    }
 
     current = frag.x;
   }

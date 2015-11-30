@@ -30,6 +30,7 @@
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/GenerateWarpGridPass.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/LightNode.hpp>
@@ -200,16 +201,35 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   GUA_POP_GL_RANGE(context_);
 
+  bool skip_passes(
+    camera.config.enable_stereo() && 
+    camera.config.stereo_type() == StereoType::SPATIAL_WARP &&
+    mode == CameraMode::RIGHT
+  );
+
+
+  // std::cout << "-----------------------------------" << std::endl;
+  // std::cout << "----------- mode: " << (int)mode << std::endl;
+  // std::cout << "---- skip_passes: " << skip_passes << std::endl;
+
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
-    if ((mode == CameraMode::LEFT && passes_[i].get_enable_for_left_eye())
-     || (mode == CameraMode::RIGHT && passes_[i].get_enable_for_right_eye())
-     || (mode == CameraMode::CENTER && passes_[i].get_enable_for_cyclops_eye())) {
+    GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
+    
+    // std::cout << "  " << last_description_.get_passes()[i]->name() << ": ";
 
-      GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
+    if (skip_passes) {
+      auto warp_pass(std::dynamic_pointer_cast<GenerateWarpGridPassDescription>(last_description_.get_passes()[i]));
+      // std::cout << "skip!" << std::endl;
+      if (warp_pass) {
+        skip_passes = false;
+      }
+      
+    } else {
+      // std::cout << "render!" << std::endl;
       passes_[i].process(*last_description_.get_passes()[i], *this);
-      GUA_POP_GL_RANGE(context_);
     }
+    GUA_POP_GL_RANGE(context_);
   }
 
   // add texture to texture database
