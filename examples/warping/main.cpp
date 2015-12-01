@@ -22,7 +22,7 @@
 
 #define GUI_SUPPORT     1
 
-#define POWER_WALL      0
+#define POWER_WALL      1
 #define OCULUS1         0
 #define OCULUS2         0
 #define STEREO_MONITOR  0
@@ -32,9 +32,9 @@
 #define LOAD_PITOTI     1
 #define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
-#define LOAD_SPONZA     0
+#define LOAD_SPONZA     1
 #define LOAD_HAIRBALL   0
-#define LOAD_DRAGON     0 
+#define LOAD_DRAGON     1 
 
 #include <functional>
 
@@ -463,15 +463,20 @@ int main(int argc, char** argv) {
     plodloader.set_out_of_core_budget_in_mb(5000);
     plodloader.set_render_budget_in_mb(1000);
     plodloader.set_upload_budget_in_mb(20);
-    for (int i(1); i<=8; ++i) {
-      auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
-        gua::PLODLoader::DEFAULTS));
-      scene_root->add_child(pitoti);
-      pitoti->set_radius_scale(1.5f);
-      pitoti->set_error_threshold(1.0f);
-    }
+    // for (int i(1); i<=8; ++i) {
+    //   auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
+    //     gua::PLODLoader::DEFAULTS));
+    //   scene_root->add_child(pitoti);
+    //   pitoti->set_radius_scale(1.0f);
+    //   pitoti->set_error_threshold(2.5f);
+    // }
+    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn",
+        gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+    scene_root->add_child(pitoti);
+    pitoti->set_radius_scale(1.0f);
+    pitoti->set_error_threshold(2.5f);
     scene_root->rotate(-90, 1, 0, 0);
-    scene_root->scale(0.5);
+    scene_root->scale(20);
   #endif
 
   // bottle --------------------------------------------------------------------
@@ -601,7 +606,7 @@ int main(int argc, char** argv) {
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
   scene_root->rotate(40, 0, 1, 0);
-  #if LOAD_SPONZA
+  #if LOAD_SPONZA 
   auto sponza(loader.create_geometry_from_file("sponza","data/objects/sponza/sponza.obj",
   // auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
@@ -915,12 +920,13 @@ int main(int argc, char** argv) {
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
-    normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
-    normal_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
-      normal_screen->data.set_size(gua::math::vec2(3, 1.6875));
-      normal_screen->translate(0, 1.5, 0);
-      normal_cam->translate(0, 1.5, 0);
+      normal_screen->data.set_size(gua::math::vec2(3, 2));
+      normal_screen->translate(0, 1.42, -1.6);
+      normal_cam->translate(0, 1.42, -1.6);
+    #else
+      normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      normal_screen->translate(0, 0, -screen_dist);
     #endif
     normal_cam->config.set_eye_dist(0.f);
     normal_cam->config.set_resolution(resolution);
@@ -962,12 +968,13 @@ int main(int argc, char** argv) {
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation/warp", "warp_cam");
-    warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
-    warp_screen->translate(0, 0, -screen_dist);
     #if POWER_WALL
-      warp_screen->data.set_size(gua::math::vec2(3, 1.6875));
-      warp_screen->translate(0, 1.5, 0);
-      warp_cam->translate(0, 1.5, 0);
+      warp_screen->data.set_size(gua::math::vec2(3, 2));
+      warp_screen->translate(0, 1.42, -1.6);
+      warp_cam->translate(0, 1.42, -1.6);
+    #else
+      warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      warp_screen->translate(0, 0, -screen_dist);
     #endif
     warp_cam->config.set_eye_dist(0.f);
     warp_cam->config.set_resolution(resolution);
