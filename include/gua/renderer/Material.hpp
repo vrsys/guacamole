@@ -24,7 +24,7 @@
 
 #include <gua/renderer/ViewDependentUniform.hpp>
 
-#include <boost/thread.hpp>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -99,7 +99,7 @@ class GUA_DLL Material {
     std::map<std::string, ViewDependentUniform> uniforms_;
     bool show_back_faces_;
 
-    mutable boost::shared_mutex mutex_;
+    mutable std::mutex mutex_;
 };
 
 template <>
