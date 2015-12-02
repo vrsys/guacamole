@@ -85,9 +85,8 @@ Texture::Texture(std::string const& file,
 Texture::~Texture() {
   for (auto texture : textures_) {
     if (texture && texture->native_handle_resident())
-      exit(-1);
+      throw std::runtime_error("Texture::~Texture(): texture && texture->native_handle_resident() == true");
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
