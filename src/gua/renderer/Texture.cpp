@@ -33,8 +33,6 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
 Texture::Texture(scm::gl::data_format color_format,
                  scm::gl::data_format internal_format,
                  unsigned mipmap_layers,
@@ -44,12 +42,7 @@ Texture::Texture(scm::gl::data_format color_format,
       internal_format_(internal_format),
       state_descripton_(state_descripton),
       file_name_(""),
-      textures_(),
-      sampler_states_(),
-      render_contexts_(),
       upload_mutex_() {}
-
-////////////////////////////////////////////////////////////////////////////////
 
 Texture::Texture(scm::gl::data_format color_format,
                  unsigned mipmap_layers,
@@ -59,12 +52,7 @@ Texture::Texture(scm::gl::data_format color_format,
       internal_format_(color_format),
       state_descripton_(state_descripton),
       file_name_(""),
-      textures_(),
-      sampler_states_(),
-      render_contexts_(),
       upload_mutex_() {}
-
-////////////////////////////////////////////////////////////////////////////////
 
 Texture::Texture(std::string const& file,
                  bool generate_mipmaps,
@@ -75,96 +63,71 @@ Texture::Texture(std::string const& file,
       internal_format_(scm::gl::FORMAT_NULL),
       state_descripton_(state_descripton),
       file_name_(file),
-      textures_(),
-      sampler_states_(),
-      render_contexts_(),
       upload_mutex_() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Texture::~Texture() {
-  for (auto texture : textures_) {
-    if (texture && texture->native_handle_resident())
-      throw std::runtime_error("Texture::~Texture(): texture && texture->native_handle_resident() == true");
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Texture::update_sub_data(RenderContext const& context,
                               scm::gl::texture_region const& region,
                               unsigned level,
                               scm::gl::data_format format,
                               const void* const data) const{
-  if (textures_.size() <= context.id || textures_[context.id] == 0) {
+  auto iter = context.textures.find(uuid_);
+  if (iter == context.textures.end()) {
     upload_to(context);
+    iter = context.textures.find(uuid_);
   }
 
-  if (textures_[context.id])
+  if (iter != context.textures.end())
     context.render_context->update_sub_texture(
-      textures_[context.id],
-      region, level, format, data
-    );
+      iter->second.texture,
+      region, level, format, data);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Texture::generate_mipmaps(RenderContext const& context) {
-
-  if (textures_.size() <= context.id || textures_[context.id] == 0) {
+  auto iter = context.textures.find(uuid_);
+  if (iter == context.textures.end()) {
     upload_to(context);
+    iter = context.textures.find(uuid_);
   }
 
-  if (textures_[context.id])
-    context.render_context->generate_mipmaps(textures_[context.id]);
+  if (iter != context.textures.end())
+    context.render_context->generate_mipmaps(iter->second.texture);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 math::vec2ui const Texture::get_handle(RenderContext const& context) const {
-
-
-  if (textures_.size() <= context.id || !textures_[context.id]) {
-    upload_to(context);
-  }
+  auto iter = context.textures.find(uuid_);
 
   uint64_t handle(0);
 
-  if (textures_[context.id])
-    handle = textures_[context.id]->native_handle();
+  if (iter == context.textures.end()) {
+    upload_to(context);
+    iter = context.textures.find(uuid_);
+  }
+
+  if (iter != context.textures.end()) {
+    handle = iter->second.texture->native_handle();
+  }
 
   return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 scm::gl::texture_image_ptr const& Texture::get_buffer(
     RenderContext const& context) const {
-
-
-  if (textures_.size() <= context.id || textures_[context.id] == 0) {
+  auto iter = context.textures.find(uuid_);
+  if (iter == context.textures.end()) {
     upload_to(context);
+    iter = context.textures.find(uuid_);
   }
 
-  return textures_[context.id];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Texture::make_resident(RenderContext const& context) const {
-  if (textures_[context.id]) {
-    context.render_context->make_resident(textures_[context.id], sampler_states_[context.id]);
-    //context.render_device->create_resident_handle(textures_[context.id], sampler_states_[context.id]);
+  if (iter != context.textures.end()) {
+    return iter->second.texture;
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void Texture::make_non_resident(RenderContext const& context) const {
-  if (textures_[context.id])
-    context.render_context->make_non_resident(textures_[context.id]);
+  auto iter = context.textures.find(uuid_);
+  if (iter != context.textures.end()) {
+    context.render_context->make_non_resident(iter->second.texture);
+  }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -85,41 +85,35 @@ TextureCube::TextureCube(std::string const& file_px,
 void TextureCube::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
+  RenderContext::Texture ctex{};
 
   if (file_name_ == "") {
     // if (data_.size() == 0) {
-      textures_[context.id] = context.render_device->create_texture_cube(
+      ctex.texture = context.render_device->create_texture_cube(
           math::vec2ui(width_, height_), color_format_, mipmap_layers_);
     // } else {
-    //   textures_[context.id] = context.render_device->create_texture_cube(
+    //   ctex.texture = context.render_device->create_texture_cube(
     //       scm::gl::texture_cube_desc(
     //           math::vec2ui(width_, height_), color_format_, mipmap_layers_
     //       ), internal_format_, data_, data_, data_, data_, data_, data_);
     // }
   } else {
     scm::gl::texture_loader loader;
-    textures_[context.id] = loader.load_texture_cube(
+    ctex.texture = loader.load_texture_cube(
         *context.render_device, file_px_, file_nx_, file_py_, file_ny_, file_pz_, file_nz_, mipmap_layers_ > 0);
 
-    if (textures_[context.id]) {
-      width_ = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
+    if (ctex.texture) {
+      width_ = ctex.texture->dimensions()[0];
+      height_ = ctex.texture->dimensions()[1];
     }
   }
 
-  if (textures_[context.id]) {
-    sampler_states_[context.id] =
+  if (ctex.texture) {
+    ctex.sampler_state =
         context.render_device->create_sampler_state(state_descripton_);
 
-    render_contexts_[context.id] = context.render_context;
-
-    make_resident(context);
+    context.textures[uuid_] = ctex;
+    context.render_context->make_resident(ctex.texture, ctex.sampler_state);
   }
 }
 
