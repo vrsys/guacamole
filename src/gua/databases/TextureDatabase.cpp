@@ -46,6 +46,7 @@ void TextureDatabase::load(std::string const& filename) {
 
   if (extension == ".png"
       || extension == ".jpg"
+      || extension == ".jpeg"
       || extension == ".bmp"
       || extension == ".dds"
       || extension == ".tif"
