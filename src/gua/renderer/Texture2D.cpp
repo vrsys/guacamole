@@ -76,33 +76,27 @@ Texture2D::Texture2D(std::string const& file,
 
 void Texture2D::upload_to(RenderContext const& context) const {
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
+  RenderContext::Texture ctex{};
 
   if (image_) {
     std::vector<void*> data;
     for (unsigned i = 0; i < image_->mip_level_count(); ++i)
       data.push_back(image_->mip_level(i).data().get());
 
-    textures_[context.id] = context.render_device->create_texture_2d(
+    ctex.texture = context.render_device->create_texture_2d(
         image_->mip_level(0).size(), image_->format(),
         image_->mip_level_count(), 1, 1, image_->format(), data);
   } else {
-    textures_[context.id] = context.render_device->create_texture_2d(
+    ctex.texture = context.render_device->create_texture_2d(
         math::vec2ui(width_, height_), color_format_, mipmap_layers_);
   }
 
-  if (textures_[context.id]) {
-    sampler_states_[context.id] =
+  if (ctex.texture) {
+    ctex.sampler_state =
         context.render_device->create_sampler_state(state_descripton_);
 
-    render_contexts_[context.id] = context.render_context;
-
-    make_resident(context);
+    context.textures[uuid_] = ctex;
+    context.render_context->make_resident(ctex.texture, ctex.sampler_state);
   }
 }
 

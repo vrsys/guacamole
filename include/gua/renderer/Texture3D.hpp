@@ -109,8 +109,6 @@ class GUA_DLL Texture3D : public Texture {
                                             scm::gl::WRAP_REPEAT,
                                             scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture3D() {}
-
   ///@{
   /**
    * Gets the size.
