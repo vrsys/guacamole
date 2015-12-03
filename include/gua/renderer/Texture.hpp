@@ -129,6 +129,8 @@ class GUA_DLL Texture {
 
   virtual void upload_to(RenderContext const& context) const = 0;
 
+  std::size_t uuid() { return uuid_; }
+
  protected:
 
   unsigned mipmap_layers_;
