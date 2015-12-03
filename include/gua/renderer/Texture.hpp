@@ -122,7 +122,6 @@ class GUA_DLL Texture {
   scm::gl::texture_image_ptr const& get_buffer(RenderContext const& context) const;
 
   void make_non_resident(RenderContext const& context) const;
-  void make_non_resident() const;
 
   virtual unsigned width() const = 0;
   virtual unsigned height() const = 0;
