@@ -121,6 +121,7 @@ scm::gl::texture_image_ptr const& Texture::get_buffer(
   if (iter != context.textures.end()) {
     return iter->second.texture;
   }
+  return nullptr;
 }
 
 void Texture::make_non_resident(RenderContext const& context) const {
