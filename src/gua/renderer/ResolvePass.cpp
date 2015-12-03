@@ -119,6 +119,8 @@ utils::Color3f ResolvePassDescription::background_color() const {
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::background_texture(std::string const& texture) {
   uniforms["gua_background_texture"] = texture;
+  if (texture != "")
+    TextureDatabase::instance()->load(texture);
   return *this;
 }
 
@@ -131,6 +133,8 @@ std::string ResolvePassDescription::background_texture() const {
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::alternative_background_texture(std::string const& texture) {
   uniforms["gua_alternative_background_texture"] = texture;
+  if (texture != "")
+    TextureDatabase::instance()->load(texture);
   return *this;
 }
 
@@ -155,6 +159,8 @@ float ResolvePassDescription::background_texture_blend_factor() const {
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::environment_lighting_texture(std::string const& texture) {
   uniforms["gua_environment_lighting_texture"] = texture;
+  if (texture != "")
+    TextureDatabase::instance()->load(texture);
   return *this;
 }
 
@@ -167,6 +173,8 @@ std::string const& ResolvePassDescription::environment_lighting_texture() const 
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::alternative_environment_lighting_texture(std::string const& texture) {
   uniforms["gua_alternative_environment_lighting_texture"] = texture;
+  if (texture != "")
+    TextureDatabase::instance()->load(texture);
   return *this;
 }
 
@@ -276,6 +284,8 @@ float ResolvePassDescription::ssao_falloff() const {
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::ssao_noise_texture(std::string const& texture) {
   uniforms["gua_noise_tex"] = texture;
+  if (texture != "")
+    TextureDatabase::instance()->load(texture);
   return *this;
 }
 
