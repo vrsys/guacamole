@@ -28,6 +28,8 @@
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/Texture.hpp>
 
+#include <future>
+
 namespace gua {
 
 /**
@@ -58,6 +60,9 @@ namespace gua {
   // this class is a Singleton --- private c'tor and d'tor
   TextureDatabase() {}
   ~TextureDatabase() {}
+
+  std::vector<std::future<void>> futures_;
+
 
 };
 
