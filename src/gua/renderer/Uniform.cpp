@@ -38,6 +38,10 @@ void UniformValue::apply<std::string>(UniformValue const* self,
     prog->uniform(name, location, math::vec2ui(0, 0));
   } else {
     auto texture(TextureDatabase::instance()->lookup(tex_name));
+    if (!texture) {
+      TextureDatabase::instance()->load(tex_name);
+      texture = TextureDatabase::instance()->lookup(tex_name);
+    }
     if (texture) {
       prog->uniform(name, location, texture->get_handle(ctx));
     }
@@ -63,6 +67,10 @@ void UniformValue::write_bytes_impl<std::string>(UniformValue const* self,
   } else {
 
     auto texture(TextureDatabase::instance()->lookup(tex_name));
+    if (!texture) {
+      TextureDatabase::instance()->load(tex_name);
+      texture = TextureDatabase::instance()->lookup(tex_name);
+    }
     if (texture) {
       auto& handle(texture->get_handle(ctx));
       memcpy(target, &handle, sizeof(math::vec2ui));
