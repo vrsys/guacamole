@@ -75,7 +75,6 @@ Texture2D::Texture2D(std::string const& file,
 }
 
 void Texture2D::upload_to(RenderContext const& context) const {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
   RenderContext::Texture ctex{};
 
   if (image_) {
