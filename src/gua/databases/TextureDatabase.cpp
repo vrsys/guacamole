@@ -51,13 +51,14 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
-    futures_.push_back(std::async(std::launch::async, [filename]() {
+    textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
       auto image = gua::load_image_2d(filename, true);
 
       instance()->add(filename, std::make_shared<Texture2D>(image, 1,
             scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT)));
+      return filename;
     }));
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
