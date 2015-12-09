@@ -528,11 +528,10 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
 
-	  // scale far clip of virtual camera to radius of unit sphere 
-	  auto light_far_clip = 2.0f * scm::math::length(math::get_translation(transform) - math::get_translation(light->get_cached_world_transform()));
 
-	  // TODO: make near clip of light configurable? currently 1/100th of light source size
-	  auto light_near_clip = light_far_clip / 100.0f;
+	  //TODO: consider light scale for clipping planes?
+	  auto light_near_clip = light->data.get_shadow_near_clipping_in_sun_direction();
+	  auto light_far_clip = light->data.get_shadow_far_clipping_in_sun_direction();
 
 	  auto frustum(
 		  Frustum::perspective(
@@ -557,14 +556,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
     screen_transform = light->get_cached_world_transform() * screen_transform;
 
-	auto light_far_clip = scm::math::length(math::get_translation(screen_transform) - math::get_translation(light->get_cached_world_transform()));
+    auto light_near_clip = light->data.get_shadow_near_clipping_in_sun_direction();
+    auto light_far_clip = light->data.get_shadow_far_clipping_in_sun_direction();
 
     auto frustum(
       Frustum::perspective(
       light->get_cached_world_transform(), screen_transform,
-      //current_viewstate_.camera.config.near_clip(),
-      light->data.get_shadow_near_clipping_in_sun_direction(),
-	  light_far_clip
+      light_near_clip,
+      light_far_clip
       )
       );
 
