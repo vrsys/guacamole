@@ -33,22 +33,14 @@
 #include <scm/gl_util/manipulators/trackball_manipulator.h>
 
 
-
-
-
 int main(int argc, char** argv) {
 
   gua::init(argc, argv);
 
   //create simple untextured material shader
   auto plod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
-  auto plod_uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_uniform_color.gmd");
-
   auto plod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", plod_keep_input_desc));
-  auto plod_overwrite_color_shader(std::make_shared<gua::MaterialShader>("PLOD_overwrite_input_color", plod_uniform_color_desc));
-
   gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader);
-  gua::MaterialShaderDatabase::instance()->add(plod_overwrite_color_shader);
 
   //create material for pointcloud
   auto plod_rough = plod_keep_color_shader->make_new_material();
@@ -56,65 +48,25 @@ int main(int argc, char** argv) {
   plod_rough->set_uniform("roughness", 0.8f);
   plod_rough->set_uniform("emissivity", 0.0f);
 
-  //simple material for light proxy
-  auto rough_white = plod_overwrite_color_shader->make_new_material();
-  rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
-  rough_white->set_uniform("metalness", 0.0f);
-  rough_white->set_uniform("roughness", 0.8f);
-  rough_white->set_uniform("emissivity", 0.0f);
-
-  scm::gl::sampler_state_desc const& sampler_state_desc = scm::gl::sampler_state_desc(
-    scm::gl::FILTER_ANISOTROPIC, 
-    scm::gl::WRAP_MIRRORED_REPEAT, 
-    scm::gl::WRAP_MIRRORED_REPEAT);
-  
-  //gua::TextureDatabase::instance()->load("data/textures/envlightmap.jpg");
-
-  //setup scene
-  gua::SceneGraph graph("main_scenegraph");
-
-  auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  scene_transform->translate(0.f, 0.f, 0.f);
-
+  //configure plod backend
   gua::PLODLoader plod_loader;
-  gua::TriMeshLoader trimesh_loader;
-
   plod_loader.set_out_of_core_budget_in_mb(2048);
   plod_loader.set_render_budget_in_mb(512);
   plod_loader.set_upload_budget_in_mb(20);
 
-  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
-  //plod_transform->rotate(90.f, 0.f, 0.f, 1.f);  
-  //plod_transform->rotate(180.f, 0.f, 1.f, 1.f);
+  //load a sample pointcloud
   auto plod_node = plod_loader.load_geometry(
     "pointcloud", 
     "/opt/3d_models/point_based/plod/pig_pr.bvh", 
     plod_rough, 
     gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
 
+  //setup scenegraph
+  gua::SceneGraph graph("main_scenegraph");
+  auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
   graph.add_node("/transform/plod_transform", plod_node);
   plod_node->set_draw_bounding_box(true);
-  plod_node->set_error_threshold(9.f);
-
-
-  auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
-  auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
-  light->data.set_type(gua::node::LightNode::Type::SPOT); //SPOT, POINT
-  light->data.set_enable_shadows(true);                                                         
-  light->data.set_shadow_map_size(2048);
-  light->data.set_shadow_near_clipping_in_sun_direction(0.1f);
-  light->data.brightness = 5.0f;
-  //light->rotate(90.f, 0.f, 1.f, 0.f);
-  light->scale(2.f);
-  light->translate(0.f, 0.f, 0.5f);
-
-  auto light_proxy_geometry(trimesh_loader.create_geometry_from_file(
-    "light_proxy", "data/objects/sphere.obj", 
-    rough_white, 
-    gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-  light_proxy_geometry->scale(0.02);
-  light->add_child(light_proxy_geometry);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -131,12 +83,12 @@ int main(int argc, char** argv) {
 
   //setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
-  
+
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.f);
   camera->config.set_resolution(resolution);
   
-  //use close near plane to inspect details
+  //use close near plane to allow inspection of details
   camera->config.set_near_clip(0.01f);
   camera->config.set_far_clip(20.0f);
   camera->config.set_screen_path("/screen");
@@ -151,13 +103,10 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   camera->set_pipeline_description(pipe);
 
-  pipe->get_resolve_pass()->tone_mapping_exposure(1.0f);
-  //pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
-  //pipe->get_resolve_pass()->environment_lighting_texture("data/textures/envlightmap.jpg");
+  pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
@@ -220,7 +169,7 @@ int main(int argc, char** argv) {
   window->on_key_press.connect(std::bind([&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
     if (action == 0) return;
     switch (std::tolower(key)) {
-      case ' ':
+      default:
         break;
     }
   },
@@ -241,9 +190,6 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
-
-    //animate light
-    light->rotate(0.1, 0.0, 1.0, 0.0);
 
     window->process_events();
     if (window->should_close()) {
