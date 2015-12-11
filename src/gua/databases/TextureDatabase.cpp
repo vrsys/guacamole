@@ -51,7 +51,19 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
+
+    auto exists = TextureDatabase::instance()->lookup(filename);
+    if (exists)
+      return;
+
+    // else
     textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
+
+      auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
+      if (default_tex) {
+        gua::TextureDatabase::instance()->add(filename, default_tex);
+      }
+
       auto image = gua::load_image_2d(filename, true);
 
       instance()->add(filename, std::make_shared<Texture2D>(image, 1,
