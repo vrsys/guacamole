@@ -4,6 +4,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(volume)
     add_subdirectory(plod)
+    add_subdirectory(gui)
     add_subdirectory(warping)
 
   # # input requires GLFW3

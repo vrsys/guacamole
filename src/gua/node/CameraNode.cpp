@@ -51,13 +51,13 @@ CameraNode::CameraNode(std::string const& name,
 ////////////////////////////////////////////////////////////////////////////////
 
 Frustum CameraNode::get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return make_frustum(graph, get_world_transform(), config, mode, false);
+    return make_frustum(graph, get_world_transform(), config, mode, false, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Frustum CameraNode::get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return make_frustum(graph, get_world_transform(), config, mode, true);
+    return make_frustum(graph, get_world_transform(), config, mode, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ SerializedCameraNode CameraNode::serialize() const
 
 Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform,
                                  CameraNode::Configuration const& config, CameraMode mode,
-                                 bool use_alternative_culling_screen) {
+                                 bool use_alternative_culling_screen, bool ignore_warp_mode) {
 
     std::string screen_name(config.get_alternative_frustum_culling_screen_path());
 
@@ -110,8 +110,8 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
 
 
     if (config.get_enable_stereo()) {
-      
-        if (config.get_stereo_type() == StereoType::SPATIAL_WARP) {
+
+        if (config.get_stereo_type() == StereoType::SPATIAL_WARP && !ignore_warp_mode) {
           eye_dist = 0;
         }
 
@@ -140,10 +140,12 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
 
     }
 
-    if (mode != CameraMode::RIGHT) {
+    if (mode == CameraMode::LEFT) {
         eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * eye_dist), math::float_t(0), math::float_t(0));
-    } else {
+    } else if (mode == CameraMode::RIGHT) {
         eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * eye_dist), math::float_t(0), math::float_t(0));
+    } else {
+        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset()), math::float_t(0), math::float_t(0));
     }
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
