@@ -925,7 +925,6 @@ int main(int argc, char** argv) {
       normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
       normal_screen->translate(0, 0, -screen_dist);
     #endif
-    // normal_cam->config.set_eye_dist(0.f);
     normal_cam->config.set_resolution(resolution);
     normal_cam->config.set_screen_path("/navigation/normal_screen");
   #endif
@@ -934,6 +933,7 @@ int main(int argc, char** argv) {
   normal_cam->config.mask().blacklist.add_tag("invisible");
   normal_cam->config.set_far_clip(350.f);
   normal_cam->config.set_near_clip(0.1f);
+  normal_cam->config.set_eye_dist(eye_dist);
 
   // auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
   // fill_light->data.set_type(gua::node::LightNode::Type::SUN);
@@ -972,7 +972,6 @@ int main(int argc, char** argv) {
       warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
       warp_screen->translate(0, 0, -screen_dist);
     #endif
-    // warp_cam->config.set_eye_dist(0.f);
     warp_cam->config.set_resolution(resolution);
     warp_cam->config.set_screen_path("/navigation/warp/warp_screen");
   #endif
@@ -980,6 +979,7 @@ int main(int argc, char** argv) {
   warp_cam->config.set_scene_graph_name("main_scenegraph");
   warp_cam->config.set_far_clip(normal_cam->config.get_far_clip()*1.5);
   warp_cam->config.set_near_clip(normal_cam->config.get_near_clip());
+  warp_cam->config.set_eye_dist(eye_dist);
 
   normal_cam->config.set_output_window_name("window");
   normal_cam->set_pipeline_description(pipe);
@@ -1009,9 +1009,6 @@ int main(int argc, char** argv) {
       }
     }
 
-    normal_cam->config.set_eye_dist(eye_dist);
-    warp_cam->config.set_eye_dist(eye_dist);
-
     // set stereo options
     if (stereo) {
 
@@ -1032,7 +1029,6 @@ int main(int argc, char** argv) {
 
         if (stereotype_spatial) {
           normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
-          normal_cam->config.set_eye_dist(0.f);
 
           #if OCULUS1
             normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));

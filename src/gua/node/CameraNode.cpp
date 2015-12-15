@@ -106,10 +106,17 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     float camera_scale(scm::math::length(math::vec3(camera_transform[8], camera_transform[9], camera_transform[10])));
     float clipping_offset(0.f);
 
+    float eye_dist(config.eye_dist());
+
+
     if (config.get_enable_stereo()) {
+      
+        if (config.get_stereo_type() == StereoType::SPATIAL_WARP) {
+          eye_dist = 0;
+        }
 
         // assure same clipping for left and right eye
-        math::vec4 eye_separation(camera_transform * math::vec4(config.eye_dist(), 0.f, 0.f, 0.f));
+        math::vec4 eye_separation(camera_transform * math::vec4(eye_dist, 0.f, 0.f, 0.f));
         math::vec4 screen_direction(screen_transform * math::vec4(0.f, 0.f, -1.f, 0.f));
 
         math::vec3 eye_separation_in_screen_direction(
@@ -134,9 +141,9 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     }
 
     if (mode != CameraMode::RIGHT) {
-        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() - 0.5f * eye_dist), math::float_t(0), math::float_t(0));
     } else {
-        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * config.eye_dist()), math::float_t(0), math::float_t(0));
+        eye_transform *= scm::math::make_translation(math::float_t(config.eye_offset() + 0.5f * eye_dist), math::float_t(0), math::float_t(0));
     }
 
     if (config.mode() == node::CameraNode::ProjectionMode::PERSPECTIVE) {
