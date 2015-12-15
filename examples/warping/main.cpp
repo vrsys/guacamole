@@ -22,7 +22,7 @@
 
 #define GUI_SUPPORT     1
 
-#define POWER_WALL      1
+#define POWER_WALL      0
 #define OCULUS1         0
 #define OCULUS2         0
 #define STEREO_MONITOR  0
@@ -104,8 +104,6 @@ float quad_scale = 1.0;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
-
-
 
 
 
@@ -901,7 +899,6 @@ int main(int argc, char** argv) {
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
     auto normal_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_left");
     auto normal_screen_right = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_right");
-    // normal_cam->config.set_eye_dist(0.f);
     normal_cam->config.set_resolution(resolution);
     normal_cam->config.set_left_screen_path("/navigation/normal_cam/normal_screen_left");
     normal_cam->config.set_right_screen_path("/navigation/normal_cam/normal_screen_right");
@@ -928,7 +925,7 @@ int main(int argc, char** argv) {
       normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
       normal_screen->translate(0, 0, -screen_dist);
     #endif
-    normal_cam->config.set_eye_dist(0.f);
+    // normal_cam->config.set_eye_dist(0.f);
     normal_cam->config.set_resolution(resolution);
     normal_cam->config.set_screen_path("/navigation/normal_screen");
   #endif
@@ -952,7 +949,6 @@ int main(int argc, char** argv) {
     warp_cam->config.set_resolution(resolution);
     warp_cam->config.set_left_screen_path("/navigation/warp_cam/warp_screen_left");
     warp_cam->config.set_right_screen_path("/navigation/warp_cam/warp_screen_right");
-    // warp_cam->config.set_eye_dist(0.f);
 
     #if OCULUS1
       warp_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
@@ -976,7 +972,7 @@ int main(int argc, char** argv) {
       warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
       warp_screen->translate(0, 0, -screen_dist);
     #endif
-    warp_cam->config.set_eye_dist(0.f);
+    // warp_cam->config.set_eye_dist(0.f);
     warp_cam->config.set_resolution(resolution);
     warp_cam->config.set_screen_path("/navigation/warp/warp_screen");
   #endif
@@ -991,7 +987,7 @@ int main(int argc, char** argv) {
   auto update_view_mode([&](){
 
     // set transparency mode
-    pipe->set_enable_abuffer(true);
+    pipe->set_enable_abuffer(current_transparency_mode != "set_transparency_type_none");
     res_pass->write_abuffer_depth(false);
 
     if (warping) {
@@ -1000,7 +996,6 @@ int main(int argc, char** argv) {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
       if (current_transparency_mode == "set_transparency_type_none") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        pipe->set_enable_abuffer(false);
       }
       if (current_transparency_mode == "set_transparency_type_gbuffer") {
         warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
@@ -1013,6 +1008,9 @@ int main(int argc, char** argv) {
         res_pass->write_abuffer_depth(true);
       }
     }
+
+    normal_cam->config.set_eye_dist(eye_dist);
+    warp_cam->config.set_eye_dist(eye_dist);
 
     // set stereo options
     if (stereo) {
@@ -1029,8 +1027,6 @@ int main(int argc, char** argv) {
         window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
-      normal_cam->config.set_eye_dist(eye_dist);
-      warp_cam->config.set_eye_dist(eye_dist);
 
       if (warping) {
 
@@ -1059,8 +1055,6 @@ int main(int argc, char** argv) {
     } else {
 
       normal_cam->config.set_enable_stereo(false);
-      normal_cam->config.set_eye_dist(0.f);
-      warp_cam->config.set_eye_dist(0.f);
 
       #if OCULUS1
         normal_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(0.f, 0.f, -0.05f)));
@@ -1602,9 +1596,16 @@ int main(int argc, char** argv) {
     }
     #if GUI_SUPPORT
       gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
-      if (key == 72 && action == 1) {
-        // hide gui
-        toggle_gui();
+      if (action >= 1) {
+        if (key == 72) toggle_gui();
+        if (key == 93) {
+          pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.1));
+          std::cout << pitoti->get_error_threshold() << std::endl;
+        }
+        if (key == 47) {
+          pitoti->set_error_threshold(pitoti->get_error_threshold()+0.1);
+          std::cout << pitoti->get_error_threshold() << std::endl;
+        }
       }
     #else
       if (action == 1) {
@@ -1633,7 +1634,6 @@ int main(int argc, char** argv) {
         if (key == 82) {warping = !warping; update_view_mode();}
         if (key == 89) std::swap(manipulation_navigator, manipulation_camera);
         if (key == 85) warp_nav.reset();
-
       }
     #endif
   });

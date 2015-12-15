@@ -128,8 +128,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       scm::gl::WRAP_CLAMP_TO_EDGE,
       scm::gl::WRAP_CLAMP_TO_EDGE);
 
-    color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 0, state);
-    depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,     0, state);
+    color_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGBA_32F, 0, state);
+    depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24,      0, state);
 
     fbo_ = ctx.render_device->create_frame_buffer();
     fbo_->attach_color_buffer(0, color_buffer_->get_buffer(ctx),0,0);
@@ -254,9 +254,14 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
       warp_gbuffer_program_->use(ctx);
       warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
 
+      pipe.bind_gbuffer_input(warp_gbuffer_program_);
+
       warp_gbuffer_program_->set_uniform(ctx,
                           gbuffer->get_color_buffer()->get_handle(ctx),
                           "gua_gbuffer_color");
+      warp_gbuffer_program_->set_uniform(ctx,
+                          gbuffer->get_pbr_buffer_write()->get_handle(ctx),
+                          "gua_gbuffer_pbr");
       warp_gbuffer_program_->set_uniform(ctx,
                           gbuffer->get_depth_buffer()->get_handle(ctx),
                           "gua_gbuffer_depth");
@@ -342,6 +347,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
     warp_abuffer_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "warped_depth_buffer");
   } else {
+    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_pbr_buffer_write()->get_handle(ctx), "orig_pbr_buffer");
     warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer()->get_handle(ctx), "warped_color_buffer");
     warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer()->get_handle(ctx), "warped_depth_buffer");
   }

@@ -269,12 +269,14 @@ in float bar[];
 
 out vec3 color;
 out vec3 normal;
+out float emit;
 
 void main() {
   vec2 pos = vec2(vertex_id[0] % gua_resolution.x, vertex_id[0] / gua_resolution.x) + 0.5;
   vec2 tex_coords = pos/vec2(gua_resolution.x, gua_resolution.y);
 
   color = gua_get_color(tex_coords);
+  emit = gua_get_pbr(tex_coords).r;
   normal = gua_get_normal(tex_coords);
 
   float depth = gua_get_depth(tex_coords);
@@ -309,6 +311,7 @@ void main() {
     emit_grid_vertex(p, get_min_depth(p));
 
     color = gua_get_color(tex_coords);
+    emit = gua_get_pbr(tex_coords).r;
     normal = gua_get_normal(tex_coords);
 
     EndPrimitive();

@@ -44,6 +44,7 @@ layout(location=0) in float foo;
 
 out vec3 color;
 out vec3 normal;
+out float emit;
 
 uniform mat4 warp_matrix;
 
@@ -54,6 +55,7 @@ void main() {
   const float depth = gua_get_depth(tex_coords);
 
   color = gua_get_color(tex_coords);
+  emit = gua_get_pbr(tex_coords).r;
   normal = gua_get_normal(tex_coords);
   vec3 screen_space_pos = vec3(tex_coords*2-1, depth);
   gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*foo);

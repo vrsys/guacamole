@@ -43,6 +43,7 @@ uniform mat4 inv_warp_matrix;
 uniform mat4 warp_matrix;
 uniform uvec2 warped_depth_buffer;
 uniform uvec2 warped_color_buffer;
+uniform uvec2 orig_pbr_buffer;
 uniform uvec2 hole_filling_texture;
 
 bool get_ray(vec2 screen_space_pos, inout vec3 start, inout vec3 end, vec2 crop_depth) {
@@ -406,36 +407,44 @@ vec4 hole_filling_blur() {
     return vec4(@hole_filling_color@, 1);
   }
 
-  return textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level);
+  return vec4(textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level).rgb, 0);
 }
 
 void main() {
 
   vec4 color = vec4(0);
-  vec4 background_color = vec4(0, 0, 0, 1);
+  vec4 opaque_color_emit = vec4(0);
+  float emissivity = 0;
 
   if (!perform_warp) {
-    gua_out_color = toneMap(texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb);
+    #if WARP_MODE == WARP_MODE_RAYCASTING || WARP_MODE == WARP_MODE_HIDDEN
+      const vec3 col = texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb;
+      const float emit = texture2D(sampler2D(orig_pbr_buffer), gua_quad_coords).r;
+      // gua_out_color = vec3(emit);
+      gua_out_color = mix(toneMap(col), col, emit);
+    #else
+      gua_out_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb;
+    #endif
     return;
   }
 
   // hole filling
   float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;
   #if HOLE_FILLING_MODE == HOLE_FILLING_MODE_INPAINT
-    if (depth == 1.0) background_color = hole_filling_bidirectional_epipolar_search();
-    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) opaque_color_emit = hole_filling_bidirectional_epipolar_search();
+    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_SEARCH
-    if (depth == 1.0) background_color = hole_filling_epipolar_search();
-    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) opaque_color_emit = hole_filling_epipolar_search();
+    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_MIRROR
-    if (depth == 1.0) background_color = hole_filling_epipolar_mirror();
-    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) opaque_color_emit = hole_filling_epipolar_mirror();
+    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_BLUR
-    if (depth == 1.0) background_color = hole_filling_blur();
-    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) opaque_color_emit = hole_filling_blur();
+    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #else
-    if (depth == 1.0) background_color = vec4(@hole_filling_color@, 1);
-    else              background_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
+    if (depth == 1.0) opaque_color_emit = vec4(@hole_filling_color@, 1);
+    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #endif
 
   #if WARP_MODE == WARP_MODE_RAYCASTING
@@ -564,12 +573,11 @@ void main() {
 
     }
 
-    abuf_mix_frag(background_color, color);
-    gua_out_color = toneMap(color.rgb);
+    abuf_mix_frag(vec4(opaque_color_emit.rgb, 1), color);
+    // gua_out_color = vec3(opaque_color_emit.a);
+    gua_out_color = mix(toneMap(color.rgb), color.rgb, opaque_color_emit.a);
 
     #if @debug_sample_count@ == 1
-      // draw debug sample count
-      // gua_out_color = mix(gua_out_color, heat(float((abuffer_sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
       gua_out_color = mix(gua_out_color, heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
     #endif
 
@@ -578,11 +586,11 @@ void main() {
     #endif
 
   #elif WARP_MODE == WARP_MODE_HIDDEN
-    gua_out_color = toneMap(background_color.rgb);
+    gua_out_color = mix(toneMap(opaque_color_emit.rgb), opaque_color_emit.rgb, opaque_color_emit.a);
   #elif @enable_abuffer@
-    gua_out_color = background_color.rgb;
+    gua_out_color = opaque_color_emit.rgb;
   #else
-    gua_out_color = background_color.rgb;
+    gua_out_color = opaque_color_emit.rgb;
   #endif
 
   // draw epipol

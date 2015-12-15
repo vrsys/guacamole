@@ -77,7 +77,7 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
   auto description(dynamic_cast<GenerateWarpGridPassDescription const*>(&desc));
 
   math::vec2ui resolution(pipe.current_viewstate().camera.config.get_resolution());
-  size_t pixel_count(resolution.x * resolution.y);
+  size_t pixel_count(resolution.x * resolution.y / 4);
 
   if (!grid_generation_program_) {
     grid_generation_program_ = std::make_shared<ShaderProgram>();

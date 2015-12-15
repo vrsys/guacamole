@@ -42,7 +42,7 @@ in vec2 cellcoords;
 uniform uvec2 gua_warp_grid_tex;
 
 // output
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color_emit;
 
 vec3 heat(float v) {
   float value = 1.0-v;
@@ -63,43 +63,46 @@ void main() {
   #endif
 
   #if INTERPOLATION_MODE == INTERPOLATION_MODE_NEAREST
-    gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+    gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+    gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
   #elif INTERPOLATION_MODE == INTERPOLATION_MODE_LINEAR
-    gua_out_color = gua_get_color(texcoords);
+    gua_out_color_emit.rgb = gua_get_color(texcoords);
+    gua_out_color_emit.a = gua_get_pbr(texcoords).r;
   #else
     if (is_surface) {
-      gua_out_color = gua_get_color(texcoords);
+      gua_out_color_emit.rgb = gua_get_color(texcoords);
+      gua_out_color_emit.a = gua_get_pbr(texcoords).r;
     } else {
-      gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+      gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+      gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
     }
   #endif
 
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;
-    gua_out_color = heat(1-intensity);
-    // gua_out_color = vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity;
+    gua_out_color_emit.rgb = heat(1-intensity);
 
     if (any(lessThan(cellcoords, vec2(0.6/float(cellsize)))) || any(greaterThan(cellcoords, vec2(1.0-0.6/float(cellsize))))) {
-      gua_out_color = mix(gua_out_color, vec3(0), 0.7);
+      gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0), 0.7);
     }
   #endif
 
   #if @debug_interpolation_borders@ == 1
     if (!is_surface) {
-      gua_out_color = mix(gua_out_color, vec3(0.0, 0.0, 0.8), 0.8);
+      gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.0, 0.0, 0.8), 0.8);
     }
   #endif
 
   #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1
     if (is_rubber_band == 1) {
       #if @debug_rubber_bands@ == 1
-        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.9);
+        gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.8, 0.0, 0.0), 0.9);
       #endif
     }
   #elif HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
     if (is_rubber_band == 1) {
       #if @debug_rubber_bands@ == 1
-        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.5);
+        gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.8, 0.0, 0.0), 0.5);
       #endif
       gl_FragDepth = 0.9999999;
     } else {
@@ -116,12 +119,13 @@ void main() {
 
 in vec3 color;
 in vec3 normal;
+in float emit;
 
 // output
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color_emit;
 
 void main() {
-  gua_out_color = color;
+  gua_out_color_emit = vec4(color, emit);
 }
 
 #endif
