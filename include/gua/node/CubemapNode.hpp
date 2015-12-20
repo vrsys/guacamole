@@ -124,9 +124,11 @@ class GUA_DLL CubemapNode : public SerializableNode {
   float get_weighted_min_distance();
   math::vec3 get_min_distance_position();
   float get_distance_by_local_direction(math::vec3 const& dir) const;
+
   void create_weights(math::vec3 const& view_direction, math::vec3 const& move_direction);
 
   math::vec3 get_push_back(float radius, float softness);
+  math::vec3 get_pull_in(float inner_radius, float outer_radius, float softness);
 
 
   std::shared_ptr<std::atomic<bool>> m_NewTextureData;

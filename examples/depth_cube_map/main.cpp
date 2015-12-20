@@ -330,7 +330,7 @@ int main(int argc, char** argv) {
   cmn->config.set_texture_name("navigation_depth_texture");
   cmn->config.set_near_clip(0.01f);
   cmn->config.set_far_clip(100.0f);
-  // cmn->config.set_resolution(64);
+  cmn->config.set_resolution(64);
   float motion_speed = 0.01f;
 
   // DEBUG VIEW

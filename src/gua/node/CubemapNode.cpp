@@ -247,6 +247,51 @@ math::vec3 CubemapNode::get_push_back(float radius, float softness){
   // return pushback;
 }
 
+math::vec3 CubemapNode::get_pull_in(float inner_radius, float outer_radius, float softness){
+  auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
+  math::vec3 pullin(0.0, 0.0, 0.0);
+
+
+  if (texture){
+    std::vector<float> const& data = texture->get_data();
+
+    uint samples(0);
+
+    for (const float &f : data){
+      uint index = &f - &data[0];
+
+      if ( (f > inner_radius) && (f < outer_radius) ){
+          math::vec2ui tex_coords( index%(config.resolution()*6), index/(config.resolution()*6) );
+          math::vec3 direction( calculate_direction_from_tex_coords(tex_coords) );
+          // direction *= -1.0;
+
+          // float intrusion_factor = (outer_radius - f) / (outer_radius - inner_radius);
+          // float intrusion_factor = (f - inner_radius) / (outer_radius - inner_radius);
+          // intrusion_factor = pow(intrusion_factor, 2);
+
+          // float _softness = pow(softness, 2);
+
+          // float weight = -1.0 * exp( -1.0 * intrusion_factor / _softness) + 1.0;
+          int distortion_index = (tex_coords.y * config.resolution()) + (tex_coords.x % config.resolution());
+
+          pullin += direction * m_DistortionWeights[distortion_index];;
+          // ++samples;
+
+      }
+    }
+    // if (samples > 0){
+    //   pullin /= samples;
+    // }
+  }
+  if (scm::math::length(pullin) == 0.0){
+    return pullin;
+  }else{
+    // return pullin /= pow(config.get_resolution(), 2) * 6;
+    return scm::math::normalize(pullin);
+  }
+  // return pullin;
+}
+
 void CubemapNode::find_min_distance(){
   auto texture = std::dynamic_pointer_cast<TextureDistance>(TextureDatabase::instance()->lookup(config.get_texture_name()));
   if (texture){
