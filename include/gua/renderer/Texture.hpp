@@ -34,6 +34,9 @@
 #include <mutex>
 #include <thread>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/functional/hash.hpp>
+
 namespace gua {
 
 /**
@@ -93,7 +96,7 @@ class GUA_DLL Texture {
                                           scm::gl::WRAP_REPEAT,
                                           scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture();
+  virtual ~Texture() {}
 
 
   void update_sub_data(RenderContext const& context,
@@ -116,30 +119,29 @@ class GUA_DLL Texture {
    *                         returned.
    * \return                 A pointer to the schism texture.
    */
-  virtual scm::gl::texture_image_ptr const& get_buffer(
-      RenderContext const& context) const;
+  scm::gl::texture_image_ptr const& get_buffer(RenderContext const& context) const;
 
-  void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
-  void make_non_resident() const;
 
   virtual unsigned width() const = 0;
   virtual unsigned height() const = 0;
 
   virtual void upload_to(RenderContext const& context) const = 0;
 
+  std::size_t uuid() { return uuid_; }
+
  protected:
 
-  mutable unsigned mipmap_layers_;
+  unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
   scm::gl::data_format internal_format_;
   scm::gl::sampler_state_desc state_descripton_;
-  mutable std::vector<scm::gl::texture_image_ptr> textures_;
-  mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
-  mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
+  std::string file_name_;
+
   mutable std::mutex upload_mutex_;
 
-  std::string file_name_;
+  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
+                        boost::uuids::random_generator()());
 };
 
 }

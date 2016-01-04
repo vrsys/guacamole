@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 #include <functional>
-#include <future>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -29,27 +28,38 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
-{
+void mouse_button(gua::utils::Trackball& trackball,
+                  int mousebutton,
+                  int action,
+                  int mods) {
   gua::utils::Trackball::button_type button;
   gua::utils::Trackball::state_type state;
 
   switch (mousebutton) {
-    case 0: button = gua::utils::Trackball::left; break;
-    case 2: button = gua::utils::Trackball::middle; break;
-    case 1: button = gua::utils::Trackball::right; break;
+    case 0:
+      button = gua::utils::Trackball::left;
+      break;
+    case 2:
+      button = gua::utils::Trackball::middle;
+      break;
+    case 1:
+      button = gua::utils::Trackball::right;
+      break;
   };
 
   switch (action) {
-    case 0: state = gua::utils::Trackball::released; break;
-    case 1: state = gua::utils::Trackball::pressed; break;
+    case 0:
+      state = gua::utils::Trackball::released;
+      break;
+    case 1:
+      state = gua::utils::Trackball::pressed;
+      break;
   };
 
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
 int main(int argc, char** argv) {
-
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -67,27 +77,26 @@ int main(int argc, char** argv) {
   gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
   gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
 
-  auto pbrMat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+  auto pbrMat(gua::MaterialShaderDatabase::instance()
+                  ->lookup("gua_default_material")
+                  ->make_new_material());
   // pbrMat.set_uniform("Color", chromium);
   // pbrMat.set_uniform("Roughness", 0.2f);
   // pbrMat.set_uniform("Metalness", 1.0f);
 
   std::string directory("/opt/3d_models/Cerberus_by_Andrew_Maximov/Textures/");
-  pbrMat->set_uniform("ColorMap",     directory + "Cerberus_A.tga");
+  pbrMat->set_uniform("ColorMap", directory + "Cerberus_A.tga");
   pbrMat->set_uniform("MetalnessMap", directory + "Cerberus_M.tga");
   pbrMat->set_uniform("RoughnessMap", directory + "Cerberus_R.tga");
-  pbrMat->set_uniform("NormalMap",    directory + "Cerberus_N.negated_green.tga");
+  pbrMat->set_uniform("NormalMap", directory + "Cerberus_N.negated_green.tga");
 
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto cerberus(loader.create_geometry_from_file(
-          "cerberus"
-        , "/opt/3d_models/Cerberus_by_Andrew_Maximov/Cerberus_LP.3ds"
-        , pbrMat
-        , gua::TriMeshLoader::NORMALIZE_POSITION
-        | gua::TriMeshLoader::NORMALIZE_SCALE
-        ));
+      "cerberus", "/opt/3d_models/Cerberus_by_Andrew_Maximov/Cerberus_LP.3ds",
+      pbrMat, gua::TriMeshLoader::NORMALIZE_POSITION |
+                  gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/transform", cerberus);
   cerberus->set_draw_bounding_box(true);
   cerberus->rotate(90, 0.f, 1.f, 0.f);
@@ -96,7 +105,7 @@ int main(int argc, char** argv) {
   auto pointLight = graph.add_node<gua::node::LightNode>("/", "pointLight");
   pointLight->data.set_type(gua::node::LightNode::Type::POINT);
   pointLight->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-  pointLight->data.brightness = 150.0f; // lm
+  pointLight->data.brightness = 150.0f;  // lm
   pointLight->scale(9.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
@@ -118,21 +127,18 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  //auto resolution = gua::math::vec2ui(1920, 1080);
-  auto resolution = gua::math::vec2ui(2560,1440);
+  // auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(2560, 1440);
 
-  std::async(std::launch::async, []() {
-    gua::TextureDatabase::instance()->load(
-      "/opt/guacamole/resources/skymaps/skymap.jpg");
-  });
+  std::string skymaps_dir("/opt/guacamole/resources/skymaps/");
 
-  for (auto const& file : {
-        "Cerberus_A.tga",
-        "Cerberus_M.tga",
-        "Cerberus_R.tga",
-        "Cerberus_N.negated_green.tga"
-        }) {
-    gua::TextureDatabase::instance()->load(directory + file);
+  for (auto const& file :
+       {std::string(directory + "Cerberus_A.tga"),
+        std::string(directory + "Cerberus_M.tga"),
+        std::string(directory + "Cerberus_R.tga"),
+        std::string(directory + "Cerberus_N.negated_green.tga"),
+        std::string(skymaps_dir + "skymap.jpg")}) {
+    gua::TextureDatabase::instance()->load(file);
   }
 
   auto standardPipe(std::make_shared<gua::PipelineDescription>());
@@ -140,14 +146,15 @@ int main(int argc, char** argv) {
   standardPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
   standardPipe->add_pass(std::make_shared<gua::LightingPassDescription>());
   // standardPipe->add_pass<gua::BackgroundPassDescription>()
-    // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    // ;
+  // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
+  // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
+  // ;
 
   auto pbrPipe(std::make_shared<gua::PipelineDescription>());
   pbrPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
+  pbrPipe->add_pass(
+      std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::ToneMappingPassDescription>());
 #if 0
   pbrPipe->add_pass<gua::BackgroundPassDescription>()
@@ -179,25 +186,29 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    screen->data.set_size(
+        gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
-  });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-  window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
-      if (action != 0) return;
-      if ('1' == key) {
-        camera->set_pipeline_description(pbrPipe);
-        std::cout << "Pipeline: deferred PBR" << std::endl;
-      } else if ('2' == key) {
-        camera->set_pipeline_description(standardPipe);
-        std::cout << "Pipeline: deferred standard" << std::endl;
-      } else if ('3' == key) {
-        camera->set_pipeline_description(tiledPipe);
-        std::cout << "Pipeline: tiled PBR" << std::endl;
-      }
-    });
+  window->on_move_cursor.connect(
+      [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+  window->on_button_press.connect(
+      std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
+                std::placeholders::_2, std::placeholders::_3));
+  window->on_key_press.connect(
+      [&](int key, int scancode, int action, int mods) {
+        if (action != 0)
+          return;
+        if ('1' == key) {
+          camera->set_pipeline_description(pbrPipe);
+          std::cout << "Pipeline: deferred PBR" << std::endl;
+        } else if ('2' == key) {
+          camera->set_pipeline_description(standardPipe);
+          std::cout << "Pipeline: deferred standard" << std::endl;
+        } else if ('3' == key) {
+          camera->set_pipeline_description(tiledPipe);
+          std::cout << "Pipeline: tiled PBR" << std::endl;
+        }
+      });
 
   window->open();
 
@@ -205,21 +216,24 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+  gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
   size_t ctr{};
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-      gua::math::float_t(trackball.shifty()),
-      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+    gua::math::mat4 modelmatrix =
+        scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
+                                    gua::math::float_t(trackball.shifty()),
+                                    gua::math::float_t(trackball.distance())) *
+        gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)
-      gua::Logger::LOG_WARNING << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
-                << window->get_rendering_fps() << std::endl;
+      gua::Logger::LOG_WARNING
+          << "Frame time: " << 1000.f / window->get_rendering_fps()
+          << " ms, fps: " << window->get_rendering_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

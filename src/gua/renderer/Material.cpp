@@ -54,7 +54,7 @@ std::string const& Material::get_shader_name() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Material::set_shader_name(std::string const& name) {
-  boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   shader_name_ = name;
   shader_cache_ = nullptr;
 
@@ -94,7 +94,7 @@ std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() cons
 ////////////////////////////////////////////////////////////////////////////////
 
 void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
     for (auto const& uniform : uniforms_) {
       uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
@@ -133,5 +133,30 @@ std::ostream& operator<<(std::ostream& os, Material const& val) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+template <>
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& tex_name, int view_id) {
+  auto uniform(uniforms_.find(name));
+  if (! TextureDatabase::instance()->contains(tex_name))
+    TextureDatabase::instance()->load(tex_name);
+
+  if (uniform != uniforms_.end()) {
+    uniform->second.set(view_id, tex_name);
+  } else {
+    ViewDependentUniform tmp;
+    tmp.set(UniformValue(tex_name));
+    tmp.set(view_id, UniformValue(tex_name));
+    uniforms_[name] = tmp;
+  }
+  return *this;
+}
+
+template <>
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& tex_name)
+{
+  if (! TextureDatabase::instance()->contains(tex_name))
+    TextureDatabase::instance()->load(tex_name);
+  return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(tex_name))));
+}
 
 }

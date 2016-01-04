@@ -19,10 +19,6 @@ layout(location=4) in vec3 gua_in_bitangent;
 ///////////////////////////////////////////////////////////////////////////////
 // video3d uniforms
 ///////////////////////////////////////////////////////////////////////////////
-uniform mat4  image_d_to_eye_d;
-uniform mat4  eye_d_to_world;
-uniform mat4  eye_d_to_eye_rgb;
-uniform mat4  eye_rgb_to_image_rgb;
 
 uniform sampler2DArray depth_video3d_texture;
 uniform sampler3D cv_xyz;
@@ -38,8 +34,7 @@ uniform int layer;
 out VertexData {
     vec2 texture_coord;
     vec3 pos_es;
-    vec3 pos_d;
-    vec3 pos_ws;
+    vec3 pos_cs;
     float depth;
 } VertexOut;
 
@@ -124,35 +119,16 @@ float bilateral_filter(){
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
-void main() 
-{
-#if 0
-  float depth             = texture2DArray(depth_video3d_texture, vec3(gua_in_position.xy, layer)).r;
-#else
-  float depth             = bilateral_filter();
-#endif
+void main() {
 
-  vec4 POS_d              = depth * image_d_to_eye_d * vec4(gua_in_position.xy, depth, 1.0);
-  POS_d.z                 = depth;
-  POS_d.w                 = 1.0;
-  
-  vec4 POS_rgb            = eye_d_to_eye_rgb * POS_d;
-  vec4 POS_ws             = eye_d_to_world * POS_d;
+  float depth             = bilateral_filter();
 
   // lookup from calibvolume
   float d_idx = (depth - cv_min_d)/(cv_max_d - cv_min_d);
-  POS_ws = vec4(texture(cv_xyz, vec3(gua_in_position.xy, d_idx)).rgb, 1.0);
-
-  VertexOut.pos_d         = POS_d.xyz;
-  VertexOut.pos_ws        = POS_ws.xyz;
-  VertexOut.pos_es        = (gua_view_matrix * gua_model_matrix * POS_ws).xyz;
-
+  VertexOut.pos_cs        = texture(cv_xyz, vec3(gua_in_position.xy, d_idx)).rgb;
+  VertexOut.pos_es        = (gua_view_matrix * gua_model_matrix * vec4(VertexOut.pos_cs, 1.0)).xyz;
   VertexOut.texture_coord = texture(cv_uv,  vec3(gua_in_position.xy, d_idx)).rg;
-  //VertexOut.texture_coord = (eye_rgb_to_image_rgb * vec4( (POS_rgb.xy/POS_rgb.z) ,0.0, 1.0)).xy;
-
-
   VertexOut.depth         = depth;
-  
-  gl_Position             = gua_projection_matrix * gua_view_matrix * gua_model_matrix * POS_ws;
+  gl_Position             = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(VertexOut.pos_cs, 1.0);
 }
 

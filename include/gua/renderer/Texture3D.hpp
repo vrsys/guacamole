@@ -109,16 +109,14 @@ class GUA_DLL Texture3D : public Texture {
                                             scm::gl::WRAP_REPEAT,
                                             scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture3D() {}
-
   ///@{
   /**
    * Gets the size.
    *
    * Returns the size of the Texture3D.
    */
-  inline unsigned width() const { return width_; }
-  inline unsigned height() const { return height_; }
+  inline unsigned width() const override { return width_; }
+  inline unsigned height() const override { return height_; }
   inline unsigned depth() const { return depth_; }
 
   void upload_to(RenderContext const& context) const override;

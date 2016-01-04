@@ -69,21 +69,16 @@ Texture3D::Texture3D(std::string const& file,
 void Texture3D::upload_to(RenderContext const& context) const {
 
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
+  RenderContext::Texture ctex{};
 
   if (file_name_ == "") {
 
 
     if (data_.size() == 0) {
-      textures_[context.id] = context.render_device->create_texture_3d(
+      ctex.texture = context.render_device->create_texture_3d(
           math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_);
     } else {
-      textures_[context.id] = context.render_device->create_texture_3d(
+      ctex.texture = context.render_device->create_texture_3d(
           scm::gl::texture_3d_desc(
               math::vec3ui(width_, height_, depth_), color_format_, mipmap_layers_),
           color_format_,
@@ -92,22 +87,21 @@ void Texture3D::upload_to(RenderContext const& context) const {
   } else {
     // MESSAGE("Uploading texture file %s", file_name_.c_str());
     scm::gl::volume_loader loader;
-    textures_[context.id] = loader.load_texture_3d(
+    ctex.texture = loader.load_texture_3d(
         *context.render_device, file_name_, mipmap_layers_ > 0);
 
-    if (textures_[context.id]) {
-      width_  = textures_[context.id]->dimensions()[0];
-      height_ = textures_[context.id]->dimensions()[1];
-      depth_  = textures_[context.id]->dimensions()[2];
+    if (ctex.texture) {
+      width_  = ctex.texture->dimensions()[0];
+      height_ = ctex.texture->dimensions()[1];
+      depth_  = ctex.texture->dimensions()[2];
     }
   }
 
-  sampler_states_[context.id] =
+  ctex.sampler_state =
       context.render_device->create_sampler_state(state_descripton_);
 
-  render_contexts_[context.id] = context.render_context;
-
-  make_resident(context);
+  context.textures[uuid_] = ctex;
+  context.render_context->make_resident(ctex.texture, ctex.sampler_state);
 }
 
 }

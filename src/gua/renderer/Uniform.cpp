@@ -23,7 +23,6 @@
 #include <gua/renderer/Uniform.hpp>
 
 #include <gua/math/math.hpp>
-#include <gua/memory.hpp>
 
 namespace gua {
 
@@ -34,27 +33,17 @@ void UniformValue::apply<std::string>(UniformValue const* self,
                                       scm::gl::program_ptr const& prog,
                                       unsigned location) {
 
-  auto tex_name(boost::get<std::string>(self->data));
+  auto tex_name = boost::get<std::string>(self->data);
   if (tex_name == "0") {
     prog->uniform(name, location, math::vec2ui(0, 0));
   } else {
     auto texture(TextureDatabase::instance()->lookup(tex_name));
+    if (!texture) {
+      TextureDatabase::instance()->load(tex_name);
+      texture = TextureDatabase::instance()->lookup(tex_name);
+    }
     if (texture) {
       prog->uniform(name, location, texture->get_handle(ctx));
-    } else if (ctx.mode != CameraMode::CENTER) {
-      if ((ctx.mode != CameraMode::LEFT)) {
-        auto left_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_left"));
-        if (left_texture) {
-          prog->uniform(name, location, left_texture->get_handle(ctx));
-        }
-      } else {
-        auto right_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_right"));
-        if (right_texture) {
-          prog->uniform(name, location, right_texture->get_handle(ctx));
-        }
-      }
     }
   }
 }
@@ -78,25 +67,13 @@ void UniformValue::write_bytes_impl<std::string>(UniformValue const* self,
   } else {
 
     auto texture(TextureDatabase::instance()->lookup(tex_name));
+    if (!texture) {
+      TextureDatabase::instance()->load(tex_name);
+      texture = TextureDatabase::instance()->lookup(tex_name);
+    }
     if (texture) {
       auto& handle(texture->get_handle(ctx));
       memcpy(target, &handle, sizeof(math::vec2ui));
-    } else if (ctx.mode != CameraMode::CENTER) {
-      if ((ctx.mode != CameraMode::LEFT)) {
-        auto left_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_left"));
-        if (left_texture) {
-          auto& handle(left_texture->get_handle(ctx));
-          memcpy(target, &handle, sizeof(math::vec2ui));
-        }
-      } else {
-        auto right_texture(TextureDatabase::instance()->lookup(
-            boost::get<std::string>(self->data) + "_right"));
-        if (right_texture) {
-          auto& handle(right_texture->get_handle(ctx));
-          memcpy(target, &handle, sizeof(math::vec2ui));
-        }
-      }
     }
   }
 }

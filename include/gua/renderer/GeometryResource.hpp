@@ -70,10 +70,14 @@ class GUA_DLL GeometryResource {
     return bounding_box_;
   }
 
+  inline std::size_t uuid() { return uuid_; }
+
  protected:
 
   math::BoundingBox<math::vec3> bounding_box_;
 
+  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
+                        boost::uuids::random_generator()());
 };
 
 }

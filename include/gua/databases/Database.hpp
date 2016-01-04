@@ -26,8 +26,9 @@
 #include <gua/utils.hpp>
 
 // external headers
-#include <boost/thread.hpp>
+#include <mutex>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #include <thread>
 #include <memory>
 #include <string>
@@ -58,8 +59,7 @@ template <typename T, typename K = std::string> class Database {
    * \param date The newly added entry.
    */
   void add(key_type const& k, mapped_type const& date) {
-    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+    std::lock_guard<std::mutex> lock(mutex_);
     data_[k] = date;
     keys_.insert(k);
   }
@@ -68,8 +68,7 @@ template <typename T, typename K = std::string> class Database {
   * Remove entry to the data base.
   */
   void remove(key_type const& k) {
-    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+    std::lock_guard<std::mutex> lock(mutex_);
 
     auto entry = data_.find(k);
     if (entry != data_.end()) {
@@ -91,7 +90,7 @@ template <typename T, typename K = std::string> class Database {
    * \return     Whether the given key is stored in the Database.
    */
   bool contains(key_type const& k) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return keys_.find(k) != keys_.end();
   }
 
@@ -105,28 +104,15 @@ template <typename T, typename K = std::string> class Database {
    * \return     A shared pointer to the data of the requested
    *             entry. nullptr if the entry does not exist.
    */
-  mapped_type lookup(key_type const& k) {
-    auto result(data_.end());
-
-    {
-      boost::shared_lock<boost::shared_mutex> lock(mutex_);
-      result = data_.find(k);
-    }
-
-    if (result == data_.end()) {
-      load(k);
-
-      {
-        boost::shared_lock<boost::shared_mutex> lock(mutex_);
-        result = data_.find(k);
-      }
-    }
+  mapped_type lookup(key_type const& k) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto result = data_.find(k);
 
     if (result == data_.end()) {
       return std::shared_ptr<T>();
+    } else {
+      return result->second;
     }
-
-    return result->second;
   }
 
   /**
@@ -136,21 +122,12 @@ template <typename T, typename K = std::string> class Database {
    */
   inline std::set<key_type> const& list_all() const { return keys_; }
 
-  /**
-   * This function gets called when a not-stored item is requested.
-   *
-   * Derived classes may overload this method.
-   *
-   * \return A set containing all keys.
-   */
-  virtual void load(key_type const& k) {};
-
  protected:
   std::unordered_map<key_type,mapped_type> data_;
   std::set<key_type> keys_;
 
  private:
-  mutable boost::shared_mutex mutex_;
+  mutable std::mutex mutex_;
 
 };
 
@@ -159,7 +136,7 @@ auto lookup(Database<T>& db, typename Database<T>::key_type const& k) -> decltyp
   if (db.contains(k))
     return boost::make_optional(db.lookup(k));
   else
-    return boost::optional<typename Database<T>::mapped_type>();
+    return boost::none;
 }
 
 }

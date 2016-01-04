@@ -29,32 +29,40 @@ namespace traits {
 
 // vector space meta functions
 
-template <typename T> struct scalar {
+template <typename T>
+struct scalar {
   BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
 };
 
-template <> struct scalar<float> {
+template <>
+struct scalar<float> {
   using type = float;
 };
-template <> struct scalar<double> {
+template <>
+struct scalar<double> {
   using type = double;
 };
 
-template <> struct scalar<long double> {
+template <>
+struct scalar<long double> {
   using type = long double;
 };
 
-template <typename T> struct dimension {
+template <typename T>
+struct dimension {
   BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
 };
 
-template <> struct dimension<float> {
+template <>
+struct dimension<float> {
   static const unsigned int value = 1;
 };
-template <> struct dimension<double> {
+template <>
+struct dimension<double> {
   static const unsigned int value = 1;
 };
-template <> struct dimension<long double> {
+template <>
+struct dimension<long double> {
   static const unsigned int value = 1;
 };
 
@@ -83,7 +91,6 @@ template <> struct dimension<long double> {
 // {
 //   static const unsigned int value = N;
 // };
-
 }
 }
 

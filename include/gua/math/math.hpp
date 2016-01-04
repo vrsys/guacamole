@@ -26,7 +26,7 @@
 #include <scm/gl_core/math.h>
 #include <tuple>
 
-template<class TReal>
+template <class TReal>
 class aiMatrix4x4t;
 
 #include <gua/platform.hpp>
@@ -43,43 +43,50 @@ namespace math {
 using float_t = double;
 
 // cpu types
-template<typename T> using M44 = scm::math::mat<T, 4, 4>;
-template<typename T> using M33 = scm::math::mat<T, 3, 3>;
-template<typename T> using M22 = scm::math::mat<T, 2, 2>;
+template <typename T>
+using M44 = scm::math::mat<T, 4, 4>;
+template <typename T>
+using M33 = scm::math::mat<T, 3, 3>;
+template <typename T>
+using M22 = scm::math::mat<T, 2, 2>;
 
-template<typename T> using V4 = scm::math::vec<T, 4>;
-template<typename T> using V3 = scm::math::vec<T, 3>;
-template<typename T> using V2 = scm::math::vec<T, 2>;
-template<typename T> using V1 = T;
+template <typename T>
+using V4 = scm::math::vec<T, 4>;
+template <typename T>
+using V3 = scm::math::vec<T, 3>;
+template <typename T>
+using V2 = scm::math::vec<T, 2>;
+template <typename T>
+using V1 = T;
 
-using mat4   = M44<float_t>;
-using mat4d  = M44<double>;
-using mat4f  = M44<float>;
+using mat4 = M44<float_t>;
+using mat4d = M44<double>;
+using mat4f = M44<float>;
 
-using mat3   = M33<float_t>;
-using mat3d  = M33<double>;
-using mat3f  = M33<float>;
+using mat3 = M33<float_t>;
+using mat3d = M33<double>;
+using mat3f = M33<float>;
 
-using mat2   = M22<float_t>;
-using mat2d  = M22<double>;
-using mat2f  = M22<float>;
+using mat2 = M22<float_t>;
+using mat2d = M22<double>;
+using mat2f = M22<float>;
 
-using vec4   = V4<float_t>;
-using vec4d  = V4<double>;
-using vec4f  = V4<float>;
-using vec4i  = V4<int>;
+using vec4 = V4<float_t>;
+using vec4d = V4<double>;
+using vec4f = V4<float>;
+using vec4i = V4<int>;
 using vec4ui = V4<unsigned>;
 
-using vec3   = V3<float_t>;
-using vec3d  = V3<double>;
-using vec3f  = V3<float>;
-using vec3i  = V3<int>;
+using vec3 = V3<float_t>;
+using vec3d = V3<double>;
+using vec3f = V3<float>;
+using vec3i = V3<int>;
 using vec3ui = V3<unsigned>;
 
-using vec2   = V2<float_t>;
-using vec2d  = V2<double>;
-using vec2f  = V2<float>;
-using vec2i  = V2<int>;
+using vec2 = V2<float_t>;
+using vec2d = V2<double>;
+using vec2f = V2<float>;
+using vec2i = V2<int>;
 using vec2ui = V2<unsigned>;
 
 using quat = scm::math::quat<float_t>;
@@ -98,15 +105,17 @@ using quatf = scm::math::quat<float>;
  *
  * \return                  A frustum matrix.
  */
-math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position,
-                                 math::mat4 const& screen_transform,
-                                 math::mat4::value_type near_plane,
-                                 math::mat4::value_type far_plane);
+math::mat4 GUA_DLL
+compute_perspective_frustum(math::vec4 const& eye_position,
+                            math::mat4 const& screen_transform,
+                            math::mat4::value_type near_plane,
+                            math::mat4::value_type far_plane);
 
-math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
-                                 math::mat4 const& screen_transform,
-                                 math::mat4::value_type near_plane,
-                                 math::mat4::value_type far_plane);
+math::mat4 GUA_DLL
+compute_orthographic_frustum(math::vec4 const& eye_position,
+                             math::mat4 const& screen_transform,
+                             math::mat4::value_type near_plane,
+                             math::mat4::value_type far_plane);
 
 /**
  * Converts an assimp matrix to a schism matrix.
@@ -118,15 +127,15 @@ math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position,
 math::mat4 GUA_DLL mat_ai_to_scm(aiMatrix4x4t<float> const& ai_mat);
 
 #if WIN32
-  template <typename T>
-  inline T clamp(T const& x, T const& min, T const& max) {
-    return x < min ? min : (x > max ? max : x);
-  }
+template <typename T>
+inline T clamp(T const& x, T const& min, T const& max) {
+  return x < min ? min : (x > max ? max : x);
+}
 #else
-  template <typename T>
-  constexpr T clamp(T const& x, T const& min, T const& max) {
-    return x < min ? min : (x > max ? max : x);
-  }
+template <typename T>
+constexpr T clamp(T const& x, T const& min, T const& max) {
+  return x < min ? min : (x > max ? max : x);
+}
 #endif
 
 inline math::vec3 get_translation(math::mat4 const& m) {
@@ -155,42 +164,46 @@ ValueType interpolate(math::vec3 const& position,
                       std::pair<math::vec3, ValueType> const& a,
                       std::pair<math::vec3, ValueType> const& b,
                       std::pair<math::vec3, ValueType> const& c) {
-    float u, v, w;
-    std::tie(u,v,w) = barycentric(a.first,b.first,c.first,position);
-    return u * a.second + v * b.second + w * c.second;
+  float u, v, w;
+  std::tie(u, v, w) = barycentric(a.first, b.first, c.first, position);
+  return u * a.second + v * b.second + w * c.second;
 }
-
 }
 }
 
 namespace gua {
 namespace traits {
 
-template <> struct scalar<math::vec2d> {
+template <>
+struct scalar<math::vec2d> {
   using type = math::vec2d::value_type;
 };
 
-template <> struct scalar<math::vec3d> {
+template <>
+struct scalar<math::vec3d> {
   using type = math::vec3d::value_type;
 };
 
-template <> struct scalar<math::vec4d> {
+template <>
+struct scalar<math::vec4d> {
   using type = math::vec4d::value_type;
 };
 
-template <> struct dimension<math::vec2d> {
+template <>
+struct dimension<math::vec2d> {
   static const unsigned int value = 2;
 };
 
-template <> struct dimension<math::vec3d> {
+template <>
+struct dimension<math::vec3d> {
   static const unsigned int value = 3;
 };
 
-template <> struct dimension<math::vec4d> {
+template <>
+struct dimension<math::vec4d> {
   static const unsigned int value = 4;
 };
-
 }
 }
 
-#endif // GUA_MATH_HPP
+#endif  // GUA_MATH_HPP
