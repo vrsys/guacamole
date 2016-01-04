@@ -60,11 +60,31 @@ void Window::open() {
   ctx_.display.reset();
   window_.reset();
 
-  scm::gl::wm::surface::format_desc window_format(
-      scm::gl::FORMAT_RGBA_8, scm::gl::FORMAT_D24_S8, true, false);
+  scm::gl::data_format color_format = scm::gl::FORMAT_RGBA_8;
+  scm::gl::data_format depth_stencil_format = scm::gl::FORMAT_D24_S8;
+  bool double_buffer = true;
+  bool quad_buffer_stereo = false;
 
+  if (config.get_stereo_mode() == StereoMode::QUAD_BUFFERED) {
+    quad_buffer_stereo = true;
+  }
+
+  scm::gl::wm::surface::format_desc window_format(
+      color_format, depth_stencil_format, double_buffer, quad_buffer_stereo);
+
+  int version_major = 4;
+  int version_minor = 4;
+  bool compatibility_profile = false;
+  bool debug = config.get_debug();
+  bool forward_compatible = false;
+  bool es_profile = false;
   scm::gl::wm::context::attribute_desc context_attribs(
-      4, 4, false, config.get_debug(), false);
+      version_major,
+      version_minor,
+      compatibility_profile,
+      config.get_debug(),
+      forward_compatible,
+      es_profile);
 
   ctx_.display =
       scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
@@ -114,8 +134,8 @@ void Window::set_active(bool active) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Window::finish_frame() {
-  WindowBase::finish_frame();
+void Window::swap_buffers_impl() {
+  // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   window_->swap_buffers(config.get_enable_vsync());
 }
 

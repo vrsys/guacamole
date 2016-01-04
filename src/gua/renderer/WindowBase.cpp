@@ -30,9 +30,20 @@
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 // external headers
 #include <sstream>
 #include <iostream>
+
+#ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+extern "C" {
+#include <nvstusb/nvstusb.h>
+}
+
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86vmode.h>
+#endif
 
 namespace gua {
 
@@ -53,6 +64,12 @@ std::string subroutine_from_mode(WindowBase::TextureDisplayMode mode) {
     case WindowBase::CHECKER_ODD:
       return "get_checker_odd";
       break;
+    case WindowBase::QUAD_BUFFERED_LEFT:
+      return "get_quad_buffer_left";
+      break;
+    case WindowBase::QUAD_BUFFERED_RIGHT:
+      return "get_quad_buffer_right";
+      break;
     default:
       return "get_full";
   }
@@ -62,6 +79,7 @@ std::string subroutine_from_mode(WindowBase::TextureDisplayMode mode) {
 
 std::atomic_uint WindowBase::last_context_id_{ 0 };
 std::mutex WindowBase::last_context_id_mutex_{};
+WindowBase* WindowBase::current_instance_ = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,13 +89,15 @@ WindowBase::WindowBase(Configuration const& configuration)
       fullscreen_shader_(),
       fullscreen_quad_(),
       depth_stencil_state_(),
+      #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+      nv_context_(nullptr),
+      #endif
       warpRR_(nullptr),
       warpGR_(nullptr),
       warpBR_(nullptr),
       warpRL_(nullptr),
       warpGL_(nullptr),
-      warpBL_(nullptr),
-      display_count_(0) {}
+      warpBL_(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,6 +122,12 @@ void WindowBase::destroy_context() {
   ctx_.render_context.reset();
   //ctx_.display.reset();
   ctx_.render_device.reset();
+
+  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+  if (nv_context_) {
+    nvstusb_deinit(nv_context_);
+  }
+  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +200,7 @@ void WindowBase::init_context() {
   if (config.get_debug()) {
     ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,12 +210,32 @@ void WindowBase::start_frame() {
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
 
   ctx_.render_context->clear_default_depth_stencil_buffer();
+
+  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+  // init nv_context_ for NVIDIA 3D Vision
+  if (config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION && !nv_context_) {
+    nv_context_ = nvstusb_init(GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH);
+    if (!nv_context_) {
+      Logger::LOG_ERROR << "Could not initialize NVIDIA 3D Vision IR emitter!" << std::endl;
+    } else {
+      Display *display = XOpenDisplay(0);
+      double display_num = DefaultScreen(display);
+      XF86VidModeModeLine mode_line;
+      int pixel_clk = 0;
+      XF86VidModeGetModeLine(display, display_num, &pixel_clk, &mode_line);
+      double frame_rate = (double) pixel_clk * 1000.0 / mode_line.htotal / mode_line.vtotal;
+      Logger::LOG_MESSAGE << "Detected refresh rate of " << frame_rate << " Hz." << std::endl;
+      nvstusb_set_rate(nv_context_, frame_rate);
+    }
+  }
+  #endif
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::finish_frame() {
-  ++display_count_;
+  swap_buffers();
 }
 
 
@@ -212,6 +259,9 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
     case StereoMode::SIDE_BY_SIDE:
+    #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+    case StereoMode::NVIDIA_3D_VISION:
+    #endif
       display(texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
               is_left ? config.get_left_position() : config.get_right_position(),
@@ -238,27 +288,17 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
               is_left, true);
       break;
-    case StereoMode::ACTIVE: {
-      if ((display_count_ % 2) == 0 && is_left) {
-        display(texture,
-                config.get_left_resolution(),
-                config.get_left_position(),
-                WindowBase::FULL,
-                true, true);
-      } else if ((display_count_ % 2) == 1 && !is_left) {
-        display(texture,
-                config.get_right_resolution(),
-                config.get_right_position(),
-                WindowBase::FULL,
-                false, true);
-      }
+    case StereoMode::QUAD_BUFFERED:
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::QUAD_BUFFERED_LEFT : WindowBase::QUAD_BUFFERED_RIGHT,
+              is_left, true);
       break;
-    }
+    default:
+      break;
   }
-
-
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -272,6 +312,12 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      TextureDisplayMode mode,
                      bool is_left,
                      bool clear) {
+
+  auto const& glapi = ctx_.render_context->opengl_api();
+  glapi.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  if (config.get_stereo_mode() == StereoMode::QUAD_BUFFERED) {
+    glapi.glDrawBuffer(is_left ? GL_BACK_LEFT : GL_BACK_RIGHT);
+  }
 
   fullscreen_shader_.use(ctx_);
   fullscreen_shader_.set_uniform(ctx_, texture->get_handle(ctx_), "sampler");
@@ -302,6 +348,34 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
 
   ctx_.render_context->reset_state_objects();
   fullscreen_shader_.unuse(ctx_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WindowBase::swap_buffers_callback() {
+  WindowBase::current_instance_->swap_buffers_impl();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WindowBase::swap_buffers() {
+
+  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+  if (config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
+    if (nv_context_) {
+      current_instance_ = this;
+      if ((ctx_.framecount % 2) == 0) {
+        nvstusb_swap(nv_context_, nvstusb_right, WindowBase::swap_buffers_callback);
+      } else {
+        nvstusb_swap(nv_context_, nvstusb_left, WindowBase::swap_buffers_callback);
+      }
+    }
+  } else {
+    swap_buffers_impl();
+  }
+  #else
+    swap_buffers_impl();
+  #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -29,26 +29,51 @@
 
 // external headers
 #include <sstream>
+#include <future>
 #include <iostream>
+#include <cstdint>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <gua/renderer/Texture2D.hpp>
+
 namespace gua {
 
-void TextureDatabase::load(std::string const& id) {
-  boost::filesystem::path fp(id);
+void TextureDatabase::load(std::string const& filename) {
+  boost::filesystem::path fp(filename);
   std::string extension(fp.extension().string());
   boost::algorithm::to_lower(extension);
 
   if (extension == ".png"
       || extension == ".jpg"
+      || extension == ".jpeg"
       || extension == ".bmp"
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
-    instance()->add(id, std::make_shared<Texture2D>(id, true));
+
+    auto exists = TextureDatabase::instance()->lookup(filename);
+    if (exists)
+      return;
+
+    // else
+    textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
+
+      auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
+      if (default_tex) {
+        gua::TextureDatabase::instance()->add(filename, default_tex);
+      }
+
+      auto image = gua::load_image_2d(filename, true);
+
+      instance()->add(filename, std::make_shared<Texture2D>(image, 1,
+            scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                        scm::gl::WRAP_REPEAT,
+                                        scm::gl::WRAP_REPEAT)));
+      return filename;
+    }));
   } else if (extension == ".vol") {
-    instance()->add(id, std::make_shared<Texture3D>(id, true));
+    instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   }
 }
 
