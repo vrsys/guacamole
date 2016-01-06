@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
 
   //configure plod backend
   gua::PLODLoader plod_loader;
-  plod_loader.set_out_of_core_budget_in_mb(2048);
-  plod_loader.set_render_budget_in_mb(512);
+  plod_loader.set_out_of_core_budget_in_mb(4096);
+  plod_loader.set_render_budget_in_mb(2048);
   plod_loader.set_upload_budget_in_mb(20);
 
   //load a sample pointcloud
@@ -102,11 +102,10 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
   camera->set_pipeline_description(pipe);
 
-  pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
+  pipe->get_resolve_pass()->tone_mapping_exposure(5.f);
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
