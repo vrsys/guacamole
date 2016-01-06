@@ -57,8 +57,7 @@ int main(int argc, char** argv) {
   //load a sample pointcloud
   auto lod_node = lod_loader.load_geometry(
     "pointcloud", 
-    //"/opt/3d_models/point_based/lod/pig_pr.bvh", 
-    "/mnt/pitoti/PitotiTUG/received_18_12_2015/ebee_seradina/ebee_seradina.bvh",
+    "/opt/3d_models/point_based/lod/pig_pr.bvh", 
     lod_rough, 
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
