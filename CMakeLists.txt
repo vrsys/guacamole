@@ -89,6 +89,7 @@ if (UNIX)
   find_package(Boost COMPONENTS
     system
     regex
+    chrono
     thread
     filesystem
     REQUIRED

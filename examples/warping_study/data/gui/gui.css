@@ -1,0 +1,644 @@
+/* ########################################################################## */
+/* ################################ General ################################# */
+/* ########################################################################## */
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('res/fonts/UbuntuTitling-Bold.woff') format('woff');
+}
+
+body {
+  font-family: 'Ubuntu' !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-user-select: none;
+  background-color: transparent;
+  /*background: url("../bgs/background.png") repeat;*/
+  overflow: hidden;
+
+  opacity: 0.0;
+
+  -webkit-transition: opacity 2s;
+
+  color:white;
+}
+
+body.on {
+  opacity: 1.0;
+}
+
+::selection {
+  background: rgb(255, 171, 235) !important;
+  color: black !important;
+}
+
+a {
+  color: rgb(255, 171, 235);
+}
+
+a:hover {
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+h4 {
+  margin-bottom: 20px;
+}
+
+hr {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  border: 0;
+  border-top: 1px solid rgba(255, 160, 250, 0.11);
+}
+
+#panel-top {
+    position: absolute;
+    width: 100%;
+    top:10px;
+}
+
+#panel-top .panel-inner {
+  position: relative;
+  padding: 10px 10px;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 10px #000;
+  margin: 0 auto;
+  width: 90%;
+  text-align: center;
+  border-radius: 10px;
+}
+
+
+/* ########################################################################## */
+/* ######################### Scrollbars ##################################### */
+/* ########################################################################## */
+
+::-webkit-scrollbar {
+    width: 12px;
+    cursor: pointer;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(255, 171, 235, 0.5);
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgb(255, 171, 235);
+    background-color: rgba(255, 171, 235, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 171, 235, 0.7);
+}
+
+
+/* ########################################################################## */
+/* ######################### Scroll box ##################################### */
+/* ########################################################################## */
+
+.scroll-box {
+  -webkit-mask-image: -webkit-linear-gradient(rgba(255, 255, 255, 0) 0,
+                                            rgba(255, 255, 255, 1) 20px,
+                                            rgba(255, 255, 255, 1) 40%,
+                                            rgba(255, 255, 255, 0) 49%),
+                    -webkit-linear-gradient(bottom,
+                                            rgba(255, 255, 255, 0) 0,
+                                            rgba(255, 255, 255, 1) 20px,
+                                            rgba(255, 255, 255, 1) 49%,
+                                            rgba(255, 255, 255, 0) 49%),
+                    -webkit-linear-gradient(rgba(255, 255, 255, 0) 30%,
+                                            rgba(255, 255, 255, 1) 40%,
+                                            rgba(255, 255, 255, 1) 60%,
+                                            rgba(255, 255, 255, 0) 70%);
+  -webkit-mask-composite: and, and, and;
+  overflow-y:scroll;
+  margin: -15px 0;
+}
+
+.scroll-box-content {
+  padding: 15px 5px 0 0;
+}
+
+/* ########################################################################## */
+/* ############################### Modals ################################### */
+/* ########################################################################## */
+
+.modal-content {
+  background: rgba(0, 0, 0, 0.8);
+  border: none;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(255, 160, 250, 0.11);
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(255, 160, 250, 0.11);
+}
+
+.close {
+  color:#fff;
+}
+
+/* ########################################################################## */
+/* ################################ Tabs #################################### */
+/* ########################################################################## */
+
+.nav-tabs {
+  border-bottom: 2px solid rgb(255, 171, 235);
+}
+
+.nav>li>a {
+  padding: 5px 15px;
+}
+
+.nav-tabs>li {
+  margin-bottom: -2px;
+}
+
+.nav-tabs>li>a:hover {
+  border-color: rgba(0, 0, 0, 0);
+  background-color: rgba(0, 0, 0, 0);
+  background-image: -webkit-linear-gradient(bottom, rgba(255, 171, 235, 0.4) 0%,rgba(0,0,0,0) 50%);
+  border-top: none;
+}
+
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:hover,
+.nav-tabs>li.active>a:focus {
+  color: rgb(255, 171, 235);
+  background-color: rgba(0, 0, 0, 1);
+
+  border: 2px solid rgb(255, 171, 235);
+
+  border-bottom: 0px solid #000;
+
+  background-image: url("res/img/gloss.png");
+  background-repeat: no-repeat;
+  background-size: 100% 10px;
+}
+
+
+.tab-pane {
+  position: relative;
+  padding: 15px;
+}
+
+.tab-pane:before {
+  content:"";
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-left: 2px solid rgb(255, 171, 235);
+  border-right: 2px solid rgb(255, 171, 235);
+  -webkit-mask-image: -webkit-linear-gradient(rgba(255, 255, 255, 1) 0,
+                                              rgba(255, 255, 255, 0) 100%);
+}
+
+
+/* ########################################################################## */
+/* ########################### Tables ####################################### */
+/* ########################################################################## */
+
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+  background-color: rgba(255, 171, 235, 0.1);
+}
+
+.table-hover>tbody>tr:hover>td,
+.table-hover>tbody>tr:hover>th {
+  background-color: rgba(255, 171, 235, 0.3);
+}
+
+.table>tbody>tr.success>td {
+  background-color: rgba(255, 171, 235, 0.5);
+  color: white;
+}
+
+.table>tbody>tr:hover.success>td {
+  background-color: rgba(255, 171, 235, 0.6);
+}
+
+.table>thead>tr>th,
+.table>tbody>tr>th,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>tbody>tr>td,
+.table>tfoot>tr>td {
+  border-top: 1px solid rgba(255, 171, 235, 0.5);
+}
+
+.table>thead>tr>th {
+  border-bottom: 2px solid rgba(255, 171, 235, 0.5);
+}
+
+
+/* ########################################################################## */
+/* ################################ Tooltips ################################ */
+/* ########################################################################## */
+
+.tooltip-inner {
+  border-color: rgb(255, 171, 235);
+  font-size: 14px;
+  color: rgb(255, 171, 235);
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  padding: 1px 6px;
+  max-width: 250px;
+  box-shadow: 0 0 10px rgba(255, 171, 235, 0.5) inset;
+}
+
+.tooltip.bottom
+.tooltip-arrow {
+    border-bottom-color: rgb(255, 171, 235);
+}
+
+.tooltip.top
+.tooltip-arrow {
+    border-top-color: rgb(255, 171, 235);
+}
+
+.tooltip.left
+.tooltip-arrow {
+    border-left-color: rgb(255, 171, 235);
+}
+
+.tooltip.right
+.tooltip-arrow {
+    border-right-color: rgb(255, 171, 235);
+}
+
+
+/* ########################################################################## */
+/* ############################ Buttons ##################################### */
+/* ########################################################################## */
+
+.btn {
+  position: relative;
+  padding: 7px 10px 5px 10px;
+  margin-bottom: 3px;
+
+  background-color: rgba(0,0,0,0.8);
+  background-image: url("res/img/gloss.png");
+  background-repeat: no-repeat;
+  background-size: 100% 10px;
+
+  border-radius: 2px;
+  border: 1px rgba(255, 171, 235, 0.5) solid;
+  box-shadow: 0 0 5px rgba(255, 171, 235, 0.5) inset, 0 1px 5px rgb(0, 0, 0);
+
+  text-align: center;
+  -webkit-transition: all 0.1s;
+}
+
+.btn:hover {
+  color: #FFC7ED;
+  border: 1px rgb(255, 171, 235) solid;
+  box-shadow: 0 0 10px rgb(255, 171, 235) inset, 0 1px 5px rgb(0, 0, 0);
+}
+
+.btn:active {
+  border: 1px rgb(255, 171, 235) solid;
+  box-shadow: none;
+  top: 1px;
+  -webkit-transition: none;
+}
+
+.btn:after {
+  display: block;
+  content:"";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 20px;
+  width: 100%;
+  border-radius: 30% / 50%;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background-image: -webkit-linear-gradient(bottom, rgba(255, 171, 235, 0.4) 1%,rgba(0,0,0,0) 100%);
+  opacity: 0.5;
+
+  -webkit-transition: all 0.25s;
+}
+
+.btn:hover:after {
+  opacity: 1.0;
+}
+
+.btn-default,
+.btn-default:hover, .btn-default:focus,
+.btn-default:active, .btn-default.active,
+.form-control:focus,
+.open>.dropdown-toggle.btn-default {
+  background-color: inherit;
+  background-position: inherit;
+  color: inherit;
+  text-shadow: inherit;
+  border: 1px rgb(255, 171, 235) solid;
+}
+
+.btn-default {
+  border: 1px rgba(255, 171, 235, 0.5) solid;
+}
+
+.btn:focus,
+.btn-default:focus,
+.bootstrap-select .btn:focus {
+  outline: none;
+  color: inherit;
+  background-color: rgba(255, 171, 235, 0.2);
+}
+
+.btn-image {
+  background-size: contain;
+  background-position: 50% 50%;
+  background-color: #000;
+}
+
+.btn-image:hover {
+  background-position: 50% 50%;
+  background-color: #000;
+}
+
+.modal-footer .btn+.btn {
+  margin-bottom: 3px;
+}
+
+.btn i {
+  margin-right: 8px;
+}
+
+/* ########################################################################## */
+/* ################################ Inputs ################################## */
+/* ########################################################################## */
+
+*::-webkit-input-placeholder {
+  color: rgba(255, 171, 235, 0.5);
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  border: 1px rgba(255, 171, 235, 0.5) solid;
+  box-shadow: 0 0 5px rgba(255, 171, 235, 0.5) inset;
+  color: rgb(255, 171, 235);
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.form-control::-webkit-input-placeholder {
+  color: rgba(255, 171, 235, 0.5);
+}
+
+.input-group-addon {
+  color: rgb(255, 171, 235);
+  background-color: rgba(255, 171, 235, 0.5);
+  border: 1px solid rgba(255, 171, 235, 0.0);
+}
+
+textarea:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="datetime"]:focus,
+input[type="datetime-local"]:focus,
+input[type="date"]:focus,
+input[type="month"]:focus,
+input[type="time"]:focus,
+input[type="week"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="color"]:focus,
+.uneditable-input:focus {
+  border-color: rgb(255, 171, 235);
+  box-shadow: 0 0 8px rgba(255, 171, 235, 0.6);
+}
+
+/* ########################################################################## */
+/* ################################ Selects ################################# */
+/* ########################################################################## */
+
+.dropdown-menu {
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 10px #000;
+  border-radius: 5px;
+}
+
+.dropdown-menu>li>a {
+  color: #fff;
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus,
+.dropdown-menu > .active > a, .dropdown-menu > .active > a:hover, .dropdown-menu > .active > a:focus {
+  background: rgba(255, 171, 235, 0.1) !important;
+}
+
+/* ########################################################################## */
+/* ################################## Slider ################################ */
+/* ########################################################################## */
+
+.slider.slider-horizontal {
+  width: 100%;
+}
+
+.slider:before {
+  position: absolute;
+  content: attr(val);
+  left: -109px;
+  text-align: right;
+  width: 100px;
+  color: rgb(255, 171, 235);
+}
+
+.slider-track {
+  background-image: none;
+  -webkit-box-shadow: inset 0 0 6px rgba(255, 171, 235, 0.5);
+  /*box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);*/
+  border-radius: 4px;
+}
+
+.slider.slider-horizontal .slider-track {
+  margin-top: -3px;
+}
+
+.slider-selection {
+  background-color: rgb(255, 171, 235);
+  background-image: none;
+}
+
+.slider-handle {
+  background-color: rgb(255, 171, 235);
+  background-image: none;
+  opacity: 1.0;
+  box-shadow: none;
+}
+
+.slider.slider-horizontal .slider-track {
+  height: 5px;
+}
+
+.slider-handle {
+  width: 10px;
+  height: 10px;
+  margin-left: -5px !important;
+  margin-top: -2px !important;
+}
+
+/* ########################################################################## */
+/* ################################# Popovers ############################### */
+/* ########################################################################## */
+
+.popover {
+  color: rgb(255, 171, 235);
+  background-color: rgba(0, 0, 0, 0.8);
+  background-image: url("res/img/gloss.png");
+  background-repeat: no-repeat;
+  background-size: 100% 30px;
+
+  max-width: 277px;
+
+  border-radius: 3px;
+  border: 1px rgb(255, 171, 235) solid;
+  box-shadow: 0 0 10px rgb(255, 171, 235) inset;
+}
+
+.popover-title {
+  background-color: transparent;
+  border-bottom: none;
+  position: relative;
+}
+
+.popover-title:before {
+  content: "";
+  width: 90%;
+  height: 2px;
+  position: absolute;
+  bottom: 0;
+  /*left: -1px;*/
+  border-bottom: none;
+  background-image: -webkit-linear-gradient(left, rgb(255, 171, 235) 0%,rgba(0,0,0,0) 100%);
+}
+
+.popover.top>.arrow:after {
+  border-top-color: rgb(255, 171, 235);
+}
+.popover.left>.arrow:after {
+  border-left-color: rgb(255, 171, 235);
+}
+.popover.right>.arrow:after {
+  border-right-color: rgb(255, 171, 235);
+}
+.popover.bottom>.arrow:after {
+  border-bottom-color: rgb(255, 171, 235);
+}
+
+
+/* ########################################################################## */
+/* ############################## Selects ################################### */
+/* ########################################################################## */
+
+.form-control select {
+   background: transparent;
+   width: 150px;
+   padding: 5px;
+   font-size: 16px;
+   border: 1px solid #ccc;
+   height: 34px;
+    -webkit-appearance: none;
+}
+
+
+/* ########################################################################## */
+/* ###################### Check and Radio buttons ########################### */
+/* ########################################################################## */
+
+.radio, .checkbox {
+  margin-top: 0px;
+}
+
+.radio label,
+.checkbox label {
+  position: relative;
+  padding-left: 25px;
+  display: inline;
+}
+
+.radio label:hover,
+.checkbox label:hover {
+  color: #FFC7ED;
+}
+
+.radio label:active,
+.checkbox label:active {
+  top: 1px;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  display:none;
+}
+
+input[type="radio"] + span:before,
+input[type="checkbox"] + span:before {
+  -webkit-transition: all 0.1s;
+  position: absolute;
+  left: -2px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+
+  background-color: rgba(0,0,0,0.8);
+  background-image: url("res/img/gloss.png");
+  background-repeat: no-repeat;
+  background-size: 100% 10px;
+
+  border: 2px rgba(255, 171, 235, 0.5) solid;
+  box-shadow: 0 0 5px rgba(255, 171, 235, 0.5) inset, 0 1px 5px rgb(0, 0, 0);
+}
+
+input[type="radio"] + span:before {
+  content: "";
+  border-radius: 15px;
+}
+
+input[type="radio"]:hover + span:before {
+  border: 2px rgb(255, 171, 235) solid;
+  box-shadow: 0 0 10px rgb(255, 171, 235) inset, 0 1px 5px rgb(0, 0, 0);
+}
+
+input[type="radio"]:checked + span:before {
+  content: "";
+  background-color: rgba(255, 171, 235, 0.8);
+}
+
+input[type="checkbox"] + span:before {
+  content: "";
+  border-radius: 2px;
+}
+
+input[type="checkbox"]:hover + span:before {
+  border: 2px rgb(255, 171, 235) solid;
+  box-shadow: 0 0 10px rgb(255, 171, 235) inset, 0 1px 5px rgb(0, 0, 0);
+}
+
+input[type="checkbox"]:checked + span:before {
+  content: "";
+  background-color: rgba(255, 171, 235, 0.8);
+}
+
+
+

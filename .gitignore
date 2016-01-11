@@ -64,6 +64,7 @@ examples/warping/data/objects/dragon.dae
 examples/warping/data/objects/hairball.dae
 examples/warping/data/objects/buddha.dae
 examples/animation/example-animation
+examples/warping_study/example-warping_study
 
 examples/*/Release/*
 examples/*/Debug/*

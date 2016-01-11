@@ -6,6 +6,8 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(plod)
     add_subdirectory(gui)
     add_subdirectory(warping)
+    add_subdirectory(warping_study)
+    add_subdirectory(input)
 
   # # input requires GLFW3
   # IF (${GUACAMOLE_GLFW3})
