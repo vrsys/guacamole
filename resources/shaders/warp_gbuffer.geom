@@ -161,6 +161,10 @@ void emit_pixel(uvec2 offset) {
   #else
     cellsize = 1;
     vec2 position = varying_position[0].xy + offset;
+
+    // remove strange one-pixel line
+    if (position.y == gua_resolution.y) return;
+
     texcoords = position / gua_resolution;
     const float depth = get_depth_raw(position);
 

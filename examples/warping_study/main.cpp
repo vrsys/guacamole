@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#define POWER_WALL      0
+#define POWER_WALL      1
 #define SHADOWS         1
 
 #include <functional>
@@ -42,18 +42,11 @@
 
 bool vsync                  = false;
 float eye_offset            = 0.f;
+int current_scene           = 0;
+int current_mode            = 0;
 
-std::vector<gua::StereoType> stereo_types = {
-  gua::StereoType::RENDER_TWICE,
-  gua::StereoType::SPATIAL_WARP,
-  gua::StereoType::TEMPORAL_WARP
-};
-
-std::vector<std::string> scenes = {
-  "pitoti", 
-  "oilrig",
-  "physics"
-};
+std::vector<std::vector<gua::StereoType>> stereo_types(3);
+std::vector<std::string> scenes(3);
 
 const float aspect = 1.0f/1.6f;
 const float screen_width = 4.f;
@@ -99,19 +92,24 @@ int main(int argc, char** argv) {
 
   if (argc == 2) {
     std::string permutation(argv[1]);
-    if (permutation.length() == 7) {
+    if (permutation.length() == 5) {
+      if (permutation[1] == '1') scenes = {"pitoti", "oilrig", "physics"};
+      if (permutation[1] == '2') scenes = {"pitoti", "physics", "oilrig"};
+      if (permutation[1] == '3') scenes = {"oilrig", "pitoti", "physics"};
+      if (permutation[1] == '4') scenes = {"oilrig", "physics", "pitoti"};
+      if (permutation[1] == '5') scenes = {"physics", "oilrig", "pitoti"};
+      if (permutation[1] == '6') scenes = {"physics", "pitoti", "oilrig"};
+
       for (int i(0); i<3; ++i) {
-        if (permutation[i+1] == 'a') stereo_types[i] = gua::StereoType::RENDER_TWICE;
-        if (permutation[i+1] == 'b') stereo_types[i] = gua::StereoType::SPATIAL_WARP;
-        if (permutation[i+1] == 'c') stereo_types[i] = gua::StereoType::TEMPORAL_WARP;
+        if (permutation[i+2] == '1') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP};
+        if (permutation[i+2] == '2') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP};
+        if (permutation[i+2] == '3') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE};
+        if (permutation[i+2] == '4') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP};
+        if (permutation[i+2] == '5') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP};
+        if (permutation[i+2] == '6') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE};
       }
-      for (int i(0); i<3; ++i) {
-        if (permutation[i+4] == 'a') scenes[i] = "pitoti";
-        if (permutation[i+4] == 'b') scenes[i] = "oilrig";
-        if (permutation[i+4] == 'c') scenes[i] = "physics";
-      }
-    }    
-  }
+    } else return 0;
+  } else return 0;
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -200,20 +198,22 @@ int main(int argc, char** argv) {
   plodloader.set_out_of_core_budget_in_mb(5000);
   plodloader.set_render_budget_in_mb(1000);
   plodloader.set_upload_budget_in_mb(20);
-  // for (int i(1); i<=8; ++i) {
-  //   auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
-  //     gua::PLODLoader::DEFAULTS));
+  // for (int i(1); i<=2; ++i) {
+  //   // auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
+  //   auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/Pointcloud_Stuetzwand_part_0000" + std::to_string(i) + "_knobi.kdn",
+  //     gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   //   scene_root->add_child(pitoti);
-  //   pitoti->set_radius_scale(1.0f);
-  //   pitoti->set_error_threshold(2.5f);
+  //   pitoti->set_radius_scale(1.2f);
+  //   pitoti->set_error_threshold(2.0f);
   // }
+  // auto pitoti(plodloader.load_geometry("/mnt/pitoti/misc_scans/UDK/udk_9.bvh",
   auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn",
       gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   scene_root->add_child(pitoti);
-  pitoti->set_radius_scale(1.0f);
-  pitoti->set_error_threshold(2.5f);
+  pitoti->set_radius_scale(1.2f);
+  pitoti->set_error_threshold(2.0f);
   scene_root->rotate(-90, 1, 0, 0);
-  scene_root->scale(20);
+  scene_root->scale(10);
 
   // physics --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "physics");
@@ -238,7 +238,7 @@ int main(int argc, char** argv) {
   gua::physics::CollisionShapeDatabase::add_shape("sphere", new gua::physics::SphereShape(0.25));
   gua::physics::CollisionShapeDatabase::add_shape("box", new gua::physics::BoxShape(gua::math::vec3(5, 1, 5)));
 
-  auto floor_body = std::make_shared<gua::physics::RigidBodyNode>("floor_body", 0, 0.5, 0.5);
+  auto floor_body = std::make_shared<gua::physics::RigidBodyNode>("floor_body", 0, 0.5, 0.7);
   auto floor_shape = std::make_shared<gua::physics::CollisionShapeNode>("floor_shape");
   floor_shape->data.set_shape("box");
   graph.get_root()->add_child(floor_body);
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
   std::list<std::shared_ptr<gua::physics::RigidBodyNode>> balls;
 
   auto add_sphere = [&](){
-    auto sphere_body = std::make_shared<gua::physics::RigidBodyNode>("sphere_body", 5, 0.5, 0.5, scm::math::make_translation(1.0-2.0*std::rand()/RAND_MAX, 5.0, 1.0-2.0*std::rand()/RAND_MAX));
+    auto sphere_body = std::make_shared<gua::physics::RigidBodyNode>("sphere_body", 5, 0.5, 0.7, scm::math::make_translation(1.0-2.0*std::rand()/RAND_MAX, 5.0, 1.0-2.0*std::rand()/RAND_MAX));
     auto sphere_shape = std::make_shared<gua::physics::CollisionShapeNode>("sphere_shape");
     sphere_shape->data.set_shape("sphere");
     graph.get_root()->add_child(sphere_body);
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
     background_color(gua::utils::Color3f(0,0,0)).
     environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
     environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
-    ssao_enable(true).
+    // ssao_enable(true).
     tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
     tone_mapping_exposure(1.5f).
     horizon_fade(0.2f).
@@ -327,6 +327,11 @@ int main(int argc, char** argv) {
     if (name == "pitoti") {
       sun_light->data.set_enable_shadows(false);
       graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
+
+      nav.set_transform(scm::math::mat4f(-0.188, 0.015, 0.982, 1.020,
+                                         0.000, 1.000, -0.015, -1.774,
+                                         -0.982, -0.003, -0.188, 1.475,
+                                         0.000, 0.000, 0.000, 1.000));                     
     }
   };
 
@@ -386,8 +391,8 @@ int main(int argc, char** argv) {
   warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
   // warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
   
-  set_scene(scenes[0]);
-  normal_cam->config.set_stereo_type(stereo_types[0]);
+  set_scene(scenes[current_scene]);
+  normal_cam->config.set_stereo_type(stereo_types[current_scene][current_mode]);
 
   // ---------------------------------------------------------------------------
   // ----------------------------- setup gui -----------------------------------
@@ -431,12 +436,17 @@ int main(int argc, char** argv) {
   });
 
   gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
-    if      (callback == "set_warp_mode_1") normal_cam->config.set_stereo_type(stereo_types[0]);
-    else if (callback == "set_warp_mode_2") normal_cam->config.set_stereo_type(stereo_types[1]);
-    else if (callback == "set_warp_mode_3") normal_cam->config.set_stereo_type(stereo_types[2]);
-    else if (callback == "set_scene_1") set_scene(scenes[0]);
-    else if (callback == "set_scene_2") set_scene(scenes[1]);
-    else if (callback == "set_scene_3") set_scene(scenes[2]);
+
+    if      (callback == "set_scene_1") current_scene = 0;
+    else if (callback == "set_scene_2") current_scene = 1;
+    else if (callback == "set_scene_3") current_scene = 2;
+
+    if      (callback == "set_warp_mode_1") current_mode = 0;
+    else if (callback == "set_warp_mode_2") current_mode = 1;
+    else if (callback == "set_warp_mode_3") current_mode = 2;
+    
+    set_scene(scenes[current_scene]);
+    normal_cam->config.set_stereo_type(stereo_types[current_scene][current_mode]);
   });
 
   // ---------------------------------------------------------------------------
@@ -467,12 +477,12 @@ int main(int argc, char** argv) {
     gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
     if (action >= 1) {
       if (key == 93) {
-        pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.1));
-        std::cout << pitoti->get_error_threshold() << std::endl;
+        // pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.1));
+        // std::cout << pitoti->get_error_threshold() << std::endl;
       }
       if (key == 47) {
-        pitoti->set_error_threshold(pitoti->get_error_threshold()+0.1);
-        std::cout << pitoti->get_error_threshold() << std::endl;
+        // pitoti->set_error_threshold(pitoti->get_error_threshold()+0.1);
+        // std::cout << pitoti->get_error_threshold() << std::endl;
       }
     }
   });
@@ -556,7 +566,7 @@ int main(int argc, char** argv) {
 
     bool spawn_balls(!graph["/transform/physics"]->get_tags().has_tag("invisible"));
 
-    if (spawn_balls && frame_timer.get_elapsed() > 0.1f) {
+    if (spawn_balls && frame_timer.get_elapsed() > 0.02f) {
       frame_timer.reset();
       add_sphere();
     }
