@@ -30,6 +30,21 @@
         });
       }
 
+      function select_1 () {
+        $("#warp_mode_1").prop("checked", true);
+        gua["set_warp_mode_1"](1);
+      }
+
+      function select_2 () {
+        $("#warp_mode_2").prop("checked", true)
+        gua["set_warp_mode_2"](1);
+      }
+
+      function select_3 () {
+        $("#warp_mode_3").prop("checked", true)
+        gua["set_warp_mode_3"](1);
+      }
+
       function init() {
         init_radio("#warp_mode_1", "warp_mode_1");
         init_radio("#warp_mode_2", "warp_mode_2");

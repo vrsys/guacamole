@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#define POWER_WALL      1
+#define POWER_WALL      0
 #define SHADOWS         1
 
 #include <functional>
@@ -474,16 +474,17 @@ int main(int argc, char** argv) {
 
   window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
     nav.set_key_press(key, action);
-    gui->inject_keyboard_event(gua::Key(key), scancode, action, mods);
+
     if (action >= 1) {
-      if (key == 93) {
-        // pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.1));
-        // std::cout << pitoti->get_error_threshold() << std::endl;
+      if (key == 49) {
+        gui->call_javascript("select_1");
       }
-      if (key == 47) {
-        // pitoti->set_error_threshold(pitoti->get_error_threshold()+0.1);
-        // std::cout << pitoti->get_error_threshold() << std::endl;
+      if (key == 50) {
+        gui->call_javascript("select_2");
       }
+      if (key == 51) {
+        gui->call_javascript("select_3");
+      } 
     }
   });
 
