@@ -34,6 +34,9 @@
 #include <mutex>
 #include <thread>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/functional/hash.hpp>
+
 namespace gua {
 
 /**
@@ -93,7 +96,7 @@ class GUA_DLL Texture {
                                           scm::gl::WRAP_REPEAT,
                                           scm::gl::WRAP_REPEAT));
 
-  virtual ~Texture();
+  virtual ~Texture() {}
 
 
   void update_sub_data(RenderContext const& context,
@@ -118,7 +121,6 @@ class GUA_DLL Texture {
    */
   scm::gl::texture_image_ptr const& get_buffer(RenderContext const& context) const;
 
-  void make_resident(RenderContext const& context) const;
   void make_non_resident(RenderContext const& context) const;
   void make_non_resident() const;
 
@@ -135,11 +137,10 @@ class GUA_DLL Texture {
   scm::gl::sampler_state_desc state_descripton_;
   std::string file_name_;
 
-  mutable std::vector<scm::gl::texture_image_ptr> textures_;
-  mutable std::vector<scm::gl::sampler_state_ptr> sampler_states_;
-  mutable std::vector<scm::gl::render_context_ptr> render_contexts_;
   mutable std::mutex upload_mutex_;
 
+  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
+                        boost::uuids::random_generator()());
 };
 
 }

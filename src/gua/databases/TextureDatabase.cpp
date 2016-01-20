@@ -29,6 +29,7 @@
 
 // external headers
 #include <sstream>
+#include <future>
 #include <iostream>
 #include <cstdint>
 #include <boost/filesystem.hpp>
@@ -49,12 +50,14 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".dds"
       || extension == ".tif"
       || extension == ".tga") {
-    auto image = gua::load_image_2d(filename, true);
+    futures_.push_back(std::async(std::launch::async, [filename]() {
+      auto image = gua::load_image_2d(filename, true);
 
-    instance()->add(filename, std::make_shared<Texture2D>(image, 1,
-          scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                      scm::gl::WRAP_REPEAT,
-                                      scm::gl::WRAP_REPEAT)));
+      instance()->add(filename, std::make_shared<Texture2D>(image, 1,
+            scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                        scm::gl::WRAP_REPEAT,
+                                        scm::gl::WRAP_REPEAT)));
+    }));
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   }
