@@ -187,10 +187,6 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
           if (video3d_ressource)
           {
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getImageDToEyeD(), "image_d_to_eye_d");
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToWorld(), "eye_d_to_world");
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeDToEyeRGB(), "eye_d_to_eye_rgb");
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getEyeRGBToImageRGB(), "eye_rgb_to_image_rgb");
 
             ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_, 1);
             warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);

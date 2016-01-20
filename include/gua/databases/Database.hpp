@@ -26,7 +26,7 @@
 #include <gua/utils.hpp>
 
 // external headers
-#include <boost/thread.hpp>
+#include <mutex>
 #include <boost/optional.hpp>
 #include <boost/none.hpp>
 #include <thread>
@@ -59,8 +59,7 @@ template <typename T, typename K = std::string> class Database {
    * \param date The newly added entry.
    */
   void add(key_type const& k, mapped_type const& date) {
-    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+    std::lock_guard<std::mutex> lock(mutex_);
     data_[k] = date;
     keys_.insert(k);
   }
@@ -69,8 +68,7 @@ template <typename T, typename K = std::string> class Database {
   * Remove entry to the data base.
   */
   void remove(key_type const& k) {
-    boost::upgrade_lock<boost::shared_mutex> lock(mutex_);
-    boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+    std::lock_guard<std::mutex> lock(mutex_);
 
     auto entry = data_.find(k);
     if (entry != data_.end()) {
@@ -92,7 +90,7 @@ template <typename T, typename K = std::string> class Database {
    * \return     Whether the given key is stored in the Database.
    */
   bool contains(key_type const& k) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return keys_.find(k) != keys_.end();
   }
 
@@ -107,7 +105,7 @@ template <typename T, typename K = std::string> class Database {
    *             entry. nullptr if the entry does not exist.
    */
   mapped_type lookup(key_type const& k) const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     auto result = data_.find(k);
 
     if (result == data_.end()) {
@@ -129,7 +127,7 @@ template <typename T, typename K = std::string> class Database {
   std::set<key_type> keys_;
 
  private:
-  mutable boost::shared_mutex mutex_;
+  mutable std::mutex mutex_;
 
 };
 

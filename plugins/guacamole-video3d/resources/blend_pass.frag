@@ -40,6 +40,7 @@ void main() {
 
   vec4 color_contributions[MAX_VIEWS];
 
+
   float maxdist = 1000.0;
   float mindist = maxdist;
   float ogldepth = 1.0;
@@ -51,12 +52,9 @@ void main() {
     vec4 color_contribution = texture2DArray( quality_texture, coords);
     float depth             = texture2DArray( depth_texture, coords).r;
     vec3 normal             = unpack_vec3(color_contribution.b);
-#if 0
-#else
     vec4 p_os = gua_inverse_projection_matrix * vec4(gua_texcoords.xy * 2.0f - vec2(1.0), depth*2.0f - 1.0f, 1.0);
     p_os = p_os / p_os.w;
     color_contribution.b = length(p_os.xyz);
-#endif
 
     float dist = color_contribution.b;
 
@@ -75,29 +73,29 @@ void main() {
 
   int accum = 0;
   if(mindist < maxdist)  // we found at least one surface
-  {
-    vec4 finalcol = vec4(0.0);
-
-    for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
     {
-      if( abs(color_contributions[l].b - mindist) < epsilon)
-      {
+      vec4 finalcol = vec4(0.0);
+      
+      for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
+	{
+	  if( abs(color_contributions[l].b - mindist) < epsilon)
+	    {
 	      ++accum;
 	      vec4 color_contribution = color_contributions[l];
 	      vec4 color = texture2DArray( video_color_texture, vec3(color_contribution.xy,float(l)));
 	      finalcol.rgb += color.rgb * color_contribution.a;
 	      finalcol.a   += color_contribution.a;
+	    }
+	}
+      if(finalcol.a > 0.0)
+	{
+	  finalcol.rgba = finalcol.rgba/finalcol.a;
+	  output_depth  = ogldepth;
+	  output_color  = finalcol.rgb;
+	} else {
+	discard;
       }
-    }
-    if(finalcol.a > 0.0)
-    {
-      finalcol.rgba = finalcol.rgba/finalcol.a;
-      output_depth  = ogldepth;
-      output_color  = finalcol.rgb;
     } else {
-      discard;
-    }
-  } else {
     discard;
   }
 

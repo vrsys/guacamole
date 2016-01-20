@@ -108,8 +108,6 @@ namespace gua {
                                             scm::gl::WRAP_REPEAT,
                                             scm::gl::WRAP_REPEAT));
 
-  virtual ~TextureCube() {}
-
   ///@{
   /**
    * Gets the size.

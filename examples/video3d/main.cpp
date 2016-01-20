@@ -49,15 +49,23 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 
 int main(int argc, char** argv) {
 
+  if(argc != 2){
+    std::cout << "ERROR: please specify kinect file to load" << std::endl;
+  }
+  std::string kinect_file(argv[1]);
+
+  char* argv_tmp[] = {"./example-video3d", NULL};
+  int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;;
   // initialize guacamole
-  gua::init(argc, argv);
+  gua::init(argc_tmp, argv_tmp);
+
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
   gua::Video3DLoader vloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto steppo(vloader.create_geometry_from_file("steppo","K:/kinect-resources/shot_lcd_KV2_X_5_dist_arachne.ks"));
+  auto steppo(vloader.create_geometry_from_file("steppo",kinect_file.c_str()));
   graph.add_node("/transform", steppo);
 
   gua::TriMeshLoader mloader;
