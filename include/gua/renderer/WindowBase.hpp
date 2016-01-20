@@ -62,7 +62,9 @@ class GUA_DLL WindowBase {
     GREEN,
     CYAN,
     CHECKER_EVEN,
-    CHECKER_ODD
+    CHECKER_ODD,
+    QUAD_BUFFERED_LEFT,
+    QUAD_BUFFERED_RIGHT
   };
 
   /**
