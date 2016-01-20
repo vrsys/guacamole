@@ -35,6 +35,11 @@
 
 namespace gua {
 
+void error_callback(int error, const char* description)
+{
+  throw std::runtime_error(description);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void on_window_resize(GLFWwindow* glfw_window, int width, int height) {
@@ -106,6 +111,7 @@ GlfwWindow::~GlfwWindow() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GlfwWindow::open() {
+  glfwSetErrorCallback(error_callback);
 
   int monitor_count(0);
   auto monitors(glfwGetMonitors(&monitor_count));
@@ -127,11 +133,18 @@ void GlfwWindow::open() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, config.get_debug());
 
+  if (config.get_stereo_mode() == StereoMode::QUAD_BUFFERED) {
+    glfwWindowHint(GLFW_STEREO, GL_TRUE);
+  }
+
   glfw_window_ = glfwCreateWindow(
     config.get_size().x, config.get_size().y,
     config.get_title().c_str(),
     config.get_fullscreen_mode()? glfwGetPrimaryMonitor(): nullptr, nullptr
   );
+  if (!glfw_window_) {
+    throw std::runtime_error("GlfwWindow::open() : unable to create window");
+  }
 
   glfwSetWindowUserPointer(glfw_window_, this);
   glfwSetWindowSizeCallback(glfw_window_, &on_window_resize);

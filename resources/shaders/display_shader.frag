@@ -64,6 +64,24 @@ vec3 get_full() {
   return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
 }
 
+subroutine( GetColorType )
+vec3 get_quad_buffer_left() {
+  //if (gl_FragCoord.x < 20.0 && gl_FragCoord.y < 20.0)
+  if (tex_coord.x < 0.05 && tex_coord.y > 0.95)
+    return vec3(1.0, 1.0, 1.0);
+  else
+    return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
+}
+
+subroutine( GetColorType )
+vec3 get_quad_buffer_right() {
+  //if (gl_FragCoord.x < 20.0 && gl_FragCoord.y < 20.0)
+  if (tex_coord.x < 0.05 && tex_coord.y > 0.95)
+    return vec3(0.0, 0.0, 0.0);
+  else
+    return vec3(texture2D( sampler2D(sampler), tex_coord).rgb);
+}
+
 void main() {
   out_color = get_color();
 }

@@ -76,8 +76,14 @@ IF (GUACAMOLE_EXAMPLES)
 
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod})
-    add_subdirectory(plod)
+    add_subdirectory(plod_simple)
+    add_subdirectory(plod_shadows)
   ENDIF (${PLUGIN_guacamole-plod})
+
+  # lod example requires lod-plugin
+  IF (${PLUGIN_guacamole-lod})
+    add_subdirectory(lod_simple)
+  ENDIF (${PLUGIN_guacamole-lod})
 
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
