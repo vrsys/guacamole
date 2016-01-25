@@ -134,8 +134,7 @@ void render_scene(gua::node::SerializedCameraNode     const& serialized_cam,
               } else {
                 auto eyes = {gua::CameraMode::LEFT, gua::CameraMode::RIGHT};
 
-                if (serialized_cam.config.get_stereo_type() == gua::StereoType::TEMPORAL_WARP ||
-                    serialized_cam.config.get_stereo_type() == gua::StereoType::SINGLE_TEMPORAL_WARP) {
+                if (serialized_cam.config.get_stereo_type() == gua::StereoType::TEMPORAL_WARP) {
                   if ((window->get_context()->framecount % 2) == 0) {
                     eyes = {gua::CameraMode::RIGHT, gua::CameraMode::LEFT};
                   }

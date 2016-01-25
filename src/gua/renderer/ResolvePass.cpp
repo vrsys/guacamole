@@ -489,19 +489,6 @@ PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, Substit
       compositing = !pipe.current_viewstate().camera.pipeline_description->get_enable_abuffer();
     }
 
-    if (!compositing) {
-      // hack: enable compositing when using WarpPassDescription::ABUFFER_NONE
-      for (auto pass: pipe.current_viewstate().camera.pipeline_description->get_passes()) {
-        auto warp_pass(std::dynamic_pointer_cast<WarpPassDescription>(pass));
-        if (warp_pass && warp_pass->abuffer_warp_mode() == WarpPassDescription::ABUFFER_NONE &&
-            pipe.current_viewstate().camera.pipeline_description->get_enable_abuffer()) {
-          compositing = true;
-          break;
-        }
-      }
-    }
-
-
     pass.shader_->set_uniform(ctx, compositing, "gua_compositing_enable");
 
     for (auto const& u : desc.uniforms) {

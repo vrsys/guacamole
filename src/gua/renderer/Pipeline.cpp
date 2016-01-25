@@ -208,8 +208,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       skip_passes = (mode == CameraMode::RIGHT);
     } else if (camera.config.stereo_type() == StereoType::TEMPORAL_WARP) {
       skip_passes = (((context_.framecount % 2) == 0) == (mode == CameraMode::RIGHT));
-    } else if (camera.config.stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
-      skip_passes = (((context_.framecount % 2) == 0) == (mode == CameraMode::RIGHT));
     }
   } 
 

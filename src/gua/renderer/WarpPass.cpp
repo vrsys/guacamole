@@ -45,10 +45,7 @@ WarpPassDescription::WarpPassDescription()
   , hole_filling_color_(0,0,0)
   , max_raysteps_(50)
   , pixel_size_(0.2f)
-  , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
-  , abuffer_warp_mode_(ABUFFER_RAYCASTING)
   , hole_filling_mode_(HOLE_FILLING_BLUR)
-  , interpolation_mode_(INTERPOLATION_MODE_ADAPTIVE)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -172,34 +169,6 @@ float WarpPassDescription::pixel_size() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode) {
-  gbuffer_warp_mode_ = gbuffer_warp_mode;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription::GBufferWarpMode WarpPassDescription::gbuffer_warp_mode() const {
-  return gbuffer_warp_mode_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode) {
-  abuffer_warp_mode_ = abuffer_warp_mode;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription::ABufferWarpMode WarpPassDescription::abuffer_warp_mode() const {
-  return abuffer_warp_mode_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 WarpPassDescription& WarpPassDescription::hole_filling_mode(HoleFillingMode hole_filling_mode) {
   hole_filling_mode_ = hole_filling_mode;
   touch();
@@ -228,20 +197,6 @@ math::vec3f const& WarpPassDescription::hole_filling_color() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::interpolation_mode(InterpolationMode interpolation_mode) {
-  interpolation_mode_ = interpolation_mode;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription::InterpolationMode WarpPassDescription::interpolation_mode() const {
-  return interpolation_mode_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 std::shared_ptr<PipelinePassDescription> WarpPassDescription::make_copy() const {
   return std::make_shared<WarpPassDescription>(*this);
 }
@@ -254,11 +209,8 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["debug_sample_count"] = debug_sample_count_ ? "1" : "0";
   substitution_map["debug_bounding_volumes"] = debug_bounding_volumes_ ? "1" : "0";
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
-  substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
-  substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
   substitution_map["hole_filling_color"] = "vec3(" + gua::string_utils::to_string(hole_filling_color_.x) + ", " + gua::string_utils::to_string(hole_filling_color_.y) + ", " + gua::string_utils::to_string(hole_filling_color_.z) + ")";
-  substitution_map["interpolation_mode"] = std::to_string(interpolation_mode_);
   substitution_map["max_raysteps"] = std::to_string(max_raysteps_);
   PipelinePass pass{*this, ctx, substitution_map};
 
@@ -269,8 +221,7 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
     if (pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SPATIAL_WARP ||
-        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP ||
-        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::SINGLE_TEMPORAL_WARP) {
+        pipe.current_viewstate().camera.config.get_stereo_type() == StereoType::TEMPORAL_WARP) {
       renderer->render(pipe, desc);
     }
   };

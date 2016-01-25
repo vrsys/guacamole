@@ -20,14 +20,6 @@
  ******************************************************************************/
 
 @include "common/header.glsl"
-@include "gbuffer_warp_modes.glsl"
-@include "common/gua_camera_uniforms.glsl"
-@include "common/gua_gbuffer_input.glsl"
-
-// -----------------------------------------------------------------------------
-// all grid modes
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-// -----------------------------------------------------------------------------
 
 layout(location=0) in uvec3 position;
 
@@ -36,19 +28,3 @@ flat out uvec3 varying_position;
 void main() {
   varying_position = position;
 }
-
-// -----------------------------------------------------------------------------
-#else // WARP_MODE_QUADS_DEPTH_ALIGNED------------------------------------------
-// -----------------------------------------------------------------------------
-
-layout(location=0) in float foo;
-
-flat out uint vertex_id;
-out float bar;
-
-void main() {
-  vertex_id = gl_VertexID;
-  bar = foo;
-}
-
-#endif

@@ -173,17 +173,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   bool first_eye(
        (stereo_type == StereoType::SPATIAL_WARP  && ctx.mode != CameraMode::RIGHT)
     || (stereo_type == StereoType::TEMPORAL_WARP && (ctx.framecount % 2 == 0) == (ctx.mode == CameraMode::RIGHT))
-    || (stereo_type == StereoType::SINGLE_TEMPORAL_WARP && (ctx.framecount % 2 == 0) == (ctx.mode == CameraMode::RIGHT))
   );
 
   bool first_warp(
        (stereo_type == StereoType::SPATIAL_WARP && first_eye)
     || (stereo_type == StereoType::TEMPORAL_WARP && !first_eye)
-    || (stereo_type == StereoType::SINGLE_TEMPORAL_WARP && !first_eye)
-  );
-
-  bool perform_warp(
-    !(stereo_type == StereoType::SINGLE_TEMPORAL_WARP && first_warp)
   );
 
   if (first_eye) {
@@ -198,19 +192,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     proj = last_frustum_.get_projection();
     view = last_frustum_.get_view();
     warp = cached_warp_state_.get(ctx.mode);
-  } else if (first_eye && stereo_type == StereoType::SINGLE_TEMPORAL_WARP) {
-    proj = last_frustum_.get_projection();
-    view = last_frustum_.get_view();
-
-    auto cur(Frustum::perspective(
-      pipe.current_viewstate().frustum.get_camera_transform(),
-      pipe.current_viewstate().frustum.get_screen_transform(),
-      pipe.current_viewstate().frustum.get_clip_near(),
-      pipe.current_viewstate().frustum.get_clip_far()*1.5
-    ));
-
-    warp = cur.get_projection() * cur.get_view();
-
   } else {
     proj = pipe.current_viewstate().frustum.get_projection();
     view = pipe.current_viewstate().frustum.get_view();
@@ -241,47 +222,33 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   pipe.begin_gpu_query(ctx, gpu_query_name_a);
   pipe.begin_primitive_query(ctx, pri_query_name_a);
 
-  if (perform_warp) {
-    ctx.render_context->set_frame_buffer(fbo_);
-    gbuffer->set_viewport(ctx);
-    ctx.render_context->clear_color_buffers(
-        fbo_, scm::math::vec4f(0,0,0,0));
-    ctx.render_context->clear_depth_stencil_buffer(fbo_);
+  ctx.render_context->set_frame_buffer(fbo_);
+  gbuffer->set_viewport(ctx);
+  ctx.render_context->clear_color_buffers(
+      fbo_, scm::math::vec4f(0,0,0,0));
+  ctx.render_context->clear_depth_stencil_buffer(fbo_);
 
-    if (description->gbuffer_warp_mode() != WarpPassDescription::GBUFFER_NONE) {
-      warp_gbuffer_program_->use(ctx);
-      warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
+  warp_gbuffer_program_->use(ctx);
+  warp_gbuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
 
-      pipe.bind_gbuffer_input(warp_gbuffer_program_);
+  pipe.bind_gbuffer_input(warp_gbuffer_program_);
 
-      warp_gbuffer_program_->set_uniform(ctx,
-                          gbuffer->get_color_buffer()->get_handle(ctx),
-                          "gua_gbuffer_color");
-      warp_gbuffer_program_->set_uniform(ctx,
-                          gbuffer->get_pbr_buffer_write()->get_handle(ctx),
-                          "gua_gbuffer_pbr");
-      warp_gbuffer_program_->set_uniform(ctx,
-                          gbuffer->get_depth_buffer()->get_handle(ctx),
-                          "gua_gbuffer_depth");
+  warp_gbuffer_program_->set_uniform(ctx,
+                      gbuffer->get_color_buffer()->get_handle(ctx),
+                      "gua_gbuffer_color");
+  warp_gbuffer_program_->set_uniform(ctx,
+                      gbuffer->get_pbr_buffer_write()->get_handle(ctx),
+                      "gua_gbuffer_pbr");
+  warp_gbuffer_program_->set_uniform(ctx,
+                      gbuffer->get_depth_buffer()->get_handle(ctx),
+                      "gua_gbuffer_depth");
 
-      if (description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD ||
-          description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION ||
-          description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION ||
-          description->gbuffer_warp_mode() == WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION) {
-        auto res(ctx.resources.get_dont_create<WarpGridGenerator::SharedResource>());
-        if (res) {
-          warp_gbuffer_program_->set_uniform(ctx, res->surface_detection_buffer->get_handle(ctx),  "gua_warp_grid_tex");
-          ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
-          ctx.render_context->apply();
-          ctx.render_context->draw_transform_feedback(scm::gl::PRIMITIVE_POINT_LIST, res->grid_tfb[res->current_vbo()]);
-        }
-      } else {
-        ctx.render_context->set_rasterizer_state(points_);
-        ctx.render_context->bind_vertex_array(empty_vao_);
-        ctx.render_context->apply();
-        ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, resolution.x * resolution.y);
-      }
-    }
+  auto res(ctx.resources.get_dont_create<WarpGridGenerator::SharedResource>());
+  if (res) {
+    warp_gbuffer_program_->set_uniform(ctx, res->surface_detection_buffer->get_handle(ctx),  "gua_warp_grid_tex");
+    ctx.render_context->bind_vertex_array(res->grid_vao[res->current_vbo()]);
+    ctx.render_context->apply();
+    ctx.render_context->draw_transform_feedback(scm::gl::PRIMITIVE_POINT_LIST, res->grid_tfb[res->current_vbo()]);
   }
 
   pipe.end_primitive_query(ctx, pri_query_name_a);
@@ -293,7 +260,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   // --------------------- warp abuffer & hole filling -------------------------
   // ---------------------------------------------------------------------------
 
-  if (perform_warp && description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
+  if (description->hole_filling_mode() == WarpPassDescription::HOLE_FILLING_BLUR) {
     GUA_PUSH_GL_RANGE(ctx, "Generate Hole Filling Map");
 
     std::string const gpu_query_name_c = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / WarpPass Generate Hole Filling Texture";
@@ -317,6 +284,8 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     pipe.end_gpu_query(ctx, gpu_query_name_c);
     GUA_POP_GL_RANGE(ctx);
   }
+
+
   
   gbuffer->set_viewport(ctx);
 
@@ -328,7 +297,6 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   warp_abuffer_program_->use(ctx);
   warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
   warp_abuffer_program_->apply_uniform(ctx, "inv_warp_matrix", inv_warp_matrix);
-  warp_abuffer_program_->apply_uniform(ctx, "perform_warp", perform_warp);
 
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
 
@@ -341,17 +309,12 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     warp_abuffer_program_->set_uniform(ctx, hole_filling_texture_->get_handle(ctx), "hole_filling_texture");
   }
 
-  if (perform_warp) {
-    warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
-    warp_abuffer_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "warped_depth_buffer");
-  } else {
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_pbr_buffer_write()->get_handle(ctx), "orig_pbr_buffer");
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_color_buffer()->get_handle(ctx), "warped_color_buffer");
-    warp_abuffer_program_->set_uniform(ctx, gbuffer->get_depth_buffer()->get_handle(ctx), "warped_depth_buffer");
-  }
+  warp_abuffer_program_->set_uniform(ctx, color_buffer_->get_handle(ctx), "warped_color_buffer");
+  warp_abuffer_program_->set_uniform(ctx, depth_buffer_->get_handle(ctx), "warped_depth_buffer");
 
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
   ctx.render_context->apply();
+  
   pipe.draw_quad();
 
   pipe.end_gpu_query(ctx, gpu_query_name_b);

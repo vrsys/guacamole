@@ -121,14 +121,8 @@ void WarpGridGenerator::render(Pipeline& pipe, PipelinePassDescription const& de
         scm::gl::WRAP_CLAMP_TO_EDGE,
         scm::gl::WRAP_CLAMP_TO_EDGE);
 
-      if (description->mode() == WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD) {
-        res_->surface_detection_buffer = std::make_shared<Texture2D>(size.x, size.y,
-            scm::gl::FORMAT_RGB_16, mip_map_levels, state);
-      } else {
-        res_->surface_detection_buffer = std::make_shared<Texture2D>(size.x, size.y,
-            scm::gl::FORMAT_R_16UI, mip_map_levels, state);
-      }
-
+      res_->surface_detection_buffer = std::make_shared<Texture2D>(size.x, size.y,
+          scm::gl::FORMAT_R_16UI, mip_map_levels, state);
       res_->surface_detection_buffer_fbos.clear();
 
       for (int i(0); i<mip_map_levels; ++i) {

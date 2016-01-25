@@ -72,19 +72,11 @@ bool manipulation_camera    = false;
 bool manipulation_object    = false;
 bool stereotype_spatial     = true;
 bool stereotype_temporal    = false;
-bool stereotype_single_temporal = false;
 bool warping                = true;
 bool stereo                 = false;
 bool warp_perspective       = false;
 bool vsync                  = false;
 float eye_offset            = 0.f;
-
-bool test_resolution_series = false;
-bool test_positional_warp_series = false;
-bool test_rotational_warp_series = false;
-bool test_quad_series = false;
-bool test_quad_count_series = false;
-bool test_print_current_times = false;
 
 const float aspect = 1.0f/1.6f;
 const float screen_width = 4.f;
@@ -358,7 +350,49 @@ int main(int argc, char** argv) {
   light3->rotate(45, 1, 0, 0);
   light3->rotate(80, 0, 1, 0);
 
-  // floor
+
+  // many oilrigs scene --------------------------------------------------------
+  auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
+    auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
+    t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
+    auto oilrig(loader.create_geometry_from_file("oilrig", opt_prefix + "3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    t->add_child(oilrig);
+  };
+
+  // one oilrig ----------------------------------------------------------------
+  auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "oilrig");
+  scene_root->scale(20);
+  scene_root->rotate(-90, 1, 0, 0);
+  add_oilrig(0, 0, 1, "/transform/oilrig");
+
+
+  // teapot --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
+  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  scene_root->add_child(teapot);
+
+  // pitoti --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
+  #if LOAD_PITOTI
+    gua::PLODLoader plodloader;
+    plodloader.set_out_of_core_budget_in_mb(5000);
+    plodloader.set_render_budget_in_mb(1000);
+    plodloader.set_upload_budget_in_mb(20);
+    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/groundtruth_data/rocks/seradina12c/TLS_Seradina_Rock-12C_knn.kdn",
+        gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
+    scene_root->add_child(pitoti);
+    pitoti->set_radius_scale(1.0f);
+    pitoti->set_error_threshold(2.5f);
+    scene_root->rotate(-90, 1, 0, 0);
+    scene_root->scale(20);
+  #endif
+
+  // bottle --------------------------------------------------------------------
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -373,112 +407,6 @@ int main(int argc, char** argv) {
     casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
     casted->get_material()->set_uniform("NormalMap", std::string("data/textures/tiles_normal.jpg"));
   }
-
-  // many oilrigs scene --------------------------------------------------------
-  auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "many_oilrigs");
-  scene_root->rotate(-90, 1, 0, 0);
-  auto add_oilrig = [&](int x, int y, int c, std::string const& parent) {
-    auto t = graph.add_node<gua::node::TransformNode>(parent, "t");
-    t->translate((x - c*0.5 + 0.5)/1.5, (y - c*0.5 + 0.8)/2, 0);
-    auto oilrig(loader.create_geometry_from_file("oilrig", opt_prefix + "3d_models/OIL_RIG_GUACAMOLE/oilrig.obj",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    t->add_child(oilrig);
-
-  };
-
-  for (int x(0); x<6; ++x) {
-    for (int y(0); y<6; ++y) {
-      add_oilrig(x, y, 6, "/transform/many_oilrigs");
-    }
-  }
-
-  // one oilrig ----------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
-  scene_root->scale(20);
-  scene_root->rotate(-90, 1, 0, 0);
-  add_oilrig(0, 0, 1, "/transform/one_oilrig");
-
-  // auto tuscany(loader.create_geometry_from_file("tuscany", opt_prefix + "3d_models/NewTuscany/tuscany_optimized.obj",
-  //     gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
-  //     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
-  // //tuscany->scale(20);
-  // tuscany->translate(0, -2, -20);
-  // scene_root->add_child(tuscany);
-
-  // textured quads scene ------------------------------------------------------
-  auto texured_quad_root = graph.add_node<gua::node::TransformNode>("/transform", "textured_quads");
-
-  auto setup_textured_quad_scene = [&](){
-    texured_quad_root->clear_children();
-    for (int x(0); x<quad_count; ++x) {
-      float offset(quad_count <= 1 ? quad_start : x*quad_range/(quad_count-1)+quad_start);
-      float scale(offset/screen_dist*quad_scale);
-      auto node = graph.add_node<gua::node::TexturedQuadNode>("/transform/textured_quads", "node" + std::to_string(x));
-      node->data.set_texture("data/textures/test_grid.png");
-      node->translate(0, 0, -offset);
-      node->data.set_size(gua::math::vec2(screen_width, screen_width*aspect) * scale);
-      node->data.set_repeat(gua::math::vec2(screen_width, screen_width*aspect) * scale);
-    }
-  };
-
-  setup_textured_quad_scene();
-
-
-  // teapot --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(teapot);
-  // scene_root->add_child(plane);
-
-  // car --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "car");
-  #if LOAD_CAR
-    auto car(loader.create_geometry_from_file("car", "data/objects/car/car.dae",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::LOAD_MATERIALS |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    scene_root->scale(2);
-    scene_root->add_child(car);
-
-    for (auto& child: car->get_children()) {
-      auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(child));
-      if (casted) {
-        casted->get_material()->set_show_back_faces(true);
-        casted->get_material()->set_uniform("Metalness", 0.5f);
-        casted->get_material()->set_uniform("Roughness", 0.5f);
-      }
-    }
-  #endif
-  // scene_root->add_child(plane);
-
-  // pitoti --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
-  #if LOAD_PITOTI
-    gua::PLODLoader plodloader;
-    plodloader.set_out_of_core_budget_in_mb(5000);
-    plodloader.set_render_budget_in_mb(1000);
-    plodloader.set_upload_budget_in_mb(20);
-    // for (int i(1); i<=8; ++i) {
-    //   auto pitoti(plodloader.load_geometry("/mnt/pitoti/hallermann_scans/bruecke/bruecke_points_part0000" + std::to_string(i) + "_knobi.kdn",
-    //     gua::PLODLoader::DEFAULTS));
-    //   scene_root->add_child(pitoti);
-    //   pitoti->set_radius_scale(1.0f);
-    //   pitoti->set_error_threshold(2.5f);
-    // }
-    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/groundtruth_data/rocks/seradina12c/TLS_Seradina_Rock-12C_knn.kdn",
-        gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
-    scene_root->add_child(pitoti);
-    pitoti->set_radius_scale(1.0f);
-    pitoti->set_error_threshold(2.5f);
-    scene_root->rotate(-90, 1, 0, 0);
-    scene_root->scale(20);
-  #endif
-
-  // bottle --------------------------------------------------------------------
   auto load_mat = [](std::string const& file){
     auto desc(std::make_shared<gua::MaterialShaderDescription>());
     desc->load_from_file(file);
@@ -501,39 +429,8 @@ int main(int argc, char** argv) {
   }
   scene_root->add_child(plane);
 
-  // mountains --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "mountains");
-  #if LOAD_MOUNTAINS
-    auto mountains(loader.create_geometry_from_file("mountains", "/home/simon/Master/Code/gua_dependencies/guacamole-restricted-develop/mountains/data/objects/terrain/lod0.obj",
-    // auto mountains(loader.create_geometry_from_file("mountains", "/home/rufu1194/Desktop/island/guacamole-restricted/vr_hyperspace/data/objects/terrain/lod0.obj",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    auto clouds(std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("clouds", "data/objects/plane.obj",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE)));
-    clouds->translate(0, 0.05, 0);
-    clouds->get_material()->set_uniform("ColorMap", std::string("data/textures/clouds.png"));
-    clouds->get_material()->set_uniform("Roughness", 1.f);
-    clouds->get_material()->set_uniform("Metalness", 0.f);
-    clouds->get_material()->set_show_back_faces(false);
-    clouds->set_shadow_mode(gua::ShadowMode::HIGH_QUALITY);
-    scene_root->scale(30);
-    scene_root->add_child(mountains);
-    scene_root->add_child(clouds);
-  #endif
-
-  // spheres -------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sphere");
-  auto sphere(loader.create_geometry_from_file("sphere", "data/objects/sphere.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(sphere);
-  scene_root->add_child(plane);
-
-  // buddha --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
+  // glasses --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "glasses");
   auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
   mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
               .set_show_back_faces(true);
@@ -548,59 +445,6 @@ int main(int argc, char** argv) {
   scene_root->rotate(180, 0, 1, 0);
   scene_root->scale(2);
 
-  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE);
-  // buddha->translate(0, -0.16, -1);
-  // for (auto c: buddha->get_children()) {
-  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.5f, 1.f));
-  //   node->get_material()->set_uniform("Roughness", 0.2f);
-  //   node->get_material()->set_uniform("Metalness", 0.5f);
-  // }
-  // scene_root->add_child(buddha);
-
-  // buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE);
-  // buddha->translate(0, -0.16, 1);
-  // for (auto c: buddha->get_children()) {
-  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.f, 0.5f));
-  //   node->get_material()->set_uniform("Roughness", 0.2f);
-  //   node->get_material()->set_uniform("Metalness", 0.5f);
-  // }
-  // scene_root->add_child(buddha);
-
-  // dragon --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "dragon");
-  scene_root->rotate(60, 0, 1, 0);
-  scene_root->translate(0.6, -0.17, 0);
-  #if LOAD_DRAGON
-    auto dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    dragon->get_material()->set_uniform("Color", gua::math::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    scene_root->add_child(dragon);
-
-    auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
-    transp_dragon->translate(0, 0, 4);
-    scene_root->add_child(transp_dragon);
-
-    for (int i=0; i<8; ++i) {
-      auto transp_dragon = std::dynamic_pointer_cast<gua::node::TriMeshNode>(loader.create_geometry_from_file("dragon", "data/objects/dragon.dae",
-        gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-        gua::TriMeshLoader::NORMALIZE_SCALE));
-      transp_dragon->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.3f));
-      transp_dragon->rotate(42*i, 0, 1, 0);
-      transp_dragon->translate(i*0.5, 0, ((i%2)-0.5)*i*0.5+15);
-      scene_root->add_child(transp_dragon);
-      show_backfaces(transp_dragon, true);
-    }
-  #endif
 
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
@@ -614,18 +458,6 @@ int main(int argc, char** argv) {
   sponza->scale(20);
   sponza->translate(0, 2, 0);
   scene_root->add_child(sponza);
-
-  // auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
-  // mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
-  //             .set_show_back_faces(true);
-  // auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glass.dae", mat_glasses,
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // glasses->scale(2.5);
-  // glasses->translate(0, 0.71, 0);
-  // scene_root->add_child(glasses);
-
 
   auto sponza_light_05 = std::make_shared<gua::node::TransformNode>("sponza_light_05");
   auto light = std::make_shared<gua::node::LightNode>("light");
@@ -694,58 +526,6 @@ int main(int argc, char** argv) {
     scene_root->add_child(hairball);
   #endif
 
-  // engine --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "engine");
-  #if LOAD_ENGINE
-    scene_root->scale(0.05);
-
-    // material
-    auto desc(std::make_shared<gua::MaterialShaderDescription>());
-    desc->load_from_file("data/materials/engine.gmd");
-    auto shader(std::make_shared<gua::MaterialShader>("data/materials/engine.gmd", desc));
-    gua::MaterialShaderDatabase::instance()->add(shader);
-
-    std::map<std::string, int> part_names {
-      {"part_inner_04",2},
-      {"part_inner_03",2},
-      {"part_inner_02",2},
-      {"part_08",2      },
-      {"part_10",1      },
-      {"part_09",1      },
-      {"part_04",2      },
-      {"part_05",1      },
-      {"part_06",2      },
-      {"part_07",2      },
-      {"part_02",2      },
-      {"part_03",2      },
-      {"part_inner_01",1},
-      {"part_01",0      }
-    };
-
-    const std::string engine_directory = opt_prefix + "3d_models/engine/";
-
-    // prepare engine parts
-    for(const auto& p : part_names) {
-      auto mat = shader->make_new_material();
-      mat->set_uniform("style", p.second)
-       .set_uniform("opacity", 1.f)
-       .set_uniform("cut_rad", 0.3f)
-       .set_uniform("cut_n", gua::math::vec3(0.5, 1, 0))
-       .set_uniform("roughness_map", std::string("data/textures/roughness.jpg"))
-       .set_uniform("reflection_texture", std::string(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg"))
-       .set_show_back_faces(true);
-
-      // derived from http://www.turbosquid.com/3d-models/speculate-3ds-free/302188
-      // Royalty Free License
-      auto part(loader.create_geometry_from_file(p.first,
-                                                 engine_directory + p.first + ".obj",
-                                                 mat,
-                                                 gua::TriMeshLoader::DEFAULTS));
-      scene_root->add_child(part);
-    }
-    show_backfaces(scene_root, true);
-  #endif
-
   auto pipe = gua::PipelineFactory::make_pipeline(
     gua::PipelineFactory::DEFAULT | 
     #if LOAD_PITOTI
@@ -774,20 +554,13 @@ int main(int argc, char** argv) {
   auto grid_pass(pipe->get_pass_by_type<gua::GenerateWarpGridPassDescription>());
 
   auto set_scene = [&](std::string const& name) {
-    graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
     graph["/transform/sponza"]->get_tags().add_tag("invisible");
-    graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
-    graph["/transform/textured_quads"]->get_tags().add_tag("invisible");
+    graph["/transform/oilrig"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
-    graph["/transform/car"]->get_tags().add_tag("invisible");
     graph["/transform/pitoti"]->get_tags().add_tag("invisible");
     graph["/transform/bottle"]->get_tags().add_tag("invisible");
-    graph["/transform/mountains"]->get_tags().add_tag("invisible");
-    graph["/transform/sphere"]->get_tags().add_tag("invisible");
-    graph["/transform/engine"]->get_tags().add_tag("invisible");
-    graph["/transform/dragon"]->get_tags().add_tag("invisible");
-    graph["/transform/buddha"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
+    graph["/transform/glasses"]->get_tags().add_tag("invisible");
 
     sun_light->data.set_brightness(3.f);
     sun_light->data.set_enable_shadows(true);
@@ -795,10 +568,8 @@ int main(int argc, char** argv) {
     res_pass->ssao_intensity(1.5f);
     res_pass->ssao_radius(2.0f);
 
-    if (name == "set_scene_many_oilrigs")
-      graph["/transform/many_oilrigs"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_one_oilrig") {
-      graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_oilrig") {
+      graph["/transform/oilrig"]->get_tags().remove_tag("invisible");
       res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
       nav.set_transform(scm::math::mat4f(-0.228, -0.031, 0.973, 2.404,
                                          0.000, 1.000, 0.031, 1.568,
@@ -829,56 +600,14 @@ int main(int argc, char** argv) {
                                            -0.210, -0.236, -0.949, -4.290,
                                            0.000, 0.000, 0.000, 1.000));
     }
-    if (name == "set_scene_textured_quads") {
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
-      graph["/transform/textured_quads"]->get_tags().remove_tag("invisible");
-      nav.set_transform(scm::math::mat4f(1, 0, 0, 0,
-                                         0, 1, 0, 0,
-                                         0, 0, 1, 0,
-                                         0, 0, 0, 1));
-    }
     if (name == "set_scene_teapot")
       graph["/transform/teapot"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_car")
-      graph["/transform/car"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_pitoti") {
       sun_light->data.set_enable_shadows(false);
       graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
     }
     if (name == "set_scene_bottle")
       graph["/transform/bottle"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_mountains")
-      graph["/transform/mountains"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sphere") {
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
-      graph["/transform/sphere"]->get_tags().remove_tag("invisible");
-    }
-    if (name == "set_scene_engine")
-      graph["/transform/engine"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_transp_dragon") {
-      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
-      nav.set_transform(scm::math::mat4f(0.914, 0.114, -0.388, 3.625,
-                                         0.000, 0.959, 0.283, 0.060,
-                                         0.405, -0.259, 0.877, 2.961,
-                                         0.000, 0.000, 0.000, 1.000));
-    }
-    if (name == "set_scene_many_transp_dragon") {
-      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/checker.png");
-      nav.set_transform(scm::math::mat4f(0.988, 0.007, -0.154, 1.457,
-                                         0.000, 0.999, 0.046, -0.155,
-                                         0.154, -0.045, 0.987, 1.278,
-                                         0.000, 0.000, 0.000, 1.000));
-    }
-    if (name == "set_scene_dragon") {
-      graph["/transform/dragon"]->get_tags().remove_tag("invisible");
-      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
-      nav.set_transform(scm::math::mat4f(0.846, 0.019, -0.534, -0.009,
-                                         0.000, 0.999, 0.035, -0.186,
-                                         0.534, -0.030, 0.845, 0.881,
-                                         0.000, 0.000, 0.000, 1.000));
-    }
     if (name == "set_scene_hairball") {
       graph["/transform/hairball"]->get_tags().remove_tag("invisible");
       res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
@@ -888,11 +617,11 @@ int main(int argc, char** argv) {
                                          0.031, -0.228, 0.973, -3.367,
                                          0.000, 0.000, 0.000, 1.000));
     }
-    if (name == "set_scene_buddha")
-      graph["/transform/buddha"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_glasses")
+      graph["/transform/glasses"]->get_tags().remove_tag("invisible");
   };
 
-  set_scene("set_scene_one_oilrig");
+  set_scene("set_scene_oilrig");
 
   // ---------------------------------------------------------------------------
   // ------------------------ setup rendering pipelines ------------------------
@@ -902,12 +631,6 @@ int main(int argc, char** argv) {
 
   // normal camera -------------------------------------------------------------
   #if OCULUS1 || OCULUS2
-
-    // auto platform = graph.add_node<gua::node::TexturedQuadNode>("/navigation", "platform");
-    // platform->scale(1);
-    // platform->rotate(-90, 1, 0, 0);
-    // platform->translate(0, -0.5, -0.4);
-    // platform->data.texture() = "data/textures/platform.png";
 
     auto normal_cam = graph.add_node<gua::node::CameraNode>("/navigation", "normal_cam");
     auto normal_screen_left = graph.add_node<gua::node::ScreenNode>("/navigation/normal_cam", "normal_screen_left");
@@ -919,13 +642,9 @@ int main(int argc, char** argv) {
     #if OCULUS1
       normal_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
       normal_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-      // normal_screen_right->translate(0.04, 0, -0.05f);
-      // normal_screen_left->translate(0.f, 0.f, -0.05f);
     #else
       normal_screen_left->data.set_size(gua::math::vec2(0.17074, 0.21));
       normal_screen_right->data.set_size(gua::math::vec2(0.17074, 0.21));
-      // normal_screen_right->translate(0.04, 0, -0.05f);
-      // normal_screen_left->translate(0.f, 0.f, -0.08f);
     #endif
   #else
     auto normal_screen = graph.add_node<gua::node::ScreenNode>("/navigation", "normal_screen");
@@ -952,12 +671,6 @@ int main(int argc, char** argv) {
   normal_cam->config.set_near_clip(0.1f);
   normal_cam->config.set_eye_dist(eye_dist);
 
-  // auto fill_light = graph.add_node<gua::node::LightNode>("/navigation", "light");
-  // fill_light->data.set_type(gua::node::LightNode::Type::SUN);
-  // fill_light->data.set_brightness(1.f);
-  // fill_light->data.set_color(gua::utils::Color3f(0.5f, 1.0f, 2.f));
-  // fill_light->rotate(95, 1, 0.5, 0);
-
   // warping camera ------------------------------------------------------------
   #if OCULUS1 || OCULUS2
     auto warp_cam = graph.add_node<gua::node::CameraNode>("/navigation", "warp_cam");
@@ -970,13 +683,9 @@ int main(int argc, char** argv) {
     #if OCULUS1
       warp_screen_left->data.set_size(gua::math::vec2(0.08, 0.1));
       warp_screen_right->data.set_size(gua::math::vec2(0.08, 0.1));
-      // warp_screen_right->translate(0.04, 0, -0.05f);
-      // warp_screen_left->translate(0.f, 0.f, -0.05f);
     #else
       warp_screen_left->data.set_size(gua::math::vec2(0.17074, 0.21));
       warp_screen_right->data.set_size(gua::math::vec2(0.17074, 0.21));
-      // warp_screen_right->translate(0.04, 0, -0.05f);
-      // warp_screen_left->translate(0.f, 0.f, -0.08f);
     #endif
   #else
     auto warp_screen = graph.add_node<gua::node::ScreenNode>("/navigation/warp", "warp_screen");
@@ -1011,25 +720,6 @@ int main(int argc, char** argv) {
     pipe->set_enable_abuffer(current_transparency_mode != "set_transparency_type_none");
     res_pass->write_abuffer_depth(false);
 
-    if (warping) {
-
-      if (current_transparency_mode == "set_transparency_type_raycasting")
-        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
-      if (current_transparency_mode == "set_transparency_type_none") {
-        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-      }
-      if (current_transparency_mode == "set_transparency_type_gbuffer") {
-        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-      }
-      if (current_transparency_mode == "set_transparency_type_hidden") {
-        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_HIDDEN);
-      }
-      if (current_transparency_mode == "set_transparency_type_abuffer") {
-        warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-        res_pass->write_abuffer_depth(true);
-      }
-    }
-
     // set stereo options
     if (stereo) {
 
@@ -1061,8 +751,6 @@ int main(int argc, char** argv) {
 
         } else if (stereotype_temporal) {
           normal_cam->config.set_stereo_type(gua::StereoType::TEMPORAL_WARP);
-        } else if (stereotype_single_temporal) {
-          normal_cam->config.set_stereo_type(gua::StereoType::SINGLE_TEMPORAL_WARP);
         }
 
       } else {
@@ -1167,23 +855,12 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_warp_perspective", [&](){ return std::to_string(warp_perspective);});
       gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
       gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
-      gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
       gui->add_javascript_getter("get_adaptive_entry_level", [&](){ return std::to_string(warp_pass->adaptive_entry_level());});
       gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
       gui->add_javascript_getter("get_debug_sample_count", [&](){ return std::to_string(warp_pass->debug_sample_count());});
       gui->add_javascript_getter("get_debug_bounding_volumes", [&](){ return std::to_string(warp_pass->debug_bounding_volumes());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
-      gui->add_javascript_getter("get_quad_count", [&](){ return gua::string_utils::to_string(quad_count);});
-      gui->add_javascript_getter("get_quad_range", [&](){ return gua::string_utils::to_string(quad_range);});
-      gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
-      gui->add_javascript_getter("get_quad_scale", [&](){ return gua::string_utils::to_string(quad_scale);});
 
-      gui->add_javascript_callback("start_resolution_series");
-      gui->add_javascript_callback("start_positional_warp_series");
-      gui->add_javascript_callback("start_rotational_warp_series");
-      gui->add_javascript_callback("start_quad_series");
-      gui->add_javascript_callback("start_quad_count_series");
-      gui->add_javascript_callback("print_current_times");
       gui->add_javascript_callback("set_max_raysteps");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
@@ -1191,62 +868,30 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_warp_perspective");
       gui->add_javascript_callback("set_warping");
       gui->add_javascript_callback("set_stereo");
-      gui->add_javascript_callback("set_background");
-      gui->add_javascript_callback("set_gbuffer_type_none");
-      gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
-      gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
-      gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
-      gui->add_javascript_callback("set_gbuffer_type_grid_advanced_surface_estimation");
-      gui->add_javascript_callback("set_gbuffer_type_grid_non_uniform_surface_estimation");
-      gui->add_javascript_callback("set_transparency_type_none");
-      gui->add_javascript_callback("set_transparency_type_gbuffer");
-      gui->add_javascript_callback("set_transparency_type_hidden");
-      gui->add_javascript_callback("set_transparency_type_abuffer");
-      gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_color");
       gui->add_javascript_callback("set_hole_filling_type_none");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_search");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_mirror");
       gui->add_javascript_callback("set_hole_filling_type_blur");
-      gui->add_javascript_callback("set_interpolation_mode_nearest");
-      gui->add_javascript_callback("set_interpolation_mode_linear");
-      gui->add_javascript_callback("set_interpolation_mode_adaptive");
-      gui->add_javascript_callback("set_scene_one_oilrig");
-      gui->add_javascript_callback("set_scene_many_oilrigs");
-      gui->add_javascript_callback("set_scene_sponza0");
+      gui->add_javascript_callback("set_scene_oilrig");
       gui->add_javascript_callback("set_scene_sponza1");
       gui->add_javascript_callback("set_scene_sponza2");
       gui->add_javascript_callback("set_scene_sponza3");
-      gui->add_javascript_callback("set_scene_sponza4");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_pitoti");
-      gui->add_javascript_callback("set_scene_car");
       gui->add_javascript_callback("set_scene_bottle");
-      gui->add_javascript_callback("set_scene_mountains");
-      gui->add_javascript_callback("set_scene_sphere");
-      gui->add_javascript_callback("set_scene_textured_quads");
-      gui->add_javascript_callback("set_scene_dragon");
-      gui->add_javascript_callback("set_scene_buddha");
+      gui->add_javascript_callback("set_scene_glasses");
       gui->add_javascript_callback("set_scene_hairball");
-      gui->add_javascript_callback("set_scene_engine");
-      gui->add_javascript_callback("set_scene_many_transp_dragon");
-      gui->add_javascript_callback("set_scene_transp_dragon");
       gui->add_javascript_callback("set_manipulation_navigator");
       gui->add_javascript_callback("set_manipulation_camera");
       gui->add_javascript_callback("set_manipulation_object");
       gui->add_javascript_callback("set_stereotype_spatial");
       gui->add_javascript_callback("set_stereotype_temporal");
-      gui->add_javascript_callback("set_stereotype_single_temporal");
       gui->add_javascript_callback("set_adaptive_entry_level");
       gui->add_javascript_callback("set_debug_cell_colors");
       gui->add_javascript_callback("set_debug_sample_count");
       gui->add_javascript_callback("set_debug_bounding_volumes");
       gui->add_javascript_callback("set_pixel_size");
-      gui->add_javascript_callback("set_quad_count");
-      gui->add_javascript_callback("set_quad_start");
-      gui->add_javascript_callback("set_quad_scale");
-      gui->add_javascript_callback("set_quad_range");
-      gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
       gui->add_javascript_callback("set_view_stereo_warped");
       gui->add_javascript_callback("set_view_mono");
@@ -1260,24 +905,7 @@ int main(int argc, char** argv) {
     });
 
     gui->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
-      if (callback == "start_resolution_series") {
-        toggle_gui();
-        test_resolution_series = true;
-      } else if (callback == "start_positional_warp_series") {
-        toggle_gui();
-        test_positional_warp_series = true;
-      } else if (callback == "start_rotational_warp_series") {
-        toggle_gui();
-        test_rotational_warp_series = true;
-      } else if (callback == "start_quad_series") {
-        toggle_gui();
-        test_quad_series = true;
-      } else if (callback == "start_quad_count_series") {
-        toggle_gui();
-        test_quad_count_series = true;
-      } else if (callback == "print_current_times") {
-        test_print_current_times = true;
-      } else if (callback == "set_max_raysteps") {
+      if (callback == "set_max_raysteps") {
         std::stringstream str(params[0]);
         int max_raysteps;
         str >> max_raysteps;
@@ -1293,24 +921,6 @@ int main(int argc, char** argv) {
         float pixel_size;
         str >> pixel_size;
         warp_pass->pixel_size(pixel_size-0.5);
-      } else if (callback == "set_quad_count") {
-        std::stringstream str(params[0]);
-        str >> quad_count;
-        setup_textured_quad_scene();
-      } else if (callback == "set_quad_range") {
-        std::stringstream str(params[0]);
-        str >> quad_range;
-        setup_textured_quad_scene();
-      } else if (callback == "set_quad_start") {
-        std::stringstream str(params[0]);
-        str >> quad_start;
-        setup_textured_quad_scene();
-      } else if (callback == "set_quad_scale") {
-        std::stringstream str(params[0]);
-        str >> quad_scale;
-        setup_textured_quad_scene();
-      } else if (callback == "set_bg_tex") {
-        res_pass->background_texture(params[0]);
       } else if (callback == "set_cell_size") {
         std::stringstream str(params[0]);
         int cell_size;
@@ -1332,11 +942,6 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> stereo;
         update_view_mode();
-      } else if (callback == "set_background") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
       } else if (callback == "set_adaptive_entry_level") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1372,47 +977,6 @@ int main(int argc, char** argv) {
       } else if (callback == "set_right_view") {
         eye_offset = eye_dist*0.5;
         update_view_mode();
-      } else if (callback == "set_gbuffer_type_points"
-               | callback == "set_gbuffer_type_scaled_points"
-               | callback == "set_gbuffer_type_quads_screen_aligned"
-               | callback == "set_gbuffer_type_quads_depth_aligned"
-               | callback == "set_gbuffer_type_grid_depth_theshold"
-               | callback == "set_gbuffer_type_grid_surface_estimation"
-               | callback == "set_gbuffer_type_grid_advanced_surface_estimation"
-               | callback == "set_gbuffer_type_grid_non_uniform_surface_estimation"
-               | callback == "set_gbuffer_type_none") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-
-          gua::WarpPassDescription::GBufferWarpMode mode(gua::WarpPassDescription::GBUFFER_NONE);
-
-          if (callback == "set_gbuffer_type_quads_depth_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
-          if (callback == "set_gbuffer_type_grid_depth_theshold")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_DEPTH_THRESHOLD;
-          if (callback == "set_gbuffer_type_grid_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_grid_advanced_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_grid_non_uniform_surface_estimation")
-            mode = gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION;
-          if (callback == "set_gbuffer_type_none")
-            mode = gua::WarpPassDescription::GBUFFER_NONE;
-
-          warp_pass->gbuffer_warp_mode(mode);
-          grid_pass->mode(mode);
-        }
-      } else if (callback == "set_transparency_type_gbuffer"
-               | callback == "set_transparency_type_hidden"
-               | callback == "set_transparency_type_abuffer"
-               | callback == "set_transparency_type_raycasting"
-               | callback == "set_transparency_type_none") {
-
-        current_transparency_mode = callback;
-        update_view_mode();
-
       } else if (callback == "set_hole_filling_type_none"
                | callback == "set_hole_filling_type_epipolar_search"
                | callback == "set_hole_filling_type_epipolar_mirror"
@@ -1433,24 +997,6 @@ int main(int argc, char** argv) {
 
           warp_pass->hole_filling_mode(mode);
         }
-      } else if (callback == "set_interpolation_mode_nearest"
-               | callback == "set_interpolation_mode_linear"
-               | callback == "set_interpolation_mode_adaptive") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        if (checked) {
-
-          gua::WarpPassDescription::InterpolationMode mode(gua::WarpPassDescription::INTERPOLATION_MODE_ADAPTIVE);
-
-          if (callback == "set_interpolation_mode_nearest")
-            mode = gua::WarpPassDescription::INTERPOLATION_MODE_NEAREST;
-          if (callback == "set_interpolation_mode_linear")
-            mode = gua::WarpPassDescription::INTERPOLATION_MODE_LINEAR;
-
-          warp_pass->interpolation_mode(mode);
-        }
-
       } else if (callback == "set_manipulation_object"
               || callback == "set_manipulation_camera"
               || callback == "set_manipulation_navigator") {
@@ -1467,41 +1013,27 @@ int main(int argc, char** argv) {
           if (callback == "set_manipulation_navigator") manipulation_navigator = true;
         }
       } else if (callback == "set_stereotype_spatial"
-              || callback == "set_stereotype_temporal"
-              || callback == "set_stereotype_single_temporal") {
+              || callback == "set_stereotype_temporal") {
         std::stringstream str(params[0]);
         bool checked;
         str >> checked;
         if (checked) {
           stereotype_spatial = false;
           stereotype_temporal = false;
-          stereotype_single_temporal = false;
 
           if (callback == "set_stereotype_spatial") stereotype_spatial = true;
           if (callback == "set_stereotype_temporal") stereotype_temporal = true;
-          if (callback == "set_stereotype_single_temporal") stereotype_single_temporal = true;
         }
         update_view_mode();
-      } else if (callback == "set_scene_one_oilrig"        ||
-                 callback == "set_scene_many_oilrigs"      ||
-                 callback == "set_scene_sponza0"           ||
+      } else if (callback == "set_scene_oilrig"            ||
                  callback == "set_scene_sponza1"           ||
                  callback == "set_scene_sponza2"           ||
                  callback == "set_scene_sponza3"           ||
-                 callback == "set_scene_sponza4"           ||
                  callback == "set_scene_teapot"            ||
                  callback == "set_scene_pitoti"            ||
-                 callback == "set_scene_car"               ||
                  callback == "set_scene_bottle"            ||
-                 callback == "set_scene_mountains"         ||
-                 callback == "set_scene_sphere"            ||
-                 callback == "set_scene_dragon"            ||
                  callback == "set_scene_hairball"          ||
-                 callback == "set_scene_engine"            ||
-                 callback == "set_scene_many_transp_dragon"||
-                 callback == "set_scene_transp_dragon"     ||
-                 callback == "set_scene_buddha"            ||
-                 callback == "set_scene_textured_quads") {
+                 callback == "set_scene_glasses") {
         set_scene(callback);
       }
     });
@@ -1568,7 +1100,7 @@ int main(int argc, char** argv) {
       }
     #else
       if (action == 1) {
-        if (key == 49) set_scene("set_scene_one_oilrig");
+        if (key == 49) set_scene("set_scene_oilrig");
         if (key == 50) set_scene("set_scene_dragon");
         if (key == 51) set_scene("set_scene_hairball");
         if (key == 52) set_scene("set_scene_sponza_1");
@@ -1710,60 +1242,6 @@ int main(int argc, char** argv) {
   // stat display update counter
   int ctr=0;
 
-  // testcounter counter
-  int test_frame_counter = -1;
-  int test_counter = -1;
-  gua::math::vec2ui orig_resolution;
-
-  auto round = [](gua::math::vec2 input){
-    return gua::math::vec2ui((unsigned)(input.x/32)*32, (unsigned)(input.y/32)*32);
-  };
-
-
-  std::vector<gua::math::vec2ui> test_resolutions = {round(gua::math::vec2(std::sqrt(9.0/16.0*500000*1)*16.0/9.0,std::sqrt(9.0/16.0*500000*1))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*2)*16.0/9.0,std::sqrt(9.0/16.0*500000*2))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*3)*16.0/9.0,std::sqrt(9.0/16.0*500000*3))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*4)*16.0/9.0,std::sqrt(9.0/16.0*500000*4))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*5)*16.0/9.0,std::sqrt(9.0/16.0*500000*5))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*6)*16.0/9.0,std::sqrt(9.0/16.0*500000*6))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*7)*16.0/9.0,std::sqrt(9.0/16.0*500000*7))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*8)*16.0/9.0,std::sqrt(9.0/16.0*500000*8))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*9)*16.0/9.0,std::sqrt(9.0/16.0*500000*9))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*10)*16.0/9.0,std::sqrt(9.0/16.0*500000*10))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*11)*16.0/9.0,std::sqrt(9.0/16.0*500000*11))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*12)*16.0/9.0,std::sqrt(9.0/16.0*500000*12))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*13)*16.0/9.0,std::sqrt(9.0/16.0*500000*13))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*14)*16.0/9.0,std::sqrt(9.0/16.0*500000*14))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*15)*16.0/9.0,std::sqrt(9.0/16.0*500000*15))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*16)*16.0/9.0,std::sqrt(9.0/16.0*500000*16))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*17)*16.0/9.0,std::sqrt(9.0/16.0*500000*17))),
-                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*18)*16.0/9.0,std::sqrt(9.0/16.0*500000*18)))};
-
-  float max_test_disparity(screen_width/10.f);
-  std::vector<double> test_offsets;
-  for (int i=0; i<20; ++i) {
-    test_offsets.push_back(i*max_test_disparity/(20-1));
-  }
-
-
-  std::vector<double> test_rotations = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
-
-  std::vector<gua::math::vec2> test_quad_positions;
-  for (float i=0; i<30; ++i) {
-    float offset(i*max_test_disparity/(30-1));
-
-    for (float j=0; j<200; j=j*1.5+0.1) {
-      test_quad_positions.push_back(gua::math::vec2(offset, j));
-    }
-  }
-
-  std::vector<gua::math::vec2> test_quad_ranges;
-  for (float i=2; i<10; ++i) {
-    for (float j=0; j<200; j=j*1.7+0.02) {
-      test_quad_ranges.push_back(gua::math::vec2(i, j));
-    }
-  }
-
   gua::Timer frame_timer;
   frame_timer.start();
 
@@ -1774,203 +1252,36 @@ int main(int argc, char** argv) {
 
     query_results.update(window);
 
-    // test --------------------------------------------------------------------
-    if (test_print_current_times) {
-      if (test_frame_counter < 0) {
-        #if GUI_SUPPORT
-          toggle_gui();
-        #endif
-        query_results.reset();
-        test_frame_counter = 10;
+    #if POWER_WALL
+      normal_cam->set_transform(current_tracking_matrix);
+    #elif OCULUS1
+      normal_cam->set_transform(get_oculus_transform(oculus_sensor));
+    #elif OCULUS2
+      normal_cam->set_transform(window->get_oculus_sensor_orientation());
+    #endif
+
+    nav.update();
+    warp_nav.update();
+
+    #if POWER_WALL
+      if (warp_perspective && !warping) {
+        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
+      } else {
+        navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
       }
-      if (test_frame_counter == 0) {
-        #if GUI_SUPPORT
-          toggle_gui();
-        #endif
-        query_results.print_to_console();
-        test_print_current_times = false;
+      warp_navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
+    #else
+      if (warp_perspective && !warping) {
+        navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));
+      } else {
+        navigation->set_transform(gua::math::mat4(nav.get_transform()));
       }
-
-      --test_frame_counter;
-    }
-    // resolution --------------------------------------------------------------
-    else if (test_resolution_series) {
-
-      if (test_frame_counter < 0) {
-
-        if (test_counter < (int)test_resolutions.size()-1) {
-          if (test_counter == -1) {
-            orig_resolution = normal_cam->config.get_resolution();
-          }
-          ++test_counter;
-          test_frame_counter = 20;
-          normal_cam->config.set_resolution(test_resolutions[test_counter]);
-          warp_cam->config.set_resolution(test_resolutions[test_counter]);
-        } else {
-          test_counter = -1;
-          test_resolution_series = false;
-          normal_cam->config.set_resolution(orig_resolution);
-          warp_cam->config.set_resolution(orig_resolution);
-
-          #if GUI_SUPPORT
-            toggle_gui();
-          #endif
-        }
-      }
-      if (test_frame_counter == 10)  query_results.reset();
-      if (test_frame_counter == 0) {
-        std::cout << test_resolutions[test_counter].x*test_resolutions[test_counter].y << " ";
-        query_results.print_to_console();
-      }
-
-      --test_frame_counter;
-    }
-
-
-    // warp offset -------------------------------------------------------------
-    else if (test_positional_warp_series) {
-
-      if (test_frame_counter < 0) {
-
-        if (test_counter < (int)test_offsets.size()-1) {
-          ++test_counter;
-          test_frame_counter = 20;
-          warp_navigation->set_transform(scm::math::make_translation(test_offsets[test_counter], 0.0, 0.0));
-        } else {
-          test_counter = -1;
-          test_positional_warp_series = false;
-          #if GUI_SUPPORT
-            toggle_gui();
-          #endif
-        }
-      }
-      if (test_frame_counter == 10)  query_results.reset();
-      if (test_frame_counter == 0) {
-        std::cout << test_offsets[test_counter] << " ";
-        query_results.print_to_console();
-      }
-      --test_frame_counter;
-    }
-
-    // warp rotations ----------------------------------------------------------
-    else if (test_rotational_warp_series) {
-
-      if (test_frame_counter < 0) {
-
-        if (test_counter < (int)test_rotations.size()-1) {
-          ++test_counter;
-          test_frame_counter = 20;
-          warp_navigation->set_transform(scm::math::make_rotation(test_rotations[test_counter], 0.0, 1.0, 0.0));
-        } else {
-          test_counter = -1;
-          test_rotational_warp_series = false;
-          #if GUI_SUPPORT
-            toggle_gui();
-          #endif
-        }
-      }
-      if (test_frame_counter == 10)  query_results.reset();
-      if (test_frame_counter == 0) {
-        std::cout << test_rotations[test_counter] << " ";
-        query_results.print_to_console();
-      }
-      --test_frame_counter;
-    }
-
-    // textured quads disparity ------------------------------------------------
-    else if (test_quad_series) {
-
-      if (test_frame_counter < 0) {
-
-        if (test_counter < (int)test_quad_positions.size()-1) {
-          ++test_counter;
-          test_frame_counter = 15;
-          quad_range = test_quad_positions[test_counter].y;
-          warp_navigation->set_transform(scm::math::make_translation(test_quad_positions[test_counter].x, 0.0, 0.0));
-          setup_textured_quad_scene();
-        } else {
-          test_counter = -1;
-          test_quad_series = false;
-          #if GUI_SUPPORT
-            toggle_gui();
-          #endif
-        }
-      }
-      if (test_frame_counter == 5) query_results.reset();
-      if (test_frame_counter == 0) {
-        std::cout << resolution.x*test_quad_positions[test_counter].x/screen_width << " "
-                  << resolution.x*test_quad_positions[test_counter].x/(screen_width*(test_quad_positions[test_counter].y+screen_dist)/screen_dist) << " ";
-        query_results.print_to_console();
-      }
-      --test_frame_counter;
-    }
-
-    // textured quads count ----------------------------------------------------
-    else if (test_quad_count_series) {
-
-      if (test_frame_counter < 0) {
-
-        if (test_counter < (int)test_quad_ranges.size()-1) {
-          ++test_counter;
-          test_frame_counter = 15;
-          quad_range = test_quad_ranges[test_counter].y;
-          quad_count = test_quad_ranges[test_counter].x;
-          warp_navigation->set_transform(scm::math::make_translation(0.125, 0.0, 0.0));
-          setup_textured_quad_scene();
-        } else {
-          test_counter = -1;
-          test_quad_count_series = false;
-          #if GUI_SUPPORT
-            toggle_gui();
-          #endif
-        }
-      }
-      if (test_frame_counter == 5) query_results.reset();
-      if (test_frame_counter == 0) {
-        std::cout << quad_count << " "
-                  << resolution.x*0.125/screen_width << " "
-                  << resolution.x*0.125/(screen_width*(test_quad_ranges[test_counter].y+screen_dist)/screen_dist) << " ";
-        query_results.print_to_console();
-      }
-      --test_frame_counter;
-    }
-
-    else {
-
-      #if POWER_WALL
-        normal_cam->set_transform(current_tracking_matrix);
-      #elif OCULUS1
-        normal_cam->set_transform(get_oculus_transform(oculus_sensor));
-      #elif OCULUS2
-        normal_cam->set_transform(window->get_oculus_sensor_orientation());
-      #endif
-
-      nav.update();
-      warp_nav.update();
-
-      #if POWER_WALL
-        if (warp_perspective && !warping) {
-          navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-        } else {
-          navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-        }
-        warp_navigation->set_transform(normal_screen->get_transform() * gua::math::mat4(warp_nav.get_transform()) * scm::math::inverse(normal_screen->get_transform()));
-      #else
-        if (warp_perspective && !warping) {
-          navigation->set_transform(gua::math::mat4(nav.get_transform() * warp_nav.get_transform()));
-        } else {
-          navigation->set_transform(gua::math::mat4(nav.get_transform()));
-        }
-        // std::cout << nav.get_transform() << std::endl;
-        warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
-      #endif
-    }
-
+      warp_navigation->set_transform(gua::math::mat4(warp_nav.get_transform()));
+    #endif
 
     #if GUI_SUPPORT
       gua::Interface::instance()->update();
     #endif
-
 
     gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(object_trackball.shiftx()),
                                                               gua::math::float_t(object_trackball.shifty()),
@@ -1986,16 +1297,6 @@ int main(int argc, char** argv) {
 
       query_results.reset();
     }
-
-    #if LOAD_SPONZA
-      // double t = frame_timer.get_elapsed()*2;
-      // auto movement = gua::math::vec3(std::sin(t), std::sin(t*3.123+1), std::sin(t*5.34+3));
-      // movement += gua::math::vec3(std::sin(t*0.32+2)*0.4, std::sin(t*2.123)*0.5, std::sin(t*2.34+2)*0.7);
-      // sponza_light_05->set_transform(scm::math::make_translation(movement*0.1));
-      // sponza_light_06->set_transform(scm::math::make_translation(movement*0.1));
-      // sponza_light_07->set_transform(scm::math::make_translation(movement*0.1));
-      // sponza_light_08->set_transform(scm::math::make_translation(movement*0.1));
-    #endif
 
     window->process_events();
     if (window->should_close()) {

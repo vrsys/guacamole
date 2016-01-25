@@ -308,9 +308,6 @@ int main(int argc, char** argv) {
   auto warp_pass(pipe->get_pass_by_type<gua::WarpPassDescription>());
   auto grid_pass(pipe->get_pass_by_type<gua::GenerateWarpGridPassDescription>());
 
-  warp_pass->interpolation_mode(gua::WarpPassDescription::INTERPOLATION_MODE_ADAPTIVE);
-  warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION);
-  grid_pass->mode(gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION);
   warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_BLUR);
 
   auto set_scene = [&](std::string const& name) {
@@ -409,7 +406,6 @@ int main(int argc, char** argv) {
   res_pass->write_abuffer_depth(false);
   normal_cam->config.set_enable_stereo(true);
   window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
-  warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
   
   set_scene(scenes[current_scene]);
   normal_cam->config.set_stereo_type(stereo_types[current_scene][current_mode]);

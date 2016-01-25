@@ -41,9 +41,6 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
   GenerateWarpGridPassDescription& split_threshold(float val);
   float split_threshold() const;
 
-  GenerateWarpGridPassDescription& mode(WarpPassDescription::GBufferWarpMode mode);
-  WarpPassDescription::GBufferWarpMode mode() const;
-
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
@@ -52,7 +49,6 @@ class GUA_DLL GenerateWarpGridPassDescription : public PipelinePassDescription {
 
   int cell_size_;
   float split_threshold_;
-  WarpPassDescription::GBufferWarpMode mode_;
 };
 
 }

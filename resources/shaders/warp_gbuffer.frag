@@ -22,14 +22,8 @@
 @include "common/header.glsl"
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
-@include "gbuffer_warp_modes.glsl"
 @include "hole_filling_modes.glsl"
-@include "interpolation_modes.glsl"
 @include "warp_grid_bits.glsl"
-
-// -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-// -----------------------------------------------------------------------------
 
 flat in uint cellsize;
 in vec2 texcoords;
@@ -51,28 +45,17 @@ vec3 heat(float v) {
 
 void main() {
 
-  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
-    const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x & 1) == 1;
-  #else
-    uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x;
-    const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
-  #endif
+  uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x;
+  const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
 
-  #if INTERPOLATION_MODE == INTERPOLATION_MODE_NEAREST
-    gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
-    gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
-  #elif INTERPOLATION_MODE == INTERPOLATION_MODE_LINEAR
+  // adaptive interpolation
+  if (is_surface) {
     gua_out_color_emit.rgb = gua_get_color(texcoords);
     gua_out_color_emit.a = gua_get_pbr(texcoords).r;
-  #else
-    if (is_surface) {
-      gua_out_color_emit.rgb = gua_get_color(texcoords);
-      gua_out_color_emit.a = gua_get_pbr(texcoords).r;
-    } else {
-      gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
-      gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
-    }
-  #endif
+  } else {
+    gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+    gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
+  }
 
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;
@@ -83,21 +66,3 @@ void main() {
     }
   #endif
 }
-
-
-// -----------------------------------------------------------------------------
-#else // WARP_MODE_QUADS_DEPTH_ALIGNED -----------------------------------------
-// -----------------------------------------------------------------------------
-
-in vec3 color;
-in vec3 normal;
-in float emit;
-
-// output
-layout(location=0) out vec4 gua_out_color_emit;
-
-void main() {
-  gua_out_color_emit = vec4(color, emit);
-}
-
-#endif

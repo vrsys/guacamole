@@ -45,32 +45,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
     }
   };
 
-  enum GBufferWarpMode {
-    GBUFFER_NONE,
-    GBUFFER_QUADS_DEPTH_ALIGNED,
-    GBUFFER_GRID_DEPTH_THRESHOLD,
-    GBUFFER_GRID_SURFACE_ESTIMATION,
-    GBUFFER_GRID_ADVANCED_SURFACE_ESTIMATION,
-    GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-  };
-
-  enum ABufferWarpMode {
-    ABUFFER_NONE,
-    ABUFFER_HIDDEN,
-    ABUFFER_RAYCASTING
-  };
-
   enum HoleFillingMode {
     HOLE_FILLING_NONE,
     HOLE_FILLING_EPIPOLAR_SEARCH,
     HOLE_FILLING_EPIPOLAR_MIRROR,
     HOLE_FILLING_BLUR
-  };
-
-  enum InterpolationMode {
-    INTERPOLATION_MODE_NEAREST,
-    INTERPOLATION_MODE_LINEAR,
-    INTERPOLATION_MODE_ADAPTIVE
   };
 
   WarpPassDescription();
@@ -96,20 +75,11 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
 
-  WarpPassDescription& gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode);
-  GBufferWarpMode gbuffer_warp_mode() const;
-
-  WarpPassDescription& abuffer_warp_mode(ABufferWarpMode abuffer_warp_mode);
-  ABufferWarpMode abuffer_warp_mode() const;
-
   WarpPassDescription& hole_filling_mode(HoleFillingMode hole_filling_mode);
   HoleFillingMode hole_filling_mode() const;
 
   WarpPassDescription& hole_filling_color(math::vec3f const& hole_filling_color);
   math::vec3f const& hole_filling_color() const;
-
-  WarpPassDescription& interpolation_mode(InterpolationMode interpolation_mode);
-  InterpolationMode interpolation_mode() const;
 
   WarpPassDescription& get_warp_state(std::function<WarpState()> const& f);
   std::function<WarpState()> const& get_warp_state() const;
@@ -128,10 +98,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   math::vec3f hole_filling_color_;
   int max_raysteps_;
   float pixel_size_;
-  GBufferWarpMode gbuffer_warp_mode_;
-  ABufferWarpMode abuffer_warp_mode_;
   HoleFillingMode hole_filling_mode_;
-  InterpolationMode interpolation_mode_;
 
   std::function<WarpState()> get_warp_state_;
 };
