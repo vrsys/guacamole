@@ -43,6 +43,7 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
+#include <gua/physics.hpp>
 
 #if GUI_SUPPORT
   #include <gua/gui.hpp>
@@ -136,23 +137,14 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-void show_backfaces(std::shared_ptr<gua::node::Node> const& node, bool show) {
-  auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(node));
-  if (casted) {
-    casted->get_material()->set_show_back_faces(show);
-  }
-
-  for (auto& child: node->get_children()) {
-    show_backfaces(child, show);
-  }
-}
-
 int main(int argc, char** argv) {
 
   // initialize guacamole
   gua::init(argc, argv);
 
   gua::Logger::enable_debug = false;
+
+  auto physics = std::make_shared<gua::physics::Physics>();
 
   #if OCULUS1
     auto window = std::make_shared<gua::OculusWindow>();
@@ -284,12 +276,14 @@ int main(int argc, char** argv) {
     scene_root->scale(20);
   #endif
 
-  // bottle --------------------------------------------------------------------
+  // physics --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "physics");
+
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
-  plane->translate(0, -0.26, 0);
-  plane->scale(2);
+  plane->scale(10);
+  plane->translate(0, 1, 0);
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
   if (casted) {
     casted->get_material()->set_show_back_faces(true);
@@ -299,6 +293,43 @@ int main(int argc, char** argv) {
     casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
     casted->get_material()->set_uniform("NormalMap", std::string("data/textures/tiles_normal.jpg"));
   }
+
+  scene_root->add_child(plane);
+
+  gua::physics::CollisionShapeDatabase::add_shape("sphere", new gua::physics::SphereShape(0.25));
+  gua::physics::CollisionShapeDatabase::add_shape("box", new gua::physics::BoxShape(gua::math::vec3(5, 1, 5)));
+
+  auto floor_body = std::make_shared<gua::physics::RigidBodyNode>("floor_body", 0, 0.5, 0.7);
+  auto floor_shape = std::make_shared<gua::physics::CollisionShapeNode>("floor_shape");
+  floor_shape->data.set_shape("box");
+  graph.get_root()->add_child(floor_body);
+  floor_body->add_child(floor_shape);
+  physics->add_rigid_body(floor_body);
+
+  std::list<std::shared_ptr<gua::physics::RigidBodyNode>> balls;
+
+  auto add_sphere = [&](){
+    auto sphere_body = std::make_shared<gua::physics::RigidBodyNode>("sphere_body", 5, 0.5, 0.7, scm::math::make_translation(1.0-2.0*std::rand()/RAND_MAX, 5.0, 1.0-2.0*std::rand()/RAND_MAX));
+    auto sphere_shape = std::make_shared<gua::physics::CollisionShapeNode>("sphere_shape");
+    sphere_shape->data.set_shape("sphere");
+    graph.get_root()->add_child(sphere_body);
+    sphere_body->add_child(sphere_shape);
+
+    auto sphere_geometry(loader.create_geometry_from_file("sphere_geometry", "data/objects/sphere.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+      gua::TriMeshLoader::NORMALIZE_SCALE));
+    sphere_shape->add_child(sphere_geometry);
+    sphere_geometry->scale(0.5);
+
+    physics->add_rigid_body(sphere_body);
+
+    balls.push_back(sphere_body);
+  };
+
+
+  // glasses --------------------------------------------------------------------
+  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "glasses");
   auto load_mat = [](std::string const& file){
     auto desc(std::make_shared<gua::MaterialShaderDescription>());
     desc->load_from_file(file);
@@ -306,23 +337,6 @@ int main(int argc, char** argv) {
     gua::MaterialShaderDatabase::instance()->add(shader);
     return shader->make_new_material();
   };
-
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "bottle");
-  auto mat_bottle(load_mat("data/materials/Bottle.gmd"));
-  mat_bottle->set_uniform("ColorMap",     std::string("data/objects/bottle/albedo.png"))
-             .set_uniform("RoughnessMap", std::string("data/objects/bottle/roughness.jpg"))
-             .set_show_back_faces(true);
-
-  for (int i(-1); i<=1; ++i) {
-    auto bottle(loader.create_geometry_from_file("bottle", "data/objects/bottle/bottle.obj", mat_bottle,
-                                                 gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    bottle->translate(i*0.75, 0, 0);
-    scene_root->add_child(bottle);
-  }
-  scene_root->add_child(plane);
-
-  // glasses --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "glasses");
   auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
   mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
               .set_show_back_faces(true);
@@ -450,7 +464,7 @@ int main(int argc, char** argv) {
     graph["/transform/oilrig"]->get_tags().add_tag("invisible");
     graph["/transform/teapot"]->get_tags().add_tag("invisible");
     graph["/transform/pitoti"]->get_tags().add_tag("invisible");
-    graph["/transform/bottle"]->get_tags().add_tag("invisible");
+    graph["/transform/physics"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
     graph["/transform/glasses"]->get_tags().add_tag("invisible");
 
@@ -471,7 +485,6 @@ int main(int argc, char** argv) {
     if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
       sun_light->data.set_brightness(15.f);
-      //res_pass->ssao_enable(false);
       res_pass->ssao_intensity(5.0f);
       res_pass->ssao_radius(5.0f);
       res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
@@ -498,8 +511,8 @@ int main(int argc, char** argv) {
       sun_light->data.set_enable_shadows(false);
       graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
     }
-    if (name == "set_scene_bottle")
-      graph["/transform/bottle"]->get_tags().remove_tag("invisible");
+    if (name == "set_scene_physics")
+      graph["/transform/physics"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_hairball") {
       graph["/transform/hairball"]->get_tags().remove_tag("invisible");
       res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
@@ -614,7 +627,6 @@ int main(int argc, char** argv) {
 
     // set stereo options
     if (stereo) {
-
       normal_cam->config.set_enable_stereo(true);
 
       #if OCULUS1
@@ -627,9 +639,7 @@ int main(int argc, char** argv) {
         window->config.set_stereo_mode(POWER_WALL || USE_SIDE_BY_SIDE ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
-
       if (warping) {
-
         if (stereotype_spatial) {
           normal_cam->config.set_stereo_type(gua::StereoType::SPATIAL_WARP);
 
@@ -761,7 +771,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_sponza3");
       gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_pitoti");
-      gui->add_javascript_callback("set_scene_bottle");
+      gui->add_javascript_callback("set_scene_physics");
       gui->add_javascript_callback("set_scene_glasses");
       gui->add_javascript_callback("set_scene_hairball");
       gui->add_javascript_callback("set_manipulation_navigator");
@@ -913,7 +923,7 @@ int main(int argc, char** argv) {
                  callback == "set_scene_sponza3"           ||
                  callback == "set_scene_teapot"            ||
                  callback == "set_scene_pitoti"            ||
-                 callback == "set_scene_bottle"            ||
+                 callback == "set_scene_physics"            ||
                  callback == "set_scene_hairball"          ||
                  callback == "set_scene_glasses") {
         set_scene(callback);
@@ -1083,6 +1093,26 @@ int main(int argc, char** argv) {
 
   // application loop
   while(true) {
+
+    bool spawn_balls(!graph["/transform/physics"]->get_tags().has_tag("invisible"));
+
+    if (spawn_balls && frame_timer.get_elapsed() > 0.02f) {
+      frame_timer.reset();
+      add_sphere();
+    }
+
+    auto b(balls.begin());
+    while (b != balls.end()) {
+      if (!spawn_balls || (*b)->get_world_position().y < -5.0) {
+        physics->remove_rigid_body(*b);
+        graph.get_root()->remove_child(*b);
+        b = balls.erase(b);
+      } else {
+        ++b;
+      }
+    }
+
+    physics->synchronize(true);
 
     #if POWER_WALL
       normal_cam->set_transform(current_tracking_matrix);
