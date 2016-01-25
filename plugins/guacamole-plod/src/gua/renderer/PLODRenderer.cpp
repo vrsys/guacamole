@@ -462,12 +462,14 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
     std::size_t camera_id = pipe.current_viewstate().viewpoint_uuid;
     unsigned char view_direction = (unsigned char)pipe.current_viewstate().view_direction;
 
-    std::size_t gua_view_id = (camera_id >> 8) | ( std::size_t(view_direction) << 56 );
+    std::size_t gua_view_id = (camera_id << 8) | ( std::size_t(view_direction));
 
-	//std::cout << " View UUID : " << std::setfill('0') << std::setw(32) << gua_view_id <<
-	//	         " Near clip : " << frustum.get_clip_near() << 
-	//			 " Far clip : " << frustum.get_clip_far() <<
-	//			 " Resolution : " << render_target_dims << std::endl;
+    //std::cout << " View UUID : " /*<< std::setfill('0') << std::setw(32) << gua_view_id */<<
+		         //" Near clip : " << frustum.get_clip_near() << 
+			 //" Far clip : " << frustum.get_clip_far() <<
+			 //" Resolution : " << render_target_dims <<
+                         //" Camera_id : " << camera_id <<
+                         //" V Direction : " << (int)view_direction << std::endl;
 
     pbr::view_t pbr_view_id = controller->DeduceViewId(context_id, gua_view_id);
 

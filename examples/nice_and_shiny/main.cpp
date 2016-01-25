@@ -20,8 +20,6 @@
  ******************************************************************************/
 
 #include <functional>
-#include <future>
-#include <chrono>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -131,33 +129,16 @@ int main(int argc, char** argv) {
   // auto resolution = gua::math::vec2ui(1920, 1080);
   auto resolution = gua::math::vec2ui(2560, 1440);
 
-  std::vector<std::future<void>> futures;
-
-  // std::async(std::launch::async, []() {
-  //  gua::TextureDatabase::instance()->load(
-  //    "/opt/guacamole/resources/skymaps/skymap.jpg");
-  //});
-
   std::string skymaps_dir("/opt/guacamole/resources/skymaps/");
 
-  auto start = std::chrono::steady_clock::now();
   for (auto const& file :
        {std::string(directory + "Cerberus_A.tga"),
         std::string(directory + "Cerberus_M.tga"),
         std::string(directory + "Cerberus_R.tga"),
         std::string(directory + "Cerberus_N.negated_green.tga"),
         std::string(skymaps_dir + "skymap.jpg")}) {
-    futures.push_back(std::async(std::launch::async, [file]() {
-      gua::TextureDatabase::instance()->load(file);
-    }));
+    gua::TextureDatabase::instance()->load(file);
   }
-  for (auto& f : futures) {
-    f.get();
-  }
-  auto end = std::chrono::steady_clock::now();
-  auto diff = end - start;
-  std::cout << std::chrono::duration<double, std::milli>(diff).count() << " ms"
-            << std::endl;
 
   // TODO: old pipes wont work anymore
   auto standardPipe(std::make_shared<gua::PipelineDescription>());

@@ -81,10 +81,10 @@ if (UNIX)
   include(find_x11)
 elseif (WIN32)
   include(FindAssimp)
-  include(FindFreeImage)
   set(GL_LIBRARIES OpenGL32.lib)
 endif (UNIX)
 
+include(FindFreeImage)
 include(FindSchism)
 
 if (UNIX)

@@ -31,11 +31,7 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
 WarpMatrix::WarpMatrix() : Texture2D(0, 0), data_() {}
-
-////////////////////////////////////////////////////////////////////////////////
 
 WarpMatrix::WarpMatrix(std::string const& file_name)
     : Texture2D(0,
@@ -61,35 +57,24 @@ WarpMatrix::WarpMatrix(std::string const& file_name)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void WarpMatrix::upload_to(RenderContext const& context) const {
-
   std::unique_lock<std::mutex> lock(upload_mutex_);
-
-  if (textures_.size() <= context.id) {
-    textures_.resize(context.id + 1);
-    sampler_states_.resize(context.id + 1);
-    render_contexts_.resize(context.id + 1);
-  }
+  RenderContext::Texture ctex{};
 
   std::vector<void*> tmp_data;
   tmp_data.push_back(&data_[0]);
 
-  textures_[context.id] = context.render_device->create_texture_2d(
+  ctex.texture = context.render_device->create_texture_2d(
       scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_),
                                color_format_),
       scm::gl::FORMAT_RGBA_32F,
       tmp_data);
 
-  sampler_states_[context.id] =
+  ctex.sampler_state =
       context.render_device->create_sampler_state(state_descripton_);
 
-  render_contexts_[context.id] = context.render_context;
-
-  make_resident(context);
+  context.textures[uuid_] = ctex;
+  context.render_context->make_resident(ctex.texture, ctex.sampler_state);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 }

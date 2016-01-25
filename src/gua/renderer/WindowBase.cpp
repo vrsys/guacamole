@@ -31,6 +31,8 @@
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 // external headers
 #include <sstream>
 #include <iostream>
@@ -62,6 +64,12 @@ std::string subroutine_from_mode(WindowBase::TextureDisplayMode mode) {
       break;
     case WindowBase::CHECKER_ODD:
       return "get_checker_odd";
+      break;
+    case WindowBase::QUAD_BUFFERED_LEFT:
+      return "get_quad_buffer_left";
+      break;
+    case WindowBase::QUAD_BUFFERED_RIGHT:
+      return "get_quad_buffer_right";
       break;
     default:
       return "get_full";
@@ -281,9 +289,17 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
               is_left, true);
       break;
+    case StereoMode::QUAD_BUFFERED:
+      display(texture,
+              is_left ? config.get_left_resolution() : config.get_right_resolution(),
+              is_left ? config.get_left_position() : config.get_right_position(),
+              is_left ? WindowBase::QUAD_BUFFERED_LEFT : WindowBase::QUAD_BUFFERED_RIGHT,
+              is_left, true);
+      break;
+    default:
+      break;
   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -299,6 +315,12 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      bool clear) {
 
   GUA_PUSH_GL_RANGE(ctx_, "Display image");
+
+  auto const& glapi = ctx_.render_context->opengl_api();
+  glapi.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  if (config.get_stereo_mode() == StereoMode::QUAD_BUFFERED) {
+    glapi.glDrawBuffer(is_left ? GL_BACK_LEFT : GL_BACK_RIGHT);
+  }
 
   fullscreen_shader_.use(ctx_);
   fullscreen_shader_.set_uniform(ctx_, texture->get_handle(ctx_), "sampler");

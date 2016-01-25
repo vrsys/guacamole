@@ -100,6 +100,23 @@ struct GUA_DLL RenderContext {
   */
   InstanceCollection resources;
 
+  class Texture
+  {
+    public:
+      Texture() = default;
+      Texture(scm::gl::texture_image_ptr const& t,
+              scm::gl::sampler_state_ptr const& s)
+        : texture(t), sampler_state(s)
+      {}
+      scm::gl::texture_image_ptr texture;
+      scm::gl::sampler_state_ptr sampler_state;
+  };
+
+  /**
+  * Textures associated with this context
+  */
+  mutable std::unordered_map<std::size_t, Texture> textures;
+
   /**
   * Resources associated with this context
   */
