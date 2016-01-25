@@ -27,10 +27,6 @@
 @include "interpolation_modes.glsl"
 @include "warp_grid_bits.glsl"
 
-#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-  flat in uint is_rubber_band;
-#endif
-
 // -----------------------------------------------------------------------------
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
@@ -86,35 +82,11 @@ void main() {
       gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0), 0.7);
     }
   #endif
-
-  #if @debug_interpolation_borders@ == 1
-    if (!is_surface) {
-      gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.0, 0.0, 0.8), 0.8);
-    }
-  #endif
-
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1
-    if (is_rubber_band == 1) {
-      #if @debug_rubber_bands@ == 1
-        gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.8, 0.0, 0.0), 0.9);
-      #endif
-    }
-  #elif HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-    if (is_rubber_band == 1) {
-      #if @debug_rubber_bands@ == 1
-        gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0.8, 0.0, 0.0), 0.5);
-      #endif
-      gl_FragDepth = 0.9999999;
-    } else {
-      gl_FragDepth = gl_FragCoord.z;
-    }
-
-  #endif
 }
 
 
 // -----------------------------------------------------------------------------
-#else // all other modes -------------------------------------------------------
+#else // WARP_MODE_QUADS_DEPTH_ALIGNED -----------------------------------------
 // -----------------------------------------------------------------------------
 
 in vec3 color;

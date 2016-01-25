@@ -29,7 +29,7 @@ layout(pixel_center_integer) in vec4 gl_FragCoord;
 // output
 layout(location=0) out vec3 gua_out_color;
 
-#define MAX_RAY_STEPS @warping_max_layers@
+#define MAX_RAY_STEPS @max_raysteps@
 
 uniform float gua_tone_mapping_exposure = 1.5;
 
@@ -154,130 +154,6 @@ vec2 get_min_max_depth(ivec2 pos, int level) {
   return vec2(min_depth, max_depth);
 }
 
-void draw_debug_views() {
-
-  const int preview_scale = 3;
-  vec2 preview_coords = gua_quad_coords*preview_scale-vec2(0.09, 0.12);
-
-  // center ray preview
-  #if 1
-    // draw mini version of depth buffer
-    if (preview_coords.x < 1 && preview_coords.y < 1 && preview_coords.x > 0 && preview_coords.y > 0) {
-      gua_out_color = vec3(get_min_max_depth(ivec2(preview_coords*gua_resolution)/2, 1).x);
-    }
-
-    {
-      const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
-      const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
-
-      vec2 ref = preview_coords*gua_resolution;
-      vec3 s, e;
-      if (!get_ray(vec2(0.5), s, e, total_min_max_depth)) {
-        return;
-      }
-
-      s.xy = vec2(gua_resolution) * s.xy;
-      e.xy = vec2(gua_resolution) * e.xy;
-
-      int sample_count = 0;
-
-            vec2 pos = s.xy;
-      const vec3 dir = e-s;
-
-      const vec2 signs = vec2(s.x <= e.x ? 1 : -1, s.y <= e.y ? 1 : -1);
-      const vec2 flip  = vec2(s.x <= e.x ? 1 :  0, s.y <= e.y ? 1 :  0);
-
-      int current_level = min(max_level, int(log2(max(abs(dir.x), abs(dir.y))+1)+1));
-
-      while(++sample_count < (MAX_RAY_STEPS+1)) {
-
-        const float cell_size   = 1<<current_level;
-        const vec2  cell_origin = cell_size * mix(ceil(pos/cell_size-1), floor(pos/cell_size), flip);
-
-        bool inside = false;
-        if (all(lessThan(ref-cell_origin, vec2(cell_size))) && all(greaterThanEqual(ref-cell_origin, vec2(0)))) {
-          inside = true;
-        }
-
-        const vec2 min_max_depth = get_min_max_depth(ivec2(cell_origin.xy/cell_size), current_level);
-        const vec2 corner_in_ray_direction = cell_origin + flip*cell_size;
-        const vec2 t = (corner_in_ray_direction - pos) / dir.xy;
-
-        vec2 d_range;
-        vec2 new_pos;
-
-        if (t.x < t.y) {
-          new_pos = vec2(cell_origin.x + flip.x*cell_size, pos.y + dir.y*t.x);
-          d_range = s.z + dir.z / dir.x * vec2(pos.x-s.x, new_pos.x-s.x);
-
-        } else {
-          new_pos = vec2(pos.x + dir.x*t.y, cell_origin.y + flip.y*cell_size);
-          d_range = s.z + dir.z / dir.y * vec2(pos.y-s.y, new_pos.y-s.y);
-        }
-
-        const bool at_end = any(greaterThan((new_pos.xy - e.xy)*signs, vec2(0)));
-
-        if (at_end) {
-          d_range.y = e.z;
-        }
-
-        const bool intersects = !(d_range.x > min_max_depth.y || min_max_depth.x > d_range.y);
-
-
-        if (intersects) {
-          if (inside) {
-            gua_out_color = mix(vec3(min_max_depth.x, 0, 0), gua_out_color, 0.9);
-          }
-        } else {
-          if (inside) {
-            gua_out_color = mix(vec3(0, min_max_depth.x, 0), gua_out_color, 0.7);
-          }
-        }
-
-        if (!intersects || current_level == 0) {
-          pos = new_pos;
-
-          if (any(equal(mod(pos / cell_size, 2), vec2(0)))) {
-            current_level = min(current_level+1, max_level);
-          }
-        } else {
-          if (d_range.x < min_max_depth.x) {
-            pos = pos + dir.xy*(min_max_depth.x - d_range.x) / dir.z;
-          }
-          --current_level;
-        }
-
-        if (!intersects && at_end) {
-          break;
-        }
-      }
-    }
-
-    // draw line
-    {
-      vec2 cur_pos = preview_coords;
-      vec3 s, e;
-      const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
-      const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
-      get_ray(vec2(0.5), s, e, total_min_max_depth);
-      if(abs((e.y-s.y)*cur_pos.x - (e.x-s.x)*cur_pos.y + e.x*s.y - e.y*s.x) / (length(s.xy-e.xy)+0.00001) < 0.002
-         && length(e.xy-cur_pos.xy) + length(s.xy-cur_pos.xy) - 0.002 < length(s.xy-e.xy)) {
-
-        gua_out_color = mix(vec3(1, 0, 0), vec3(0, 1, 0), length(e.xy-cur_pos.xy)/(length(s.xy-e.xy)+0.00001));
-      }
-    }
-
-
-    // draw center dot
-    if (length(vec2(0.5) - gua_quad_coords) < 0.001) {
-      gua_out_color = vec3(1, 0, 1);
-    }
-
-    preview_coords -= vec2(0, 1.1);
-  #endif
-
-}
-
 vec2 get_epipolar_direction() {
   vec4 epipol = warp_matrix * vec4(0, 0, -1, 0);
   vec2 epi_dir = vec2(0);
@@ -298,7 +174,7 @@ vec2 get_epipolar_direction() {
   return normalize(epi_dir);
 }
 
-vec4 hole_filling_bidirectional_epipolar_search() {
+vec4 hole_filling_epipolar_search() {
   vec2 boundary_pos = vec2(0);
 
   vec2 epi_dir = get_epipolar_direction();
@@ -322,26 +198,6 @@ vec4 hole_filling_bidirectional_epipolar_search() {
       }
       break;
     }
-  }
-
-  if (sample_depth == 1.0) {
-    return vec4(@hole_filling_color@, 1);
-  }
-
-  return texelFetch(sampler2D(warped_color_buffer), ivec2(boundary_pos*gua_resolution),0);
-}
-
-vec4 hole_filling_epipolar_search() {
-  vec2 boundary_pos = vec2(0);
-
-  vec2 epi_dir = get_epipolar_direction();
-  float sample_depth = 1.0;
-
-  for (int i=1; i<=75; ++i) {
-    boundary_pos = gua_quad_coords + i*epi_dir/gua_resolution;
-    sample_depth = texelFetch(sampler2D(warped_depth_buffer), ivec2(boundary_pos*gua_resolution), 0).x;
-
-    if (sample_depth < 1.0) break;
   }
 
   if (sample_depth == 1.0) {
@@ -375,21 +231,19 @@ vec4 hole_filling_epipolar_mirror() {
 }
 
 vec4 hole_filling_blur() {
-  const float step_size = 0.25;
+  const float step_size = 0.5;
   const float max_level = 7;
   const vec2  epi_dir = get_epipolar_direction();
   const vec2  dirs[2] = {
     vec2( epi_dir.x,  epi_dir.y),
     vec2(-epi_dir.x, -epi_dir.y)
-    // vec2( epi_dir.y, -epi_dir.x),
-    // vec2(-epi_dir.y,  epi_dir.x)
   };
 
   float depth = 0.0;
   float level = max_level;
 
   for (int i=0; i<dirs.length(); ++i) {
-    for (float l=1; l<=max_level; l+=step_size) {
+    for (float l=0; l<=max_level; l+=step_size) {
       vec2  p = gua_quad_coords - pow(2,l)*dirs[i]/gua_resolution;
       float d = texelFetch(sampler2D(warped_depth_buffer), ivec2(p*gua_resolution), 0).x;
 
@@ -407,7 +261,7 @@ vec4 hole_filling_blur() {
     return vec4(@hole_filling_color@, 1);
   }
 
-  return vec4(textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level).rgb, 0);
+  return vec4(textureLod(sampler2D(hole_filling_texture), gua_quad_coords, level+1).rgb, 0);
 }
 
 void main() {
@@ -420,7 +274,6 @@ void main() {
     #if WARP_MODE == WARP_MODE_RAYCASTING || WARP_MODE == WARP_MODE_HIDDEN
       const vec3 col = texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb;
       const float emit = texture2D(sampler2D(orig_pbr_buffer), gua_quad_coords).r;
-      // gua_out_color = vec3(emit);
       gua_out_color = mix(toneMap(col), col, emit);
     #else
       gua_out_color = texture2D(sampler2D(warped_color_buffer), gua_quad_coords).rgb;
@@ -430,10 +283,7 @@ void main() {
 
   // hole filling
   float depth = texture2D(sampler2D(warped_depth_buffer), gua_quad_coords).x;
-  #if HOLE_FILLING_MODE == HOLE_FILLING_MODE_INPAINT
-    if (depth == 1.0) opaque_color_emit = hole_filling_bidirectional_epipolar_search();
-    else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
-  #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_SEARCH
+  #if HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_SEARCH
     if (depth == 1.0) opaque_color_emit = hole_filling_epipolar_search();
     else              opaque_color_emit = texture2D(sampler2D(warped_color_buffer), gua_quad_coords);
   #elif HOLE_FILLING_MODE == HOLE_FILLING_MODE_EPIPOLAR_MIRROR
@@ -451,9 +301,6 @@ void main() {
 
     const int max_level = textureQueryLevels(usampler2D(abuf_min_max_depth));
     const vec2 total_min_max_depth = get_min_max_depth(ivec2(0), max_level);
-
-    // gua_out_color = vec3(get_min_max_depth(ivec2(gua_quad_coords*gua_resolution)/2, 1).x);
-    // return;
 
     int sample_count = 0;
     int abuffer_sample_count = 0;
@@ -538,11 +385,9 @@ void main() {
         // draw debug hierachy
         if (current_level == 0 && intersects) {
           abuf_mix_frag(vec4(vec3(1, 0, 0), 1), color);
-          // color += vec4(1, 0, 0, 0);
         }
         float intensity = 1-pow(float(current_level) / max_level, 1);
-          // color += vec4(heat(1-intensity)*0.05, 0);
-        abuf_mix_frag(vec4(heat(intensity), 0.02), color);
+        abuf_mix_frag(vec4(heat(intensity), 0.1), color);
       #endif
 
 
@@ -574,15 +419,11 @@ void main() {
     }
 
     abuf_mix_frag(vec4(opaque_color_emit.rgb, 1), color);
-    // gua_out_color = vec3(opaque_color_emit.a);
+
     gua_out_color = mix(toneMap(color.rgb), color.rgb, opaque_color_emit.a);
 
     #if @debug_sample_count@ == 1
       gua_out_color = mix(gua_out_color, heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
-    #endif
-
-    #if @debug_sample_ray@ == 1
-      draw_debug_views();
     #endif
 
   #elif WARP_MODE == WARP_MODE_HIDDEN
@@ -591,19 +432,5 @@ void main() {
     gua_out_color = opaque_color_emit.rgb;
   #else
     gua_out_color = opaque_color_emit.rgb;
-  #endif
-
-  // draw epipol
-  #if @debug_epipol@
-    vec2 epi = get_epipolar_direction();
-
-    if (abs(epi.x) > abs(epi.y)) {
-      epi.xy = epi.yx;
-    }
-
-    if (mod(ceil(150.0*abs(epi.x/epi.y)), 10) == 1) {
-      gua_out_color = vec3(1, 0, 0);
-    }
-
   #endif
 }

@@ -42,9 +42,7 @@ float get_min_depth(vec2 frag_pos) {
 }
 
 float get_depth(vec2 position) {
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-    return get_min_depth(position);
-  #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
+  #if WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
     return gua_get_depth(position/gua_resolution);
   #else
     return get_depth_raw(position);
@@ -69,13 +67,9 @@ layout(triangle_strip, max_vertices = 16) out;
 
 flat in  uvec3 varying_position[];
 flat out uint cellsize;
-#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-  flat out uint is_rubber_band;
-#endif
 
 out vec2 texcoords;
 out vec2 cellcoords;
-
 
 
 void emit_quad(uvec2 offset, uvec2 size) {
@@ -84,12 +78,6 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
     float depth1, depth2, depth3, depth4;
 
-    #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-      const float interpolation_offset = 0;
-    #else
-      const float interpolation_offset = 0.5;
-    #endif
-
     vec2 pos1 = vec2(varying_position[0].xy)                        + vec2(offset);
     vec2 pos2 = vec2(varying_position[0].xy) + vec2(size.x, 0)      + vec2(offset);
     vec2 pos3 = vec2(varying_position[0].xy) + vec2(0,      size.y) + vec2(offset);
@@ -97,10 +85,10 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
     #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
 
-      depth1 = get_depth(pos1+vec2( interpolation_offset,  interpolation_offset));
-      depth2 = get_depth(pos2+vec2(-interpolation_offset,  interpolation_offset));
-      depth3 = get_depth(pos3+vec2( interpolation_offset, -interpolation_offset));
-      depth4 = get_depth(pos4+vec2(-interpolation_offset, -interpolation_offset));
+      depth1 = get_depth(pos1+vec2( 0.5,  0.5));
+      depth2 = get_depth(pos2+vec2(-0.5,  0.5));
+      depth3 = get_depth(pos3+vec2( 0.5, -0.5));
+      depth4 = get_depth(pos4+vec2(-0.5, -0.5));
 
     #elif WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 
@@ -114,24 +102,14 @@ void emit_quad(uvec2 offset, uvec2 size) {
       const int cont_bl = int(varying_position[0].z >> BIT_CONTINUOUS_BL) & 1;
       const int cont_br = int(varying_position[0].z >> BIT_CONTINUOUS_BR) & 1;
 
-      depth1 = get_depth(vec2(-cont_l, -cont_b)*cont_bl*interpolation_offset + pos1+vec2( interpolation_offset,  interpolation_offset));
-      depth2 = get_depth(vec2( cont_r, -cont_b)*cont_br*interpolation_offset + pos2+vec2(-interpolation_offset,  interpolation_offset));
-      depth3 = get_depth(vec2(-cont_l,  cont_t)*cont_tl*interpolation_offset + pos3+vec2( interpolation_offset, -interpolation_offset));
-      depth4 = get_depth(vec2( cont_r,  cont_t)*cont_tr*interpolation_offset + pos4+vec2(-interpolation_offset, -interpolation_offset));
+      depth1 = get_depth(vec2(-cont_l, -cont_b)*cont_bl*0.5 + pos1+vec2( 0.5,  0.5));
+      depth2 = get_depth(vec2( cont_r, -cont_b)*cont_br*0.5 + pos2+vec2(-0.5,  0.5));
+      depth3 = get_depth(vec2(-cont_l,  cont_t)*cont_tl*0.5 + pos3+vec2( 0.5, -0.5));
+      depth4 = get_depth(vec2( cont_r,  cont_t)*cont_tr*0.5 + pos4+vec2(-0.5, -0.5));
 
     #endif // ------------------------------------------------------------------
 
     cellsize = min(size.x, size.y);
-
-    #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-      const float max_depth = max(depth1, max(depth2, max(depth3, depth4)));
-      const float min_depth = min(depth1, min(depth2, min(depth3, depth4)));
-      if (max_depth - min_depth > @rubber_band_threshold@ && size.x == 1 && size.y == 1) {
-        is_rubber_band = 1;
-      } else {
-        is_rubber_band = 0;
-      }
-    #endif
 
     texcoords = pos1 / gua_resolution;
     cellcoords = vec2(0, 0);
@@ -155,30 +133,25 @@ void emit_quad(uvec2 offset, uvec2 size) {
 
 void emit_pixel(uvec2 offset) {
 
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-    emit_quad(offset, uvec2(1));
+  cellsize = 1;
+  vec2 position = varying_position[0].xy + offset;
 
-  #else
-    cellsize = 1;
-    vec2 position = varying_position[0].xy + offset;
+  // remove strange one-pixel line
+  if (position.y == gua_resolution.y) return;
 
-    // remove strange one-pixel line
-    if (position.y == gua_resolution.y) return;
+  texcoords = position / gua_resolution;
+  const float depth = get_depth_raw(position);
 
-    texcoords = position / gua_resolution;
-    const float depth = get_depth_raw(position);
+  cellcoords = vec2(0, 0);
+  emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
+  cellcoords = vec2(1, 0);
+  emit_grid_vertex(position + vec2(1, 0) + vec2( GAP, -GAP), depth);
+  cellcoords = vec2(1, 1);
+  emit_grid_vertex(position + vec2(0, 1) + vec2(-GAP,  GAP), depth);
+  cellcoords = vec2(0, 1);
+  emit_grid_vertex(position + vec2(1, 1) + vec2( GAP,  GAP), depth);
 
-    cellcoords = vec2(0, 0);
-    emit_grid_vertex(position + vec2(0, 0) + vec2(-GAP, -GAP), depth);
-    cellcoords = vec2(1, 0);
-    emit_grid_vertex(position + vec2(1, 0) + vec2( GAP, -GAP), depth);
-    cellcoords = vec2(1, 1);
-    emit_grid_vertex(position + vec2(0, 1) + vec2(-GAP,  GAP), depth);
-    cellcoords = vec2(0, 1);
-    emit_grid_vertex(position + vec2(1, 1) + vec2( GAP,  GAP), depth);
-
-    EndPrimitive();
-  #endif
+  EndPrimitive();
 }
 
 void main() {
@@ -260,7 +233,7 @@ void main() {
 
 
 // -----------------------------------------------------------------------------
-#else // all other modes -------------------------------------------------------
+#else // WARP_MODE_QUADS_DEPTH_ALIGNED -----------------------------------------
 // -----------------------------------------------------------------------------
 
 layout(points) in;
@@ -286,40 +259,23 @@ void main() {
   float depth = gua_get_depth(tex_coords);
   vec2 frag_pos = tex_coords*2-1;
 
-  #if WARP_MODE == WARP_MODE_QUADS_SCREEN_ALIGNED
-    const vec2 half_pixel = vec2(1.0) / vec2(gua_resolution);
-    const vec2 offsets[4] = {vec2(half_pixel), vec2(-half_pixel.x, half_pixel.y),
-                             vec2(half_pixel.x, -half_pixel.y), vec2(-half_pixel)};
+  vec2 p = pos + vec2(-0.5, -0.5);
+  emit_grid_vertex(p, get_min_depth(p));
 
-    for (int v=0; v<4; ++v) {
-      vec3 screen_space_pos = vec3(frag_pos + offsets[v], depth);
-      gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*bar[0]);
+  p = pos + vec2( 0.5, -0.5);
+  emit_grid_vertex(p, get_min_depth(p));
 
-      EmitVertex();
-    }
+  p = pos + vec2(-0.5,  0.5);
+  emit_grid_vertex(p, get_min_depth(p));
 
-    EndPrimitive();
+  p = pos + vec2( 0.5,  0.5);
+  emit_grid_vertex(p, get_min_depth(p));
 
-  #elif WARP_MODE == WARP_MODE_QUADS_DEPTH_ALIGNED
+  color = gua_get_color(tex_coords);
+  emit = gua_get_pbr(tex_coords).r;
+  normal = gua_get_normal(tex_coords);
 
-    vec2 p = pos + vec2(-0.5, -0.5);
-    emit_grid_vertex(p, get_min_depth(p));
-
-    p = pos + vec2( 0.5, -0.5);
-    emit_grid_vertex(p, get_min_depth(p));
-
-    p = pos + vec2(-0.5,  0.5);
-    emit_grid_vertex(p, get_min_depth(p));
-
-    p = pos + vec2( 0.5,  0.5);
-    emit_grid_vertex(p, get_min_depth(p));
-
-    color = gua_get_color(tex_coords);
-    emit = gua_get_pbr(tex_coords).r;
-    normal = gua_get_normal(tex_coords);
-
-    EndPrimitive();
-  #endif
+  EndPrimitive();
 }
 
 #endif

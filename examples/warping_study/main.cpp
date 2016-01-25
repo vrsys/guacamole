@@ -45,8 +45,12 @@ float eye_offset            = 0.f;
 int current_scene           = 0;
 int current_mode            = 0;
 
-std::vector<std::vector<gua::StereoType>> stereo_types(3);
-std::vector<std::string> scenes(3);
+std::vector<std::vector<gua::StereoType>> stereo_types = {
+  {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP},
+  {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP},
+  {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP}
+};
+std::vector<std::string> scenes = {"sponza", "physics", "pitoti"};
 
 const float aspect = 1.0f/1.6f;
 const float screen_width = 4.f;
@@ -90,26 +94,26 @@ void show_backfaces(std::shared_ptr<gua::node::Node> const& node, bool show) {
 
 int main(int argc, char** argv) {
 
-  if (argc == 2) {
-    std::string permutation(argv[1]);
-    if (permutation.length() == 5) {
-      if (permutation[1] == '1') scenes = {"pitoti", "oilrig", "physics"};
-      if (permutation[1] == '2') scenes = {"pitoti", "physics", "oilrig"};
-      if (permutation[1] == '3') scenes = {"oilrig", "pitoti", "physics"};
-      if (permutation[1] == '4') scenes = {"oilrig", "physics", "pitoti"};
-      if (permutation[1] == '5') scenes = {"physics", "oilrig", "pitoti"};
-      if (permutation[1] == '6') scenes = {"physics", "pitoti", "oilrig"};
+  // if (argc == 2) {
+  //   std::string permutation(argv[1]);
+  //   if (permutation.length() == 5) {
+  //     if (permutation[1] == '1') scenes = {"pitoti", "sponza", "physics"};
+  //     if (permutation[1] == '2') scenes = {"pitoti", "physics", "sponza"};
+  //     if (permutation[1] == '3') scenes = {"sponza", "pitoti", "physics"};
+  //     if (permutation[1] == '4') scenes = {"sponza", "physics", "pitoti"};
+  //     if (permutation[1] == '5') scenes = {"physics", "sponza", "pitoti"};
+  //     if (permutation[1] == '6') scenes = {"physics", "pitoti", "sponza"};
 
-      for (int i(0); i<3; ++i) {
-        if (permutation[i+2] == '1') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP};
-        if (permutation[i+2] == '2') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP};
-        if (permutation[i+2] == '3') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE};
-        if (permutation[i+2] == '4') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP};
-        if (permutation[i+2] == '5') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP};
-        if (permutation[i+2] == '6') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE};
-      }
-    } else return 0;
-  } else return 0;
+  //     for (int i(0); i<3; ++i) {
+  //       if (permutation[i+2] == '1') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP};
+  //       if (permutation[i+2] == '2') stereo_types[i] = {gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP};
+  //       if (permutation[i+2] == '3') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE};
+  //       if (permutation[i+2] == '4') stereo_types[i] = {gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::TEMPORAL_WARP};
+  //       if (permutation[i+2] == '5') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::RENDER_TWICE, gua::StereoType::SPATIAL_WARP};
+  //       if (permutation[i+2] == '6') stereo_types[i] = {gua::StereoType::TEMPORAL_WARP, gua::StereoType::SPATIAL_WARP, gua::StereoType::RENDER_TWICE};
+  //     }
+  //   } else return 0;
+  // } else return 0;
 
   // initialize guacamole
   gua::init(argc, argv);
@@ -160,16 +164,15 @@ int main(int argc, char** argv) {
   sun_light->data.set_shadow_offset(0.0004f);
   sun_light->data.set_enable_shadows(SHADOWS);
   sun_light->data.set_shadow_map_size(512);
-  sun_light->data.set_brightness(3.f);
   sun_light->rotate(-65, 1, 0, 0);
   sun_light->rotate(-100, 0, 1, 0);
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
   light2->data.set_color(gua::utils::Color3f(0.8f, 1.0f, 1.5f));
-  light2->data.set_brightness(0.5f);
+  light2->data.set_brightness(1.5f);
   light2->data.set_enable_specular_shading(false);
-  light2->rotate(45, 1, 0, 0);
+  light2->rotate(-45, 1, 0, 0);
   light2->rotate(-120, 0, 1, 0);
 
   auto light3 = graph.add_node<gua::node::LightNode>("/", "light3");
@@ -182,7 +185,7 @@ int main(int argc, char** argv) {
 
 
   // one oilrig ----------------------------------------------------------------
-  auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "one_oilrig");
+  auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
   scene_root->scale(20);
   scene_root->rotate(-90, 1, 0, 0);
 
@@ -191,6 +194,18 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   scene_root->add_child(oilrig);
+
+  // sponza --------------------------------------------------------------------
+  // auto scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
+  // scene_root->rotate(40, 0, 1, 0);
+  // auto sponza(loader.create_geometry_from_file("sponza","../warping/data/objects/sponza/sponza.obj",
+  // // auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // sponza->scale(20);
+  // sponza->translate(0, 2, 0);
+  // scene_root->add_child(sponza);
 
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
@@ -207,7 +222,7 @@ int main(int argc, char** argv) {
   //   pitoti->set_error_threshold(2.0f);
   // }
   // auto pitoti(plodloader.load_geometry("/mnt/pitoti/misc_scans/UDK/udk_9.bvh",
-  auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn",
+  auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/groundtruth_data/rocks/seradina12c/TLS_Seradina_Rock-12C_knn.kdn",
       gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
   scene_root->add_child(pitoti);
   pitoti->set_radius_scale(1.2f);
@@ -268,12 +283,10 @@ int main(int argc, char** argv) {
 
 
 
-
   auto pipe = gua::PipelineFactory::make_pipeline(
     gua::PipelineFactory::DEFAULT | 
     gua::PipelineFactory::DRAW_PLODS |
     gua::PipelineFactory::ABUFFER |
-    gua::PipelineFactory::DEBUG_WARPING |
     gua::PipelineFactory::WARPING
   );
 
@@ -294,28 +307,37 @@ int main(int argc, char** argv) {
   auto res_pass(pipe->get_resolve_pass());
   auto warp_pass(pipe->get_pass_by_type<gua::WarpPassDescription>());
   auto grid_pass(pipe->get_pass_by_type<gua::GenerateWarpGridPassDescription>());
-  auto render_grid_pass(pipe->get_pass_by_type<gua::RenderWarpGridPassDescription>());
 
   warp_pass->interpolation_mode(gua::WarpPassDescription::INTERPOLATION_MODE_ADAPTIVE);
   warp_pass->gbuffer_warp_mode(gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION);
   grid_pass->mode(gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION);
   warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_BLUR);
-  render_grid_pass->mode(gua::WarpPassDescription::GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION);
 
   auto set_scene = [&](std::string const& name) {
     graph["/transform/physics"]->get_tags().add_tag("invisible");
-    graph["/transform/one_oilrig"]->get_tags().add_tag("invisible");
+    graph["/transform/sponza"]->get_tags().add_tag("invisible");
     graph["/transform/pitoti"]->get_tags().add_tag("invisible");
 
     sun_light->data.set_enable_shadows(true);
+    pipe->set_enable_abuffer(true);
+    sun_light->data.set_brightness(3.f);
 
-    if (name == "oilrig") {
-      graph["/transform/one_oilrig"]->get_tags().remove_tag("invisible");
+    // if (name == "oilrig") {
+    // }
+    if (name == "sponza") {
+      // pipe->set_enable_abuffer(true);
+      // sun_light->data.set_brightness(15.f);
+      graph["/transform/sponza"]->get_tags().remove_tag("invisible");
+
       nav.set_transform(scm::math::mat4f(0.001, -0.018, 1.000, 2.351,
                                          0.000, 1.000, 0.018, 0.151,
                                          -1.000, -0.000, 0.001, 3.742,
                                          0.000, 0.000, 0.000, 1.000));
-    }
+      // nav.set_transform(scm::math::mat4f(0.623, 0.011, -0.782, -4.220,
+      //                                    0.000, 1.000, 0.013, 1.002,
+      //                                    0.782, -0.008, 0.623, 3.308,
+      //                                    0.000, 0.000, 0.000, 1.000));
+    } 
     if (name == "physics") {
       graph["/transform/physics"]->get_tags().remove_tag("invisible");
 
@@ -384,12 +406,10 @@ int main(int argc, char** argv) {
   normal_cam->config.set_output_window_name("window");
   normal_cam->set_pipeline_description(pipe);
 
-  // pipe->set_enable_abuffer(true);
   res_pass->write_abuffer_depth(false);
   normal_cam->config.set_enable_stereo(true);
   window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
-  warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_NONE);
-  // warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
+  warp_pass->abuffer_warp_mode(gua::WarpPassDescription::ABUFFER_RAYCASTING);
   
   set_scene(scenes[current_scene]);
   normal_cam->config.set_stereo_type(stereo_types[current_scene][current_mode]);
@@ -441,11 +461,14 @@ int main(int argc, char** argv) {
     else if (callback == "set_scene_2") current_scene = 1;
     else if (callback == "set_scene_3") current_scene = 2;
 
+    if (callback.find("set_scene") != std::string::npos) {
+      set_scene(scenes[current_scene]);
+    }
+
     if      (callback == "set_warp_mode_1") current_mode = 0;
     else if (callback == "set_warp_mode_2") current_mode = 1;
     else if (callback == "set_warp_mode_3") current_mode = 2;
     
-    set_scene(scenes[current_scene]);
     normal_cam->config.set_stereo_type(stereo_types[current_scene][current_mode]);
   });
 
@@ -586,6 +609,7 @@ int main(int argc, char** argv) {
     physics->synchronize(true);
 
     // std::cout << nav.get_transform() << std::endl;
+    // std::cout << window->get_rendering_fps() << std::endl;
 
     #if POWER_WALL
       normal_cam->set_transform(current_tracking_matrix);

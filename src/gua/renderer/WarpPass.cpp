@@ -42,17 +42,12 @@ WarpPassDescription::WarpPassDescription()
   , debug_cell_colors_(false)
   , debug_sample_count_(false)
   , debug_bounding_volumes_(false)
-  , debug_sample_ray_(false)
-  , debug_interpolation_borders_(false)
-  , debug_rubber_bands_(false)
-  , debug_epipol_(false)
   , hole_filling_color_(0,0,0)
-  , max_layers_(50)
+  , max_raysteps_(50)
   , pixel_size_(0.2f)
-  , rubber_band_threshold_(0.01f)
   , gbuffer_warp_mode_(GBUFFER_GRID_NON_UNIFORM_SURFACE_ESTIMATION)
   , abuffer_warp_mode_(ABUFFER_RAYCASTING)
-  , hole_filling_mode_(HOLE_FILLING_INPAINT)
+  , hole_filling_mode_(HOLE_FILLING_BLUR)
   , interpolation_mode_(INTERPOLATION_MODE_ADAPTIVE)
 {
   vertex_shader_ = "";
@@ -61,19 +56,6 @@ WarpPassDescription::WarpPassDescription()
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = false;
   rendermode_ = RenderMode::Custom;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::use_abuffer_from_window(std::string const& name) {
-  shared_window_name_ = name;
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string const& WarpPassDescription::use_abuffer_from_window() const {
-  return shared_window_name_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,16 +74,16 @@ std::function<WarpPassDescription::WarpState()> const& WarpPassDescription::get_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::max_layers(int val) {
-  max_layers_ = val;
+WarpPassDescription& WarpPassDescription::max_raysteps(int val) {
+  max_raysteps_ = val;
   touch();
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int WarpPassDescription::max_layers() const {
-  return max_layers_;
+int WarpPassDescription::max_raysteps() const {
+  return max_raysteps_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,62 +158,6 @@ bool WarpPassDescription::debug_bounding_volumes() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::debug_sample_ray(bool val) {
-  debug_sample_ray_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::debug_sample_ray() const {
-  return debug_sample_ray_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::debug_interpolation_borders(bool val) {
-  debug_interpolation_borders_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::debug_interpolation_borders() const {
-  return debug_interpolation_borders_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::debug_rubber_bands(bool val) {
-  debug_rubber_bands_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::debug_rubber_bands() const {
-  return debug_rubber_bands_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::debug_epipol(bool val) {
-  debug_epipol_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::debug_epipol() const {
-  return debug_epipol_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 WarpPassDescription& WarpPassDescription::pixel_size(float val) {
   pixel_size_ = val;
   touch();
@@ -242,20 +168,6 @@ WarpPassDescription& WarpPassDescription::pixel_size(float val) {
 
 float WarpPassDescription::pixel_size() const {
   return pixel_size_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::rubber_band_threshold(float val) {
-  rubber_band_threshold_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-float WarpPassDescription::rubber_band_threshold() const {
-  return rubber_band_threshold_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,18 +253,13 @@ PipelinePass WarpPassDescription::make_pass(RenderContext const& ctx, Substituti
   substitution_map["debug_cell_colors"] = debug_cell_colors_ ? "1" : "0";
   substitution_map["debug_sample_count"] = debug_sample_count_ ? "1" : "0";
   substitution_map["debug_bounding_volumes"] = debug_bounding_volumes_ ? "1" : "0";
-  substitution_map["debug_interpolation_borders"] = debug_interpolation_borders_ ? "1" : "0";
-  substitution_map["debug_rubber_bands"] = debug_rubber_bands_ ? "1" : "0";
-  substitution_map["debug_epipol"] = debug_epipol_ ? "1" : "0";
-  substitution_map["debug_sample_ray"] = debug_sample_ray_ ? "1" : "0";
   substitution_map["pixel_size"] = gua::string_utils::to_string(pixel_size_);
-  substitution_map["rubber_band_threshold"] = gua::string_utils::to_string(rubber_band_threshold_);
   substitution_map["gbuffer_warp_mode"] = std::to_string(gbuffer_warp_mode_);
   substitution_map["abuffer_warp_mode"] = std::to_string(abuffer_warp_mode_);
   substitution_map["hole_filling_mode"] = std::to_string(hole_filling_mode_);
   substitution_map["hole_filling_color"] = "vec3(" + gua::string_utils::to_string(hole_filling_color_.x) + ", " + gua::string_utils::to_string(hole_filling_color_.y) + ", " + gua::string_utils::to_string(hole_filling_color_.z) + ")";
   substitution_map["interpolation_mode"] = std::to_string(interpolation_mode_);
-  substitution_map["warping_max_layers"] = std::to_string(max_layers_);
+  substitution_map["max_raysteps"] = std::to_string(max_raysteps_);
   PipelinePass pass{*this, ctx, substitution_map};
 
   auto renderer = std::make_shared<WarpRenderer>();

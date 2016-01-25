@@ -38,7 +38,6 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/GenerateWarpGridPass.hpp>
-#include <gua/renderer/RenderWarpGridPass.hpp>
 #include <gua/renderer/WarpPass.hpp>
 
 #ifdef GUA_ENABLE_VOLUME
@@ -92,10 +91,6 @@ std::shared_ptr<PipelineDescription> PipelineFactory::make_pipeline(int caps) {
   if ((caps & WARPING) > 0) {
     pipe->add_pass(std::make_shared<GenerateWarpGridPassDescription>());
     pipe->add_pass(std::make_shared<WarpPassDescription>());
-  }
-
-  if ((caps & DEBUG_WARPING) > 0 && (caps & WARPING) > 0) {
-    pipe->add_pass(std::make_shared<RenderWarpGridPassDescription>());
   }
   
   #ifdef GUA_ENABLE_VOLUME

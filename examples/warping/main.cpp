@@ -26,6 +26,7 @@
 #define OCULUS1         0
 #define OCULUS2         0
 #define STEREO_MONITOR  0
+#define USE_SIDE_BY_SIDE 0
 
 #define SHADOWS         1
 #define LOAD_CAR        0
@@ -33,7 +34,7 @@
 #define LOAD_MOUNTAINS  0
 #define LOAD_ENGINE     0
 #define LOAD_SPONZA     1
-#define LOAD_HAIRBALL   0
+#define LOAD_HAIRBALL   1
 #define LOAD_DRAGON     1 
 
 #include <functional>
@@ -344,9 +345,9 @@ int main(int argc, char** argv) {
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
   light2->data.set_color(gua::utils::Color3f(0.8f, 1.0f, 1.5f));
-  light2->data.set_brightness(0.5f);
+  light2->data.set_brightness(1.5f);
   light2->data.set_enable_specular_shading(false);
-  light2->rotate(45, 1, 0, 0);
+  light2->rotate(-45, 1, 0, 0);
   light2->rotate(-120, 0, 1, 0);
 
   auto light3 = graph.add_node<gua::node::LightNode>("/", "light3");
@@ -468,7 +469,7 @@ int main(int argc, char** argv) {
     //   pitoti->set_radius_scale(1.0f);
     //   pitoti->set_error_threshold(2.5f);
     // }
-    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/seradina_12c/rock/TLS_Seradina_Rock-12C_knn.kdn",
+    auto pitoti(plodloader.load_geometry("/mnt/pitoti/3d_pitoti/groundtruth_data/rocks/seradina12c/TLS_Seradina_Rock-12C_knn.kdn",
         gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE));
     scene_root->add_child(pitoti);
     pitoti->set_radius_scale(1.0f);
@@ -533,31 +534,31 @@ int main(int argc, char** argv) {
 
   // buddha --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "buddha");
-  // auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
-  // mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
-  //             .set_show_back_faces(true);
-  // auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glasses.dae", mat_glasses,
-  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-  //   gua::TriMeshLoader::NORMALIZE_SCALE));
-  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
-  // // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
-  // scene_root->add_child(glasses);
-  // scene_root->scale(10);
-  // scene_root->rotate(180, 0, 1, 0);
+  auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
+  mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
+              .set_show_back_faces(true);
+  auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glasses.dae", mat_glasses,
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
+  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
+  scene_root->add_child(glasses);
+  scene_root->scale(10);
+  scene_root->rotate(180, 0, 1, 0);
   scene_root->scale(2);
 
-  auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE);
-  buddha->translate(0, -0.16, -1);
-  for (auto c: buddha->get_children()) {
-    auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-    node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.5f, 1.f));
-    node->get_material()->set_uniform("Roughness", 0.2f);
-    node->get_material()->set_uniform("Metalness", 0.5f);
-  }
-  scene_root->add_child(buddha);
+  // auto buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE);
+  // buddha->translate(0, -0.16, -1);
+  // for (auto c: buddha->get_children()) {
+  //   auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
+  //   node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 0.7f, 0.5f, 1.f));
+  //   node->get_material()->set_uniform("Roughness", 0.2f);
+  //   node->get_material()->set_uniform("Metalness", 0.5f);
+  // }
+  // scene_root->add_child(buddha);
 
   // buddha = loader.create_geometry_from_file("buddha", "data/objects/buddha.dae",
   //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
@@ -613,6 +614,18 @@ int main(int argc, char** argv) {
   sponza->scale(20);
   sponza->translate(0, 2, 0);
   scene_root->add_child(sponza);
+
+  // auto mat_glasses(load_mat("data/materials/Glasses.gmd"));
+  // mat_glasses->set_uniform("ReflectionMap", std::string(opt_prefix + "/guacamole/resources/skymaps/DH206SN.png"))
+  //             .set_show_back_faces(true);
+  // auto glasses(loader.create_geometry_from_file("glasses", "data/objects/glass.dae", mat_glasses,
+  //   gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+  //   gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+  //   gua::TriMeshLoader::NORMALIZE_SCALE));
+  // glasses->scale(2.5);
+  // glasses->translate(0, 0.71, 0);
+  // scene_root->add_child(glasses);
+
 
   auto sponza_light_05 = std::make_shared<gua::node::TransformNode>("sponza_light_05");
   auto light = std::make_shared<gua::node::LightNode>("light");
@@ -739,7 +752,6 @@ int main(int argc, char** argv) {
       gua::PipelineFactory::DRAW_PLODS |
     #endif
     gua::PipelineFactory::ABUFFER |
-    gua::PipelineFactory::DEBUG_WARPING |
     gua::PipelineFactory::WARPING
   );
 
@@ -760,7 +772,6 @@ int main(int argc, char** argv) {
   auto res_pass(pipe->get_resolve_pass());
   auto warp_pass(pipe->get_pass_by_type<gua::WarpPassDescription>());
   auto grid_pass(pipe->get_pass_by_type<gua::GenerateWarpGridPassDescription>());
-  auto render_grid_pass(pipe->get_pass_by_type<gua::RenderWarpGridPassDescription>());
 
   auto set_scene = [&](std::string const& name) {
     graph["/transform/many_oilrigs"]->get_tags().add_tag("invisible");
@@ -796,7 +807,7 @@ int main(int argc, char** argv) {
     }
     if (name.find("set_scene_sponza") != std::string::npos) {
       graph["/transform/sponza"]->get_tags().remove_tag("invisible");
-      sun_light->data.set_brightness(10.f);
+      sun_light->data.set_brightness(15.f);
       //res_pass->ssao_enable(false);
       res_pass->ssao_intensity(5.0f);
       res_pass->ssao_radius(5.0f);
@@ -813,9 +824,9 @@ int main(int argc, char** argv) {
                                            0.661, -0.143, -0.736, -0.661,
                                            0.000, 0.000, 0.000, 1.000));
       if (name == "set_scene_sponza3")
-        nav.set_transform(scm::math::mat4f(-0.980, -0.028, 0.196, 3.754,
-                                           0.000, 0.990, 0.139, 0.730,
-                                           -0.198, 0.136, -0.971, -4.748,
+        nav.set_transform(scm::math::mat4f(-0.978, 0.051, 0.204, 4.450,
+                                           0.000, 0.970, -0.241, -0.268,
+                                           -0.210, -0.236, -0.949, -4.290,
                                            0.000, 0.000, 0.000, 1.000));
     }
     if (name == "set_scene_textured_quads") {
@@ -838,8 +849,10 @@ int main(int argc, char** argv) {
       graph["/transform/bottle"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_mountains")
       graph["/transform/mountains"]->get_tags().remove_tag("invisible");
-    if (name == "set_scene_sphere")
+    if (name == "set_scene_sphere") {
+      res_pass->background_texture(opt_prefix + "guacamole/resources/skymaps/uffizi.jpg");
       graph["/transform/sphere"]->get_tags().remove_tag("invisible");
+    }
     if (name == "set_scene_engine")
       graph["/transform/engine"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_transp_dragon") {
@@ -922,7 +935,11 @@ int main(int argc, char** argv) {
       normal_screen->translate(0, 1.42, -1.6);
       normal_cam->translate(0, 1.42, -1.6);
     #else
-      normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      #if USE_SIDE_BY_SIDE
+        normal_screen->data.set_size(gua::math::vec2(screen_width/2,screen_width*aspect));
+      #else
+        normal_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      #endif
       normal_screen->translate(0, 0, -screen_dist);
     #endif
     normal_cam->config.set_resolution(resolution);
@@ -969,7 +986,11 @@ int main(int argc, char** argv) {
       warp_screen->translate(0, 1.42, -1.6);
       warp_cam->translate(0, 1.42, -1.6);
     #else
-      warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      #if USE_SIDE_BY_SIDE
+        warp_screen->data.set_size(gua::math::vec2(screen_width/2,screen_width*aspect));
+      #else
+        warp_screen->data.set_size(gua::math::vec2(screen_width,screen_width*aspect));
+      #endif
       warp_screen->translate(0, 0, -screen_dist);
     #endif
     warp_cam->config.set_resolution(resolution);
@@ -1021,7 +1042,7 @@ int main(int argc, char** argv) {
         warp_screen_left->set_transform(gua::math::mat4(scm::math::make_translation(-0.03175f, 0.f, -0.08f)));
         warp_screen_right->set_transform(gua::math::mat4(scm::math::make_translation(0.03175f, 0.f, -0.08f)));
       #else
-        window->config.set_stereo_mode(POWER_WALL ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
+        window->config.set_stereo_mode(POWER_WALL || USE_SIDE_BY_SIDE ? gua::StereoMode::SIDE_BY_SIDE : gua::StereoMode::ANAGLYPH_RED_CYAN);
       #endif
 
 
@@ -1139,7 +1160,7 @@ int main(int argc, char** argv) {
     gui->init("gui", "asset://gua/data/gui/gui.html", gua::math::vec2ui(330, 830));
 
     gui->on_loaded.connect([&]() {
-      gui->add_javascript_getter("get_depth_layers", [&](){ return std::to_string(warp_pass->max_layers());});
+      gui->add_javascript_getter("get_max_raysteps", [&](){ return std::to_string(warp_pass->max_raysteps());});
       gui->add_javascript_getter("get_split_threshold", [&](){ return gua::string_utils::to_string(grid_pass->split_threshold());});
       gui->add_javascript_getter("get_cell_size", [&](){ return gua::string_utils::to_string(std::log2(grid_pass->cell_size()));});
       gui->add_javascript_getter("get_vsync", [&](){ return std::to_string(vsync);});
@@ -1147,21 +1168,15 @@ int main(int argc, char** argv) {
       gui->add_javascript_getter("get_warping", [&](){ return std::to_string(warping);});
       gui->add_javascript_getter("get_stereo", [&](){ return std::to_string(stereo);});
       gui->add_javascript_getter("get_background", [&](){ return std::to_string(res_pass->background_mode() == gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);});
-      gui->add_javascript_getter("get_show_warp_grid", [&](){ return std::to_string(render_grid_pass->show_warp_grid());});
       gui->add_javascript_getter("get_adaptive_entry_level", [&](){ return std::to_string(warp_pass->adaptive_entry_level());});
       gui->add_javascript_getter("get_debug_cell_colors", [&](){ return std::to_string(warp_pass->debug_cell_colors());});
       gui->add_javascript_getter("get_debug_sample_count", [&](){ return std::to_string(warp_pass->debug_sample_count());});
       gui->add_javascript_getter("get_debug_bounding_volumes", [&](){ return std::to_string(warp_pass->debug_bounding_volumes());});
-      gui->add_javascript_getter("get_debug_sample_ray", [&](){ return std::to_string(warp_pass->debug_sample_ray());});
-      gui->add_javascript_getter("get_debug_interpolation_borders", [&](){ return std::to_string(warp_pass->debug_interpolation_borders());});
-      gui->add_javascript_getter("get_debug_rubber_bands", [&](){ return std::to_string(warp_pass->debug_rubber_bands());});
-      gui->add_javascript_getter("get_debug_epipol", [&](){ return std::to_string(warp_pass->debug_epipol());});
       gui->add_javascript_getter("get_pixel_size", [&](){ return gua::string_utils::to_string(warp_pass->pixel_size()+0.5);});
       gui->add_javascript_getter("get_quad_count", [&](){ return gua::string_utils::to_string(quad_count);});
       gui->add_javascript_getter("get_quad_range", [&](){ return gua::string_utils::to_string(quad_range);});
       gui->add_javascript_getter("get_quad_start", [&](){ return gua::string_utils::to_string(quad_start);});
       gui->add_javascript_getter("get_quad_scale", [&](){ return gua::string_utils::to_string(quad_scale);});
-      gui->add_javascript_getter("get_rubber_band_threshold", [&](){ return gua::string_utils::to_string(warp_pass->rubber_band_threshold());});
 
       gui->add_javascript_callback("start_resolution_series");
       gui->add_javascript_callback("start_positional_warp_series");
@@ -1169,7 +1184,7 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("start_quad_series");
       gui->add_javascript_callback("start_quad_count_series");
       gui->add_javascript_callback("print_current_times");
-      gui->add_javascript_callback("set_depth_layers");
+      gui->add_javascript_callback("set_max_raysteps");
       gui->add_javascript_callback("set_split_threshold");
       gui->add_javascript_callback("set_cell_size");
       gui->add_javascript_callback("set_vsync");
@@ -1178,9 +1193,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_stereo");
       gui->add_javascript_callback("set_background");
       gui->add_javascript_callback("set_gbuffer_type_none");
-      gui->add_javascript_callback("set_gbuffer_type_points");
-      gui->add_javascript_callback("set_gbuffer_type_scaled_points");
-      gui->add_javascript_callback("set_gbuffer_type_quads_screen_aligned");
       gui->add_javascript_callback("set_gbuffer_type_quads_depth_aligned");
       gui->add_javascript_callback("set_gbuffer_type_grid_depth_theshold");
       gui->add_javascript_callback("set_gbuffer_type_grid_surface_estimation");
@@ -1193,11 +1205,8 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_transparency_type_raycasting");
       gui->add_javascript_callback("set_hole_filling_color");
       gui->add_javascript_callback("set_hole_filling_type_none");
-      gui->add_javascript_callback("set_hole_filling_type_inpaint");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_search");
       gui->add_javascript_callback("set_hole_filling_type_epipolar_mirror");
-      gui->add_javascript_callback("set_hole_filling_type_rubber_band_1");
-      gui->add_javascript_callback("set_hole_filling_type_rubber_band_2");
       gui->add_javascript_callback("set_hole_filling_type_blur");
       gui->add_javascript_callback("set_interpolation_mode_nearest");
       gui->add_javascript_callback("set_interpolation_mode_linear");
@@ -1228,21 +1237,15 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_stereotype_spatial");
       gui->add_javascript_callback("set_stereotype_temporal");
       gui->add_javascript_callback("set_stereotype_single_temporal");
-      gui->add_javascript_callback("set_show_warp_grid");
       gui->add_javascript_callback("set_adaptive_entry_level");
       gui->add_javascript_callback("set_debug_cell_colors");
       gui->add_javascript_callback("set_debug_sample_count");
       gui->add_javascript_callback("set_debug_bounding_volumes");
-      gui->add_javascript_callback("set_debug_sample_ray");
-      gui->add_javascript_callback("set_debug_interpolation_borders");
-      gui->add_javascript_callback("set_debug_rubber_bands");
-      gui->add_javascript_callback("set_debug_epipol");
       gui->add_javascript_callback("set_pixel_size");
       gui->add_javascript_callback("set_quad_count");
       gui->add_javascript_callback("set_quad_start");
       gui->add_javascript_callback("set_quad_scale");
       gui->add_javascript_callback("set_quad_range");
-      gui->add_javascript_callback("set_rubber_band_threshold");
       gui->add_javascript_callback("set_bg_tex");
       gui->add_javascript_callback("set_view_mono_warped");
       gui->add_javascript_callback("set_view_stereo_warped");
@@ -1274,11 +1277,11 @@ int main(int argc, char** argv) {
         test_quad_count_series = true;
       } else if (callback == "print_current_times") {
         test_print_current_times = true;
-      } else if (callback == "set_depth_layers") {
+      } else if (callback == "set_max_raysteps") {
         std::stringstream str(params[0]);
-        int depth_layers;
-        str >> depth_layers;
-        warp_pass->max_layers(depth_layers);
+        int max_raysteps;
+        str >> max_raysteps;
+        warp_pass->max_raysteps(max_raysteps);
 
       } else if (callback == "set_split_threshold") {
         std::stringstream str(params[0]);
@@ -1306,11 +1309,6 @@ int main(int argc, char** argv) {
         std::stringstream str(params[0]);
         str >> quad_scale;
         setup_textured_quad_scene();
-      } else if (callback == "set_rubber_band_threshold") {
-        std::stringstream str(params[0]);
-        float rubber_band_threshold;
-        str >> rubber_band_threshold;
-        warp_pass->rubber_band_threshold(rubber_band_threshold);
       } else if (callback == "set_bg_tex") {
         res_pass->background_texture(params[0]);
       } else if (callback == "set_cell_size") {
@@ -1339,11 +1337,6 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         res_pass->background_mode(checked ? gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE : gua::ResolvePassDescription::BackgroundMode::COLOR);
-      } else if (callback == "set_show_warp_grid") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        render_grid_pass->show_warp_grid(checked);
       } else if (callback == "set_adaptive_entry_level") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1364,26 +1357,6 @@ int main(int argc, char** argv) {
         bool checked;
         str >> checked;
         warp_pass->debug_bounding_volumes(checked);
-      } else if (callback == "set_debug_sample_ray") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_sample_ray(checked);
-      } else if (callback == "set_debug_interpolation_borders") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_interpolation_borders(checked);
-      } else if (callback == "set_debug_rubber_bands") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_rubber_bands(checked);
-      } else if (callback == "set_debug_epipol") {
-        std::stringstream str(params[0]);
-        bool checked;
-        str >> checked;
-        warp_pass->debug_epipol(checked);
       } else if (callback == "set_hole_filling_color") {
         std::stringstream str(params[0]);
         gua::math::vec3f color;
@@ -1415,12 +1388,6 @@ int main(int argc, char** argv) {
 
           gua::WarpPassDescription::GBufferWarpMode mode(gua::WarpPassDescription::GBUFFER_NONE);
 
-          if (callback == "set_gbuffer_type_points")
-            mode = gua::WarpPassDescription::GBUFFER_POINTS;
-          if (callback == "set_gbuffer_type_scaled_points")
-            mode = gua::WarpPassDescription::GBUFFER_SCALED_POINTS;
-          if (callback == "set_gbuffer_type_quads_screen_aligned")
-            mode = gua::WarpPassDescription::GBUFFER_QUADS_SCREEN_ALIGNED;
           if (callback == "set_gbuffer_type_quads_depth_aligned")
             mode = gua::WarpPassDescription::GBUFFER_QUADS_DEPTH_ALIGNED;
           if (callback == "set_gbuffer_type_grid_depth_theshold")
@@ -1436,7 +1403,6 @@ int main(int argc, char** argv) {
 
           warp_pass->gbuffer_warp_mode(mode);
           grid_pass->mode(mode);
-          render_grid_pass->mode(mode);
         }
       } else if (callback == "set_transparency_type_gbuffer"
                | callback == "set_transparency_type_hidden"
@@ -1448,11 +1414,8 @@ int main(int argc, char** argv) {
         update_view_mode();
 
       } else if (callback == "set_hole_filling_type_none"
-               | callback == "set_hole_filling_type_inpaint"
                | callback == "set_hole_filling_type_epipolar_search"
                | callback == "set_hole_filling_type_epipolar_mirror"
-               | callback == "set_hole_filling_type_rubber_band_1"
-               | callback == "set_hole_filling_type_rubber_band_2"
                | callback == "set_hole_filling_type_blur") {
         std::stringstream str(params[0]);
         bool checked;
@@ -1461,16 +1424,10 @@ int main(int argc, char** argv) {
 
           gua::WarpPassDescription::HoleFillingMode mode(gua::WarpPassDescription::HOLE_FILLING_NONE);
 
-          if (callback == "set_hole_filling_type_inpaint")
-            mode = gua::WarpPassDescription::HOLE_FILLING_INPAINT;
           if (callback == "set_hole_filling_type_epipolar_search")
             mode = gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH;
           if (callback == "set_hole_filling_type_epipolar_mirror")
             mode = gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR;
-          if (callback == "set_hole_filling_type_rubber_band_1")
-            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_1;
-          if (callback == "set_hole_filling_type_rubber_band_2")
-            mode = gua::WarpPassDescription::HOLE_FILLING_RUBBER_BAND_2;
           if (callback == "set_hole_filling_type_blur")
             mode = gua::WarpPassDescription::HOLE_FILLING_BLUR;
 
@@ -1569,8 +1526,14 @@ int main(int argc, char** argv) {
       resolution = new_size;
       window->config.set_resolution(new_size);
       normal_cam->config.set_resolution(new_size);
-      normal_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
-      warp_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
+
+      #if USE_SIDE_BY_SIDE
+        normal_screen->data.set_size(gua::math::vec2(screen_width/2, screen_width * new_size.y / new_size.x));
+        warp_screen->data.set_size(gua::math::vec2(screen_width/2, screen_width * new_size.y / new_size.x));
+      #else
+        normal_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
+        warp_screen->data.set_size(gua::math::vec2(screen_width, screen_width * new_size.y / new_size.x));
+      #endif
     });
   #endif
 
@@ -1595,11 +1558,11 @@ int main(int argc, char** argv) {
       if (action >= 1) {
         if (key == 72) toggle_gui();
         if (key == 93) {
-          pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.1));
+          pitoti->set_error_threshold(std::max(0.0, pitoti->get_error_threshold()-0.5));
           std::cout << pitoti->get_error_threshold() << std::endl;
         }
         if (key == 47) {
-          pitoti->set_error_threshold(pitoti->get_error_threshold()+0.1);
+          pitoti->set_error_threshold(pitoti->get_error_threshold()+0.5);
           std::cout << pitoti->get_error_threshold() << std::endl;
         }
       }
@@ -1672,8 +1635,16 @@ int main(int argc, char** argv) {
     window->config.set_left_position(gua::math::vec2ui(140, 0));
     window->config.set_left_resolution(gua::math::vec2ui(1780, 1185));
   #elif !OCULUS1 && !OCULUS2
+    
     window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
+
+    #if USE_SIDE_BY_SIDE 
+      window->config.set_left_resolution(gua::math::vec2ui(resolution.x/2, resolution.y));
+      window->config.set_right_resolution(gua::math::vec2ui(resolution.x/2, resolution.y));
+      window->config.set_right_position(gua::math::vec2ui(resolution.x/2, 0));
+    #else
+      window->config.set_resolution(resolution);
+    #endif    
   #endif
   window->config.set_enable_vsync(vsync);
   gua::WindowDatabase::instance()->add("window", window);
@@ -1748,24 +1719,25 @@ int main(int argc, char** argv) {
     return gua::math::vec2ui((unsigned)(input.x/32)*32, (unsigned)(input.y/32)*32);
   };
 
-  std::vector<gua::math::vec2ui> test_resolutions = {round(gua::math::vec2(1920,1080)*0.7745966692),
-                                                     round(gua::math::vec2(1920,1080)*0.894427191),
-                                                     round(gua::math::vec2(1920,1080)*1),
-                                                     round(gua::math::vec2(1920,1080)*1.095445115),
-                                                     round(gua::math::vec2(1920,1080)*1.1832159566),
-                                                     round(gua::math::vec2(1920,1080)*1.2649110641),
-                                                     round(gua::math::vec2(1920,1080)*1.3416407865),
-                                                     round(gua::math::vec2(1920,1080)*1.4142135624),
-                                                     round(gua::math::vec2(1920,1080)*1.4832396974),
-                                                     round(gua::math::vec2(1920,1080)*1.5491933385),
-                                                     round(gua::math::vec2(1920,1080)*1.6124515497),
-                                                     round(gua::math::vec2(1920,1080)*1.6733200531),
-                                                     round(gua::math::vec2(1920,1080)*1.7320508076),
-                                                     round(gua::math::vec2(1920,1080)*1.788854382),
-                                                     round(gua::math::vec2(1920,1080)*1.8439088915),
-                                                     round(gua::math::vec2(1920,1080)*1.8973665961),
-                                                     round(gua::math::vec2(1920,1080)*1.949358869),
-                                                     round(gua::math::vec2(1920,1080)*2)};
+
+  std::vector<gua::math::vec2ui> test_resolutions = {round(gua::math::vec2(std::sqrt(9.0/16.0*500000*1)*16.0/9.0,std::sqrt(9.0/16.0*500000*1))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*2)*16.0/9.0,std::sqrt(9.0/16.0*500000*2))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*3)*16.0/9.0,std::sqrt(9.0/16.0*500000*3))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*4)*16.0/9.0,std::sqrt(9.0/16.0*500000*4))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*5)*16.0/9.0,std::sqrt(9.0/16.0*500000*5))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*6)*16.0/9.0,std::sqrt(9.0/16.0*500000*6))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*7)*16.0/9.0,std::sqrt(9.0/16.0*500000*7))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*8)*16.0/9.0,std::sqrt(9.0/16.0*500000*8))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*9)*16.0/9.0,std::sqrt(9.0/16.0*500000*9))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*10)*16.0/9.0,std::sqrt(9.0/16.0*500000*10))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*11)*16.0/9.0,std::sqrt(9.0/16.0*500000*11))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*12)*16.0/9.0,std::sqrt(9.0/16.0*500000*12))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*13)*16.0/9.0,std::sqrt(9.0/16.0*500000*13))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*14)*16.0/9.0,std::sqrt(9.0/16.0*500000*14))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*15)*16.0/9.0,std::sqrt(9.0/16.0*500000*15))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*16)*16.0/9.0,std::sqrt(9.0/16.0*500000*16))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*17)*16.0/9.0,std::sqrt(9.0/16.0*500000*17))),
+                                                     round(gua::math::vec2(std::sqrt(9.0/16.0*500000*18)*16.0/9.0,std::sqrt(9.0/16.0*500000*18)))};
 
   float max_test_disparity(screen_width/10.f);
   std::vector<double> test_offsets;

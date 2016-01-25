@@ -25,6 +25,7 @@
 @include "common/gua_gbuffer_input.glsl"
 
 // -----------------------------------------------------------------------------
+// all grid modes
 #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION_STRETCH || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
 // -----------------------------------------------------------------------------
 
@@ -37,39 +38,7 @@ void main() {
 }
 
 // -----------------------------------------------------------------------------
-#elif WARP_MODE == WARP_MODE_POINTS || WARP_MODE == WARP_MODE_SCALED_POINTS // -
-// -----------------------------------------------------------------------------
-
-layout(location=0) in float foo;
-
-out vec3 color;
-out vec3 normal;
-out float emit;
-
-uniform mat4 warp_matrix;
-
-void main() {
-  const vec2 pos = vec2(gl_VertexID % gua_resolution.x, gl_VertexID / gua_resolution.x) + 0.5;
-  const vec2 tex_coords = pos/vec2(gua_resolution.x, gua_resolution.y);
-
-  const float depth = gua_get_depth(tex_coords);
-
-  color = gua_get_color(tex_coords);
-  emit = gua_get_pbr(tex_coords).r;
-  normal = gua_get_normal(tex_coords);
-  vec3 screen_space_pos = vec3(tex_coords*2-1, depth);
-  gl_Position = warp_matrix * vec4(screen_space_pos, 1 + 0.000000000000001*foo);
-
-  #if WARP_MODE == WARP_MODE_SCALED_POINTS
-    gl_PointSize = min(15, 15*(1-gl_Position.z/gl_Position.w));
-  #else
-    gl_PointSize = 1;
-  #endif
-}
-
-
-// -----------------------------------------------------------------------------
-#else // all other modes -------------------------------------------------------
+#else // WARP_MODE_QUADS_DEPTH_ALIGNED------------------------------------------
 // -----------------------------------------------------------------------------
 
 layout(location=0) in float foo;

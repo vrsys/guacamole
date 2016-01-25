@@ -47,9 +47,6 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum GBufferWarpMode {
     GBUFFER_NONE,
-    GBUFFER_POINTS,
-    GBUFFER_SCALED_POINTS,
-    GBUFFER_QUADS_SCREEN_ALIGNED,
     GBUFFER_QUADS_DEPTH_ALIGNED,
     GBUFFER_GRID_DEPTH_THRESHOLD,
     GBUFFER_GRID_SURFACE_ESTIMATION,
@@ -65,11 +62,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   enum HoleFillingMode {
     HOLE_FILLING_NONE,
-    HOLE_FILLING_INPAINT,
     HOLE_FILLING_EPIPOLAR_SEARCH,
     HOLE_FILLING_EPIPOLAR_MIRROR,
-    HOLE_FILLING_RUBBER_BAND_1,
-    HOLE_FILLING_RUBBER_BAND_2,
     HOLE_FILLING_BLUR
   };
 
@@ -81,11 +75,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
 
   WarpPassDescription();
 
-  WarpPassDescription& use_abuffer_from_window(std::string const& name);
-  std::string const& use_abuffer_from_window() const;
-
-  WarpPassDescription& max_layers(int val);
-  int max_layers() const;
+  WarpPassDescription& max_raysteps(int val);
+  int max_raysteps() const;
 
   WarpPassDescription& depth_test(bool val);
   bool depth_test() const;
@@ -102,23 +93,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& debug_bounding_volumes(bool val);
   bool debug_bounding_volumes() const;
 
-  WarpPassDescription& debug_sample_ray(bool val);
-  bool debug_sample_ray() const;
-
-  WarpPassDescription& debug_interpolation_borders(bool val);
-  bool debug_interpolation_borders() const;
-
-  WarpPassDescription& debug_rubber_bands(bool val);
-  bool debug_rubber_bands() const;
-
-  WarpPassDescription& debug_epipol(bool val);
-  bool debug_epipol() const;
-
   WarpPassDescription& pixel_size(float val);
   float pixel_size() const;
-
-  WarpPassDescription& rubber_band_threshold(float val);
-  float rubber_band_threshold() const;
 
   WarpPassDescription& gbuffer_warp_mode(GBufferWarpMode gbuffer_warp_mode);
   GBufferWarpMode gbuffer_warp_mode() const;
@@ -144,21 +120,14 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-  std::string shared_window_name_;
-
   bool depth_test_;
   bool adaptive_entry_level_;
   bool debug_cell_colors_;
   bool debug_sample_count_;
   bool debug_bounding_volumes_;
-  bool debug_sample_ray_;
-  bool debug_interpolation_borders_;
-  bool debug_rubber_bands_;
-  bool debug_epipol_;
   math::vec3f hole_filling_color_;
-  int max_layers_;
+  int max_raysteps_;
   float pixel_size_;
-  float rubber_band_threshold_;
   GBufferWarpMode gbuffer_warp_mode_;
   ABufferWarpMode abuffer_warp_mode_;
   HoleFillingMode hole_filling_mode_;
