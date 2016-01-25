@@ -201,6 +201,11 @@ IF (PLUGIN_guacamole-plod)
   TARGET_LINK_LIBRARIES(guacamole guacamole-plod)
 ENDIF(PLUGIN_guacamole-plod)
 
+IF (PLUGIN_guacamole-lod)
+  add_definitions(-DGUA_ENABLE_LOD)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-lod)
+ENDIF(PLUGIN_guacamole-lod)
+
 IF (PLUGIN_guacamole-volume)
   add_definitions(-DGUA_ENABLE_VOLUME)
   TARGET_LINK_LIBRARIES(guacamole guacamole-volume)
@@ -211,6 +216,25 @@ IF (PLUGIN_guacamole-gui)
   TARGET_LINK_LIBRARIES(guacamole guacamole-gui)
 ENDIF(PLUGIN_guacamole-gui)
 
+IF (PLUGIN_guacamole-video3d)
+  add_definitions(-DGUA_ENABLE_VIDEO3D)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-video3d)
+ENDIF(PLUGIN_guacamole-video3d)
+
+IF (PLUGIN_guacamole-skelanim)
+  add_definitions(-DGUA_ENABLE_SKELANIM)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-skelanim)
+ENDIF(PLUGIN_guacamole-skelanim)
+
+IF (PLUGIN_guacamole-oculus)
+  add_definitions(-DGUA_ENABLE_OCULUS)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-oculus)
+ENDIF(PLUGIN_guacamole-oculus)
+
+IF (PLUGIN_guacamole-nurbs)
+  add_definitions(-DGUA_ENABLE_NURBS)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-nurbs)
+ENDIF(PLUGIN_guacamole-nurbs)
 
 ###############################################################################
 # install

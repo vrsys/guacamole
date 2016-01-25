@@ -115,15 +115,11 @@ int main(int argc, char** argv) {
   camera->config.set_near_clip(0.001f);
   camera->config.set_far_clip(10.0f);
 
-  auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::SkeletalAnimationPassDescription>());
-  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::TexturedScreenSpaceQuadPassDescription>());
-  // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  auto pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    gua::PipelineFactory::DRAW_ANIMATED_TRIMESHES
+  );
+
   pipe->get_resolve_pass()->background_color(gua::utils::Color3f(0.5f,0.7f, 1.0f));
   camera->set_pipeline_description(pipe);
 

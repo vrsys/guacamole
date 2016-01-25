@@ -57,6 +57,12 @@ examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/warping/example-warping
 examples/animation/example-animation
+examples/lod_simple/example-lod_simple
+examples/plod_shadows/example-plod_shadows
+examples/plod_simple/example-plod_simple
+examples/stress_test/example-stress_test
+examples/tiled_shading_test/example-tiled_shading_test
+examples/clipping/example-clipping
 
 examples/*/Release/*
 examples/*/Debug/*

@@ -101,7 +101,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
     pipe.begin_cpu_query(cpu_query_name);
 
     bool write_depth = true;
-    target.bind(ctx, write_depth);
+    target.bind(ctx, write_depth, false, false);
     target.set_viewport(ctx);
 
     int view_id(camera.config.get_view_id());

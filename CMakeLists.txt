@@ -150,7 +150,10 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-plod/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-lod/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-video3d/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-volume/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-skelanim/include
     ${SCHISM_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}

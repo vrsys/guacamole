@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
   portal_camera->config.set_screen_path("/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -118,7 +117,6 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
   camera->set_pre_render_cameras({portal_camera});
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -126,7 +124,6 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(true);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);

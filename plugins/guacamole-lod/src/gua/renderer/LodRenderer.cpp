@@ -763,7 +763,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
       }
 
       bool write_depth = true;
-      target.bind(ctx, write_depth);
+      target.bind(ctx, write_depth, false, false);
 
        //////////////////////////////////////////////////////////////////////////
        // 3. normalization pass 
@@ -806,7 +806,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
     } else { //shadow branch
         bool write_depth = true;
-        target.bind(ctx, write_depth);
+        target.bind(ctx, write_depth, false, false);
 
       //////////////////////////////////////////////////////////////////////////
       // only pass in this branch: shadow pass 

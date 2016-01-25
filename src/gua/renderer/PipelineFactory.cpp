@@ -23,20 +23,14 @@
 #include <gua/renderer/PipelineFactory.hpp>
 
 // guacamole headers
-#include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/ClearPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/GenerateWarpGridPass.hpp>
 #include <gua/renderer/WarpPass.hpp>
 
@@ -47,6 +41,24 @@
 #ifdef GUA_ENABLE_PLOD
   #include <gua/renderer/PLODPass.hpp>
 #endif
+
+#ifdef GUA_ENABLE_LOD
+  #include <gua/renderer/LodPass.hpp>
+#endif
+
+#ifdef GUA_ENABLE_VIDEO3D
+  #include <gua/video3d/Video3DPass.hpp>
+#endif
+
+#ifdef GUA_ENABLE_NURBS
+  #include <gua/renderer/NurbsPass.hpp>
+#endif
+
+#ifdef GUA_ENABLE_SKELANIM
+  #include <gua/renderer/SkeletalAnimationPass.hpp>
+#endif
+
+
 
 namespace gua {
 
@@ -66,19 +78,35 @@ std::shared_ptr<PipelineDescription> PipelineFactory::make_pipeline(int caps) {
     pipe->add_pass(std::make_shared<TriMeshPassDescription>());
   }
 
+  #ifdef GUA_ENABLE_SKELANIM
+    if ((caps & DRAW_ANIMATED_TRIMESHES) > 0) {
+      pipe->add_pass(std::make_shared<SkeletalAnimationPassDescription>());
+    }
+  #endif
+
   #ifdef GUA_ENABLE_PLOD
     if ((caps & DRAW_PLODS) > 0) {
       pipe->add_pass(std::make_shared<PLODPassDescription>());
     }
   #endif
 
-  // if ((caps & DRAW_NURBS) > 0) {
-  //   pipe->add_pass(std::make_shared<NurbsPassDescription>());
-  // }
+  #ifdef GUA_ENABLE_LOD
+    if ((caps & DRAW_LODS) > 0) {
+      pipe->add_pass(std::make_shared<LodPassDescription>());
+    }
+  #endif
 
-  // if ((caps & DRAW_VIDEO3D) > 0) {
-  //   pipe->add_pass(std::make_shared<Video3DPassDescription>());
-  // }
+  #ifdef GUA_ENABLE_VIDEO3D
+    if ((caps & DRAW_VIDEO3D) > 0) {
+      pipe->add_pass(std::make_shared<Video3DPassDescription>());
+    }
+  #endif
+
+  #ifdef GUA_ENABLE_NURBS
+    if ((caps & DRAW_NURBS) > 0) {
+      pipe->add_pass(std::make_shared<NurbsPassDescription>());
+    }
+  #endif
 
 
   if ((caps & DRAW_BBOXES) > 0) {

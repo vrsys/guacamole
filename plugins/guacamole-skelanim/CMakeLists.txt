@@ -17,7 +17,7 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SKELANIM_INCLUDE_DIR}
 )
 
-ADD_LIBRARY( guacamole-skelanim SHARED
+ADD_LIBRARY( guacamole-skelanim STATIC
     ${GUACAMOLE_SKELANIM_SRC}
 )
 
