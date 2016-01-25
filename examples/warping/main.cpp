@@ -30,8 +30,6 @@
 
 #define SHADOWS         1
 #define LOAD_PITOTI     1
-#define LOAD_SPONZA     1
-#define LOAD_HAIRBALL   1
 
 #include <functional>
 
@@ -252,14 +250,6 @@ int main(int argc, char** argv) {
   scene_root->rotate(-90, 1, 0, 0);
   add_oilrig(0, 0, 1, "/transform/oilrig");
 
-
-  // teapot --------------------------------------------------------------------
-  scene_root = graph.add_node<gua::node::TransformNode>("/transform", "teapot");
-  auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
-  scene_root->add_child(teapot);
-
   // pitoti --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "pitoti");
   #if LOAD_PITOTI
@@ -327,7 +317,6 @@ int main(int argc, char** argv) {
     balls.push_back(sphere_body);
   };
 
-
   // glasses --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "glasses");
   auto load_mat = [](std::string const& file){
@@ -345,19 +334,15 @@ int main(int argc, char** argv) {
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
   std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[0])->set_material(mat_glasses);
-  // std::dynamic_pointer_cast<gua::node::TriMeshNode>(glasses->get_children()[1])->set_material(mat_glasses);
   scene_root->add_child(glasses);
   scene_root->scale(10);
   scene_root->rotate(180, 0, 1, 0);
   scene_root->scale(2);
 
-
   // sponza --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "sponza");
   scene_root->rotate(40, 0, 1, 0);
-  #if LOAD_SPONZA 
-  auto sponza(loader.create_geometry_from_file("sponza","data/objects/sponza/sponza.obj",
-  // auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/SponzaPBR/sponza.obj",
+  auto sponza(loader.create_geometry_from_file("sponza", opt_prefix + "3d_models/sponza_with_windows/sponza.obj",
     gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
     gua::TriMeshLoader::NORMALIZE_SCALE));
@@ -365,72 +350,16 @@ int main(int argc, char** argv) {
   sponza->translate(0, 2, 0);
   scene_root->add_child(sponza);
 
-  auto sponza_light_05 = std::make_shared<gua::node::TransformNode>("sponza_light_05");
-  auto light = std::make_shared<gua::node::LightNode>("light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.set_brightness(10.f);
-  light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
-  light->translate(2.1, 0.2, 0.8);
-  light->scale(3.0);
-  scene_root->add_child(sponza_light_05);
-  sponza_light_05->add_child(light);
-
-  auto sponza_light_06 = std::make_shared<gua::node::TransformNode>("sponza_light_06");
-  light = std::make_shared<gua::node::LightNode>("light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.set_brightness(10.f);
-  light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
-  light->translate(-2.1, 0.2, 0.8);
-  light->scale(3.0);
-  scene_root->add_child(sponza_light_06);
-  sponza_light_06->add_child(light);
-
-  auto sponza_light_07 = std::make_shared<gua::node::TransformNode>("sponza_light_07");
-  light = std::make_shared<gua::node::LightNode>("light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.set_brightness(10.f);
-  light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
-  light->translate(-2.1, 0.2, -0.8);
-  light->scale(3.0);
-  scene_root->add_child(sponza_light_07);
-  sponza_light_07->add_child(light);
-
-  auto sponza_light_08 = std::make_shared<gua::node::TransformNode>("sponza_light_08");
-  light = std::make_shared<gua::node::LightNode>("light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.set_brightness(10.f);
-  light->data.set_falloff(2.f);
-  light->data.set_color(gua::utils::Color3f(1.5f, 0.5f, 0.3f));
-  light->translate(2.1, 0.2, -0.8);
-  light->scale(3.0);
-  scene_root->add_child(sponza_light_08);
-  sponza_light_08->add_child(light);
-  #endif
-
   // hairball --------------------------------------------------------------------
   scene_root = graph.add_node<gua::node::TransformNode>("/transform", "hairball");
-  #if LOAD_HAIRBALL
-    auto hairball(loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    hairball->scale(5.0);
-    hairball->translate(0, 0, -7);
-    scene_root->add_child(hairball);
+  auto hairball(loader.create_geometry_from_file("hairball", opt_prefix + "3d_models/hairball/hairball.dae",
+    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+  hairball->scale(5.0);
+  scene_root->add_child(hairball);
 
-    hairball = loader.create_geometry_from_file("hairball", "data/objects/hairball.dae",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE);
-    for (auto c: hairball->get_children()) {
-      auto node = std::dynamic_pointer_cast<gua::node::TriMeshNode>(c);
-      node->get_material()->set_uniform("Color", gua::math::vec4(1.f, 1.f, 1.f, 0.5f));
-    }
-    hairball->scale(5.0);
-    hairball->translate(0, 0, 7);
-    scene_root->add_child(hairball);
-  #endif
+
+
 
   auto pipe = gua::PipelineFactory::make_pipeline(
     gua::PipelineFactory::DEFAULT | 
@@ -462,7 +391,6 @@ int main(int argc, char** argv) {
   auto set_scene = [&](std::string const& name) {
     graph["/transform/sponza"]->get_tags().add_tag("invisible");
     graph["/transform/oilrig"]->get_tags().add_tag("invisible");
-    graph["/transform/teapot"]->get_tags().add_tag("invisible");
     graph["/transform/pitoti"]->get_tags().add_tag("invisible");
     graph["/transform/physics"]->get_tags().add_tag("invisible");
     graph["/transform/hairball"]->get_tags().add_tag("invisible");
@@ -505,8 +433,6 @@ int main(int argc, char** argv) {
                                            -0.210, -0.236, -0.949, -4.290,
                                            0.000, 0.000, 0.000, 1.000));
     }
-    if (name == "set_scene_teapot")
-      graph["/transform/teapot"]->get_tags().remove_tag("invisible");
     if (name == "set_scene_pitoti") {
       sun_light->data.set_enable_shadows(false);
       graph["/transform/pitoti"]->get_tags().remove_tag("invisible");
@@ -769,7 +695,6 @@ int main(int argc, char** argv) {
       gui->add_javascript_callback("set_scene_sponza1");
       gui->add_javascript_callback("set_scene_sponza2");
       gui->add_javascript_callback("set_scene_sponza3");
-      gui->add_javascript_callback("set_scene_teapot");
       gui->add_javascript_callback("set_scene_pitoti");
       gui->add_javascript_callback("set_scene_physics");
       gui->add_javascript_callback("set_scene_glasses");
@@ -921,9 +846,8 @@ int main(int argc, char** argv) {
                  callback == "set_scene_sponza1"           ||
                  callback == "set_scene_sponza2"           ||
                  callback == "set_scene_sponza3"           ||
-                 callback == "set_scene_teapot"            ||
                  callback == "set_scene_pitoti"            ||
-                 callback == "set_scene_physics"            ||
+                 callback == "set_scene_physics"           ||
                  callback == "set_scene_hairball"          ||
                  callback == "set_scene_glasses") {
         set_scene(callback);
