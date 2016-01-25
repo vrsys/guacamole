@@ -42,8 +42,7 @@ class GUA_DLL PipelineFactory {
     DRAW_VOLUMES                      = 1 << 7,
     WARPING                           = 1 << 8,
     DEBUG_GBUFFER                     = 1 << 9,
-    DEBUG_WARPING                     = 1 << 10,
-    ABUFFER                           = 1 << 11,
+    ABUFFER                           = 1 << 10,
     DEFAULT                           = DRAW_TRIMESHES | DRAW_TEXTURED_QUADS |
                                         DRAW_SCREEN_SPACE_TEXTURED_QUADS
   };

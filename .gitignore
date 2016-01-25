@@ -46,7 +46,7 @@ examples/volume/example-volume
 examples/nurbs/example-nurbs
 examples/video3d/example-video3d
 examples/stress_test/stress_test
-examples/nice_and_shiny/nice_and_shiny
+examples/nice_and_shiny/example-nice_and_shiny
 examples/plod/example-plod
 examples/projective_texturing/example-projective_texturing
 examples/tiled_shading_test/tiled_shading_test
@@ -56,13 +56,6 @@ examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/warping/example-warping
-examples/warping/data/objects/car
-examples/warping/data/objects/sponza
-examples/warping/data/objects/sanmiguel
-examples/warping/data/objects/sibenik
-examples/warping/data/objects/dragon.dae
-examples/warping/data/objects/hairball.dae
-examples/warping/data/objects/buddha.dae
 examples/animation/example-animation
 
 examples/*/Release/*

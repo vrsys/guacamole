@@ -63,7 +63,7 @@ void Navigator::update() {
     }
 
     auto target = scm::math::make_translation(current_location_.x, current_location_.y, current_location_.z) * rotation;
-    float smoothness = 1;
+    float smoothness = 0.2;
     transform_ = transform_ * (1.f - smoothness) + target * smoothness;
     mouse_movement_ = scm::math::vec2i(0);
 

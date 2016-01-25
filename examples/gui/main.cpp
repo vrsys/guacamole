@@ -141,20 +141,36 @@ int main(int argc, char** argv) {
   std::shared_ptr<gua::GuiResource> focused_element;
 
   auto camera = screen->add_child<gua::node::CameraNode>("cam");
-  camera->set_pipeline_description(gua::PipelineFactory::make_pipeline(
+  auto pipe = gua::PipelineFactory::make_pipeline(
     gua::PipelineFactory::DRAW_TRIMESHES |
-    gua::PipelineFactory::DEBUG_GBUFFER | 
+    gua::PipelineFactory::WARPING | 
     gua::PipelineFactory::DRAW_SCREEN_SPACE_TEXTURED_QUADS  
-  ));
+  );
+  camera->set_pipeline_description(pipe);
   camera->translate(0, 0, 1.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
 
+  camera->config.set_enable_stereo(true);
+  camera->config.set_stereo_type(gua::StereoType::TEMPORAL_WARP);
+
+  pipe->get_pass_by_type<gua::WarpPassDescription>()->get_warp_state([&](){
+    gua::WarpPassDescription::WarpState state;
+    gua::Frustum frustum = camera->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    state.projection_view_center = frustum.get_projection() * frustum.get_view();
+    frustum = camera->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+    state.projection_view_left = frustum.get_projection() * frustum.get_view();
+    frustum = camera->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
+    state.projection_view_right = frustum.get_projection() * frustum.get_view();
+    return state;
+  });
+
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->on_char.connect([&](unsigned c) {

@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
+  window->config.set_enable_vsync(true);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);

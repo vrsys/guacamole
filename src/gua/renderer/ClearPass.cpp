@@ -58,7 +58,7 @@ PipelinePass ClearPassDescription::make_pass(RenderContext const& ctx, Substitut
     auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
     if (gbuffer) {
       auto& ctx(pipe.get_context());
-      gbuffer->clear(ctx, 1.f, 1);
+      gbuffer->clear_all(ctx, 1.f, 1);
       gbuffer->clear_abuffer(ctx);
     }
   };

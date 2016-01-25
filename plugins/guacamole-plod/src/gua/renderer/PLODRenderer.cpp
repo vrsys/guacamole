@@ -757,8 +757,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
         pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
       }
 
-      bool write_depth = true;
-      target.bind(ctx, write_depth);
+      bool write_all_layers = true;
+      bool do_clear = false;
+      bool do_swap = false;
+      target.bind(ctx, write_all_layers, do_clear, do_swap);
 
        //////////////////////////////////////////////////////////////////////////
        // 3. normalization pass 
@@ -800,8 +802,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
        }
 
     } else { //shadow branch
-        bool write_depth = true;
-        target.bind(ctx, write_depth);
+      bool write_all_layers = true;
+      bool do_clear = false;
+      bool do_swap = false;
+      target.bind(ctx, write_all_layers, do_clear, do_swap);
 
       //////////////////////////////////////////////////////////////////////////
       // only pass in this branch: shadow pass 

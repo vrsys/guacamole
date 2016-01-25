@@ -19,7 +19,7 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_GUI_INCLUDE_DIR}
 )
 
-ADD_LIBRARY( guacamole-gui SHARED
+ADD_LIBRARY( guacamole-gui STATIC
     ${GUACAMOLE_GUI_SRC}
 )
 

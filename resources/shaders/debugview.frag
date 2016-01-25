@@ -14,7 +14,7 @@ layout(location=0) out vec3 gua_out_color;
 void main() {
 
   ivec2 fragment_position = ivec2(gl_FragCoord.xy);
-  const int number_of_gbuffers = 5;
+  const int number_of_gbuffers = 6;
 
   int debug_window_width  = int(gua_resolution.x / number_of_gbuffers);
   int debug_window_height = int((debug_window_width * gua_resolution.y) / gua_resolution.x);
@@ -39,6 +39,9 @@ void main() {
         // output position
       gua_out_color = gua_get_position(texcoord);
     } else if ( fragment_position.x < 5*debug_window_width) {
+        // output pbr
+      gua_out_color = gua_get_pbr(texcoord);
+    } else if ( fragment_position.x < 6*debug_window_width) {
       unsigned int nlights = gua_sun_lights_num;
       int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
 

@@ -186,7 +186,8 @@ class GUA_DLL CameraNode : public Node {
   static Frustum make_frustum(SceneGraph const& graph,
                               math::mat4 const& camera_transform,
                               CameraNode::Configuration const& config,
-                              CameraMode mode, bool use_alternative_culling_screen);
+                              CameraMode mode, bool use_alternative_culling_screen, 
+                              bool ignore_warp_mode);
 
   std::shared_ptr<Node> copy() const override;
 
@@ -207,11 +208,11 @@ struct GUA_DLL SerializedCameraNode {
   std::vector<SerializedCameraNode>     pre_render_cameras;
 
   Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode, false);
+    return CameraNode::make_frustum(graph, transform, config, mode, false, false);
   }
 
   Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode, true);
+    return CameraNode::make_frustum(graph, transform, config, mode, true, false);
   }
 };
 

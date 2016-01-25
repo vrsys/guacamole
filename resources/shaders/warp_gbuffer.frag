@@ -22,18 +22,8 @@
 @include "common/header.glsl"
 @include "common/gua_camera_uniforms.glsl"
 @include "common/gua_gbuffer_input.glsl"
-@include "gbuffer_warp_modes.glsl"
 @include "hole_filling_modes.glsl"
-@include "interpolation_modes.glsl"
 @include "warp_grid_bits.glsl"
-
-#if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1 || HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-  flat in uint is_rubber_band;
-#endif
-
-// -----------------------------------------------------------------------------
-#if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_ADVANCED_SURFACE_ESTIMATION || WARP_MODE == WARP_MODE_GRID_NON_UNIFORM_SURFACE_ESTIMATION
-// -----------------------------------------------------------------------------
 
 flat in uint cellsize;
 in vec2 texcoords;
@@ -42,7 +32,7 @@ in vec2 cellcoords;
 uniform uvec2 gua_warp_grid_tex;
 
 // output
-layout(location=0) out vec3 gua_out_color;
+layout(location=0) out vec4 gua_out_color_emit;
 
 vec3 heat(float v) {
   float value = 1.0-v;
@@ -55,73 +45,24 @@ vec3 heat(float v) {
 
 void main() {
 
-  #if WARP_MODE == WARP_MODE_GRID_DEPTH_THRESHOLD || WARP_MODE == WARP_MODE_GRID_SURFACE_ESTIMATION
-    const bool is_surface = (texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x & 1) == 1;
-  #else
-    uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x;
-    const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
-  #endif
+  uint info = texelFetch(usampler2D(gua_warp_grid_tex), ivec2(ivec2(texcoords*gua_resolution+vec2(0.001))/2), 0).x;
+  const bool is_surface = (info & ALL_CONTINUITY_BITS) == ALL_CONTINUITY_BITS;
 
-  #if INTERPOLATION_MODE == INTERPOLATION_MODE_NEAREST
-    gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
-  #elif INTERPOLATION_MODE == INTERPOLATION_MODE_LINEAR
-    gua_out_color = gua_get_color(texcoords);
-  #else
-    if (is_surface) {
-      gua_out_color = gua_get_color(texcoords);
-    } else {
-      gua_out_color = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
-    }
-  #endif
+  // adaptive interpolation
+  if (is_surface) {
+    gua_out_color_emit.rgb = gua_get_color(texcoords);
+    gua_out_color_emit.a = gua_get_pbr(texcoords).r;
+  } else {
+    gua_out_color_emit.rgb = texelFetch(sampler2D(gua_gbuffer_color), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).rgb;
+    gua_out_color_emit.a = texelFetch(sampler2D(gua_gbuffer_pbr), ivec2(texcoords*gua_resolution+vec2(0.001)), 0).r;
+  }
 
   #if @debug_cell_colors@ == 1
     float intensity = log2(cellsize) / 7.0;
-    gua_out_color = heat(1-intensity);
-    // gua_out_color = vec3(0.4, 0.0, 0.0) * (1-intensity) + vec3(0.0, 0.4, 0.0) * intensity;
+    gua_out_color_emit.rgb = heat(1-intensity);
 
     if (any(lessThan(cellcoords, vec2(0.6/float(cellsize)))) || any(greaterThan(cellcoords, vec2(1.0-0.6/float(cellsize))))) {
-      gua_out_color = mix(gua_out_color, vec3(0), 0.7);
+      gua_out_color_emit.rgb = mix(gua_out_color_emit.rgb, vec3(0), 0.7);
     }
-  #endif
-
-  #if @debug_interpolation_borders@ == 1
-    if (!is_surface) {
-      gua_out_color = mix(gua_out_color, vec3(0.0, 0.0, 0.8), 0.8);
-    }
-  #endif
-
-  #if HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_1
-    if (is_rubber_band == 1) {
-      #if @debug_rubber_bands@ == 1
-        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.9);
-      #endif
-    }
-  #elif HOLE_FILLING_MODE == HOLE_FILLING_RUBBER_BAND_2
-    if (is_rubber_band == 1) {
-      #if @debug_rubber_bands@ == 1
-        gua_out_color = mix(gua_out_color, vec3(0.8, 0.0, 0.0), 0.5);
-      #endif
-      gl_FragDepth = 0.9999999;
-    } else {
-      gl_FragDepth = gl_FragCoord.z;
-    }
-
   #endif
 }
-
-
-// -----------------------------------------------------------------------------
-#else // all other modes -------------------------------------------------------
-// -----------------------------------------------------------------------------
-
-in vec3 color;
-in vec3 normal;
-
-// output
-layout(location=0) out vec3 gua_out_color;
-
-void main() {
-  gua_out_color = color;
-}
-
-#endif

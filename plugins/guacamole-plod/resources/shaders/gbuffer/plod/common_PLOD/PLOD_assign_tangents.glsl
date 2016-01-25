@@ -7,3 +7,7 @@
 VertexOut.pass_ms_u = normalize(ms_u) * radius_scaling * in_radius;
 VertexOut.pass_ms_v = normalize(cross(ms_n, ms_u)) * radius_scaling  * in_radius;
   
+if (in_radius > 0.1) {
+    VertexOut.pass_ms_u = vec3(0);
+    VertexOut.pass_ms_v = vec3(0);
+}

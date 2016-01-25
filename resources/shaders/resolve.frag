@@ -17,6 +17,8 @@ in vec2 gua_quad_coords;
 @include "ssao.frag"
 @include "screen_space_shadow.frag"
 
+uniform bool gua_compositing_enable;
+
 // #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
 @include "common/gua_abuffer_resolve.glsl"
@@ -269,12 +271,12 @@ void main() {
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
-  #if @gua_compositing_enable@
+  if (gua_compositing_enable) {
     // color correction
     gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
-  #else
+  } else {
     gua_out_color = abuffer_accumulation_color.rgb;
-  #endif
+  }
 
   // vignette
   if (gua_vignette_color.a > 0) {

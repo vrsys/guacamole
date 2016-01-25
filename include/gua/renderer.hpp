@@ -29,7 +29,6 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/WarpPass.hpp>
-#include <gua/renderer/RenderWarpGridPass.hpp>
 #include <gua/renderer/EmissivePass.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>

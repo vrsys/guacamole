@@ -43,7 +43,7 @@
 
         // see-through
         const float feather = 0.04;
-        const float min_alpha = 0.1;
+        const float min_alpha = 0.2;
         if (cut_rad > 0.001) {
           const vec3 p = gua_varying_world_position;
           float cut_dist = length((cut_pos-p)-(dot(cut_pos - p, cut_n)*cut_n));
@@ -53,7 +53,7 @@
         }
 
         // fade out
-        const float fade_dist = 0.15;
+        const float fade_dist = 0.25;
         gua_alpha *= smoothstep(0.0, 1.0, gl_FragCoord.z / gl_FragCoord.w / fade_dist);
 
         // model opacity

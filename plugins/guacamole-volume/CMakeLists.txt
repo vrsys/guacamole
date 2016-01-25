@@ -10,21 +10,16 @@ file(GLOB_RECURSE GUACAMOLE_VOLUME_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 SET(GUACAMOLE_VOLUME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-volume includes.")
 
-LINK_DIRECTORIES(${LIB_PATHS})
+# LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}
                      ${GUACAMOLE_VOLUME_INCLUDE_DIR}
 )
 
-ADD_LIBRARY( guacamole-volume SHARED
+ADD_LIBRARY( guacamole-volume STATIC
     ${GUACAMOLE_VOLUME_SRC}
 )
-
-TARGET_LINK_LIBRARIES( guacamole-volume
-                       guacamole
-                       general ${SCHISM_LIBRARIES}
-                       general ${GL_LIBRARIES})
 
 ADD_DEPENDENCIES(guacamole-volume guacamole)
 
@@ -72,4 +67,4 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources
         PATTERN "*.teval"
         PATTERN "*.obj"
         PATTERN "*.gmd"
-        )
+)

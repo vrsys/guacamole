@@ -24,14 +24,6 @@
 
     <script type="text/javascript">
 
-    var textures = [
-      "/opt/guacamole/resources/skymaps/cycles_island.jpg",
-      "/opt/guacamole/resources/skymaps/checker.png",
-      "/opt/guacamole/resources/skymaps/bath.jpg",
-      "/opt/guacamole/resources/skymaps/uffizi.jpg",
-      "/opt/guacamole/resources/skymaps/above_clouds.jpg"
-    ]
-
       function add_space(parent_selector, label) {
         $(parent_selector).append('<hr />');
       }
@@ -53,31 +45,6 @@
             gua["set_" + func]("(" + rgb.r + " " + rgb.g + " " + rgb.b + ")");
           }
         });
-
-        return {func: func, selector: parent_selector + " ." + func};
-      }
-
-      function add_texture_select(parent_selector, func, label) {
-
-        var texture_button_popover = "";
-        var count = textures.length;
-        for (var i = 0; i < count; i++) {
-          texture_button_popover += '<div data-texture="' + textures[i] + '" style="background-image:url(../../' + textures[i] + '); margin-right:4px; height: 40px; width: 30%;" class="btn btn-default btn-image ' + func + '_button"></div>';
-        }
-
-        $(parent_selector).append(
-          '<div class="row">' +
-            '<div class="col-xs-5">' +
-              label + ':' +
-            '</div>' +
-            '<div class="col-xs-7">' +
-              '<div class="btn btn-default btn-image texture_button ' + func + '" data-toggle="popover" data-placement="left" title="Select Texture" style="height: 20px; width: 100%; padding:0"></div>' +
-            '</div>' +
-          '</div>'
-        );
-
-        $(parent_selector + ' .' + func).popover({container:"body", html:true});
-        $(parent_selector + ' .' + func).data('bs.popover').options.content = texture_button_popover;
 
         return {func: func, selector: parent_selector + " ." + func};
       }
@@ -173,83 +140,40 @@
         init_radio("#stereotype_spatial", "stereotype_spatial");
         init_radio("#stereotype_temporal", "stereotype_temporal");
 
-        init_radio("#scene_one_oilrig", "scene_one_oilrig");
+        init_radio("#scene_oilrig", "scene_oilrig");
         init_radio("#scene_sponza1", "scene_sponza1");
         init_radio("#scene_sponza2", "scene_sponza2");
         init_radio("#scene_sponza3", "scene_sponza3");
-        init_radio("#scene_mountains", "scene_mountains");
-        init_radio("#scene_bottle", "scene_bottle");
-        init_radio("#scene_teapot", "scene_teapot");
-        init_radio("#scene_car", "scene_car");
-        init_radio("#scene_sphere", "scene_sphere");
-        init_radio("#scene_textured_quads", "scene_textured_quads");
-        init_radio("#scene_buddha", "scene_buddha");
-        init_radio("#scene_dragon", "scene_dragon");
+        init_radio("#scene_physics", "scene_physics");
+        init_radio("#scene_glasses", "scene_glasses");
         init_radio("#scene_hairball", "scene_hairball");
-        init_radio("#scene_engine", "scene_engine");
-        init_radio("#scene_many_transp_dragon", "scene_many_transp_dragon");
-        init_radio("#scene_transp_dragon", "scene_transp_dragon");
+        init_radio("#scene_pitoti", "scene_pitoti");
 
         init_checkbox("#vsync", "vsync");
-        init_checkbox("#background", "background");
 
         init_checkbox("#warp_perspective", "warp_perspective");
         init_checkbox("#warping", "warping");
         init_checkbox("#stereo", "stereo");
 
-        init_radio("#gbuffer_type_none", "gbuffer_type_none");
-        init_radio("#gbuffer_type_points", "gbuffer_type_points");
-        init_radio("#gbuffer_type_scaled_points", "gbuffer_type_scaled_points");
-        init_radio("#gbuffer_type_quads_screen_aligned", "gbuffer_type_quads_screen_aligned");
-        init_radio("#gbuffer_type_quads_depth_aligned", "gbuffer_type_quads_depth_aligned");
-        init_radio("#gbuffer_type_grid_depth_theshold", "gbuffer_type_grid_depth_theshold");
-        init_radio("#gbuffer_type_grid_surface_estimation", "gbuffer_type_grid_surface_estimation");
-        init_radio("#gbuffer_type_grid_advanced_surface_estimation", "gbuffer_type_grid_advanced_surface_estimation");
-        init_radio("#gbuffer_type_grid_non_uniform_surface_estimation", "gbuffer_type_grid_non_uniform_surface_estimation");
-
-        init_radio("#transparency_type_none", "transparency_type_none");
-        init_radio("#transparency_type_hidden", "transparency_type_hidden");
-        init_radio("#transparency_type_gbuffer", "transparency_type_gbuffer");
-        init_radio("#transparency_type_abuffer", "transparency_type_abuffer");
-        init_radio("#transparency_type_raycasting", "transparency_type_raycasting");
         init_checkbox("#adaptive_entry_level", "adaptive_entry_level");
 
-        init_checkbox("#show_warp_grid", "show_warp_grid");
         init_checkbox("#debug_cell_colors", "debug_cell_colors");
         init_checkbox("#debug_sample_count", "debug_sample_count");
         init_checkbox("#debug_bounding_volumes", "debug_bounding_volumes");
-        init_checkbox("#debug_sample_ray", "debug_sample_ray");
-        init_checkbox("#debug_interpolation_borders", "debug_interpolation_borders");
-        init_checkbox("#debug_rubber_bands", "debug_rubber_bands");
-        init_checkbox("#debug_epipol", "debug_epipol");
 
         init_radio("#grid_surface", "grid_surface");
         init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
         init_radio("#grid_depth_threshold", "grid_depth_threshold");
 
-        init_slider("#preview-panel .depth_layers", "depth_layers");
-        init_slider("#preview-panel .rubber_band_threshold", "rubber_band_threshold");
+        init_slider("#preview-panel .max_raysteps", "max_raysteps");
         init_slider("#preview-panel .pixel_size", "pixel_size");
         init_slider("#preview-panel .split_threshold", "split_threshold");
         init_slider("#preview-panel .cell_size", "cell_size");
 
-        add_texture_select("#scene-panel", "bg_tex", "Texture");
-        init_slider("#scene-panel .quad_count", "quad_count");
-        init_slider("#scene-panel .quad_start", "quad_start");
-        init_slider("#scene-panel .quad_scale", "quad_scale");
-        init_slider("#scene-panel .quad_range", "quad_range");
-
         init_radio("#hole_filling_type_none", "hole_filling_type_none");
-        init_radio("#hole_filling_type_inpaint", "hole_filling_type_inpaint");
         init_radio("#hole_filling_type_epipolar_search", "hole_filling_type_epipolar_search");
         init_radio("#hole_filling_type_epipolar_mirror", "hole_filling_type_epipolar_mirror");
-        init_radio("#hole_filling_type_rubber_band_1", "hole_filling_type_rubber_band_1");
-        init_radio("#hole_filling_type_rubber_band_2", "hole_filling_type_rubber_band_2");
         init_radio("#hole_filling_type_blur", "hole_filling_type_blur");
-
-        init_radio("#interpolation_mode_nearest", "interpolation_mode_nearest");
-        init_radio("#interpolation_mode_linear", "interpolation_mode_linear");
-        init_radio("#interpolation_mode_adaptive", "interpolation_mode_adaptive");
 
         init_color_picker("#hole_filling_color", "hole_filling_color");
 
@@ -269,11 +193,6 @@
         $('#settings-right .side-panel').hover(function(){
           $('#settings-right .side-panel').removeClass("expanded");
           $(this).addClass("expanded");
-        });
-
-        $('body').on('click','.bg_tex_button', function () {
-          gua.set_bg_tex($(this).data("texture"));
-          $('.texture_button').css('background-image', 'url(../../' + $(this).data("texture") + ')');
         });
       });
 
@@ -295,30 +214,21 @@
 
           <h4><i class="fa fa-picture-o"></i> Scene Selection</h4>
 
-          <div class="row">
-            <div class="col-xs-6">
+           <div class="row">
+            <div class="col-xs-5">
+            Scene:
+            </div>
+            <div class="col-xs-7">
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_bottle" value="">
-                  <span>Bottle</span>
+                  <input type="radio" name="sceneRadios" id="scene_physics" value="">
+                  <span>Physics</span>
                 </label>
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_engine" value="">
-                  <span>Engine</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_transp_dragon" value="">
-                  <span>Trsp. Dragon</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_many_transp_dragon" value="">
-                  <span>Many trsp. Dragons</span>
+                  <input type="radio" name="sceneRadios" id="scene_pitoti" value="">
+                  <span>Pitoti</span>
                 </label>
               </div>
               <div class="radio">
@@ -341,55 +251,14 @@
               </div>
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_one_oilrig" value="" checked="">
+                  <input type="radio" name="sceneRadios" id="scene_oilrig" value="" checked="">
                   <span>One Oilrig</span>
                 </label>
               </div>
-
-            </div>
-
-            <div class="col-xs-6">
               <div class="radio">
                 <label>
-                  <input type="radio" name="sceneRadios" id="scene_mountains" value="">
-                  <span>Mountains</span>
-                </label>
-              </div>
-
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_teapot" value="">
-                  <span>Teapot</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_car" value="">
-                  <span>Car</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_sphere" value="">
-                  <span>Textured Spheres</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_textured_quads" value="">
-                  <span>Textured Quads</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_buddha" value="">
-                  <span>Buddha</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="sceneRadios" id="scene_dragon" value="">
-                  <span>Dragon</span>
+                  <input type="radio" name="sceneRadios" id="scene_glasses" value="">
+                  <span>Glasses</span>
                 </label>
               </div>
               <div class="radio">
@@ -399,64 +268,8 @@
                 </label>
               </div>
 
-
             </div>
           </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-              Quad Count:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider quad_count" data-slider-tooltip="hide" data-slider-id="quad_count" type="text" data-slider-min="1" data-slider-max="10" data-slider-step="1" handle="custom"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-5">
-              Quad Scale:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider quad_scale" data-slider-tooltip="hide" data-slider-id="quad_scale" type="text" data-slider-min="0" data-slider-max="5" data-slider-step="0.1" handle="custom"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-5">
-              Quad Start:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider quad_start" data-slider-tooltip="hide" data-slider-id="quad_start" type="text" data-slider-min="0" data-slider-max="5" data-slider-step="0.1" handle="custom"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-xs-5">
-              Quad Range:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider quad_range" data-slider-tooltip="hide" data-slider-id="quad_range" type="text" data-slider-min="0.1" data-slider-max="20" data-slider-step="0.1" handle="custom"/>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Background:
-            </div>
-            <div class="col-xs-7">
-              <div class="checkbox">
-                <label>
-                  <input id="background" type="checkbox" value="">
-                  <span>Enable</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -563,17 +376,6 @@
             </div>
           </div>
 
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Object:
-            </div>
-            <div class="col-xs-7">
-              <button onclick="gua.reset_object()" style="width:100%"class="btn btn-block"><i class="fa fa-undo"></i></button>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -584,101 +386,7 @@
       <div class="side-panel">
         <div id="preview-panel" class="panel-inner">
 
-          <h4><i class="fa fa-recycle"></i> Opaque Warping</h4>
-
-
-          <div class="row">
-            <div class="col-xs-5">
-            Disable:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_none" value="">
-                  <span>None</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Point Based:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_points" value="">
-                  <span>Simple</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_scaled_points" value="">
-                  <span>Scaled</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Quad Based:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_screen_aligned" value="">
-                  <span>Screen aligned</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_quads_depth_aligned" value="">
-                  <span>Depth aligned</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-            Grid Based:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_depth_theshold" value="">
-                  <span>Depth Threshold</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_surface_estimation" value="">
-                  <span>Surface Estimation</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_advanced_surface_estimation" value="">
-                  <span>Advanced Surf. Est.</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="gbufferRadios" id="gbuffer_type_grid_non_uniform_surface_estimation" value="" checked>
-                  <span>Non-Uniform Surf. Est.</span>
-                </label>
-              </div>
-
-            </div>
-          </div>
+          <h4><i class="fa fa-recycle"></i> Warping</h4>
 
           <div class="row">
             <div class="col-xs-5">
@@ -707,29 +415,15 @@
             </div>
           </div>
 
-        </div>
-      </div>
-
-      <div class="side-panel">
-        <div id="preview-panel" class="panel-inner">
-
-          <h4><i class="fa fa-recycle"></i> Transparency Warping</h4>
-
           <div class="row">
             <div class="col-xs-5">
-            Disable:
+              Debug:
             </div>
             <div class="col-xs-7">
-              <div class="radio">
+              <div class="checkbox">
                 <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_none" value="">
-                  <span>None</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_hidden" value="">
-                  <span>Hidden</span>
+                  <input id="debug_cell_colors" type="checkbox" value="">
+                  <span>Cell Colors</span>
                 </label>
               </div>
             </div>
@@ -738,39 +432,11 @@
           <hr />
 
           <div class="row">
-            <div class="col-xs-5">
-            GBuffer:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_gbuffer" value="">
-                  <span>GBuffer Depth</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_abuffer" value="">
-                  <span>ABuffer Depth</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-           <div class="row">
             <div class="col-xs-5">
             ABuffer:
             </div>
             <div class="col-xs-7">
 
-              <div class="radio">
-                <label>
-                  <input type="radio" name="transparencyRadios" id="transparency_type_raycasting" value="" checked>
-                  <span>Raycasting</span>
-                </label>
-              </div>
               <div class="checkbox">
                 <label>
                   <input id="adaptive_entry_level" type="checkbox" value="">
@@ -785,171 +451,14 @@
               Ray Steps:
             </div>
             <div class="col-xs-7">
-              <input class="slider depth_layers" data-slider-tooltip="hide" data-slider-id="depth_layers" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="2" handle="custom"/>
+              <input class="slider max_raysteps" data-slider-tooltip="hide" data-slider-id="max_raysteps" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="2" handle="custom"/>
             </div>
           </div>
 
-        </div>
-      </div>
-
-
-      <div class="side-panel">
-        <div id="preview-panel" class="panel-inner">
-
-          <h4><i class="fa fa-magic"></i> Hole Filling</h4>
 
           <div class="row">
             <div class="col-xs-5">
-              Disable:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_none" value="">
-                  <span>None</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-xs-5">
-              Hole Color
-            </div>
-            <div class="col-xs-7">
-              <div id="hole_filling_color" class="btn btn-default" style="height: 20px; width:100%;">
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-              Inpainting:
-            </div>
-            <div class="col-xs-7">
-               <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_search" value="">
-                  <span>Stretch</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_inpaint" value="" checked>
-                  <span>Bi-Stretch</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
-                  <span>Mirror</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_blur" value="">
-                  <span>Blur</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-              Rubber Sheets:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_1" value="">
-                  <span>Simple</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_rubber_band_2" value="">
-                  <span>Zero Depth</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-xs-5">
-              Rubber Thr.:
-            </div>
-            <div class="col-xs-7">
-              <input class="slider rubber_band_threshold" data-slider-tooltip="hide" data-slider-id="rubber_band_threshold" type="text" data-slider-min="0" data-slider-max="0.001" data-slider-step="0.00002" handle="custom"/>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-
-
-       <div class="side-panel">
-        <div id="preview-panel" class="panel-inner">
-
-          <h4><i class="fa fa-bug"></i> Debug Options</h4>
-
-          <div class="row">
-            <div class="col-xs-5">
-              Grid Warping:
-            </div>
-            <div class="col-xs-7">
-              <div class="checkbox">
-                <label>
-                  <input id="show_warp_grid" type="checkbox" value="">
-                  <span>Display Grid</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_cell_colors" type="checkbox" value="">
-                  <span>Cell Colors</span>
-                </label>
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_interpolation_borders" type="checkbox" value="">
-                  <span>Interpolation Borders</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="col-xs-5">
-              Interpolation:
-            </div>
-            <div class="col-xs-7">
-              <div class="radio">
-                <label>
-                  <input type="radio" name="interpolationRadios" id="interpolation_mode_nearest" value="">
-                  <span>Nearest</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="interpolationRadios" id="interpolation_mode_linear" value="">
-                  <span>Linear</span>
-                </label>
-              </div>
-              <div class="radio">
-                <label>
-                  <input type="radio" name="interpolationRadios" id="interpolation_mode_adaptive" value="" checked>
-                  <span>Adaptive</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <div class="col-xs-5">
-              Ray Casting:
+              Debug:
             </div>
             <div class="col-xs-7">
               <div class="checkbox">
@@ -964,14 +473,9 @@
                   <span>Bounding Volumes</span>
                 </label>
               </div>
-              <div class="checkbox">
-                <label>
-                  <input id="debug_sample_ray" type="checkbox" value="">
-                  <span>Sample Ray</span>
-                </label>
-              </div>
             </div>
           </div>
+
 
           <hr />
 
@@ -980,43 +484,48 @@
               Hole Filling:
             </div>
             <div class="col-xs-7">
-              <div class="checkbox">
+              <div class="radio">
                 <label>
-                  <input id="debug_rubber_bands" type="checkbox" value="">
-                  <span>Rubber Sheets</span>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_none" value="">
+                  <span>None</span>
                 </label>
               </div>
-              <div class="checkbox">
+               <div class="radio">
                 <label>
-                  <input id="debug_epipol" type="checkbox" value="">
-                  <span>Epipolar Geometry</span>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_search" value="">
+                  <span>Stretch</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
+                  <span>Mirror</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_blur" value="" checked>
+                  <span>Blur</span>
                 </label>
               </div>
             </div>
           </div>
-
-        </div>
-      </div>
-
-      <div class="side-panel">
-        <div id="preview-panel" class="panel-inner">
-
-          <h4><i class="fa fa-gears"></i> Tests</h4>
 
           <div class="row">
-            <div class="col-xs-12">
-              <button onclick="gua.start_resolution_series()" class="btn btn-block"><i class="fa fa-gears"></i> Resolution Series</button>
-              <button onclick="gua.start_positional_warp_series()" class="btn btn-block"><i class="fa fa-gears"></i> Positional Warp Series</button>
-              <button onclick="gua.start_rotational_warp_series()" class="btn btn-block"><i class="fa fa-gears"></i> Rotational Warp Series</button>
-              <button onclick="gua.start_quad_series()" class="btn btn-block"><i class="fa fa-gears"></i> Quad Disparity Series</button>
-              <button onclick="gua.start_quad_count_series()" class="btn btn-block"><i class="fa fa-gears"></i> Quad Count Series</button>
-              <button onclick="gua.print_current_times()" class="btn btn-block"><i class="fa fa-pencil"></i> Print Current Times</button>
+            <div class="col-xs-5">
+              Hole Color
             </div>
-
+            <div class="col-xs-7">
+              <div id="hole_filling_color" class="btn btn-default" style="height: 20px; width:100%;">
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
+
+
+        </div>
+
+      </div>
     </div>
 
   </body>

@@ -52,6 +52,7 @@ CollisionShapeNodeVisitor::~CollisionShapeNodeVisitor() {}
 void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
 
   rigid_body_ = rigid_body;
+  rigid_body_->set_dirty();
 
   // clear matrix stack
   while (!matrix_stack_.empty())

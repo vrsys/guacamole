@@ -1,53 +1,19 @@
 # determine source and header files
-file(GLOB_RECURSE EXAMPLE_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.c *.cpp *.cc)
 
 get_filename_component(_EXAMPLE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
-SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-LIST(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
+link_directories(${LIB_PATHS})
 
-LINK_DIRECTORIES(${LIB_PATHS})
+include_directories( ${INCLUDE_PATHS} ${PROJECT_SOURCE_DIR}/include)
 
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}/include
-                     ${AWESOMIUM_INCLUDE_DIR}
-                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${GUACAMOLE_GUI_INCLUDE_DIR}
-                     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
-                     ${OVRSDK2_INCLUDE_DIR}
-                     ${GUACAMOLE_OCULUSSDK2_INCLUDE_DIR}
-                     ${OVR_INCLUDE_DIR}
-)
+add_executable( ${_EXE_NAME} main.cpp Navigator.cpp)
 
-ADD_EXECUTABLE( ${_EXE_NAME}
-    ${EXAMPLE_SRC}
-)
+add_dependencies(${_EXE_NAME} guacamole)
 
-
-# ADD_DEPENDENCIES(${_EXE_NAME} guacamole-oculus)
-LIST(APPEND LIBS guacamole)
-#LIST(APPEND LIBS guacamole-oculus guacamole ${OVR_LIBRARY})
-
-IF (${PLUGIN_guacamole-gui})
-	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
-	LIST(APPEND LIBS guacamole-gui)
-ENDIF (${PLUGIN_guacamole-gui})
-
-IF (${PLUGIN_guacamole-plod})
-	ADD_DEPENDENCIES(${_EXE_NAME} guacamole-plod)
-	LIST(APPEND LIBS guacamole-plod)
-ENDIF (${PLUGIN_guacamole-plod})
-
-IF (MSVC)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
-                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
-ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
-                         general ${ASSIMP_LIBRARIES}
-                       )
-ENDIF (MSVC)
+target_link_libraries(${_EXE_NAME} guacamole)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

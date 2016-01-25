@@ -35,7 +35,7 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${PBR_INCLUDE_DIRS}
 )
 
-ADD_LIBRARY( guacamole-plod SHARED
+ADD_LIBRARY( guacamole-plod STATIC
     ${GUA_PLOD_NODE_SRC}
     ${GUA_PLOD_NODE_INC}
     ${GUA_PLOD_RENDERER_SRC}
@@ -67,9 +67,6 @@ message(STATUS "" )
 IF (MSVC)
   set_target_properties(guacamole-plod PROPERTIES COMPILE_FLAGS "-D GUA_PLOD_LIBRARY")
 ENDIF (MSVC)
-
-set_target_properties(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_ENABLE_PLOD")
-
 
 IF (UNIX)
     LIST(APPEND LIBS udev Xinerama guacamole)
