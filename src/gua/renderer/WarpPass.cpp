@@ -37,7 +37,6 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 WarpPassDescription::WarpPassDescription()
   : PipelinePassDescription()
-  , depth_test_(true)
   , adaptive_entry_level_(true)
   , debug_cell_colors_(false)
   , debug_sample_count_(false)
@@ -81,20 +80,6 @@ WarpPassDescription& WarpPassDescription::max_raysteps(int val) {
 
 int WarpPassDescription::max_raysteps() const {
   return max_raysteps_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-WarpPassDescription& WarpPassDescription::depth_test(bool val) {
-  depth_test_ = val;
-  touch();
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool WarpPassDescription::depth_test() const {
-  return depth_test_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

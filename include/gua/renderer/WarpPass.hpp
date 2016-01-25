@@ -57,9 +57,6 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& max_raysteps(int val);
   int max_raysteps() const;
 
-  WarpPassDescription& depth_test(bool val);
-  bool depth_test() const;
-
   WarpPassDescription& adaptive_entry_level(bool val);
   bool adaptive_entry_level() const;
 
@@ -90,7 +87,6 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-  bool depth_test_;
   bool adaptive_entry_level_;
   bool debug_cell_colors_;
   bool debug_sample_count_;

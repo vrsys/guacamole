@@ -159,12 +159,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
     }
   }
 
-
-  if (description->depth_test()) {
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_yes_, 1);
-  } else {
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
-  }
+  ctx.render_context->set_depth_stencil_state(depth_stencil_state_yes_, 1);
 
   // get warp matrix -----------------------------------------------------------
   auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
@@ -314,7 +309,7 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
   ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_, 1);
   ctx.render_context->apply();
-  
+
   pipe.draw_quad();
 
   pipe.end_gpu_query(ctx, gpu_query_name_b);

@@ -29,13 +29,9 @@
 #define USE_SIDE_BY_SIDE 0
 
 #define SHADOWS         1
-#define LOAD_CAR        0
 #define LOAD_PITOTI     1
-#define LOAD_MOUNTAINS  0
-#define LOAD_ENGINE     0
 #define LOAD_SPONZA     1
 #define LOAD_HAIRBALL   1
-#define LOAD_DRAGON     1 
 
 #include <functional>
 
@@ -83,11 +79,6 @@ const float screen_width = 4.f;
 const float screen_dist = 2.5f;
 const int   window_size = 1600;
 
-int quad_count = 5;
-float quad_range = 20;
-float quad_start = 2.5;
-float quad_scale = 1.0;
-
 
 #if OCULUS1 || OCULUS2
   float eye_dist = 0.0635f;
@@ -97,105 +88,6 @@ float quad_scale = 1.0;
 
 gua::math::mat4 current_tracking_matrix(gua::math::mat4::identity());
 std::string     current_transparency_mode("set_transparency_type_raycasting");
-
-
-
-
-class QueryResults {
- public:
-  enum class Type {
-    FPS = 0,
-    RENDER_TIME,
-    GBUFFER_PRE_TIME,
-    ABUFFER_PRE_TIME,
-    HOLE_FILLING_PRE_TIME,
-    GBUFFER_WARP_TIME,
-    ABUFFER_WARP_TIME,
-    GBUFFER_PRIMITIVES,
-    COUNT
-  };
-
-  QueryResults() {
-    reset();
-  }
-
-  void update(std::shared_ptr<gua::WindowBase> const& window) {
-
-    add(Type::FPS, window->get_rendering_fps());
-
-    for (auto const& result: window->get_context()->time_query_results) {
-      if (result.first.find("GPU") != std::string::npos) {
-        if (result.first.find("Trimesh") != std::string::npos)
-          add(Type::RENDER_TIME, result.second);
-        if (result.first.find("Resolve") != std::string::npos)
-          add(Type::RENDER_TIME, result.second);
-        if (result.first.find("WarpPass GBuffer") != std::string::npos)
-          add(Type::GBUFFER_WARP_TIME, result.second);
-        if (result.first.find("WarpPass ABuffer") != std::string::npos)
-          add(Type::ABUFFER_WARP_TIME, result.second);
-        if (result.first.find("WarpGridGenerator") != std::string::npos)
-          add(Type::GBUFFER_PRE_TIME, result.second);
-        if (result.first.find("MinMaxMap") != std::string::npos)
-          add(Type::ABUFFER_PRE_TIME, result.second);
-        if (result.first.find("Generate Hole Filling Texture") != std::string::npos)
-          add(Type::HOLE_FILLING_PRE_TIME, result.second);
-      }
-    }
-
-    for (auto const& result: window->get_context()->primitive_query_results) {
-      if (result.first.find("WarpPass GBuffer") != std::string::npos)
-        add(Type::GBUFFER_PRIMITIVES, result.second.first);
-    }
-
-    ++update_count_;
-  }
-
-  double get(Type type) {
-    auto value(values_[static_cast<int>(type)]);
-    return value / update_count_;
-  }
-
-  void print_to_console() {
-    for (auto& value: values_) {
-      std::cout << value / update_count_ << " ";
-    }
-    std::cout << std::endl;
-  }
-
-  #if GUI_SUPPORT
-    void print_to_gui(std::shared_ptr<gua::GuiResource> const& gui) {
-
-      gui->call_javascript("set_stats", 1000.f / get(Type::FPS), get(Type::FPS),
-                           get(Type::RENDER_TIME), get(Type::GBUFFER_PRE_TIME),
-                           get(Type::ABUFFER_PRE_TIME), get(Type::GBUFFER_WARP_TIME),
-                           get(Type::ABUFFER_WARP_TIME), get(Type::HOLE_FILLING_PRE_TIME),
-                           get(Type::GBUFFER_PRIMITIVES));
-
-    }
-  #endif
-
-  void reset() {
-    for (auto& value: values_) {
-      value = 0;
-    }
-    update_count_ = 0;
-  }
-
- private:
-  void add(Type type, double value) {
-    auto last(values_[static_cast<int>(type)]);
-    values_[static_cast<int>(type)] = last + value;
-  }
-
-  std::array<double, static_cast<int>(Type::COUNT)> values_;
-  int update_count_;
-};
-
-
-
-
-
-
 
 
 #if OCULUS1
@@ -803,11 +695,6 @@ int main(int argc, char** argv) {
     gui_quad->data.size() = gua::math::vec2ui(330, 830);
     graph.add_node("/", gui_quad);
 
-    auto stats_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("stats_quad");
-    stats_quad->data.texture() = "stats";
-    stats_quad->data.size() = gua::math::vec2ui(resolution.x*0.7, 60);
-    graph.add_node("/", stats_quad);
-
     auto mouse_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("mouse_quad");
     mouse_quad->data.texture() = "mouse";
     mouse_quad->data.size() = gua::math::vec2ui(50, 50);
@@ -815,14 +702,11 @@ int main(int argc, char** argv) {
 
     #if OCULUS1 || OCULUS2
       mouse_quad->data.fake_parallax() = -0.01f;
-      stats_quad->data.fake_parallax() = -0.01f;
       gui_quad->data.fake_parallax() = -0.01f;
       mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
-      stats_quad->data.anchor() = gua::math::vec2(0.f, -0.7f);
       gui_quad->data.anchor() = gua::math::vec2(0.7f, 0.f);
     #else
       mouse_quad->data.anchor() = gua::math::vec2(-1.f, -1.f);
-      stats_quad->data.anchor() = gua::math::vec2(0.f, -1.f);
       gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
     #endif
 
@@ -834,11 +718,9 @@ int main(int argc, char** argv) {
     auto toggle_gui = [&](){
       if (gui_quad->get_tags().has_tag("invisible")) {
         gui_quad->get_tags().remove_tag("invisible");
-        stats_quad->get_tags().remove_tag("invisible");
         mouse_quad->get_tags().remove_tag("invisible");
       } else {
         gui_quad->get_tags().add_tag("invisible");
-        stats_quad->get_tags().add_tag("invisible");
         mouse_quad->get_tags().add_tag("invisible");
       }
     };
@@ -1037,13 +919,6 @@ int main(int argc, char** argv) {
         set_scene(callback);
       }
     });
-
-    // bottom gui --------------------------------------------------------------
-    auto stats = std::make_shared<gua::GuiResource>();
-    stats->init("stats", "asset://gua/data/gui/statistics.html", gua::math::vec2ui(resolution.x*0.7, 60));
-    stats->on_loaded.connect([&]() {
-      stats->call_javascript("init");
-    });
   #endif
 
   // ---------------------------------------------------------------------------
@@ -1097,34 +972,6 @@ int main(int argc, char** argv) {
           pitoti->set_error_threshold(pitoti->get_error_threshold()+0.5);
           std::cout << pitoti->get_error_threshold() << std::endl;
         }
-      }
-    #else
-      if (action == 1) {
-        if (key == 49) set_scene("set_scene_oilrig");
-        if (key == 50) set_scene("set_scene_dragon");
-        if (key == 51) set_scene("set_scene_hairball");
-        if (key == 52) set_scene("set_scene_sponza_1");
-        if (key == 53) set_scene("set_scene_sponza_2");
-        if (key == 54) set_scene("set_scene_sponza_3");
-        if (key == 55) set_scene("set_scene_bottle");
-        if (key == 56) set_scene("set_scene_engine");
-
-        if (key == 72) {
-            if      (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_INPAINT) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH);
-            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_SEARCH) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR);
-            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_EPIPOLAR_MIRROR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_BLUR);
-            else if (warp_pass->hole_filling_mode() == gua::WarpPassDescription::HOLE_FILLING_BLUR) warp_pass->hole_filling_mode(gua::WarpPassDescription::HOLE_FILLING_INPAINT);
-        }
-        if (key ==84) {
-            if (current_transparency_mode == "set_transparency_type_raycasting") current_transparency_mode = "set_transparency_type_gbuffer";
-            else if (current_transparency_mode == "set_transparency_type_gbuffer") current_transparency_mode = "set_transparency_type_abuffer";
-            else if (current_transparency_mode == "set_transparency_type_abuffer") current_transparency_mode = "set_transparency_type_raycasting";
-            update_view_mode();
-        }
-        if (key == 69) {stereo = !stereo; update_view_mode();}
-        if (key == 82) {warping = !warping; update_view_mode();}
-        if (key == 89) std::swap(manipulation_navigator, manipulation_camera);
-        if (key == 85) warp_nav.reset();
       }
     #endif
   });
@@ -1225,17 +1072,6 @@ int main(int argc, char** argv) {
     });
   #endif
 
-  #if !GUI_SUPPORT
-    gua::Logger::LOG_MESSAGE << "Usage:" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Scene selection:     Press keys 1-9" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle stereo:       E" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle warping:      R" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle transparency: T" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle camera:       Z" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Reset perspective:   U" << std::endl;
-    gua::Logger::LOG_MESSAGE << "  Toggle Hole Filling: H" << std::endl;
-  #endif
-
   // render setup --------------------------------------------------------------
   gua::Renderer renderer;
 
@@ -1245,12 +1081,8 @@ int main(int argc, char** argv) {
   gua::Timer frame_timer;
   frame_timer.start();
 
-  QueryResults query_results;
-
   // application loop
   while(true) {
-
-    query_results.update(window);
 
     #if POWER_WALL
       normal_cam->set_transform(current_tracking_matrix);
@@ -1288,14 +1120,8 @@ int main(int argc, char** argv) {
                                                               gua::math::float_t(object_trackball.distance())) * gua::math::mat4(object_trackball.rotation());
     transform->set_transform(modelmatrix);
 
-    if (ctr++ % 10 == 0) {
-      #if GUI_SUPPORT
-        query_results.print_to_gui(stats);
-      #else
-        query_results.print_to_console();
-      #endif
-
-      query_results.reset();
+    if (ctr++ % 100 == 0) {
+      std::cout << window->get_rendering_fps() << std::endl;
     }
 
     window->process_events();
