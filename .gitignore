@@ -56,6 +56,7 @@ examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/warping/example-warping
+examples/warping_simple/example-warping_simple
 examples/animation/example-animation
 examples/lod_simple/example-lod_simple
 examples/plod_shadows/example-plod_shadows

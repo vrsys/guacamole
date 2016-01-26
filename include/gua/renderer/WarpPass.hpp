@@ -23,6 +23,7 @@
 #define GUA_WARP_PASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/Frustum.hpp>
 
 #include <memory>
 
@@ -34,14 +35,37 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
  public:
 
   struct WarpState {
-    math::mat4f projection_view_center;
-    math::mat4f projection_view_right;
-    math::mat4f projection_view_left;
+    Frustum center;
+    Frustum left;
+    Frustum right;
 
-    math::mat4f const& get(CameraMode mode) {
-      if (mode == CameraMode::LEFT)  return projection_view_left;
-      if (mode == CameraMode::RIGHT) return projection_view_right;
-      return projection_view_center;
+    math::mat4 get(CameraMode mode) {
+      Frustum frustum;
+
+      if (mode == CameraMode::LEFT) {
+        frustum = Frustum::perspective(
+          left.get_camera_transform(),
+          left.get_screen_transform(),
+          left.get_clip_near(),
+          left.get_clip_far()*1.5
+        );
+      } else if (mode == CameraMode::RIGHT) {
+        frustum = Frustum::perspective(
+          right.get_camera_transform(),
+          right.get_screen_transform(),
+          right.get_clip_near(),
+          right.get_clip_far()*1.5
+        );
+      } else {
+        frustum = Frustum::perspective(
+          center.get_camera_transform(),
+          center.get_screen_transform(),
+          center.get_clip_near(),
+          center.get_clip_far()*1.5
+        );
+      }
+
+      return frustum.get_projection() * frustum.get_view();
     }
   };
 
@@ -78,8 +102,8 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   WarpPassDescription& hole_filling_color(math::vec3f const& hole_filling_color);
   math::vec3f const& hole_filling_color() const;
 
-  WarpPassDescription& get_warp_state(std::function<WarpState()> const& f);
-  std::function<WarpState()> const& get_warp_state() const;
+  WarpPassDescription& get_warp_state(std::function<bool(WarpState&)> const& f);
+  std::function<bool(WarpState&)> const& get_warp_state() const;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
@@ -96,7 +120,7 @@ class GUA_DLL WarpPassDescription : public PipelinePassDescription {
   float pixel_size_;
   HoleFillingMode hole_filling_mode_;
 
-  std::function<WarpState()> get_warp_state_;
+  std::function<bool(WarpState&)> get_warp_state_;
 };
 
 }

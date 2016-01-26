@@ -498,8 +498,6 @@ int main(int argc, char** argv) {
 
   normal_cam->config.set_scene_graph_name("main_scenegraph");
   normal_cam->config.mask().blacklist.add_tag("invisible");
-  normal_cam->config.set_far_clip(350.f);
-  normal_cam->config.set_near_clip(0.1f);
   normal_cam->config.set_eye_dist(eye_dist);
 
   // warping camera ------------------------------------------------------------
@@ -538,8 +536,6 @@ int main(int argc, char** argv) {
   #endif
 
   warp_cam->config.set_scene_graph_name("main_scenegraph");
-  warp_cam->config.set_far_clip(normal_cam->config.get_far_clip()*1.5);
-  warp_cam->config.set_near_clip(normal_cam->config.get_near_clip());
   warp_cam->config.set_eye_dist(eye_dist);
 
   normal_cam->config.set_output_window_name("window");
@@ -964,7 +960,7 @@ int main(int argc, char** argv) {
   window->open();
 
   // tracking ------------------------------------------------------------------
-  warp_pass->get_warp_state([&](){
+  warp_pass->get_warp_state([&](gua::WarpPassDescription::WarpState& state){
     #if POWER_WALL
       warp_cam->set_transform(current_tracking_matrix);
     #elif OCULUS1
@@ -973,18 +969,11 @@ int main(int argc, char** argv) {
       warp_cam->set_transform(window->get_oculus_sensor_orientation());
     #endif
 
-    gua::WarpPassDescription::WarpState state;
+    state.center = warp_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
+    state.left = warp_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
+    state.right = warp_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
 
-    gua::Frustum frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::CENTER);
-    state.projection_view_center = frustum.get_projection() * frustum.get_view();
-
-    frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::LEFT);
-    state.projection_view_left = frustum.get_projection() * frustum.get_view();
-
-    frustum = warp_cam->get_rendering_frustum(graph, gua::CameraMode::RIGHT);
-    state.projection_view_right = frustum.get_projection() * frustum.get_view();
-
-    return state;
+    return true;
   });
 
   #if POWER_WALL

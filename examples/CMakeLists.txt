@@ -14,6 +14,7 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(smooth_lighting)
     add_subdirectory(projective_texturing)
     add_subdirectory(clipping)
+    add_subdirectory(warping_simple)
 
     # skelanim example requires skelanim-plugin and the fbx sdk
     if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})

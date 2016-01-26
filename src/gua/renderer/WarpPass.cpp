@@ -45,6 +45,7 @@ WarpPassDescription::WarpPassDescription()
   , max_raysteps_(50)
   , pixel_size_(0.2f)
   , hole_filling_mode_(HOLE_FILLING_BLUR)
+  , get_warp_state_([](WarpState&){return false;})
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
@@ -56,7 +57,7 @@ WarpPassDescription::WarpPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WarpPassDescription& WarpPassDescription::get_warp_state(std::function<WarpPassDescription::WarpState()> const& f) {
+WarpPassDescription& WarpPassDescription::get_warp_state(std::function<bool(WarpPassDescription::WarpState&)> const& f) {
   get_warp_state_ = f;
   touch();
   return *this;
@@ -64,7 +65,7 @@ WarpPassDescription& WarpPassDescription::get_warp_state(std::function<WarpPassD
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::function<WarpPassDescription::WarpState()> const& WarpPassDescription::get_warp_state() const {
+std::function<bool(WarpPassDescription::WarpState&)> const& WarpPassDescription::get_warp_state() const {
   return get_warp_state_;
 }
 

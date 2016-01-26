@@ -176,7 +176,18 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   );
 
   if (first_eye) {
-    cached_warp_state_ = description->get_warp_state()();
+    WarpPassDescription::WarpState state;
+
+    if (!description->get_warp_state()(state)) {
+      SceneGraph const* graph(pipe.current_viewstate().graph);
+      node::SerializedCameraNode camera(pipe.current_viewstate().camera);
+
+      state.center = camera.get_rendering_frustum(*graph, gua::CameraMode::CENTER, true);
+      state.left   = camera.get_rendering_frustum(*graph, gua::CameraMode::LEFT, true);
+      state.right  = camera.get_rendering_frustum(*graph, gua::CameraMode::RIGHT, true);
+    }
+
+    cached_warp_state_ = state;
   }
  
   gua::math::mat4d proj;
