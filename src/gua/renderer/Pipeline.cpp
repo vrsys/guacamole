@@ -318,6 +318,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // render cascaded shadows for sunlights
     switch (light->data.get_type()) {
+
       case node::LightNode::Type::SUN :
         generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw, orig_scene->rendering_frustum.get_screen_transform());
         break;
@@ -351,6 +352,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+
   void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw) {
 
     light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());

@@ -101,6 +101,7 @@ public:
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
+
   PipelineViewState const&           current_viewstate() const;
 
   RenderContext&                     get_context();
