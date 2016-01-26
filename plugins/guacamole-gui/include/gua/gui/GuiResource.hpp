@@ -97,6 +97,14 @@ class GuiResource {
 
     void call_javascript_arg_vector(std::string const& method, std::vector<std::string> const& args) const;
 
+    template<typename ...Args>
+    void call_javascript_async(std::string const& method, Args&& ... a) const {
+      std::vector<std::string> args = {(gua::to_string(a))...};
+      call_javascript_arg_vector_async(method, args);
+    }
+
+    void call_javascript_arg_vector_async(std::string const& method, std::vector<std::string> const& args) const;
+
     void add_javascript_callback(std::string const& name);
     void add_javascript_getter(std::string const& name, std::function<std::string()> callback);
 
