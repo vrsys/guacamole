@@ -83,10 +83,17 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
           generate_depth_cubemap_face(4, cube_map_node, pipe);
           generate_depth_cubemap_face(5, cube_map_node, pipe);
           reset_depth_cubemap(cube_map_node, pipe);
+        }
+        else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
           if (face_counter_ == 0){
-            pipe.reset_depth_cubemap(cube_map_node);
+            prepare_depth_cubemap(cube_map_node, pipe);
           }
-          pipe.generate_depth_cubemap_face(face_counter_, cube_map_node);
+
+          generate_depth_cubemap_face(face_counter_, cube_map_node, pipe);
+
+          if (face_counter_ == 5){
+            reset_depth_cubemap(cube_map_node, pipe);
+          }
           face_counter_ = (face_counter_+1)%6;
         }
 
