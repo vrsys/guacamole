@@ -39,8 +39,7 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 DepthCubeMapRenderer::DepthCubeMapRenderer()
-  : mode_(DepthCubeMapRenderer::COMPLETE),
-    face_counter_(0)
+  : face_counter_(0)
 {
 }
 
@@ -56,7 +55,6 @@ void DepthCubeMapRenderer::create_state_objects(RenderContext const& ctx)
 
 void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-
   auto& scene = *pipe.current_viewstate().scene;
   auto cube_map_nodes(scene.nodes.find(std::type_index(typeid(node::CubemapNode))));
   
@@ -74,7 +72,7 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
       auto cube_map_node(reinterpret_cast<node::CubemapNode*>(object));
       if (cube_map_node->config.get_active()){
 
-        if (mode_ == DepthCubeMapRenderer::COMPLETE){
+        if (cube_map_node->config.get_render_mode() == node::CubemapNode::RenderMode::COMPLETE){
           prepare_depth_cubemap(cube_map_node, pipe);
           generate_depth_cubemap_face(0, cube_map_node, pipe);
           generate_depth_cubemap_face(1, cube_map_node, pipe);
@@ -84,7 +82,7 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
           generate_depth_cubemap_face(5, cube_map_node, pipe);
           reset_depth_cubemap(cube_map_node, pipe);
         }
-        else if (mode_ == DepthCubeMapRenderer::ONE_SIDE_PER_FRAME) {
+        else if (cube_map_node->config.get_render_mode() == node::CubemapNode::RenderMode::ONE_SIDE_PER_FRAME) {
           if (face_counter_ == 0){
             prepare_depth_cubemap(cube_map_node, pipe);
           }
@@ -94,7 +92,6 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
           if (face_counter_ == 5){
             reset_depth_cubemap(cube_map_node, pipe);
           }
-          face_counter_ = (face_counter_+1)%6;
         }
 
       }
@@ -104,6 +101,8 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
     pipe.end_cpu_query(cpu_query_name);
 
   }
+
+  face_counter_ = (face_counter_+1)%6; //cycle throgh sides
   // ctx.render_context->reset_state_objects();
 
 
