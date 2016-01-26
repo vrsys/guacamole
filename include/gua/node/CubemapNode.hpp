@@ -40,6 +40,8 @@ namespace node {
 class GUA_DLL CubemapNode : public SerializableNode {
  public:
 
+  enum class RenderMode { COMPLETE=0, ONE_SIDE_PER_FRAME=1};
+
   struct Configuration {
     /**
      * Sets wether for this node is a depth map created or not
@@ -60,6 +62,13 @@ class GUA_DLL CubemapNode : public SerializableNode {
      * far clipping distance for depth value generation
      */
     GUA_ADD_PROPERTY(float,           far_clip,                  10.f);
+
+    /**
+     * render mode for depth calculation
+     * one side per frame improves performance, but the data gets up to 5 frames old 
+     * 0 - COMPLETE, 1 - ONE_SIDE_PER_FRAME
+     */
+    GUA_ADD_PROPERTY(RenderMode,      render_mode,               RenderMode::COMPLETE);
 
     /**
      * Name of the depth texture in the texture database

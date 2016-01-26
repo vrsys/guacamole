@@ -60,7 +60,6 @@ class DepthCubeMapRenderer {
 
   void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node, Pipeline& pipe);
 
-  Mode                            mode_;
   unsigned                        face_counter_;
 
   std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_;
