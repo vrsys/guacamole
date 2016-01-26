@@ -56,7 +56,7 @@ class GUA_DLL Renderer {
    *
    * \param pipelines        A vector of Pipelines to process. For each
    *                         pipeline a RenderClient is created.
-   */   
+   */
   Renderer();
   Renderer(Renderer const&) = delete;
   Renderer& operator=(Renderer const&) = delete;
