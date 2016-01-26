@@ -77,7 +77,6 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 int main(int argc, char** argv) {
 
   // add interaction
-  // gua::utils::Trackball object_trackball(0.01, 0.002, 0, 0.2);
   Navigator nav;
   nav.set_transform(scm::math::make_translation(0.f, 0.f, 4.f));
 
@@ -107,9 +106,6 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
       gua::TriMeshLoader::NORMALIZE_SCALE));
-
-    // teapot->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    // teapot->scale(0.1f);
 
     graph.add_node(scene, teapot);
   }
@@ -145,7 +141,7 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::NORMALIZE_SCALE));
 
     oilrig->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    // oilrig->scale(0.1);
+    // oilrig->scale(1.0);
     oilrig->translate(19.8f, 1.1f, 8.8f);
 
     graph.add_node(scene, oilrig);
@@ -174,6 +170,12 @@ int main(int argc, char** argv) {
 
     graph.add_node(scene, elephant);
 
+    much_big_oilrig->translate(50.0, 0.0, -50.0);
+    big_oilrig->translate(50.0, 0.0, -50.0);
+    oilrig->translate(50.0, 0.0, -50.0);
+    small_oilrig->translate(50.0, 0.0, -50.0);
+    elephant->translate(50.0, 0.0, -50.0);
+
     nav.set_transform(scm::math::make_translation(50.f, 1.f, 9.f) * scm::math::make_rotation(90.0f, 0.f, 1.f, 0.f));
   }
 
@@ -183,7 +185,6 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
 
     viaden_outside->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    // viaden_outside->scale(100.0f);
 
     graph.add_node(scene, viaden_outside);
  
@@ -191,7 +192,6 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS));
 
     viaden_inside->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    // viaden_inside->scale(100.0f);
 
     graph.add_node(scene, viaden_inside);
   }
@@ -328,30 +328,22 @@ int main(int argc, char** argv) {
   auto cmn(graph.add_node<gua::node::CubemapNode>("/navigation", "test"));
   // graph.remove_node("/navigation/test");
   cmn->config.set_texture_name("navigation_depth_texture");
-  cmn->config.set_near_clip(0.01f);
-  cmn->config.set_far_clip(100.0f);
+  cmn->config.set_near_clip(0.005f);
+  cmn->config.set_far_clip(500.0f);
   cmn->config.set_resolution(64);
+  // cmn->config.set_render_mode(gua::node::CubemapNode::RenderMode::ONE_SIDE_PER_FRAME);
   float motion_speed = 0.01f;
 
-  // DEBUG VIEW
-  bool debug_preview = true;
-  auto cm_preview = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("cubemap_debug");
-  cm_preview->data.texture() = cmn->config.get_texture_name();
-  gua::math::vec2 preview_size(resolution.x, resolution.x / 6.0f);
-  cm_preview->data.size() = preview_size;
-  cm_preview->data.anchor() = gua::math::vec2(0.f, -1.f);
-  graph.add_node("/", cm_preview);
-
-  // gua::math::vec2 gui_size(150.f, 80.f);
-  // auto gui = std::make_shared<gua::GuiResource>();
-  // gui->init("gui", "asset://gua/data/gui/fps.html", gui_size);
-  
-  // auto gui_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("gui_quad");
-  // gui_quad->data.texture() = "gui";
-  // gui_quad->data.size() = gui_size;
-  // gui_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
-
-  // graph.add_node("/", gui_quad);
+  /* NOT SUPPORTED BY GUACAMOLE RIGHT NOW -> textured_screen_space_quad.frag has to be adapted
+  * // DEBUG VIEW
+  * bool debug_preview = true;
+  * auto cm_preview = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("cubemap_debug");
+  * cm_preview->data.texture() = cmn->config.get_texture_name();
+  * gua::math::vec2 preview_size(resolution.x, resolution.x / 6.0f);
+  * cm_preview->data.size() = preview_size;
+  * cm_preview->data.anchor() = gua::math::vec2(0.f, -1.f);
+  * graph.add_node("/", cm_preview);
+  */
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -363,7 +355,7 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    cm_preview->data.size() = gua::math::vec2(new_size.x, new_size.x / 6.f);
+    // cm_preview->data.size() = gua::math::vec2(new_size.x, new_size.x / 6.f);
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -387,12 +379,12 @@ int main(int argc, char** argv) {
     }
     // V
     if ((key == 86) && (action == 1)){
-      debug_preview = !debug_preview;
-      if (debug_preview){
-        graph.add_node("/", cm_preview);
-      }else{
-        graph.remove_node("/cubemap_debug");
-      }
+      // debug_preview = !debug_preview;
+      // if (debug_preview){
+      //   graph.add_node("/", cm_preview);
+      // }else{
+      //   graph.remove_node("/cubemap_debug");
+      // }
   }
   });  
 
@@ -412,35 +404,24 @@ int main(int argc, char** argv) {
   int count(0);
 
   ticker.on_tick.connect([&]() {
-  //   std::stringstream sstr;
-  //   sstr.precision(1);
-  //   sstr.setf(std::ios::fixed, std::ios::floatfield);
-  //   sstr << "FPS: " << renderer.get_application_fps()
-  //        << " / " << window->get_rendering_fps();
-  //   // std::cout << sstr.str() << std::endl;
-  //   gui->call_javascript("set_fps_text", sstr.str());
-
 
     // adaptive speed & clipping
     float new_motion_speed = motion_speed;
     if (adaptive_navigation) {
 
       float closest_distance = cmn->get_min_distance();
-      // std::cout << "min distance " << closest_distance << std::endl;
-      // std::cout << "new data " << *(cmn->m_NewTextureData) << std::endl;
-      // float closest_distance = cmn->get_distance_by_local_direction(gua::math::vec3(0.f, 0.5f, -1.f));
+
       if ((closest_distance != -1.0) && (closest_distance < 1000.0f)){
+        // adapt motion speed 
         new_motion_speed = closest_distance / 1000.0f;
 
-        // cmn->config.set_near_clip(closest_distance / 100.0);
-        // cmn->config.set_far_clip(closest_distance * 100.0);
+        // adapt clipping planes 
         camera->config.set_near_clip(closest_distance / 100.0);
         camera->config.set_far_clip(closest_distance * 100.0);
 
       }
       nav.set_motion_speed(new_motion_speed);
 
-      // std::cout << motion_speed << std::endl;
     } else {
       nav.set_motion_speed(new_motion_speed);
     }
@@ -451,17 +432,7 @@ int main(int argc, char** argv) {
     if(count == 60){
       count = 0;
       std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
-      // std::cout << nav.get_transform() << std::endl;
-      // std::cout << "Speed: " << new_motion_speed*60 << std::endl;
-      // std::cout << "Transform: " << nav.get_transform() << std::endl;
-      // std::cout << "Clipping: " << camera->config.get_near_clip() << " , " << camera->config.get_far_clip() << std::endl;
     }
-
-    // gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-                                                              // gua::math::float_t(trackball.shifty()),
-                                                              // gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
-
-    // transform->set_transform(modelmatrix);
 
     window->process_events();
     if (window->should_close()) {
