@@ -25,6 +25,9 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
+#include <gua/node/CubemapNode.hpp>
+#include <gua/renderer/DepthCubeMap.hpp>
+
 #include <scm/gl_core/shader_objects.h>
 
 namespace gua {
@@ -52,8 +55,15 @@ class DepthCubeMapRenderer {
 
  private:
 
+  void prepare_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
+  void reset_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
+
+  void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node, Pipeline& pipe);
+
   Mode                            mode_;
   unsigned                        face_counter_;
+
+  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_;
 
   scm::gl::rasterizer_state_ptr   rs_cull_back_;
   scm::gl::rasterizer_state_ptr   rs_cull_none_;

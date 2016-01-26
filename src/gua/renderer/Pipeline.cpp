@@ -33,7 +33,6 @@
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/LightNode.hpp>
-#include <gua/node/CubemapNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -219,10 +218,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     gbuffer_->toggle_ping_pong();
 
-
   // add texture to texture database
-  // auto const& tex = shadow_map_res_->used_shadow_maps.begin()->second.begin()->shadow_map->get_depth_buffer();
-  // auto const& tex(depth_cube_map_->get_depth_buffer());
   auto const& tex(gbuffer_->get_color_buffer());
   auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
@@ -355,142 +351,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void Pipeline::generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node)
-  {
-    auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node->config.get_texture_name())->second;
-
-    auto node_transform(cube_map_node->get_cached_world_transform());
-    math::vec2ui viewport_size(depth_cube_map->get_viewport_size());
-
-    current_viewstate_.target = depth_cube_map.get();
-    auto orig_scene(current_viewstate_.scene);
-    auto orig_shadow_mode(current_viewstate_.shadow_mode);
-    auto orig_viewpoint_uuid(current_viewstate_.viewpoint_uuid);
-
-    // calculate screen transforms
-    math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
-    std::vector<math::mat4> screen_transforms({
-      screen_transform,
-      scm::math::make_rotation(180., 0., 1., 0.) * screen_transform,
-      scm::math::make_rotation(90., 1., 0., 0.) * screen_transform,
-      scm::math::make_rotation(-90., 1., 0., 0.) * screen_transform,
-      scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
-      scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform
-    });
-
-    // view directions
-    std::vector<PipelineViewState::ViewDirection> view_directions = {
-      PipelineViewState::front,
-      PipelineViewState::back,
-      PipelineViewState::top,
-      PipelineViewState::bottom,
-      PipelineViewState::left,
-      PipelineViewState::right
-    };
-
-    // frustum
-    math::vec3 scale(math::get_scale(node_transform));
-    math::mat4 scale_free(node_transform * scm::math::inverse(scm::math::make_scale(scale)));
-    math::mat4 transform(scale_free * screen_transforms[face]);
-    auto frustum(
-      Frustum::perspective(
-      scale_free, transform,
-      cube_map_node->config.near_clip(),
-      cube_map_node->config.far_clip()
-      )
-      );
-
-    depth_cube_map->set_viewport_offset(math::vec2f(face, 0.f));
-
-    // set view parameters
-    current_viewstate_.shadow_mode = true;
-    current_viewstate_.view_direction = view_directions[face];
-    current_viewstate_.viewpoint_uuid = cube_map_node->uuid();
-
-    current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
-      math::get_translation(node_transform),
-      true, //Frustum Culling
-      cube_map_node->config.mask(),
-      cube_map_node->config.view_id());
-    current_viewstate_.frustum = frustum;
-
-    camera_block_.update(context_,
-      frustum,
-      frustum.get_camera_position(),
-      current_viewstate_.scene->clipping_planes,
-      cube_map_node->config.view_id(),
-      viewport_size);
-    bind_camera_uniform_block(0);
-
-    // process all passes
-    for (int i(0); i < passes_.size(); ++i) {
-      if (passes_[i].enable_for_shadows()) {
-        passes_[i].process(*last_description_.get_passes()[i], *this);
-      }
-    }
-
-
-
-    // restore previous configuration
-    current_viewstate_.target = gbuffer_.get();
-    current_viewstate_.scene = orig_scene;
-    current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
-    current_viewstate_.shadow_mode = orig_shadow_mode;
-    current_viewstate_.viewpoint_uuid = orig_viewpoint_uuid;
-    camera_block_.update(context_,
-                         current_viewstate_.scene->rendering_frustum,
-                         math::get_translation(current_viewstate_.camera.transform),
-                         current_viewstate_.scene->clipping_planes,
-                         current_viewstate_.camera.config.get_view_id(),
-                         current_viewstate_.camera.config.get_resolution());
-    bind_camera_uniform_block(0);
-
-
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void Pipeline::prepare_depth_cubemap(node::CubemapNode* cube_map_node)
-  {
-    if (!depth_cube_map_res_) {
-      depth_cube_map_res_ = context_.resources.get<SharedDepthCubeMapResource>();
-    }
-    auto texture_name(cube_map_node->config.get_texture_name());
-    std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
-    auto depth_cube_map_it = depth_cube_map_res_->cube_maps_.find(texture_name);
-
-    if (depth_cube_map_it == depth_cube_map_res_->cube_maps_.end()){
-
-      unsigned viewport_size(cube_map_node->config.resolution());
-      unsigned map_width(viewport_size*6);
-
-      current_depth_cube_map = std::make_shared<DepthCubeMap>(context_, math::vec2ui(map_width, viewport_size), texture_name);;
-      depth_cube_map_res_->cube_maps_[texture_name] = current_depth_cube_map;
-      current_depth_cube_map->set_viewport_size(math::vec2f(viewport_size));
-    } else {
-      current_depth_cube_map = depth_cube_map_it->second;
-    }
-    current_depth_cube_map->clear(context_);
-
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  
-  void Pipeline::reset_depth_cubemap(node::CubemapNode* cube_map_node)
-  {
-    auto texture_name(cube_map_node->config.get_texture_name());
-    std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
-    auto depth_cube_map_it = depth_cube_map_res_->cube_maps_.find(texture_name);
-
-    if (depth_cube_map_it != depth_cube_map_res_->cube_maps_.end()){
-      current_depth_cube_map = depth_cube_map_it->second;
-      current_depth_cube_map->retrieve_data(context_, cube_map_node->config.near_clip(), cube_map_node->config.far_clip());
-      *(cube_map_node->m_NewTextureData) = true;
-    }
-
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-
   void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw) {
 
     light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());

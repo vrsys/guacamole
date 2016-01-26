@@ -26,7 +26,6 @@
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/ShadowMap.hpp>
-#include <gua/renderer/DepthCubeMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
@@ -92,6 +91,7 @@ class GUA_DLL Pipeline {
    };
 
 public:
+  friend class DepthCubeMapRenderer;
 
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
@@ -101,11 +101,6 @@ public:
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
-
-  void prepare_depth_cubemap(node::CubemapNode* cube_map_node);
-  void reset_depth_cubemap(node::CubemapNode* cube_map_node);
-  void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node);
-
   PipelineViewState const&           current_viewstate() const;
 
   RenderContext&                     get_context();
@@ -149,7 +144,6 @@ public:
   RenderContext&                            context_;
   std::unique_ptr<GBuffer>                  gbuffer_;
   std::shared_ptr<SharedShadowMapResource>  shadow_map_res_;
-  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_;
   CameraUniformBlock                        camera_block_;
   std::unique_ptr<LightTable>               light_table_;
 
