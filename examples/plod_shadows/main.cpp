@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
   auto plod_node = plod_loader.load_geometry(
     "pointcloud", 
     "/opt/3d_models/point_based/plod/pig_pr.bvh", 
+    //"/mnt/pitoti/PitotiTUG/received_18_12_2015/ebee_seradina/ebee_seradina.bvh", 
     plod_rough, 
     gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
 
@@ -78,20 +79,22 @@ int main(int argc, char** argv) {
   scene_transform->translate(0.f, 0.f, 0.f);
 
   auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
-  //plod_transform->rotate(90.f, 0.f, 0.f, 1.f);  
+  plod_transform->rotate(-90.f, 1.f, 0.f, 0.f);  
   //plod_transform->rotate(180.f, 0.f, 1.f, 1.f);
 
   graph.add_node("/transform/plod_transform", plod_node);
   plod_node->set_draw_bounding_box(true);
   plod_node->set_error_threshold(2.5f);
+  plod_node->set_radius_scale(1.2f);
 
   auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
   auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
   light->data.set_type(gua::node::LightNode::Type::SPOT); //SPOT, POINT
   light->data.set_enable_shadows(true);                                                         
-  light->data.set_shadow_map_size(2048);
+  light->data.set_shadow_map_size(4096);
   light->data.brightness = 5.0f;
   //light->rotate(90.f, 0.f, 1.f, 0.f);
+  light->translate(0.f, 0.2f, 0.f);
   light->scale(2.f);
   light->translate(0.f, 0.f, 1.f);
   light->data.set_shadow_near_clipping_in_sun_direction(0.1f);
@@ -142,11 +145,11 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   camera->set_pipeline_description(pipe);
 
-  pipe->get_resolve_pass()->tone_mapping_exposure(1.0f);
+  pipe->get_resolve_pass()->tone_mapping_exposure(3.0f);
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");

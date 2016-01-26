@@ -27,9 +27,9 @@
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/PLODLoader.hpp>
-#include <gua/renderer/PLODPass.hpp>
-#include <gua/node/PLODNode.hpp>
+#include <gua/renderer/LodLoader.hpp>
+#include <gua/renderer/LodPass.hpp>
+#include <gua/node/LodNode.hpp>
 #include <scm/gl_util/manipulators/trackball_manipulator.h>
 
 
@@ -38,35 +38,35 @@ int main(int argc, char** argv) {
   gua::init(argc, argv);
 
   //create simple untextured material shader
-  auto plod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
-  auto plod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", plod_keep_input_desc));
-  gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader);
+  auto lod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
+  auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
+  gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
 
   //create material for pointcloud
-  auto plod_rough = plod_keep_color_shader->make_new_material();
-  plod_rough->set_uniform("metalness", 0.0f);
-  plod_rough->set_uniform("roughness", 0.8f);
-  plod_rough->set_uniform("emissivity", 0.0f);
+  auto lod_rough = lod_keep_color_shader->make_new_material();
+  lod_rough->set_uniform("metalness", 0.0f);
+  lod_rough->set_uniform("roughness", 0.8f);
+  lod_rough->set_uniform("emissivity", 0.0f);
 
-  //configure plod backend
-  gua::PLODLoader plod_loader;
-  plod_loader.set_out_of_core_budget_in_mb(4096);
-  plod_loader.set_render_budget_in_mb(2048);
-  plod_loader.set_upload_budget_in_mb(20);
+  //configure lod backend
+  gua::LodLoader lod_loader;
+  lod_loader.set_out_of_core_budget_in_mb(4096);
+  lod_loader.set_render_budget_in_mb(2048);
+  lod_loader.set_upload_budget_in_mb(20);
 
   //load a sample pointcloud
-  auto plod_node = plod_loader.load_geometry(
+  auto lod_node = lod_loader.load_geometry(
     "pointcloud", 
-    "/opt/3d_models/point_based/plod/pig_pr.bvh", 
-    plod_rough, 
-    gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
+    "/opt/3d_models/point_based/lod/pig_pr.bvh", 
+    lod_rough, 
+    gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
   //setup scenegraph
   gua::SceneGraph graph("main_scenegraph");
   auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
-  graph.add_node("/transform/plod_transform", plod_node);
-  plod_node->set_draw_bounding_box(true);
+  auto lod_transform = graph.add_node<gua::node::TransformNode>("/transform", "lod_transform");
+  graph.add_node("/transform/lod_transform", lod_node);
+  lod_node->set_draw_bounding_box(true);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LodPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
       if (drag_mode) {
         auto ssize = screen->data.get_size();
         gua::math::vec3 trans = gua::math::vec3(ssize.x *(nx - last_mouse_pos.x), ssize.y * (ny - last_mouse_pos.y), 0.f);
-        auto object_trans = scm::math::inverse(screen->get_world_transform()) * plod_transform->get_world_transform();
-        plod_transform->set_world_transform(screen->get_world_transform() * scm::math::make_translation(trans) * object_trans);
+        auto object_trans = scm::math::inverse(screen->get_world_transform()) * lod_transform->get_world_transform();
+        lod_transform->set_world_transform(screen->get_world_transform() * scm::math::make_translation(trans) * object_trans);
       }
       else {
         if (button_state == 0) { // left
