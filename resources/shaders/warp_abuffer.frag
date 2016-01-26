@@ -155,8 +155,8 @@ vec2 get_epipolar_direction() {
   vec4 epipol = warp_matrix * vec4(0, 0, -1, 0);
   vec2 epi_dir = vec2(0);
 
-  if (epipol.w == 0) {
-    epipol.xy = epipol.xy*0.5 + 0.5;
+  if (abs(epipol.w) < 0.01) {
+    epipol.xy = 100*epipol.xy*0.5 + 0.5;
     epi_dir = epipol.xy - gua_quad_coords;
   } else if (epipol.w < 0) {
     epipol /= epipol.w;
@@ -228,7 +228,7 @@ vec4 hole_filling_epipolar_mirror() {
 }
 
 vec4 hole_filling_blur() {
-  const float step_size = 0.5;
+  const float step_size = 0.2;
   const float max_level = 7;
   const vec2  epi_dir = get_epipolar_direction();
   const vec2  dirs[2] = {
