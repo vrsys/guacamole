@@ -226,6 +226,21 @@ void GuiResource::call_javascript_arg_vector(std::string const& method, std::vec
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+void GuiResource::call_javascript_arg_vector_async(std::string const& method, std::vector<std::string> const& args) const {
+
+  if (!js_window_) {
+    return;
+  }
+
+  Awesomium::JSArray j_args;
+  for (auto const& arg: args) {
+    j_args.Push(Awesomium::JSValue(Awesomium::ToWebString(arg)));
+  }
+  js_window_->ToObject().InvokeAsync(Awesomium::ToWebString(method), j_args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::add_javascript_callback(std::string const& name) {
   add_javascript_callback(name, false);
