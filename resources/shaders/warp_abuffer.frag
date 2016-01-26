@@ -291,7 +291,7 @@ void main() {
   int perform_ray_casting = 1;
 
   vec3 s, e;
-  if (!get_ray(gua_quad_coords, s, e, total_min_max_depth)) {
+  if (@enable_abuffer@ == 0 || !get_ray(gua_quad_coords, s, e, total_min_max_depth)) {
     // skip raycasting if invalid ray was generated
     sample_count = MAX_RAY_STEPS+1;
     perform_ray_casting = 0;
@@ -404,7 +404,11 @@ void main() {
 
   abuf_mix_frag(vec4(opaque_color_emit.rgb, 1), color);
 
-  gua_out_color = mix(toneMap(color.rgb), color.rgb, opaque_color_emit.a);
+  #if @enable_abuffer@ == 1
+    gua_out_color = mix(toneMap(color.rgb), color.rgb, opaque_color_emit.a);
+  #else
+    gua_out_color = color.rgb;
+  #endif
 
   #if @debug_sample_count@ == 1
     gua_out_color = mix(gua_out_color, heat(float((sample_count-1)*perform_ray_casting) / MAX_RAY_STEPS), 0.8);
