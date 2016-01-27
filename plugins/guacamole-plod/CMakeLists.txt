@@ -25,7 +25,7 @@ SOURCE_GROUP("node" FILES ${GUA_PLOD_NODE_INC})
 
 SOURCE_GROUP("resources" FILES ${GUA_PLOD_SHADERS})
 
-SET(GUACAMOLE_PLOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-PLOD includes." )
+SET(GUACAMOLE_PLOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-plod includes." )
 
 LINK_DIRECTORIES(${LIB_PATHS})
 
@@ -35,7 +35,7 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${PBR_INCLUDE_DIRS}
 )
 
-ADD_LIBRARY( guacamole-PLOD SHARED
+ADD_LIBRARY( guacamole-plod STATIC
     ${GUA_PLOD_NODE_SRC}
     ${GUA_PLOD_NODE_INC}
     ${GUA_PLOD_RENDERER_SRC}
@@ -45,7 +45,7 @@ ADD_LIBRARY( guacamole-PLOD SHARED
     ${GUA_PLOD_SHADERS}
 )
 
-ADD_DEPENDENCIES(guacamole-PLOD guacamole)
+ADD_DEPENDENCIES(guacamole-plod guacamole)
 
 LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
 LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
@@ -65,7 +65,7 @@ message(STATUS "" )
 # compiling and linking
 ###############################################################################
 IF (MSVC)
-	set_target_properties(guacamole-PLOD PROPERTIES COMPILE_FLAGS "-D GUA_PLOD_LIBRARY")
+  set_target_properties(guacamole-plod PROPERTIES COMPILE_FLAGS "-D GUA_PLOD_LIBRARY")
 ENDIF (MSVC)
 
 IF (UNIX)
@@ -75,14 +75,14 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-PLOD optimized ${PBR_RENDERING_LIBRARY}
+  target_link_libraries( guacamole-plod optimized ${PBR_RENDERING_LIBRARY}
                                         optimized ${PBR_COMMON_LIBRARY}
                                         debug ${PBR_RENDERING_LIBRARY_DEBUG}
                                         debug ${PBR_COMMON_LIBRARY_DEBUG} 
                                         general guacamole
                        )
 ELSEIF (UNIX)
-  target_link_libraries( guacamole-PLOD 
+  target_link_libraries( guacamole-plod 
                          guacamole 
                          ${PBR_RENDERING_LIBRARY}
                          ${PBR_COMMON_LIBRARY}
@@ -96,21 +96,21 @@ ENDIF (MSVC)
 ###############################################################################
 
 IF (MSVC)
-  install (TARGETS guacamole-PLOD
+  install (TARGETS guacamole-plod
     CONFIGURATIONS Release
     RUNTIME DESTINATION bin/Release
     LIBRARY DESTINATION lib/Release
     ARCHIVE DESTINATION lib/Release
   )
 
-  install (TARGETS guacamole-PLOD
+  install (TARGETS guacamole-plod
     CONFIGURATIONS Debug
     RUNTIME DESTINATION bin/Debug
     LIBRARY DESTINATION lib/Debug
     ARCHIVE DESTINATION lib/Debug
   )
 ELSEIF (UNIX)
-  install (TARGETS guacamole-PLOD 
+  install (TARGETS guacamole-plod 
     RUNTIME DESTINATION lib
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

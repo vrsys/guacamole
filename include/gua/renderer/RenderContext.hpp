@@ -122,6 +122,9 @@ struct GUA_DLL RenderContext {
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 
+  std::map<std::string, double>                   time_query_results;
+  std::map<std::string, std::pair<int, int>>      primitive_query_results;
+
  /**
   * Animated Bone Uniforms
   */

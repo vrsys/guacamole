@@ -1,5 +1,6 @@
 # Folders
 cmake_out/
+externals/
 
 # Compiled Object files
 *.slo
@@ -36,6 +37,7 @@ src/gua/generated/*
 .vim.custom
 tests/tests
 examples/oculus/example-oculus
+examples/oculusSDK2/example-oculusSDK2
 examples/oculus_pitoti/example-oculus_pitoti
 examples/multicontext/example-multicontext
 examples/input/example-input
@@ -44,7 +46,7 @@ examples/volume/example-volume
 examples/nurbs/example-nurbs
 examples/video3d/example-video3d
 examples/stress_test/stress_test
-examples/nice_and_shiny/nice_and_shiny
+examples/nice_and_shiny/example-nice_and_shiny
 examples/plod/example-plod
 examples/projective_texturing/example-projective_texturing
 examples/tiled_shading_test/tiled_shading_test
@@ -53,5 +55,17 @@ examples/screenshot/example-screenshot
 examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
+examples/warping/example-warping
+examples/warping_simple/example-warping_simple
 examples/animation/example-animation
+examples/lod_simple/example-lod_simple
+examples/plod_shadows/example-plod_shadows
+examples/plod_simple/example-plod_simple
+examples/stress_test/example-stress_test
+examples/tiled_shading_test/example-tiled_shading_test
+examples/clipping/example-clipping
+
+examples/*/Release/*
+examples/*/Debug/*
+
 install

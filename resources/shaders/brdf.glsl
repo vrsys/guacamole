@@ -149,7 +149,7 @@ float D_GGX(float roughness, float nDotH)
   float m = roughness*roughness;
   float m2 = m*m;
   float denom = nDotH * (nDotH * m2 - nDotH) + 1.0f;
-  return m2 / (3.14159265 * denom * denom);
+  return m2 / (3.14159265 * denom * denom + 0.000001);
   //return m2 / (denom * denom);
 }
 

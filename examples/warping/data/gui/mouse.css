@@ -1,0 +1,27 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+#mouse {
+    background: url("res/img/mouse_off.png") left center;
+    /*background-position: 50px;*/
+    width: 50px;
+    height: 50px;
+    /*opacity: 0;*/
+    -webkit-transition: background-image 0.1s linear;
+    -webkit-animation: rotate 0.3s steps(10) infinite;
+}
+
+#mouse.active {
+    background: url("res/img/mouse_flash_off.png") left center;
+}
+
+#mouse.clicked {
+    background-image: url("res/img/mouse_flash_on.png");
+}
+
+@-webkit-keyframes rotate {
+   100% { background-position: -500px; }
+}
+

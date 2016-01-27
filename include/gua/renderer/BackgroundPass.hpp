@@ -60,6 +60,9 @@ class GUA_DLL BackgroundPassDescription : public PipelinePassDescription {
   BackgroundPassDescription& fog_end(float fog_end);
   float fog_end() const;
 
+  BackgroundPassDescription& repeat(math::vec2f const& count);
+  math::vec2f repeat() const;
+
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;

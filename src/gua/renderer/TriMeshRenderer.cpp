@@ -27,6 +27,8 @@
 
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/WarpGridGenerator.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
@@ -81,16 +83,22 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                      < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
               });
 
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
+    auto description(dynamic_cast<TriMeshPassDescription const*>(&desc));
+
 
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+    // std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+    std::string const pri_query_name = "Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
 
+    pipe.begin_primitive_query(ctx, pri_query_name);
     pipe.begin_gpu_query(ctx, gpu_query_name);
-    pipe.begin_cpu_query(cpu_query_name);
+    // pipe.begin_cpu_query(cpu_query_name);
 
-    bool write_depth = true;
-    target.bind(ctx, write_depth);
+    bool write_all_layers = true;
+    bool do_clear = false;
+    bool do_swap = false;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
 
     int view_id(camera.config.get_view_id());
@@ -143,8 +151,15 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
           current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
           // hack
-          current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
-                                      "gua_gbuffer_depth");
+
+          auto gbuffer = dynamic_cast<GBuffer*>(pipe.current_viewstate().target);
+          if (gbuffer) {
+            current_shader->set_uniform(ctx, gbuffer->get_depth_buffer_write()->get_handle(ctx),
+                                        "gua_gbuffer_depth");
+          } else {
+            current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+                                        "gua_gbuffer_depth");
+          }
         }
       }
 
@@ -180,8 +195,9 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
     target.unbind(ctx);
 
+    pipe.end_primitive_query(ctx, pri_query_name);
     pipe.end_gpu_query(ctx, gpu_query_name);
-    pipe.end_cpu_query(cpu_query_name);
+    // pipe.end_cpu_query(cpu_query_name);
 
     ctx.render_context->reset_state_objects();
   }

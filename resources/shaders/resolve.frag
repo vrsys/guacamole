@@ -17,7 +17,9 @@ in vec2 gua_quad_coords;
 @include "ssao.frag"
 @include "screen_space_shadow.frag"
 
-#define ABUF_MODE readonly
+uniform bool gua_compositing_enable;
+
+// #define ABUF_MODE readonly
 #define ABUF_SHADE_FUNC abuf_shade
 @include "common/gua_abuffer_resolve.glsl"
 
@@ -48,6 +50,11 @@ vec3 EnvBRDFApprox( vec3 SpecularColor, float Roughness, float NoV )
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+float gua_my_atan2(float a, float b) {
+  return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
+}
+
+///////////////////////////////////////////////////////////////////////////////
 vec3 environment_lighting (in ShadingTerms T)
 {
   vec3 env_color = vec3(0);
@@ -55,34 +62,45 @@ vec3 environment_lighting (in ShadingTerms T)
   vec3 col1 = vec3(0);
   vec3 col2 = vec3(0);
 
+  vec3 R = reflect(-T.V, T.N);
+  float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
+  horizon *= horizon;
+
   switch (gua_environment_lighting_mode) {
-    case 0 : // spheremap
+    case 0 : { // spheremap
       vec2 texcoord = longitude_latitude(T.N);
       col1 = brdf_spec * texture(sampler2D(gua_environment_lighting_texture), texcoord).rgb;
       col2 = brdf_spec * texture(sampler2D(gua_alternative_environment_lighting_texture), texcoord).rgb;
       env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
-    case 1 : // cubemap
+    } case 1 : { // cubemap
       col1 = brdf_spec * texture(samplerCube(gua_environment_lighting_texture), T.N).rgb;
       col2 = brdf_spec * texture(samplerCube(gua_alternative_environment_lighting_texture), T.N).rgb;
       env_color = mix(col1, col2, gua_environment_lighting_texture_blend_factor);
       break;
-    case 2 : // single color
+    } case 2 : { // single color
       // http://marmosetco.tumblr.com/post/81245981087
-      float gua_horizon_fade = 1.3;
-      vec3 R = reflect(-T.V, T.N);
-      float horizon = saturate( 1.0 + gua_horizon_fade * dot(R, T.N));
-      horizon *= horizon;
-      vec3 brdf_diff = T.diffuse;
-      env_color = (Pi * brdf_diff + (horizon * brdf_spec)) * gua_horizon_fade * gua_environment_lighting_color;
+      env_color = gua_environment_lighting_color;
       break;
+    } case 3 : { // skymap
+      const float pi = 3.14159265359;
+      float x = 0.5 + 0.5*gua_my_atan2(T.N.x, -T.N.z)/pi;
+      float y = 1.0 - acos(T.N.y)/pi;
+      vec2 texcoord = vec2(x, y);
+      float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
+      vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
+      vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+      vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+      env_color = mix(col1, col2, gua_background_texture_blend_factor);
+    }
   };
 
-  return env_color;
+  vec3 brdf_diff = T.diffuse;
+  return (Pi * brdf_diff + (horizon*gua_horizon_fade * brdf_spec)) * gua_horizon_fade * env_color;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
+vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -124,13 +142,12 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 color = vec3(unpackUnorm2x16(data.x), unpackUnorm2x16(data.y).x);
   vec3 normal = vec3(unpackSnorm2x16(data.y).y, unpackSnorm2x16(data.z));
   vec3 pbr = unpackUnorm4x8(data.w).xyz;
-  uint flags = bitfieldExtract(data.w, 24, 8);
 
   vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -139,15 +156,6 @@ vec4 abuf_shade(uint pos, float depth) {
 
 // output
 layout(location=0) out vec3 gua_out_color;
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-// skymap
-
-float gua_my_atan2(float a, float b) {
-  return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_background_texture() {
@@ -218,6 +226,11 @@ float get_vignette(float coverage, float softness, float intensity) {
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
+  float depth = gua_get_unscaled_depth();
+
+  // WARP TODO: Why is this necessary?
+  gl_FragDepth = depth-0.000001;
+
   ivec2 frag_pos = ivec2(gl_FragCoord.xy);
 
   // init light bitset
@@ -231,12 +244,12 @@ void main() {
   float abuffer_accumulation_emissivity = 0.0;
   vec3 gbuffer_color = vec3(0);
 
-  float depth = gua_get_depth();
-
-#if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
-#else
   bool res = true;
+#if @enable_abuffer@
+
+  int level = 0;
+  res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, depth);
+
 #endif
 
   if (res) {
@@ -245,7 +258,6 @@ void main() {
                                       gua_get_normal(),
                                       gua_get_position(),
                                       gua_get_pbr(),
-                                      gua_get_flags(),
                                       gua_ssao_enable);
       if (gua_enable_fog) {
         gbuffer_color = gua_apply_fog(gbuffer_color, gua_get_background_color());
@@ -259,15 +271,18 @@ void main() {
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
-  gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
+  if (gua_compositing_enable) {
+    // color correction
+    gua_out_color = mix(toneMap(abuffer_accumulation_color.rgb), abuffer_accumulation_color.rgb, abuffer_accumulation_emissivity);
+  } else {
+    gua_out_color = abuffer_accumulation_color.rgb;
+  }
 
   // vignette
   if (gua_vignette_color.a > 0) {
     float vignetting = get_vignette(gua_vignette_coverage, gua_vignette_softness, gua_vignette_color.a);
     gua_out_color = mix(gua_vignette_color.rgb, gua_out_color, vignetting);
   }
-
-  // color correction
 
 #if @gua_debug_tiles@
   vec3 color_codes[] = {vec3(1,0,0), vec3(0,1,0), vec3(0,0,1), vec3(1,1,0), vec3(1,0,1), vec3(0,1,1)};

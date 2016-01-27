@@ -146,13 +146,15 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
       auto source = factory.resolve_substitutions(s.source, substitutions_);
       shaders.push_back(context.render_device->create_shader(s.type, source));
     }
-    
+
     if (interleaved_stream_capture_.empty()) {
       program_ = context.render_device->create_program(shaders);
     } else {
-      scm::gl::interleaved_stream_capture capture_array (interleaved_stream_capture_.front());
-      for (auto const& k : interleaved_stream_capture_)
-        capture_array(k);
+      auto first(interleaved_stream_capture_.begin());
+      scm::gl::interleaved_stream_capture capture_array (*first);
+      while (++first != interleaved_stream_capture_.end()) {
+        capture_array(*first);
+      }
 
       program_ = context.render_device->create_program(
           shaders, capture_array, in_rasterization_discard_);

@@ -23,7 +23,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
@@ -111,22 +110,6 @@ int main(int argc, char** argv) {
   portal_camera->config.set_screen_path("/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(
-      std::make_shared<gua::LightVisibilityPassDescription>());
-
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(
-      gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
-
-  portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
-  portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
@@ -134,20 +117,13 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
   camera->set_pre_render_cameras({portal_camera});
-
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-      1.0f);
-  camera->get_pipeline_description()->add_pass(
-      std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
+  window->config.set_enable_vsync(true);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);

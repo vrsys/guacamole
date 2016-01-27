@@ -29,6 +29,7 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/databases/WindowDatabase.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/utils.hpp>
@@ -70,6 +71,113 @@ void display_loading_screen(gua::WindowBase& window) {
   window.config.set_right_resolution(tmp_right_resolution);
 }
 
+void render_scene(gua::node::SerializedCameraNode     const& serialized_cam,
+                  std::vector<gua::SceneGraph const*> const& scene_graphs,
+                  gua::FpsCounter& fpsc) {
+
+    auto window_name(serialized_cam.config.get_output_window_name());
+    if (window_name != "") {
+        auto window = gua::WindowDatabase::instance()->lookup(window_name);
+
+        if (window && !window->get_is_open()) {
+            window->open();
+        }
+
+        // update window if one is assigned
+        if (window && window->get_is_open()) {
+            window->set_active(true);
+
+            if (window->get_context()->framecount == 0) {
+                display_loading_screen(*window);
+            }
+
+            // make sure pipeline was created
+            std::shared_ptr<gua::Pipeline> pipe = nullptr;
+            auto pipe_iter = window->get_context()->render_pipelines.find(
+                serialized_cam.uuid);
+
+            if (pipe_iter == window->get_context()->render_pipelines.end()) {
+                pipe = std::make_shared<gua::Pipeline>(
+                    *window->get_context(),
+                    serialized_cam.config.get_resolution());
+                window->get_context()->render_pipelines.insert(
+                    std::make_pair(serialized_cam.uuid, pipe));
+            }
+            else {
+                pipe = pipe_iter->second;
+            }
+
+            window->rendering_fps = fpsc.fps;
+
+            window->start_frame();
+            window->on_start_frame.emit();
+
+            GUA_PUSH_GL_RANGE(*window->get_context(), "Frame");
+
+            if (serialized_cam.config.get_enable_stereo()) {
+              if (window->config.get_stereo_mode() == gua::StereoMode::NVIDIA_3D_VISION) {
+                #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+                  if ((window->get_context()->framecount % 2) == 0) {
+                    GUA_PUSH_GL_RANGE(*window->get_context(), "Left eye");
+                    auto img(pipe->render_scene(gua::CameraMode::LEFT,  serialized_cam, scene_graphs));
+                    if (img) window->display(img, true, true);
+                    GUA_POP_GL_RANGE(*window->get_context());
+                  } else {
+                    GUA_PUSH_GL_RANGE(*window->get_context(), "Right eye");
+                    auto img(pipe->render_scene(gua::CameraMode::RIGHT,  serialized_cam, scene_graphs));
+                    if (img) window->display(img, false, false);
+                    GUA_POP_GL_RANGE(*window->get_context());
+                  }
+                #else
+                  gua::Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+                #endif
+              } else {
+                auto eyes = {gua::CameraMode::LEFT, gua::CameraMode::RIGHT};
+
+                if (serialized_cam.config.get_stereo_type() == gua::StereoType::TEMPORAL_WARP) {
+                  if ((window->get_context()->framecount % 2) == 0) {
+                    eyes = {gua::CameraMode::RIGHT, gua::CameraMode::LEFT};
+                  }
+                }
+
+                bool first(true);
+
+                for (auto eye: eyes) {
+                  bool is_left(eye == gua::CameraMode::LEFT);
+                  GUA_PUSH_GL_RANGE(*window->get_context(), is_left ? "Left eye" : "Right eye");
+                    auto img(pipe->render_scene(eye, serialized_cam, scene_graphs));
+                    if (img) {
+                      window->display(img, is_left, first);
+                    }
+                    first = false;
+                  GUA_POP_GL_RANGE(*window->get_context());
+                }
+              }
+            } else {
+              GUA_PUSH_GL_RANGE(*window->get_context(), "Cyclops eye");
+                auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
+                         serialized_cam, scene_graphs));
+                if (img) {
+                  window->display(img, serialized_cam.config.get_mono_mode() != gua::CameraMode::RIGHT, true);
+                }
+              GUA_POP_GL_RANGE(*window->get_context());
+            }
+
+            pipe->clear_frame_cache();
+
+            GUA_POP_GL_RANGE(*window->get_context());
+
+            // swap buffers
+            window->finish_frame();
+            ++(window->get_context()->framecount);
+
+            window->on_finish_frame.emit();
+
+            fpsc.step();
+        }
+    }
+}
+
 template <class T>
 using DB = std::shared_ptr<gua::concurrent::Doublebuffer<T> >;
 
@@ -101,79 +209,21 @@ void Renderer::renderclient(Mailbox in) {
   fpsc.start();
 
   for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    auto window_name(cmd.serialized_cam->config.get_output_window_name());
-    if (window_name != "") {
-      auto window = WindowDatabase::instance()->lookup(window_name);
+    std::vector<SceneGraph const*> graphs;
 
-      if (window && !window->get_is_open()) {
-        window->open();
-      }
-      // update window if one is assigned
-      if (window && window->get_is_open()) {
-        window->set_active(true);
-        window->start_frame();
-
-        if (window->get_context()->framecount == 0) {
-          display_loading_screen(*window);
-        }
-
-        // make sure pipeline was created
-        std::shared_ptr<Pipeline> pipe = nullptr;
-        auto pipe_iter = window->get_context()->render_pipelines.find(
-            cmd.serialized_cam->uuid);
-
-        if (pipe_iter == window->get_context()->render_pipelines.end()) {
-          pipe = std::make_shared<Pipeline>(
-              *window->get_context(),
-              cmd.serialized_cam->config.get_resolution());
-          window->get_context()->render_pipelines.insert(
-              std::make_pair(cmd.serialized_cam->uuid, pipe));
-        } else {
-          pipe = pipe_iter->second;
-        }
-
-        window->rendering_fps = fpsc.fps;
-
-        if (cmd.serialized_cam->config.get_enable_stereo()) {
-          if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
-            #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
-            if ((window->get_context()->framecount % 2) == 0) {
-              auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
-              if (img) window->display(img, true);
-            } else {
-              auto img(pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs));
-              if (img) window->display(img, false);
-            }
-            #else
-            Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
-            #endif
-          } else {
-            auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
-            if (img) window->display(img, true);
-            img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
-            if (img) window->display(img, false);
-          }
-        } else {
-          auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
-                   *cmd.serialized_cam, *cmd.scene_graphs));
-          if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
-        }
-
-        pipe->clear_frame_cache();
-
-        // swap buffers
-        window->finish_frame();
-        ++(window->get_context()->framecount);
-
-        fpsc.step();
-      }
+    for (auto& g : *cmd.scene_graphs) {
+      graphs.push_back(g.get());
     }
+
+    render_scene(cmd.serialized_cam, graphs, fpsc);
   }
 }
 
-Renderer::Renderer() :
-  render_clients_(),
-  application_fps_(20) {
+
+Renderer::Renderer() 
+ : render_clients_(), 
+   application_fps_(20), 
+   single_threaded_rendering_fps_(20) {
 
   application_fps_.start();
 }
@@ -191,17 +241,14 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
       auto rclient(render_clients_.find(window_name));
       if (rclient != render_clients_.end()) {
         rclient->second.first->push_back(
-            Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-                 sgs));
+            Item(cam->serialize(), sgs));
 
       } else {
         auto window(WindowDatabase::instance()->lookup(window_name));
 
         if (window) {
           auto p = spawnDoublebufferred<Item>();
-          p.first->push_back(Item(
-              std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-              sgs));
+          p.first->push_back(Item(cam->serialize(), sgs));
           render_clients_[window_name] = std::make_pair(
               p.first, std::thread(Renderer::renderclient, p.second));
         }
@@ -216,81 +263,12 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
     graph->update_cache();
   }
 
-  auto sgs = garbage_collected_copy(scene_graphs);
-
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
-      auto window_name(cam->config.get_output_window_name());
-      auto serialized_cam(cam->serialize());
-
-      if (window_name != "") {
-        auto window = WindowDatabase::instance()->lookup(window_name);
-
-        if (window && !window->get_is_open()) {
-          window->open();
-        }
-        // update window if one is assigned
-        if (window && window->get_is_open()) {
-          window->set_active(true);
-          window->start_frame();
-
-          if (window->get_context()->framecount == 0) {
-            display_loading_screen(*window);
-          }
-
-          // make sure pipeline was created
-          std::shared_ptr<Pipeline> pipe = nullptr;
-          auto pipe_iter = window->get_context()->render_pipelines.find(
-              serialized_cam.uuid);
-
-          if (pipe_iter == window->get_context()->render_pipelines.end()) {
-            pipe = std::make_shared<Pipeline>(
-                *window->get_context(),
-                serialized_cam.config.get_resolution());
-            window->get_context()->render_pipelines.insert(
-                std::make_pair(serialized_cam.uuid, pipe));
-          } else {
-            pipe = pipe_iter->second;
-          }
-
-          window->rendering_fps = application_fps_.fps;
-
-          if (serialized_cam.config.get_enable_stereo()) {
-
-            if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
-              #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
-              if ((window->get_context()->framecount % 2) == 0) {
-                auto img(pipe->render_scene(CameraMode::LEFT, serialized_cam, *sgs));
-                if (img) window->display(img, true);
-              } else {
-                auto img(pipe->render_scene(CameraMode::RIGHT, serialized_cam, *sgs));
-                if (img) window->display(img, false);
-              }
-              #else
-              Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
-              #endif
-            } else {
-              auto img(pipe->render_scene(CameraMode::LEFT, serialized_cam, *sgs));
-              if (img) window->display(img, true);
-              img = pipe->render_scene(CameraMode::RIGHT, serialized_cam, *sgs);
-              if (img) window->display(img, false);
-            }
-          } else {
-            auto img(pipe->render_scene(serialized_cam.config.get_mono_mode(),
-                     serialized_cam, *sgs));
-            if (img) window->display(img, serialized_cam.config.get_mono_mode() != CameraMode::RIGHT);
-          }
-
-          pipe->clear_frame_cache();
-
-          // swap buffers
-          window->finish_frame();
-          ++(window->get_context()->framecount);
-
-        }
-      }
+      render_scene(cam->serialize(), scene_graphs, single_threaded_rendering_fps_);
     }
   }
+
   application_fps_.step();
 }
 

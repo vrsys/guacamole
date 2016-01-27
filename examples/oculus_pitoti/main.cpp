@@ -25,14 +25,7 @@
 #include <gua/OculusWindow.hpp>
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
-#include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/PLODLoader.hpp>
-#include <gua/renderer/SSAAPass.hpp>
-
-#include <gua/renderer/BBoxPass.hpp>
-#include <gua/renderer/DebugViewPass.hpp>
-
-#include <gua/renderer/TexturedQuadPass.hpp>
 
 #include <iomanip>
 
@@ -187,11 +180,10 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(true);
   camera->config.set_eye_dist(window->get_IPD());
 
-  auto pipe = std::make_shared<gua::PipelineDescription>();
-
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  auto pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    gua::PipelineFactory::DRAW_LODS
+  );
 
   camera->set_pipeline_description(pipe); 
   

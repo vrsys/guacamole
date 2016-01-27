@@ -63,7 +63,7 @@ namespace utils {
 
   void TagList::remove_tags(std::vector<std::string> const& tags) {
     if (tags_.any()) {
-      for (auto tag : tags) {
+      for (auto const& tag : tags) {
         remove_tag(tag);
       }
     }
@@ -73,6 +73,20 @@ namespace utils {
 
   void TagList::clear_tags() {
     tags_.reset();
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  bool TagList::has_tag(std::string const& tag) const {
+    if (tags_.any()) {
+      auto strings(gua::utils::TagRegister::instance()->get_tag_strings(tags_));
+      for (auto const& s : strings) {
+        if (s == tag) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   ////////////////////////////////////////////////////////////////////////////////

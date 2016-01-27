@@ -24,7 +24,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/video3d.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -95,11 +94,10 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::Video3DPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  auto pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    gua::PipelineFactory::DRAW_VIDEO3D
+  );
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);

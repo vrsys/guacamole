@@ -19,6 +19,7 @@ set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
 option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
+option (GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES "Set to enable profile using per-pass primitive queries." OFF)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
@@ -80,10 +81,10 @@ if (UNIX)
   include(find_x11)
 elseif (WIN32)
   include(FindAssimp)
-  include(FindFreeImage)
   set(GL_LIBRARIES OpenGL32.lib)
 endif (UNIX)
 
+include(FindFreeImage)
 include(FindSchism)
 
 if (UNIX)
@@ -91,7 +92,9 @@ if (UNIX)
   find_package(Boost COMPONENTS
     system
     regex
+    chrono
     thread
+    filesystem
     REQUIRED
     )
 elseif (WIN32)
@@ -146,6 +149,12 @@ set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/externals
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-plod/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-lod/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-video3d/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-volume/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-skelanim/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-oculus/include
     ${SCHISM_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
@@ -167,7 +176,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+	set(CMAKE_CXX_FLAGS_RELEASE "-fPIC -s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
 ELSEIF(MSVC)

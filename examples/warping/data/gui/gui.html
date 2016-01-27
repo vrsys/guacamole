@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>particles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-theme.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-slider.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap.colorpickersliders.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="third_party/css/bootstrap-select.min.css">
+    <link href="gui.css" rel="stylesheet">
+
+    <script type="text/javascript" src="third_party/js/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="third_party/js/jquery-ui-1.10.4.min.js"></script>
+    <script type="text/javascript" src="third_party/js/tinycolor.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-slider.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap.colorpickersliders.min.js"></script>
+    <script type="text/javascript" src="third_party/js/bootstrap-select.min.js"></script>
+
+
+    <script type="text/javascript">
+
+      function add_space(parent_selector, label) {
+        $(parent_selector).append('<hr />');
+      }
+
+      function init_color_picker(parent_selector, func) {
+
+        $(parent_selector).ColorPickerSliders({
+          size: "sm",
+          color: "rgb(0,0,0)",
+          placement: "top",
+          sliders: false,
+          swatches: false,
+          hsvpanel: true,
+          onchange: function(container, color) {
+            var colorPicker = $(parent_selector);
+            var color_string = color.tiny.toRgbString();
+            var rgb = color.tiny.toRgb();
+            colorPicker.css("background-color", color_string);
+            gua["set_" + func]("(" + rgb.r + " " + rgb.g + " " + rgb.b + ")");
+          }
+        });
+
+        return {func: func, selector: parent_selector + " ." + func};
+      }
+
+      function add_slider(parent_selector, func, label, min, max, step) {
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-5">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-7">' +
+              '<input class="slider ' + func + '" data-slider-tooltip="hide" data-slider-id=' +
+                func + ' type="text" data-slider-min="' +
+                min + '" data-slider-max="' + max + '" data-slider-step="' +
+                step + '" handle="custom"/>' +
+            '</div>' +
+          '</div>'
+        );
+
+        return init_slider(parent_selector + ' .' + func, func);
+      }
+
+      function init_slider(id, func) {
+
+        var slider = $(id).slider();
+
+        var obj = $(id);
+
+        slider.swift_func = func;
+
+        slider.on("slideStop", function() {
+          var val = $(this).slider('getValue');
+          $(this).parent().attr("val", parseFloat(val.toFixed(4)));
+          gua["set_" + func](val);
+        });
+
+        slider.on("slide", function() {
+          var val = $(this).slider('getValue');
+          gua["set_" + func](val);
+          $(this).parent().attr("val", parseFloat(val.toFixed(4)));
+          obj.find(".slider-handle").focus();
+        });
+
+        obj.on("click", function(){
+          obj.find(".slider-handle").focus();
+        });
+
+        var val = parseFloat(gua["get_" + func]());
+        slider.slider('setValue', val);
+        $(id).parent().attr("val", parseFloat(val.toFixed(4)));
+
+        return slider;
+      }
+
+      function add_checkbox(parent_selector, func, label) {
+        $(parent_selector).append(
+          '<div class="row">' +
+            '<div class="col-xs-5">' +
+              label + ':' +
+            '</div>' +
+            '<div class="col-xs-7">' +
+              '<div class="checkbox">' +
+                '<label>' +
+                  '<input id="' + func + '" type="checkbox" value="">' +
+                  '<span></span>' +
+                '</label>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+
+        return init_checkbox("#" + func, func);
+      }
+
+      var init_checkbox = function(selector, func) {
+        $(selector).prop('checked', !(typeof(gua) === "undefined") && gua["get_" + func]() == "1").change(function() {
+          gua["set_" + func](this.checked ? 1 : 0);
+        });
+      }
+
+      var init_radio = function(selector, func) {
+        $(selector).change(function() {
+          gua["set_" + func](this.checked ? 1 : 0);
+        });
+      }
+
+      function init() {
+
+        init_radio("#manipulation_navigator", "manipulation_navigator");
+        init_radio("#manipulation_camera", "manipulation_camera");
+        init_radio("#manipulation_object", "manipulation_object");
+
+        init_radio("#stereotype_spatial", "stereotype_spatial");
+        init_radio("#stereotype_temporal", "stereotype_temporal");
+
+        init_radio("#scene_oilrig", "scene_oilrig");
+        init_radio("#scene_sponza1", "scene_sponza1");
+        init_radio("#scene_sponza2", "scene_sponza2");
+        init_radio("#scene_sponza3", "scene_sponza3");
+        init_radio("#scene_physics", "scene_physics");
+        init_radio("#scene_glasses", "scene_glasses");
+        init_radio("#scene_hairball", "scene_hairball");
+        init_radio("#scene_pitoti", "scene_pitoti");
+
+        init_checkbox("#vsync", "vsync");
+
+        init_checkbox("#warp_perspective", "warp_perspective");
+        init_checkbox("#warping", "warping");
+        init_checkbox("#stereo", "stereo");
+
+        init_checkbox("#adaptive_entry_level", "adaptive_entry_level");
+
+        init_checkbox("#debug_cell_colors", "debug_cell_colors");
+        init_checkbox("#debug_sample_count", "debug_sample_count");
+        init_checkbox("#debug_bounding_volumes", "debug_bounding_volumes");
+
+        init_radio("#grid_surface", "grid_surface");
+        init_radio("#grid_adaptive_surface", "grid_adaptive_surface");
+        init_radio("#grid_depth_threshold", "grid_depth_threshold");
+
+        init_slider("#preview-panel .max_raysteps", "max_raysteps");
+        init_slider("#preview-panel .pixel_size", "pixel_size");
+        init_slider("#preview-panel .split_threshold", "split_threshold");
+        init_slider("#preview-panel .cell_size", "cell_size");
+
+        init_radio("#hole_filling_type_none", "hole_filling_type_none");
+        init_radio("#hole_filling_type_epipolar_search", "hole_filling_type_epipolar_search");
+        init_radio("#hole_filling_type_epipolar_mirror", "hole_filling_type_epipolar_mirror");
+        init_radio("#hole_filling_type_blur", "hole_filling_type_blur");
+
+        init_color_picker("#hole_filling_color", "hole_filling_color");
+
+        $("body").addClass("on");
+      }
+
+
+      $(document).ready(function() {
+        $('body').on('click', function (e) {
+          $('[data-toggle="popover"]').each(function () {
+            if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                $(this).popover('hide');
+            }
+          });
+        });
+
+        $('#settings-right .side-panel').hover(function(){
+          $('#settings-right .side-panel').removeClass("expanded");
+          $(this).addClass("expanded");
+        });
+      });
+
+    </script>
+
+  </head>
+  <body>
+
+
+    <!-- ################################################################### -->
+    <!-- ############################ Right Pane ########################### -->
+    <!-- ################################################################### -->
+
+
+    <div id="settings-right">
+
+      <div class="side-panel">
+        <div id="scene-panel" class="panel-inner">
+
+          <h4><i class="fa fa-picture-o"></i> Scene Selection</h4>
+
+           <div class="row">
+            <div class="col-xs-5">
+            Scene:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_physics" value="">
+                  <span>Physics</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_pitoti" value="">
+                  <span>Pitoti</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza1" value="">
+                  <span>Sponza 1</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza2" value="">
+                  <span>Sponza 2</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_sponza3" value="">
+                  <span>Sponza 3</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_oilrig" value="" checked="">
+                  <span>One Oilrig</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_glasses" value="">
+                  <span>Glasses</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="sceneRadios" id="scene_hairball" value="">
+                  <span>Hairball</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-panel expanded">
+        <div id="control-panel" class="panel-inner">
+
+          <h4><i class="fa fa-eye"></i> View Options</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+            Camera:
+            </div>
+            <div class="col-xs-7">
+
+              <div class="checkbox">
+                <label>
+                  <input id="vsync" type="checkbox" value="">
+                  <span>Vsync</span>
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label>
+                  <input id="warping" type="checkbox" value="">
+                  <span>Warping</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="stereo" type="checkbox" value="">
+                  <span>Stereo</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="warp_perspective" type="checkbox" value="">
+                  <span>Warp Perspective</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Warp Stereo Type:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereotypeRadios" id="stereotype_spatial" value="" checked>
+                  <span>Spatial</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="stereotypeRadios" id="stereotype_temporal" value="">
+                  <span>Temporal</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Manipulation:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_navigator" value="" checked>
+                  <span>Navigation</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_camera" value="">
+                  <span>Warp Camera</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="manipulationRadios" id="manipulation_object" value="">
+                  <span>Object</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            Warp Camera:
+            </div>
+            <div class="col-xs-7">
+              <button onclick="gua.reset_view()" style="width:32%" class="btn"><i class="fa fa-undo"></i></button>
+              <button onclick="gua.set_left_view()" style="width:32%" class="btn"><i class="fa fa-arrow-circle-left"></i></button>
+              <button onclick="gua.set_right_view()" style="width:32%" class="btn"><i class="fa fa-arrow-circle-right"></i></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+
+
+
+      <div class="side-panel">
+        <div id="preview-panel" class="panel-inner">
+
+          <h4><i class="fa fa-recycle"></i> Warping</h4>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Pixel Size:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider pixel_size" data-slider-tooltip="hide" data-slider-id="pixel_size" type="text" data-slider-min="0" data-slider-max="2.0" data-slider-step="0.1" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Threshold:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider split_threshold" data-slider-tooltip="hide" data-slider-id="split_threshold" type="text" data-slider-min="0" data-slider-max="0.01" data-slider-step="0.0001" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Cell Size:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider cell_size" data-slider-tooltip="hide" data-slider-id="cell_size" type="text" data-slider-min="1" data-slider-max="7" data-slider-step="1" handle="custom"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Debug:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="debug_cell_colors" type="checkbox" value="">
+                  <span>Cell Colors</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+            ABuffer:
+            </div>
+            <div class="col-xs-7">
+
+              <div class="checkbox">
+                <label>
+                  <input id="adaptive_entry_level" type="checkbox" value="">
+                  <span>Adaptive Ray Entry</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Ray Steps:
+            </div>
+            <div class="col-xs-7">
+              <input class="slider max_raysteps" data-slider-tooltip="hide" data-slider-id="max_raysteps" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="2" handle="custom"/>
+            </div>
+          </div>
+
+
+          <div class="row">
+            <div class="col-xs-5">
+              Debug:
+            </div>
+            <div class="col-xs-7">
+              <div class="checkbox">
+                <label>
+                  <input id="debug_sample_count" type="checkbox" value="">
+                  <span>Sample Count</span>
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="debug_bounding_volumes" type="checkbox" value="">
+                  <span>Bounding Volumes</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+
+          <hr />
+
+          <div class="row">
+            <div class="col-xs-5">
+              Hole Filling:
+            </div>
+            <div class="col-xs-7">
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_none" value="">
+                  <span>None</span>
+                </label>
+              </div>
+               <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_search" value="">
+                  <span>Stretch</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_epipolar_mirror" value="">
+                  <span>Mirror</span>
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" name="holeFillingRadios" id="hole_filling_type_blur" value="" checked>
+                  <span>Blur</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-5">
+              Hole Color
+            </div>
+            <div class="col-xs-7">
+              <div id="hole_filling_color" class="btn btn-default" style="height: 20px; width:100%;">
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+
+      </div>
+    </div>
+
+  </body>
+</html>

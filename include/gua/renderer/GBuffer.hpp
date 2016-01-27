@@ -30,27 +30,33 @@
 
 namespace gua {
 
+class Pipeline;
+
 class GUA_DLL GBuffer : public RenderTarget {
  public:
 
   GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
   void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
-  void clear_color(RenderContext const& context);
+  void clear_all(RenderContext const& context, float depth = 1.f, unsigned stencil = 0);
+  void clear_abuffer(RenderContext const& context);
   
-  void bind(RenderContext const& context, bool write_depth) override;
+  void bind(RenderContext const& context, bool write_all_layers, bool do_clear, bool do_swap) override;
   void unbind(RenderContext const& context) override;
 
-  void toggle_ping_pong();
+  ABuffer& get_abuffer();
 
-  void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
   void remove_buffers(RenderContext const& ctx) override;
 
   std::shared_ptr<Texture2D> const& get_color_buffer()  const;
   std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
   std::shared_ptr<Texture2D> const& get_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_flags_buffer()  const;
   std::shared_ptr<Texture2D> const& get_depth_buffer()  const override;
+
+  std::shared_ptr<Texture2D> const& get_color_buffer_write()  const;
+  std::shared_ptr<Texture2D> const& get_pbr_buffer_write()    const;
+  std::shared_ptr<Texture2D> const& get_normal_buffer_write() const;
+  std::shared_ptr<Texture2D> const& get_depth_buffer_write()  const;
 
   inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
 
@@ -63,12 +69,14 @@ class GUA_DLL GBuffer : public RenderTarget {
   scm::gl::frame_buffer_ptr fbo_read_only_color_;
   scm::gl::frame_buffer_ptr fbo_write_only_color_;
 
-  std::shared_ptr<Texture2D> color_buffer_read_;
-  std::shared_ptr<Texture2D> color_buffer_write_;
-  std::shared_ptr<Texture2D> pbr_buffer_;
-  std::shared_ptr<Texture2D> normal_buffer_;
-  std::shared_ptr<Texture2D> flags_buffer_;
-  std::shared_ptr<Texture2D> depth_buffer_;
+  std::shared_ptr<Texture2D> color_buffer_r_;
+  std::shared_ptr<Texture2D> color_buffer_w_;
+  std::shared_ptr<Texture2D> pbr_buffer_r_;
+  std::shared_ptr<Texture2D> pbr_buffer_w_;
+  std::shared_ptr<Texture2D> normal_buffer_r_;
+  std::shared_ptr<Texture2D> normal_buffer_w_;
+  std::shared_ptr<Texture2D> depth_buffer_r_;
+  std::shared_ptr<Texture2D> depth_buffer_w_;
 };
 
 }

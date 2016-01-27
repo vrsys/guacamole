@@ -24,7 +24,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -141,21 +140,22 @@ int main(int argc, char** argv) {
     gua::TextureDatabase::instance()->load(file);
   }
 
+  // TODO: old pipes wont work anymore
   auto standardPipe(std::make_shared<gua::PipelineDescription>());
+  standardPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   standardPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   standardPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  standardPipe->add_pass(std::make_shared<gua::LightingPassDescription>());
   // standardPipe->add_pass<gua::BackgroundPassDescription>()
   // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
   // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
   // ;
 
   auto pbrPipe(std::make_shared<gua::PipelineDescription>());
+  pbrPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pbrPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
   pbrPipe->add_pass(
       std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::ToneMappingPassDescription>());
 #if 0
   pbrPipe->add_pass<gua::BackgroundPassDescription>()
     .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
 #endif
 
   auto tiledPipe(std::make_shared<gua::PipelineDescription>());
+  tiledPipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::ResolvePassDescription>());

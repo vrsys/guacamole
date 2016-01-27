@@ -56,6 +56,7 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
   static void shutdown_oculus_environment();
 
   OculusWindow(std::string const& display);
+
   virtual ~OculusWindow();
 
   void init_context() override;

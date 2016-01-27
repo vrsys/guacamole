@@ -237,7 +237,7 @@ void Video3DRenderer::render(Pipeline& pipe)
       current_shader->use(ctx);
 
       bool write_depth = true;
-      target.bind(ctx, write_depth);
+      target.bind(ctx, write_depth, false, false);
       target.set_viewport(ctx);
 
       {

@@ -49,10 +49,14 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   enum class EnvironmentLightingMode {
     SPHEREMAP = 0,
     CUBEMAP = 1,
-    AMBIENT_COLOR = 2
+    AMBIENT_COLOR = 2,
+    SKYMAP_TEXTURE = 3
   };
 
   ResolvePassDescription();
+
+  ResolvePassDescription& write_abuffer_depth(bool enable);
+  bool write_abuffer_depth() const;
 
   /////////////////////////////////////////////////////////////////////////////
   // background
@@ -170,10 +174,11 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription {
   friend class Pipeline;
 
  protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  virtual PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
   ToneMappingMethod tone_mapping_method_ = ToneMappingMethod::LINEAR;
   bool debug_tiles_ = false;
+  bool write_abuffer_depth_ = false;
 };
 }
 

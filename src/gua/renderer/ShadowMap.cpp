@@ -61,7 +61,7 @@ void ShadowMap::clear(RenderContext const& ctx, float depth, unsigned stencil) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::bind(RenderContext const& ctx, bool write_depth) {
+void ShadowMap::bind(RenderContext const& ctx, bool, bool, bool) {
   ctx.render_context->set_frame_buffer(fbo_);
 }
 

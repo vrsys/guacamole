@@ -46,7 +46,20 @@ VolumeRenderer::VolumeRenderer():
 
 ////////////////////////////////////////////////////////////////////////////////
 
+VolumeRenderer::~VolumeRenderer() {
+  if (volume_raygeneration_color_buffer_) {
+    volume_raygeneration_color_buffer_->make_non_resident(pipe_->get_context());
+  }
+  if (volume_raygeneration_depth_buffer_) {
+    volume_raygeneration_depth_buffer_->make_non_resident(pipe_->get_context());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void VolumeRenderer::render(Pipeline& pipe) {
+
+  pipe_ = &pipe;
 
   auto& scene = *pipe.current_viewstate().scene;
   auto& target = *pipe.current_viewstate().target;
@@ -91,8 +104,10 @@ void VolumeRenderer::render(Pipeline& pipe) {
     ctx.render_context->set_blend_state(blend_state_);
 
     // 2. render fullscreen quad for compositing and volume ray casting
-    bool write_depth = false;
-    target.bind(ctx, write_depth);
+    bool write_all_layers = false;
+    bool do_clear = false;
+    bool do_swap = false;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     pipe.bind_gbuffer_input(composite_shader_);
     composite_shader_->set_uniform(ctx, volume_raygeneration_color_buffer_->get_handle(ctx), "gua_ray_entry_in");
 

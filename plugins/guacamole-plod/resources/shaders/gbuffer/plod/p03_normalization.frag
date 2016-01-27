@@ -159,7 +159,6 @@ void main() {
     gua_roughness  = final_neighbours_pbr.g;
     gua_emissivity = final_neighbours_pbr.b;
     gua_alpha      = 1.0;
-    gua_flags_passthrough = (gua_emissivity > 0.99999);
 
     gl_FragDepth = final_neighbours_depth;
 
@@ -200,7 +199,6 @@ void main() {
     gua_roughness  = written_pbr_coeffs.g;
     gua_emissivity = written_pbr_coeffs.b;
     gua_alpha      = 1.0;
-    gua_flags_passthrough = (gua_emissivity > 0.99999);
 
     // calculate world position from blended depth
     //vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, depth_visibility_pass, 1.0);

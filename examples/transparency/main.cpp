@@ -162,6 +162,7 @@ int main(int argc, char** argv) {
   gua::TextureDatabase::instance()->load("data/checkerboard.png");
 
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
+  portal_pipe->add_pass(std::make_shared<gua::ClearPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());

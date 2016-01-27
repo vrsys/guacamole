@@ -32,6 +32,8 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <gua/renderer/WarpPass.hpp>
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +62,9 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d,
   , needs_color_buffer_as_input_(d.needs_color_buffer_as_input_)
   , writes_only_color_buffer_(d.writes_only_color_buffer_)
   , enable_for_shadows_(d.enable_for_shadows_)
+  , enable_for_left_eye_(d.enable_for_left_eye_)
+  , enable_for_right_eye_(d.enable_for_right_eye_)
+  , enable_for_cyclops_eye_(d.enable_for_cyclops_eye_)
   , rendermode_(d.rendermode_)
   , process_(d.process_)
   , name_(d.name_)
@@ -94,7 +99,10 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe) 
   } else {
     auto& target = *pipe.current_viewstate().target;
 
-    target.bind(ctx, !writes_only_color_buffer_);
+    bool write_all_layers = !writes_only_color_buffer_;
+    bool do_clear = needs_color_buffer_as_input_;
+    bool do_swap = needs_color_buffer_as_input_;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
     target.set_viewport(ctx);
     if (depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);

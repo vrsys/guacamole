@@ -302,10 +302,6 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
                                 false,
                                 scm::gl::point_raster_state(false));
 
-
-    fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
-                                                      scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
-
     //invalidation before first write
     previous_frame_count_ = UINT_MAX;
   }
@@ -600,7 +596,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
         ctx.render_context->apply();
 
-        fullscreen_quad_->draw(ctx.render_context);
+        pipe.draw_quad();
 
         //pipe.end_cpu_query("CPU : PLODRenderer::depth_conversion_pass");
         //pipe.end_gpu_query(ctx, "GPU : PLODRenderer::depth_conversion_pass");
@@ -763,8 +759,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
         pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
       }
 
-      bool write_depth = true;
-      target.bind(ctx, write_depth);
+      bool write_all_layers = true;
+      bool do_clear = false;
+      bool do_swap = false;
+      target.bind(ctx, write_all_layers, do_clear, do_swap);
 
        //////////////////////////////////////////////////////////////////////////
        // 3. normalization pass 
@@ -798,7 +796,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
            ctx.render_context->apply();
 
-           fullscreen_quad_->draw(ctx.render_context);
+           pipe.draw_quad();
          }
          normalization_pass_program_->unuse(ctx);
 
@@ -806,8 +804,10 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
        }
 
     } else { //shadow branch
-        bool write_depth = true;
-        target.bind(ctx, write_depth);
+      bool write_all_layers = true;
+      bool do_clear = false;
+      bool do_swap = false;
+      target.bind(ctx, write_all_layers, do_clear, do_swap);
 
       //////////////////////////////////////////////////////////////////////////
       // only pass in this branch: shadow pass 

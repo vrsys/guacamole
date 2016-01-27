@@ -34,7 +34,7 @@ class VolumeRenderer {
  public:
 
   VolumeRenderer();
-  ~VolumeRenderer() {}
+  ~VolumeRenderer();
 
   void render(Pipeline& pipe);
 
@@ -51,6 +51,8 @@ class VolumeRenderer {
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_;
   scm::gl::blend_state_ptr blend_state_;
+
+  Pipeline* pipe_;
 };
 
 }

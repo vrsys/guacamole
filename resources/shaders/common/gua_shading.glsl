@@ -97,63 +97,63 @@ bool gua_is_inside_frustum(int light_id, int cascade, vec3 point) {
   // proj /= proj.w;
   // return proj.x < 1 && proj.y < 1 && proj.z < 1 && proj.x > -1 && proj.y > -1 && proj.z > -1;
 
-  vec4 plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+  vec4 plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] +
                     gua_lights[light_id].projection_view_mats[cascade][0][0],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] +
                     gua_lights[light_id].projection_view_mats[cascade][1][0],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] +
                     gua_lights[light_id].projection_view_mats[cascade][2][0],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] +
                     gua_lights[light_id].projection_view_mats[cascade][3][0]);
   if (gua_point_outside_plane(plane, point)) return false;
 
-  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] -
                     gua_lights[light_id].projection_view_mats[cascade][0][0],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] -
                     gua_lights[light_id].projection_view_mats[cascade][1][0],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] -
                     gua_lights[light_id].projection_view_mats[cascade][2][0],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] -
                     gua_lights[light_id].projection_view_mats[cascade][3][0]);
   if (gua_point_outside_plane(plane, point)) return false;
 
-  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] +
                     gua_lights[light_id].projection_view_mats[cascade][0][1],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] +
                     gua_lights[light_id].projection_view_mats[cascade][1][1],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] +
                     gua_lights[light_id].projection_view_mats[cascade][2][1],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] +
                     gua_lights[light_id].projection_view_mats[cascade][3][1]);
   if (gua_point_outside_plane(plane, point)) return false;
 
-  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] -
                     gua_lights[light_id].projection_view_mats[cascade][0][1],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] -
                     gua_lights[light_id].projection_view_mats[cascade][1][1],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] -
                     gua_lights[light_id].projection_view_mats[cascade][2][1],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] -
                     gua_lights[light_id].projection_view_mats[cascade][3][1]);
   if (gua_point_outside_plane(plane, point)) return false;
 
-  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] + 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] +
                     gua_lights[light_id].projection_view_mats[cascade][0][2],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] +
                     gua_lights[light_id].projection_view_mats[cascade][1][2],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] +
                     gua_lights[light_id].projection_view_mats[cascade][2][2],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] + 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] +
                     gua_lights[light_id].projection_view_mats[cascade][3][2]);
   if (gua_point_outside_plane(plane, point)) return false;
 
-  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] - 
+  plane = vec4(gua_lights[light_id].projection_view_mats[cascade][0][3] -
                     gua_lights[light_id].projection_view_mats[cascade][0][2],
-                    gua_lights[light_id].projection_view_mats[cascade][1][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][1][3] -
                     gua_lights[light_id].projection_view_mats[cascade][1][2],
-                    gua_lights[light_id].projection_view_mats[cascade][2][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][2][3] -
                     gua_lights[light_id].projection_view_mats[cascade][2][2],
-                    gua_lights[light_id].projection_view_mats[cascade][3][3] - 
+                    gua_lights[light_id].projection_view_mats[cascade][3][3] -
                     gua_lights[light_id].projection_view_mats[cascade][3][2]);
   if (gua_point_outside_plane(plane, point)) return false;
 

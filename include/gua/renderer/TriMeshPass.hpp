@@ -35,6 +35,7 @@ namespace gua {
 class GUA_DLL TriMeshPassDescription : public PipelinePassDescription {
  public:
   TriMeshPassDescription();
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
  protected:

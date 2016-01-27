@@ -23,6 +23,7 @@
 
 uniform uvec2 gua_in_texture;
 uniform ivec2 flip;
+uniform vec2  repeat;
 
 in vec2 gua_varying_quad_coords;
 in vec3 gua_varying_normal;
@@ -33,11 +34,12 @@ in vec3 gua_varying_normal;
 @include "common/gua_abuffer_collect.glsl"
 
 void main() {
-    vec4 color = texture2D(sampler2D(gua_in_texture), (gua_varying_quad_coords - 0.5)*flip + 0.5);
+    vec4 color = texture2D(sampler2D(gua_in_texture), ((gua_varying_quad_coords - 0.5)*flip + 0.5)*repeat);
 
     gua_alpha = color.a;
     gua_color = color.rgb;
-    gua_emissivity = 1.0;
+    gua_normal = gua_varying_normal;
+    gua_emissivity = 0.2;
     gua_roughness = 0.0;
     gua_metalness = 0.0;
 

@@ -37,6 +37,11 @@ void init(int argc, char** argv) {
   static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
 
 #ifdef GUACAMOLE_GLFW3
+
+  glfwSetErrorCallback([](int error, const char* description){
+    Logger::LOG_ERROR << "GLFW error: " << description << " (code " << error << ")" << std::endl;
+  });
+
   if (!glfwInit()) {
     Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
   }

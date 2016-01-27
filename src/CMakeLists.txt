@@ -31,14 +31,7 @@ FILE(GLOB_RECURSE GUACAMOLE_DATABASES_SRC      RELATIVE ${CMAKE_CURRENT_SOURCE_D
 ###############################################################################
 FILE(GLOB         GUACAMOLE_CORE_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/*.hpp)
 FILE(GLOB         GUACAMOLE_RENDERER_INC       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/*.hpp)
-IF (NOT GUACAMOLE_PBR_SUPPORT)
-list (REMOVE_ITEM GUACAMOLE_RENDERER_INC
-  ../include/gua/renderer/PLODLoader.hpp
-  ../include/gua/renderer/PLODRessource.hpp
-  ../include/gua/renderer/PBRLoader.hpp
-  ../include/gua/renderer/PBRRessource.hpp
-)
-ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
+
 IF (NOT GUACAMOLE_GLFW3)
 list (REMOVE_ITEM GUACAMOLE_RENDERER_INC
   ../include/gua/renderer/GlfwWindow.hpp
@@ -48,19 +41,13 @@ ENDIF (NOT GUACAMOLE_GLFW3)
 FILE(GLOB_RECURSE GUACAMOLE_RENDERER_VIDEO_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/renderer/video3d_geometry/*.hpp)
 
 FILE(GLOB_RECURSE GUACAMOLE_SCENEGRAPH_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/scenegraph/*.hpp)
-FILE(GLOB_RECURSE GUACAMOLE_NODE_INC     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/node/*.hpp)
-IF (NOT GUACAMOLE_PBR_SUPPORT)
-list (REMOVE_ITEM GUACAMOLE_NODE_INC
-  ../include/gua/node/PBRNode.hpp
-  ../include/gua/node/PLODNode.hpp
-)
-ENDIF (NOT GUACAMOLE_PBR_SUPPORT)
+FILE(GLOB_RECURSE GUACAMOLE_NODE_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/node/*.hpp)
+
 FILE(GLOB_RECURSE GUACAMOLE_UTILS_INC          RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/utils/*.hpp)
 
 IF (GUACAMOLE_ENABLE_PHYSICS)
 FILE(GLOB_RECURSE GUACAMOLE_PHYSICS_INC        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/physics/*.hpp)
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
-
 
 FILE(GLOB_RECURSE GUACAMOLE_MATH_INC           RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/math/*.hpp)
 FILE(GLOB_RECURSE GUACAMOLE_GENERATED_INC      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ../include/gua/generated/*.inl)
@@ -113,7 +100,7 @@ LINK_DIRECTORIES(${LIB_PATHS})
 
 INCLUDE_DIRECTORIES(guacamole ${INCLUDE_PATHS})
 
-ADD_LIBRARY( guacamole SHARED
+ADD_LIBRARY( guacamole STATIC
     ${GUACAMOLE_CORE_INC}
     ${GUACAMOLE_CORE_SRC}
     ${GUACAMOLE_RENDERER_INC}
@@ -145,24 +132,27 @@ IF (MSVC)
     SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
 ENDIF(MSVC)
 
-TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
-
 # link static libraries,
-IF (MSVC)
-  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
-ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
-  TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
-  TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
-ENDIF (MSVC)
 
 if (GUACAMOLE_GLFW3)
   TARGET_LINK_LIBRARIES( guacamole general ${GLFW_LIBRARIES})
 endif (GUACAMOLE_GLFW3)
 
-IF (GUACAMOLE_PBR_SUPPORT)
-  TARGET_LINK_LIBRARIES( guacamole general ${PBR_LIBRARIES})
-ENDIF (GUACAMOLE_PBR_SUPPORT)
+IF (GUACAMOLE_FBX)
+  TARGET_LINK_LIBRARIES( guacamole optimized ${FBX_LIBRARY} debug ${FBX_LIBRARY_DEBUG})
+ENDIF (GUACAMOLE_FBX)
+
+TARGET_LINK_LIBRARIES( guacamole general ${FREEIMAGE_LIBRARY} general ${FREEIMAGE_PLUS_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES} general ${FREEIMAGE_LIBRARY})
+
+IF (MSVC)
+  TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
+ELSEIF (UNIX)
+  TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
+  TARGET_LINK_LIBRARIES( guacamole general ${ASSIMP_LIBRARIES})
+ENDIF (MSVC)
+
+
 
 IF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general ${Boost_LIBRARIES})
@@ -174,13 +164,7 @@ ENDIF (UNIX)
 
 # link general libraries
 TARGET_LINK_LIBRARIES( guacamole general ${ZMQ_LIBRARIES})
-IF (GUACAMOLE_PBR_SUPPORT)
-  TARGET_LINK_LIBRARIES( guacamole general ${PROTOBUF_LIBRARIES})
-ENDIF (GUACAMOLE_PBR_SUPPORT)
 
-IF (GUACAMOLE_FBX)
-  TARGET_LINK_LIBRARIES( guacamole optimized ${FBX_LIBRARY} debug ${FBX_LIBRARY_DEBUG})
-ENDIF (GUACAMOLE_FBX)
 
 # link release libraries
 TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
@@ -209,6 +193,48 @@ IF (GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
   add_dependencies(guacamole nvstusb)
   TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
 ENDIF(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+
+
+# plugins
+IF (PLUGIN_guacamole-plod)
+  add_definitions(-DGUA_ENABLE_PLOD)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-plod)
+ENDIF(PLUGIN_guacamole-plod)
+
+IF (PLUGIN_guacamole-lod)
+  add_definitions(-DGUA_ENABLE_LOD)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-lod)
+ENDIF(PLUGIN_guacamole-lod)
+
+IF (PLUGIN_guacamole-volume)
+  add_definitions(-DGUA_ENABLE_VOLUME)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-volume)
+ENDIF(PLUGIN_guacamole-volume)
+
+IF (PLUGIN_guacamole-gui)
+  add_definitions(-DGUA_ENABLE_GUI)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-gui)
+ENDIF(PLUGIN_guacamole-gui)
+
+IF (PLUGIN_guacamole-video3d)
+  add_definitions(-DGUA_ENABLE_VIDEO3D)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-video3d)
+ENDIF(PLUGIN_guacamole-video3d)
+
+IF (PLUGIN_guacamole-skelanim)
+  add_definitions(-DGUA_ENABLE_SKELANIM)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-skelanim)
+ENDIF(PLUGIN_guacamole-skelanim)
+
+IF (PLUGIN_guacamole-oculus)
+  add_definitions(-DGUA_ENABLE_OCULUS)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-oculus)
+ENDIF(PLUGIN_guacamole-oculus)
+
+IF (PLUGIN_guacamole-nurbs)
+  add_definitions(-DGUA_ENABLE_NURBS)
+  TARGET_LINK_LIBRARIES(guacamole guacamole-nurbs)
+ENDIF(PLUGIN_guacamole-nurbs)
 
 ###############################################################################
 # install

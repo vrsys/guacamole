@@ -23,7 +23,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
@@ -57,7 +56,7 @@ int main(int argc, char** argv) {
   //load a sample pointcloud
   auto lod_node = lod_loader.load_geometry(
     "pointcloud", 
-    "/opt/3d_models/point_based/lod/pig_pr.bvh", 
+    "/opt/3d_models/point_based/plod/pig_pr.bvh", 
     lod_rough, 
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
@@ -96,17 +95,14 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
-  auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LodPassDescription>());
-  pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  auto pipe = gua::PipelineFactory::make_pipeline(
+    gua::PipelineFactory::DEFAULT | 
+    gua::PipelineFactory::DRAW_LODS
+  );
 
   camera->set_pipeline_description(pipe);
 
   pipe->get_resolve_pass()->tone_mapping_exposure(5.f);
-
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
 

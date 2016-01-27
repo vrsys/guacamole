@@ -3,6 +3,7 @@
 #if @enable_abuffer@
 
 uniform uvec2 gua_gbuffer_depth;
+uniform uvec2 gua_warp_grid_tex;
 
 @include "gua_abuffer.glsl"
 
@@ -67,15 +68,16 @@ bool abuf_insert(float depth)
 
   if (success) {
     // write data
-
     uint pbr = packUnorm4x8(vec4(gua_emissivity, gua_roughness, gua_metalness, 0.0));
-    pbr = bitfieldInsert(pbr, ((gua_flags_passthrough)?1u:0u), 24, 8);
 
     uint col_norm = bitfieldInsert(packUnorm2x16(gua_color.bb),
                                    packSnorm2x16(gua_normal.xx), 16, 16);
 
     frag_data[ctr] = uvec4(packUnorm2x16(gua_color.rg), col_norm,
                            packSnorm2x16(gua_normal.yz), pbr);
+
+    imageAtomicMax(abuf_min_depth, ivec2(gl_FragCoord.xy)/2, pack_depth((1-depth)+0.0001));
+    imageAtomicMax(abuf_max_depth, ivec2(gl_FragCoord.xy)/2, pack_depth(depth+0.0001));
   }
   return success;
 }
@@ -90,9 +92,10 @@ void submit_fragment(float depth)
   // if abuffer enabled and not rendering shadows
   if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
 #if @enable_abuffer@
-    float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
-    if (depth > z) discard;
+    // float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+    // if (abs(depth - z) < 0.0001) discard;
 
+    #if 1
     if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {
       discard;
     }
@@ -101,11 +104,24 @@ void submit_fragment(float depth)
       @include "gua_write_gbuffer.glsl"
     }
     else {
-      if (abuf_insert(depth))
-        discard;
+      abuf_insert(depth);
+      discard;
     }
+
+    #else
+    abuf_insert(depth);
+    discard;
+    #endif
+
+
+    // // always abuffer
+    //   abuf_insert(depth);
+
+    // // always gbuffer
+    // include "gua_write_gbuffer.glsl"
+
 #endif
-  } 
+  }
   else {
     if (gua_alpha < 0.5) {
       discard;

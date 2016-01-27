@@ -21,6 +21,15 @@ class InstanceCollection
   }
 
   template <typename T>
+  std::shared_ptr<T> get_dont_create() const {
+    auto it(collection_.find(typeid(T)));
+    if (it != collection_.end()) {
+      return std::static_pointer_cast<T, void>(it->second.lock());
+    }
+    return std::shared_ptr<T>();
+  }
+
+  template <typename T>
   bool has() {
     return !collection_[typeid(T)].expired();
   }

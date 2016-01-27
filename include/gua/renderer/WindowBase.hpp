@@ -31,6 +31,7 @@
 #include <gua/math/math.hpp>
 #include <gua/utils/configuration_macro.hpp>
 #include <gua/config.hpp>
+#include <gua/events/Signal.hpp>
 
 // external headers
 #include <atomic>
@@ -66,6 +67,9 @@ class GUA_DLL WindowBase {
     QUAD_BUFFERED_LEFT,
     QUAD_BUFFERED_RIGHT
   };
+
+  events::Signal<> on_start_frame;
+  events::Signal<> on_finish_frame;
 
   /**
    * A description of a window.
@@ -172,7 +176,7 @@ class GUA_DLL WindowBase {
   virtual void display(std::shared_ptr<Texture> const& center_texture);
 
   virtual void display(std::shared_ptr<Texture> const& center_texture,
-                       bool is_left);
+                       bool is_left, bool is_first);
 
   /**
    * Get the RenderContext of this window.

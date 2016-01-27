@@ -119,7 +119,11 @@ class GUA_DLL Texture {
    *                         returned.
    * \return                 A pointer to the schism texture.
    */
-  scm::gl::texture_image_ptr const& get_buffer(RenderContext const& context) const;
+  // TODO: virtual required???
+  virtual scm::gl::texture_image_ptr const& get_buffer(
+      RenderContext const& context) const;
+
+  // void bind(RenderContext const& context, unsigned location);
 
   void make_non_resident(RenderContext const& context) const;
 
@@ -132,10 +136,11 @@ class GUA_DLL Texture {
 
  protected:
 
-  unsigned mipmap_layers_;
+  mutable unsigned mipmap_layers_;
   scm::gl::data_format color_format_;
   scm::gl::data_format internal_format_;
   scm::gl::sampler_state_desc state_descripton_;
+
   std::string file_name_;
 
   mutable std::mutex upload_mutex_;
@@ -145,4 +150,4 @@ class GUA_DLL Texture {
 };
 
 }
-#endif  // GUA_TEXTURE2D_HPP
+#endif  // GUA_TEXTURE_HPP

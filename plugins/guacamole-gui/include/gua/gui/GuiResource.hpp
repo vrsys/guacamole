@@ -39,8 +39,8 @@ namespace Awesomium {
 namespace gua {
 
 class GuiTexture;
-class RenderContext;
 class ShaderProgram;
+struct RenderContext;
 
 /**
  * Stores geometry data.
@@ -63,13 +63,16 @@ class GuiResource {
 
     void init(std::string const& name,
               std::string const& url = "",
-              math::vec2 const& size = math::vec2(1000.f, 1000.f));
+              math::vec2ui const& size = math::vec2ui(1000, 1000));
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
     events::Signal<>                                      on_loaded;
 
     void set_url(std::string const& url);
     std::string const& get_url() const;
+
+    void set_size(math::vec2ui const& size);
+    math::vec2ui get_size() const;
 
     void go_forward();
     void go_back();
@@ -117,8 +120,9 @@ class GuiResource {
 
     void add_javascript_callback(std::string const& callback, bool with_result);
 
-    std::string name_;
-    std::string url_;
+    std::string  name_;
+    std::string  url_;
+    math::vec2ui size_;
 
     std::shared_ptr<GuiTexture> gui_texture_;
 

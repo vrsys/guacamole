@@ -27,6 +27,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils.hpp>
 
@@ -206,10 +207,10 @@ void WindowBase::init_context() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::start_frame() {
-  ctx_.render_context->clear_default_color_buffer(
-      scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
+  // ctx_.render_context->clear_default_color_buffer(
+  //     scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
 
-  ctx_.render_context->clear_default_depth_stencil_buffer();
+  // ctx_.render_context->clear_default_depth_stencil_buffer();
 
   #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
   // init nv_context_ for NVIDIA 3D Vision
@@ -243,10 +244,10 @@ void WindowBase::finish_frame() {
 
 void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
-  display(center_texture, true);
+  display(center_texture, true, true);
 
   if (config.get_stereo_mode() != StereoMode::MONO) {
-    display(center_texture, false);
+    display(center_texture, false, false);
   }
 
 }
@@ -254,7 +255,7 @@ void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::display(std::shared_ptr<Texture> const& texture,
-                         bool is_left) {
+                         bool is_left, bool is_first) {
 
   switch (config.get_stereo_mode()) {
     case StereoMode::MONO:
@@ -272,14 +273,14 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
               is_left ? config.get_left_position() : config.get_right_position(),
               is_left ? WindowBase::RED : WindowBase::CYAN,
-              is_left, is_left);
+              is_left, is_first);
       break;
     case StereoMode::ANAGLYPH_RED_GREEN:
       display(texture,
               is_left ? config.get_left_resolution() : config.get_right_resolution(),
               is_left ? config.get_left_position() : config.get_right_position(),
               is_left ? WindowBase::RED : WindowBase::GREEN,
-              is_left, is_left);
+              is_left, is_first);
       break;
     case StereoMode::CHECKERBOARD:
       display(texture,
@@ -312,6 +313,8 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
                      TextureDisplayMode mode,
                      bool is_left,
                      bool clear) {
+
+  GUA_PUSH_GL_RANGE(ctx_, "Display image");
 
   auto const& glapi = ctx_.render_context->opengl_api();
   glapi.glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -348,6 +351,8 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
 
   ctx_.render_context->reset_state_objects();
   fullscreen_shader_.unuse(ctx_);
+
+  GUA_POP_GL_RANGE(ctx_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

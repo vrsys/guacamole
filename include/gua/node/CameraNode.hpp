@@ -24,7 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
-#include <gua/renderer/PipelineDescription.hpp>
+#include <gua/renderer/PipelineFactory.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/Mask.hpp>
 #include <gua/renderer/Frustum.hpp>
@@ -77,7 +77,10 @@ class GUA_DLL CameraNode : public Node {
     GUA_ADD_PROPERTY(std::string,     alternative_frustum_culling_screen_path, "");
     GUA_ADD_PROPERTY(CameraMode,      mono_mode,              CameraMode::CENTER);
 
-    // the rendering is performed with thid resolution. Usually it should match
+    // configures how stereo images are created
+    GUA_ADD_PROPERTY(StereoType,      stereo_type,            StereoType::RENDER_TWICE);
+
+    // the rendering is performed with this resolution. Usually it should match
     // the output window's size.
     GUA_ADD_PROPERTY(math::vec2ui,    resolution,             math::vec2ui(800, 600));
 
@@ -133,7 +136,7 @@ class GUA_DLL CameraNode : public Node {
    *                       with the xy-plane and facing in +z direction.
    */
   CameraNode(std::string const& name,
-             std::shared_ptr<PipelineDescription> const& description = PipelineDescription::make_default(),
+             std::shared_ptr<PipelineDescription> const& description = PipelineFactory::make_pipeline(),
              Configuration const& configuration = Configuration(),
              math::mat4 const& transform = math::mat4::identity());
 
@@ -183,7 +186,8 @@ class GUA_DLL CameraNode : public Node {
   static Frustum make_frustum(SceneGraph const& graph,
                               math::mat4 const& camera_transform,
                               CameraNode::Configuration const& config,
-                              CameraMode mode, bool use_alternative_culling_screen);
+                              CameraMode mode, bool use_alternative_culling_screen, 
+                              bool ignore_warp_mode);
 
   std::shared_ptr<Node> copy() const override;
 
@@ -203,12 +207,12 @@ struct GUA_DLL SerializedCameraNode {
   std::shared_ptr<PipelineDescription>  pipeline_description;
   std::vector<SerializedCameraNode>     pre_render_cameras;
 
-  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode, false);
+  Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode, bool ignore_warp_mode = false) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, false, ignore_warp_mode);
   }
 
-  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const {
-    return CameraNode::make_frustum(graph, transform, config, mode, true);
+  Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode, bool ignore_warp_mode = false) const {
+    return CameraNode::make_frustum(graph, transform, config, mode, true, ignore_warp_mode);
   }
 };
 

@@ -45,7 +45,7 @@ enum class CameraMode {
 /**
  * Stereo mode for a pipeline.
  *
- * Determines how two stereo images should be mapped to each other.
+ * Determines how two stereo images should be displayed.
  */
 enum class StereoMode {
   MONO = 0,
@@ -55,6 +55,17 @@ enum class StereoMode {
   CHECKERBOARD,
   NVIDIA_3D_VISION,
   QUAD_BUFFERED
+};
+
+/**
+ * Stereo type for a pipeline.
+ *
+ * Determines how two stereo images should be created.
+ */
+enum class StereoType {
+  RENDER_TWICE = 0,
+  SPATIAL_WARP,
+  TEMPORAL_WARP
 };
 
 /**

@@ -78,7 +78,7 @@ class GUA_DLL Pipeline {
  public:
 
    struct GUA_DLL query_dispatch {
-     scm::gl::timer_query_ptr  query;
+     scm::gl::query_ptr        query;
      bool                      dispatched;
      unsigned                  collect_attempts;
    };
@@ -87,7 +87,11 @@ class GUA_DLL Pipeline {
      using time_point = std::chrono::steady_clock::time_point;
      std::unordered_map<std::string, query_dispatch> gpu_queries;
      std::unordered_map<std::string, time_point>     cpu_queries;
-     std::map<std::string, double>                   results;
+   };
+
+   struct GUA_DLL primitive_query_collection {
+     typedef std::chrono::steady_clock::time_point   time_point;
+     std::unordered_map<std::string, query_dispatch> gpu_queries;
    };
 
 public:
@@ -97,14 +101,14 @@ public:
 
   std::shared_ptr<Texture2D> render_scene(
     CameraMode mode, node::SerializedCameraNode const& camera,
-    std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
+    std::vector<SceneGraph const*> const& scene_graphs);
 
   void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
 
   PipelineViewState const&           current_viewstate() const;
 
-  RenderContext&                     get_context();
   RenderContext const&               get_context() const;
+  RenderContext&                     get_context();
   LightTable&                        get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
@@ -114,6 +118,9 @@ public:
   // time queries
   void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
   void end_gpu_query(RenderContext const& ctx, std::string const& query_name);
+
+  void begin_primitive_query(RenderContext const& ctx, std::string const& query_name);
+  void end_primitive_query(RenderContext const& ctx, std::string const& query_name);
 
   void begin_cpu_query(std::string const& query_name);
   void end_cpu_query(std::string const& query_name);
@@ -154,8 +161,8 @@ public:
   std::vector<PipelinePass>                 passes_;
   scm::gl::quad_geometry_ptr                quad_;
 
-#define GUA_ENABLE_PROFILING_TIME_QUERIES
-  time_query_collection                 queries_;
+  time_query_collection                     time_queries_;
+  primitive_query_collection                primitive_queries_;
 };
 
 }

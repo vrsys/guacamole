@@ -25,6 +25,7 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/WarpPass.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
@@ -42,10 +43,10 @@ ResolvePassDescription::ResolvePassDescription()
   name_ = "ResolvePass";
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+  rendermode_ = RenderMode::Custom;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );
@@ -93,8 +94,19 @@ ResolvePassDescription::ResolvePassDescription()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+ResolvePassDescription& ResolvePassDescription::write_abuffer_depth(bool value) {
+  write_abuffer_depth_ = value;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool ResolvePassDescription::write_abuffer_depth() const {
+  return write_abuffer_depth_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::background_mode(BackgroundMode mode) {
-  uniforms["gua_background_mode"] = static_cast<int>(mode);;
+  uniforms["gua_background_mode"] = static_cast<int>(mode);
   return *this;
 }
 
@@ -460,9 +472,53 @@ std::shared_ptr<PipelinePassDescription> ResolvePassDescription::make_copy() con
 PipelinePass ResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   substitution_map["gua_debug_tiles"] = debug_tiles() ? "1" : "0";
+  substitution_map["gua_write_abuffer_depth"] = write_abuffer_depth() ? "1" : "0";
   substitution_map["gua_tone_mapping_method"] = std::to_string(static_cast<int>(tone_mapping_method()));
 
   PipelinePass pass{*this, ctx, substitution_map};
+
+  pass.process_ = [](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+
+    auto& target = *pipe.current_viewstate().target;
+    auto const& ctx(pipe.get_context());
+
+    bool write_all_layers = false;
+    bool do_clear = true;
+    bool do_swap = true;
+    target.bind(ctx, write_all_layers, do_clear, do_swap);
+    target.set_viewport(ctx);
+    if (pass.depth_stencil_state_) {
+      ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    }
+
+    pass.shader_->use(ctx);
+
+    bool compositing(pipe.current_viewstate().camera.config.stereo_type() == StereoType::RENDER_TWICE);
+
+    if (!compositing) {
+      compositing = !pipe.current_viewstate().camera.pipeline_description->get_enable_abuffer();
+    }
+
+    pass.shader_->set_uniform(ctx, compositing, "gua_compositing_enable");
+
+    for (auto const& u : desc.uniforms) {
+      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+    }
+
+    pipe.bind_gbuffer_input(pass.shader_);
+    pipe.bind_light_table(pass.shader_);
+
+    std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + pass.name_;
+    pipe.begin_gpu_query(ctx, gpu_query_name);
+
+    pipe.draw_quad();
+
+    pipe.end_gpu_query(ctx, gpu_query_name);
+
+    target.unbind(ctx);
+    ctx.render_context->reset_state_objects();
+  };
+
   return pass;
 }
 

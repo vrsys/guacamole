@@ -32,31 +32,13 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
+#include <gua/renderer/ClearPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 
 namespace gua {
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
-
-  auto pipe(std::make_shared<PipelineDescription>());
-
-  pipe->add_pass(std::make_shared<TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
-  pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
-  pipe->add_pass(std::make_shared<BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<TexturedScreenSpaceQuadPassDescription>());
-
-  pipe->set_enable_abuffer(false);
-
-  return pipe;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -30,27 +30,29 @@
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/TextureDatabase.hpp>
+#include <gua/renderer/GenerateWarpGridPass.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/node/CameraNode.hpp>
 #include <gua/node/LightNode.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
-
+#include <gua/renderer/opengl_debugging.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/renderer/LightTable.hpp>
 
 // external headers
 #include <iostream>
+#include <functional>
 
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
   Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : context_(ctx),
+    : current_viewstate_(),
+      context_(ctx),
       gbuffer_(new GBuffer(ctx, resolution)),
       camera_block_(ctx.render_device),
       light_table_(new LightTable),
-      current_viewstate_(),
       last_resolution_(0, 0),
       last_description_(),
       global_substitution_map_(),
@@ -62,11 +64,11 @@ namespace gua {
 
   const float th = last_description_.get_blending_termination_threshold();
   global_substitution_map_["enable_abuffer"] = "0";
-  global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
+  global_substitution_map_["abuf_insertion_threshold"] = gua::string_utils::to_string(th);
   global_substitution_map_["abuf_blending_termination_threshold"] =
-      std::to_string(th);
+      gua::string_utils::to_string(th);
   global_substitution_map_["max_lights_num"] =
-      std::to_string(last_description_.get_max_lights_count());
+      gua::string_utils::to_string(last_description_.get_max_lights_count());
 
   for (auto pass : last_description_.get_passes()) {
     passes_.push_back(pass->make_pass(ctx, global_substitution_map_));
@@ -78,7 +80,7 @@ namespace gua {
 std::shared_ptr<Texture2D> Pipeline::render_scene(
     CameraMode mode,
     node::SerializedCameraNode const& camera,
-    std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs) {
+    std::vector<SceneGraph const*> const& scene_graphs) {
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
@@ -87,12 +89,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   // store the current camera data
   current_viewstate_.camera = camera;
-  current_viewstate_.viewpoint_uuid = camera.uuid;
+  current_viewstate_.viewpoint_uuid = camera.uuid + static_cast<int>(mode);
   current_viewstate_.view_direction = PipelineViewState::front;
   current_viewstate_.shadow_mode = false;
 
   bool reload_gbuffer(false);
   bool reload_abuffer(false);
+
+  GUA_PUSH_GL_RANGE(context_, "Process pre-render pipelines");
 
   // execute all prerender cameras
   for (auto const& cam : camera.pre_render_cameras) {
@@ -103,10 +107,15 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs);
   }
 
+  GUA_POP_GL_RANGE(context_);
+
+  GUA_PUSH_GL_RANGE(context_, "Prepare frame");
+
   // recreate gbuffer if resolution changed
   if (last_resolution_ != camera.config.get_resolution()) {
     last_resolution_ = camera.config.get_resolution();
     reload_gbuffer = true;
+    reload_abuffer = true;
   }
 
   if (reload_gbuffer) {
@@ -135,13 +144,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
   }
 
-  if (reload_abuffer) {
-    gbuffer_->allocate_a_buffer(context_,
-                      last_description_.get_enable_abuffer()
-                          ? last_description_.get_abuffer_size()
-                          : 0);
-  }
-
 
   if (reload_passes) {
     for (auto& pass : passes_) {
@@ -154,22 +156,29 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     const float th = last_description_.get_blending_termination_threshold();
     global_substitution_map_["enable_abuffer"] =
       last_description_.get_enable_abuffer() ? "1" : "0";
-    global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
+    global_substitution_map_["abuf_insertion_threshold"] = gua::string_utils::to_string(th);
     global_substitution_map_["abuf_blending_termination_threshold"] =
-      std::to_string(th);
+      gua::string_utils::to_string(th);
     global_substitution_map_["max_lights_num"] =
-      std::to_string(last_description_.get_max_lights_count());
+      gua::string_utils::to_string(last_description_.get_max_lights_count());
 
     for (auto pass : last_description_.get_passes()) {
       passes_.push_back(pass->make_pass(context_, global_substitution_map_));
     }
   }
 
+  if (reload_abuffer) {
+    gbuffer_->get_abuffer().allocate(*this,
+                      last_description_.get_enable_abuffer()
+                          ? last_description_.get_abuffer_size()
+                          : 0, gbuffer_->get_resolution());
+  }
+
   // get scenegraph which shall be rendered
   current_viewstate_.graph = nullptr;
   for (auto& graph : scene_graphs) {
     if (graph->get_name() == camera.config.get_scene_graph_name()) {
-      current_viewstate_.graph = graph.get();
+      current_viewstate_.graph = graph;
       break;
     }
   }
@@ -188,39 +197,39 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
                        camera.config.get_resolution());
   bind_camera_uniform_block(0);
 
-  // clear gbuffer
-  gbuffer_->clear(context_, 1.f, 1);
   current_viewstate_.target = gbuffer_.get();
+
+  GUA_POP_GL_RANGE(context_);
+
+  bool skip_passes(false);
+
+  if (camera.config.enable_stereo()) {
+    if (camera.config.stereo_type() == StereoType::SPATIAL_WARP) {
+      skip_passes = (mode == CameraMode::RIGHT);
+    } else if (camera.config.stereo_type() == StereoType::TEMPORAL_WARP) {
+      skip_passes = (((context_.framecount % 2) == 0) == (mode == CameraMode::RIGHT));
+    }
+  } 
 
   // process all passes
   for (unsigned i(0); i < passes_.size(); ++i) {
-    if (passes_[i].needs_color_buffer_as_input()) {
-      gbuffer_->toggle_ping_pong();
+    GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
+    
+    if (skip_passes) {
+      auto warp_pass(std::dynamic_pointer_cast<GenerateWarpGridPassDescription>(last_description_.get_passes()[i]));
+      if (warp_pass) {
+        skip_passes = false;
+      }
+      
+    } else {
+      passes_[i].process(*last_description_.get_passes()[i], *this);
     }
-    passes_[i].process(*last_description_.get_passes()[i], *this);
+    GUA_POP_GL_RANGE(context_);
   }
 
-
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    fetch_gpu_query_results(context_);
-
-    if (context_.framecount % 60 == 0) {
-      std::cout << "===== Time Queries for Context: " << context_.id
-        << " ============================" << std::endl;
-      for (auto const& t : queries_.results) {
-        std::cout << t.first << " : " << t.second << " ms" << std::endl;
-      }
-      queries_.results.clear();
-      std::cout << ">>===================================================="
-        << std::endl;
-    }
-#endif
-
-    gbuffer_->toggle_ping_pong();
-
   // add texture to texture database
-  auto const& tex(gbuffer_->get_color_buffer());
-  auto const& depth_tex(gbuffer_->get_depth_buffer());
+  auto const& tex(gbuffer_->get_color_buffer_write());
+  auto const& depth_tex(gbuffer_->get_depth_buffer_write());
   auto tex_name(camera.config.get_output_texture_name());
 
   if (tex_name != "") {
@@ -236,6 +245,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
   void Pipeline::generate_shadow_map(node::LightNode* light,
                                    LightTable::LightBlock& light_block) {
+
+    GUA_PUSH_GL_RANGE(context_, "Generate shadow map");
 
     if (!shadow_map_res_) {
       shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
@@ -274,6 +285,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // cascades are aligned horizontally on the shadow map
     unsigned map_width(viewport_size * cascade_count);
+    unsigned map_height(viewport_size);
 
     light_block.cascade_count = cascade_count;
 
@@ -281,7 +293,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     if (!shadow_map) {
       needs_redraw = true;
       for (auto it(shadow_map_res_->unused_shadow_maps.begin()); it != shadow_map_res_->unused_shadow_maps.end(); ++it) {
-        if ((*it)->get_width() == map_width) {
+        if ((*it)->get_width() == map_width && (*it)->get_height() == map_height) {
           shadow_map = *it;
           shadow_map_res_->unused_shadow_maps.erase(it);
           break;
@@ -297,9 +309,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     // store shadow map
     shadow_map_res_->used_shadow_maps[light].push_back({shadow_map, current_mask});
 
-    current_viewstate_.target = shadow_map.get();
+    auto orig_state(current_viewstate_);
 
-    auto orig_scene(current_viewstate_.scene);
+    current_viewstate_.target = shadow_map.get();
 
     // clear shadow map
     if (needs_redraw) {
@@ -308,19 +320,19 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     }
 
     // set view parameters
-	auto original_camera_resolution = current_viewstate_.camera.config.get_resolution();
-	auto shadow_resolution = gua::math::vec2ui{ viewport_size, viewport_size };
+  	auto original_camera_resolution = current_viewstate_.camera.config.get_resolution();
+  	auto shadow_resolution = gua::math::vec2ui{ viewport_size, viewport_size };
 
     current_viewstate_.viewpoint_uuid = light->uuid();
     current_viewstate_.view_direction = PipelineViewState::front;
     current_viewstate_.shadow_mode = true;
-	current_viewstate_.camera.config.set_resolution(shadow_resolution);
+	  current_viewstate_.camera.config.set_resolution(shadow_resolution);
 
     // render cascaded shadows for sunlights
     switch (light->data.get_type()) {
 
       case node::LightNode::Type::SUN :
-        generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw, orig_scene->rendering_frustum.get_screen_transform());
+        generate_shadow_map_sunlight(shadow_map, light, light_block, viewport_size, needs_redraw, orig_state.scene->rendering_frustum.get_screen_transform());
         break;
       case node::LightNode::Type::POINT :
         generate_shadow_map_pointlight(shadow_map, light, light_block, viewport_size, needs_redraw);
@@ -328,15 +340,12 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       case node::LightNode::Type::SPOT :
         generate_shadow_map_spotlight(light, light_block, viewport_size, needs_redraw);
         break;
-    default : 
+    default :
       throw std::runtime_error("Pipeline::generate_shadow_map(): Lightnode type not supported.");
     };
 
     // restore previous configuration
-    current_viewstate_.target = gbuffer_.get();
-    current_viewstate_.scene = orig_scene;
-    current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
-	current_viewstate_.camera.config.set_resolution(original_camera_resolution);
+    current_viewstate_ = orig_state;
 
     camera_block_.update(context_,
                          current_viewstate_.scene->rendering_frustum,
@@ -349,6 +358,8 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     light_block.shadow_offset = light->data.get_shadow_offset();
     light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
+
+    GUA_POP_GL_RANGE(context_);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +370,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
     // only render shadow map if it hasn't been rendered before this frame
     if (redraw) {
+
+      current_viewstate_.viewpoint_uuid += 1;
+
       current_viewstate_.scene = current_viewstate_.graph->serialize(frustum, frustum,
         math::get_translation(current_viewstate_.camera.transform),
         current_viewstate_.camera.config.enable_frustum_culling(),
@@ -378,7 +392,9 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       // process all passes
       for (int i(0); i < passes_.size(); ++i) {
         if (passes_[i].enable_for_shadows()) {
+          GUA_PUSH_GL_RANGE(context_, last_description_.get_passes()[i]->name());
           passes_[i].process(*last_description_.get_passes()[i], *this);
+          GUA_POP_GL_RANGE(context_);
         }
       }
     }
@@ -528,10 +544,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
       auto transform(light->get_cached_world_transform() * screen_transforms[cascade]);
 
+	  // scale far clip of virtual camera to radius of unit sphere
+	  auto light_far_clip = 2.0f * scm::math::length(math::get_translation(transform) - math::get_translation(light->get_cached_world_transform()));
 
-	  //TODO: consider light scale for clipping planes?
-	  auto light_near_clip = light->data.get_shadow_near_clipping_in_sun_direction();
-	  auto light_far_clip = light->data.get_shadow_far_clipping_in_sun_direction();
+	  // TODO: make near clip of light configurable? currently 1/100th of light source size
+	  auto light_near_clip = light_far_clip / 100.0f;
 
 	  auto frustum(
 		  Frustum::perspective(
@@ -556,14 +573,14 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
     screen_transform = light->get_cached_world_transform() * screen_transform;
 
-    auto light_near_clip = light->data.get_shadow_near_clipping_in_sun_direction();
-    auto light_far_clip = light->data.get_shadow_far_clipping_in_sun_direction();
+	auto light_far_clip = scm::math::length(math::get_translation(screen_transform) - math::get_translation(light->get_cached_world_transform()));
 
     auto frustum(
       Frustum::perspective(
       light->get_cached_world_transform(), screen_transform,
-      light_near_clip,
-      light_far_clip
+      //current_viewstate_.camera.config.near_clip(),
+      light->data.get_shadow_near_clipping_in_sun_direction(),
+	  light_far_clip
       )
       );
 
@@ -575,16 +592,16 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   PipelineViewState const& Pipeline::current_viewstate() const {
     return current_viewstate_;
   }
-  
+
   ////////////////////////////////////////////////////////////////////////////////
 
-  RenderContext& Pipeline::get_context() {
+  RenderContext const& Pipeline::get_context() const {
     return context_;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  RenderContext const& Pipeline::get_context() const {
+  RenderContext& Pipeline::get_context() {
     return context_;
   }
 
@@ -602,11 +619,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     shader->set_uniform(context_, 1.0f / gbuffer_->get_width(), "gua_texel_width");
     shader->set_uniform(context_, 1.0f / gbuffer_->get_height(), "gua_texel_height");
 
-    shader->set_uniform(
-      context_,
-      math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),
-      "gua_resolution");
-
     shader->set_uniform(context_,
                         gbuffer_->get_color_buffer()->get_handle(context_),
                         "gua_gbuffer_color");
@@ -616,9 +628,6 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     shader->set_uniform(context_,
                         gbuffer_->get_normal_buffer()->get_handle(context_),
                         "gua_gbuffer_normal");
-    shader->set_uniform(context_,
-                        gbuffer_->get_flags_buffer()->get_handle(context_),
-                        "gua_gbuffer_flags");
     shader->set_uniform(context_,
                         gbuffer_->get_depth_buffer()->get_handle(context_),
                         "gua_gbuffer_depth");
@@ -660,23 +669,23 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::chrono::steady_clock::time_point start_time =
       std::chrono::steady_clock::now();
-    queries_.cpu_queries[query_name] = start_time;
+    time_queries_.cpu_queries[query_name] = start_time;
 #endif
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   void Pipeline::end_cpu_query(std::string const& query_name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    assert(queries_.cpu_queries.count(query_name));
+    assert(time_queries_.cpu_queries.count(query_name));
 
     std::chrono::steady_clock::time_point end_time =
       std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point start_time =
-      queries_.cpu_queries.at(query_name);
+      time_queries_.cpu_queries.at(query_name);
 
     double mcs = std::chrono::duration_cast<std::chrono::microseconds>(
       end_time - start_time).count();
-    queries_.results[query_name] = mcs / 1000.0;
+   context_.time_query_results[query_name] = mcs / 1000.0;
 #endif
   }
 
@@ -686,18 +695,18 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::string const& name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 
-    if (ctx.framecount < 50) {
-      queries_.gpu_queries.clear();
-      return;
-    }
+    // if (ctx.framecount < 50) {
+    //   time_queries_.gpu_queries.clear();
+    //   return;
+    // }
 
-    auto existing_query = queries_.gpu_queries.find(name);
+    auto existing_query = time_queries_.gpu_queries.find(name);
 
-    if (existing_query != queries_.gpu_queries.end()) {
+    if (existing_query != time_queries_.gpu_queries.end()) {
       // delete existing query if it is too old
       const unsigned max_wait_frames = 50;
       if (existing_query->second.collect_attempts > max_wait_frames) {
-        queries_.gpu_queries.erase(existing_query);
+        time_queries_.gpu_queries.erase(existing_query);
       }
       else {
         // existing query in process -> nothing to be done!!! -> return!!
@@ -710,7 +719,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
       auto query = ctx.render_device->create_timer_query();
       query_dispatch dispatch = { query, false, 0U };
 
-      queries_.gpu_queries.insert(std::make_pair(name, dispatch));
+      time_queries_.gpu_queries.insert(std::make_pair(name, dispatch));
       ctx.render_context->begin_query(query);
     }
     catch (...) {
@@ -726,11 +735,11 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
     std::string const& name) {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     // query started
-    if (queries_.gpu_queries.count(name)) {
+    if (time_queries_.gpu_queries.count(name)) {
       // query not finished yet
-      if (!queries_.gpu_queries.at(name).dispatched) {
-        ctx.render_context->end_query(queries_.gpu_queries.at(name).query);
-        queries_.gpu_queries.at(name).dispatched = true;
+      if (!time_queries_.gpu_queries.at(name).dispatched) {
+        ctx.render_context->end_query(time_queries_.gpu_queries.at(name).query);
+        time_queries_.gpu_queries.at(name).dispatched = true;
       }
       else {
         // no such query
@@ -740,13 +749,74 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 #endif
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Pipeline::begin_primitive_query(RenderContext const& ctx,
+    std::string const& name) {
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+
+    // if (ctx.framecount < 50) {
+    //   primitive_queries_.gpu_queries.clear();
+    //   return;
+    // }
+
+    auto existing_query = primitive_queries_.gpu_queries.find(name);
+
+    if (existing_query != primitive_queries_.gpu_queries.end()) {
+      // delete existing query if it is too old
+      const unsigned max_wait_frames = 50;
+      if (existing_query->second.collect_attempts > max_wait_frames) {
+        primitive_queries_.gpu_queries.erase(existing_query);
+      }
+      else {
+        // existing query in process -> nothing to be done!!! -> return!!
+        return;
+      }
+    }
+
+    try {
+      // create query
+      auto query = ctx.render_device->create_transform_feedback_statistics_query();
+      query_dispatch dispatch = { query, false, 0U };
+
+      primitive_queries_.gpu_queries.insert(std::make_pair(name, dispatch));
+      ctx.render_context->begin_query(query);
+    }
+    catch (...) {
+      // query dispatch failed
+    }
+
+#endif
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void Pipeline::end_primitive_query(RenderContext const& ctx,
+    std::string const& name) {
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+    // query started
+    if (primitive_queries_.gpu_queries.count(name)) {
+      // query not finished yet
+      if (!primitive_queries_.gpu_queries.at(name).dispatched) {
+        ctx.render_context->end_query(primitive_queries_.gpu_queries.at(name).query);
+        primitive_queries_.gpu_queries.at(name).dispatched = true;
+      }
+      else {
+        // no such query
+        return;
+      }
+    }
+#endif
+  }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
   bool queries_ready = true;
-  for (auto& q : queries_.gpu_queries) {
+  for (auto& q : time_queries_.gpu_queries) {
     bool query_ready =
       ctx.render_context->query_result_available(q.second.query);
     ++q.second.collect_attempts;
@@ -754,14 +824,34 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
   }
 
   if (queries_ready) {
-    for (auto const& q : queries_.gpu_queries) {
+    for (auto const& q : time_queries_.gpu_queries) {
       ctx.render_context->collect_query_results(q.second.query);
       double draw_time_in_ms =
-        static_cast<double>(q.second.query->result()) / 1e6;
-      queries_.results[q.first] = draw_time_in_ms;
+        static_cast<double>(dynamic_cast<scm::gl::timer_query*>(q.second.query.get())->result()) / 1e6;
+      context_.time_query_results[q.first] = draw_time_in_ms;
     }
 
-    queries_.gpu_queries.clear();
+    time_queries_.gpu_queries.clear();
+  }
+#endif
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+  queries_ready = true;
+  for (auto& q : primitive_queries_.gpu_queries) {
+    bool query_ready =
+      ctx.render_context->query_result_available(q.second.query);
+    ++q.second.collect_attempts;
+    queries_ready &= query_ready;
+  }
+
+  if (queries_ready) {
+    for (auto const& q : primitive_queries_.gpu_queries) {
+      ctx.render_context->collect_query_results(q.second.query);
+      auto query = dynamic_cast<scm::gl::transform_feedback_statistics_query*>(q.second.query.get());
+      context_.primitive_query_results[q.first] = std::make_pair(query->result()._primitives_generated, query->result()._primitives_written);
+    }
+
+    primitive_queries_.gpu_queries.clear();
   }
 #endif
 }
@@ -769,6 +859,9 @@ void Pipeline::fetch_gpu_query_results(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::clear_frame_cache() {
+
+  GUA_PUSH_GL_RANGE(context_, "Clear frame cache");
+
   if (!shadow_map_res_) {
     shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
   }
@@ -786,8 +879,37 @@ void Pipeline::clear_frame_cache() {
   }
 
   shadow_map_res_->used_shadow_maps.clear();
+
+  fetch_gpu_query_results(context_);
+
+  #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+      // if (context_.framecount % 60 == 0) {
+      //   std::cout << "===== Time Queries for Context: " << context_.id
+      //     << " ============================" << std::endl;
+      //   for (auto const& t : context_.time_query_results) {
+      //     std::cout << t.first << " : " << t.second << " ms" << std::endl;
+      //   }
+      //   std::cout << std::endl;
+      //   context_.time_query_results.clear();
+      // }
+  #endif
+
+  #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_PRIMITIVE_QUERIES
+      if (context_.framecount % 60 == 0) {
+        // std::cout << "===== Primitive Queries for Context: " << context_.id
+        //   << " ============================" << std::endl;
+        // for (auto const& t : context_.primitive_query_results) {
+        //   std::cout << t.first << " : Generated: " << t.second.first << " Written: " << t.second.second << std::endl;
+        // }
+        // std::cout << std::endl;
+        // context_.primitive_query_results.clear();
+      }
+  #endif
+
+  GUA_POP_GL_RANGE(context_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }
+
