@@ -91,6 +91,7 @@ class GUA_DLL Pipeline {
    };
 
 public:
+  friend class DepthCubeMapRenderer;
 
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
