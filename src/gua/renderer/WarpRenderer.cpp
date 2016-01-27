@@ -30,6 +30,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ABuffer.hpp>
+#include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/opengl_debugging.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
@@ -303,6 +304,11 @@ void WarpRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
   warp_abuffer_program_->use(ctx);
   warp_abuffer_program_->apply_uniform(ctx, "warp_matrix", warp_matrix);
   warp_abuffer_program_->apply_uniform(ctx, "inv_warp_matrix", inv_warp_matrix);
+
+  // Not very beautiful: we need to set the tonemapping exposure. This is a uniform set by the resolve pass,
+  // so we have to find the resolvepass to get that value
+  float exposure(pipe.current_viewstate().camera.pipeline_description->get_pass_by_type<gua::ResolvePassDescription>()->tone_mapping_exposure());
+  warp_abuffer_program_->apply_uniform(ctx, "gua_tone_mapping_exposure", exposure);
 
   gbuffer->get_abuffer().bind_min_max_buffer(warp_abuffer_program_);
 

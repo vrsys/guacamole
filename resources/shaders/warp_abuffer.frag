@@ -30,7 +30,7 @@ layout(location=0) out vec3 gua_out_color;
 
 #define MAX_RAY_STEPS @max_raysteps@
 
-uniform float gua_tone_mapping_exposure = 1.5;
+uniform float gua_tone_mapping_exposure = 1.0;
 
 @include "common/gua_abuffer.glsl"
 @include "common/gua_tone_mapping.glsl"

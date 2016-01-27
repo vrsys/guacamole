@@ -112,15 +112,10 @@ int main(int argc, char** argv) {
   pipe->get_resolve_pass()->
     background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE).
     environment_lighting_texture(opt_prefix + "guacamole/resources/skymaps/DH206SN.png").
-    background_color(gua::utils::Color3f(0,0,0)).
     environment_lighting(gua::utils::Color3f(0.4, 0.4, 0.5)).
     environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR).
     tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::HEJL).
-    tone_mapping_exposure(1.5f).
-    horizon_fade(0.2f).
-    ssao_enable(true).
-    ssao_intensity(5.0f).
-    ssao_radius(5.0f).
+    tone_mapping_exposure(1.5f).horizon_fade(0.2f).
     background_texture(opt_prefix + "guacamole/resources/skymaps/cycles_island.jpg");
 
   // ---------------------------------------------------------------------------
