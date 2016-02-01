@@ -142,10 +142,15 @@ ADD_LIBRARY( guacamole SHARED
 
 IF (MSVC)
     GET_WIN32_WINNT(WIN_VERSION)
-    SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY -D _WIN32_WINNT=${WIN_VERSION}")
+    SET_TARGET_PROPERTIES(guacamole PROPERTIES COMPILE_FLAGS "-D GUA_LIBRARY")
 ENDIF(MSVC)
 
-TARGET_LINK_LIBRARIES( guacamole general ${SCHISM_LIBRARIES} general ${GL_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole 
+                       general ${GL_LIBRARIES}
+                       optimized ${SCHISM_CORE_LIBRARY} debug ${SCHISM_CORE_LIBRARY_DEBUG}
+                       optimized ${SCHISM_GL_CORE_LIBRARY} debug ${SCHISM_GL_CORE_LIBRARY_DEBUG}
+                       optimized ${SCHISM_GL_UTIL_LIBRARY} debug ${SCHISM_GL_UTIL_LIBRARY_DEBUG}
+                       optimized ${SCHISM_INPUT_LIBRARY} debug ${SCHISM_INPUT_LIBRARY_DEBUG})
 
 # link static libraries,
 IF (MSVC)
@@ -168,12 +173,19 @@ IF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general ${Boost_LIBRARIES})
   TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
 ELSEIF (MSVC)
-    # use boost autolink feature
-    # not necessary to link GL on msvc
+  TARGET_LINK_LIBRARIES( guacamole 
+                         optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
+                         optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE} debug ${Boost_FILESYSTEM_LIBRARY_DEBUG}
+                         optimized ${Boost_SYSTEM_LIBRARY_RELEASE} debug ${Boost_SYSTEM_LIBRARY_DEBUG}
+                         optimized ${Boost_REGEX_LIBRARY_RELEASE} debug ${Boost_REGEX_LIBRARY_DEBUG}
+                         optimized ${Boost_CHRONO_LIBRARY_RELEASE} debug ${Boost_CHRONO_LIBRARY_DEBUG}
+                         optimized ${FREEIMAGE_LIBRARY} debug ${FREEIMAGE_LIBRARY_DEBUG}
+                         optimized ${FREEIMAGE_PLUS_LIBRARY} debug ${FREEIMAGE_PLUS_LIBRARY_DEBUG}
+                         )
 ENDIF (UNIX)
 
 # link general libraries
-TARGET_LINK_LIBRARIES( guacamole general ${ZMQ_LIBRARIES})
+TARGET_LINK_LIBRARIES( guacamole optimized ${ZMQ_LIBRARY} debug ${ZMQ_LIBRARY_DEBUG})
 IF (GUACAMOLE_PBR_SUPPORT)
   TARGET_LINK_LIBRARIES( guacamole general ${PROTOBUF_LIBRARIES})
 ENDIF (GUACAMOLE_PBR_SUPPORT)
@@ -183,21 +195,14 @@ IF (GUACAMOLE_FBX)
 ENDIF (GUACAMOLE_FBX)
 
 # link release libraries
-TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY})
+TARGET_LINK_LIBRARIES( guacamole optimized ${JSON_LIBRARY} debug ${JSON_LIBRARY_DEBUG})
 IF (GUACAMOLE_ENABLE_PHYSICS)
-  TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_DYNAMICS_LIBRARY})
-  TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_COLLISION_LIBRARY})
-  TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_MATH_LIBRARY})
-  TARGET_LINK_LIBRARIES( guacamole optimized ${BULLET_HACD_LIBRARY})
-ENDIF (GUACAMOLE_ENABLE_PHYSICS)
-
-# link debug libraries
-TARGET_LINK_LIBRARIES( guacamole debug ${JSON_LIBRARY_DEBUG})
-IF (GUACAMOLE_ENABLE_PHYSICS)
-  TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_DYNAMICS_LIBRARY_DEBUG})
-  TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_COLLISION_LIBRARY_DEBUG})
-  TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_MATH_LIBRARY_DEBUG})
-  TARGET_LINK_LIBRARIES( guacamole debug ${BULLET_HACD_LIBRARY_DEBUG})
+  TARGET_LINK_LIBRARIES( guacamole 
+                         optimized ${BULLET_DYNAMICS_LIBRARY} debug ${BULLET_DYNAMICS_LIBRARY_DEBUG}
+                         optimized ${BULLET_COLLISION_LIBRARY} debug ${BULLET_COLLISION_LIBRARY_DEBUG}
+                         optimized ${BULLET_MATH_LIBRARY} debug ${BULLET_MATH_LIBRARY_DEBUG} 
+                         optimized ${BULLET_HACD_LIBRARY} debug ${BULLET_HACD_LIBRARY_DEBUG} 
+                       )
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
 # set dependencies
@@ -206,8 +211,11 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 IF (GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
-  add_dependencies(guacamole nvstusb)
-  TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
+  IF (UNIX)
+    add_dependencies(guacamole nvstusb)
+    TARGET_LINK_LIBRARIES( guacamole general ${PROJECT_SOURCE_DIR}/lib/libnvstusb.so)
+  ELSEIF(MSVC)
+  ENDIF()
 ENDIF(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
 
 ###############################################################################

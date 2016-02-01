@@ -43,6 +43,7 @@ class LightVisibilityRenderer {
                     LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const;
 
   scm::gl::frame_buffer_ptr empty_fbo_ = nullptr;
+  scm::gl::texture_2d_ptr empty_fbo_color_attachment_ = nullptr;
 };
 
 }

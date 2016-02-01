@@ -28,7 +28,7 @@
 #include <functional>
 #include <iostream>
 
-const bool SHOW_FRAME_RATE = false;
+const bool SHOW_FRAME_RATE = true;
 
 struct AnimEvent {
   float start;
