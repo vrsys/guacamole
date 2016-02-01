@@ -23,7 +23,6 @@ ADD_LIBRARY( guacamole-volume SHARED
 
 TARGET_LINK_LIBRARIES( guacamole-volume
                        guacamole
-                       general ${SCHISM_LIBRARIES}
                        general ${GL_LIBRARIES})
 
 ADD_DEPENDENCIES(guacamole-volume guacamole)

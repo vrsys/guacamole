@@ -51,10 +51,6 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (${GUACAMOLE_GLFW3})
   add_subdirectory(screenshot)
 
-  IF (${PLUGIN_guacamole-video3d})
-    add_subdirectory(video3d)
-  ENDIF (${PLUGIN_guacamole-video3d})
-
   # skelanim example requires skelanim-plugin and the fbx sdk
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
     add_subdirectory(animation)

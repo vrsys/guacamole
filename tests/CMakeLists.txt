@@ -7,8 +7,12 @@ include_directories (
 
 add_executable( runTests main.cpp testBoundingBox.cpp testBoundingSphere.cpp)
 
-target_link_libraries( runTests
-                      unittest++
-                      ${Boost_LIBRARIES}
-                      ${UNITTEST++_LIBRARIES}
-                      )
+IF (UNIX)
+  target_link_libraries( runTests
+                        general ${UNITTEST++_LIBRARY}
+                        )
+ELSEIF (MSVC)
+  target_link_libraries( runTests
+                        optimized ${UNITTEST++_LIBRARY} debug ${UNITTEST++_LIBRARY_DEBUG}
+                        )
+ENDIF()

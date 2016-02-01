@@ -23,11 +23,10 @@ ADD_EXECUTABLE( ${_EXE_NAME}
 
 ADD_DEPENDENCIES(${_EXE_NAME} guacamole-volume guacamole-gui)
 
-LIST(APPEND LIBS guacamole-volume guacamole-gui guacamole)
+LIST(APPEND LIBS )
 
 IF (MSVC)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
-                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
+  TARGET_LINK_LIBRARIES( ${_EXE_NAME} guacamole-volume guacamole-gui guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
                          general ${ASSIMP_LIBRARIES}

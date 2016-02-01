@@ -39,22 +39,33 @@ namespace gua {
 
     if (!empty_fbo_) {
       empty_fbo_ = ctx.render_device->create_frame_buffer();
-
-      auto const& glapi = ctx.render_context->opengl_api();
+      
+#if WIN32 // workaround to avoid GL assertions 
+      empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
+      empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
+#else
       // TODO: ideally, FBOs with no attachments should be implemented in schism
+      auto const& glapi = ctx.render_context->opengl_api();
+      
       glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
         GL_FRAMEBUFFER_DEFAULT_WIDTH, rasterizer_resolution.x);
+
       glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
         GL_FRAMEBUFFER_DEFAULT_HEIGHT, rasterizer_resolution.y);
+      
       glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(),
         GL_FRAMEBUFFER_DEFAULT_SAMPLES, ms_sample_count);
+#endif
     }
+
     ctx.render_context->set_frame_buffer(empty_fbo_);
+
     ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0),
       rasterizer_resolution));
 
     if (pass.depth_stencil_state_)
       ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+
     if (pass.rasterizer_state_)
       ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
 

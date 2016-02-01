@@ -51,13 +51,11 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
       root_(root),
-      first_run_ {
-  true
-}
-, has_anims_ { false }
-, anim_1_ { "none" }
-, anim_2_ { "none" }
-, blend_factor_ { 1.0 }
+      first_run_ { true }, 
+      has_anims_ { false }, 
+      anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
+      anim_2_ ( "none" ), 
+      blend_factor_ { 1.0 }
 {
   root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();

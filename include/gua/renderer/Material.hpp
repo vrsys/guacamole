@@ -108,9 +108,18 @@ Material& Material::set_uniform<std::string>(std::string const& name, std::strin
 template <>
 Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value);
 
+template GUA_DLL Material& Material::set_uniform<int>(std::string const& name, int const& value);
+template GUA_DLL Material& Material::set_uniform<float>(std::string const& name, float const& value);
+template GUA_DLL Material& Material::set_uniform<math::vec2>(std::string const& name, math::vec2 const& value);
+template GUA_DLL Material& Material::set_uniform<math::vec3>(std::string const& name, math::vec3 const& value);
+template GUA_DLL Material& Material::set_uniform<math::vec4>(std::string const& name, math::vec4 const& value);
+template GUA_DLL Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value);
+
 //operators
 std::ostream& operator<<(std::ostream& os, Material const& val);
 
 }
+
+
 
 #endif  // GUA_MATERIAL_HPP

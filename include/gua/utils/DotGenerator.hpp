@@ -27,6 +27,7 @@
 #include <string>
 
 // guacamole header
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
