@@ -40,6 +40,7 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
+    add_subdirectory(depth_cube_map)
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(smooth_lighting)
