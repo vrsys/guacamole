@@ -100,7 +100,7 @@ std::string demangle_type_name(const char* name) {
     // implementation taken from http://stackoverflow.com/a/4541470
     int status = -4;
     std::unique_ptr<char, void(*)(void*)> res {
-        abi::__cxa_demangle(name, NULL, NULL, &status),
+        abi::__cxa_demangle(name, nullptr, nullptr, &status),
         std::free
     };
     return (status == 0) ? res.get() : name ;
