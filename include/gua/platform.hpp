@@ -18,6 +18,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+#ifndef GUA_PLATFORM_HPP
+#define GUA_PLATFORM_HPP
 
 #include <boost/preprocessor.hpp>
 #include <boost/preprocessor/detail/is_nullary.hpp>
@@ -120,4 +122,4 @@
   #endif
 #endif
 
-//#endif  // namespace GUA_PLATFORM_HPP
+#endif  // namespace GUA_PLATFORM_HPP
