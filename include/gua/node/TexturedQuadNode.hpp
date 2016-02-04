@@ -98,13 +98,13 @@ class GUA_DLL TexturedQuadNode : public SerializableNode {
    *
    * \param visitor  A visitor to process the TexturedQuadNode's data.
    */
-  virtual void accept(NodeVisitor& visitor) override;
+  void accept(NodeVisitor& visitor) override;
 
   // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
 
-  virtual void update_bounding_box() const override;
+  void update_bounding_box() const override;
 
-  virtual void update_cache() override;
+  void update_cache() override;
 
   void ray_test_impl(Ray const& ray,
                      int options,

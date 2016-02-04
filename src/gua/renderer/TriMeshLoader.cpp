@@ -336,7 +336,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
   auto group(std::make_shared<node::TransformNode>());
 
-  if(fbx_node.GetGeometry() != NULL) {
+  if(fbx_node.GetGeometry() != nullptr) {
     
     if(fbx_node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
 
@@ -350,7 +350,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
   }
 
   // there is only one child -- skip it!
-  if (fbx_node.GetChildCount() == 1 && fbx_node.GetChild(0)->GetGeometry() != NULL) {
+  if (fbx_node.GetChildCount() == 1 && fbx_node.GetChild(0)->GetGeometry() != nullptr) {
     if(fbx_node.GetChild(0)->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
       return get_tree(*fbx_node.GetChild(0), file_name, flags, mesh_count);
     }

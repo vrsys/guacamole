@@ -73,7 +73,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
   root.collect_indices(bone_mapping_);
 
   //check for skinning
-  FbxSkin* skin = NULL;
+  FbxSkin* skin = nullptr;
   for (unsigned i = 0; i < mesh.GetDeformerCount(); ++i) {
     FbxDeformer* defPtr = { mesh.GetDeformer(i) };
     if (defPtr->GetDeformerType() == FbxDeformer::eSkin) {
