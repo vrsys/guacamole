@@ -19,6 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+#ifndef GUA_RANDOM_HPP
+#define GUA_RANDOM_HPP
+
 #include <gua/platform.hpp>
 
 namespace gua {
@@ -61,3 +64,4 @@ int GUA_DLL get(int begin, int end);
 }
 }
 }
+#endif  // GUA_RANDOM_HPP
