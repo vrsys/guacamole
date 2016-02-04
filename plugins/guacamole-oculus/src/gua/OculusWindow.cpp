@@ -192,7 +192,7 @@ OculusWindow::OculusWindow(std::string const& display):
 
   if (!tracking_configured) {
       ovrHmd_Destroy(registered_HMD_);
-      registered_HMD_ = NULL;
+      registered_HMD_ = nullptr;
       gua::Logger::LOG_WARNING << "The oculus device does not support demanded tracking feature.\n";
 
       exit(-1);
