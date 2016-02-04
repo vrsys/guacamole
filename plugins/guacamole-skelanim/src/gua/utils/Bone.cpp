@@ -25,7 +25,7 @@ Bone::Bone() : index { -1 }
 
 Bone::Bone(aiNode const& node) : index { -1 }
 , name { node.mName.C_Str() }
-, parentName { node.mParent != NULL ? node.mParent->mName.C_Str() : "none" }
+, parentName { node.mParent != nullptr ? node.mParent->mName.C_Str() : "none" }
 , numChildren { node.mNumChildren }
 , transformation { to_gua::mat4f(node.mTransformation) }
 , offsetMatrix { scm::math::mat4f::identity() }
@@ -138,7 +138,7 @@ Bone::Bone(FbxScene& scene) {
 
 Bone::Bone(FbxNode& node) : index { -1 }
 , name { node.GetName() }
-, parentName { node.GetParent() != NULL ? node.GetParent()->GetName() : "none" }
+, parentName { node.GetParent() != nullptr ? node.GetParent()->GetName() : "none" }
 , numChildren { unsigned(node.GetChildCount()) }
 , transformation { to_gua::mat4f(node.EvaluateLocalTransform()) }
 , offsetMatrix { scm::math::mat4f::identity() }

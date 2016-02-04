@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   }
   std::string kinect_file(argv[1]);
 
-  char* argv_tmp[] = {"./example-video3d", NULL};
+  char* argv_tmp[] = {"./example-video3d", nullptr};
   int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;;
   // initialize guacamole
   gua::init(argc_tmp, argv_tmp);
