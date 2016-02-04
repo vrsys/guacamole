@@ -98,7 +98,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       GeometryDescription desc("NURBS", filename, 0, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
-      std::shared_ptr<node::NURBSNode> node(new node::NURBSNode(filename, desc.unique_key()));
+      auto node = std::make_shared<node::NURBSNode>(filename, desc.unique_key());
       node->update_cache();
 
       auto bbox = ressource->get_bounding_box();

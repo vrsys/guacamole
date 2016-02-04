@@ -69,7 +69,7 @@ std::shared_ptr<node::LodNode> LodLoader::load_geometry(std::string const& noden
       auto resource = std::make_shared<LodResource>(model_id, flags & LodLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-      std::shared_ptr<node::LodNode> node(new node::LodNode(nodename, desc.unique_key(), filename, material));
+      auto node = std::make_shared<node::LodNode>(nodename, desc.unique_key(), filename, material);
       
       node->update_cache();
      
