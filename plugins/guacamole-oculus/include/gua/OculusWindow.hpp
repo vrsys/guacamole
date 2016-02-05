@@ -80,7 +80,6 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
   void start_frame() override;
   void finish_frame() override;
 
-
   private:
 
     void calculate_viewing_setup();

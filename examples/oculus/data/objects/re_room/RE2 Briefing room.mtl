@@ -56,7 +56,7 @@ map_Kd 0f59e567.dds
 
 
 newmtl Material.025_re2coonw_re2coonwall3.dds
-Ns 92.156863
+Ns 0.156863
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
 Ks 0.000000 0.000000 0.000000
@@ -78,7 +78,7 @@ map_Kd a585ca25.dds
 
 
 newmtl Material.045_re2pop_m_re2pop_machine_cans.d
-Ns 92.156863
+Ns 0.156863
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
 Ks 0.000000 0.000000 0.000000
@@ -122,7 +122,7 @@ map_Kd 9e75ac59.dds
 
 
 newmtl Material.002_Re2conwa_Re2conwall.dds
-Ns 0.156863
+Ns 1.0
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
 Ks 0.000000 0.000000 0.000000
@@ -143,7 +143,7 @@ map_Kd 18d14fc4.dds
 
 
 newmtl Material.016_re2conwa_re2conwall2.dds
-Ns 92.156863
+Ns 1.156863
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
 Ks 0.000000 0.000000 0.000000
@@ -198,10 +198,10 @@ map_Kd c742dcdf.dds
 
 
 newmtl Material.029_RE2_conf_RE2_confroo.dds
-Ns 92.156863
+Ns 0.156863
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
-Ks 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.000000
 illum 2
@@ -238,8 +238,6 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd re2conrooplaf.dds
-metalness re2conrooplaf_metal.dds
-roghness re2conrooplaf_rough.dds
 
 
 newmtl Material.017_a2d78068_a2d78068.dds
@@ -251,7 +249,6 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd a2d78068.dds
-
 
 newmtl Material.026_341a2fa2_341a2fa2.dds
 Ns 92.156863

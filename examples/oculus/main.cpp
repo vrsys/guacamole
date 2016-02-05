@@ -68,6 +68,9 @@ gua::SSAAPassDescription::SSAAMode antialiasing_mode = gua::SSAAPassDescription:
 // toogle with KEY '4'
 bool pipeline_use_shadow_maps = false;
 const int pipeline_shadow_map_size = 128;
+
+// toggle with KEY '5'
+bool pipeline_enable_alternate_frame_rendering = false;
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -221,28 +224,31 @@ int main(int argc, char** argv) {
       pipeline_use_shadow_maps = !pipeline_use_shadow_maps;
       std::cout << "Shadow maps = " << pipeline_use_shadow_maps << std::endl;
       break;
-      
-
+    case '5': // alternate frame rendering
+      pipeline_enable_alternate_frame_rendering = !pipeline_enable_alternate_frame_rendering;
+      break;
     default: break;
     };
-
   });
 
+  //////////////////////////////////////////////////////////////////////////////////////
+  // setup rendering
+  //////////////////////////////////////////////////////////////////////////////////////
+  double time = 0.0; // current time
+  long long ctr = 0; // frame timer 
+  const float desired_frame_time = 1.0 / 120.0; // desired application of 120Hz
 
+  // setup application loop
   gua::Renderer renderer;
+  gua::events::MainLoop loop;
+  gua::events::Ticker ticker(loop, desired_frame_time);
 
   gua::Timer timer;
   timer.start();
 
-  double time(0);
-  float desired_frame_time(1.0 / 120.0);
-  gua::events::MainLoop loop;
-
-  // application loop
-  gua::events::Ticker ticker(loop, desired_frame_time);
-
-  long long ctr = 0;
-
+  //////////////////////////////////////////////////////////////////////////////////////
+  // mainloop
+  //////////////////////////////////////////////////////////////////////////////////////
   ticker.on_tick.connect([&]() {
     double frame_time(timer.get_elapsed());
     time += frame_time;
@@ -264,7 +270,7 @@ int main(int argc, char** argv) {
       loop.stop();
     }
     else {
-      renderer.queue_draw({ &graph });
+      renderer.queue_draw({ &graph }, pipeline_enable_alternate_frame_rendering);
     }
 
     for (unsigned i = 0; i != light_count; ++i) {
