@@ -475,16 +475,16 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
 
     if (is_left) {
       glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                              config.left_position().x, config.left_position().y,
-                              config.left_resolution().x, config.left_resolution().y,
-                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    } else {
-      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                              config.right_position().x, config.right_position().y,
-                              config.right_position().x + config.right_resolution().x, config.right_resolution().y,
-                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        config.left_position().x, config.left_position().y,
+        config.left_resolution().x, config.left_resolution().y,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
-
+    else {
+      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+        config.right_position().x, config.right_position().y,
+        config.right_position().x + config.right_resolution().x, config.right_resolution().y,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    }
 
     glapi.glBindTexture(GL_TEXTURE_2D, 0);
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -691,7 +691,7 @@ void OculusWindow::calculate_viewing_setup() {
   // eye to screen distance can be choosen relatively arbitrary as well, since
   // the virtual screen is enlarged, such that it fits into the frustum at this
   // distance
-  float eye_to_screen_distance = 0.0;
+  float eye_to_screen_distance = 0.08;
   
   // do the viewing setup calculations for both eyes
   for (unsigned eye_num = 0; eye_num < 2; ++eye_num) {
