@@ -23,7 +23,7 @@
 #define GUA_DISPLAY_DATA_HPP
 
 #include <gua/platform.hpp>
-#include <boost/chrono.hpp>
+#include <chrono>
 
 namespace gua {
 
@@ -41,7 +41,7 @@ class GUA_DLL DisplayData {
  private:
   static float physics_fps_;
 
-  static boost::chrono::high_resolution_clock::time_point last_update_;
+  static std::chrono::high_resolution_clock::time_point last_update_;
 };
 
 }
