@@ -1,26 +1,32 @@
 if (WIN32)
     if (MSVC71)
         set (_COMPILER_SUFFIX "vc71")
+        set (_COMPILER_SUFFIX_VERSION "71")
     endif(MSVC71)
 
     if (MSVC80)
         set (_COMPILER_SUFFIX "vc80")
+        set (_COMPILER_SUFFIX_VERSION "vc80")
     endif(MSVC80)
 
     if (MSVC90)
         set (_COMPILER_SUFFIX "vc90")
+        set (_COMPILER_SUFFIX_VERSION "90")
     endif(MSVC90)
 
     if (MSVC10)
         set (_COMPILER_SUFFIX "vc100")
+        set (_COMPILER_SUFFIX_VERSION "100")
     endif(MSVC10)
 
     if (MSVC11)
         set (_COMPILER_SUFFIX "vc110")
+        set (_COMPILER_SUFFIX_VERSION "110")
     endif(MSVC11)
 	
 	if (MSVC12)
         set (_COMPILER_SUFFIX "vc120")
+        set (_COMPILER_SUFFIX_VERSION "120")
     endif(MSVC12)
 endif (WIN32)
 
@@ -49,4 +55,5 @@ if (_COMPILER_SUFFIX STREQUAL "")
     message(FATAL_ERROR "find_compiler.cmake: unable to identify supported compiler")
 else (_COMPILER_SUFFIX STREQUAL "")
     set(COMPILER_SUFFIX       ${_COMPILER_SUFFIX}       CACHE STRING "The boost style compiler suffix")
+    set(COMPILER_SUFFIX_VERSION       ${_COMPILER_SUFFIX_VERSION}       CACHE STRING "The compiler suffix version only")
 endif (_COMPILER_SUFFIX STREQUAL "")

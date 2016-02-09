@@ -5,11 +5,10 @@
 #  FBX_LIBRARIES - The libraries needed to use the FBX SDK
 find_path(FBX_INCLUDE_DIR fbxsdk.h
             HINTS 
+            ${GLOBAL_EXT_DIR}/fbx2016/include
              ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
-			 ${CMAKE_SOURCE_DIR}/externals/inc/fbx
             PATHS
              /usr/include/fbx20151
-             ${GUACAMOLE_EXT_DIR}/fbx20151/include
              /opt/project_animation/fbx20151/include
              /opt/fbx20151/include
             PATH_SUFFIXES FBX fbx fbxdsk FBXSDK
@@ -24,8 +23,9 @@ ENDIF(MSVC)
 find_library(FBX_LIBRARY
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
+            ${GLOBAL_EXT_DIR}/fbx2016/lib/vs2013/x64/release
              ${CMAKE_SOURCE_DIR}/externals/fbx20151/lib/gcc4/x64/release
-			 ${CMAKE_SOURCE_DIR}/externals/lib/release
+			       ${CMAKE_SOURCE_DIR}/externals/lib/release
             PATHS
              /usr/lib
              /opt/project_animation/fbx20151/lib/gcc4/x64/release
@@ -35,6 +35,7 @@ find_library(FBX_LIBRARY
 find_library(FBX_LIBRARY_DEBUG
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
+            ${GLOBAL_EXT_DIR}/fbx2016/lib/vs2013/x64/debug
              ${CMAKE_SOURCE_DIR}/externals/fbx20151/lib/gcc4/x64/debug
 			 ${CMAKE_SOURCE_DIR}/externals/lib/debug
             PATHS 

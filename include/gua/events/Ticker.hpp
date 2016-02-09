@@ -22,7 +22,7 @@
 #ifndef TICKER_HPP_
 #define TICKER_HPP_
 
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 
 #include <gua/platform.hpp>
 #include <gua/events/Scheduler.hpp>

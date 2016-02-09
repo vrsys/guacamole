@@ -40,17 +40,27 @@
 #define NB_ENABLE 1
 
 int kbhit() {
+
+
   struct timeval tv;
   fd_set fds;
   tv.tv_sec = 0;
   tv.tv_usec = 0;
   FD_ZERO(&fds);
+#if WIN32
+  #define STDIN_FILENO 0
+#endif
+
   FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
-  select(STDIN_FILENO+1, &fds, nullptr, nullptr, &tv);
+  select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv);
   return FD_ISSET(STDIN_FILENO, &fds);
 }
  
 void nonblock( int state ) {
+
+#if WIN32
+
+#else
   struct termios ttystate;
 
   //get the terminal state
@@ -68,6 +78,7 @@ void nonblock( int state ) {
   }
   //set the terminal attributes.
   tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+#endif
 }
 
 
@@ -217,11 +228,11 @@ int main(int argc, char** argv) {
   float desired_frame_time(1.0 / 60.0);
   gua::events::MainLoop loop;
 
- nonblock(NB_ENABLE);
-
- char c = '0';
- int i = 0;
- char prev_character = '\n';
+  nonblock(NB_ENABLE);
+  
+  char c = '0';
+  int i = 0;
+  char prev_character = '\n';
   // application loop
 
   // application loop

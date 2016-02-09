@@ -164,7 +164,7 @@ void DotGenerator::parse_graph(SceneGraph const* graph) {
   }
 }
 
-#if 0
+#ifdef GUACAMOLE_ENABLE_PHYSICS
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DotGenerator::visit(physics::RigidBodyNode* rb) {
   pre_node_info(rb);
