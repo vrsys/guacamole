@@ -127,7 +127,7 @@ if (GUACAMOLE_ENABLE_PHYSICS)
     set (BULLET_ROOT "externals/bullet" CACHE PATH "Set to your bullet install path.")
   endif (UNIX)
   find_package(Bullet REQUIRED)
-  include(findHACD)
+  include(FindHACD)
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
 ## fbx ###################################################
