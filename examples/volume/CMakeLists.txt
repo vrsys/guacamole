@@ -28,7 +28,7 @@ LIST(APPEND LIBS )
 IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} guacamole-volume guacamole-gui guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
+  TARGET_LINK_LIBRARIES( ${_EXE_NAME} guacamole-volume guacamole-gui guacamole
                          general ${ASSIMP_LIBRARIES}
                        )
 ENDIF (MSVC)
