@@ -45,10 +45,11 @@ unsigned OculusWindow::registered_oculus_device_count_ = 0;
 // will set up the oculus environment
 void OculusWindow::initialize_oculus_environment() {
   if( !oculus_environment_initialized_ ) {
-      ovrResult result = ovr_Initialize(nullptr);
+      auto result = ovr_Initialize(nullptr);
       oculus_environment_initialized_ = true;
 
-      if (!OVR_SUCCESS(result)) {
+      //if (!OVR_SUCCESS(result)) {
+      if (result > 0) {
         Logger::LOG_WARNING << "Failed to initialize oculus environment!" << "Errorcode:" << (int)result  << std::endl;
       }
   } else {
@@ -241,9 +242,10 @@ OculusWindow::OculusWindow(std::string const& display):
 
   try {
     ovrGraphicsLuid luid;
-    ovrResult result = ovr_Create(&registered_HMD_, &luid);
+    auto result = ovr_Create(&registered_HMD_, &luid);
 
-    if (!OVR_SUCCESS(result)) {
+    //if (!OVR_SUCCESS(result)) {
+    if (result > 0) {
       throw std::runtime_error("Unable to create HMD.");
     }
 
@@ -253,7 +255,8 @@ OculusWindow::OculusWindow(std::string const& display):
       | ovrTrackingCap_MagYawCorrection
       | ovrTrackingCap_Position, 0) == ovrSuccess;
 
-    if (!OVR_SUCCESS(result)) {
+    //if (!OVR_SUCCESS(result)) {
+    if (result > 0) {
       ovr_Destroy(registered_HMD_);
       registered_HMD_ = 0;
       Logger::LOG_WARNING << "Unable to initialize HMD tracking. Errorcode:" << (int)result << std::endl;
