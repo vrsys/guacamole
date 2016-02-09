@@ -96,14 +96,18 @@ include(FindSchism)
 ## boost ######################################################
 if (UNIX)
   set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
-  
+
   find_package(Boost COMPONENTS
     system
     regex
     thread
+    filesystem
+    date_time
     REQUIRED
     )
 elseif (WIN32)
+
+  set (BOOST_ROOT ${GLOBAL_EXT_DIR}/boost CACHE PATH "Set to your boost install")
 
   set(BOOST_INCLUDEDIR ${GLOBAL_EXT_DIR}/boost/include)
   set(BOOST_LIBRARYDIR ${GLOBAL_EXT_DIR}/boost/lib)
@@ -113,7 +117,6 @@ elseif (WIN32)
 
   find_package( Boost 1.54.0 REQUIRED thread regex system program_options timer chrono filesystem date_time)
   ADD_DEFINITIONS("-DBOOST_ALL_NO_LIB")
-    
 endif (UNIX)
 
 ## ZMQ ######################################################
