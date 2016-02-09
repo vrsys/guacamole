@@ -10,9 +10,9 @@ LIST(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 LINK_DIRECTORIES(${LIB_PATHS})
 
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS} 
+INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}/include
-                     ${OVR_INCLUDE_DIR} 
+                     ${OVR_INCLUDE_DIR}
                      ${GUACAMOLE_OCULUS_INCLUDE_DIR}
 )
 
@@ -28,7 +28,7 @@ IF (MSVC)
   TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
                          debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS} 
+  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
 			 general ${OVR_LIBRARY}
                          general ${ASSIMP_LIBRARIES}
                        )
