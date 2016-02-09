@@ -22,8 +22,7 @@
 // header
 #include <gua/renderer/DisplayData.hpp>
 
-//#include <boost/asio/high_resolution_timer.hpp>
-//#include <boost/chrono.hpp>
+#include <chrono>
 
 namespace gua {
 
@@ -31,21 +30,21 @@ namespace gua {
 
 float DisplayData::physics_fps_ = 0.f;
 
-boost::chrono::high_resolution_clock::time_point DisplayData::last_update_ =
-    boost::chrono::high_resolution_clock::now();
+std::chrono::high_resolution_clock::time_point DisplayData::last_update_ =
+    std::chrono::high_resolution_clock::now();
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void DisplayData::set_physics_fps(float fps) {
 
-  if (boost::chrono::duration_cast<boost::chrono::milliseconds>(
-          boost::chrono::high_resolution_clock::now() - last_update_)
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::high_resolution_clock::now() - last_update_)
           .count() < 250)
     return;
 
   DisplayData::physics_fps_ = fps;
 
-  last_update_ = boost::chrono::high_resolution_clock::now();
+  last_update_ = std::chrono::high_resolution_clock::now();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
