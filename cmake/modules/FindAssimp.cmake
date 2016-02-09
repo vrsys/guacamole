@@ -1,12 +1,18 @@
+##############################################################################
+# search paths
+##############################################################################
 SET(ASSIMP_SEARCH_PATHS
-	${GLOBAL_EXT_DIR}/inc/assimp
+	${GLOBAL_EXT_DIR}/assimp/include
 	/opt/assimp/current
 	/usr/include
-	${GLOBAL_EXT_DIR}/lib
+	${GLOBAL_EXT_DIR}/assimp/lib
 	/opt/assimp/current/assimp-build
 	/usr/lib
 )
 
+##############################################################################
+# search
+##############################################################################
 find_path (ASSIMP_INCLUDE_DIR
            NAMES assimp/ai_assert.h
 		   HINTS
@@ -21,12 +27,12 @@ find_path (ASSIMP_INCLUDE_DIR
 )
 
 find_library (ASSIMP_LIBRARY_DEBUG 
-              NAMES assimpd libassimpd libassimp_d 
+              NAMES assimpd libassimpd libassimp_d assimp-${COMPILER_SUFFIX}-mtd
 			  PATH_SUFFIXES release debug 
 			  PATHS ${ASSIMP_SEARCH_PATHS})
 			  
 find_library (ASSIMP_LIBRARY_RELEASE
-              NAMES assimp libassimp 
+              NAMES assimp libassimp assimp-${COMPILER_SUFFIX}-mt 
 			  PATH_SUFFIXES release debug 
 			  PATHS ${ASSIMP_SEARCH_PATHS})
 

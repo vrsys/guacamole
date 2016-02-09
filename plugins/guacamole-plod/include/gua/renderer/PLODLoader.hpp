@@ -29,6 +29,7 @@
 #include <set>
 #include <unordered_set>
 #include <memory>
+#include <atomic>
 
 namespace gua {
 
@@ -55,7 +56,6 @@ class GUA_PLOD_DLL PLODLoader {
     NORMALIZE_POSITION = 1 << 1,
     NORMALIZE_SCALE = 1 << 2
   };
-
 
   PLODLoader();
 

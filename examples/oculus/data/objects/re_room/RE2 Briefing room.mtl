@@ -1,0 +1,582 @@
+# Blender3D MTL File: 
+# Material Count: 53
+newmtl Material.014_p_re2bri_p_re2briefingchair.dd
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd p_re2briefingchair.dds
+
+
+newmtl Material.032_06b6acf9_06b6acf9.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 06b6acf9.dds
+
+
+newmtl Material_Re2chair2.jp_Re2chair2.jpg
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd Re2chair2.jpg
+
+
+newmtl Material.004_7e37e064_7e37e064.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 7e37e064.dds
+
+
+newmtl Material.038_0f59e567_0f59e567.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 0f59e567.dds
+
+
+newmtl Material.025_re2coonw_re2coonwall3.dds
+Ns 0.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2coonwall3.dds
+
+
+newmtl Material.028_a585ca25_a585ca25.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd a585ca25.dds
+
+
+newmtl Material.045_re2pop_m_re2pop_machine_cans.d
+Ns 0.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd re2pop_machine_cans.dds
+
+
+newmtl Material.041_re2phone_re2phonebriefroom.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd re2phonebriefroom.dds
+
+
+newmtl Material.039_f1bbc9d3_f1bbc9d3.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd f1bbc9d3.dds
+
+
+newmtl Material.003_9e75ac59_9e75ac59.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 9e75ac59.dds
+
+
+newmtl Material.002_Re2conwa_Re2conwall.dds
+Ns 1.0
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd Re2conwall.dds
+
+newmtl Material.009_18d14fc4_18d14fc4.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd 18d14fc4.dds
+
+
+newmtl Material.016_re2conwa_re2conwall2.dds
+Ns 1.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2conwall2.dds
+
+
+newmtl Material.006_76af8296_76af8296.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 76af8296.dds
+
+
+newmtl Material.008_c8206421_c8206421.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd c8206421.dds
+
+
+newmtl Material.050_d4ced55b_d4ced55b.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd d4ced55b.dds
+
+
+newmtl Material.020_c742dcdf_c742dcdf.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd c742dcdf.dds
+
+
+newmtl Material.029_RE2_conf_RE2_confroo.dds
+Ns 0.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd RE2 confroo.dds
+
+newmtl Material.019_c8206421_c8206421.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd c8206421.dds
+
+
+newmtl Material.018_Re2chair_Re2chair2.jpg
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd Re2chair2.jpg
+
+
+newmtl Material.034_re2conro_re2conrooplaf.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2conrooplaf.dds
+
+
+newmtl Material.017_a2d78068_a2d78068.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd a2d78068.dds
+
+newmtl Material.026_341a2fa2_341a2fa2.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 341a2fa2.dds
+
+
+newmtl Material.052_RE2map_u_RE2map_united.png
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd RE2map united.png
+
+
+newmtl Material.047_3a43b9bc_3a43b9bc.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 3a43b9bc.dds
+
+
+newmtl Material.037_re2confr_re2confroowall5.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2confroowall5.dds
+
+
+newmtl Material.010_1a5bb4df_1a5bb4df.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 1a5bb4df.dds
+
+
+newmtl Material.027_46c86e1c_46c86e1c.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 46c86e1c.dds
+
+
+newmtl Material.042_8c430750_8c430750.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 8c430750.dds
+
+
+newmtl Material.022_94b83688_94b83688.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 94b83688.dds
+
+
+newmtl Material.024_8c430750_8c430750.dds
+Ns 2.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 8c430750.dds
+
+
+newmtl Material.031_re2flagr_re2flagrooconf.dds
+Ns 2.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.200000 0.200000 0.200000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2flagrooconf.dds
+
+
+newmtl Material.001_dc222d4c_dc222d4c.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd dc222d4c.dds
+
+
+newmtl Material.015_9e75ac59_9e75ac59.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 9e75ac59.dds
+
+
+newmtl Material.030_e410bf2b_e410bf2b.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd e410bf2b.dds
+
+
+newmtl Material.048_e8a75c53_e8a75c53.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd e8a75c53.dds
+
+
+newmtl Material.011_f0d6ed63_f0d6ed63.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd f0d6ed63.dds
+
+
+newmtl Material.021_RE2logor_RE2logorpdbrief.png
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd RE2logorpdbrief.png
+
+
+newmtl Material.049_e8a75c53_e8a75c53.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd e8a75c53.dds
+
+
+newmtl Material.035_38a3ef41_38a3ef41.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 38a3ef41.dds
+
+
+newmtl Material.007_bb096c7c_bb096c7c.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd bb096c7c.dds
+
+
+newmtl Material.013_re2board_re2boardconbrif.png
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd re2boardconbrif.png
+
+
+newmtl Material.005_3c30cf48_3c30cf48.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 3c30cf48.dds
+
+
+newmtl Material.012_RE2board_RE2boardrpd.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd RE2boardrpd.dds
+
+
+newmtl Material.043_69ecb237_69ecb237.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 69ecb237.dds
+
+
+newmtl Material.046_re2pop_m_re2pop_machine_cans.d
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd re2pop_machine_cans.dds
+
+
+newmtl Material.040_Re2chair_Re2chair2.jpg
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd Re2chair2.jpg
+
+
+newmtl Material.023_17377089_17377089.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd 17377089.dds
+
+
+newmtl Material.033_re2monit_re2monitorsuspended.d
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd re2monitorsuspended.dds
+
+
+newmtl Material.036_RE2_bora_RE2_borads.png
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd RE2 borads.png
+
+
+newmtl Material.051_c1920f71_c1920f71.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 2
+map_Kd c1920f71.dds
+
+
+newmtl Material.044_re2coffe_re2coffemug.dds
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 1.0 1.0 1.0
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd re2coffemug.dds
+
+

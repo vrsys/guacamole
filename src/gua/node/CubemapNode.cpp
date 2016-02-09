@@ -212,10 +212,10 @@ math::vec3 CubemapNode::get_push_back(float radius, float softness){
   if (texture){
     std::vector<float> const& data = texture->get_data();
 
-    uint samples(0);
+    unsigned samples(0);
 
     for (const float &f : data){
-      uint index = &f - &data[0];
+      unsigned index = &f - &data[0];
 
       if ( (f < radius) && (f!=-1.f) ){
           math::vec2ui tex_coords( index%(config.resolution()*6), index/(config.resolution()*6) );
@@ -255,10 +255,10 @@ math::vec3 CubemapNode::get_pull_in(float inner_radius, float outer_radius, floa
   if (texture){
     std::vector<float> const& data = texture->get_data();
 
-    uint samples(0);
+    unsigned samples(0);
 
     for (const float &f : data){
-      uint index = &f - &data[0];
+      unsigned index = &f - &data[0];
 
       if ( (f > inner_radius) && (f < outer_radius) ){
           math::vec2ui tex_coords( index%(config.resolution()*6), index/(config.resolution()*6) );
@@ -305,7 +305,7 @@ void CubemapNode::find_min_distance(){
     weighted_min_distance.distance = std::numeric_limits<float>::max();
 
     for (const float &f : data){
-      uint index = &f - &data[0];
+      unsigned index = &f - &data[0];
       float w_f = f * m_Weights[index];
       if ( (f < min_distance.distance) && (f!=-1.f) ){
         min_distance.distance = f;
