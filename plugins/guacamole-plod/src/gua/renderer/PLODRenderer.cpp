@@ -521,7 +521,11 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
       std::unordered_set<pbr::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
 
-      auto global_clipping_planes = scene.clipping_planes;
+      //auto global_clipping_planes = scene.clipping_planes;
+      std::vector<math::vec4f> global_clipping_planes{};
+      for (auto const& plane : scene.clipping_planes) {
+        global_clipping_planes.push_back(math::vec4f(plane));
+      }
       unsigned num_global_clipping_planes = global_clipping_planes.size();
       auto scm_transpose_model_matrix = scm::math::transpose( scm_model_matrix);
       auto scm_inverse_model_matrix = scm::math::inverse(scm_model_matrix);

@@ -76,7 +76,7 @@ class GUA_DLL ClippingPlaneNode : public Node {
 
   math::vec3  get_center() const;
   math::vec3  get_normal() const;
-  math::vec4f get_component_vector() const;
+  math::vec4  get_component_vector() const;
 
   bool        is_visible(int view_id) const;
 

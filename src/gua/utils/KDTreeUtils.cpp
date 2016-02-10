@@ -54,11 +54,11 @@ inline math::vec2 mesh_texcoord(Mesh const& mesh,
 
 // Ray -------------------------------------------------------------------------
 
-const float Ray::END(std::numeric_limits<float>::max());
+const math::vec3::value_type Ray::END(std::numeric_limits<math::vec3::value_type>::max());
 
-Ray::Ray() : origin_(), direction_(), t_max_(-1.f) {}
+Ray::Ray() : origin_(), direction_(), t_max_(-1.0) {}
 
-Ray::Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max)
+Ray::Ray(math::vec3 const& origin, math::vec3 const& direction, math::vec3::value_type t_max)
     : origin_(origin), direction_(direction), t_max_(t_max) {}
 
 std::pair<float, float> intersect(Ray const& ray,
@@ -72,8 +72,8 @@ std::pair<float, float> intersect(Ray const& ray,
   math::vec3 tmax1(
       std::max(t1[0], t2[0]), std::max(t1[1], t2[1]), std::max(t1[2], t2[2]));
 
-  float tmin = std::max(std::max(tmin1[0], tmin1[1]), tmin1[2]);
-  float tmax = std::min(std::min(tmax1[0], tmax1[1]), tmax1[2]);
+  auto tmin = std::max(std::max(tmin1[0], tmin1[1]), tmin1[2]);
+  auto tmax = std::min(std::min(tmax1[0], tmax1[1]), tmax1[2]);
 
   if (tmax >= tmin) {
     // there are two intersections
