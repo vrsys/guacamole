@@ -40,18 +40,19 @@ namespace gua {
   struct GUA_DLL Ray {
 
   Ray();
-  Ray(math::vec3 const& origin, math::vec3 const& direction, float t_max);
+  Ray(math::vec3 const& origin, math::vec3 const& direction, math::vec3::value_type t_max);
 
   Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
-  Ray const intersection(scm::gl::box_impl<gua::math::float_t> const& box) const {
+  Ray const intersection(scm::gl::box_impl<gua::math::vec3::value_type> const& box) const {
     return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex()));
   }
 
   math::vec3 origin_;
   math::vec3 direction_;
-  float t_max_;
 
-  static const float END;
+  math::vec3::value_type t_max_;
+
+  static const math::vec3::value_type END;
 };
 
 GUA_DLL std::pair<float, float> intersect(Ray const& ray, math::BoundingBox<math::vec3> const& box);
