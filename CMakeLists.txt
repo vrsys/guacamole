@@ -97,17 +97,13 @@ include(FindSchism)
 if (UNIX)
   set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
 elseif (WIN32)
-
-  set (BOOST_ROOT ${GLOBAL_EXT_DIR}/boost CACHE PATH "Set to your boost install")
-
-  #set(BOOST_INCLUDEDIR ${GLOBAL_EXT_DIR}/boost/include)
-  #set(BOOST_LIBRARYDIR ${GLOBAL_EXT_DIR}/boost/lib)
-
-  set(Boost_USE_MULTITHREADED ON)
+  set(BOOST_ROOT ${GLOBAL_EXT_DIR}/boost CACHE PATH "Set to your boost install")
   set(Boost_USE_STATIC_LIBS ON)
-  ADD_DEFINITIONS("-DBOOST_ALL_NO_LIB")
-
+  set(Boost_USE_MULTITHREADED ON)
+  add_definitions("-DBOOST_ALL_NO_LIB")
 endif (UNIX)
+
+mark_as_advanced(Boost_DIR)
 
 find_package( Boost 1.54.0 COMPONENTS
   system
@@ -205,21 +201,21 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+if (UNIX)
+  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
-ELSEIF(MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
-	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
-ENDIF(UNIX)
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
+elseif(MSVC)
+  set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
+  set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
+endif(UNIX)
 
 ################################################################
 # Create GuaRC
 ################################################################
-IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+if (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   add_subdirectory(guarc)
-ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+endif (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Generate RC data
