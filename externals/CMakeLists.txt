@@ -1,0 +1,5 @@
+if (UNIX)
+  if(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+  add_subdirectory(nvstusb)
+  endif(GUACAMOLE_ENABLE_NVIDIA_3D_VISION)
+endif(UNIX)
