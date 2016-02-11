@@ -100,7 +100,7 @@ public:
     CameraMode mode, node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-  void generate_shadow_map(node::LightNode* light, LightTable::LightBlock& light_block);
+  void generate_shadow_map(node::LightNode& light, LightTable::LightBlock& light_block);
 
   PipelineViewState const&           current_viewstate() const;
 
@@ -131,14 +131,14 @@ public:
     unsigned cascade_id, unsigned viewport_size, bool redraw);
 
   void generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const& shadowmap,
-    node::LightNode* light, LightTable::LightBlock& light_block,
+    node::LightNode& light, LightTable::LightBlock& light_block,
     unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform);
 
   void generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadowmap,
-    node::LightNode* light, LightTable::LightBlock& light_block,
+    node::LightNode& light, LightTable::LightBlock& light_block,
     unsigned viewport_size, bool redraw);
 
-  void generate_shadow_map_spotlight(node::LightNode* light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw);
+  void generate_shadow_map_spotlight(node::LightNode& light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw);
 
   PipelineViewState                         current_viewstate_;
   
