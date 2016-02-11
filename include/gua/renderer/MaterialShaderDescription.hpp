@@ -30,7 +30,7 @@ namespace gua {
 
 class GUA_DLL MaterialShaderDescription {
  public:
-  MaterialShaderDescription();
+  MaterialShaderDescription() = default;
   MaterialShaderDescription(std::string const& file);
 
   void load_from_file(std::string const& file_name);
