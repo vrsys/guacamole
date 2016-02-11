@@ -231,7 +231,7 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::generate_shadow_map(node::LightNode* light,
+void Pipeline::generate_shadow_map(node::LightNode& light,
                                    LightTable::LightBlock& light_block) {
 
   if (!shadow_map_res_) {
@@ -243,13 +243,13 @@ void Pipeline::generate_shadow_map(node::LightNode* light,
   std::shared_ptr<ShadowMap> shadow_map(nullptr);
   bool needs_redraw(false);
 
-  if (light->data.get_type() == node::LightNode::Type::SUN) {
+  if (light.data.get_type() == node::LightNode::Type::SUN) {
     // cascaded shadow maps need to be redrawn every frame
     needs_redraw = true;
   }
 
   // has the shadow map been rendered this frame already?
-  auto cached_shadow_maps(shadow_map_res_->used_shadow_maps.find(light));
+  auto cached_shadow_maps(shadow_map_res_->used_shadow_maps.find(&light));
 
   if (cached_shadow_maps != shadow_map_res_->used_shadow_maps.end()) {
     for (auto& cached_shadow_map : cached_shadow_maps->second) {
@@ -260,12 +260,12 @@ void Pipeline::generate_shadow_map(node::LightNode* light,
     }
   }
 
-  unsigned viewport_size(light->data.shadow_map_size());
+  unsigned viewport_size(light.data.shadow_map_size());
   unsigned cascade_count(1);
 
-  if (light->data.get_type() == node::LightNode::Type::SUN) {
-    cascade_count = light->data.get_shadow_cascaded_splits().size() - 1;
-  } else if (light->data.get_type() == node::LightNode::Type::POINT) {
+  if (light.data.get_type() == node::LightNode::Type::SUN) {
+    cascade_count = light.data.get_shadow_cascaded_splits().size() - 1;
+  } else if (light.data.get_type() == node::LightNode::Type::POINT) {
     cascade_count = 6;
   }
 
@@ -295,7 +295,7 @@ void Pipeline::generate_shadow_map(node::LightNode* light,
   }
 
     // store shadow map
-  shadow_map_res_->used_shadow_maps[light].push_back({
+  shadow_map_res_->used_shadow_maps[&light].push_back({
     shadow_map, current_mask
   });
 
@@ -314,13 +314,13 @@ void Pipeline::generate_shadow_map(node::LightNode* light,
       current_viewstate_.camera.config.get_resolution();
   auto shadow_resolution = gua::math::vec2ui{viewport_size, viewport_size};
 
-  current_viewstate_.viewpoint_uuid = light->uuid();
+  current_viewstate_.viewpoint_uuid = light.uuid();
   current_viewstate_.view_direction = PipelineViewState::front;
   current_viewstate_.shadow_mode = true;
   current_viewstate_.camera.config.set_resolution(shadow_resolution);
 
   // render cascaded shadows for sunlights
-  switch (light->data.get_type()) {
+  switch (light.data.get_type()) {
 
     case node::LightNode::Type::SUN:
       generate_shadow_map_sunlight(
@@ -360,7 +360,7 @@ void Pipeline::generate_shadow_map(node::LightNode* light,
 
   bind_camera_uniform_block(0);
 
-  light_block.shadow_offset = light->data.get_shadow_offset();
+  light_block.shadow_offset = light.data.get_shadow_offset();
   light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
 }
 
@@ -407,15 +407,15 @@ void Pipeline::render_shadow_map(LightTable::LightBlock& light_block,
 ////////////////////////////////////////////////////////////////////////////////
 void Pipeline::generate_shadow_map_sunlight(
     std::shared_ptr<ShadowMap> const& shadow_map,
-    node::LightNode* light,
+    node::LightNode& light,
     LightTable::LightBlock& light_block,
     unsigned viewport_size,
     bool redraw,
     math::mat4 const& original_screen_transform) {
 
-  auto splits(light->data.get_shadow_cascaded_splits());
+  auto splits(light.data.get_shadow_cascaded_splits());
 
-  if (light->data.get_shadow_cascaded_splits().size() < 2) {
+  if (light.data.get_shadow_cascaded_splits().size() < 2) {
     Logger::LOG_WARNING
         << "At least 2 splits have to be defined for cascaded shadow maps!"
         << std::endl;
@@ -460,7 +460,7 @@ void Pipeline::generate_shadow_map_sunlight(
     std::vector<math::vec3> corners_in_sun_space;
     math::vec3 center_in_sun_space(0, 0, 0);
 
-    auto transform(light->get_cached_world_transform());
+    auto transform(light.get_cached_world_transform());
 
     auto inverse_sun_transform(scm::math::inverse(transform));
     for (auto const& corner : cropped_frustum_corners) {
@@ -482,7 +482,7 @@ void Pipeline::generate_shadow_map_sunlight(
         (extends_in_sun_space.min[0] + extends_in_sun_space.max[0]) / 2,
         (extends_in_sun_space.min[1] + extends_in_sun_space.max[1]) / 2,
         extends_in_sun_space.max[2] +
-            light->data.get_shadow_near_clipping_in_sun_direction()));
+            light.data.get_shadow_near_clipping_in_sun_direction()));
 
     // eliminate sub-pixel movement
     float tex_coord_x = center.x * viewport_size / radius_in_sun_space / 2;
@@ -516,7 +516,7 @@ void Pipeline::generate_shadow_map_sunlight(
         math::vec4(0,
                    0,
                    extends_in_sun_space.max[2] - extends_in_sun_space.min[2] +
-                       light->data.get_shadow_near_clipping_in_sun_direction(),
+                       light.data.get_shadow_near_clipping_in_sun_direction(),
                    0.0f));
 
     auto shadow_frustum(Frustum::orthographic(
@@ -524,7 +524,7 @@ void Pipeline::generate_shadow_map_sunlight(
         sun_screen_transform,
         0,
         scm::math::length(sun_eye_depth) +
-            light->data.get_shadow_far_clipping_in_sun_direction()));
+            light.data.get_shadow_far_clipping_in_sun_direction()));
 
     render_shadow_map(
         light_block, shadow_frustum, cascade, viewport_size, redraw);
@@ -535,7 +535,7 @@ void Pipeline::generate_shadow_map_sunlight(
 
 void Pipeline::generate_shadow_map_pointlight(
     std::shared_ptr<ShadowMap> const& shadow_map,
-    node::LightNode* light,
+    node::LightNode& light,
     LightTable::LightBlock& light_block,
     unsigned viewport_size,
     bool redraw) {
@@ -559,16 +559,16 @@ void Pipeline::generate_shadow_map_pointlight(
 
   for (unsigned cascade(0); cascade < screen_transforms.size(); ++cascade) {
 
-    auto transform(light->get_cached_world_transform() *
+    auto transform(light.get_cached_world_transform() *
                    screen_transforms[cascade]);
 
     //TODO: consider light scale for clipping planes?
     auto light_near_clip =
-        light->data.get_shadow_near_clipping_in_sun_direction();
+        light.data.get_shadow_near_clipping_in_sun_direction();
     auto light_far_clip =
-        light->data.get_shadow_far_clipping_in_sun_direction();
+        light.data.get_shadow_far_clipping_in_sun_direction();
 
-    auto frustum(Frustum::perspective(light->get_cached_world_transform(),
+    auto frustum(Frustum::perspective(light.get_cached_world_transform(),
                                       transform,
                                       light_near_clip,
                                       light_far_clip));
@@ -583,20 +583,20 @@ void Pipeline::generate_shadow_map_pointlight(
 
 ////////////////////////////////////////////////////////////////////////////////
 void Pipeline::generate_shadow_map_spotlight(
-    node::LightNode* light,
+    node::LightNode& light,
     LightTable::LightBlock& light_block,
     unsigned viewport_size,
     bool redraw) {
 
   // calculate light frustum
   math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
-  screen_transform = light->get_cached_world_transform() * screen_transform;
+  screen_transform = light.get_cached_world_transform() * screen_transform;
 
   auto light_near_clip =
-      light->data.get_shadow_near_clipping_in_sun_direction();
-  auto light_far_clip = light->data.get_shadow_far_clipping_in_sun_direction();
+      light.data.get_shadow_near_clipping_in_sun_direction();
+  auto light_far_clip = light.data.get_shadow_far_clipping_in_sun_direction();
 
-  auto frustum(Frustum::perspective(light->get_cached_world_transform(),
+  auto frustum(Frustum::perspective(light.get_cached_world_transform(),
                                     screen_transform,
                                     light_near_clip,
                                     light_far_clip));
