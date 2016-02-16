@@ -46,7 +46,7 @@ class GUA_DLL TransformNode : public Node {
    * This constructs an empty TransformNode.
    *
    */
-  TransformNode() {};
+  TransformNode() = default;
 
   /**
    * Constructor.
