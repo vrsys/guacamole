@@ -85,6 +85,42 @@ class GUA_DLL Material {
     std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
     void set_uniforms_from_serialized_string(std::string const& value);
 
+    std::string get_sampler(std::string const& name, int view_id) {
+      auto iter = uniforms_.find(name);
+      if (iter == uniforms_.end()) {
+        return std::string("");
+      } else {
+        return boost::get<std::string>(iter->second.get(view_id).data);
+      }
+    }
+
+    std::string get_sampler(std::string const& name) {
+      auto iter = uniforms_.find(name);
+      if (iter == uniforms_.end()) {
+        return std::string("");
+      } else {
+        return boost::get<std::string>(iter->second.get().data);
+      }
+    }
+
+    math::mat4f get_mat4(std::string const& name, int view_id) {
+      auto iter = uniforms_.find(name);
+      if (iter == uniforms_.end()) {
+        return math::mat4f{};
+      } else {
+        return boost::get<math::mat4f>(iter->second.get(view_id).data);
+      }
+    }
+
+    math::mat4f get_mat4(std::string const& name) {
+      auto iter = uniforms_.find(name);
+      if (iter == uniforms_.end()) {
+        return math::mat4f{};
+      } else {
+        return boost::get<math::mat4f>(iter->second.get().data);
+      }
+    }
+
   private:
 
     Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
