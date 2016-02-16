@@ -116,7 +116,7 @@ struct GUA_DLL Color3f {
 };
 
 // Multiplication of a color with a float.
-Color3f operator*(float const& lhs, Color3f rhs);
+Color3f operator*(float lhs, Color3f const& rhs);
 Color3f operator*(Color3f const& lhs, float rhs);
 
 // Addition of two colors. Clamped.
