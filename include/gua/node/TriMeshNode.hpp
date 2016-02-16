@@ -63,11 +63,11 @@ public : // methods
   std::shared_ptr<Material> const& get_material() const;
   void                      set_material(std::shared_ptr<Material> const& material);
 
-  bool get_render_to_gbuffer() const;
-  void set_render_to_gbuffer(bool enable);
+  inline bool get_render_to_gbuffer() const { return render_to_gbuffer_; }
+  inline void set_render_to_gbuffer(bool enable) { render_to_gbuffer_ = enable; }
 
-  bool get_render_to_stencil_buffer() const;
-  void set_render_to_stencil_buffer(bool enable);
+  inline bool get_render_to_stencil_buffer() const { return render_to_stencil_buffer_; }
+  inline void set_render_to_stencil_buffer(bool enable) { render_to_stencil_buffer_ = enable; }
 
   /**
   * Implements ray picking for a triangular mesh
