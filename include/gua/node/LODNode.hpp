@@ -64,7 +64,7 @@ class GUA_DLL LODNode : public TransformNode {
    * This constructs an empty LODNode.
    *
    */
-  LODNode() {};
+  LODNode() = default;
 
   /**
    * Constructor.
