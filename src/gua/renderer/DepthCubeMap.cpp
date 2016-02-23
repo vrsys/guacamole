@@ -90,12 +90,6 @@ void DepthCubeMap::set_viewport_size(math::vec2f const& size) {
 
 ////////////////////////////////////////////////////////////////////////////////
  
-math::vec2f DepthCubeMap::get_viewport_size(){
-    return viewport_size_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 std::shared_ptr<Texture2D> const& DepthCubeMap::get_depth_buffer() const {
   return depth_buffer_;
 }
@@ -114,31 +108,8 @@ void DepthCubeMap::remove_buffers(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip){
-
+void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip) {
   std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->download_data(ctx, near_clip, far_clip);
-  // auto depth_data = std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->retrieve_data(ctx, near_clip, far_clip);
-  
-
-  // ASCII OUTPUT
-  // for (int side = 0; side < 6; side++){
-  //   std::cout << "SIDE: " << side <<  std::endl;
-  //   for (int i = 0; i<size; i++){
-  //     for (int j = 0; j<size; j++){
-  //       if (depth_data[i*size*6 + j + side * size] == -1.0f)
-  //       {
-  //         std::cout << "..";
-  //       }
-  //       else
-  //       {
-  //         std::cout << "##";
-  //       }
-  //     }
-  //     std::cout << std::endl;
-  //   }
-  // }
-  // std::cout << "============================" << std::endl;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
