@@ -56,7 +56,7 @@ class DepthCubeMapRenderer {
  private:
 
   void prepare_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
-  void reset_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
+  void download_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
 
   void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node, Pipeline& pipe);
 
@@ -68,6 +68,7 @@ class DepthCubeMapRenderer {
   scm::gl::rasterizer_state_ptr   rs_cull_none_;
 
   SubstitutionMap                 global_substitution_map_;
+  std::pair<unsigned int, std::vector<std::size_t>> needs_rendering_;
 };
 
 }
