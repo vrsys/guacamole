@@ -36,33 +36,17 @@
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
-
-DepthCubeMapRenderer::DepthCubeMapRenderer()
-  : face_counter_(0)
-  , depth_cube_map_res_(nullptr)
-  , rs_cull_back_(nullptr)
-  , rs_cull_none_(nullptr)
-  , global_substitution_map_()
-  , needs_rendering_({0, std::vector<std::size_t>()})
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void DepthCubeMapRenderer::create_state_objects(RenderContext const& ctx)
 {
   rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
   rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
   auto& scene = *pipe.current_viewstate().scene;
   auto cube_map_nodes(scene.nodes.find(std::type_index(typeid(node::CubemapNode))));
-  
+
   if (cube_map_nodes != scene.nodes.end()) {
 
     RenderContext const& ctx(pipe.get_context());
@@ -70,68 +54,61 @@ void DepthCubeMapRenderer::render(Pipeline& pipe, PipelinePassDescription const&
     if (needs_rendering_.first != ctx.framecount) {
       needs_rendering_ = std::make_pair(ctx.framecount, std::vector<std::size_t>());
     }
-  
+
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
     std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
 
     pipe.begin_gpu_query(ctx, gpu_query_name);
     pipe.begin_cpu_query(cpu_query_name);
 
-    for (auto const& object : cube_map_nodes->second){
+    for (auto const& object : cube_map_nodes->second) {
       auto cube_map_node(reinterpret_cast<node::CubemapNode*>(object));
       bool needs_rendering = std::find(needs_rendering_.second.begin(), needs_rendering_.second.end(), cube_map_node->uuid()) == needs_rendering_.second.end();
       if (cube_map_node->config.get_active() && needs_rendering) {
         needs_rendering_.second.push_back(cube_map_node->uuid());
         if (cube_map_node->config.get_render_mode() == node::CubemapNode::RenderMode::COMPLETE){
-          prepare_depth_cubemap(cube_map_node, pipe);
-          generate_depth_cubemap_face(0, cube_map_node, pipe);
-          generate_depth_cubemap_face(1, cube_map_node, pipe);
-          generate_depth_cubemap_face(2, cube_map_node, pipe);
-          generate_depth_cubemap_face(3, cube_map_node, pipe);
-          generate_depth_cubemap_face(4, cube_map_node, pipe);
-          generate_depth_cubemap_face(5, cube_map_node, pipe);
-          download_depth_cubemap(cube_map_node, pipe);
-        }
-        else if (cube_map_node->config.get_render_mode() == node::CubemapNode::RenderMode::ONE_SIDE_PER_FRAME) {
-          if (face_counter_ == 0){
-            prepare_depth_cubemap(cube_map_node, pipe);
+          prepare_depth_cubemap(*cube_map_node, pipe);
+          generate_depth_cubemap_face(0, *cube_map_node, pipe);
+          generate_depth_cubemap_face(1, *cube_map_node, pipe);
+          generate_depth_cubemap_face(2, *cube_map_node, pipe);
+          generate_depth_cubemap_face(3, *cube_map_node, pipe);
+          generate_depth_cubemap_face(4, *cube_map_node, pipe);
+          generate_depth_cubemap_face(5, *cube_map_node, pipe);
+          download_depth_cubemap(*cube_map_node, pipe);
+        } else if (cube_map_node->config.get_render_mode() == node::CubemapNode::RenderMode::ONE_SIDE_PER_FRAME) {
+          if (face_counter_ == 0) {
+            prepare_depth_cubemap(*cube_map_node, pipe);
           }
 
-          generate_depth_cubemap_face(face_counter_, cube_map_node, pipe);
+          generate_depth_cubemap_face(face_counter_, *cube_map_node, pipe);
 
-          if (face_counter_ == 5){
-            download_depth_cubemap(cube_map_node, pipe);
+          if (face_counter_ == 5) {
+            download_depth_cubemap(*cube_map_node, pipe);
           }
         }
-
       }
     }
 
     pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name);
-
   }
 
   face_counter_ = (face_counter_+1)%6; //cycle throgh sides
   // ctx.render_context->reset_state_objects();
-
-
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void DepthCubeMapRenderer::prepare_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe)
+void DepthCubeMapRenderer::prepare_depth_cubemap(node::CubemapNode const& cube_map_node, Pipeline& pipe)
 {
   if (!depth_cube_map_res_) {
     depth_cube_map_res_ = pipe.get_context().resources.get<SharedDepthCubeMapResource>();
   }
-  auto texture_name(cube_map_node->config.get_texture_name());
+  auto texture_name(cube_map_node.config.get_texture_name());
   std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
   auto depth_cube_map_it = depth_cube_map_res_->cube_maps_.find(texture_name);
 
   if (depth_cube_map_it == depth_cube_map_res_->cube_maps_.end()){
 
-    unsigned viewport_size(cube_map_node->config.resolution());
+    unsigned viewport_size(cube_map_node.config.resolution());
     unsigned map_width(viewport_size*6);
 
     current_depth_cube_map = std::make_shared<DepthCubeMap>(pipe.get_context(), math::vec2ui(map_width, viewport_size), texture_name);;
@@ -141,16 +118,13 @@ void DepthCubeMapRenderer::prepare_depth_cubemap(node::CubemapNode* cube_map_nod
     current_depth_cube_map = depth_cube_map_it->second;
   }
   current_depth_cube_map->clear(pipe.get_context());
-
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node, Pipeline& pipe)
+void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::CubemapNode const& cube_map_node, Pipeline& pipe) const
 {
-  auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node->config.get_texture_name())->second;
+  auto depth_cube_map = depth_cube_map_res_->cube_maps_.find(cube_map_node.config.get_texture_name())->second;
 
-  auto node_transform(cube_map_node->get_cached_world_transform());
+  auto node_transform(cube_map_node.get_cached_world_transform());
   math::vec2ui viewport_size(depth_cube_map->get_viewport_size());
 
   auto orig_scene(pipe.current_viewstate().scene);
@@ -182,13 +156,10 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
   math::vec3 scale(math::get_scale(node_transform));
   math::mat4 scale_free(node_transform * scm::math::inverse(scm::math::make_scale(scale)));
   math::mat4 transform(scale_free * screen_transforms[face]);
-  auto frustum(
-    Frustum::perspective(
-    scale_free, transform,
-    cube_map_node->config.near_clip(),
-    cube_map_node->config.far_clip()
-    )
-    );
+  auto frustum = Frustum::perspective(scale_free,
+                                      transform,
+                                      cube_map_node.config.near_clip(),
+                                      cube_map_node.config.far_clip());
 
   depth_cube_map->set_viewport_offset(math::vec2f(face, 0.f));
 
@@ -199,20 +170,20 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
   new_view_state.target = depth_cube_map.get();
   new_view_state.shadow_mode = true;
   new_view_state.view_direction = view_directions[face];
-  new_view_state.viewpoint_uuid = cube_map_node->uuid();
+  new_view_state.viewpoint_uuid = cube_map_node.uuid();
 
   new_view_state.scene = new_view_state.graph->serialize(frustum, frustum,
     math::get_translation(node_transform),
     true, //Frustum Culling
-    cube_map_node->config.mask(),
-    cube_map_node->config.view_id());
+    cube_map_node.config.mask(),
+    cube_map_node.config.view_id());
   new_view_state.frustum = frustum;
 
   pipe.camera_block_.update(pipe.get_context(),
     frustum,
     frustum.get_camera_position(),
     new_view_state.scene->clipping_planes,
-    cube_map_node->config.view_id(),
+    cube_map_node.config.view_id(),
     viewport_size);
   pipe.bind_camera_uniform_block(0);
 
@@ -224,7 +195,6 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
       pipe.passes_[i].process(*pipe.last_description_.get_passes()[i], pipe);
     }
   }
-
 
   // restore previous configuration
   pipe.current_viewstate_ = old_view_state;
@@ -239,21 +209,18 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
 
 }
 
-////////////////////////////////////////////////////////////////////////////////  
-
-void DepthCubeMapRenderer::download_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe)
+void DepthCubeMapRenderer::download_depth_cubemap(node::CubemapNode& cube_map_node, Pipeline const& pipe) const
 {
-  auto texture_name(cube_map_node->config.get_texture_name());
+  auto texture_name(cube_map_node.config.get_texture_name());
   std::shared_ptr<DepthCubeMap> current_depth_cube_map(nullptr);
   auto depth_cube_map_it = depth_cube_map_res_->cube_maps_.find(texture_name);
 
-  if (depth_cube_map_it != depth_cube_map_res_->cube_maps_.end()){
+  if (depth_cube_map_it != depth_cube_map_res_->cube_maps_.end()) {
     current_depth_cube_map = depth_cube_map_it->second;
-    current_depth_cube_map->retrieve_data(pipe.get_context(), cube_map_node->config.near_clip(), cube_map_node->config.far_clip());
-    *(cube_map_node->m_NewTextureData) = true;
+    current_depth_cube_map->retrieve_data(pipe.get_context(), cube_map_node.config.near_clip(), cube_map_node.config.far_clip());
+    *(cube_map_node.m_NewTextureData) = true;
   }
 
 }
-////////////////////////////////////////////////////////////////////////////////
 
 } // namespace gua
