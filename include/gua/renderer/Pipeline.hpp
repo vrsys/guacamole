@@ -43,8 +43,6 @@ class WindowBase;
 struct RenderContext;
 class ShaderProgram;
 
-namespace node { class SpotLightNode; }
-
 struct GUA_DLL PipelineViewState {
   enum ViewDirection {
     front = 0,
