@@ -45,11 +45,15 @@ unsigned OculusWindow::registered_oculus_device_count_ = 0;
 // will set up the oculus environment
 void OculusWindow::initialize_oculus_environment() {
   if( !oculus_environment_initialized_ ) {
-      ovr_Initialize(nullptr);
+      auto result = ovr_Initialize(nullptr);
       oculus_environment_initialized_ = true;
+
+      //if (!OVR_SUCCESS(result)) {
+      if (result > 0) {
+        Logger::LOG_WARNING << "Failed to initialize oculus environment!" << "Errorcode:" << (int)result  << std::endl;
+      }
   } else {
-      Logger::LOG_WARNING << "Attempt to initialize oculus environment multiple times!"
-                          << std::endl;
+      Logger::LOG_WARNING << "Attempt to initialize oculus environment multiple times!" << std::endl;
   }
 }
 
@@ -170,6 +174,8 @@ OculusWindow::OculusWindow(std::string const& display):
 
   initialize_oculus_environment();
 
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
+
   // automatically register the HMDs in order
 #ifdef _WIN32
     ovrHmd_Create(registered_oculus_device_count_++, &registered_HMD_);
@@ -232,6 +238,77 @@ OculusWindow::OculusWindow(std::string const& display):
 
 #endif
 
+#else
+
+  try {
+    ovrGraphicsLuid luid;
+    auto result = ovr_Create(&registered_HMD_, &luid);
+
+    //if (!OVR_SUCCESS(result)) {
+    if (result > 0) {
+      throw std::runtime_error("Unable to create HMD.");
+    }
+
+    registered_HMD_desc_ = ovr_GetHmdDesc(registered_HMD_);
+    
+    result = ovr_ConfigureTracking(registered_HMD_, ovrTrackingCap_Orientation
+      | ovrTrackingCap_MagYawCorrection
+      | ovrTrackingCap_Position, 0) == ovrSuccess;
+
+    //if (!OVR_SUCCESS(result)) {
+    if (result > 0) {
+      ovr_Destroy(registered_HMD_);
+      registered_HMD_ = 0;
+      Logger::LOG_WARNING << "Unable to initialize HMD tracking. Errorcode:" << (int)result << std::endl;
+      throw std::runtime_error("Unable to initialize HMD tracking.");
+    }
+
+    // get optimal texture size for rendering
+    ovrSizei ideal_texture_size_left  = ovr_GetFovTextureSize(registered_HMD_, ovrEyeType(0), registered_HMD_desc_.DefaultEyeFov[0], 1);
+    ovrSizei ideal_texture_size_right = ovr_GetFovTextureSize(registered_HMD_, ovrEyeType(1), registered_HMD_desc_.DefaultEyeFov[1], 1);
+
+    math::vec2ui window_size(ideal_texture_size_left.w + ideal_texture_size_right.w, std::max(ideal_texture_size_left.h, ideal_texture_size_right.h));
+
+    // initialize window => resolution is independent of rendering resolution!
+    config.set_size(window_size);
+
+    config.set_left_resolution(math::vec2ui(ideal_texture_size_left.w, ideal_texture_size_left.h));
+    config.set_left_position(math::vec2ui(0, 0));
+    config.set_right_resolution(math::vec2ui(ideal_texture_size_right.w, ideal_texture_size_right.h));
+    config.set_right_position(math::vec2ui(ideal_texture_size_left.w, 0));
+
+    // Initialize VR structures, filling out description.
+    ovrEyeRenderDesc eyeRenderDesc[2];
+    ovrVector3f      hmdToEyeViewOffset[2];
+
+    eyeRenderDesc[0] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Left, registered_HMD_desc_.DefaultEyeFov[0]);
+    eyeRenderDesc[1] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Right, registered_HMD_desc_.DefaultEyeFov[1]);
+
+    hmdToEyeViewOffset[0] = eyeRenderDesc[0].HmdToEyeViewOffset;
+    hmdToEyeViewOffset[1] = eyeRenderDesc[1].HmdToEyeViewOffset;
+
+    // Initialize our single full screen Fov layer.
+    color_layer_.Header.Type = ovrLayerType_EyeFov;
+    color_layer_.Header.Flags = 0;
+    color_layer_.Fov[0] = eyeRenderDesc[0].Fov;
+    color_layer_.Fov[1] = eyeRenderDesc[1].Fov;
+
+    ovrRecti left_viewport;
+    left_viewport.Size = { config.left_resolution().x, config.left_resolution().y };
+    left_viewport.Pos = { config.left_position().x, config.left_position().y };
+
+    ovrRecti right_viewport;
+    right_viewport.Size = { config.right_resolution().x, config.right_resolution().y };
+    right_viewport.Pos = { config.right_position().x, config.right_position().y };
+
+    color_layer_.Viewport[0] = left_viewport;
+    color_layer_.Viewport[1] = right_viewport;
+
+  }
+  catch (std::exception& e) {
+    gua::Logger::LOG_WARNING << "Failed to initialize oculus rift.\n" << e.what() << std::endl;
+  }
+#endif
   config.set_title("guacamole");
   config.set_display_name(display);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
@@ -244,7 +321,11 @@ OculusWindow::OculusWindow(std::string const& display):
 
 OculusWindow::~OculusWindow() {
   // cleanup the oculus device
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
   ovrHmd_Destroy(registered_HMD_);
+#else
+  ovr_Destroy(registered_HMD_);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,16 +333,24 @@ OculusWindow::~OculusWindow() {
 void OculusWindow::init_context() {
 
 #ifdef _WIN32
-
   WindowBase::init_context();
 
   auto const& glapi = ctx_.render_context->opengl_api();
+
   glapi.glGenFramebuffers(1, &blit_fbo_read_);
   glapi.glGenFramebuffers(1, &blit_fbo_write_);
 
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
   if (ovrHmd_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_SRGBA_8,
       config.left_resolution().x + config.right_resolution().x,
       std::max(config.left_resolution().y, config.right_resolution().y), &swap_texures_) != ovrSuccess) {
+#else
+  ovrResult result = ovr_CreateSwapTextureSetGL(registered_HMD_, scm::gl::FORMAT_SRGBA_8,
+                                          config.left_resolution().x + config.right_resolution().x,
+                                          std::max(config.left_resolution().y, config.right_resolution().y),
+                                          &swap_texures_);
+  if (!OVR_SUCCESS(result)) {
+#endif
       gua::Logger::LOG_WARNING << "Failed to create swap textures for oculus rift.\n";
   }
 
@@ -389,22 +478,22 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
 
     if (is_left) {
       glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                              config.left_position().x, config.left_position().y,
-                              config.left_resolution().x, config.left_resolution().y,
-                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    } else {
-      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
-                              config.right_position().x, config.right_position().y,
-                              config.right_position().x + config.right_resolution().x, config.right_resolution().y,
-                              GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        config.left_position().x, config.left_position().y,
+        config.left_resolution().x, config.left_resolution().y,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
-
+    else {
+      glapi.glBlitFramebuffer(0, texture->height(), texture->width(), 0,
+        config.right_position().x, config.right_position().y,
+        config.right_position().x + config.right_resolution().x, config.right_resolution().y,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    }
 
     glapi.glBindTexture(GL_TEXTURE_2D, 0);
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glapi.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    //WindowBase::display(texture, is_left);
+    WindowBase::display(texture, is_left);
 
 #else
 
@@ -460,10 +549,15 @@ float const OculusWindow::get_IPD() const {
 
   ovrEyeRenderDesc eyeRenderDesc[2];
   
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
   eyeRenderDesc[0] 
     = ovrHmd_GetRenderDesc(registered_HMD_, ovrEye_Left, registered_HMD_->DefaultEyeFov[0]);
   eyeRenderDesc[1] 
     = ovrHmd_GetRenderDesc(registered_HMD_, ovrEye_Right, registered_HMD_->DefaultEyeFov[1]);
+#else
+  eyeRenderDesc[0] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Left, registered_HMD_desc_.DefaultEyeFov[0]);
+  eyeRenderDesc[1] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Right, registered_HMD_desc_.DefaultEyeFov[1]);
+#endif
 
   ovrVector3f hmdToEyeViewOffset[2];
   hmdToEyeViewOffset[0] = eyeRenderDesc[0].HmdToEyeViewOffset;
@@ -473,8 +567,13 @@ float const OculusWindow::get_IPD() const {
 }
 
 math::vec2ui OculusWindow::get_eye_resolution() const {
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
   ovrSizei recommenedTex0Size = ovrHmd_GetFovTextureSize(registered_HMD_, ovrEye_Left,
       registered_HMD_->DefaultEyeFov[0], 1.0f);
+#else
+  ovrSizei recommenedTex0Size = ovr_GetFovTextureSize(registered_HMD_, ovrEye_Left,
+    registered_HMD_desc_.DefaultEyeFov[0], 1.0f);
+#endif
   //return math::vec2ui(recommenedTex0Size.w, recommenedTex0Size.h);
   #ifdef _WIN32
     return math::vec2ui(recommenedTex0Size.h, recommenedTex0Size.w);
@@ -488,7 +587,12 @@ math::vec2ui OculusWindow::get_eye_resolution() const {
 }
 
 math::vec2ui OculusWindow::get_window_resolution() const {
+
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
   ovrSizei HMD_resolution = registered_HMD_->Resolution;
+#else
+  ovrSizei HMD_resolution = registered_HMD_desc_.Resolution;
+#endif
 
   #ifdef _WIN32
     return math::vec2ui(HMD_resolution.w, HMD_resolution.h);
@@ -512,6 +616,8 @@ void OculusWindow::start_frame() {
     GlfwWindow::start_frame();
 
   #ifdef _WIN32
+
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
     ovrFrameTiming   ftiming = ovrHmd_GetFrameTiming(registered_HMD_, 0);
     ovrTrackingState hmdState = ovrHmd_GetTrackingState(registered_HMD_, ftiming.DisplayMidpointSeconds);
     swap_texures_->CurrentIndex = (swap_texures_->CurrentIndex + 1) % swap_texures_->TextureCount;
@@ -524,6 +630,21 @@ void OculusWindow::start_frame() {
     hmdToEyeViewOffset[1] = eyeRenderDesc[1].HmdToEyeViewOffset;
 
     ovr_CalcEyePoses(hmdState.HeadPose.ThePose, hmdToEyeViewOffset, color_layer_.RenderPose);
+#else
+    auto ftiming = ovr_GetPredictedDisplayTime(registered_HMD_, 0);
+
+    ovrTrackingState hmdState = ovr_GetTrackingState(registered_HMD_, ftiming, true);
+    swap_texures_->CurrentIndex = (swap_texures_->CurrentIndex + 1) % swap_texures_->TextureCount;
+
+    ovrEyeRenderDesc eyeRenderDesc[2];
+    ovrVector3f      hmdToEyeViewOffset[2];
+    eyeRenderDesc[0] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Left, registered_HMD_desc_.DefaultEyeFov[0]);
+    eyeRenderDesc[1] = ovr_GetRenderDesc(registered_HMD_, ovrEye_Right, registered_HMD_desc_.DefaultEyeFov[1]);
+    hmdToEyeViewOffset[0] = eyeRenderDesc[0].HmdToEyeViewOffset;
+    hmdToEyeViewOffset[1] = eyeRenderDesc[1].HmdToEyeViewOffset;
+
+    ovr_CalcEyePoses(hmdState.HeadPose.ThePose, hmdToEyeViewOffset, color_layer_.RenderPose);
+#endif
   #else
     ovrEyeRenderDesc eyeRenderDesc[2];
     eyeRenderDesc[0] = ovrHmd_GetRenderDesc(registered_HMD_, ovrEye_Left, registered_HMD_->DefaultEyeFov[0]);
@@ -549,8 +670,13 @@ void OculusWindow::start_frame() {
 void OculusWindow::finish_frame() {
 #ifdef _WIN32
     ovrLayerHeader* layers = &color_layer_.Header;
+
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
     ovrResult       result = ovrHmd_SubmitFrame(registered_HMD_, 0, nullptr, &layers, 1);
-    if (result != ovrSuccess) {
+#else
+    ovrResult       result = ovr_SubmitFrame(registered_HMD_, 0, nullptr, &layers, 1);
+#endif
+    if (!OVR_SUCCESS(result)) {
         gua::Logger::LOG_WARNING << "Failed to submit frame to the oculus rift.\n";
     }
 #else
@@ -573,8 +699,15 @@ void OculusWindow::calculate_viewing_setup() {
   // do the viewing setup calculations for both eyes
   for (unsigned eye_num = 0; eye_num < 2; ++eye_num) {
     //retreive the correct projection matrix from the oculus API
+#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION <= 6
     auto const& oculus_eye_projection 
       = ovrMatrix4f_Projection(registered_HMD_->DefaultEyeFov[eye_num], near_distance, far_distance, 1);
+#else
+
+    auto const& oculus_eye_projection
+      = ovrMatrix4f_Projection(registered_HMD_desc_.DefaultEyeFov[eye_num], near_distance, far_distance, 1);
+
+#endif
     
     //convert the matrix to a gua compatible one
     scm::math::mat4 scm_eye_proj_matrix;
@@ -636,7 +769,7 @@ void OculusWindow::calculate_viewing_setup() {
       = gua::math::vec3(standard_horizontal_eye_offset + horizontal_eye_distortion_offset,
                         0.0 + vertical_eye_distortion_offset,
                         -eye_to_screen_distance);
-    
+
     // calculate the final screen size
     screen_size_[eye_num] 
       = gua::math::vec2f( (screen_right_upper_corner_relative_to_eye 

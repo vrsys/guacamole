@@ -32,9 +32,11 @@ macro(_FIND_BULLET_LIBRARY _var)
      NAMES
         ${ARGN}
      HINTS
+        ${GLOBAL_EXT_DIR}/bullet/lib
         ${BULLET_ROOT}
-        ${BULLET_ROOT}/lib/Release
-        ${BULLET_ROOT}/lib/Debug
+        ${BULLET_ROOT}/bullet/lib/Release
+        ${BULLET_ROOT}/bullet/lib
+        ${BULLET_ROOT}/bullet/lib/Debug
         ${BULLET_ROOT}/out/release8/libs
         ${BULLET_ROOT}/out/debug8/libs
      PATH_SUFFIXES lib
@@ -51,39 +53,7 @@ macro(_BULLET_APPEND_LIBRARIES _list _release)
    endif()
 endmacro()
 
-find_path(BULLET_INCLUDE_DIR NAMES btBulletCollisionCommon.h
-  HINTS
-    ${BULLET_ROOT}/inc
-    ${BULLET_ROOT}/include
-    ${BULLET_ROOT}/src
-  PATH_SUFFIXES bullet
-)
-
 # Find the libraries
-
-_FIND_BULLET_LIBRARY(BULLET_DYNAMICS_LIBRARY        BulletDynamics)
-_FIND_BULLET_LIBRARY(BULLET_DYNAMICS_LIBRARY_DEBUG  BulletDynamics_Debug BulletDynamics_d)
-_FIND_BULLET_LIBRARY(BULLET_COLLISION_LIBRARY       BulletCollision)
-_FIND_BULLET_LIBRARY(BULLET_COLLISION_LIBRARY_DEBUG BulletCollision_Debug BulletCollision_d)
-_FIND_BULLET_LIBRARY(BULLET_MATH_LIBRARY            BulletMath LinearMath)
-_FIND_BULLET_LIBRARY(BULLET_MATH_LIBRARY_DEBUG      BulletMath_Debug BulletMath_d LinearMath_Debug LinearMath_d)
-#_FIND_BULLET_LIBRARY(BULLET_SOFTBODY_LIBRARY        BulletSoftBody)
-#_FIND_BULLET_LIBRARY(BULLET_SOFTBODY_LIBRARY_DEBUG  BulletSoftBody_Debug BulletSoftBody_d)
 _FIND_BULLET_LIBRARY(BULLET_HACD_LIBRARY            HACD)
 _FIND_BULLET_LIBRARY(BULLET_HACD_LIBRARY_DEBUG      HACD_Debug HACD_d)
 
-
-# handle the QUIETLY and REQUIRED arguments and set BULLET_FOUND to TRUE if
-# all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Bullet DEFAULT_MSG
-    BULLET_DYNAMICS_LIBRARY BULLET_COLLISION_LIBRARY BULLET_MATH_LIBRARY
-    BULLET_HACD_LIBRARY BULLET_INCLUDE_DIR)
-
-set(BULLET_INCLUDE_DIRS ${BULLET_INCLUDE_DIR})
-if(BULLET_FOUND)
-   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_DYNAMICS_LIBRARY)
-   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_COLLISION_LIBRARY)
-   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_MATH_LIBRARY)
-   _BULLET_APPEND_LIBRARIES(BULLET_LIBRARIES BULLET_HACD_LIBRARY)
-endif()

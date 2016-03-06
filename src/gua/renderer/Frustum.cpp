@@ -40,8 +40,8 @@ Frustum::Frustum()
 
 Frustum Frustum::perspective(math::mat4 const& camera_transform,
                     math::mat4 const& screen_transform,
-                    float clip_near,
-                    float clip_far) {
+                    math::mat4::value_type clip_near,
+                    math::mat4::value_type clip_far) {
 
   auto projection = math::compute_perspective_frustum(
              camera_transform.column(3), screen_transform, clip_near, clip_far);
@@ -61,8 +61,8 @@ Frustum Frustum::perspective(math::mat4 const& camera_transform,
 
 Frustum Frustum::orthographic(math::mat4 const& camera_transform,
                     math::mat4 const& screen_transform,
-                    float clip_near,
-                    float clip_far) {
+                    math::mat4::value_type clip_near,
+                    math::mat4::value_type clip_far) {
 
   auto projection = math::compute_orthographic_frustum(
              camera_transform.column(3), screen_transform, clip_near, clip_far);
@@ -105,9 +105,9 @@ std::vector<math::vec3> Frustum::get_corners() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Frustum::intersects(math::BoundingBox<math::vec3> const& bbox,
-                         std::vector<math::vec4f> const& global_planes) const {
+                         std::vector<math::vec4> const& global_planes) const {
 
-  auto outside = [](math::vec4f const & plane, math::vec3 const & point) {
+  auto outside = [](math::vec4 const & plane, math::vec3 const & point) {
     return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] +
            plane[3] < 0;
   };
@@ -151,7 +151,7 @@ bool Frustum::intersects(math::BoundingBox<math::vec3> const& bbox,
 
 bool Frustum::contains(math::vec3 const& point) const {
 
-  auto outside = [](math::vec4f const & plane, math::vec3 const & point) {
+  auto outside = [](math::vec4 const & plane, math::vec3 const & point) {
     return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] +
            plane[3] < 0;
   };
@@ -179,8 +179,8 @@ std::set<PickResult> const Frustum::ray_test(Ray const& ray, int options) {
 
   std::set<PickResult> result;
 
-  float tnear = 0;
-  float tfar = ray.t_max_;
+  math::vec3::value_type tnear = 0;
+  math::vec3::value_type tfar = ray.t_max_;
 
   int fnorm_num(0);
   int bnorm_num(0);
@@ -189,8 +189,8 @@ std::set<PickResult> const Frustum::ray_test(Ray const& ray, int options) {
   // for ( pln = &phdrn[ph_num-1] ; ph_num-- ; pln-- ) {
   for (unsigned i(0); i < 6; ++i) {
     // Compute intersection point T and sidedness
-    float vd = ray.direction_.x * planes_[i].x + ray.direction_.y * planes_[i].y +ray.direction_.z * planes_[i].z;
-    float vn = ray.origin_.x * planes_[i].x + ray.origin_.y * planes_[i].y +ray.origin_.z * planes_[i].z + planes_[i].w;
+    math::vec3::value_type vd = ray.direction_.x * planes_[i].x + ray.direction_.y * planes_[i].y +ray.direction_.z * planes_[i].z;
+    math::vec3::value_type vn = ray.origin_.x * planes_[i].x + ray.origin_.y * planes_[i].y +ray.origin_.z * planes_[i].z + planes_[i].w;
     if (vd == 0.0) {
       // ray is parallel to plane - check if ray origin is inside plane half-space
       if (vn > 0.0) {
@@ -199,7 +199,7 @@ std::set<PickResult> const Frustum::ray_test(Ray const& ray, int options) {
       }
     } else {
       // ray not parallel - get distance to plane
-      float t = -vn / vd ;
+      math::vec3::value_type t = -vn / vd ;
       if (vd > 0.0) {
         if (t > tfar) {
           // front face - T is a near point
@@ -268,37 +268,37 @@ void Frustum::init_frustum_members(math::mat4 const& camera_transform,
   //store normals
 
   //left plane
-  frustum.planes_[0] = math::vec4f(projection_view[3] + projection_view[0],
+  frustum.planes_[0] = math::vec4(projection_view[3] + projection_view[0],
                           projection_view[7] + projection_view[4],
                           projection_view[11] + projection_view[8],
                           projection_view[15] + projection_view[12]);
 
   //right plane
-  frustum.planes_[1] = math::vec4f(projection_view[3] - projection_view[0],
+  frustum.planes_[1] = math::vec4(projection_view[3] - projection_view[0],
                           projection_view[7] - projection_view[4],
                           projection_view[11] - projection_view[8],
                           projection_view[15] - projection_view[12]);
 
   //bottom plane
-  frustum.planes_[2] = math::vec4f(projection_view[3] + projection_view[1],
+  frustum.planes_[2] = math::vec4(projection_view[3] + projection_view[1],
                           projection_view[7] + projection_view[5],
                           projection_view[11] + projection_view[9],
                           projection_view[15] + projection_view[13]);
 
   //top plane
-  frustum.planes_[3] = math::vec4f(projection_view[3] - projection_view[1],
+  frustum.planes_[3] = math::vec4(projection_view[3] - projection_view[1],
                           projection_view[7] - projection_view[5],
                           projection_view[11] - projection_view[9],
                           projection_view[15] - projection_view[13]);
 
   //near plane
-  frustum.planes_[4] = math::vec4f(projection_view[3] + projection_view[2],
+  frustum.planes_[4] = math::vec4(projection_view[3] + projection_view[2],
                           projection_view[7] + projection_view[6],
                           projection_view[11] + projection_view[10],
                           projection_view[15] + projection_view[14]);
 
   //far plane
-  frustum.planes_[5] = math::vec4f(projection_view[3] - projection_view[2],
+  frustum.planes_[5] = math::vec4(projection_view[3] - projection_view[2],
                           projection_view[7] - projection_view[6],
                           projection_view[11] - projection_view[10],
                           projection_view[15] - projection_view[14]);

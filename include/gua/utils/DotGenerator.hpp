@@ -27,6 +27,7 @@
 #include <string>
 
 // guacamole header
+#include <gua/config.hpp>
 #include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
@@ -65,18 +66,18 @@ class GUA_DLL DotGenerator : public NodeVisitor {
   /**
    * Visiters for each Node type
    */
-  /*virtual*/ void visit(node::Node* node);
-  /*virtual*/ void visit(node::TransformNode* cam);
-  /*virtual*/ void visit(node::GeometryNode* geometry);
+  void visit(node::Node* node) override;
+  void visit(node::TransformNode* cam) override;
+  void visit(node::GeometryNode* geometry) override;
   /*virtual*/ void visit(node::VolumeNode* volume);
-  /*virtual*/ void visit(node::LightNode* pointlight);
-  /*virtual*/ void visit(node::ScreenNode* screen);
-  /*virtual*/ void visit(node::RayNode* ray);
+  void visit(node::LightNode* pointlight) override;
+  void visit(node::ScreenNode* screen) override;
+  void visit(node::RayNode* ray) override;
 #ifdef GUACAMOLE_ENABLE_PHYSICS
-  /*virtual*/ void visit(physics::RigidBodyNode* rb);
-  /*virtual*/ void visit(physics::CollisionShapeNode* shape);
+  void visit(physics::RigidBodyNode* rb) override;
+  void visit(physics::CollisionShapeNode* shape) override;
 #endif
-  /*virtual*/ void visit(node::TexturedQuadNode* node);
+  void visit(node::TexturedQuadNode* node) override;
    ///@}
 
   /**

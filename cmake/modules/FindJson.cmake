@@ -6,7 +6,7 @@
 find_path(JSON_INCLUDE_DIR
             NAMES jsoncpp/json/features.h
             PATHS /usr/include/jsoncpp/json
-                  ${GLOBAL_EXT_DIR}/inc/json
+                  ${GLOBAL_EXT_DIR}/json/include
                   ${GUACAMOLE_EXT_DIR}/inc/json
             PATH_SUFFIXES jsoncpp json
             )
@@ -14,7 +14,7 @@ find_path(JSON_INCLUDE_DIR
 find_library(JSON_LIBRARY
             NAMES jsoncpp json
             PATHS /usr/lib
-                  ${GLOBAL_EXT_DIR}/lib
+                  ${GLOBAL_EXT_DIR}/json/lib
                   ${GUACAMOLE_EXT_DIR}/lib
             PATH_SUFFIXES release
             )
@@ -22,7 +22,7 @@ find_library(JSON_LIBRARY
 find_library(JSON_LIBRARY_DEBUG
             NAMES jsoncpp jsond
             PATHS /usr/lib
-                  ${GLOBAL_EXT_DIR}/lib
+                  ${GLOBAL_EXT_DIR}/json/lib
                   ${GUACAMOLE_EXT_DIR}/lib
             PATH_SUFFIXES debug
             )

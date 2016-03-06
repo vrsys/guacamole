@@ -36,17 +36,7 @@ class Pipeline;
 class PipelinePassDescription;
 
 class DepthCubeMapRenderer {
-
  public:
-
-  enum Mode {
-    COMPLETE            = 0,
-    ONE_SIDE_PER_FRAME  = 1
-  };
-
-  DepthCubeMapRenderer();
-  virtual ~DepthCubeMapRenderer() {}
-
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
@@ -55,19 +45,20 @@ class DepthCubeMapRenderer {
 
  private:
 
-  void prepare_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
-  void reset_depth_cubemap(node::CubemapNode* cube_map_node, Pipeline& pipe);
+  void prepare_depth_cubemap(node::CubemapNode const& cube_map_node, Pipeline& pipe);
+  void download_depth_cubemap(node::CubemapNode& cube_map_node, Pipeline const& pipe) const;
 
-  void generate_depth_cubemap_face(unsigned face, node::CubemapNode* cube_map_node, Pipeline& pipe);
+  void generate_depth_cubemap_face(unsigned face, node::CubemapNode const& cube_map_node, Pipeline& pipe) const;
 
-  unsigned                        face_counter_;
+  unsigned                        face_counter_ = 0;
 
-  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_;
+  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_ = nullptr;
 
-  scm::gl::rasterizer_state_ptr   rs_cull_back_;
-  scm::gl::rasterizer_state_ptr   rs_cull_none_;
+  scm::gl::rasterizer_state_ptr   rs_cull_back_ = nullptr;
+  scm::gl::rasterizer_state_ptr   rs_cull_none_ = nullptr;
 
-  SubstitutionMap                 global_substitution_map_;
+  SubstitutionMap                 global_substitution_map_ = {};
+  std::pair<unsigned int, std::vector<std::size_t>> needs_rendering_ = {0, std::vector<std::size_t>()};
 };
 
 }

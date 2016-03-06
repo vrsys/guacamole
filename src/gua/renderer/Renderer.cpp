@@ -148,9 +148,9 @@ void Renderer::renderclient(Mailbox in) {
             Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
             #endif
           } else {
-            auto img(pipe->render_scene(CameraMode::LEFT,  *cmd.serialized_cam, *cmd.scene_graphs));
+            auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
             if (img) window->display(img, true);
-            img = pipe->render_scene(CameraMode::RIGHT,  *cmd.serialized_cam, *cmd.scene_graphs);
+            img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
             if (img) window->display(img, false);
           }
         } else {
@@ -178,7 +178,7 @@ Renderer::Renderer() :
   application_fps_.start();
 }
 
-void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
+void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bool alternate_frame_rendering) {
   for (auto graph : scene_graphs) {
     graph->update_cache();
   }
@@ -192,7 +192,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs) {
       if (rclient != render_clients_.end()) {
         rclient->second.first->push_back(
             Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-                 sgs));
+            sgs, alternate_frame_rendering));
 
       } else {
         auto window(WindowDatabase::instance()->lookup(window_name));

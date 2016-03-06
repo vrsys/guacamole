@@ -44,19 +44,19 @@ class DepthCubeMap : public RenderTarget {
 
   DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& tex_name);
 
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
-  virtual void bind(RenderContext const& context, bool write_depth) override;
+  void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
+  void bind(RenderContext const& context, bool write_depth) override;
 
-  virtual void set_viewport(RenderContext const& context) override;
+  void set_viewport(RenderContext const& context) override;
   void set_viewport_offset(math::vec2f const& offset);
   void set_viewport_size(math::vec2f const& size);
-  math::vec2f get_viewport_size();
+  math::vec2f get_viewport_size() const { return viewport_size_; }
 
-  virtual void remove_buffers(RenderContext const& ctx) override;
+  void remove_buffers(RenderContext const& ctx) override;
 
   void retrieve_data(RenderContext const& ctx, float near_clip, float far_clip);
 
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
+  std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
 
  private:
   scm::gl::frame_buffer_ptr fbo_;

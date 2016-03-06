@@ -56,11 +56,11 @@ math::vec3 ClippingPlaneNode::get_normal() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec4f ClippingPlaneNode::get_component_vector() const {
+math::vec4 ClippingPlaneNode::get_component_vector() const {
   auto normal(get_normal());
   auto center(get_center());
   auto dist(scm::math::dot(normal, -center));
-  return math::vec4f(normal.x, normal.y, normal.z, dist);
+  return math::vec4(normal.x, normal.y, normal.z, dist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
