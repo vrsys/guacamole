@@ -23,6 +23,8 @@ uniform sampler2DArray video_color_texture;
 
 @material_method_declarations_frag@
 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,10 +40,13 @@ void main() {
 
   vec3 coords = vec3(gua_texcoords, 0.0);
 
-  vec4 color_contributions[MAX_VIEWS];
+  const float maxdist = 1.0 / 0.0; // infinity 1000.0;
+  vec4 layer_contributions[MAX_VIEWS];
 
 
-  float maxdist = 1000.0;
+
+
+
   float mindist = maxdist;
   float ogldepth = 1.0;
 
@@ -49,53 +54,57 @@ void main() {
   for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
   {
     coords.z = float(l);
-    vec4 color_contribution = texture2DArray( quality_texture, coords);
-    float depth             = texture2DArray( depth_texture, coords).r;
-    vec3 normal             = unpack_vec3(color_contribution.b);
-    vec4 p_os = gua_inverse_projection_matrix * vec4(gua_texcoords.xy * 2.0f - vec2(1.0), depth*2.0f - 1.0f, 1.0);
-    p_os = p_os / p_os.w;
-    color_contribution.b = length(p_os.xyz);
+    const float depth             = texture2DArray( depth_texture, coords).r;
+    if(depth < 1.0){ // found kinect surface in layer
+      vec4 layer_contribution = texture2DArray( quality_texture, coords);
+      vec3 normal             = unpack_vec3(layer_contribution.b);
+      vec4 p_os = gua_inverse_projection_matrix * vec4(gua_texcoords.xy * 2.0f - vec2(1.0), depth*2.0f - 1.0f, 1.0);
+      p_os = p_os / p_os.w;
+      layer_contribution.b = length(p_os.xyz);
+      const float dist = layer_contribution.b;
+      layer_contributions[l] = layer_contribution;
 
-    float dist = color_contribution.b;
-
-    if(dist < maxdist && depth < 1.0)
-    {
-      color_contributions[l] = color_contribution;
-      if(dist < mindist){
+      if(dist < mindist){ // track minimum distance to eye
       	mindist = dist;
       	ogldepth = depth;
         output_normal = normal;
       }
-    } else {
-      color_contributions[l] = vec4(1.0,1.0,maxdist,1.0);
+
+    }
+    else{
+      layer_contributions[l] = vec4(1.0,1.0,maxdist,1.0);
     }
   }
 
+
+
   int accum = 0;
-  if(mindist < maxdist)  // we found at least one surface
-    {
-      vec4 finalcol = vec4(0.0);
-      
-      for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
-	{
-	  if( abs(color_contributions[l].b - mindist) < epsilon)
-	    {
-	      ++accum;
-	      vec4 color_contribution = color_contributions[l];
-	      vec4 color = texture2DArray( video_color_texture, vec3(color_contribution.xy,float(l)));
-	      finalcol.rgb += color.rgb * color_contribution.a;
-	      finalcol.a   += color_contribution.a;
-	    }
+  int best_layer = 0;
+  float best_quality = 0.0;
+  if(mindist < maxdist) {  // we found at least one kinect surface
+    vec4 finalcol = vec4(0.0);
+
+
+    for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l){
+      if( abs(layer_contributions[l].b - mindist) < epsilon){
+	++accum;
+	vec4 layer_contribution = layer_contributions[l];
+	vec3 color = texture2DArray( video_color_texture, vec3(layer_contribution.xy,float(l))).rgb;
+
+	finalcol.rgb += color * layer_contribution.a;
+	finalcol.a   += layer_contribution.a;
+
+	if(layer_contribution.a > best_quality){ // track best layer
+	  best_quality = layer_contribution.a;
+	  best_layer = l;
 	}
-      if(finalcol.a > 0.0)
-	{
-	  finalcol.rgba = finalcol.rgba/finalcol.a;
-	  output_depth  = ogldepth;
-	  output_color  = finalcol.rgb;
-	} else {
-	discard;
       }
-    } else {
+    }
+    finalcol.rgba = finalcol.rgba/finalcol.a;
+    output_color  = finalcol.rgb;
+    output_depth  = ogldepth;
+  }
+  else {
     discard;
   }
 
@@ -105,6 +114,26 @@ void main() {
 
   gua_normal = output_normal;
   gua_color = output_color;
+#if 0
+  if(layer_contributions[0].a < 0.999999)
+    gua_color.r = layer_contributions[0].a;
+  else
+    gua_color.r = 0;
+  if(layer_contributions[1].a < 0.999999)
+    gua_color.g = layer_contributions[1].a;
+  else
+    gua_color.g = 0;
+  if(layer_contributions[2].a < 0.999999)
+    gua_color.b = layer_contributions[2].a;
+  else
+    gua_color.b = 0;
+
+#endif  
+#if 0
+  gua_color = vec3(layer_contributions[0].a);
+  if(gua_color.r > 0.999999)
+    discard;
+#endif
 
   gl_FragDepth = output_depth;
 
