@@ -44,7 +44,7 @@ class GUA_DLL TexturedQuadNode : public SerializableNode {
 
   struct Configuration {
     GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
-    GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.f, 1.f));
+    GUA_ADD_PROPERTY(math::vec2,  size,       math::vec2(1.0, 1.0));
     GUA_ADD_PROPERTY(bool,        flip_x,     false);
     GUA_ADD_PROPERTY(bool,        flip_y,     false);
   };

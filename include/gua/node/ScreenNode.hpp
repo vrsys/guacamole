@@ -45,7 +45,7 @@ class GUA_DLL ScreenNode : public Node {
     /**
      * A vector containing width and height of the ScreenNode.
      */
-    GUA_ADD_PROPERTY(math::vec2, size, math::vec2(1.f, 1.f));
+    GUA_ADD_PROPERTY(math::vec2, size, math::vec2(1.0, 1.0));
   };
 
   /**

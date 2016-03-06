@@ -73,24 +73,29 @@ class GUA_DLL Renderer {
    *
    * \param scene_graphs      The SceneGraphs to be processed.
    */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs);
+  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bool alternate_frame_rendering = false);
 
   void draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs);
 
   void stop();
 
-  inline float get_application_fps() { return application_fps_.fps; }
+  inline float get_application_fps() { 
+    return application_fps_.fps; 
+  }
 
  private:
 
   struct Item {
     Item() = default;
     Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
-          std::shared_ptr<const SceneGraphs> const& sgs)
-        : serialized_cam(sc), scene_graphs(sgs) {}
+          std::shared_ptr<const SceneGraphs> const& sgs,
+          bool afr = false )
+          : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr) 
+    {}
 
     std::shared_ptr<node::SerializedCameraNode> serialized_cam;
     std::shared_ptr<const SceneGraphs>          scene_graphs;
+    bool                                        alternate_frame_rendering;
   };
 
   using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;

@@ -3,7 +3,7 @@
 ##############################################################################
 SET(PBR_INCLUDE_SEARCH_DIRS
   ${PBR_ROOT}/include
-  ${GLOBAL_EXT_DIR}/inc/pbr
+  ${GLOBAL_EXT_DIR}/pbr/include
   ${PBR_INCLUDE_SEARCH_DIR}
   ${PBR_ROOT}/common/include
   ${PBR_ROOT}/common/src
@@ -16,7 +16,7 @@ SET(PBR_INCLUDE_SEARCH_DIRS
 )
 
 SET(PBR_LIBRARY_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/lib
+  ${GLOBAL_EXT_DIR}/pbr/lib
   ${PBR_LIBRARY_SEARCH_DIR}
   ${PBR_ROOT}/lib
   /usr/lib

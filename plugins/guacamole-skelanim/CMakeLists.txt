@@ -23,7 +23,6 @@ ADD_LIBRARY( guacamole-skelanim SHARED
 
 TARGET_LINK_LIBRARIES( guacamole-skelanim
                        guacamole
-                       general ${SCHISM_LIBRARIES}
                        general ${GL_LIBRARIES})
 
 ADD_DEPENDENCIES(guacamole-skelanim guacamole)

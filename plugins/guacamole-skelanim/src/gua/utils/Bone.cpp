@@ -15,20 +15,22 @@
 
 namespace gua {
 
-Bone::Bone() : index { -1 }
-, name { "none" }
-, parentName { "none" }
-, numChildren { 0 }
-, transformation { scm::math::mat4f::identity() }
-, offsetMatrix { scm::math::mat4f::identity() }
+Bone::Bone()
+  : index (-1),
+    name( "none" ),
+    parentName ( "none" ),
+    numChildren ( 0 ),
+    transformation ( scm::math::mat4f::identity() ),
+    offsetMatrix ( scm::math::mat4f::identity() )
 {}
 
-Bone::Bone(aiNode const& node) : index { -1 }
-, name { node.mName.C_Str() }
-, parentName { node.mParent != nullptr ? node.mParent->mName.C_Str() : "none" }
-, numChildren { node.mNumChildren }
-, transformation { to_gua::mat4f(node.mTransformation) }
-, offsetMatrix { scm::math::mat4f::identity() }
+Bone::Bone(aiNode const& node)
+  : index ( -1 ),
+    name ( node.mName.C_Str() ),
+    parentName ( node.mParent != nullptr ? node.mParent->mName.C_Str() : "none" ),
+    numChildren ( node.mNumChildren ),
+    transformation ( to_gua::mat4f(node.mTransformation) ),
+    offsetMatrix ( scm::math::mat4f::identity() )
 {
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     auto child = std::make_shared<Bone>(*(node.mChildren[i]));
@@ -133,12 +135,13 @@ Bone::Bone(FbxScene& scene) {
   }
 }
 
-Bone::Bone(FbxNode& node) : index { -1 }
-, name { node.GetName() }
-, parentName { node.GetParent() != nullptr ? node.GetParent()->GetName() : "none" }
-, numChildren { unsigned(node.GetChildCount()) }
-, transformation { to_gua::mat4f(node.EvaluateLocalTransform()) }
-, offsetMatrix { scm::math::mat4f::identity() }
+Bone::Bone(FbxNode& node)
+  : index ( -1 )
+  , name ( node.GetName() )
+  , parentName ( node.GetParent() != nullptr ? node.GetParent()->GetName() : "none" )
+  , numChildren ( unsigned(node.GetChildCount()) )
+  , transformation ( to_gua::mat4f(node.EvaluateLocalTransform()) )
+  , offsetMatrix ( scm::math::mat4f::identity() )
 {
   for (int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() };

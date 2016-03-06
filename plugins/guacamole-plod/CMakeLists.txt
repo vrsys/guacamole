@@ -50,7 +50,7 @@ ADD_DEPENDENCIES(guacamole-PLOD guacamole)
 LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
 LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})
 
-include(find_protobuf)
+#include(find_protobuf)
 #set(PLOD_ROOT "/opt/pbr/gualod/trunk/pbr" CACHE PATH "Set to your PLOD install path.")
 
 #find_package(PLOD REQUIRED)

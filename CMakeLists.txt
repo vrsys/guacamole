@@ -23,6 +23,7 @@ option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
 option (GUACAMOLE_FBX "Set to enable FBX support." ON)
+option (GUACAMOLE_TESTS "Enable testing." OFF)
 
 # We require at least version 3.0.2
 cmake_minimum_required(VERSION 3.0.2)
@@ -73,42 +74,64 @@ set(GLOBAL_EXT_DIR ${GUACAMOLE_SOURCE_DIR}/externals)
 include(define_macros)
 include(find_compiler)
 
+## assimp ######################################################
 if (UNIX)
   pkg_check_modules(ASSIMP REQUIRED assimp)
   pkg_check_modules(GL REQUIRED gl)
   pkg_check_modules(GLEW REQUIRED glew)
   include(find_x11)
-elseif (WIN32)
+elseif (MSVC)
   include(FindAssimp)
-  include(FindFreeImage)
   set(GL_LIBRARIES OpenGL32.lib)
 endif (UNIX)
 
+## assimp ######################################################
+if (MSVC)
+  include(FindFreeImage)
+endif ()
+
+## schism ######################################################
 include(FindSchism)
 
+## boost ######################################################
 if (UNIX)
   set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
-  find_package(Boost COMPONENTS
-    system
-    regex
-    thread
-    REQUIRED
-    )
 elseif (WIN32)
-  include(FindBoostWindows)
+  set(BOOST_ROOT ${GLOBAL_EXT_DIR}/boost CACHE PATH "Set to your boost install")
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_MULTITHREADED ON)
+  add_definitions("-DBOOST_ALL_NO_LIB")
 endif (UNIX)
 
+mark_as_advanced(Boost_DIR)
+
+find_package( Boost 1.54.0 COMPONENTS
+  system
+  regex
+  thread
+  filesystem
+  date_time
+  program_options
+  timer
+  chrono
+  REQUIRED
+  )
+
+## ZMQ ######################################################
 include(FindZMQ)
 
+## bullet ###################################################
 if (GUACAMOLE_ENABLE_PHYSICS)
   if (UNIX)
     set (BULLET_ROOT "/opt/bullet/default" CACHE PATH "Set to your bullet install path.")
   elseif (WIN32)
-    set (BULLET_ROOT "externals/" CACHE PATH "Set to your bullet install path.")
+    set (BULLET_ROOT "externals/bullet" CACHE PATH "Set to your bullet install path.")
   endif (UNIX)
   find_package(Bullet REQUIRED)
+  include(FindHACD)
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
+## fbx ###################################################
 if (GUACAMOLE_FBX)
   include(FindFBX)
   set (FBX_ROOT "externals/fbx" CACHE PATH "Set to your FBX SDK install path.")
@@ -121,12 +144,20 @@ if (GUACAMOLE_FBX)
   find_package(FBX REQUIRED)
 endif (GUACAMOLE_FBX)
 
+## glfw ###################################################
 if (GUACAMOLE_GLFW3)
   find_package(GLFW3 REQUIRED)
 endif (GUACAMOLE_GLFW3)
 
+## unittest ###############################################
+if (GUACAMOLE_TESTS)
+  include(FindUnitTest++)
+endif()
+
+## json ###################################################
 find_package(Json REQUIRED)
 
+## setup paths and libraries ##############################
 set(LIB_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/lib
     ${ASSIMP_LIBRARY_DIRS}
@@ -134,7 +165,10 @@ set(LIB_PATHS
     ${GL_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
     ${Boost_LIBRARY_DIRS}
+    ${Boost_LIBRARY_DIR_RELEASE}
+    ${Boost_LIBRARY_DIR_DEBUG}
     ${BULLET_LIBRARY_DIRS}
+    ${FREEIMAGE_LIBRARY_DIR}
     ${FBX_LIBRARY_DIRS}
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
@@ -153,6 +187,7 @@ set(INCLUDE_PATHS
     ${GL_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${BULLET_INCLUDE_DIRS}
+    ${FREEIMAGE_INCLUDE_DIR}
     ${FBX_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
@@ -166,21 +201,21 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-IF (UNIX)
-	set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+if (UNIX)
+  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
-ELSEIF(MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
-	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
-ENDIF(UNIX)
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
+elseif(MSVC)
+  set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
+  set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
+endif(UNIX)
 
 ################################################################
 # Create GuaRC
 ################################################################
-IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+if (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
   add_subdirectory(guarc)
-ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
+endif (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ################################################################
 # Generate RC data
@@ -259,13 +294,17 @@ add_subdirectory(plugins)
 # Testing
 ################################################################
 
-option (GUACAMOLE_TESTS "Enable testing." OFF)
-
 if (GUACAMOLE_TESTS)
   add_subdirectory(tests)
   enable_testing()
   add_test( NAME testGUA COMMAND runTests )
 endif (GUACAMOLE_TESTS)
+
+################################################################
+## gather MSVC runtime libraries
+################################################################
+FILE(GLOB_RECURSE _RUNTIME_LIBRARIES ${GLOBAL_EXT_DIR} ${GLOBAL_EXT_DIR}/*.dll)
+SET(GUACAMOLE_RUNTIME_LIBRARIES ${_RUNTIME_LIBRARIES} CACHE INTERNAL "Runtime libraries.")
 
 ################################################################
 # Examples

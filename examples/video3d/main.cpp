@@ -134,6 +134,8 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
 
+  unsigned framecount = 0;
+
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object

@@ -155,7 +155,7 @@ Color3f const Color3f::random() {
   return result;
 }
 
-Color3f operator*(float const& lhs, Color3f rhs) {
+Color3f operator*(float lhs, Color3f const& rhs) {
   return Color3f(rhs.r() * lhs, rhs.g() * lhs, rhs.b() * lhs);
 }
 
