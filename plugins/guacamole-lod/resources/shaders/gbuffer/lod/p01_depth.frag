@@ -38,7 +38,6 @@ void main() {
     }
   }
 
-  gl_FragDepth = (gl_FragCoord.z * gua_clip_far + VertexIn.pass_es_shift) / gua_clip_far;//( ( -(es_linear_depth_corner + es_shift ) ) / gua_clip_far);; // this is used for depth testing/early z in accum pass
-
+  gl_FragDepth = (gl_FragCoord.z * gua_clip_far + VertexIn.pass_es_shift) / gua_clip_far;
 }
 

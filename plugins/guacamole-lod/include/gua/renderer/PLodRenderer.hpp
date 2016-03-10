@@ -51,7 +51,7 @@ namespace gua {
   
     void reload_programs();
 
- private:  //shader related auxiliary methods
+  private:  //shader related auxiliary methods
   
   void          _load_shaders();
   void          _initialize_log_to_lin_conversion_pass_program();
@@ -68,17 +68,17 @@ namespace gua {
                                     scm::math::vec2ui const& render_target_dims,
 				    bool resize_resource_containers); 
   
- private:  //out-of-core related auxiliary methods
+  private:  //out-of-core related auxiliary methods
   
    lamure::context_t _register_context_in_cut_update(gua::RenderContext const& ctx);
 
- private: //misc auxiliary methods
-  bool _intersects(scm::gl::boxf const& bbox,
+  private: //misc auxiliary methods
+    bool _intersects(scm::gl::boxf const& bbox,
                    std::vector<math::vec4> const& global_planes) const;
 
    std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
    
- private:  //member variables
+  private:  //member variables
 
     //FBOs:
     //////////////////////////////////////////////////////////////////////////////////////

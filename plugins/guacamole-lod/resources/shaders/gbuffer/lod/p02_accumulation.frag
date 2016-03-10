@@ -16,10 +16,12 @@ const float gaussian[32] = float[](
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-in vec3 pass_point_color;
-in vec3 pass_normal;
-in vec2 pass_uv_coords;
-in float pass_log_depth;
+in VertexData {
+  in vec3 pass_point_color;
+  in vec3 pass_normal;
+  in vec2 pass_uv_coords;
+  in float pass_log_depth;
+} VertexIn;
 
 @include "common/gua_fragment_shader_input.glsl"
 
@@ -56,11 +58,11 @@ float weight = 0;
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-  vec2 uv_coords = pass_uv_coords;
+  vec2 uv_coords = VertexIn.pass_uv_coords;
 
   //turn normal to viewer
-  vec4 view_normal = gua_view_matrix * vec4(pass_normal, 0.0);
-  vec3 face_forward_normal = pass_normal.xyz;
+  vec4 view_normal = gua_view_matrix * vec4(VertexIn.pass_normal, 0.0);
+  vec3 face_forward_normal = VertexIn.pass_normal.xyz;
 
   if (view_normal.z < 0.0) {
     face_forward_normal = -face_forward_normal;
@@ -73,7 +75,6 @@ void main() {
 
 
   for (int i=0; i < gua_clipping_plane_count; ++i) {
-
     if (dot(gua_clipping_planes[i].xyz, gua_varying_world_position.xyz) + gua_clipping_planes[i].w < 0) {
       discard;
     }
@@ -82,8 +83,8 @@ void main() {
 
   @include "common/gua_global_variable_assignment.glsl"
 
-  gua_color = pass_point_color;
-  gua_normal = pass_normal;
+  gua_color      = VertexIn.pass_point_color;
+  gua_normal     = VertexIn.pass_normal;
   gua_metalness  = 0.0;
   gua_roughness  = 1.0;
   gua_emissivity = 1.0; // pass through if unshaded
@@ -91,12 +92,10 @@ void main() {
   @material_input@
   @material_method_calls_frag@
 
-  out_accumulated_color = vec3(weight * gua_color);
-  //out_accumulated_normal = vec4(weight * face_forward_normal, gl_FragCoord.z);
+  out_accumulated_color  = vec3(weight * gua_color);
   out_accumulated_normal = vec3(weight * face_forward_normal);
-  out_accumulated_pbr = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
+  out_accumulated_pbr    = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
 
-  out_accumulated_weight_and_depth = vec2(weight, weight * pass_log_depth);
-
+  out_accumulated_weight_and_depth = vec2(weight, weight * VertexIn.pass_log_depth);
 }
 
