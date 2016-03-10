@@ -26,22 +26,23 @@ out VertexData {
 
 void main() {
 
-  if(enable_backface_culling == false /*|| VertexIn[0].pass_normal.z > 0.0*/ ) {
+  if(enable_backface_culling == false || VertexIn[0].pass_normal.z > 0.0) {
 
       // --------------------------- common attributes -----------------------------------
-      vec3 s_pos_ms = gl_in[0].gl_Position.xyz; // poisition of surfel in model space
-      vec3 step_u   = VertexIn[0].pass_ms_u;
-      vec3 step_v   = VertexIn[0].pass_ms_v;
+      mat3x3 step_uv = mat3x3(gl_in[0].gl_Position.xyz,
+                              VertexIn[0].pass_ms_u,
+                              VertexIn[0].pass_ms_v);
 
       const float index_arr[8] = {-1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0};
 
       // ---------------------------------------------------------------------------------
       for(int idx = 0; idx < 4; ++idx ) {
-        float u_multiplier = index_arr[idx];
-        float v_multiplier = index_arr[idx + 4];
+        vec3 uv_multiplier = vec3(1.0, 
+                                  index_arr[idx],   
+                                  index_arr[idx + 4]);
 
-        VertexOut.pass_uv_coords        = vec2(u_multiplier, v_multiplier);
-        vec4 q_pos_ms                   = vec4( ( (s_pos_ms + (u_multiplier * step_u) ) + (v_multiplier * step_v) ) ,1.0);
+        VertexOut.pass_uv_coords        = uv_multiplier.yz;
+        vec4 q_pos_ms                   = vec4( (step_uv * uv_multiplier) , 1.0);
         gl_Position                     = gua_model_view_projection_matrix * q_pos_ms;
         VertexOut.pass_world_position   = (gua_model_matrix * q_pos_ms).xyz;
         EmitVertex();

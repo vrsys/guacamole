@@ -139,18 +139,34 @@ namespace gua {
 
     //CPU resources
     std::vector<ShaderProgramStage>                                      log_to_lin_conversion_shader_stages_;
+
+    //two pass HQ shader stages
     std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
     std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
     std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
 
+    //linked list HQ shader stages
+    std::vector<ShaderProgramStage>                                      linked_list_accumulation_shader_stages_;
+    std::vector<ShaderProgramStage>                                      linked_list_resolve_shader_stages_;
+    std::vector<ShaderProgramStage>                                      hole_filling_pass_shader_stages_;
+
+    //shadow pass shader stages
     std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
 
     //additional GPU resources 
     std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
+
+    //two pass HQ shader program
     std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
     std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 
+    //linked list HQ shader program
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > linked_list_accumulation_pass_programs_;
+    std::shared_ptr<ShaderProgram>                                       linked_list_resolve_pass_programs_;
+    std::shared_ptr<ShaderProgram>                                       hole_filling_pass_program_;
+
+    //shadow pass shader program
     std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
 
     SubstitutionMap                                                      global_substitution_map_;
