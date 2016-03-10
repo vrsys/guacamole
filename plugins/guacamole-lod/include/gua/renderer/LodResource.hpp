@@ -50,7 +50,8 @@
 namespace gua {
 
   namespace node{
-    class LodNode;
+    class PLodNode;
+    class MLodNode;
   };
 
 /**

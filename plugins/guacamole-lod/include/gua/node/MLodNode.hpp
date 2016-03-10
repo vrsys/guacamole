@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LOD_NODE_HPP
-#define GUA_LOD_NODE_HPP
+#ifndef GUA_M_LOD_NODE_HPP
+#define GUA_M_LOD_NODE_HPP
 
 // guacamole headers
 #include <exception>
@@ -39,24 +39,22 @@ class LodLoader;
 namespace node {
 
 /**
- * This class is used to represent pointcloud in the SceneGraph.
+ * This class is used to represent a multiresolution mesh in the SceneGraph.
  *
  * \ingroup gua_scenegraph
  */
-class GUA_LOD_DLL LodNode : public GeometryNode
+class GUA_LOD_DLL MLodNode : public GeometryNode
 {
 public:
   friend class ::gua::LodLoader;
 
   // c'tor
-  LodNode(std::string const& node_name,
+  MLodNode(std::string const& node_name,
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
-           float const radius_scale = 1.0f,
-           float const error_threshold = 2.5f,
-           bool const enable_backface_culling_by_normal = false);
+           float const error_threshold = 2.5f);
 
 public:  // method override
 
@@ -74,18 +72,12 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
 
-  float              get_radius_scale();
-  void               set_radius_scale(float const scale);
-
   float              get_error_threshold();
   void               set_error_threshold(float const threshold);
 
-  bool               get_enable_backface_culling_by_normal();
-  void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
-
 public:
   /**
-  * Implements ray picking for a point cloud
+  * Implements ray picking for a multiresolution mesh
   */
   void ray_test_impl(Ray const& ray,
                      int options,
@@ -112,12 +104,10 @@ private:  // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
 
-  float                         radius_scale_;
   float                         error_threshold_;
-  bool                          enable_backface_culling_by_normal_;
 };
 
 }  // namespace node {
 }  // namespace gua {
 
-#endif  // GUA_LOD_NODE_HPP
+#endif  // GUA_M_LOD_NODE_HPP

@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LOD_RENDERER_HPP
-#define GUA_LOD_RENDERER_HPP
+#ifndef GUA_P_LOD_RENDERER_HPP
+#define GUA_P_LOD_RENDERER_HPP
 
 #include <string>
 #include <map>
@@ -40,11 +40,11 @@ namespace gua {
   class MaterialShader;
   class ShaderProgram;
 
-  class LodRenderer {
+  class PLodRenderer {
  
   public:
 
-    LodRenderer();
+    PLodRenderer();
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
@@ -74,7 +74,7 @@ namespace gua {
 
  private: //misc auxiliary methods
   bool _intersects(scm::gl::boxf const& bbox,
-                   std::vector<math::vec4f> const& global_planes) const;
+                   std::vector<math::vec4> const& global_planes) const;
 
    std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
    
@@ -159,4 +159,4 @@ namespace gua {
 
 }
 
-#endif  // GUA_LOD_RENDERER_HPP
+#endif  // GUA_P_LOD_RENDERER_HPP
