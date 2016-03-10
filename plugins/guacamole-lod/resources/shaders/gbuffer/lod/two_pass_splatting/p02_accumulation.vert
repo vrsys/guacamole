@@ -28,7 +28,7 @@ out VertexData {
 
 
 void main() {
-  @include "common_LOD/PLOD_vertex_pass_through.glsl"
+  @include "../common_LOD/PLOD_vertex_pass_through.glsl"
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b); 
 }
