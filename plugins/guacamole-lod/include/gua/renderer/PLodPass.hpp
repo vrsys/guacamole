@@ -18,60 +18,29 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-// class header
-#include <gua/renderer/LodPass.hpp>
+#ifndef GUA_P_LOD_PASS_HPP
+#define GUA_P_LOD_PASS_HPP
 
 // guacamole headers
-#include <gua/renderer/LodResource.hpp>
-#include <gua/renderer/LodRenderer.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases.hpp>
-#include <gua/utils/Logger.hpp>
-
-#include <gua/config.hpp>
-
-#include <scm/gl_core/shader_objects.h>
-
-// external headers
-#include <sstream>
-#include <fstream>
-#include <regex>
-#include <list>
+#include <gua/renderer/Lod.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
 namespace gua {
 
-////////////////////////////////////////////////////////////////////////////////
+  class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription {
 
-LodPassDescription::LodPassDescription()
-  : PipelinePassDescription()
-{
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
-}
+  public : // typedefs, enums
 
-////////////////////////////////////////////////////////////////////////////////
+   friend class Pipeline;
 
-std::shared_ptr<PipelinePassDescription> LodPassDescription::make_copy() const {
-  return std::make_shared<LodPassDescription>(*this);
-}
+  public :
 
-////////////////////////////////////////////////////////////////////////////////
+    PLodPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-PipelinePass LodPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
-{
-  PipelinePass pass{ *this, ctx, substitution_map };
-
-  auto renderer = std::make_shared<LodRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
-}
+};
 
 }
+
+#endif  // GUA_P_LOD_PASS_HPP

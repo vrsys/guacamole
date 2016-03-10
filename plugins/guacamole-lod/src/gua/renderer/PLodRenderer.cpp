@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/LodRenderer.hpp>
+#include <gua/renderer/PLodRenderer.hpp>
 
 // guacamole headers
 #include <gua/renderer/LodResource.hpp>
@@ -29,7 +29,7 @@
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-#include <gua/node/LodNode.hpp>
+#include <gua/node/PLodNode.hpp>
 #include <gua/platform.hpp>
 #include <gua/guacamole.hpp>
 #include <gua/renderer/View.hpp>
@@ -55,11 +55,11 @@
 
 namespace gua {
 
-bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
-                              std::vector<math::vec4f> const& global_planes) const {
+bool PLodRenderer::_intersects(scm::gl::boxf const& bbox,
+                              std::vector<math::vec4> const& global_planes) const {
 
 
-  auto outside = [](math::vec4f const & plane, scm::math::vec3f const & point) {
+  auto outside = [](math::vec4 const & plane, scm::math::vec3f const & point) {
     return (plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3]) < 0;
   };
 
@@ -83,7 +83,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   return true;
 }
 
-  std::vector<math::vec3> LodRenderer::_get_frustum_corners_vs(gua::Frustum const& frustum) const{
+  std::vector<math::vec3> PLodRenderer::_get_frustum_corners_vs(gua::Frustum const& frustum) const{
     std::vector<math::vec4> tmp(8);
     std::vector<math::vec3> result(8);
 
@@ -106,7 +106,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  LodRenderer::LodRenderer() : shaders_loaded_(false),
+  PLodRenderer::PLodRenderer() : shaders_loaded_(false),
                                  gpu_resources_already_created_(false),
                                  depth_pass_program_(nullptr),
                                  normalization_pass_program_(nullptr),
@@ -117,7 +117,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_load_shaders() {
+  void PLodRenderer::_load_shaders() {
     //create stages only with one thread!
     if(!shaders_loaded_) {
 
@@ -154,7 +154,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_initialize_log_to_lin_conversion_pass_program() {
+  void PLodRenderer::_initialize_log_to_lin_conversion_pass_program() {
     if(!log_to_lin_conversion_pass_program_) {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(log_to_lin_conversion_shader_stages_);
@@ -164,7 +164,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_initialize_depth_pass_program() {
+  void PLodRenderer::_initialize_depth_pass_program() {
     if(!depth_pass_program_) {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(depth_pass_shader_stages_);
@@ -174,7 +174,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_initialize_accumulation_pass_program(MaterialShader* material) {
+  void PLodRenderer::_initialize_accumulation_pass_program(MaterialShader* material) {
     if(!accumulation_pass_programs_.count(material)) {
       auto program = std::make_shared<ShaderProgram>();
 
@@ -190,7 +190,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_initialize_normalization_pass_program() {
+  void PLodRenderer::_initialize_normalization_pass_program() {
     if(!normalization_pass_program_) {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(normalization_pass_shader_stages_);
@@ -200,7 +200,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_initialize_shadow_pass_program() {
+  void PLodRenderer::_initialize_shadow_pass_program() {
     if(!shadow_pass_program_) {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(shadow_pass_shader_stages_);
@@ -210,7 +210,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::_create_gpu_resources(gua::RenderContext const& ctx,
+  void PLodRenderer::_create_gpu_resources(gua::RenderContext const& ctx,
                                            scm::math::vec2ui const& render_target_dims,
              bool resize_resource_containers) {
 
@@ -311,7 +311,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
-  lamure::context_t LodRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
+  lamure::context_t PLodRenderer::_register_context_in_cut_update(gua::RenderContext const& ctx) {
     lamure::ren::controller* controller = lamure::ren::controller::get_instance(); 
     if (previous_frame_count_ != ctx.framecount) {
       controller->reset_system();
@@ -320,7 +320,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<ShaderProgram> LodRenderer::_get_material_program(MaterialShader* material,
+  std::shared_ptr<ShaderProgram> PLodRenderer::_get_material_program(MaterialShader* material,
                                                                      std::shared_ptr<ShaderProgram> const& current_program,
                                                                      bool& program_changed) {
     auto shader_iterator = accumulation_pass_programs_.find(material);
@@ -349,7 +349,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void LodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
+  void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
     RenderContext const& ctx(pipe.get_context());
 
@@ -367,14 +367,14 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
     ///////////////////////////////////////////////////////////////////////////
     //  sort nodes 
     ///////////////////////////////////////////////////////////////////////////
-    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::LodNode))));
+    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::PLodNode))));
 
     if (sorted_objects == scene.nodes.end() || sorted_objects->second.empty()) {
       return; // return if no nodes in scene
     }
 
     std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-      return reinterpret_cast<node::LodNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::LodNode*>(b)->get_material()->get_shader();
+      return reinterpret_cast<node::PLodNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLodNode*>(b)->get_material()->get_shader();
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -440,7 +440,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
       assert(log_to_lin_conversion_pass_program_ && depth_pass_program_ && normalization_pass_program_);
     }
     catch (std::exception& e) {
-      gua::Logger::LOG_ERROR << "Error: LodRenderer::render() : Failed to create programs. " << e.what() << std::endl;
+      gua::Logger::LOG_ERROR << "Error: PLodRenderer::render() : Failed to create programs. " << e.what() << std::endl;
     }
 
     target.set_viewport(ctx);
@@ -484,14 +484,14 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
     auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
-    std::unordered_map<node::LodNode*, lamure::ren::cut*> cut_map;
+    std::unordered_map<node::PLodNode*, lamure::ren::cut*> cut_map;
     std::unordered_map<lamure::model_t, std::unordered_set<lamure::node_t> > nodes_in_frustum_per_model;
 
 
     //loop through all models and perform frustum culling
     for (auto const& object : sorted_objects->second) {
 
-      auto plod_node(reinterpret_cast<node::LodNode*>(object));
+      auto plod_node(reinterpret_cast<node::PLodNode*>(object));
 
       lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
 
@@ -567,7 +567,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
           std::cout << "Log to lin pass program not instanciated\n";
         }
 
-        std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodRenderer::DepthConversionPass";
+        std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthConversionPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
 
         log_to_lin_conversion_pass_program_->use(ctx);
@@ -601,8 +601,8 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
         fullscreen_quad_->draw(ctx.render_context);
 
-        //pipe.end_cpu_query("CPU : LodRenderer::depth_conversion_pass");
-        //pipe.end_gpu_query(ctx, "GPU : LodRenderer::depth_conversion_pass");
+        //pipe.end_cpu_query("CPU : PLodRenderer::depth_conversion_pass");
+        //pipe.end_gpu_query(ctx, "GPU : PLodRenderer::depth_conversion_pass");
 
         log_to_lin_conversion_pass_program_->unuse(ctx);
 
@@ -617,7 +617,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodRenderer::DepthPass";
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -629,7 +629,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
         //loop through all models and render depth pass
         for (auto const& object : sorted_objects->second) {
 
-          auto plod_node(reinterpret_cast<node::LodNode*>(object));
+          auto plod_node(reinterpret_cast<node::PLodNode*>(object));
 
           lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
 
@@ -666,7 +666,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
           }
           else {
-            Logger::LOG_WARNING << "LodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 
@@ -684,7 +684,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodRenderer::AccumulationPass";
+        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::AccumulationPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -700,7 +700,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
         //loop through all models and render accumulation pass
         for (auto const& object : sorted_objects->second) {
 
-          auto plod_node(reinterpret_cast<node::LodNode*>(object));
+          auto plod_node(reinterpret_cast<node::PLodNode*>(object));
           lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
 
           auto& cut = *(cut_map.at(plod_node));
@@ -753,7 +753,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
             program_changed = false;
           }
           else {
-            Logger::LOG_WARNING << "LodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 
@@ -771,7 +771,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
        {
          scm::gl::context_all_guard context_guard(ctx.render_context);
 
-         std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodRenderer::NormalizationPass";
+         std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::NormalizationPass";
          pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
 
 
@@ -815,7 +815,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
       {
         scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodRenderer::DepthPass";
+        std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -824,7 +824,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
         for (auto const& object : sorted_objects->second) {
 
-          auto plod_node(reinterpret_cast<node::LodNode*>(object));
+          auto plod_node(reinterpret_cast<node::PLodNode*>(object));
 
           lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
 
@@ -860,7 +860,7 @@ bool LodRenderer::_intersects(scm::gl::boxf const& bbox,
 
           }
           else {
-            Logger::LOG_WARNING << "LodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 

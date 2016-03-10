@@ -36,7 +36,8 @@ namespace gua {
 
 namespace node {
   class Node;
-  class LodNode;
+  class PLodNode;
+  class MLodNode;
 }
 
 /**
@@ -61,13 +62,21 @@ class GUA_LOD_DLL LodLoader {
 
 public:
 
-  std::shared_ptr<node::LodNode> load_geometry(std::string const& file_name,
-                                                unsigned flags = DEFAULTS);
+  std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& file_name,
+                                                      unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::LodNode> load_geometry(std::string const& node_name,
-                                                std::string const& file_name,
-                                                std::shared_ptr<Material> const& fallback_material,
-                                                unsigned flags =  DEFAULTS);
+  std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& node_name,
+                                                      std::string const& file_name,
+                                                      std::shared_ptr<Material> const& fallback_material,
+                                                      unsigned flags =  DEFAULTS);
+
+  std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& file_name,
+                                                   unsigned flags = DEFAULTS);
+
+  std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& node_name,
+                                                   std::string const& file_name,
+                                                   std::shared_ptr<Material> const& fallback_material,
+                                                   unsigned flags =  DEFAULTS);
 
   void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
  
@@ -75,13 +84,13 @@ public:
    * Pointcloud-specific picking methods. Might be moved into a separate object later.
    *
    */
-  std::pair<std::string, math::vec3> pick_plod_bvh(math::vec3 const& ray_origin,
+  std::pair<std::string, math::vec3> pick_lod_bvh(math::vec3 const& ray_origin,
                                                    math::vec3 const& ray_forward,
                                                    float max_distance,
                                                    std::set<std::string> const& model_filenames,
                                                     float aabb_scale) const;
                               
-  std::set<PickResult> pick_plod_interpolate(math::vec3 const& bundle_origin,
+  std::set<PickResult> pick_lod_interpolate(math::vec3 const& bundle_origin,
                                              math::vec3 const& bundle_forward,
                                              math::vec3 const& bundle_up,
                                              float bundle_radius,
