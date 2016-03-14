@@ -74,7 +74,7 @@ class TriMeshRessource : public GeometryResource {
    *
    * \param context          The RenderContext to draw onto.
    */
-  void draw(RenderContext const& context) const;
+  void draw(RenderContext& context) const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
@@ -89,17 +89,11 @@ class TriMeshRessource : public GeometryResource {
 
  private:
 
-  void upload_to(RenderContext const& context) const;
-
-  mutable std::vector<scm::gl::buffer_ptr> vertices_;
-  mutable std::vector<scm::gl::buffer_ptr> indices_;
-  mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
-  mutable std::mutex upload_mutex_;
+  void upload_to(RenderContext& context) const;
 
  public:
 
   KDTree kd_tree_;
-
   Mesh mesh_;
 };
 
