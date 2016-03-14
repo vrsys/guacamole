@@ -33,13 +33,13 @@
 namespace gua {
 
 SkinnedMeshResource::SkinnedMeshResource()
-    : upload_mutex_(), mesh_() {}
+    : mesh_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 SkinnedMeshResource::SkinnedMeshResource(SkinnedMesh const& mesh,
                                          bool build_kd_tree)
-    : upload_mutex_(), mesh_(mesh) {
+    : mesh_(mesh) {
 
   //TODO generate BBox and KDTree
   //if (mesh_->HasPositions()) {
@@ -54,6 +54,9 @@ SkinnedMeshResource::SkinnedMeshResource(SkinnedMesh const& mesh,
 
   bone_boxes_ = std::vector<math::BoundingBox<math::vec3> >(
       100, math::BoundingBox<math::vec3>());
+
+  // init non transformated/animated bone boxes
+  init_bone_boxes();
 
   // TODO
   /*if (build_kd_tree) {
@@ -74,8 +77,6 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
                         << std::endl;
     return;
   }
-
-  std::unique_lock<std::mutex> lock(upload_mutex_);
 
   cmesh.vertices = ctx.render_device
       ->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
@@ -198,8 +199,6 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
 
   resource->offset += mesh_.get_bone_weights().size();
 
-  // init non transformated/animated bone boxes
-  init_bone_boxes();
   ctx.render_context->apply();
 }
 
