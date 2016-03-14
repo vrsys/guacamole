@@ -112,12 +112,7 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
   void upload_to(RenderContext& ctx) /*const*/;
 
   SkinnedMesh mesh_;
-
-  mutable std::mutex upload_mutex_; // neeed for bone_boxes_
-
   std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
-
-  /////////////////////////////////
 
  // public:
  //  KDTree kd_tree_;
