@@ -246,9 +246,9 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe,
     ctx.render_context->apply();
 
     if (lights[i].type == 0) // point light
-      light_sphere->draw(ctx);
+      light_sphere->draw(pipe.get_context());
     else if (lights[i].type == 1) // spot light
-      light_cone->draw(ctx);
+      light_cone->draw(pipe.get_context());
   }
 }
 

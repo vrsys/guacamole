@@ -70,7 +70,7 @@ class GUA_DLL GeometryResource {
     return bounding_box_;
   }
 
-  inline std::size_t uuid() { return uuid_; }
+  inline std::size_t uuid() const { return uuid_; }
 
  protected:
 
