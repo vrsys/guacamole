@@ -202,7 +202,6 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
     }
 
     resource->offset += mesh_.get_bone_weights().size();
-    res_ = resource;
 
     // init non transformated/animated bone boxes
     // use every single vertex to be manipulated by a certain bone per bone box

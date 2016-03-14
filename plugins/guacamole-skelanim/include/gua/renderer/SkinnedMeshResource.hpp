@@ -118,8 +118,6 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
   mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
   mutable std::mutex upload_mutex_;
 
-  std::shared_ptr<SharedBoneResource> res_ = nullptr;
-
   std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
 
   /////////////////////////////////
