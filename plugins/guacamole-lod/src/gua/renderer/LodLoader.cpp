@@ -26,7 +26,8 @@
 #include <gua/utils.hpp>
 #include <gua/utils/Logger.hpp>
 
-#include <gua/node/LodNode.hpp>
+#include <gua/node/PLodNode.hpp>
+#include <gua/node/MLodNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/LodResource.hpp>
@@ -42,16 +43,14 @@ namespace gua {
 /////////////////////////////////////////////////////////////////////////////
 LodLoader::LodLoader() : _supported_file_extensions() {
   _supported_file_extensions.insert("bvh");
-  _supported_file_extensions.insert("kdn");
   _supported_file_extensions.insert("BVH");
-  _supported_file_extensions.insert("KDN");
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::LodNode> LodLoader::load_geometry(std::string const& nodename,
-                                                          std::string const& filename,
-                                                          std::shared_ptr<Material> const& material,
-                                                          unsigned flags)
+std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& nodename,
+                                                               std::string const& filename,
+                                                               std::shared_ptr<Material> const& material,
+                                                               unsigned flags)
 {
   try {
     if(!is_supported(filename)){
@@ -60,16 +59,75 @@ std::shared_ptr<node::LodNode> LodLoader::load_geometry(std::string const& noden
     else {
       lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
 
-      GeometryDescription desc("Lod", filename, 0, flags);
+      GeometryDescription desc("PLod", filename, 0, flags);
 
       lamure::model_t model_id = database->add_model(filename, desc.unique_key());
+      if (database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::POINTCLOUD) {
+         Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_trimesh for meshes" << std::endl;
+         return nullptr;
+      }
 
       math::mat4 local_transform = scm::math::make_translation(math::vec3(database->get_model(model_id)->get_bvh()->get_translation()));
 
       auto resource = std::make_shared<LodResource>(model_id, flags & LodLoader::MAKE_PICKABLE, local_transform);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-      auto node = std::make_shared<node::LodNode>(nodename, desc.unique_key(), filename, material);
+      auto node = std::make_shared<node::PLodNode>(nodename, desc.unique_key(), filename, material);
+      
+      node->update_cache();
+     
+      auto bbox = resource->get_bounding_box();
+
+      //normalize position?
+      auto normalize_position = flags & LodLoader::NORMALIZE_POSITION;
+      if (normalize_position) {
+        auto bbox_center_object_space = local_transform * math::vec4(bbox.center().x, bbox.center().y, bbox.center().z, 1.0);
+        node->translate(-bbox_center_object_space.x, -bbox_center_object_space.y, -bbox_center_object_space.z);
+      }
+
+      //normalize scale?
+      auto normalize_scale = flags & LodLoader::NORMALIZE_SCALE;
+      if (normalize_scale) {
+        auto scale = 1.0f / scm::math::length(bbox.max - bbox.min);
+        node->scale(scale, scale, scale);
+      }
+
+      return node;
+    }
+  } catch (std::exception & e) {
+    Logger::LOG_WARNING << "Failed to load Lod object \"" << filename << "\": " << e.what() << std::endl;
+    return nullptr;
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& nodename,
+                                                            std::string const& filename,
+                                                            std::shared_ptr<Material> const& material,
+                                                            unsigned flags)
+{
+  try {
+    if(!is_supported(filename)){
+      throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
+    }
+    else {
+      lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
+
+      GeometryDescription desc("MLod", filename, 0, flags);
+
+      lamure::model_t model_id = database->add_model(filename, desc.unique_key());
+      if (database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::TRIMESH) {
+         Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_pointcloud for pointclouds" << std::endl;
+         return nullptr;
+      }
+
+      math::mat4 local_transform = scm::math::make_translation(math::vec3(database->get_model(model_id)->get_bvh()->get_translation()));
+
+      auto resource = std::make_shared<LodResource>(model_id, flags & LodLoader::MAKE_PICKABLE, local_transform);
+      GeometryDatabase::instance()->add(desc.unique_key(), resource);
+
+      auto node = std::make_shared<node::MLodNode>(nodename, desc.unique_key(), filename, material);
       
       node->update_cache();
      
@@ -99,25 +157,46 @@ std::shared_ptr<node::LodNode> LodLoader::load_geometry(std::string const& noden
 
 
 
+
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::LodNode> LodLoader::load_geometry(std::string const& filename, unsigned flags)
-{
+std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& filename, unsigned flags) {
 
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
   auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
   gua::MaterialShaderDatabase::instance()->add(material_shader);
 
-  auto cached_node(load_geometry(filename, filename, material_shader->make_new_material(), flags));
+  auto cached_node(load_lod_pointcloud(filename, filename, material_shader->make_new_material(), flags));
 
   if (cached_node) {
     return cached_node;
   }
 
-  Logger::LOG_WARNING << "LodLoader::load_geometry() : unable to create Lod Node" << std::endl;
-  return std::shared_ptr<node::LodNode>(new node::LodNode(filename));
+  Logger::LOG_WARNING << "LodLoader::load_lod_pointcloud() : unable to create Lod Node" << std::endl;
+  return std::shared_ptr<node::PLodNode>(new node::PLodNode(filename));
 
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags) {
+
+  auto desc = std::make_shared<gua::MaterialShaderDescription>();
+  auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
+  gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+  auto cached_node(load_lod_trimesh(filename, filename, material_shader->make_new_material(), flags));
+
+  if (cached_node) {
+    return cached_node;
+  }
+
+  Logger::LOG_WARNING << "LodLoader::load_lod_trimesh() : unable to create Lod Node" << std::endl;
+  return std::shared_ptr<node::MLodNode>(new node::MLodNode(filename));
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +211,7 @@ bool LodLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 void LodLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const {
-  auto g_node(std::dynamic_pointer_cast<node::LodNode>(root));
+  auto g_node(std::dynamic_pointer_cast<node::PLodNode>(root));
 
   if(g_node) {
     if (!g_node->get_material()) {
@@ -154,7 +233,7 @@ void LodLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
 }
 /////////////////////////////////////////////////////////////////////////////////
 
-std::pair<std::string, math::vec3> LodLoader::pick_plod_bvh(math::vec3 const& ray_origin,
+std::pair<std::string, math::vec3> LodLoader::pick_lod_bvh(math::vec3 const& ray_origin,
                                       math::vec3 const& ray_forward,
                                       float max_distance,
                                       std::set<std::string> const& model_filenames,
@@ -179,7 +258,7 @@ std::pair<std::string, math::vec3> LodLoader::pick_plod_bvh(math::vec3 const& ra
 
 ///////////////////////////////////////////////////////////////////////////////
 
-std::set<PickResult> LodLoader::pick_plod_interpolate(math::vec3 const& bundle_origin,
+std::set<PickResult> LodLoader::pick_lod_interpolate(math::vec3 const& bundle_origin,
                                            math::vec3 const& bundle_forward,
                                            math::vec3 const& bundle_up,
                                            float bundle_radius,

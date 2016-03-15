@@ -18,8 +18,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_LOD_PASS_HPP
-#define GUA_LOD_PASS_HPP
+#ifndef GUA_M_LOD_PASS_HPP
+#define GUA_M_LOD_PASS_HPP
 
 // guacamole headers
 #include <gua/renderer/Lod.hpp>
@@ -27,7 +27,7 @@
 
 namespace gua {
 
-  class GUA_LOD_DLL LodPassDescription : public PipelinePassDescription {
+  class GUA_LOD_DLL MLodPassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
 
@@ -35,7 +35,7 @@ namespace gua {
 
   public :
 
-    LodPassDescription();
+    MLodPassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
@@ -43,4 +43,4 @@ namespace gua {
 
 }
 
-#endif  // GUA_LOD_PASS_HPP
+#endif  // GUA_M_LOD_PASS_HPP
