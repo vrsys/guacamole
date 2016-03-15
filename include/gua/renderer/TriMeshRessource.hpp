@@ -79,8 +79,8 @@ class TriMeshRessource : public GeometryResource {
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits);
 
-  unsigned int num_vertices() const;
-  unsigned int num_faces() const;
+  inline unsigned int num_vertices() const { return mesh_.num_vertices; }
+  inline unsigned int num_faces() const { return mesh_.num_triangles; }
 
   math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
