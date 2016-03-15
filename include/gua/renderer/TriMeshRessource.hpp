@@ -85,13 +85,9 @@ class TriMeshRessource : public GeometryResource {
   math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-  friend class LightingPass;
-
  private:
 
   void upload_to(RenderContext& context) const;
-
- public:
 
   KDTree kd_tree_;
   Mesh mesh_;
