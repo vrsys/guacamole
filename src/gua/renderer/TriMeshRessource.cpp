@@ -39,7 +39,7 @@ TriMeshRessource::TriMeshRessource()
 ////////////////////////////////////////////////////////////////////////////////
 
 TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree)
-    : mesh_(mesh) {
+    : kd_tree_(), mesh_(mesh) {
 
   if (mesh_.num_vertices > 0) {
     bounding_box_ = math::BoundingBox<math::vec3>();
@@ -97,11 +97,9 @@ void TriMeshRessource::upload_to(RenderContext& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshRessource::draw(RenderContext& ctx) const {
-
-  // upload to GPU if neccessary
-
   auto iter = ctx.meshes.find(uuid());
   if (iter == ctx.meshes.end()) {
+    // upload to GPU if neccessary
     upload_to(ctx);
     iter = ctx.meshes.find(uuid());
   }
@@ -120,16 +118,7 @@ void TriMeshRessource::ray_test(Ray const& ray, int options,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned int TriMeshRessource::num_vertices() const { return mesh_.num_vertices; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-unsigned int TriMeshRessource::num_faces() const { return mesh_.num_triangles; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
-
   return math::vec3(
       mesh_.positions[i].x, mesh_.positions[i].y, mesh_.positions[i].z);
 }
@@ -137,9 +126,7 @@ math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
-
   std::vector<unsigned int> face{mesh_.indices[i]};
-  
   return face;
 }
 
