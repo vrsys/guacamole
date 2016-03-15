@@ -28,8 +28,8 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/LodLoader.hpp>
-#include <gua/renderer/LodPass.hpp>
-#include <gua/node/LodNode.hpp>
+#include <gua/renderer/PLodPass.hpp>
+#include <gua/node/PLodNode.hpp>
 #include <scm/gl_util/manipulators/trackball_manipulator.h>
 
 
@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
   lod_loader.set_upload_budget_in_mb(20);
 
   //load a sample pointcloud
-  auto lod_node = lod_loader.load_geometry(
+  auto lod_node = lod_loader.load_lod_pointcloud(
     "pointcloud", 
-    "/opt/3d_models/point_based/lod/pig_pr.bvh", 
+    "/opt/3d_models/point_based/plod/pig_pr.bvh", 
     lod_rough, 
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LodPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLodPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());

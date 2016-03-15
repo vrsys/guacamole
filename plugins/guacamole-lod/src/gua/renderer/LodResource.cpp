@@ -23,7 +23,7 @@
 #include <gua/renderer/LodResource.hpp>
 
 #include <gua/utils/Singleton.hpp>
-#include <gua/node/LodNode.hpp>
+#include <gua/node/PLodNode.hpp>
 
 #include <scm/gl_core/render_device.h>
 #include <scm/gl_core/buffer_objects.h>
@@ -109,8 +109,7 @@ void LodResource::draw(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-math::mat4 const& LodResource::local_transform() const
-{
+math::mat4 const& LodResource::local_transform() const {
   return local_transform_;
 }
 

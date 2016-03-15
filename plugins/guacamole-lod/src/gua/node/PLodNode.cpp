@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include "gua/node/LodNode.hpp"
+#include "gua/node/PLodNode.hpp"
 
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
@@ -38,7 +38,7 @@ namespace gua {
 namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
-LodNode::LodNode(std::string const& name,
+PLodNode::PLodNode(std::string const& name,
                    std::string const& geometry_description,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
@@ -58,12 +58,12 @@ LodNode::LodNode(std::string const& name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<LodResource> const& LodNode::get_geometry() const {
+std::shared_ptr<LodResource> const& PLodNode::get_geometry() const {
   return geometry_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-math::mat4 LodNode::get_world_transform() const {
+math::mat4 PLodNode::get_world_transform() const {
   if (!geometry_) {
     return Node::get_world_transform();
   }
@@ -78,68 +78,68 @@ math::mat4 LodNode::get_world_transform() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& LodNode::get_geometry_file_path() const {
+std::string const& PLodNode::get_geometry_file_path() const {
   return geometry_file_path_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& LodNode::get_geometry_description() const {
+std::string const& PLodNode::get_geometry_description() const {
   return geometry_description_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::set_geometry_description(std::string const& v) {
+void PLodNode::set_geometry_description(std::string const& v) {
   geometry_description_ = v;
   geometry_changed_ = self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Material> const& LodNode::get_material() const {
+std::shared_ptr<Material> const& PLodNode::get_material() const {
   return material_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::set_material(std::shared_ptr<Material> const& material) {
+void PLodNode::set_material(std::shared_ptr<Material> const& material) {
   material_ = material;
   material_changed_ = self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::set_radius_scale(float const scale) {
+void PLodNode::set_radius_scale(float const scale) {
   radius_scale_ = scale;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float LodNode::get_radius_scale() {
+float PLodNode::get_radius_scale() {
   return radius_scale_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::set_error_threshold(float const threshold) {
+void PLodNode::set_error_threshold(float const threshold) {
   error_threshold_ = threshold;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float LodNode::get_error_threshold() {
+float PLodNode::get_error_threshold() {
   return error_threshold_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::set_enable_backface_culling_by_normal(
+void PLodNode::set_enable_backface_culling_by_normal(
     bool const enable_backface_culling) {
   enable_backface_culling_by_normal_ = enable_backface_culling;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool LodNode::get_enable_backface_culling_by_normal() {
+bool PLodNode::get_enable_backface_culling_by_normal() {
   return enable_backface_culling_by_normal_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::ray_test_impl(Ray const& ray,
+void PLodNode::ray_test_impl(Ray const& ray,
                              int options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
@@ -176,7 +176,7 @@ void LodNode::ray_test_impl(Ray const& ray,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::update_bounding_box() const {
+void PLodNode::update_bounding_box() const {
   if (geometry_) {
     auto geometry_bbox(geometry_->get_bounding_box());
     bounding_box_ = transform(geometry_bbox, world_transform_);
@@ -190,17 +190,17 @@ void LodNode::update_bounding_box() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LodNode::update_cache() {
+void PLodNode::update_cache() {
   if (geometry_changed_) {
     if (geometry_description_ != "") {
       if (!GeometryDatabase::instance()->contains(geometry_description_)) {
         GeometryDescription desc(geometry_description_);
         try {
           gua::LodLoader loader;
-          loader.load_geometry(desc.filepath(), desc.flags());
+          loader.load_lod_pointcloud(desc.filepath(), desc.flags());
         } catch (std::exception& e) {
           Logger::LOG_WARNING
-              << "LodNode::update_cache(): Loading failed from "
+              << "PLodNode::update_cache(): Loading failed from "
               << desc.filepath() << " : " << e.what() << std::endl;
         }
       }
@@ -249,13 +249,13 @@ void LodNode::update_cache() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void LodNode::accept(NodeVisitor& visitor) {
+/* virtual */ void PLodNode::accept(NodeVisitor& visitor) {
   visitor.visit(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Node> LodNode::copy() const {
-  std::shared_ptr<LodNode> result = std::make_shared<LodNode>(*this);
+std::shared_ptr<Node> PLodNode::copy() const {
+  std::shared_ptr<PLodNode> result = std::make_shared<PLodNode>(*this);
 
   result->update_cache();
 
