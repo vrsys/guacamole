@@ -79,7 +79,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
   auto& target = *pipe.current_viewstate().target;
 
   auto const& ctx(pipe.get_context());
-  
+
   if (!initialized_) {
     initialized_ = true;
 
@@ -167,8 +167,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.max), "bbx_max");
 
         // pre passes
-        for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer)
-        {
+        for (unsigned layer = 0; layer != video3d_ressource->number_of_cameras(); ++layer) {
           // configure fbo
           warp_result_fbo_->clear_attachments();
           warp_result_fbo_->attach_depth_stencil_buffer(warp_depth_result_, 0, layer);
@@ -184,26 +183,21 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
           warp_pass_program_->set_uniform(ctx, int(layer), "layer");
 
+          ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_, 1);
+          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
-          if (video3d_ressource)
+          ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_, 2);
+          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
+
+          warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
+          warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_max_d, "cv_max_d");
+
+          warp_pass_program_->use(ctx);
           {
-
-            ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_, 1);
-            warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
-
-            ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_, 2);
-            warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
-
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
-            warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_max_d, "cv_max_d");
-
-            warp_pass_program_->use(ctx);
-            {
-              // ctx.render_context->apply();
-              video3d_ressource->draw(pipe.get_context());
-            }
-            warp_pass_program_->unuse(ctx);
+            // ctx.render_context->apply();
+            video3d_ressource->draw(pipe.get_context());
           }
+          warp_pass_program_->unuse(ctx);
 
           ctx.render_context->reset_framebuffer();
         }
@@ -216,11 +210,9 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
       if (current_material) {
 
         auto shader_iterator = programs_.find(current_material);
-        if (shader_iterator != programs_.end())
-        {
+        if (shader_iterator != programs_.end()) {
           current_shader = shader_iterator->second;
-        }
-        else {
+        } else {
           auto smap = global_substitution_map_;
           for (const auto& i: current_material->generate_substitution_map())
             smap[i.first] = i.second;
@@ -228,9 +220,8 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           current_shader = std::make_shared<ShaderProgram>();
           current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
           programs_[current_material] = current_shader;
-        }           
-      }
-      else {
+        }
+      } else {
         Logger::LOG_WARNING << "Video3DPass::render(): Cannot find material: " << video_node->get_material()->get_shader_name() << std::endl;
       }
 
@@ -248,11 +239,10 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
         // second pass
         {
-          if (video3d_ressource)
-          {
+          if (video3d_ressource) {
             current_shader->apply_uniform(ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
             current_shader->apply_uniform(ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
-	    
+
             // needs to be multiplied with scene scaling
             current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
             current_shader->set_uniform(ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
@@ -267,7 +257,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
             ctx.render_context->bind_texture(video3d_ressource->color_array(ctx), linear_sampler_state_, 2);
             current_shader->get_program(ctx)->uniform_sampler("video_color_texture", 2);
-            
+
             video_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
 
             ctx.render_context->apply();
