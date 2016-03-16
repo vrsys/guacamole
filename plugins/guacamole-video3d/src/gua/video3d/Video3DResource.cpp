@@ -46,6 +46,30 @@
 
 namespace {
 
+// compute index array (proxy mesh)
+std::vector<unsigned> compute_index_array(int size, unsigned width, unsigned height)
+{
+  std::vector<unsigned> index_array(size);
+  unsigned v(0);
+  for (unsigned h(0); h < (height - 1); ++h) {
+    for (unsigned w(0); w < (width - 1); ++w) {
+      index_array[v] = (w + h * width);
+      ++v;
+      index_array[v] = (w + h * width + 1);
+      ++v;
+      index_array[v] = (w + h * width + width);
+      ++v;
+      index_array[v] = (w + h * width + width);
+      ++v;
+      index_array[v] = (w + h * width + 1);
+      ++v;
+      index_array[v] = (w + h * width + 1 + width);
+      ++v;
+    }
+  }
+  return index_array;
+}
+
 #if 0
   // not needed for proxy mesh
   struct Vertex {
@@ -221,26 +245,7 @@ void Video3DResource::upload_proxy_mesh(RenderContext& ctx) const
 
   ctx.render_context->unmap_buffer(proxy_mesh.vertices);
 
-  std::vector<unsigned> index_array(num_triangle_indices);
-
-  // compute index array (proxy mesh)
-  v = 0;
-  for (unsigned h(0); h < (height_depthimage_ - 1); ++h) {
-    for (unsigned w(0); w < (width_depthimage_ - 1); ++w) {
-      index_array[v] = (w + h * width_depthimage_);
-      ++v;
-      index_array[v] = (w + h * width_depthimage_ + 1);
-      ++v;
-      index_array[v] = (w + h * width_depthimage_ + width_depthimage_);
-      ++v;
-      index_array[v] = (w + h * width_depthimage_ + width_depthimage_);
-      ++v;
-      index_array[v] = (w + h * width_depthimage_ + 1);
-      ++v;
-      index_array[v] = (w + h * width_depthimage_ + 1 + width_depthimage_);
-      ++v;
-    }
-  }
+  std::vector<unsigned> index_array = compute_index_array(num_triangle_indices, width_depthimage_, height_depthimage_);
 
   proxy_mesh.indices =
     ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
