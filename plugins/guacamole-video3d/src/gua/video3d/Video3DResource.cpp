@@ -79,7 +79,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
   height_depthimage_(),
   width_colorimage_(),
   height_colorimage_(),
-  upload_mutex_(),
   overwrite_normal_(false),
   o_normal_(),
   is_pickable_(flags & Video3DLoader::MAKE_PICKABLE)
@@ -93,7 +92,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DResource::init()
 {
-
   // approximately local space - can be overwritten from .ks file
   bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-1.5,-0.1,-1.0),
             math::vec3( 1.5, 2.2, 1.5));
@@ -118,33 +116,29 @@ void Video3DResource::init()
 
         calib_file_ptr->parse();
         calib_file_ptr->updateMatrices();
-        //calib_file_ptr->printInfo();
 
         calib_files_.push_back(calib_file_ptr);
+      } else if ( token == "bbx" ) {
+        float x_min,y_min,z_min,x_max,y_max,z_max;
+        istr >> x_min
+             >> y_min
+             >> z_min
+             >> x_max
+             >> y_max
+             >> z_max;
+        bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(x_min,y_min,z_min),
+                        math::vec3(x_max,y_max,z_max));
+      } else if ( token == "normal" ) {
+        float x,y,z;
+        istr >> x
+             >> y
+             >> z;
+        overwrite_normal_ = true;
+        o_normal_ = scm::math::vec3f(x,y,z);
       }
-      else if ( token == "bbx" ) {
-  float x_min,y_min,z_min,x_max,y_max,z_max;
-  istr >> x_min
-       >> y_min
-       >> z_min
-       >> x_max
-       >> y_max
-       >> z_max;
-  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(x_min,y_min,z_min),
-                  math::vec3(x_max,y_max,z_max));
-      }
-      else if ( token == "normal" ){
-  float x,y,z;
-  istr >> x
-       >> y
-       >> z;
-  overwrite_normal_ = true;
-  o_normal_ = scm::math::vec3f(x,y,z);
-      }
-
     }
 
-    for ( auto calib_file : calib_files_ ){
+    for (auto calib_file : calib_files_ ){
       const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
 
       depth_size_ = calib_file->getWidth() * calib_file->getHeight(); //== pixelcount
