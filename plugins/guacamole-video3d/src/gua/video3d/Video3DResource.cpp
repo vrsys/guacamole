@@ -46,8 +46,7 @@
 
 namespace {
 
-// compute index array (proxy mesh)
-std::vector<unsigned> compute_index_array(int size, unsigned width, unsigned height)
+std::vector<unsigned> proxy_mesh_indices(int size, unsigned width, unsigned height)
 {
   std::vector<unsigned> index_array(size);
   unsigned v(0);
@@ -245,13 +244,13 @@ void Video3DResource::upload_proxy_mesh(RenderContext& ctx) const
 
   ctx.render_context->unmap_buffer(proxy_mesh.vertices);
 
-  std::vector<unsigned> index_array = compute_index_array(num_triangle_indices, width_depthimage_, height_depthimage_);
+  std::vector<unsigned> indices = proxy_mesh_indices(num_triangle_indices, width_depthimage_, height_depthimage_);
 
   proxy_mesh.indices =
     ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
     scm::gl::USAGE_STATIC_DRAW,
     num_triangle_indices * sizeof(unsigned int),
-    &index_array[0]);
+    &indices[0]);
 
   proxy_mesh.vertex_array = ctx.render_device->create_vertex_array
     (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly))
