@@ -78,7 +78,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    *
    */
   void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits)
+                node::Node* owner, std::set<PickResult>& hits) override
   {}
 
   /**
