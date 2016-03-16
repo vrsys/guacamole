@@ -130,7 +130,6 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   void upload_proxy_mesh(RenderContext& context) const;
   void upload_video_textures(RenderContext& context) const;
 
-
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
@@ -138,20 +137,18 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   // cpu resources
   mutable std::vector<PerRenderContext> per_render_context_;
 
-  mutable unsigned depth_size_;
-  mutable unsigned depth_size_byte_;
-  mutable unsigned color_size_;
+  unsigned depth_size_;
+  unsigned depth_size_byte_;
+  unsigned color_size_;
 
-  mutable unsigned width_depthimage_;
-  mutable unsigned height_depthimage_;
+  unsigned width_depthimage_;
+  unsigned height_depthimage_;
 
-  mutable unsigned width_colorimage_;
-  mutable unsigned height_colorimage_;
+  unsigned width_colorimage_;
+  unsigned height_colorimage_;
 
-  mutable std::mutex upload_mutex_;
-
-  mutable bool overwrite_normal_;
-  mutable scm::math::vec3f o_normal_;
+  bool overwrite_normal_;
+  scm::math::vec3f o_normal_;
   bool is_pickable_;
 };
 
