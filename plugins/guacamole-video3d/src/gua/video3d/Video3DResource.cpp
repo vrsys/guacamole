@@ -68,17 +68,6 @@ std::vector<unsigned> proxy_mesh_indices(int size,
   return index_array;
 }
 
-#if 0
-// not needed for proxy mesh
-struct Vertex {
-  scm::math::vec3f pos;
-  scm::math::vec2f tex;
-  scm::math::vec3f normal;
-  scm::math::vec3f tangent;
-  scm::math::vec3f bitangent;
-};
-#endif
-
 struct VertexOnly {
   scm::math::vec3f pos;
 };
@@ -224,12 +213,6 @@ void Video3DResource::upload_proxy_mesh(RenderContext& ctx) const {
   for (float h = 0.5 * step; h < height_depthimage_* step; h += step) {
     for (float w = 0.5 * step; w < width_depthimage_* step; w += step) {
       data[v].pos = scm::math::vec3f(w, h, 0.0f);
-#if 0
-//data[v].tex = scm::math::vec2f(w, h);
-//data[v].normal = scm::math::vec3f(0.0f, 0.0f, 1.0f);
-//data[v].tangent = scm::math::vec3(0.f, 0.f, 0.f);
-//data[v].bitangent = scm::math::vec3(0.f, 0.f, 0.f);
-#endif
       ++v;
       ++pCount;
     }
@@ -322,7 +305,6 @@ void Video3DResource::upload_video_textures(RenderContext& ctx) const {
             0,
             scm::gl::FORMAT_RG_32F,
             raw_cv_uv));
-
   }
 
   per_render_context_[ctx.id].framecounter_per_context_ = 0;
