@@ -68,9 +68,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   /**
    * destructor.
    */
+   ~Video3DResource() {}
 
-   ~Video3DResource();
-   
   /**
    * Raytest for Video3D
    *
@@ -92,7 +91,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   void draw(RenderContext const& context) const;
 
 
-  unsigned                        number_of_cameras() const;
+  inline unsigned                 number_of_cameras() const { return unsigned(calib_files_.size()); }
 
   scm::gl::texture_2d_ptr const&  color_array (RenderContext const& context) const;
   scm::gl::texture_2d_ptr const&  depth_array (RenderContext const& context) const;
@@ -104,9 +103,9 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
-  bool                            do_overwrite_normal() const;
-  scm::math::vec3f const&         get_overwrite_normal() const;
-  bool                            is_pickable() const;
+  inline bool                     do_overwrite_normal() const { return overwrite_normal_; }
+  scm::math::vec3f const&         get_overwrite_normal() const { return o_normal_; }
+  bool                            is_pickable() const { return is_pickable_; }
 
  private:
 
@@ -131,10 +130,6 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
 
   // cpu resources
-  mutable std::vector<unsigned char*>   color_buffers_;
-  mutable std::vector<float*>           depth_buffers_;
-  mutable std::vector<sys::FileBuffer*> file_buffers_;
-
   mutable std::vector<video3d::NetKinectArray* > nka_per_context_;
   mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_xyz_per_context_;
   mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_uv_per_context_;
