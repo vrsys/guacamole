@@ -57,6 +57,22 @@ struct RenderContext;
 class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
  public:
 
+  /** Associated per  OpenGL resources
+   *
+   */
+  struct PerRenderContext {
+    // gl resources
+    scm::gl::rasterizer_state_ptr rstate_solid_;
+    scm::gl::texture_2d_ptr       color_texArrays_;
+    scm::gl::texture_2d_ptr       depth_texArrays_;
+
+    // cpu resources
+    video3d::NetKinectArray* nka_per_context_;
+    std::vector<scm::gl::texture_3d_ptr> cv_xyz_per_context_;
+    std::vector<scm::gl::texture_3d_ptr> cv_uv_per_context_;
+    unsigned         framecounter_per_context_;
+  };
+
   /**
    * constructor.
    *
@@ -119,17 +135,9 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
 
-  // gl resources
-  mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
-
-  mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;
-  mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
-
   // cpu resources
-  mutable std::vector<video3d::NetKinectArray* > nka_per_context_;
-  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_xyz_per_context_;
-  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_uv_per_context_;
-  mutable std::vector<unsigned>         framecounter_per_context_;
+  mutable std::vector<PerRenderContext> per_render_context_;
+
   mutable unsigned depth_size_;
   mutable unsigned depth_size_byte_;
   mutable unsigned color_size_;
