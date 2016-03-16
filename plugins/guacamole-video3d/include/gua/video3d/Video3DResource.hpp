@@ -88,7 +88,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   /**
   *
   */
-  void draw(RenderContext const& context) const;
+  void draw(RenderContext& context) const;
 
 
   inline unsigned                 number_of_cameras() const { return unsigned(calib_files_.size()); }
@@ -99,7 +99,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   scm::gl::texture_3d_ptr const&  cv_xyz (RenderContext const& context, unsigned camera_id) const;
   scm::gl::texture_3d_ptr const&  cv_uv (RenderContext const& context, unsigned camera_id) const;
 
-  void                            update_buffers (RenderContext const& context) const;
+  void                            update_buffers (RenderContext& context) const;
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
@@ -109,10 +109,10 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
  private:
 
-  void upload_to(RenderContext const& context) const;
+  void upload_to(RenderContext& context) const;
 
-  void upload_proxy_mesh(RenderContext const& context) const;
-  void upload_video_textures(RenderContext const& context) const;
+  void upload_proxy_mesh(RenderContext& context) const;
+  void upload_video_textures(RenderContext& context) const;
 
 
   std::string                         ks_filename_;
@@ -120,10 +120,6 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   std::string                         server_endpoint_;
 
   // gl resources
-  mutable std::vector<scm::gl::buffer_ptr>       proxy_vertices_;
-  mutable std::vector<scm::gl::buffer_ptr>       proxy_indices_;
-  mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
-
   mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
 
   mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;

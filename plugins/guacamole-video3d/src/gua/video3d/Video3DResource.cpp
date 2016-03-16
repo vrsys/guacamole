@@ -71,9 +71,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
   ks_filename_(video3d),
   calib_files_(),
   server_endpoint_(),
-  proxy_vertices_(),
-  proxy_indices_(),
-  proxy_vertex_array_(),
   rstate_solid_(),
   color_texArrays_(),
   depth_texArrays_(),
@@ -96,9 +93,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
   init();
 
   // pre resize for video shooting VRHyperspace
-  proxy_vertices_.resize(10);
-  proxy_indices_.resize(10);
-  proxy_vertex_array_.resize(10);
   rstate_solid_.resize(10);
   color_texArrays_.resize(10);
   depth_texArrays_.resize(10);
@@ -188,32 +182,22 @@ void Video3DResource::init()
   } else {
     throw std::runtime_error("Couldn't open calib file");
   }
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void Video3DResource::upload_to(RenderContext const& ctx) const
+void Video3DResource::upload_to(RenderContext& ctx) const
 {
-  upload_proxy_mesh(ctx);
+  auto iter = ctx.meshes.find(uuid());
+  if (iter == ctx.meshes.end()) {
+    upload_proxy_mesh(ctx);
+  }
 
   upload_video_textures(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
+void Video3DResource::upload_proxy_mesh(RenderContext& ctx) const
 {
-  if (proxy_vertices_.size() > ctx.id) {
-    if (proxy_vertices_[ctx.id]) {
-      return;
-    } else {
-      // continue instantiation below
-    }
-  } else {
-    proxy_vertices_.resize(ctx.id + 1);
-    proxy_indices_.resize(ctx.id + 1);
-    proxy_vertex_array_.resize(ctx.id + 1);
-  }
-
   int num_vertices = height_depthimage_ * width_depthimage_;
   int num_indices = height_depthimage_ * width_depthimage_;
   int num_triangles = ((height_depthimage_ - 1) * (width_depthimage_ - 1)) * 2;
@@ -222,14 +206,20 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
 
   float step = 1.0f / width_depthimage_;
 
-  proxy_vertices_[ctx.id] =
+  RenderContext::Mesh proxy_mesh{};
+  proxy_mesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
+  proxy_mesh.indices_type = scm::gl::TYPE_UINT;
+  //proxy_mesh.indices_count = 6 * (height_depthimage_ - 1) * (width_depthimage_ - 1);
+  proxy_mesh.indices_count = num_triangle_indices;
+
+  proxy_mesh.vertices =
     ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
     scm::gl::USAGE_STATIC_DRAW,
     num_vertices * sizeof(VertexOnly),
     0);
 
   VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(
-                     proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+                     proxy_mesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
   unsigned v(0);
   int pCount(0);
@@ -247,7 +237,7 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
     }
   }
 
-  ctx.render_context->unmap_buffer(proxy_vertices_[ctx.id]);
+  ctx.render_context->unmap_buffer(proxy_mesh.vertices);
 
   std::vector<unsigned> index_array(num_triangle_indices);
 
@@ -270,16 +260,13 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
     }
   }
 
-  proxy_indices_[ctx.id] =
+  proxy_mesh.indices =
     ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
     scm::gl::USAGE_STATIC_DRAW,
     num_triangle_indices * sizeof(unsigned int),
     &index_array[0]);
 
-  std::vector<scm::gl::buffer_ptr> buffer_arrays;
-  buffer_arrays.push_back(proxy_vertices_[ctx.id]);
-
-  proxy_vertex_array_[ctx.id] = ctx.render_device->create_vertex_array
+  proxy_mesh.vertex_array = ctx.render_device->create_vertex_array
     (scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly))
 #if 0
     (0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))
@@ -287,12 +274,13 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
     (0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))
     (0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))
 #endif
-     ,buffer_arrays);
-
+     , { proxy_mesh.vertices });
+  ctx.meshes[uuid()] = proxy_mesh;
+  //ctx.render_context->apply(); // necessary ???
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Video3DResource::upload_video_textures(RenderContext const& ctx) const
+void Video3DResource::upload_video_textures(RenderContext& ctx) const
 {
   if ( color_texArrays_.size() > ctx.id ) {
     if (color_texArrays_[ctx.id]) {
@@ -367,14 +355,22 @@ void Video3DResource::upload_video_textures(RenderContext const& ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Video3DResource::draw(RenderContext const& ctx) const
+void Video3DResource::draw(RenderContext& ctx) const
 {
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
-  ctx.render_context->bind_vertex_array(proxy_vertex_array_[ctx.id]);
-  ctx.render_context->bind_index_buffer(proxy_indices_[ctx.id], scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
+  auto iter = ctx.meshes.find(uuid());
+  if (iter == ctx.meshes.end()) {
+    upload_proxy_mesh(ctx);
+  }
 
-  ctx.render_context->apply();
-  ctx.render_context->draw_elements(6 * (height_depthimage_ - 1) * (width_depthimage_ - 1));
+  iter = ctx.meshes.find(uuid());
+  if (iter != ctx.meshes.end()) {
+    scm::gl::context_vertex_input_guard vig(ctx.render_context);
+    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+    ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+
+    ctx.render_context->apply();
+    ctx.render_context->draw_elements(iter->second.indices_count);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +403,7 @@ Video3DResource::cv_uv (RenderContext const& context, unsigned camera_id) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Video3DResource::update_buffers(RenderContext const& ctx) const
+void Video3DResource::update_buffers(RenderContext& ctx) const
 {
   upload_to(ctx);
 

@@ -141,7 +141,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
       }
 
       // update stream data
-      video3d_ressource->update_buffers(ctx);
+      video3d_ressource->update_buffers(pipe.get_context());
 
       auto model_matrix(video_node->get_cached_world_transform());
       auto normal_matrix(scm::math::transpose(scm::math::inverse(video_node->get_cached_world_transform())));
@@ -200,7 +200,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             warp_pass_program_->use(ctx);
             {
               // ctx.render_context->apply();
-              video3d_ressource->draw(ctx);
+              video3d_ressource->draw(pipe.get_context());
             }
             warp_pass_program_->unuse(ctx);
           }
