@@ -65,9 +65,9 @@ namespace {
 
 namespace gua {
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
+Video3DResource::Video3DResource(std::string const& video3d, unsigned flags) :
   ks_filename_(video3d),
   calib_files_(),
   server_endpoint_(),
@@ -76,13 +76,10 @@ namespace gua {
   proxy_vertex_array_(),
   rstate_solid_(),
   color_texArrays_(),
-  color_buffers_(),
   depth_texArrays_(),
-  depth_buffers_(),
   depth_size_(),
   depth_size_byte_(),
   color_size_(),
-  file_buffers_(),
   nka_per_context_(),
   cv_xyz_per_context_(),
   cv_uv_per_context_(),
@@ -95,42 +92,21 @@ namespace gua {
   overwrite_normal_(false),
   o_normal_(),
   is_pickable_(flags & Video3DLoader::MAKE_PICKABLE)
-  {
+{
+  init();
 
-    init();
-
-    // pre resize for video shooting VRHyperspace
-    proxy_vertices_.resize(10);
-    proxy_indices_.resize(10);
-    proxy_vertex_array_.resize(10);
-    rstate_solid_.resize(10);
-    color_texArrays_.resize(10);
-    depth_texArrays_.resize(10);
-    nka_per_context_.resize(10);
-    cv_xyz_per_context_.resize(10);
-    cv_uv_per_context_.resize(10);
-    framecounter_per_context_.resize(10);
-
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  Video3DResource::~Video3DResource()
-  {
-    for (auto db : depth_buffers_ )
-    {
-      delete [] db;
-    }
-
-    for (auto cb : color_buffers_ )
-    {
-      delete [] cb;
-    }
-
-    for (auto fb : file_buffers_ )
-    {
-      delete fb;
-    }
-  }
+  // pre resize for video shooting VRHyperspace
+  proxy_vertices_.resize(10);
+  proxy_indices_.resize(10);
+  proxy_vertex_array_.resize(10);
+  rstate_solid_.resize(10);
+  color_texArrays_.resize(10);
+  depth_texArrays_.resize(10);
+  nka_per_context_.resize(10);
+  cv_xyz_per_context_.resize(10);
+  cv_uv_per_context_.resize(10);
+  framecounter_per_context_.resize(10);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DResource::init()
@@ -146,17 +122,13 @@ void Video3DResource::init()
   boost::filesystem::path ks_filepath(ks_filename_);
   boost::filesystem::path ks_dir = ks_filepath.parent_path();
 
-  if (istr.good())
-  {
+  if (istr.good()) {
     std::string token;
 
-    while (istr >> token)
-    {
-      if ( token == "serverport" )
-      {
+    while (istr >> token) {
+      if ( token == "serverport" ) {
         istr >> server_endpoint_;
-      } else if ( token == "kinect" ) 
-      {
+      } else if ( token == "kinect" ) {
         istr >> token;
         std::string cf_absolute_path = ks_dir.string() + "/" + token;
 
@@ -187,45 +159,31 @@ void Video3DResource::init()
   overwrite_normal_ = true;
   o_normal_ = scm::math::vec3f(x,y,z);
       }
- 
+
     }
-    
-
-    
-
 
     for ( auto calib_file : calib_files_ ){
-#if 0
-      sys::FileBuffer* tmp = new sys::FileBuffer(calib_file->get_stream_filename());
-      tmp->open();
-      tmp->setLooping(true);
-      file_buffers_.push_back(tmp);
-#endif
-
       const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
-      
+
       depth_size_ = calib_file->getWidth() * calib_file->getHeight(); //== pixelcount
       color_size_ = pixelcountc * 3 * sizeof(unsigned char);
       depth_size_byte_ = depth_size_ * sizeof(float);
-      
-      if(calib_file->isCompressedRGB()){
-  mvt::DXTCompressor dxt;
-  dxt.init(calib_file->getWidthC(), calib_file->getHeightC(), FORMAT_DXT1);
-  color_size_ = dxt.getStorageSize();
+
+      if (calib_file->isCompressedRGB()) {
+        mvt::DXTCompressor dxt;
+        dxt.init(calib_file->getWidthC(), calib_file->getHeightC(), FORMAT_DXT1);
+        color_size_ = dxt.getStorageSize();
       }
-      
-      color_buffers_.push_back(new unsigned char[color_size_]);
-        depth_buffers_.push_back(new float[depth_size_]);
     }
-    
+
     assert (calib_files_.size() > 0);
-    
+
     width_depthimage_  = calib_files_[0]->getWidth();
     height_depthimage_ = calib_files_[0]->getHeight();
-    
+
     width_colorimage_  = calib_files_[0]->getWidthC();
     height_colorimage_ = calib_files_[0]->getHeightC();
-    
+
     istr.close();
   } else {
     throw std::runtime_error("Couldn't open calib file");
@@ -247,8 +205,7 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
   if (proxy_vertices_.size() > ctx.id) {
     if (proxy_vertices_[ctx.id]) {
       return;
-    }
-    else {
+    } else {
       // continue instantiation below
     }
   } else {
@@ -274,15 +231,10 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
   VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(
                      proxy_vertices_[ctx.id], scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-  //compute vertex data (proxy mesh)ddd
-  //const scm::math::vec3f& p(0.0f); //point of origin
-
   unsigned v(0);
   int pCount(0);
-  for (float h = 0.5*step; h < height_depthimage_*step; h += step)
-  {
-    for (float w = 0.5*step; w < width_depthimage_*step; w += step)
-    {
+  for (float h = 0.5*step; h < height_depthimage_*step; h += step) {
+    for (float w = 0.5*step; w < width_depthimage_*step; w += step) {
       data[v].pos = scm::math::vec3f(w, h, 0.0f);
 #if 0
       //data[v].tex = scm::math::vec2f(w, h);
@@ -299,12 +251,10 @@ void Video3DResource::upload_proxy_mesh(RenderContext const& ctx) const
 
   std::vector<unsigned> index_array(num_triangle_indices);
 
-  //coumpute index array (proxy mesh)
+  // compute index array (proxy mesh)
   v = 0;
-  for (unsigned h(0); h < (height_depthimage_ - 1); ++h)
-  {
-    for (unsigned w(0); w < (width_depthimage_ - 1); ++w)
-    {
+  for (unsigned h(0); h < (height_depthimage_ - 1); ++h) {
+    for (unsigned w(0); w < (width_depthimage_ - 1); ++w) {
       index_array[v] = (w + h * width_depthimage_);
       ++v;
       index_array[v] = (w + h * width_depthimage_ + 1);
@@ -369,7 +319,7 @@ void Video3DResource::upload_video_textures(RenderContext const& ctx) const
                   calib_files_.size(),
                   1
                   );
-  
+
   color_texArrays_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(width_colorimage_, height_colorimage_),
                   calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
                   0,
@@ -413,7 +363,6 @@ void Video3DResource::upload_video_textures(RenderContext const& ctx) const
   }
 
   framecounter_per_context_[ctx.id] = 0;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,12 +375,6 @@ void Video3DResource::draw(RenderContext const& ctx) const
 
   ctx.render_context->apply();
   ctx.render_context->draw_elements(6 * (height_depthimage_ - 1) * (width_depthimage_ - 1));
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-unsigned Video3DResource::number_of_cameras() const {
-  return unsigned(calib_files_.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,63 +405,18 @@ Video3DResource::cv_uv (RenderContext const& context, unsigned camera_id) const
   return cv_uv_per_context_[context.id][camera_id];
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void Video3DResource::update_buffers(RenderContext const& ctx) const
 {
-
-#if 0 // OLD VERSION Kinects from filebuffer, not used any more
-  // todo: if new frame -> use framecount instead
-  if (ctx.id == 0)
-  {
-    for (unsigned i = 0; i < number_of_cameras(); ++i)
-    {
-      if (file_buffers_[i]->read((void*)color_buffers_[i], color_size_) != color_size_){
-        std::cerr << "ERROR reading color BufferData\n";
-      }
-
-      if (file_buffers_[i]->read((void*)depth_buffers_[i], depth_size_byte_) != depth_size_byte_){
-        std::cerr << "ERROR reading depth BufferData\n";
-      }
-    }
-  }
-#endif
-
   upload_to(ctx);
 
-#if 0 // OLD VERSION Kinects from filebuffer, not used any more
-  for(int i = 0; i < number_of_cameras(); ++i) 
-  {
-
-    ctx.render_context->update_sub_texture(color_texArrays_[ctx.id],
-             scm::gl::texture_region(scm::math::vec3ui(0, 0 , i),
-                   scm::math::vec3ui(width_colorimage_, height_colorimage_, 1)),
-             0, //mip-mapping level
-             calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
-             (void*) color_buffers_[i]
-             );
-
-    ctx.render_context->update_sub_texture(depth_texArrays_[ctx.id],
-                                  scm::gl::texture_region(scm::math::vec3ui(0, 0, i),
-                                                          scm::math::vec3ui(width_depthimage_, height_depthimage_, 1)),
-                                  0, //mip-mapping level
-                                  scm::gl::FORMAT_R_32F,
-                                  (void*) depth_buffers_[i]
-                                );
-  
-   
-  }
-#endif
-
-  
   if(framecounter_per_context_[ctx.id] != ctx.framecount){
     framecounter_per_context_[ctx.id] = ctx.framecount;
-  }
-  else{
+  } else {
     return;
   }
-  if(nka_per_context_[ctx.id]->update()){
+  if (nka_per_context_[ctx.id]->update()) {
     unsigned char* buff = nka_per_context_[ctx.id]->getBuffer();
     for(int i = 0; i < number_of_cameras(); ++i) {
 
@@ -538,7 +436,6 @@ void Video3DResource::update_buffers(RenderContext const& ctx) const
                (void*) buff
                );
       buff += depth_size_byte_;
-      
     }
   }
 
@@ -551,20 +448,4 @@ KinectCalibrationFile const& Video3DResource::calibration_file(unsigned i) const
   return *calib_files_[i];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-  bool                           
-  Video3DResource::do_overwrite_normal() const{
-    return overwrite_normal_;
-  }
-
-////////////////////////////////////////////////////////////////////////////////
-  scm::math::vec3f const&
-  Video3DResource::get_overwrite_normal() const{
-    return o_normal_;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  bool Video3DResource::is_pickable() const {
-    return is_pickable_;
-  }
 }
