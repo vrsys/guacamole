@@ -25,15 +25,10 @@
 // guacamole headers
 #include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/EmissivePass.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
