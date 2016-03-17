@@ -227,7 +227,7 @@ void Video3DResource::upload_proxy_mesh(RenderContext& ctx) const {
       ->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                       scm::gl::USAGE_STATIC_DRAW,
                       num_triangle_indices * sizeof(unsigned int),
-                      &indices[0]);
+                      indices.data());
 
   proxy_mesh.vertex_array = ctx.render_device->create_vertex_array(
       scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly)),
