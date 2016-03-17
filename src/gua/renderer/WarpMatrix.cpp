@@ -49,7 +49,7 @@ WarpMatrix::WarpMatrix(std::string const& file_name)
 
     data_ = std::vector<float>(width_ * height_ * 4);
 
-    file.read((char*)&data_[0], sizeof(float) * data_.size());
+    file.read((char*)data_.data(), sizeof(float) * data_.size());
 
     file.close();
   } else {
@@ -62,7 +62,7 @@ void WarpMatrix::upload_to(RenderContext const& context) const {
   RenderContext::Texture ctex{};
 
   std::vector<void*> tmp_data;
-  tmp_data.push_back(&data_[0]);
+  tmp_data.push_back(data_.data());
 
   ctex.texture = context.render_device->create_texture_2d(
       scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_),
