@@ -99,7 +99,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
       ->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                       scm::gl::USAGE_STATIC_DRAW,
                       mesh_.num_triangles * 3 * sizeof(unsigned),
-                      &mesh_.indices[0]);
+                      mesh_.indices.data());
 
   cmesh.vertex_array =
       ctx.render_device->create_vertex_array(
@@ -115,14 +115,14 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
         ->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
                         scm::gl::USAGE_STREAM_COPY,
                         mesh_.get_bone_ids().size() * sizeof(unsigned),
-                        &mesh_.get_bone_ids()[0]);
+                        mesh_.get_bone_ids().data());
 
     //new storage buffer
     resource->bone_weights_ = ctx.render_device
         ->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
                         scm::gl::USAGE_STREAM_COPY,
                         mesh_.get_bone_weights().size() * sizeof(float),
-                        &mesh_.get_bone_weights()[0]);
+                        mesh_.get_bone_weights().data());
 
     ctx.render_context->bind_storage_buffer(resource->bone_ids_, 2);
     ctx.render_context->bind_storage_buffer(resource->bone_weights_, 3);
@@ -156,7 +156,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
       memcpy(
           write_ids_map.data_ptr(), old_ids, resource->offset * sizeof(unsigned));
       memcpy(write_ids_map.data_ptr() + resource->offset * sizeof(unsigned),
-             &mesh_.get_bone_ids()[0],
+             mesh_.get_bone_ids().data(),
              mesh_.get_bone_ids().size() * sizeof(unsigned));
     }
 
@@ -189,7 +189,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx) /*const*/ {
              old_weights,
              resource->offset * sizeof(float));
       memcpy(write_weights_map.data_ptr() + resource->offset * sizeof(unsigned),
-             &mesh_.get_bone_weights()[0],
+             mesh_.get_bone_weights().data(),
              mesh_.get_bone_weights().size() * sizeof(float));
     }
 
