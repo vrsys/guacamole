@@ -63,14 +63,14 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   struct PerRenderContext {
     // gl resources
     scm::gl::rasterizer_state_ptr rstate_solid_;
-    scm::gl::texture_2d_ptr       color_texArrays_;
-    scm::gl::texture_2d_ptr       depth_texArrays_;
+    scm::gl::texture_2d_ptr       color_tex_;
+    scm::gl::texture_2d_ptr       depth_tex_;
 
     // cpu resources
-    video3d::NetKinectArray* nka_per_context_;
-    std::vector<scm::gl::texture_3d_ptr> cv_xyz_per_context_;
-    std::vector<scm::gl::texture_3d_ptr> cv_uv_per_context_;
-    unsigned         framecounter_per_context_;
+    video3d::NetKinectArray* nka_;
+    std::vector<scm::gl::texture_3d_ptr> cv_xyz_;
+    std::vector<scm::gl::texture_3d_ptr> cv_uv_;
+    unsigned         frame_counter_;
   };
 
   /**
@@ -104,16 +104,11 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   /**
   *
   */
-  void draw(RenderContext& context) const;
-
-
   inline unsigned                 number_of_cameras() const { return unsigned(calib_files_.size()); }
 
-  scm::gl::texture_2d_ptr const&  color_array (RenderContext const& context) const;
-  scm::gl::texture_2d_ptr const&  depth_array (RenderContext const& context) const;
-
-  scm::gl::texture_3d_ptr const&  cv_xyz (RenderContext const& context, unsigned camera_id) const;
-  scm::gl::texture_3d_ptr const&  cv_uv (RenderContext const& context, unsigned camera_id) const;
+  inline PerRenderContext const&  per_render_context(RenderContext const& context) const {
+    return per_render_context_[context.id];
+  }
 
   void                            update_buffers (RenderContext& context) const;
 
@@ -123,11 +118,11 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   scm::math::vec3f const&         get_overwrite_normal() const { return o_normal_; }
   bool                            is_pickable() const { return is_pickable_; }
 
+  unsigned width_depthimage() const { return width_depthimage_; }
+  unsigned height_depthimage() const { return height_depthimage_; }
+
  private:
 
-  void upload_to(RenderContext& context) const;
-
-  void upload_proxy_mesh(RenderContext& context) const;
   void upload_video_textures(RenderContext& context) const;
 
   std::string                         ks_filename_;

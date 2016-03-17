@@ -38,6 +38,102 @@
 
 #include <scm/gl_core/render_device/context_guards.h>
 
+namespace {
+
+struct VertexOnly {
+  scm::math::vec3f pos;
+};
+
+std::vector<unsigned> proxy_mesh_indices(int size,
+                                         unsigned width,
+                                         unsigned height) {
+  std::vector<unsigned> index_array(size);
+  unsigned v(0);
+  for (unsigned h(0); h < (height - 1); ++h) {
+    for (unsigned w(0); w < (width - 1); ++w) {
+      index_array[v] = (w + h * width);
+      ++v;
+      index_array[v] = (w + h * width + 1);
+      ++v;
+      index_array[v] = (w + h * width + width);
+      ++v;
+      index_array[v] = (w + h * width + width);
+      ++v;
+      index_array[v] = (w + h * width + 1);
+      ++v;
+      index_array[v] = (w + h * width + 1 + width);
+      ++v;
+    }
+  }
+  return index_array;
+}
+
+gua::RenderContext::Mesh create_proxy_mesh(gua::RenderContext& ctx, unsigned height_depthimage, unsigned width_depthimage) {
+  int num_vertices = height_depthimage * width_depthimage;
+  int num_indices = height_depthimage * width_depthimage;
+  int num_triangles = ((height_depthimage - 1) * (width_depthimage - 1)) * 2;
+  int num_triangle_indices = 3 * num_triangles;
+  int num_line_indices =
+      (height_depthimage - 1) * ((width_depthimage - 1) * 3 + 1) +
+      (width_depthimage - 1);
+
+  float step = 1.0f / width_depthimage;
+
+  gua::RenderContext::Mesh proxy_mesh{};
+  proxy_mesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
+  proxy_mesh.indices_type = scm::gl::TYPE_UINT;
+  proxy_mesh.indices_count = num_triangle_indices;
+
+  proxy_mesh.vertices =
+      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                       scm::gl::USAGE_STATIC_DRAW,
+                                       num_vertices * sizeof(VertexOnly),
+                                       0);
+
+  VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(
+      proxy_mesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+  unsigned v(0);
+  for (float h = 0.5 * step; h < height_depthimage* step; h += step) {
+    for (float w = 0.5 * step; w < width_depthimage* step; w += step) {
+      data[v].pos = scm::math::vec3f(w, h, 0.0f);
+      ++v;
+    }
+  }
+
+  ctx.render_context->unmap_buffer(proxy_mesh.vertices);
+
+  std::vector<unsigned> indices = proxy_mesh_indices(
+      num_triangle_indices, width_depthimage, height_depthimage);
+
+  proxy_mesh.indices = ctx.render_device
+      ->create_buffer(scm::gl::BIND_INDEX_BUFFER,
+                      scm::gl::USAGE_STATIC_DRAW,
+                      num_triangle_indices * sizeof(unsigned int),
+                      indices.data());
+
+  proxy_mesh.vertex_array = ctx.render_device->create_vertex_array(
+      scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly)),
+      { proxy_mesh.vertices }
+      );
+  return proxy_mesh;
+  //ctx.render_context->apply(); // necessary ???
+}
+
+void draw_proxy_mesh(gua::RenderContext const& ctx, gua::RenderContext::Mesh const& mesh) {
+  scm::gl::context_vertex_input_guard vig(ctx.render_context);
+  ctx.render_context->bind_vertex_array(mesh.vertex_array);
+  ctx.render_context->bind_index_buffer(mesh.indices,
+                                        mesh.indices_topology,
+                                        mesh.indices_type);
+
+  ctx.render_context->apply();
+  ctx.render_context->draw_elements(mesh.indices_count);
+}
+
+
+}
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +160,21 @@ Video3DRenderer::Video3DRenderer()
                                                factory.read_shader_file("resources/blend_pass.vert")));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
                                                factory.read_shader_file("resources/blend_pass.frag")));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Video3DRenderer::draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d) {
+  // ctx.render_context->apply();
+  auto iter = ctx.meshes.find(video3d.uuid());
+  if (iter == ctx.meshes.end()) {
+    ctx.meshes[video3d.uuid()] =
+        create_proxy_mesh(ctx,
+                          video3d.height_depthimage(),
+                          video3d.width_depthimage());
+    draw_proxy_mesh(ctx, ctx.meshes[video3d.uuid()]);
+  } else {
+    draw_proxy_mesh(ctx, iter->second);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +250,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): Invalid video." << std::endl;
         continue;
       }
+      auto const& per_context = video3d_ressource->per_render_context(ctx);
 
       // update stream data
       video3d_ressource->update_buffers(pipe.get_context());
@@ -155,7 +267,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         ctx.render_context->set_depth_stencil_state(depth_stencil_state_warp_pass_);
 
         // set uniforms
-        ctx.render_context->bind_texture(video3d_ressource->depth_array(ctx), nearest_sampler_state_, 0);
+        ctx.render_context->bind_texture(per_context.depth_tex_, nearest_sampler_state_, 0);
         warp_pass_program_->get_program(ctx)->uniform_sampler("depth_video3d_texture", 0);
 
         warp_pass_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
@@ -183,10 +295,10 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).getTexSizeInvD(), "tex_size_inv");
           warp_pass_program_->set_uniform(ctx, int(layer), "layer");
 
-          ctx.render_context->bind_texture(video3d_ressource->cv_xyz(ctx,layer), linear_sampler_state_, 1);
+          ctx.render_context->bind_texture(per_context.cv_xyz_[layer], linear_sampler_state_, 1);
           warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
-          ctx.render_context->bind_texture(video3d_ressource->cv_uv(ctx,layer), linear_sampler_state_, 2);
+          ctx.render_context->bind_texture(per_context.cv_uv_[layer], linear_sampler_state_, 2);
           warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
 
           warp_pass_program_->set_uniform(ctx, video3d_ressource->calibration_file(layer).cv_min_d, "cv_min_d");
@@ -194,8 +306,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
           warp_pass_program_->use(ctx);
           {
-            // ctx.render_context->apply();
-            video3d_ressource->draw(pipe.get_context());
+            draw_video3dResource(pipe.get_context(), *video3d_ressource);
           }
           warp_pass_program_->unuse(ctx);
 
@@ -255,7 +366,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             ctx.render_context->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
             current_shader->get_program(ctx)->uniform_sampler("depth_texture", 1);
 
-            ctx.render_context->bind_texture(video3d_ressource->color_array(ctx), linear_sampler_state_, 2);
+            ctx.render_context->bind_texture(per_context.color_tex_, linear_sampler_state_, 2);
             current_shader->get_program(ctx)->uniform_sampler("video_color_texture", 2);
 
             video_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
