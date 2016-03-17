@@ -73,16 +73,16 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
 
   static const unsigned                    MAX_NUM_KINECTS = 6;
 
-  mutable scm::gl::texture_2d_ptr          warp_depth_result_;
-  mutable scm::gl::texture_2d_ptr          warp_color_result_;
-  mutable scm::gl::frame_buffer_ptr        warp_result_fbo_;
+  scm::gl::texture_2d_ptr          warp_depth_result_;
+  scm::gl::texture_2d_ptr          warp_color_result_;
+  scm::gl::frame_buffer_ptr        warp_result_fbo_;
 
-  mutable scm::gl::rasterizer_state_ptr    no_bfc_rasterizer_state_;
-  mutable scm::gl::sampler_state_ptr       nearest_sampler_state_;
-  mutable scm::gl::sampler_state_ptr       linear_sampler_state_;
+  scm::gl::rasterizer_state_ptr    no_bfc_rasterizer_state_;
+  scm::gl::sampler_state_ptr       nearest_sampler_state_;
+  scm::gl::sampler_state_ptr       linear_sampler_state_;
 
-  mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
-  mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
 };
 
 }
