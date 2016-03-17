@@ -37,6 +37,7 @@ namespace gua {
 class ShaderProgram;
 class Pipeline;
 class MaterialShader;
+class Video3DResource;
 
 class GUA_VIDEO3D_DLL Video3DRenderer {
  public:
@@ -45,6 +46,21 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
      warp_pass  = 0,
      blend_pass = 1
    };
+
+#if 0
+  struct Video3DData {
+    // gl resources
+    scm::gl::rasterizer_state_ptr rstate_solid_;
+    scm::gl::texture_2d_ptr       color_texArrays_;
+    scm::gl::texture_2d_ptr       depth_texArrays_;
+
+    // cpu resources
+    video3d::NetKinectArray* nka_per_context_;
+    std::vector<scm::gl::texture_3d_ptr> cv_xyz_per_context_;
+    std::vector<scm::gl::texture_3d_ptr> cv_uv_per_context_;
+    unsigned         framecounter_per_context_;
+  };
+#endif
 
   public:
 
@@ -61,6 +77,8 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   //                          View const& view) const;
 
   void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+
+  void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
 
  private: // attributes
   bool initialized_;
@@ -83,6 +101,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
 
   scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+  //std::unordered_map<std::size_t, Video3DData> video3Ddata;
 };
 
 }
