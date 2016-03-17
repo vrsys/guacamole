@@ -84,7 +84,7 @@ void TriMeshRessource::upload_to(RenderContext& ctx) const {
       ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
                                        scm::gl::USAGE_STATIC_DRAW,
                                        mesh_.num_triangles * 3 * sizeof(unsigned),
-                                       &mesh_.indices[0]);
+                                       mesh_.indices.data());
 
   cmesh.vertex_array = ctx.render_device->create_vertex_array(
       mesh_.get_vertex_format(),
