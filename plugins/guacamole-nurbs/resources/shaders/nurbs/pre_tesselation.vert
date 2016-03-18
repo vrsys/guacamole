@@ -1,5 +1,5 @@
 @include "resources/shaders/common/header.glsl"     
-                                                   
+
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
@@ -10,10 +10,10 @@ layout (location = 2) in vec4  in_tesscoord;
 ///////////////////////////////////////////////////////////////////////////////                                         
 // output
 ///////////////////////////////////////////////////////////////////////////////                      
-out vec3  varying_position;                  
-out uint  varying_index;                    
-out vec2  varying_tesscoord;                 
-           
+out vec3  vertex_position;                  
+out uint  vertex_index;                    
+out vec2  vertex_tesscoord;             
+               
 ///////////////////////////////////////////////////////////////////////////////                                         
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////   
@@ -24,7 +24,7 @@ out vec2  varying_tesscoord;
 ///////////////////////////////////////////////////////////////////////////////                                                   
 void main()                                
 {                                          
-  varying_position  = in_position;                   
-  varying_index     = in_index;                      
-  varying_tesscoord = in_tesscoord.xy;               
+  vertex_position  = in_position;                   
+  vertex_index     = in_index;                      
+  vertex_tesscoord = in_tesscoord.xy;               
 } 

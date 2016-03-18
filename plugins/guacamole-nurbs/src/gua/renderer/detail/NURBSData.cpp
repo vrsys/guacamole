@@ -21,7 +21,7 @@
 #include <gua/renderer/detail/NURBSData.hpp>
 
 // guacamole headers
-#include <gpucast/core/trimdomain_serializer_contour_map_binary.hpp>
+#include <gpucast/core/trimdomain_serializer_contour_map_kd.hpp>
 
 // external headers 
 #include <algorithm>
@@ -30,30 +30,27 @@
 
 namespace gua {
 
-  NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v)
+  NURBSData::NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v, unsigned trim_texture)
     : object(o),
       tess_patch_data(),
       tess_index_data(),
       tess_parametric_data(),
-      tess_attribute_data(),
-      trim_partition(1),
-      trim_contourlist(1),
-      trim_curvelist(1),
-      trim_curvedata(1),
-      trim_pointdata(1) 
+      tess_attribute_data()
 {
   if (!object->initialized()) {
-    object->init(pre_subdivision_u, pre_subdivision_v);
+    object->init(pre_subdivision_u, pre_subdivision_v, trim_texture);
   }
 
   unsigned int patch_id = unsigned int(tess_attribute_data.size());
 
   // serialize trim domain
-  std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::curve_ptr, unsigned>       referenced_curves;
-  std::unordered_map<gpucast::trimdomain_serializer_contour_map_binary::trimdomain_ptr, unsigned>  referenced_domains;
-  std::unordered_map<gpucast::math::domain::contour_map_binary<double>::contour_segment_ptr, unsigned>      referenced_segments;
+  typedef gpucast::math::domain::contour_map_kd<double> partition_type;
+  std::unordered_map<gpucast::trimdomain_serializer_contour_map_kd::curve_ptr, unsigned>       referenced_curves;
+  std::unordered_map<gpucast::trimdomain_serializer_contour_map_kd::trimdomain_ptr, unsigned>  referenced_domains;
+  std::unordered_map<partition_type::contour_segment_ptr, unsigned>      referenced_segments;
 
-  gpucast::trimdomain_serializer_contour_map_binary serializer;
+  gpucast::trimdomain_serializer_contour_map_kd serializer;
+  gpucast::trim_kd_serialization serialization;
 
   auto uint_to_float = [](unsigned const & i) { return *((float*)(&i)); }
   ;
@@ -91,21 +88,20 @@ namespace gua {
     
     // serialize trim domain
     std::size_t trim_id = serializer.serialize( (*it)->domain(),
-                                               referenced_domains,
-                                               referenced_curves,
-                                               referenced_segments,
-                                               trim_partition,
-                                               trim_contourlist,
-                                               trim_curvelist,
-                                               trim_curvedata,
-                                               trim_pointdata);
+                                                gpucast::kd_split_strategy::sah,
+                                                serialization,
+                                                0, 0);
 
     // gather per patch data
-    page p;
+    per_patch_data p;
     p.surface_offset = tess_parametric_data.size();
     p.order_u = (*it)->order_u();
     p.order_v = (*it)->order_v();
     p.trim_id = trim_id;
+    auto obb_id = object->serialized_obb_base_indices().find((*it));
+    if (obb_id != object->serialized_obb_base_indices().end()) {
+      p.obb_id = obb_id->second;
+    }
 
     p.nurbs_domain = scm::math::vec4f((*it)->bezierdomain().min[0],
                                       (*it)->bezierdomain().min[1],
@@ -131,7 +127,5 @@ namespace gua {
     std::transform((*it)->points().begin(), (*it)->points().end(), tess_parametric_data.begin() + current_size, serialize_homogenous_points);
   }
 }
-
-NURBSData::~NURBSData() {}
 
 }  //namespace scm

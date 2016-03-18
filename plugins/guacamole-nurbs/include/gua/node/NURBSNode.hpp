@@ -41,9 +41,9 @@ namespace node {
 */
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-  friend class ::gua::NURBSLoader;
-
 public :
+
+  friend class NURBSLoader;
 
   enum trimming_mode_t {
     classic = 0,
@@ -72,8 +72,8 @@ public: // render configuration
   float max_pre_tesselation() const;
   void  max_pre_tesselation(float t);
 
-  float max_final_tesselation() const;
-  void  max_final_tesselation(float t);
+  float max_tesselation_error() const;
+  void  max_tesselation_error(float t);
 
   void raycasting(bool);
   bool raycasting() const;
@@ -110,12 +110,12 @@ private : // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>       material_;
   bool                            material_changed_;
 
-  bool                            enable_raycasting_;
-  bool                            enable_backfaces_;
-  trimming_mode_t                 trimming_mode_;
+  bool                            enable_raycasting_ = false;
+  bool                            enable_backfaces_ = false;
+  trimming_mode_t                 trimming_mode_ = trimming_mode_t::classic;
 
-  float                           max_tess_level_pre_pass_;
-  float                           max_tess_level_final_pass_;
+  float                           max_tesselation_error_ = 8.0f;
+  float                           max_pre_tesselation_ = 64.0f;
 
 };
 
