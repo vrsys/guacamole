@@ -97,14 +97,13 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   struct Video3DData {
     Video3DData() = default;
     Video3DData(RenderContext const& ctx, Video3DResource const& video3d);
-    ~Video3DData();
     // gl resources
     scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
     scm::gl::texture_2d_ptr color_tex_ = nullptr;
     scm::gl::texture_2d_ptr depth_tex_ = nullptr;
 
     // cpu resources
-    video3d::NetKinectArray* nka_ = nullptr;
+    std::shared_ptr<video3d::NetKinectArray> nka_ = nullptr;
     std::vector<scm::gl::texture_3d_ptr> cv_xyz_ = {};
     std::vector<scm::gl::texture_3d_ptr> cv_uv_ = {};
     unsigned frame_counter_ = 0;

@@ -161,7 +161,7 @@ Video3DRenderer::Video3DData::Video3DData(
   rstate_solid_ = ctx.render_device->create_rasterizer_state(
       scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, true);
 
-  nka_ = new video3d::NetKinectArray(video3d_ressource.calib_files(),
+  nka_ = std::make_shared<video3d::NetKinectArray>(video3d_ressource.calib_files(),
                                      video3d_ressource.server_endpoint(),
                                      video3d_ressource.color_size(),
                                      video3d_ressource.depth_size_byte());
@@ -192,12 +192,6 @@ Video3DRenderer::Video3DData::Video3DData(
   }
 
   frame_counter_ = 0;
-}
-
-
-Video3DRenderer::Video3DData::~Video3DData() {
-  if (nka_)
-    delete nka_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
