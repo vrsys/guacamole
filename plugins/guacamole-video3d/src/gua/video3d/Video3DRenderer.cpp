@@ -194,6 +194,12 @@ Video3DRenderer::Video3DData::Video3DData(
   frame_counter_ = 0;
 }
 
+
+Video3DRenderer::Video3DData::~Video3DData() {
+  if (nka_)
+    delete nka_;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Video3DRenderer::Video3DRenderer() : initialized_(false) {
