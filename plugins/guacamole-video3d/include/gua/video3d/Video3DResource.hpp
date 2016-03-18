@@ -94,17 +94,16 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   unsigned color_size() const { return color_size_; }
   unsigned depth_size_byte() const { return depth_size_byte_; }
   std::string server_endpoint() const { return server_endpoint_; }
+  unsigned width_depthimage() const { return width_depthimage_; }
+  unsigned height_depthimage() const { return height_depthimage_; }
+  unsigned width_colorimage() const { return width_colorimage_; }
+  unsigned height_colorimage() const { return height_colorimage_; }
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
   inline bool                     do_overwrite_normal() const { return overwrite_normal_; }
   scm::math::vec3f const&         get_overwrite_normal() const { return o_normal_; }
   bool                            is_pickable() const { return is_pickable_; }
-
-  unsigned width_depthimage() const { return width_depthimage_; }
-  unsigned height_depthimage() const { return height_depthimage_; }
-  unsigned width_colorimage() const { return width_colorimage_; }
-  unsigned height_colorimage() const { return height_colorimage_; }
 
  private:
 
