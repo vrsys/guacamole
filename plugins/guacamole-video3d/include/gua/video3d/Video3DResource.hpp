@@ -57,22 +57,6 @@ struct RenderContext;
 class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
  public:
 
-  /** Associated per  OpenGL resources
-   *
-   */
-  struct PerRenderContext {
-    // gl resources
-    scm::gl::rasterizer_state_ptr rstate_solid_;
-    scm::gl::texture_2d_ptr       color_tex_;
-    scm::gl::texture_2d_ptr       depth_tex_;
-
-    // cpu resources
-    video3d::NetKinectArray* nka_;
-    std::vector<scm::gl::texture_3d_ptr> cv_xyz_;
-    std::vector<scm::gl::texture_3d_ptr> cv_uv_;
-    unsigned         frame_counter_;
-  };
-
   /**
    * constructor.
    *
@@ -105,12 +89,11 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   *
   */
   inline unsigned                 number_of_cameras() const { return unsigned(calib_files_.size()); }
+  std::vector<std::shared_ptr<KinectCalibrationFile>> const& calib_files() const { return calib_files_; }
 
-  inline PerRenderContext const&  per_render_context(RenderContext const& context) const {
-    return per_render_context_[context.id];
-  }
-
-  void                            update_buffers (RenderContext& context) const;
+  unsigned color_size() const { return color_size_; }
+  unsigned depth_size_byte() const { return depth_size_byte_; }
+  std::string server_endpoint() const { return server_endpoint_; }
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
@@ -120,18 +103,16 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   unsigned width_depthimage() const { return width_depthimage_; }
   unsigned height_depthimage() const { return height_depthimage_; }
+  unsigned width_colorimage() const { return width_colorimage_; }
+  unsigned height_colorimage() const { return height_colorimage_; }
 
  private:
-
-  void upload_video_textures(RenderContext& context) const;
 
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
 
   // cpu resources
-  mutable std::vector<PerRenderContext> per_render_context_;
-
   unsigned depth_size_;
   unsigned depth_size_byte_;
   unsigned color_size_;

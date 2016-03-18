@@ -53,7 +53,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
       depth_size_(),
       depth_size_byte_(),
       color_size_(),
-      per_render_context_(),
       width_depthimage_(),
       height_depthimage_(),
       width_colorimage_(),
@@ -62,9 +61,6 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
       o_normal_(),
       is_pickable_(flags & Video3DLoader::MAKE_PICKABLE) {
   init();
-
-  // pre resize for video shooting VRHyperspace
-  per_render_context_.resize(10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,120 +134,6 @@ void Video3DResource::init() {
   } else {
     throw std::runtime_error("Couldn't open calib file");
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void Video3DResource::upload_video_textures(RenderContext& ctx) const {
-  if (per_render_context_.size() > ctx.id) {
-    if (per_render_context_[ctx.id].color_tex_) {
-      return;
-    } else {
-      // continue initialization
-    }
-  } else {
-    per_render_context_.resize(ctx.id + 1);
-  }
-
-  std::cout << "Upload video textures" << std::endl;
-
-  auto& per_context = per_render_context_[ctx.id];
-
-  // initialize Texture Arrays (kinect depths & colors)
-  per_context.depth_tex_ =
-      ctx.render_device->create_texture_2d(
-          scm::math::vec2ui(width_depthimage_, height_depthimage_),
-          scm::gl::FORMAT_R_32F,
-          0,
-          calib_files_.size(),
-          1);
-
-  per_context.color_tex_ =
-      ctx.render_device->create_texture_2d(
-          scm::math::vec2ui(width_colorimage_, height_colorimage_),
-          calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA
-                                             : scm::gl::FORMAT_RGB_8,
-          0,
-          calib_files_.size(),
-          1);
-
-  per_context.rstate_solid_ =
-      ctx.render_device->create_rasterizer_state(
-          scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, true);
-
-  per_context.nka_ = new video3d::NetKinectArray(
-      calib_files_, server_endpoint_, color_size_, depth_size_byte_);
-
-  // generate and download calibvolumes for this context
-  for (unsigned i = 0; i < number_of_cameras(); ++i) {
-    std::vector<void*> raw_cv_xyz;
-    raw_cv_xyz.push_back(calib_files_[i]->cv_xyz);
-    // should be: glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F, cv_width, cv_height,
-    // cv_depth, 0, GL_RGB, GL_FLOAT, (unsigned char*) cv_xyz);
-    per_context.cv_xyz_
-        .push_back(ctx.render_device->create_texture_3d(
-            scm::math::vec3ui(calib_files_[i]->cv_width,
-                              calib_files_[i]->cv_height,
-                              calib_files_[i]->cv_depth),
-            scm::gl::FORMAT_RGB_32F,
-            0,
-            scm::gl::FORMAT_RGB_32F,
-            raw_cv_xyz));
-
-    std::vector<void*> raw_cv_uv;
-    raw_cv_uv.push_back(calib_files_[i]->cv_uv);
-    // should be: glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, cv_width, cv_height,
-    // cv_depth, 0, GL_RG, GL_FLOAT, (unsigned char*) cv_uv);
-    per_context.cv_uv_
-        .push_back(ctx.render_device->create_texture_3d(
-            scm::math::vec3ui(calib_files_[i]->cv_width,
-                              calib_files_[i]->cv_height,
-                              calib_files_[i]->cv_depth),
-            scm::gl::FORMAT_RG_32F,
-            0,
-            scm::gl::FORMAT_RG_32F,
-            raw_cv_uv));
-  }
-
-  per_context.frame_counter_ = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Video3DResource::update_buffers(RenderContext& ctx) const {
-  upload_video_textures(ctx);
-
-  if (per_render_context_[ctx.id].frame_counter_ != ctx.framecount) {
-    per_render_context_[ctx.id].frame_counter_ = ctx.framecount;
-  } else {
-    return;
-  }
-  auto & per_context = per_render_context_[ctx.id];
-  if (per_context.nka_->update()) {
-    unsigned char* buff = per_context.nka_->getBuffer();
-    for (int i = 0; i < number_of_cameras(); ++i) {
-
-      ctx.render_context->update_sub_texture(
-          per_context.color_tex_,
-          scm::gl::texture_region(
-              scm::math::vec3ui(0, 0, i),
-              scm::math::vec3ui(per_context.color_tex_->dimensions(), 1)),
-          0,  //mip-mapping level
-          calib_files_[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA
-                                             : scm::gl::FORMAT_RGB_8,
-          static_cast<void*>(buff));
-      buff += color_size_;
-      ctx.render_context->update_sub_texture(
-          per_context.depth_tex_,
-          scm::gl::texture_region(
-              scm::math::vec3ui(0, 0, i),
-              scm::math::vec3ui(per_context.depth_tex_->dimensions(), 1)),
-          0,  //mip-mapping level
-          scm::gl::FORMAT_R_32F,
-          static_cast<void*>(buff));
-      buff += depth_size_byte_;
-    }
-  }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
