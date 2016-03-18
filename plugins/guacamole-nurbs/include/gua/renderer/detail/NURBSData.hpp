@@ -32,17 +32,15 @@ namespace gua {
 
 struct NURBSData 
 {
- private:
+public :
 
-  struct page {
-   public:
-    page() {}
-    ~page() {}
-
+  struct per_patch_data
+  {
     unsigned surface_offset;
-    unsigned order_u;
-    unsigned order_v;
+    unsigned short order_u;
+    unsigned short order_v;
     unsigned trim_id;
+    unsigned obb_id;
 
     scm::math::vec4f nurbs_domain;
     scm::math::vec4f bbox_min;
@@ -50,30 +48,21 @@ struct NURBSData
 
     scm::math::vec4f dist;
   };
+  
 
  public:
 
   //Constructor and Destructor
-   NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v);
-
-  virtual ~NURBSData();
+  NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v, unsigned trim_texture);
 
   std::shared_ptr<gpucast::beziersurfaceobject> object;
 
   // adaptive_tesselation data
-  std::vector<scm::math::vec4f> tess_patch_data;       // Domain Points
-  std::vector<unsigned>         tess_index_data;       // Index Data
-  std::vector<scm::math::vec4f> tess_parametric_data;  // Control Points of all the surfaces
-  std::vector<page>             tess_attribute_data;   
+  std::vector<scm::math::vec4f>  tess_patch_data;       // Domain Points
+  std::vector<unsigned>          tess_index_data;       // Index Data
+  std::vector<scm::math::vec4f>  tess_parametric_data;  // Control Points of all the surfaces
+  std::vector<per_patch_data>    tess_attribute_data;
 
-  //Data for Trimming
-  std::vector<scm::math::vec4f> trim_partition;
-  std::vector<scm::math::vec4f> trim_contourlist;
-  std::vector<scm::math::vec4f> trim_curvelist;
-  std::vector<float>            trim_curvedata;
-  std::vector<scm::math::vec3f> trim_pointdata;
-
-  //gua::math::BoundingBox<scm::math::vec3f> bbox;
 };
 
 }  // namespace gua

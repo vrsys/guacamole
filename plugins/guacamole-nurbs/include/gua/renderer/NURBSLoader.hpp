@@ -54,7 +54,10 @@ class GUA_NURBS_DLL NURBSLoader {
      NORMALIZE_SCALE = 1 << 2,
      WIREFRAME = 1 << 3,
      RAYCASTING = 1 << 4,
-     PRE_SUBDIVISION = 1 << 5
+     PRE_SUBDIVISION = 1 << 5,
+     TRIM_TEXTURE_8 = 1 << 6,
+     TRIM_TEXTURE_16 = 1 << 7,
+     TRIM_TEXTURE_32 = 1 << 8
    };
 
 

@@ -38,19 +38,14 @@ namespace node {
 
 ////////////////////////////////////////////////////////////////////////////////
 NURBSNode::NURBSNode(std::string const& name,
-                     std::string const& geometry_description,
-                     std::shared_ptr<Material> const& material,
-                     math::mat4 const& transform)
-    : GeometryNode(name, transform),
-      geometry_description_(geometry_description),
-      geometry_changed_(true),
-      material_(material),
-      max_tess_level_pre_pass_(1.0f),
-      max_tess_level_final_pass_(4.0f),
-      enable_raycasting_(false),
-      enable_backfaces_(false),
-      trimming_mode_(trimming_mode_t::classic) {
-}
+  std::string const& geometry_description,
+  std::shared_ptr<Material> const& material,
+  math::mat4 const& transform)
+  : GeometryNode(name, transform),
+    geometry_description_(geometry_description),
+    geometry_changed_(true),
+    material_(material)
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<NURBSResource> const& NURBSNode::get_geometry() const {
@@ -81,22 +76,22 @@ void NURBSNode::set_material(std::shared_ptr<Material> const& material) {
 
 ////////////////////////////////////////////////////////////////////////////////
 float NURBSNode::max_pre_tesselation() const {
-  return max_tess_level_pre_pass_;
+  return max_pre_tesselation_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSNode::max_pre_tesselation(float t) {
-  max_tess_level_pre_pass_ = std::max(1.0f, std::min(t, 64.0f));
+  max_pre_tesselation_ = std::max(1.0f, std::min(t, 64.0f));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float NURBSNode::max_final_tesselation() const {
-  return max_tess_level_final_pass_;
+float NURBSNode::max_tesselation_error() const {
+  return max_tesselation_error_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSNode::max_final_tesselation(float t) {
-  max_tess_level_final_pass_ = std::max(1.0f, std::min(t, 64.0f));
+void NURBSNode::max_tesselation_error(float t) {
+  max_tesselation_error_ = std::max(1.0f, std::min(t, 64.0f));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +215,7 @@ std::shared_ptr<Node> NURBSNode::copy() const {
   result->trimming_mode_ = trimming_mode_;
   result->enable_backfaces_ = enable_backfaces_;
 
-  result->max_final_tesselation(this->max_final_tesselation());
+  result->max_tesselation_error(this->max_tesselation_error());
   result->max_pre_tesselation(this->max_pre_tesselation());
 
   return result;
