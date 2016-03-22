@@ -231,9 +231,9 @@ void TriangleMeshShape::decompose_to_convex(std::shared_ptr<TriMeshRessource> co
 	}
 
     HACD::HACD hacd;
-	hacd.SetPoints(&points[0]);
+	hacd.SetPoints(points.data());
 	hacd.SetNPoints(points.size());
-	hacd.SetTriangles(&triangles[0]);
+	hacd.SetTriangles(triangles.data());
 	hacd.SetNTriangles(triangles.size());
 	hacd.SetCompacityWeight(0.1);
 	hacd.SetVolumeWeight(0.0);

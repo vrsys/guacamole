@@ -68,9 +68,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   /**
    * destructor.
    */
+   ~Video3DResource() {}
 
-   ~Video3DResource();
-   
   /**
    * Raytest for Video3D
    *
@@ -78,7 +77,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    *
    */
   void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits)
+                node::Node* owner, std::set<PickResult>& hits) override
   {}
 
   /**
@@ -89,70 +88,42 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   /**
   *
   */
-  void draw(RenderContext const& context) const;
+  inline unsigned                 number_of_cameras() const { return unsigned(calib_files_.size()); }
+  std::vector<std::shared_ptr<KinectCalibrationFile>> const& calib_files() const { return calib_files_; }
 
-
-  unsigned                        number_of_cameras() const;
-
-  scm::gl::texture_2d_ptr const&  color_array (RenderContext const& context) const;
-  scm::gl::texture_2d_ptr const&  depth_array (RenderContext const& context) const;
-
-  scm::gl::texture_3d_ptr const&  cv_xyz (RenderContext const& context, unsigned camera_id) const;
-  scm::gl::texture_3d_ptr const&  cv_uv (RenderContext const& context, unsigned camera_id) const;
-
-  void                            update_buffers (RenderContext const& context) const;
+  unsigned color_size() const { return color_size_; }
+  unsigned depth_size_byte() const { return depth_size_byte_; }
+  std::string server_endpoint() const { return server_endpoint_; }
+  unsigned width_depthimage() const { return width_depthimage_; }
+  unsigned height_depthimage() const { return height_depthimage_; }
+  unsigned width_colorimage() const { return width_colorimage_; }
+  unsigned height_colorimage() const { return height_colorimage_; }
 
   KinectCalibrationFile const&    calibration_file (unsigned i) const;
 
-  bool                            do_overwrite_normal() const;
-  scm::math::vec3f const&         get_overwrite_normal() const;
-  bool                            is_pickable() const;
+  inline bool                     do_overwrite_normal() const { return overwrite_normal_; }
+  scm::math::vec3f const&         get_overwrite_normal() const { return o_normal_; }
+  bool                            is_pickable() const { return is_pickable_; }
 
  private:
-
-  void upload_to(RenderContext const& context) const;
-
-  void upload_proxy_mesh(RenderContext const& context) const;
-  void upload_video_textures(RenderContext const& context) const;
-
 
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
 
-  // gl resources
-  mutable std::vector<scm::gl::buffer_ptr>       proxy_vertices_;
-  mutable std::vector<scm::gl::buffer_ptr>       proxy_indices_;
-  mutable std::vector<scm::gl::vertex_array_ptr> proxy_vertex_array_;
-
-  mutable std::vector<scm::gl::rasterizer_state_ptr> rstate_solid_;
-
-  mutable std::vector<scm::gl::texture_2d_ptr> color_texArrays_;
-  mutable std::vector<scm::gl::texture_2d_ptr> depth_texArrays_;
-
   // cpu resources
-  mutable std::vector<unsigned char*>   color_buffers_;
-  mutable std::vector<float*>           depth_buffers_;
-  mutable std::vector<sys::FileBuffer*> file_buffers_;
+  unsigned depth_size_;
+  unsigned depth_size_byte_;
+  unsigned color_size_;
 
-  mutable std::vector<video3d::NetKinectArray* > nka_per_context_;
-  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_xyz_per_context_;
-  mutable std::vector< std::vector<scm::gl::texture_3d_ptr> > cv_uv_per_context_;
-  mutable std::vector<unsigned>         framecounter_per_context_;
-  mutable unsigned depth_size_;
-  mutable unsigned depth_size_byte_;
-  mutable unsigned color_size_;
+  unsigned width_depthimage_;
+  unsigned height_depthimage_;
 
-  mutable unsigned width_depthimage_;
-  mutable unsigned height_depthimage_;
+  unsigned width_colorimage_;
+  unsigned height_colorimage_;
 
-  mutable unsigned width_colorimage_;
-  mutable unsigned height_colorimage_;
-
-  mutable std::mutex upload_mutex_;
-
-  mutable bool overwrite_normal_;
-  mutable scm::math::vec3f o_normal_;
+  bool overwrite_normal_;
+  scm::math::vec3f o_normal_;
   bool is_pickable_;
 };
 

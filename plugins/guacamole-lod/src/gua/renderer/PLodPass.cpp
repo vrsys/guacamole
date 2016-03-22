@@ -18,63 +18,60 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
 // class header
-#include <gua/renderer/WarpMatrix.hpp>
+#include <gua/renderer/PLodPass.hpp>
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/renderer/LodResource.hpp>
+#include <gua/renderer/PLodRenderer.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <gua/config.hpp>
+
+#include <scm/gl_core/shader_objects.h>
+
 // external headers
+#include <sstream>
 #include <fstream>
+#include <regex>
+#include <list>
 
 namespace gua {
 
-WarpMatrix::WarpMatrix() : Texture2D(0, 0), data_() {}
+////////////////////////////////////////////////////////////////////////////////
 
-WarpMatrix::WarpMatrix(std::string const& file_name)
-    : Texture2D(0,
-              0,
-              scm::gl::FORMAT_RGBA_16F,
-              1,
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR)),
-      data_() {
-
-  std::ifstream file(file_name, std::ios::binary);
-
-  if (file) {
-    file.read((char*)&width_, sizeof(unsigned));
-    file.read((char*)&height_, sizeof(unsigned));
-
-    data_ = std::vector<float>(width_ * height_ * 4);
-
-    file.read((char*)data_.data(), sizeof(float) * data_.size());
-
-    file.close();
-  } else {
-    Logger::LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
-  }
+PLodPassDescription::PLodPassDescription()
+  : PipelinePassDescription()
+{
+  needs_color_buffer_as_input_ = false;
+  writes_only_color_buffer_ = false;
+  enable_for_shadows_ = true;
+  rendermode_ = RenderMode::Custom;
 }
 
-void WarpMatrix::upload_to(RenderContext const& context) const {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-  RenderContext::Texture ctex{};
+////////////////////////////////////////////////////////////////////////////////
 
-  std::vector<void*> tmp_data;
-  tmp_data.push_back(data_.data());
+std::shared_ptr<PipelinePassDescription> PLodPassDescription::make_copy() const {
+  return std::make_shared<PLodPassDescription>(*this);
+}
 
-  ctex.texture = context.render_device->create_texture_2d(
-      scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_),
-                               color_format_),
-      scm::gl::FORMAT_RGBA_32F,
-      tmp_data);
+////////////////////////////////////////////////////////////////////////////////
 
-  ctex.sampler_state =
-      context.render_device->create_sampler_state(state_descripton_);
+PipelinePass PLodPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+  PipelinePass pass{ *this, ctx, substitution_map };
 
-  context.textures[uuid_] = ctex;
-  context.render_context->make_resident(ctex.texture, ctex.sampler_state);
+  auto renderer = std::make_shared<PLodRenderer>();
+  renderer->set_global_substitution_map(substitution_map);
+
+  pass.process_ = [renderer](
+    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+    renderer->render(pipe, desc);
+  };
+
+  return pass;
 }
 
 }

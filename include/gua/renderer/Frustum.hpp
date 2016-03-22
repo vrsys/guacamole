@@ -48,13 +48,13 @@ class GUA_DLL Frustum {
 
   static Frustum perspective(math::mat4 const& camera_transform,
                              math::mat4 const& screen_transform,
-                             float clip_near,
-                             float clip_far);
+                             math::mat4::value_type clip_near,
+                             math::mat4::value_type clip_far);
 
   static Frustum orthographic(math::mat4 const& camera_transform,
                               math::mat4 const& screen_transform,
-                              float clip_near,
-                              float clip_far);
+                              math::mat4::value_type clip_near,
+                              math::mat4::value_type clip_far);
 
   std::vector<math::vec3> get_corners() const;
 
@@ -69,11 +69,11 @@ class GUA_DLL Frustum {
 
   inline math::mat4 const& get_projection() const { return projection_; }
   inline math::mat4 const& get_view() const { return view_; }
-  inline float get_clip_near() const { return clip_near_; }
-  inline float get_clip_far() const { return clip_far_; }
+  inline math::mat4::value_type get_clip_near() const { return clip_near_; }
+  inline math::mat4::value_type get_clip_far() const { return clip_far_; }
 
   bool intersects(math::BoundingBox<math::vec3> const& bbox,
-                  std::vector<math::vec4f> const& global_planes = {}) const;
+                  std::vector<math::vec4> const& global_planes = {}) const;
   bool contains(math::vec3 const& point) const;
 
   std::set<PickResult> const ray_test(node::RayNode const& ray,
@@ -99,9 +99,9 @@ class GUA_DLL Frustum {
   math::mat4 screen_transform_;
   math::mat4 projection_;
   math::mat4 view_;
-  std::vector<math::vec4f> planes_;
-  float clip_near_;
-  float clip_far_;
+  std::vector<math::vec4> planes_;
+  math::mat4::value_type clip_near_;
+  math::mat4::value_type clip_far_;
 
 };
 
