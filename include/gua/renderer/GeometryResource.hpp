@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GEOMETRY_RESSOURCE_HPP
-#define GUA_GEOMETRY_RESSOURCE_HPP
+#ifndef GUA_GEOMETRY_RESOURCE_HPP
+#define GUA_GEOMETRY_RESOURCE_HPP
 
 // guacamole_headers
 #include <gua/platform.hpp>
@@ -82,4 +82,4 @@ class GUA_DLL GeometryResource {
 
 }
 
-#endif  // GUA_GEOMETRY_RESSOURCE_HPP
+#endif  // GUA_GEOMETRY_RESOURCE_HPP
