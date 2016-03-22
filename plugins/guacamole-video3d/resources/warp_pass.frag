@@ -19,7 +19,10 @@ uniform vec3 bbx_max;
 in vec2  texture_coord;
 in vec3  pos_es;
 in vec3  pos_cs;
+in float sq_area_cs;
+
 in float depth;
+in float lateral_quality;
 in vec3  normal_es;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,15 +60,29 @@ void main()
 
 #if 1
    // to cull away borders of the rgb camera view
-   if(texture_coord.s > 0.975 || texture_coord.s < 0.025 ||
-      texture_coord.t > 0.975 || texture_coord.t < 0.025) {
+   if(texture_coord.s > 0.99 || texture_coord.s < 0.01 ||
+      texture_coord.t > 0.99 || texture_coord.t < 0.01) {
         discard;
    }
 #endif
 
-   float quality = 1.0 / (depth * depth);
-   float dist_es = length(pos_es);
-   float packed_normal = pack_vec3(normalize(normal_es));
+   vec3 normal = normalize(normal_es);
+#if 1
+// backface culling
+   if ( dot ( normal, -normalize(pos_es) ) > 0.0f ) {
+     discard;
+   }
+#else
+   if ( dot ( normal, -normalize(pos_es) ) < 0.0f ) {
+     normal = -normal;
+   }
+#endif
+
+
+   //float quality = 1.0/(depth * depth);
+   float quality = lateral_quality/depth;
+
+   float packed_normal = pack_vec3(normal);
 
    out_color = vec4(texture_coord, packed_normal, quality);
 

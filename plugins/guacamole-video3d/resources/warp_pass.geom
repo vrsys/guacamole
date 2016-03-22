@@ -26,6 +26,7 @@ in VertexData {
     vec3 pos_es;
     vec3 pos_cs;
     float depth;
+    float lateral_quality;
 } VertexIn[3];
 
 
@@ -35,7 +36,10 @@ in VertexData {
 out vec2  texture_coord;
 out vec3  pos_es;
 out vec3  pos_cs;
+out float sq_area_cs;
+
 out float depth;
+out float lateral_quality;
 out vec3  normal_es;
 
 
@@ -61,7 +65,12 @@ bool validSurface(vec3 a, vec3 b, vec3 c,
   return true;
 }
 
-
+float calcAreaSQ(vec3 a, vec3 b, vec3 c){
+  vec3 ab = b - a;
+  vec3 ac = c - a;
+  vec3 cc = cross(ab,ac);
+  return dot(cc, cc);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,10 +83,12 @@ void main()
   vec3 c = VertexIn[2].pos_es - VertexIn[1].pos_es;
 
   vec3 tri_normal = normalize(cross (a, b));
+#if 0
+  // flip normal towards camera in eye space. However, this will be done in fragment stage
   if ( dot ( tri_normal, -normalize(VertexIn[0].pos_es) ) < 0.0f ) {
     tri_normal = -tri_normal;
   }
-
+#endif
   float depth_a = VertexIn[0].depth;
   float depth_b = VertexIn[1].depth;
   float depth_c = VertexIn[2].depth;
@@ -89,12 +100,19 @@ void main()
   bool valid = validSurface(a_cs, b_cs, c_cs, depth_a, depth_b, depth_c);
 
   if (valid)
-  {      
+  {
+
+    const float sq_area_in_cs      = calcAreaSQ(VertexIn[0].pos_cs,VertexIn[1].pos_cs,VertexIn[2].pos_cs);
+
+    const float e_c_ratio = 1.0;
+      
       for(int i = 0; i < gl_in.length(); i++)
       {
         texture_coord = VertexIn[i].texture_coord;
         pos_es        = VertexIn[i].pos_es;
         pos_cs        = VertexIn[i].pos_cs;
+        sq_area_cs    = sq_area_in_cs;
+	lateral_quality = VertexIn[i].lateral_quality;
         depth         = VertexIn[i].depth;
         normal_es     = tri_normal;
 

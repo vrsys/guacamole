@@ -74,32 +74,22 @@ class TriMeshRessource : public GeometryResource {
    *
    * \param context          The RenderContext to draw onto.
    */
-  void draw(RenderContext const& context) const;
+  void draw(RenderContext& context) const;
 
   void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits);
+                node::Node* owner, std::set<PickResult>& hits) override;
 
-  unsigned int num_vertices() const;
-  unsigned int num_faces() const;
+  inline unsigned int num_vertices() const { return mesh_.num_vertices; }
+  inline unsigned int num_faces() const { return mesh_.num_triangles; }
 
   math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
 
-  friend class LightingPass;
-
  private:
 
-  void upload_to(RenderContext const& context) const;
-
-  mutable std::vector<scm::gl::buffer_ptr> vertices_;
-  mutable std::vector<scm::gl::buffer_ptr> indices_;
-  mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
-  mutable std::mutex upload_mutex_;
-
- public:
+  void upload_to(RenderContext& context) const;
 
   KDTree kd_tree_;
-
   Mesh mesh_;
 };
 

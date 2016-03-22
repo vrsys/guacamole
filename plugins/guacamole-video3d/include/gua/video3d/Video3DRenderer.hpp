@@ -32,21 +32,24 @@
 
 #include <unordered_map>
 
+namespace video3d { class NetKinectArray; }
+
 namespace gua {
 
 class ShaderProgram;
 class Pipeline;
 class MaterialShader;
+class Video3DResource;
 
 class GUA_VIDEO3D_DLL Video3DRenderer {
  public:
 
-   enum pass {
-     warp_pass  = 0,
-     blend_pass = 1
-   };
+  enum pass {
+    warp_pass = 0,
+    blend_pass = 1
+  };
 
-  public:
+ public:
 
   Video3DRenderer();
 
@@ -60,29 +63,53 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   //                          Frustum const& frustum,
   //                          View const& view) const;
 
-  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+  void set_global_substitution_map(SubstitutionMap const& smap) {
+    global_substitution_map_ = smap;
+  }
 
- private: // attributes
+  void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
+  void update_buffers(RenderContext const& ctx, Video3DResource const& video3d);
+
+ private:  // attributes
+
   bool initialized_;
 
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  SubstitutionMap                                                     global_substitution_map_;
+  std::vector<ShaderProgramStage> program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
+      programs_;
+  SubstitutionMap global_substitution_map_;
 
   std::shared_ptr<ShaderProgram> warp_pass_program_;
 
-  static const unsigned                    MAX_NUM_KINECTS = 6;
+  static const unsigned MAX_NUM_KINECTS = 6;
 
-  mutable scm::gl::texture_2d_ptr          warp_depth_result_;
-  mutable scm::gl::texture_2d_ptr          warp_color_result_;
-  mutable scm::gl::frame_buffer_ptr        warp_result_fbo_;
+  scm::gl::texture_2d_ptr warp_depth_result_;
+  scm::gl::texture_2d_ptr warp_color_result_;
+  scm::gl::frame_buffer_ptr warp_result_fbo_;
 
-  mutable scm::gl::rasterizer_state_ptr    no_bfc_rasterizer_state_;
-  mutable scm::gl::sampler_state_ptr       nearest_sampler_state_;
-  mutable scm::gl::sampler_state_ptr       linear_sampler_state_;
+  scm::gl::rasterizer_state_ptr no_bfc_rasterizer_state_;
+  scm::gl::sampler_state_ptr nearest_sampler_state_;
+  scm::gl::sampler_state_ptr linear_sampler_state_;
 
-  mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
-  mutable scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
+  scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+
+  struct Video3DData {
+    Video3DData() = default;
+    Video3DData(RenderContext const& ctx, Video3DResource const& video3d);
+    // gl resources
+    scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
+    scm::gl::texture_2d_ptr color_tex_ = nullptr;
+    scm::gl::texture_2d_ptr depth_tex_ = nullptr;
+
+    // cpu resources
+    std::shared_ptr<video3d::NetKinectArray> nka_ = nullptr;
+    std::vector<scm::gl::texture_3d_ptr> cv_xyz_ = {};
+    std::vector<scm::gl::texture_3d_ptr> cv_uv_ = {};
+    unsigned frame_counter_ = 0;
+  };
+
+  std::unordered_map<std::size_t, Video3DData> video3Ddata_;
 };
 
 }

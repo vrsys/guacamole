@@ -45,8 +45,8 @@ class GUA_DLL TexturedScreenSpaceQuadNode : public SerializableNode {
   struct Configuration {
     GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
     GUA_ADD_PROPERTY(math::vec2i, size,       math::vec2i(1, 1));
-    GUA_ADD_PROPERTY(math::vec2,  anchor,     math::vec2(0.f, 0.f));
-    GUA_ADD_PROPERTY(math::vec2,  offset,     math::vec2(0.f, 0.f));
+    GUA_ADD_PROPERTY(math::vec2,  anchor,     math::vec2(0.0, 0.0));
+    GUA_ADD_PROPERTY(math::vec2,  offset,     math::vec2(0.0, 0.0));
     GUA_ADD_PROPERTY(float,       opacity,    1.f);
     GUA_ADD_PROPERTY(bool,        flip_x,     false);
     GUA_ADD_PROPERTY(bool,        flip_y,     false);
