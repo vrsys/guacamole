@@ -36,52 +36,6 @@
 
 #include <iomanip>
 
-#define NB_DISABLE 0
-#define NB_ENABLE 1
-
-int kbhit() {
-
-
-  struct timeval tv;
-  fd_set fds;
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
-  FD_ZERO(&fds);
-#if WIN32
-  #define STDIN_FILENO 0
-#endif
-
-  FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
-  select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv);
-  return FD_ISSET(STDIN_FILENO, &fds);
-}
- 
-void nonblock( int state ) {
-
-#if WIN32
-
-#else
-  struct termios ttystate;
-
-  //get the terminal state
-  tcgetattr(STDIN_FILENO, &ttystate);
-
-  if (state==NB_ENABLE) {
-    //turn off canonical mode
-    ttystate.c_lflag &= ~ICANON;
-    //minimum of number input read.
-    ttystate.c_cc[VMIN] = 1;
-  }
-  else if (state==NB_DISABLE) {
-    //turn on canonical mode
-    ttystate.c_lflag |= ICANON;
-  }
-  //set the terminal attributes.
-  tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
-#endif
-}
-
-
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
@@ -151,7 +105,7 @@ int main(int argc, char** argv) {
   };
 
 
-  auto plod_pig_node = plodLoader.load_geometry("plod_pig", "data/objects/pig.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
+  auto plod_pig_node = plodLoader.load_geometry("plod_pig", "data/objects/Area1.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
   plod_pig_node->scale(5.0, 5.0, 5.0);
 
   gua::TriMeshLoader loader;
@@ -161,21 +115,24 @@ int main(int argc, char** argv) {
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
   nav->translate(0.0, 0.0, 2.0);
 
-
+#if WIN32
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
-
-  //get the resolution from the oculus window
-  gua::math::vec2ui res(window->get_window_resolution());
-
-  gua::math::vec2ui eye_res(window->get_eye_resolution());
-
+  gua::WindowDatabase::instance()->add("main_window", window);
+  window->config.set_enable_vsync(false);
+  window->config.set_fullscreen_mode(false);
+  window->open();
+#else
+  auto window = std::make_shared<gua::OculusWindow>(":0.0");
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_fullscreen_mode(true);
-  window->config.set_size(res);
-  window->config.set_resolution( res );
+  window->config.set_size(window->get_window_resolution());
+  window->config.set_resolution(window->get_window_resolution());
   window->open();
+#endif
 
+  //get the resolution from the oculus window
+  gua::math::vec2ui res(window->get_window_resolution());
 
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
@@ -228,8 +185,6 @@ int main(int argc, char** argv) {
   float desired_frame_time(1.0 / 60.0);
   gua::events::MainLoop loop;
 
-  nonblock(NB_ENABLE);
-  
   char c = '0';
   int i = 0;
   char prev_character = '\n';
@@ -250,8 +205,6 @@ int main(int argc, char** argv) {
         rotate(child, ++depth);
       }
     };
-
-    i=kbhit();
 
     float frame_offset = 1.0 * frame_time;
 
@@ -289,7 +242,8 @@ int main(int argc, char** argv) {
       }
     }
 
-    neck->set_transform(window->get_oculus_sensor_orientation());
+    camera->set_transform(window->get_oculus_sensor_orientation());
+    //neck->set_transform(window->get_oculus_sensor_orientation());
 
     renderer.queue_draw({&graph});
   });
