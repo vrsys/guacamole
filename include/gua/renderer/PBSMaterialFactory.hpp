@@ -25,16 +25,10 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/Material.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
 
 // external headers
 #include <string>
-#include <list>
 #include <memory>
-
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 
 namespace gua {
 

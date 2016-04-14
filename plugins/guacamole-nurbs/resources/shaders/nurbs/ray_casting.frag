@@ -8,18 +8,20 @@
 // input
 ///////////////////////////////////////////////////////////////////////////////    
 in vec4 v_modelcoord;
-in vec4 frag_texcoord;
+in vec2 initial_uv_guess;
 
 in vec3 position_varying;     
 
-flat in int trim_index_db;
-flat in int trim_index_cmb;
+flat in int trim_index;
+flat in int trim_type;
+flat in int trim_approach;
 flat in int data_index;
+
 flat in int order_u;
 flat in int order_v;
 
 flat in vec4 uvrange;
-flat in int  trimtype;
+
 
 // generic input
 @include "resources/shaders/common/gua_fragment_shader_input.glsl"
@@ -27,9 +29,6 @@ flat in int  trimtype;
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////    
-layout (location = 0) out vec4  out_color;
-layout (depth_any)    out float gl_FragDepth;
-
 @include "resources/shaders/common/gua_global_variable_declaration.glsl"
 
 @include "resources/shaders/common/gua_fragment_shader_output.glsl"
@@ -39,9 +38,6 @@ layout (depth_any)    out float gl_FragDepth;
 ///////////////////////////////////////////////////////////////////////////////    
 
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
-
-uniform float nearplane;
-uniform float farplane;
 
 uniform float gua_texel_width;
 uniform float gua_texel_height;
@@ -54,6 +50,7 @@ uniform samplerBuffer trim_contourlist;
 uniform samplerBuffer trim_curvelist;
 uniform samplerBuffer trim_curvedata;
 uniform samplerBuffer trim_pointdata;
+uniform usamplerBuffer trim_preclassification;
 
 @material_uniforms@
 
@@ -72,6 +69,7 @@ uniform samplerBuffer trim_pointdata;
 #include "resources/glsl/trimming/binary_search.glsl"
 #include "resources/glsl/trimming/bisect_curve.glsl"           
 #include "resources/glsl/trimming/trimming_contour_double_binary.glsl"
+#include "resources/glsl/trimming/trimming_contour_kd.glsl"
 #include "resources/glsl/trimming/trimming_double_binary.glsl"
 #include "resources/glsl/trimmed_surface/shade_phong_fresnel.glsl.frag"
 
@@ -84,7 +82,7 @@ uniform samplerBuffer trim_pointdata;
 ///////////////////////////////////////////////////////////////////////////////
 void main()
 {
-  int iterations = 10;
+  int iterations = 16;
 
   mat4 modelviewmatrix        = gua_view_matrix * gua_model_matrix;
   mat4 modelviewmatrixinverse = inverse(modelviewmatrix);
@@ -99,17 +97,17 @@ void main()
   /*********************************************************************
   * Surface intersection
   *********************************************************************/
-  vec2 uv = vec2(frag_texcoord[0], frag_texcoord[1]);
+  vec2 uv = initial_uv_guess; 
   
   vec4 p  = vec4(0.0);
   vec4 du = vec4(0.0);
   vec4 dv = vec4(0.0);
 
-  bool surface_hit = newton(uv, 0.001f, iterations, vertexdata, data_index, order_u, order_v, n1, n2, d1, d2, p, du, dv);
+  bool surface_hit = newton(uv, 0.0001f, iterations, vertexdata, data_index, order_u, order_v, n1, n2, d1, d2, p, du, dv);
 
   if ( !surface_hit ) {
     discard;
-  }
+  } 
 
   /*********************************************************************
    * Trimming process
@@ -118,17 +116,18 @@ void main()
   uv[0] = uvrange[0] + uv[0] * (uvrange[1] - uvrange[0]);
   uv[1] = uvrange[2] + uv[1] * (uvrange[3] - uvrange[2]);
 
-  bool trimmed      = trimming_contour_double_binary (trim_partition,
-                                                      trim_contourlist,
-                                                      trim_curvelist,
-                                                      trim_curvedata,
-                                                      trim_pointdata,
-                                                      uv,
-                                                      int(trim_index_cmb), 
-                                                      1, 
-                                                      iterations, 
-                                                      0.0001f, 
-                                                      16);
+  bool trimmed      = trimming_contour_kd (trim_partition,
+                                           trim_contourlist,
+                                           trim_curvelist,
+                                           trim_curvedata,
+                                           trim_pointdata,
+                                           trim_preclassification,
+                                           uv,
+                                           int(trim_index), 
+                                           trim_type, 
+                                           iterations, 
+                                           0.0001f, 
+                                           16);
   if ( trimmed ) {
     discard;
   }

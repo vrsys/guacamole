@@ -1,5 +1,6 @@
 @include "resources/shaders/common/header.glsl"           
-       
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////                                                              
@@ -7,23 +8,30 @@ layout(triangles) in;
 
 in vec3  eval_position[3];                          
 in uint  eval_index[3];                             
-in vec2  eval_tesscoord[3];         
+in vec2  eval_tesscoord[3];   
+in float eval_final_tesselation[3];          
                                                                                             
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
-layout(points, max_vertices = 4) out;      
+layout(xfb_buffer = 0, points, max_vertices = 4) out;      
 
-layout (location = 0)       out vec3 xfb_position;    
-layout (location = 1) flat  out uint xfb_index;       
-layout (location = 2)       out vec2 xfb_tesscoord;   
-                                                              
+layout (xfb_offset=0)  out vec3 transform_position;    
+layout (xfb_offset=12) out uint transform_index;       
+layout (xfb_offset=16) out vec2 transform_tesscoord;                                                 
+layout (xfb_offset=24) out float transform_final_tesselation;     
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////
-uniform samplerBuffer parameter_texture;              
-uniform samplerBuffer attribute_texture;    
+uniform samplerBuffer parameter_texture;       
+uniform samplerBuffer attribute_texture;          
+ 
+#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
+#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
+
+@include "resources/glsl/common/obb_area.glsl"   
+@include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // methods
@@ -35,7 +43,7 @@ uniform samplerBuffer attribute_texture;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void main()                                                                          
-{                                                                                    
+{                                                                             
     vec2 maxmax_tesscoord = max(max(eval_tesscoord[0], eval_tesscoord[1]), eval_tesscoord[2]);
     vec2 minmin_tesscoord = min(min(eval_tesscoord[0], eval_tesscoord[1]), eval_tesscoord[2]);
                                                                                              
@@ -72,25 +80,32 @@ void main()
                                                                                              
     vec4 new_puv;                                                                    
     vec4 new_du, new_dv;                                                             
-                                                                                             
+                       
+#if TEXBUFFER_LAYOUT                                                                  
     vec4 data = texelFetch(attribute_texture, int(eval_index[0]) * 5);                  
     uint surface_index   = floatBitsToUint(data.x);                                  
     uint surface_order_u = floatBitsToUint(data.y);                                  
     uint surface_order_v = floatBitsToUint(data.z);                                  
-                                                                                             
+#else
+    int surface_index   = 0;
+    int surface_order_u = 0;
+    int surface_order_v = 0;
+    retrieve_patch_data(int(eval_index[0]), surface_index, surface_order_u, surface_order_v);
+#endif                                                                                             
     evaluateSurface ( parameter_texture,                                             
                       int(surface_index),                                            
                       int(surface_order_u),                                          
                       int(surface_order_v),                                          
                       new_tesscoord,                                                 
                       new_puv );                                                     
-                                                                                             
+                                                                                                
     for ( int i = 0; i != 4; ++i )                                                   
     {                                                                                
-        index         = order[i];                                                    
-        xfb_position 	= order[i] == -1 ? new_puv.xyz : eval_position[index];            
-        xfb_index 	  = eval_index[0];                                                  
-        xfb_tesscoord = tesscoords[i];                                               
+        index               = order[i];                                                    
+        transform_position 	= order[i] == -1 ? new_puv.xyz : eval_position[index];            
+        transform_index 	  = eval_index[0];                                                  
+        transform_tesscoord = tesscoords[i];      
+        transform_final_tesselation = eval_final_tesselation[0];                        
         EmitVertex();                                                                
     }                                                                                
     EndPrimitive(); 
