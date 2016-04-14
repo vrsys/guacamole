@@ -11,19 +11,20 @@ flat in vec3 teTangent[3];
 flat in uint teIndex[3];                           
 flat in vec2 teTessCoord[3];                       
 flat in vec4 teNormal[3];                          
-flat in vec4 tePosition[3];                        
-      
+flat in vec4 tePosition[3];     
+ 
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////                                                               
-flat out uint gIndex;      
+flat out uint gIndex;
 
 @include "resources/shaders/common/gua_global_variable_declaration.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // guacamole vertex output interface
 ///////////////////////////////////////////////////////////////////////////////
-// vec3  gua_position;
+// vec3  gua_world_position;
+// vec3  gua_view_position;
 // vec3  gua_normal;
 // vec3  gua_tangent;
 // vec3  gua_bitangent;
@@ -32,6 +33,8 @@ flat out uint gIndex;
 // float gua_roughness;
 // float gua_metalness;
 // float gua_emissivity;
+// bool  gua_flags_passthrough;
+// float gua_alpha;
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,7 +92,7 @@ void main()
 
     vec4 world_normal    = gua_normal_matrix * vec4 (teNormal[i].xyz, 0.0);
 
-    gua_position         = (gua_model_matrix * tePosition[i]).xyz;
+    gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;
     gua_normal           = normalize ( gua_normal_matrix * vec4 (teNormal[i].xyz, 0.0) ).xyz;
     gua_texcoords        = teTessCoord[i];
     gua_tangent          = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;
@@ -100,7 +103,7 @@ void main()
     gua_emissivity       = 0;
     ///////////////////////////////////////////////////////
                       
-    gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_position.xyz, 1.0);
+    gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
 
     @material_method_calls_vert@
 

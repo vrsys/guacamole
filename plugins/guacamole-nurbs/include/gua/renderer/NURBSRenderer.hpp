@@ -50,7 +50,7 @@ namespace gua {
   private:  // auxiliary methods
 
     void        _load_shaders();
-    void        _initialize_pre_tesselation_program();
+    void        _initialize_pre_tesselation_program(RenderContext const& ctx);
     void        _initialize_tesselation_program(MaterialShader*);
     void        _initialize_raycasting_program(MaterialShader*);
 

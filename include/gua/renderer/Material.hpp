@@ -150,6 +150,7 @@ template GUA_DLL Material& Material::set_uniform<math::vec2>(std::string const& 
 template GUA_DLL Material& Material::set_uniform<math::vec3>(std::string const& name, math::vec3 const& value);
 template GUA_DLL Material& Material::set_uniform<math::vec4>(std::string const& name, math::vec4 const& value);
 template GUA_DLL Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value);
+template GUA_DLL Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value, int view_id);
 
 //operators
 std::ostream& operator<<(std::ostream& os, Material const& val);

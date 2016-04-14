@@ -31,10 +31,11 @@
 
 namespace gua {
 
-class MaterialShaderMethod {
+class GUA_DLL MaterialShaderMethod {
  public:
 
   MaterialShaderMethod(std::string const& name = "");
+  ~MaterialShaderMethod() = default;
 
   MaterialShaderMethod& load_from_file(std::string const& file_name);
 

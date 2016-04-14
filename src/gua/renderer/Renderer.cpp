@@ -97,8 +97,9 @@ Renderer::~Renderer() {
 }
 
 void Renderer::renderclient(Mailbox in) {
+
   FpsCounter fpsc(20);
-  fpsc.start();
+  fpsc.start(); 
 
   for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
     auto window_name(cmd.serialized_cam->config.get_output_window_name());
@@ -108,8 +109,10 @@ void Renderer::renderclient(Mailbox in) {
       if (window && !window->get_is_open()) {
         window->open();
       }
+
       // update window if one is assigned
       if (window && window->get_is_open()) {
+
         window->set_active(true);
         window->start_frame();
 
@@ -163,9 +166,11 @@ void Renderer::renderclient(Mailbox in) {
 
         // swap buffers
         window->finish_frame();
+
         ++(window->get_context()->framecount);
 
         fpsc.step();
+
       }
     }
   }

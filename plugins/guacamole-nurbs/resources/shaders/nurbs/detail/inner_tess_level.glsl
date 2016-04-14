@@ -1,12 +1,10 @@
-float inner_tess_level(in samplerBuffer data,
-  in int offset,
-  in mat4 mvp_matrix,
-  in float max_error,
-  in int screen_res_x,
-  in int screen_res_y)
+float inner_tess_level(in vec4 bbox_min,
+                       in vec4 bbox_max,
+                       in mat4 mvp_matrix,
+                       in float max_error,
+                       in int screen_res_x,
+                       in int screen_res_y)
 {
-  vec4 bbox_min = texelFetch(data, offset + 2);
-  vec4 bbox_max = texelFetch(data, offset + 3);
   vec3 combin[8];
   int i, j;
   float max_length = 0.0;

@@ -89,16 +89,22 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
 
       // check and set rendering mode and create render resources
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
-      auto pre_subdivision_u = flags | PRE_SUBDIVISION ? 1 : 0;
-      auto pre_subdivision_v = flags | PRE_SUBDIVISION ? 1 : 0;
+      auto pre_subdivision_u = flags & PRE_SUBDIVISION ? 1 : 0;
+      auto pre_subdivision_v = flags & PRE_SUBDIVISION ? 1 : 0;
 
-      auto ressource = std::make_shared<NURBSResource>(bezier_object, pre_subdivision_u, pre_subdivision_v, fill_mode);
+      auto trim_resolution = 0;
+
+      if (flags & TRIM_TEXTURE_8) trim_resolution = 8;
+      if (flags & TRIM_TEXTURE_16) trim_resolution = 16;
+      if (flags & TRIM_TEXTURE_32) trim_resolution = 32;
+
+      auto ressource = std::make_shared<NURBSResource>(bezier_object, pre_subdivision_u, pre_subdivision_v, trim_resolution, fill_mode);
 
       // add resource to database
       GeometryDescription desc("NURBS", filename, 0, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), ressource);
 
-      auto node = std::make_shared<node::NURBSNode>(filename, desc.unique_key());
+      auto node = std::shared_ptr<node::NURBSNode>(new node::NURBSNode(filename, desc.unique_key()));
       node->update_cache();
 
       auto bbox = ressource->get_bounding_box();

@@ -138,16 +138,18 @@ int main(int argc, char** argv) {
   camera->set_pre_render_cameras({portal_camera});
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-      1.0f);
+    1.0f);
   camera->get_pipeline_description()->add_pass(
-      std::make_shared<gua::DebugViewPassDescription>());
+    std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
+
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
+
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
@@ -159,8 +161,6 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
-
-  window->open();
 
   gua::Renderer renderer;
 
@@ -178,7 +178,6 @@ int main(int argc, char** argv) {
 
     transform->set_transform(modelmatrix);
 
-    window->process_events();
     if (window->should_close()) {
       renderer.stop();
       window->close();

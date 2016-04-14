@@ -46,92 +46,6 @@
 
 namespace gua {
 
-#if 0
-
-  TriMeshPassDescription::TriMeshPassDescription()
-    : PipelinePassDescription() {
-    vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
-    fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
-
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = false;
-    rendermode_ = RenderMode::Custom;
-
-    std::shared_ptr<scm::gl::buffer_ptr> material_uniform_storage_buffer = std::make_shared<scm::gl::buffer_ptr>(nullptr);
-    auto vertex_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-    auto fragment_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
-    process_ = [material_uniform_storage_buffer, vertex_shader, fragment_shader](
-      PipelinePass&, PipelinePassDescription const&, Pipeline & pipe) {
-
-      auto sorted_objects(pipe.get_scene().odes.find(std::type_index(typeid(node::TriMeshNode))));
-
-      if (sorted_objects != pipe.get_scene().odes.end() && sorted_objects->second.size() > 0) {
-
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b){
-          return reinterpret_cast<node::TriMeshNode*>(a)->get_material().get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material().get_shader();
-        });
-
-        RenderContext const& ctx(pipe.get_context());
-
-        bool write_depth = true;
-        pipe.get_gbuffer().bind(ctx, write_depth);
-        pipe.get_gbuffer().set_viewport(ctx);
-        int view_id(pipe.get_camera().config.get_view_id());
-
-        MaterialShader* current_material(nullptr);
-        ShaderProgram*  current_shader(nullptr);
-
-        // loop through all objects, sorted by material ----------------------------
-        for (auto const& object : sorted_objects->second) {
-
-          auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-
-          if (current_material != tri_mesh_node->get_material().get_shader()) {
-            current_material = tri_mesh_node->get_material().get_shader();
-            if (current_material) {
-              current_shader = current_material->get_shader(ctx, typeid(*tri_mesh_node->get_geometry()), vertex_shader, fragment_shader);
-            }
-            else {
-              Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material().get_shader_name() << std::endl;
-            }
-            if (current_shader) {
-              current_shader->use(ctx);
-              ctx.render_context->apply();
-            }
-          }
-
-          if (current_shader && tri_mesh_node->get_geometry()) {
-            UniformValue model_mat(tri_mesh_node->get_cached_world_transform());
-            UniformValue normal_mat(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform())));
-
-            current_shader->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-
-            for (auto const& overwrite : tri_mesh_node->get_material().get_uniforms()) {
-              current_shader->apply_uniform(ctx, overwrite.first, overwrite.second.get(view_id));
-            }
-
-            ctx.render_context->apply_program();
-
-            tri_mesh_node->get_geometry()->draw(ctx);
-          }
-        }
-
-        pipe.get_gbuffer().unbind(ctx);
-      }
-    };
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  std::shared_ptr<PipelinePassDescription> TriMeshPassDescription::make_copy() const {
-    return new TriMeshPassDescription(*this);
-  }
-
-
-#endif
-
-
   ////////////////////////////////////////////////////////////////////////////////
   NURBSRenderer::NURBSRenderer()
     : pre_tesselation_program_(nullptr),
@@ -157,9 +71,9 @@ namespace gua {
     pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.geom")));
 
     pre_tesselation_interleaved_stream_capture_.clear();
-    pre_tesselation_interleaved_stream_capture_.push_back("xfb_position");
-    pre_tesselation_interleaved_stream_capture_.push_back("xfb_index");
-    pre_tesselation_interleaved_stream_capture_.push_back("xfb_tesscoord");
+    pre_tesselation_interleaved_stream_capture_.push_back("transform_position");
+    pre_tesselation_interleaved_stream_capture_.push_back("transform_index");
+    pre_tesselation_interleaved_stream_capture_.push_back("transform_tesscoord");
 
     tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
     tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
@@ -172,15 +86,24 @@ namespace gua {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_initialize_pre_tesselation_program() 
+  void NURBSRenderer::_initialize_pre_tesselation_program(RenderContext const& ctx)
   {
     if (!pre_tesselation_program_)
     {
       auto new_program = std::make_shared<ShaderProgram>();
+
       new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true);
       pre_tesselation_program_ = new_program;
       save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
     }
+
+    pre_tesselation_program_->use(ctx);
+    {
+      pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f());
+      ctx.render_context->apply();
+    }
+    pre_tesselation_program_->unuse(ctx);
+
     assert(pre_tesselation_program_);
   }
 
@@ -198,6 +121,8 @@ namespace gua {
 
       program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
       tesselation_programs_[material] = program;
+
+      save_to_file(*program, ".", "tesselation_program");
     }
     assert(tesselation_programs_.count(material));
   }
@@ -319,7 +244,7 @@ namespace gua {
     std::shared_ptr<ShaderProgram> current_material_program;
 
     if (!pre_tesselation_program_) {
-      _initialize_pre_tesselation_program();
+      _initialize_pre_tesselation_program(ctx);
       //pre_tesselation_program_->save_to_file(".", "pre_tesselation");
     }
     bool program_changed = false;
@@ -335,8 +260,12 @@ namespace gua {
                                                        nurbs_node->raycasting(), 
                                                        program_changed);
 
-      auto model_mat(nurbs_node->get_cached_world_transform());
-      auto normal_mat(scm::math::transpose(scm::math::inverse(nurbs_node->get_cached_world_transform())));
+      auto model_matrix(nurbs_node->get_cached_world_transform());
+      auto view_matrix = pipe.current_viewstate().frustum.get_view();
+      auto view_inverse_matrix = scm::math::inverse(view_matrix);
+      auto modelview_matrix = view_matrix * model_matrix;
+      auto modelviewinverse_matrix = scm::math::inverse(modelview_matrix);
+      auto normal_matrix = scm::math::transpose(scm::math::inverse(model_matrix));
 
       auto nurbs_ressource = nurbs_node->get_geometry();
 
@@ -346,17 +275,11 @@ namespace gua {
         {
           // render using raycasting
           current_material_program->use(ctx);
-          save_to_file(*current_material_program, ".", "raycasting");
+          //save_to_file(*current_material_program, ".", "raycasting");
           {
-            current_material_program->apply_uniform(ctx, "gua_model_matrix",  math::mat4f(model_mat));
-            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
+            current_material_program->apply_uniform(ctx, "gua_model_matrix",  math::mat4f(model_matrix));
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
           
-            current_material_program->apply_uniform(ctx, "nearplane", camera.config.get_near_clip());
-            current_material_program->apply_uniform(ctx, "farplane",  camera.config.get_far_clip());
-          
-            current_material_program->set_uniform(ctx, math::vec2i(target.get_width(),
-                                                                   target.get_height()),
-                                                                   "gua_resolution");
             // hack
             current_material_program->set_uniform(ctx, target.get_depth_buffer()
                                                   ->get_handle(ctx), "gua_gbuffer_depth");
@@ -376,8 +299,14 @@ namespace gua {
           // render using two-pass tesselation approach
           pre_tesselation_program_->use(ctx);
           {
-            pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_mat));
-            pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(modelview_matrix));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_view_inverse_matrix", math::mat4f(view_inverse_matrix));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_model_view_inverse_matrix", math::mat4f(modelviewinverse_matrix));
+            pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
+
+            pre_tesselation_program_->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
+            pre_tesselation_program_->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
 
             ctx.render_context->apply();
             nurbs_ressource->predraw(ctx, nurbs_node->render_backfaces());
@@ -392,14 +321,18 @@ namespace gua {
   #endif
 
           current_material_program->use(ctx);
-          save_to_file(*current_material_program, ".", "tesselation");
+          //save_to_file(*current_material_program, ".", "tesselation");
           {
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
-            current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_mat));
-            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_mat));
+            current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+            current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(modelview_matrix));
+            current_material_program->apply_uniform(ctx, "gua_model_view_inverse_matrix", math::mat4f(modelviewinverse_matrix));
+            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
 
-            current_material_program->set_uniform(ctx, math::vec2i(target.get_width(), target.get_height()), "gua_resolution");
+            current_material_program->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
+            current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
+
             // hack
             current_material_program->set_uniform(ctx, target.get_depth_buffer()
                                                   ->get_handle(ctx), "gua_gbuffer_depth");

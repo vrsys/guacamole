@@ -48,7 +48,15 @@ NURBSPassDescription::NURBSPassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
+  enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
+
+  depth_stencil_state_ = boost::make_optional(
+    scm::gl::depth_stencil_state_desc(
+    true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
+    scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

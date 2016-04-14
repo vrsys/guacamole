@@ -1,13 +1,12 @@
 @include "resources/shaders/common/header.glsl" 
                                                           
-#define ID gl_InvocationID                        
-
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////                                                            
-flat in vec3  vPosition[];                        
-flat in uint  vIndex[];                           
-flat in vec2  vTessCoord[];       
+flat in vec3  vertex_position[];                        
+flat in uint  vertex_index[];                           
+flat in vec2  vertex_tessCoord[];  
+flat in float vertex_final_tesselation[];           
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -15,22 +14,28 @@ flat in vec2  vTessCoord[];
 layout(vertices = 4) out;               
 
 flat out uint tcIndex[];                          
-flat out vec2 tcTessCoord[];            
-  
+flat out vec2 tcTessCoord[];   
+
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////                                                            
-@include "resources/shaders/common/gua_camera_uniforms.glsl"
+uniform samplerBuffer parameter_texture;    
+uniform samplerBuffer attribute_texture;    
+uniform samplerBuffer obb_texture;       
 
-uniform samplerBuffer parameter_texture;          
-uniform samplerBuffer attribute_texture;      
-                
 uniform float gua_tesselation_max_error;   
-uniform float max_final_tesselation;
+uniform float gua_max_pre_tesselation;
                                                           
 uniform float gua_texel_width;                    
 uniform float gua_texel_height;                   
-                    
+
+#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
+#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
+
+@include "resources/glsl/common/obb_area.glsl"   
+@include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
+@include "resources/shaders/common/gua_camera_uniforms.glsl"   
+            
 ///////////////////////////////////////////////////////////////////////////////
 // functions
 ///////////////////////////////////////////////////////////////////////////////                        
@@ -43,6 +48,7 @@ uniform float gua_texel_height;
 @include "resources/shaders/nurbs/detail/inner_tess_level.glsl"
 @include "resources/shaders/nurbs/detail/is_inside.glsl"
 @include "resources/shaders/nurbs/detail/frustum_cull.glsl"
+
            
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,120 +56,27 @@ uniform float gua_texel_height;
 ///////////////////////////////////////////////////////////////////////////////
 void main()                                                                                                               
 {                                                                                                                         
-  tcIndex[ID]     = vIndex[ID];                                                                                           
-  tcTessCoord[ID] = vTessCoord[ID];                                                                                       
+  tcIndex[gl_InvocationID]     = vertex_index[gl_InvocationID];                                                                                           
+  tcTessCoord[gl_InvocationID] = vertex_tessCoord[gl_InvocationID];                                                                                       
                                                                                                                                   
-  mat4 mvp_matrix = gua_projection_matrix * gua_view_matrix * gua_model_matrix;                                           
-                                                                                                                                  
-  vec4 data = texelFetch(attribute_texture, int(vIndex[ID]) * 5);                                                         
-  uint surface_index   = floatBitsToUint(data.x);                                                                         
-  uint surface_order_u = floatBitsToUint(data.y);                                                                         
-  uint surface_order_v = floatBitsToUint(data.z);                                                                         
-                                                                                                                     
-  //if ( abs(vTessCoord[0].x - vTessCoord[1].x) * abs(vTessCoord[1].y - vTessCoord[2].y) == 1.0 )                         
-  if ( true )                                                                                                             
-  {                                                                                                                       
-    vec4 curve_factor = clamp(texelFetch(attribute_texture, int(vIndex[ID]) * 5 + 4), 1, 4);                              
-    vec4 edgelen = control_polygon_length ( parameter_texture,                                                            
-                                            mvp_matrix,                                                                   
-                                            int(surface_index),                                                           
-                                            int(surface_order_u),                                                         
-                                            int(surface_order_v),                                                         
-                                            int(1.0f/gua_texel_width),                                                    
-                                            int(1.0f/gua_texel_height) );                                                 
-                                                                                                                                  
-    //     3                                                                                                             
-    //  3------2                                                                                                         
-    //  |      |                                                                                                          
-    // 0|      |2                                                                                                        
-    //  |      |                                                                                                          
-    //  0------1                                                                                                          
-    //     1                                                                                                              
-                                                                                                                                
-    float edge0 = edge_tesslevel(edgelen[0], 1.0f);                                                  
-    float edge1 = edge_tesslevel(edgelen[1], 1.0f);                                                  
-    float edge2 = edge_tesslevel(edgelen[2], 1.0f);                                                 
-    float edge3 = edge_tesslevel(edgelen[3], 1.0f);                                                  
-                                                                                                                               
-    //Following three must be same for Ist Pass                                                                         
-    gl_TessLevelInner[0] = inner_tess_level(attribute_texture, int(vIndex[ID]) * 5,                                       
-                                            mvp_matrix,                                                                   
-                                            gua_tesselation_max_error,                                                    
-                                            int(1.0f/gua_texel_width),                                                    
-                                            int(1.0f/gua_texel_height));                                                  
-    gl_TessLevelOuter[1] = edge1;                                                                                         
-    gl_TessLevelOuter[3] = edge3;                                                                                         
-                                                                                                                                  
-    //Following three must be same for Ist Pass                                                                           
-    gl_TessLevelInner[1] = inner_tess_level(attribute_texture, int(vIndex[ID]) * 5,                                       
-                                            mvp_matrix,                                                                   
-                                            gua_tesselation_max_error,                                                    
-                                            int(1.0f/gua_texel_width),                                                    
-                                            int(1.0f/gua_texel_height));                                                  
-    gl_TessLevelOuter[0] = edge0;                                                                                         
-    gl_TessLevelOuter[2] = edge2;    
-  } else {                                                                                                                
-                                                                                                                                  
-    int width  = int(1.0f/gua_texel_width);                                                                               
-    int height = int(1.0f/gua_texel_height);                                                                              
-                                                                                                                                  
-    vec4 point_on_plane0 = to_screen_space(vPosition[0], mvp_matrix, width, height);                                      
-    vec4 point_on_plane1 = to_screen_space(vPosition[1], mvp_matrix, width, height);                                      
-    vec4 point_on_plane2 = to_screen_space(vPosition[2], mvp_matrix, width, height);                                      
-    vec4 point_on_plane3 = to_screen_space(vPosition[3], mvp_matrix, width, height);                                      
-                                                                                                                                  
-    // Approach I ->                                                                                                      
-    // For Outer Tessellation Levels : Take ratio according to the original control polygon length.                       
-    // For Inner Tessellation Levels : Evaluate the mid point of the patch and get the diagonal length.                   
-                                                                                                                                  
-    vec4 edgelen = control_polygon_length(parameter_texture,                                                              
-                                          mvp_matrix,                                                                     
-                                          int(surface_index),                                                             
-                                          int(surface_order_u),                                                           
-                                          int(surface_order_v),                                                           
-                                          width,                                                                          
-                                          height);                                                                        
-                                                                                                                                  
-    vec2 p1 = mix(vTessCoord[0].xy, vTessCoord[1].xy, 0.5);                                                               
-    vec2 p2 = mix(vTessCoord[3].xy, vTessCoord[2].xy, 0.5);                                                               
-                                                                                                                                  
-    vec2 mid_uv = mix(p1, p2, 0.5);                                                                                       
-    vec4 mid_p;                                                                                                           
-                                                                                                                                  
-    evaluateSurface(parameter_texture,                                                                                    
-                    int(surface_index),                                                                                   
-                    int(surface_order_u),                                                                                 
-                    int(surface_order_v),                                                                                 
-                    mid_uv,                                                                                               
-                    mid_p);                                                                                               
-                                                                                                                                  
-    vec4 mid_p_screenspace = to_screen_space(mid_p.xyz, mvp_matrix, width, height);                                       
-                                                                                                                                  
-    float length1 = length(point_on_plane0.xy - mid_p_screenspace.xy) +                                                   
-                    length(mid_p_screenspace.xy - point_on_plane3.xy);                                                    
-                                                                                                                                  
-    float length2 = length(point_on_plane2.xy - mid_p_screenspace.xy) +                                                   
-                    length(mid_p_screenspace.xy - point_on_plane1.xy);                                                    
-                                                                                                                                  
-    float diagonal_length = min(length1, length2);                                                                        
-                                                                                                                                  
-    float edge01 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), gua_tesselation_max_error); 
-    float edge32 = edge_tesslevel(mix(edgelen[0], edgelen[2], abs(vTessCoord[0].y - vTessCoord[2].y)), gua_tesselation_max_error); 
-    float edge13 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), gua_tesselation_max_error); 
-    float edge20 = edge_tesslevel(mix(edgelen[1], edgelen[3], abs(vTessCoord[0].x - vTessCoord[1].x)), gua_tesselation_max_error); 
-                                                                                                                                  
-    // Approach II ->                                                                                                     
-    // For Outer Tessellation Levels : Approx. the curvature length of the edge according to the angle betw. its normals.
-    // For Inner Tessellation Levels : Approx. the curvature of the surface according to the all edge normals.            
-                                                                                                                                  
-    //Following three must be same for Ist Pass                                                                           
-    gl_TessLevelInner[0] = edge_tesslevel(diagonal_length, gua_tesselation_max_error);                                             
-    gl_TessLevelOuter[1] = edge01;                                                                                        
-    gl_TessLevelOuter[3] = edge32;                                                                                        
-                                                                                                                                  
-    //Following three must be same for Ist Pass                                                                           
-    gl_TessLevelInner[1] = edge_tesslevel(diagonal_length, gua_tesselation_max_error);                                             
-    gl_TessLevelOuter[0] = edge20;                                                                                        
-    gl_TessLevelOuter[2] = edge13;                                                                                        
-  }                                                                                                                       
+  mat4 mvp_matrix = gua_projection_matrix * gua_model_view_matrix;                                           
+                        
+  int surface_index   = 0;
+  int surface_order_u = 0;
+  int surface_order_v = 0;
+  retrieve_patch_data(int(vertex_index[gl_InvocationID]), surface_index, surface_order_u, surface_order_v);
+
+  vec4 curve_factor = clamp(retrieve_patch_distance(int(vertex_index[gl_InvocationID])), 1, 4);
+
+  vec4 bboxmin, bboxmax;
+  retrieve_patch_bbox(int(vertex_index[gl_InvocationID]), bboxmin, bboxmax);
+
+  float final_tess_level = vertex_final_tesselation[0];
+
+  gl_TessLevelInner[0] = clamp(final_tess_level, 1.0, 64.0);
+  gl_TessLevelOuter[1] = clamp(final_tess_level, 1.0, 64.0);
+  gl_TessLevelOuter[3] = clamp(final_tess_level, 1.0, 64.0);
+  gl_TessLevelInner[1] = clamp(final_tess_level, 1.0, 64.0);
+  gl_TessLevelOuter[0] = clamp(final_tess_level, 1.0, 64.0);
+  gl_TessLevelOuter[2] = clamp(final_tess_level, 1.0, 64.0);                                                                                                                
 }           
