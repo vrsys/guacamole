@@ -29,7 +29,9 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/LodLoader.hpp>
 #include <gua/renderer/PLodPass.hpp>
+#include <gua/renderer/MLodPass.hpp>
 #include <gua/node/PLodNode.hpp>
+#include <gua/node/MLodNode.hpp>
 #include <scm/gl_util/manipulators/trackball_manipulator.h>
 
 
@@ -37,36 +39,69 @@ int main(int argc, char** argv) {
 
   gua::init(argc, argv);
 
+
   //create simple untextured material shader
   auto lod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
   auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
 
   //create material for pointcloud
-  auto lod_rough = lod_keep_color_shader->make_new_material();
-  lod_rough->set_uniform("metalness", 0.0f);
-  lod_rough->set_uniform("roughness", 0.8f);
-  lod_rough->set_uniform("emissivity", 0.0f);
+  auto plod_rough = lod_keep_color_shader->make_new_material();
+  plod_rough->set_uniform("metalness", 0.0f);
+  plod_rough->set_uniform("roughness", 0.8f);
+  plod_rough->set_uniform("emissivity", 0.0f);
 
   //configure lod backend
   gua::LodLoader lod_loader;
   lod_loader.set_out_of_core_budget_in_mb(4096);
-  lod_loader.set_render_budget_in_mb(2048);
+  lod_loader.set_render_budget_in_mb(4096);
   lod_loader.set_upload_budget_in_mb(20);
 
   //load a sample pointcloud
-  auto lod_node = lod_loader.load_lod_pointcloud(
+  auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud", 
-    "/opt/3d_models/point_based/plod/pig_pr.bvh", 
-    lod_rough, 
+    "/opt/3d_models/lamure/plod/pig_pr.bvh", 
+    plod_rough, 
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+
+  //load a sample mesh-based lod model 
+  auto mlod_node = lod_loader.load_lod_trimesh(
+    //"tri_mesh", 
+    "/opt/3d_models/lamure/mlod/xyzrgb_dragon_7219k.bvh", 
+    //plod_rough,
+    gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE/* | gua::LodLoader::MAKE_PICKABLE*/
+  );
+
+  mlod_node->set_error_threshold(0.25);
 
   //setup scenegraph
   gua::SceneGraph graph("main_scenegraph");
   auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto lod_transform = graph.add_node<gua::node::TransformNode>("/transform", "lod_transform");
-  graph.add_node("/transform/lod_transform", lod_node);
-  lod_node->set_draw_bounding_box(true);
+  auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
+
+  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
+
+  graph.add_node("/transform/mlod_transform", mlod_node);
+
+  graph.add_node("/transform/plod_transform", plod_node);
+
+  mlod_transform->translate(-0.4, 0.0, 0.0);
+
+  plod_transform->rotate(180.0, 0.0, 1.0, 0.0);
+  plod_transform->translate(0.3, 0.08, 0.0);
+
+  //create a lightsource
+  auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
+  auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
+  light->data.set_type(gua::node::LightNode::Type::POINT);
+  light->data.set_enable_shadows(false);
+
+  light->data.set_shadow_map_size(4096);
+  light->data.brightness = 5.0f;
+  light->translate(0.f, 0.2f, 0.f);
+  light->scale(4.f);
+  light->translate(0.f, 0.f, 1.f);
+
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -85,7 +120,7 @@ int main(int argc, char** argv) {
   auto resolution = gua::math::vec2ui(1920, 1080);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.f);
+  camera->translate(0.0f, 0, 2.5f);
   camera->config.set_resolution(resolution);
   
   //use close near plane to allow inspection of details
@@ -94,10 +129,10 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
-  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
   pipe->add_pass(std::make_shared<gua::PLodPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
@@ -105,7 +140,8 @@ int main(int argc, char** argv) {
 
   camera->set_pipeline_description(pipe);
 
-  pipe->get_resolve_pass()->tone_mapping_exposure(5.f);
+  pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
+  pipe->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
@@ -133,8 +169,8 @@ int main(int argc, char** argv) {
       if (drag_mode) {
         auto ssize = screen->data.get_size();
         gua::math::vec3 trans = gua::math::vec3(ssize.x *(nx - last_mouse_pos.x), ssize.y * (ny - last_mouse_pos.y), 0.f);
-        auto object_trans = scm::math::inverse(screen->get_world_transform()) * lod_transform->get_world_transform();
-        lod_transform->set_world_transform(screen->get_world_transform() * scm::math::make_translation(trans) * object_trans);
+        auto object_trans = scm::math::inverse(screen->get_world_transform()) * mlod_transform->get_world_transform();
+        mlod_transform->set_world_transform(screen->get_world_transform() * scm::math::make_translation(trans) * object_trans);
       }
       else {
         if (button_state == 0) { // left
@@ -189,6 +225,8 @@ int main(int argc, char** argv) {
 
   ticker.on_tick.connect([&]() {
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
+
+    light->rotate(0.1, 0.f, 1.f, 0.f);
 
     window->process_events();
     if (window->should_close()) {

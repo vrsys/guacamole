@@ -78,7 +78,8 @@ void LodResource::draw(
     lamure::view_t view_id,
     lamure::model_t model_id,
     scm::gl::vertex_array_ptr const& vertex_array,
-    std::unordered_set<lamure::node_t> const& nodes_in_frustum) const {
+    std::unordered_set<lamure::node_t> const& nodes_in_frustum,
+    scm::gl::primitive_topology const type ) const {
 
   lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
   lamure::ren::cut_database* cuts = lamure::ren::cut_database::get_instance();
@@ -95,11 +96,13 @@ void LodResource::draw(
   ctx.render_context->bind_vertex_array(vertex_array);
   ctx.render_context->apply();
   
+ 
+
   for (const auto& n : node_list) {
     //result inside vector means the node is out of frustum
     if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
     
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
+      ctx.render_context->draw_arrays(type,
                                       n.slot_id_ * primitives_per_node,
                                       primitives_per_node_of_model);
     }
@@ -159,7 +162,7 @@ void LodResource::ray_test(Ray const& ray,
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit) {
+  if (has_hit && (pick.intersection < hits.begin()->distance)) {
     hits.insert(pick);
   }
 */

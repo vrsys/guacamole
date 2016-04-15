@@ -183,10 +183,11 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags) {
 
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
-  auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
-  gua::MaterialShaderDatabase::instance()->add(material_shader);
 
-  auto cached_node(load_lod_trimesh(filename, filename, material_shader->make_new_material(), flags));
+  auto shader(gua::MaterialShaderDatabase::instance()
+              ->lookup("gua_default_material"));
+
+  auto cached_node(load_lod_trimesh(filename, filename, shader->make_new_material(), flags));
 
   if (cached_node) {
     return cached_node;
@@ -211,8 +212,11 @@ bool LodLoader::is_supported(std::string const& file_name) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 void LodLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const {
-  auto g_node(std::dynamic_pointer_cast<node::PLodNode>(root));
 
+  std::cout << "Trying to apply fallback material\n";
+  //auto g_node(std::dynamic_pointer_cast<node::PLodNode>(root));
+
+/*
   if(g_node) {
     if (!g_node->get_material()) {
       g_node->set_material(fallback_material);
@@ -229,7 +233,22 @@ void LodLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root,
 
   for(auto& child : root->get_children()) {
     apply_fallback_material(child, fallback_material);
+  }*/
+
+  auto g_node(std::dynamic_pointer_cast<node::MLodNode>(root));
+
+  if (g_node && !g_node->get_material()) {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
+  } else if (g_node /*&& no_shared_materials*/) {
+    g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
   }
+
+  for (auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material /*, no_shared_materials*/);
+  }
+
+
 }
 /////////////////////////////////////////////////////////////////////////////////
 
