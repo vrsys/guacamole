@@ -660,7 +660,8 @@ bool PLodRenderer::_intersects(scm::gl::boxf const& bbox,
               lamure_view_id,
               model_id,
               controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-              nodes_in_frustum);
+              nodes_in_frustum,
+              scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
 
             
 
@@ -748,7 +749,8 @@ bool PLodRenderer::_intersects(scm::gl::boxf const& bbox,
               lamure_view_id,
               model_id,
               controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-              nodes_in_frustum);
+              nodes_in_frustum,
+              scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
 
             program_changed = false;
           }
@@ -854,7 +856,8 @@ bool PLodRenderer::_intersects(scm::gl::boxf const& bbox,
               lamure_view_id,
               model_id,
               controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-              nodes_in_frustum);
+              nodes_in_frustum,
+              scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
 
             
 

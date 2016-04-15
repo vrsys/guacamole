@@ -65,6 +65,7 @@ PipelinePass MLodPassDescription::make_pass(RenderContext const& ctx, Substituti
 
   auto renderer = std::make_shared<MLodRenderer>();
   renderer->set_global_substitution_map(substitution_map);
+  renderer->create_state_objects(ctx);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
