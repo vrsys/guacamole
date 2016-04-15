@@ -27,6 +27,7 @@
 #include <unordered_map>
 
 // guacamole headers
+#include <gua/renderer/Lod.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -42,7 +43,7 @@ class Pipeline;
 class PipelinePassDescription;
 class ShaderProgram;
 
-class MLodRenderer {
+class GUA_LOD_DLL MLodRenderer {
  
   public:
 

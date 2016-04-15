@@ -27,6 +27,7 @@
 #include <unordered_map>
 
 // guacamole headers
+#include <gua/renderer/Lod.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
@@ -40,7 +41,7 @@ namespace gua {
   class MaterialShader;
   class ShaderProgram;
 
-  class PLodRenderer {
+  class GUA_LOD_DLL PLodRenderer {
  
   public:
 

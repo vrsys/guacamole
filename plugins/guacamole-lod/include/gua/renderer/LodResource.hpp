@@ -23,7 +23,7 @@
 #define GUA_LOD_RESOURCE_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
+#include <gua/renderer/Lod.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
@@ -59,7 +59,7 @@ namespace gua {
  *
  * This class simply a wrapper for accessing models of PBR library
  */
-class LodResource : public GeometryResource {
+  class GUA_LOD_DLL LodResource : public GeometryResource {
 
   public: // c'tor /d'tor
 
