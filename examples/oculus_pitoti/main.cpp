@@ -23,10 +23,16 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/OculusWindow.hpp>
+#if 0
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
 #include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/PLODLoader.hpp>
+#else 
+#include <gua/renderer/LodLoader.hpp>
+#include <gua/node/PLodNode.hpp>
+#include <gua/renderer/PLodPass.hpp>
+#endif
 #include <gua/renderer/SSAAPass.hpp>
 
 #include <gua/renderer/BBoxPass.hpp>
@@ -68,7 +74,7 @@ int main(int argc, char** argv) {
   // rough has no metalness, high roughness and no emissivity (=no passthrough)
   plod_rough->set_uniform("metalness", 0.0f);
   plod_rough->set_uniform("roughness", 0.8f);
-  plod_rough->set_uniform("emissivity", 0.0f);
+  plod_rough->set_uniform("emissivity", 1.0f);
 
   // passthrough has emissivity of 1.0
   plod_passthrough->set_uniform("emissivity", 1.0f);
@@ -89,7 +95,7 @@ int main(int argc, char** argv) {
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
 
-  gua::PLODLoader plodLoader;
+  gua::LodLoader plodLoader;
 
   plodLoader.set_upload_budget_in_mb(32);
   plodLoader.set_render_budget_in_mb(2048);
@@ -98,22 +104,26 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto model_xf = graph.add_node<gua::node::TransformNode>("/transform", "model_xf");
 
-  auto setup_plod_node = [](std::shared_ptr<gua::node::PLODNode> const& node) {
+  auto setup_plod_node = [](std::shared_ptr<gua::node::PLodNode> const& node) {
     node->set_radius_scale(1.0f);
     node->set_enable_backface_culling_by_normal(false);
     node->set_draw_bounding_box(true);
   };
 
-
-  auto plod_pig_node = plodLoader.load_geometry("plod_pig", "data/objects/Area1.kdn", plod_rough, gua::PLODLoader::NORMALIZE_POSITION | gua::PLODLoader::NORMALIZE_SCALE | gua::PLODLoader::MAKE_PICKABLE);
+#if WIN32
+  auto plod_pig_node = plodLoader.load_lod_pointcloud("plod_pig", "data/objects/Area_4_hunter_with_bow_knn.bvh", plod_rough, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+#else
+  auto plod_pig_node = plodLoader.load_lod_pointcloud("plod_pig", "/mnt/pitoti/3d_pitoti/groundtruth_data/rocks/seradina12c/areas/objects/Area_4_hunter_with_bow_knn.bvh", plod_rough, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+#endif
   plod_pig_node->scale(5.0, 5.0, 5.0);
+  plod_pig_node->rotate(269, gua::math::vec3(0.0, 0.0, 1.0));
 
   gua::TriMeshLoader loader;
 
   auto root_plod_pig_model = graph.add_node("/", plod_pig_node);
 
   auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
-  nav->translate(0.0, 0.0, 2.0);
+  nav->translate(0.0, 0.0, 1.0);
 
 #if WIN32
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
@@ -157,7 +167,7 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
+  pipe->add_pass(std::make_shared<gua::PLodPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
@@ -185,11 +195,6 @@ int main(int argc, char** argv) {
   float desired_frame_time(1.0 / 60.0);
   gua::events::MainLoop loop;
 
-  char c = '0';
-  int i = 0;
-  char prev_character = '\n';
-  // application loop
-
   // application loop
   gua::events::Ticker ticker(loop, desired_frame_time);
 
@@ -198,6 +203,7 @@ int main(int argc, char** argv) {
     time += frame_time;
     timer.reset();
 
+    window->process_events();
     std::function<void (std::shared_ptr<gua::node::Node>, int)> rotate;
     rotate = [&](std::shared_ptr<gua::node::Node> node, int depth) {
       node->rotate(frame_time * (1+depth) * 0.5, 1, 1, 0);
@@ -207,40 +213,6 @@ int main(int argc, char** argv) {
     };
 
     float frame_offset = 1.0 * frame_time;
-
-    if (i!=0){
-      prev_character = c;
-      c=fgetc(stdin);
-        
-      if(c == 'w' || c == 'W') {
-          camera->translate(0.0, 0.01, 0.0);
-          camera_trans_y += 0.01;
-          std::cout << "Increased y to: " << camera_trans_y << "  \n";
-      } else if(c == 's' || c == 'S') {
-          camera->translate(0.0, -0.01, 0.0);
-          camera_trans_y += -0.01;  
-          std::cout << "Decreased y to: " << camera_trans_y << "  \n";
-      } else if(c == 'a' || c == 'A') {
-          camera->translate(0.0, 0.0, -0.01);
-          camera_trans_z += -0.01;
-          std::cout << "Decreased z to: " << camera_trans_z << " \n";
-      } else if(c == 'd' || c == 'D') {
-          camera->translate(0.0, 0.0, 0.01);
-          camera_trans_z += 0.01;
-          std::cout << "Increased z to: " << camera_trans_z << " \n";
-      } else if( c == 'u' || c == 'U') {
-        nav->translate(0.0, 0.0, -frame_offset);
-      } else if( c == 'j' || c == 'J') {
-        nav->translate(0.0, 0.0, frame_offset);
-      } else if( c == 'h' || c == 'H') {
-        nav->translate(-frame_offset, 0.0, 0.0);
-      } else if( c == 'k' || c == 'K') {
-        nav->translate(frame_offset, 0.0, 0.0);
-      }
-      else {
-        i=0;
-      }
-    }
 
     camera->set_transform(window->get_oculus_sensor_orientation());
     //neck->set_transform(window->get_oculus_sensor_orientation());

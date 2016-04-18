@@ -58,6 +58,7 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
   OculusWindow(std::string const& display);
   virtual ~OculusWindow();
 
+  void open() override;
   void init_context() override;
 
   void recenter();
@@ -83,6 +84,8 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
 
     static bool oculus_environment_initialized_;
     static unsigned registered_oculus_device_count_;
+
+    std::string display_name_;
 
     math::vec2 screen_size_[2];
     math::vec3 screen_translation_[2];
