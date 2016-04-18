@@ -55,11 +55,11 @@ class GUA_DLL GlfwWindow : public WindowBase {
    */
   virtual ~GlfwWindow();
 
-  void open();
-  bool should_close() const;
-  bool get_is_open() const;
-  void close();
-  void process_events();
+  void open() override;
+  bool should_close() const override;
+  bool get_is_open() const override;
+  void close() override;
+  void process_events() override;
 
   /**
    * Control the cursor mode.

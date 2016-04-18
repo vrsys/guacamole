@@ -70,8 +70,19 @@ void OculusWindow::shutdown_oculus_environment() {
 }
 
 
-OculusWindow::OculusWindow(std::string const& display):
-  GlfwWindow() {
+OculusWindow::OculusWindow(std::string const& display)
+  : GlfwWindow(),
+  display_name_(display)
+{}
+
+////////////////////////////////////////////////////////////////////////////////
+
+OculusWindow::~OculusWindow() {
+  ovr_Destroy(hmd_session_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void OculusWindow::open() {
 
   initialize_oculus_environment();
 
@@ -87,7 +98,7 @@ OculusWindow::OculusWindow(std::string const& display):
     hmd_desc_ = ovr_GetHmdDesc(hmd_session_);
 
     // get optimal texture size for rendering
-    ovrSizei ideal_texture_size_left  = ovr_GetFovTextureSize(hmd_session_, ovrEyeType(0), hmd_desc_.DefaultEyeFov[0], 1);
+    ovrSizei ideal_texture_size_left = ovr_GetFovTextureSize(hmd_session_, ovrEyeType(0), hmd_desc_.DefaultEyeFov[0], 1);
     ovrSizei ideal_texture_size_right = ovr_GetFovTextureSize(hmd_session_, ovrEyeType(1), hmd_desc_.DefaultEyeFov[1], 1);
 
     math::vec2ui window_size(ideal_texture_size_left.w + ideal_texture_size_right.w, std::max(ideal_texture_size_left.h, ideal_texture_size_right.h));
@@ -133,17 +144,13 @@ OculusWindow::OculusWindow(std::string const& display):
   }
 
   config.set_title("guacamole");
-  config.set_display_name(display);
+  config.set_display_name(display_name_);
   config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
+
+  GlfwWindow::open();
 
   this->calculate_viewing_setup();
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-OculusWindow::~OculusWindow() {
-  ovr_Destroy(hmd_session_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
