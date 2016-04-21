@@ -85,12 +85,9 @@ namespace node {
 
 
     // return if only first object shall be returned and the current first hit
-    // is in front of the bbox entry point and the ray does not start inside
-    // the bbox
+    // is in front of the bbox entry point
     if (options & PickResult::PICK_ONLY_FIRST_OBJECT
-      && hits.size() > 0 && hits.begin()->distance < box_hits.first
-      && box_hits.first != Ray::END) {
-
+      && hits.size() > 0 && hits.begin()->distance < box_hits.first) {
       return;
     }
 
