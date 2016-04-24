@@ -25,6 +25,9 @@ in VertexData {
 
 @include "common/gua_fragment_shader_input.glsl"
 
+
+uniform mat4 inverse_view_matrix;
+
 ///////////////////////////////////////////////////////////////////////////////
 // sampler
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +64,7 @@ void main() {
   vec2 uv_coords = VertexIn.pass_uv_coords;
 
   //turn normal to viewer
-  vec4 view_normal = gua_view_matrix * vec4(VertexIn.pass_normal, 0.0);
+  vec4 view_normal = inverse_view_matrix * vec4(VertexIn.pass_normal, 0.0);
   vec3 face_forward_normal = VertexIn.pass_normal.xyz;
 
   if (view_normal.z < 0.0) {
@@ -89,12 +92,14 @@ void main() {
   gua_roughness  = 1.0;
   gua_emissivity = 1.0; // pass through if unshaded
 
-  @material_input@
-  @material_method_calls_frag@
+  //@material_input@
+  //@material_method_calls_frag@
 
   out_accumulated_color  = vec3(weight * gua_color);
   out_accumulated_normal = vec3(weight * face_forward_normal);
   out_accumulated_pbr    = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
+
+  //out_accumulated_normal = vec3(0.0, 0.0, 1.0);
 
   out_accumulated_weight_and_depth = vec2(weight, weight * VertexIn.pass_log_depth);
 }

@@ -45,7 +45,7 @@ void main() {
 
     int bit_pattern = 0x0;
 
-    unsigned int cell_counter = 0;
+    uint cell_counter = 0;
 
     for( int y = -1; y <= 1; ++y ) {
       for( int x = -1; x <= 1; ++x ) {
@@ -94,14 +94,14 @@ void main() {
        || ( (bit_pattern & 0x2F) == 0x2F)
       ) {   //matches, therefore perform filling
       
-        unsigned int num_accumulated_neighbours = 0;
+        uint num_accumulated_neighbours = 0;
         vec3 final_neighbours_color  = vec3(0.0, 0.0, 0.0);
         vec3 final_neighbours_normal = vec3(0.0, 0.0, 0.0);
         vec3 final_neighbours_pbr    = vec3(0.0, 0.0, 0.0);
         float final_neighbours_depth = 0.0;
 
 
-    for(unsigned int bit_index = 0; bit_index < 8; ++bit_index) {
+    for(uint bit_index = 0; bit_index < 8; ++bit_index) {
       if( (bit_pattern & (0x1 << bit_index) ) != 0x0 ) { 
         ivec2 lookup_index_xy = ivec2(0, 0);
 
@@ -186,13 +186,19 @@ void main() {
     normalized_color = pow(normalized_color, vec3(1.4));
    
     vec3 accumulated_normal = texelFetch(p02_normal_texture, current_fragment_pos, 0).rgb;
-    vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight);
+    vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight );
+    //vec3 normalized_normal = accumulated_normal.rgb / accumulated_weight;
 
 
     //float depth_visibility_pass = texture2D( p01_log_depth_texture, coords.xy).r;
-
+/*
+    if(normalized_normal.z < 0) {
+      normalized_normal *= -1;
+    }
+*/
     gua_color = normalized_color.rgb;
     gua_normal = normalized_normal;
+    //gua_normal = vec3(1.0, 0.0, 0.0);
 
     vec3 written_pbr_coeffs = (texelFetch(p02_pbr_texture, current_fragment_pos, 0).rgb) / accumulated_weight;
 
@@ -209,7 +215,7 @@ void main() {
       blended_depth = 0.0;
 
     vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, blended_depth, 1.0);
-    gua_world_position = world_pos_h.xyz/world_pos_h.w;
+    gua_world_position = world_pos_h.xyz / world_pos_h.w;
 
 
     gl_FragDepth = blended_depth; 
@@ -219,7 +225,10 @@ void main() {
 #else
 #endif
 
-    @include "common/gua_write_gbuffer.glsl"
+
+  //gua_color = texelFetch(p02_normal_texture, current_fragment_pos ,0 ).xyz;
+  //gua_normal = vec3(0.0, 1.0, 0.0);
+  @include "common/gua_write_gbuffer.glsl"
 
 
 

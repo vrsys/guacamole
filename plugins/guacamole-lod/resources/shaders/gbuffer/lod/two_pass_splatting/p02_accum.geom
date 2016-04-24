@@ -31,10 +31,11 @@ out VertexData {
 
 void main() {
 
-    if(enable_backface_culling == false || VertexIn[0].pass_normal.z > 0.0) {
+    if(enable_backface_culling == false) {
 
       // --------------------------- common attributes -----------------------------------
       VertexOut.pass_point_color = VertexIn[0].pass_point_color;
+
       VertexOut.pass_normal      = VertexIn[0].pass_normal; 
 
       mat3x3 step_uv = mat3x3(gl_in[0].gl_Position.xyz,

@@ -18,43 +18,42 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_P_LOD_PASS_HPP
-#define GUA_P_LOD_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/Lod.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+#ifndef GUA_LOG_TO_LIN_SUB_RENDERER_HPP
+#define GUA_LOG_TO_LIN_SUB_RENDERER_HPP
 
-namespace gua {
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/PLodSubRenderer.hpp>
 
-  class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription {
+ namespace gua {
 
-  public : // typedefs, enums
+  class PLodSubRenderer;
 
-  enum class SurfelRenderMode {
-    LQ_ONE_PASS = 0,
-    HQ_TWO_PASS = 1,
-    HQ_LINKED_LIST = 2,
+  class GUA_LOD_DLL LogToLinSubRenderer : public PLodSubRenderer {
 
-    //automatically used by the PLod renderer when shadow mode is active
-    LQ_SHADOW = 999
+  public:
+  	LogToLinSubRenderer();
+
+    virtual void create_gpu_resources(gua::RenderContext const& ctx,
+                                       scm::math::vec2ui const& render_target_dims,
+                                       gua::plod_shared_resources& shared_resources) override;
+
+    virtual void render_sub_pass(Pipeline& pipe, PipelinePassDescription const& desc,
+                                 gua::plod_shared_resources& shared_resources,
+                                 std::vector<node::Node*>& sorted_models,
+                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& nodes_in_frustum_per_model,
+                                 lamure::context_t context_id,
+                                 lamure::view_t lamure_view_id) override;
+
+  private: //shader related auxiliary methods
+    virtual void _load_shaders();
+    
+  private:
+    scm::gl::depth_stencil_state_ptr no_depth_test_with_writing_depth_stencil_state_;
+    scm::gl::quad_geometry_ptr       fullscreen_quad_;
+
+    scm::gl::sampler_state_ptr       nearest_sampler_state_;
   };
+ } 
 
-   friend class Pipeline;
-
-  public :
-
-    PLodPassDescription(SurfelRenderMode const mode = SurfelRenderMode::HQ_TWO_PASS);
-    PLodPassDescription& mode(SurfelRenderMode const mode);
-    SurfelRenderMode mode() const;
-
-    std::shared_ptr<PipelinePassDescription> make_copy() const override;
-    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-
-  private :
-    SurfelRenderMode surfel_render_mode_;
-};
-
-}
-
-#endif  // GUA_P_LOD_PASS_HPP
+ #endif //GUA_NORMAL_SUB_RENDERER_HPP

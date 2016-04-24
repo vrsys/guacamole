@@ -18,43 +18,45 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_P_LOD_PASS_HPP
-#define GUA_P_LOD_PASS_HPP
 
-// guacamole headers
-#include <gua/renderer/Lod.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+#ifndef GUA_DEPTH_SUB_RENDERER_HPP
+#define GUA_DEPTH_SUB_RENDERER_HPP
 
-namespace gua {
 
-  class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription {
+//#include <gua/renderer/ShaderProgram.hpp>
+//#include <gua/node/PLodNode.hpp>
 
-  public : // typedefs, enums
 
-  enum class SurfelRenderMode {
-    LQ_ONE_PASS = 0,
-    HQ_TWO_PASS = 1,
-    HQ_LINKED_LIST = 2,
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/PLodSubRenderer.hpp>
 
-    //automatically used by the PLod renderer when shadow mode is active
-    LQ_SHADOW = 999
+ namespace gua {
+
+  class PLodSubRenderer;
+
+  class GUA_DLL DepthSubRenderer : public PLodSubRenderer {
+
+  public:
+  	DepthSubRenderer();
+
+    virtual void create_gpu_resources(gua::RenderContext const& ctx,
+                                      scm::math::vec2ui const& render_target_dims,
+                                      gua::plod_shared_resources& shared_resources) override;
+
+    virtual void render_sub_pass(Pipeline& pipe, PipelinePassDescription const& desc,
+                                 gua::plod_shared_resources& shared_resources,
+                                 std::vector<node::Node*>& sorted_models,
+                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& nodes_in_frustum_per_model,
+                                 lamure::context_t context_id,
+                                 lamure::view_t lamure_view_id) override;
+
+  private: //shader related auxiliary methods
+    virtual void _load_shaders();
+
+    virtual void _upload_model_dependent_uniforms(RenderContext const& ctx, node::PLodNode* plod_node, gua::Pipeline& pipe);
+  private:
+    scm::gl::rasterizer_state_ptr   no_backface_culling_rasterizer_state_;
   };
+ } 
 
-   friend class Pipeline;
-
-  public :
-
-    PLodPassDescription(SurfelRenderMode const mode = SurfelRenderMode::HQ_TWO_PASS);
-    PLodPassDescription& mode(SurfelRenderMode const mode);
-    SurfelRenderMode mode() const;
-
-    std::shared_ptr<PipelinePassDescription> make_copy() const override;
-    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-
-  private :
-    SurfelRenderMode surfel_render_mode_;
-};
-
-}
-
-#endif  // GUA_P_LOD_PASS_HPP
+ #endif //GUA_DEPTH_SUB_RENDERER_HPP
