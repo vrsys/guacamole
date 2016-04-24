@@ -20,6 +20,10 @@
  ******************************************************************************/
 
 #include <gua/guacamole.hpp>
+#include <gua/renderer/EmissivePass.hpp>
+#include <gua/renderer/LightingPass.hpp>
+#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
+#include <gua/renderer/ToneMappingPass.hpp>
 #include <random>
 
 int main(int argc, char** argv) {

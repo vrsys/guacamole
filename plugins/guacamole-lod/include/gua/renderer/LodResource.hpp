@@ -60,7 +60,7 @@ namespace gua {
  * This class simply a wrapper for accessing models of PBR library
  */
 class LodResource : public GeometryResource {
- 
+
   public: // c'tor /d'tor
 
     LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform);
@@ -85,6 +85,7 @@ class LodResource : public GeometryResource {
               lamure::model_t model_id,
               scm::gl::vertex_array_ptr const& vertex_array,
               std::unordered_set<lamure::node_t> const& nodes_in_frustum,
+              scm::gl::primitive_topology const,
               scm::math::mat4d model_view_matrix = math::mat4d(),
               bool draw_sorted = false) const;
 

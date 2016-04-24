@@ -23,8 +23,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/PhysicallyBasedShadingPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -109,16 +107,6 @@ int main(int argc, char** argv) {
   pointLight->scale(9.f);
   pointLight->translate(-2.f, 3.f, 5.f);
 
-#if 0
-  auto spotLight = graph.add_node<gua::node::LightNode>("/", "spotLight");
-  // spotLight->data.set_type(gua::node::LightNode::Type::SPOT);
-  spotLight->data.set_enable_shadows(true);
-  spotLight->data.brightness = 10.0f; // lm
-  spotLight->scale(10.f);
-  spotLight->rotate(-20, 0.f, 1.f, 0.f);
-  spotLight->translate(-1.f, 0.f,  3.f);
-#endif
-
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
@@ -141,28 +129,6 @@ int main(int argc, char** argv) {
     gua::TextureDatabase::instance()->load(file);
   }
 
-  auto standardPipe(std::make_shared<gua::PipelineDescription>());
-  standardPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  standardPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  standardPipe->add_pass(std::make_shared<gua::LightingPassDescription>());
-  // standardPipe->add_pass<gua::BackgroundPassDescription>()
-  // .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-  // .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-  // ;
-
-  auto pbrPipe(std::make_shared<gua::PipelineDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::EmissivePassDescription>());
-  pbrPipe->add_pass(
-      std::make_shared<gua::PhysicallyBasedShadingPassDescription>());
-  pbrPipe->add_pass(std::make_shared<gua::ToneMappingPassDescription>());
-#if 0
-  pbrPipe->add_pass<gua::BackgroundPassDescription>()
-    .mode(gua::BackgroundPassDescription::QUAD_TEXTURE)
-    .texture("/opt/guacamole/resources/skymaps/skymap.jpg")
-    ;
-#endif
-
   auto tiledPipe(std::make_shared<gua::PipelineDescription>());
   tiledPipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   tiledPipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
@@ -175,7 +141,7 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  camera->set_pipeline_description(pbrPipe);
+  camera->set_pipeline_description(tiledPipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -194,22 +160,6 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
-  window->on_key_press.connect(
-      [&](int key, int scancode, int action, int mods) {
-        if (action != 0)
-          return;
-        if ('1' == key) {
-          camera->set_pipeline_description(pbrPipe);
-          std::cout << "Pipeline: deferred PBR" << std::endl;
-        } else if ('2' == key) {
-          camera->set_pipeline_description(standardPipe);
-          std::cout << "Pipeline: deferred standard" << std::endl;
-        } else if ('3' == key) {
-          camera->set_pipeline_description(tiledPipe);
-          std::cout << "Pipeline: tiled PBR" << std::endl;
-        }
-      });
-
   window->open();
 
   gua::Renderer renderer;

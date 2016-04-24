@@ -100,6 +100,30 @@ struct GUA_DLL RenderContext {
   */
   InstanceCollection resources;
 
+  class Mesh
+  {
+    public:
+      Mesh() = default;
+      Mesh( scm::gl::vertex_array_ptr const& a
+          , scm::gl::buffer_ptr const& v
+          , scm::gl::buffer_ptr const& i)
+        : vertex_array(a)
+        , vertices(v)
+        , indices(i)
+        , indices_topology(scm::gl::PRIMITIVE_TRIANGLE_LIST)
+        , indices_type(scm::gl::TYPE_UINT)
+        , indices_count(0)
+      {}
+      scm::gl::vertex_array_ptr   vertex_array;
+      scm::gl::buffer_ptr         vertices;
+      scm::gl::buffer_ptr         indices;
+      scm::gl::primitive_topology indices_topology;
+      scm::gl::data_type          indices_type;
+      int                         indices_count;
+  };
+
+  mutable std::unordered_map<std::size_t, Mesh> meshes;
+
   class Texture
   {
     public:

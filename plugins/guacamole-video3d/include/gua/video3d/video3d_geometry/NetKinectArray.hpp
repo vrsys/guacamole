@@ -4,42 +4,36 @@
 #include <gua/video3d/video3d_geometry/KinectCalibrationFile.hpp>
 
 #include <atomic>
-
-namespace boost{
-  class thread;
-  class mutex;
-}
+#include <mutex>
+#include <thread>
 
 namespace video3d{
 
 
-  class NetKinectArray{
-  
-  public:
-    NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
-		   const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte);
-    ~NetKinectArray();
+class NetKinectArray{
 
-    bool update();
-    unsigned char* getBuffer();
+public:
+  NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
+                 const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte);
+  ~NetKinectArray();
 
-  private:
-    void init();
-    void readloop();
+  bool update();
+  inline unsigned char* getBuffer() { return m_buffer.data(); }
 
+private:
+  void readloop();
 
-    boost::mutex* m_mutex;
-    boost::thread* m_recv;
-    bool           m_running;
-    const std::string m_server_endpoint;
-    std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
-    unsigned m_colorsize_byte;
-    unsigned m_depthsize_byte;
-    unsigned char* m_buffer;
-    unsigned char* m_buffer_back;
-    std::atomic<bool> m_need_swap;
-
-  };
+  std::mutex m_mutex;
+  bool           m_running;
+  const std::string m_server_endpoint;
+  std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
+  unsigned m_colorsize_byte;
+  unsigned m_depthsize_byte;
+  std::vector<unsigned char> m_buffer;
+  std::vector<unsigned char> m_buffer_back;
+  std::atomic<bool> m_need_swap;
+  std::thread m_recv;
+};
 
 
 }

@@ -108,21 +108,11 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
   friend class LightingPass;
 
  private:
-
+  void init_bone_boxes();
   void upload_to(RenderContext& ctx) /*const*/;
 
   SkinnedMesh mesh_;
-
-  mutable std::vector<scm::gl::buffer_ptr> vertices_;
-  mutable std::vector<scm::gl::buffer_ptr> indices_;
-  mutable std::vector<scm::gl::vertex_array_ptr> vertex_array_;
-  mutable std::mutex upload_mutex_;
-
-  std::shared_ptr<SharedBoneResource> res_ = nullptr;
-
   std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
-
-  /////////////////////////////////
 
  // public:
  //  KDTree kd_tree_;

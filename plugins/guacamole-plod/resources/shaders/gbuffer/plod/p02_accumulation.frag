@@ -20,6 +20,7 @@ in vec3 pass_point_color;
 in vec3 pass_normal;
 in vec2 pass_uv_coords;
 in float pass_log_depth;
+in float plod_emissivity;
 
 @include "common/gua_fragment_shader_input.glsl"
 
@@ -83,10 +84,12 @@ void main() {
   @include "common/gua_global_variable_assignment.glsl"
 
   gua_color = pass_point_color;
+  //float e = 1.0;
+  //gua_color = vec3(plod_emissivity, e, e);
   gua_normal = pass_normal;
-  gua_metalness  = 0.0;
-  gua_roughness  = 1.0;
-  gua_emissivity = 1.0; // pass through if unshaded
+  gua_metalness  = gua_varying_metalness;
+  gua_roughness  = gua_varying_roughness;
+  gua_emissivity = gua_varying_emissivity; // pass through if unshaded
 
   @material_input@
   @material_method_calls_frag@

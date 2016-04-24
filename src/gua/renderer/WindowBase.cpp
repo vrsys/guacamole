@@ -175,7 +175,6 @@ void WindowBase::init_context() {
       );
 #endif
   }
-
   ctx_.render_device  = scm::gl::render_device_ptr(new scm::gl::render_device());
   ctx_.render_context = ctx_.render_device->main_context();
 
@@ -200,12 +199,14 @@ void WindowBase::init_context() {
   if (config.get_debug()) {
     ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::start_frame() {
+
+  process_events();
+
   ctx_.render_context->clear_default_color_buffer(
       scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
 

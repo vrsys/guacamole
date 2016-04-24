@@ -6,20 +6,23 @@
 layout (location = 0) in vec3  position;   
 layout (location = 1) in uint  index;      
 layout (location = 2) in vec2  tesscoord;  
+layout (location = 3) in float final_tesselation;  
                                                    
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
-flat out vec3  vPosition;                  
-flat out uint  vIndex;                     
-flat out vec2  vTessCoord;                 
+flat out vec3  vertex_position;                  
+flat out uint  vertex_index;                     
+flat out vec2  vertex_tessCoord; 
+flat out float vertex_final_tesselation;                     
     
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void main()                       
 {                                 
-    vPosition  = position;        
-    vIndex     = index;           
-    vTessCoord = tesscoord;       
+    vertex_position  = position;        
+    vertex_index     = index;           
+    vertex_tessCoord = tesscoord;   
+    vertex_final_tesselation = final_tesselation;  
 }     

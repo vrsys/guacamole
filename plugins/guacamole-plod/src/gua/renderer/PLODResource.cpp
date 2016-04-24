@@ -160,7 +160,7 @@ void PLODResource::ray_test(Ray const& ray,
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit) {
+  if (has_hit && (hits.empty() || pick.distance < hits.begin()->distance)) {
     hits.insert(pick);
   }
 }

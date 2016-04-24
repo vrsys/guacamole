@@ -127,7 +127,6 @@ void main() {
 
     uint premultiplied_offset = (uint(gl_FragCoord.x) + uint(gl_FragCoord.y) * gua_resolution.x)*num_blended_frags;
 
-    //NUM_BLENDED_FRAGS
     for(uint frag_offset = 0; frag_offset < limit; ++frag_offset) {
 
       if(limit > frag_offset) {
@@ -139,7 +138,6 @@ void main() {
 
         uvec2 retrieved_attributes = uvec2(
                           (depth_LMSB_ID_LMSB.x & 0xFFFF) |  ((depth_LMSB_ID_LMSB.y & 0xFFFF) << 16), // former total_depth_as_int
-                          //(depth_LMSB_ID_LMSB.z & 0xFFFF) |  ((depth_LMSB_ID_LMSB.w & 0x07FF) << 16)  // former global_surfel_idx
                           (depth_LMSB_ID_LMSB.z & 0xFFFF) |  ((depth_LMSB_ID_LMSB.w & 0xFFFF) << 16)  // former global_surfel_idx
                 );
         float es_depth = uintBitsToFloat(retrieved_attributes.x);
@@ -163,13 +161,8 @@ void main() {
     uint surfel_image_idx_y =  int(surfel_idx / attr_tex_width) ;
     ivec2 surfel_pos = ivec2(surfel_image_idx_x, surfel_image_idx_y);
 
-    //float front_most_radius = texelFetch(in_surfels_color, surfel_pos, 0).z;
-    
-    //TODO
     float front_most_radius = attributes[surfel_idx].radius;
 
-    //TODO: REPLACE BY SSBO ACCESS
-    //float front_most_radius = 5.0;
 
     for(int i = 0; i < NUM_BLEND_FRAGS; ++i) {
 
@@ -201,12 +194,10 @@ void main() {
       looked_up_pbr    += vec3(texelFetch(in_surfels_pbr, surfel_pos, 0)).xyz * current_weight;
     }
 
-    looked_up_normal.xyz /= looked_up_color.w;
-    looked_up_pbr.xyz   /= looked_up_color.w;
-    looked_up_color.xyz /= looked_up_color.w;
-
-    //looked_up_normal.z = pow( 1.0 - dot(looked_up_normal.xy, looked_up_normal.xy), 0.5 );
-
+    float accumulated_weight = looked_up_color.w;
+    looked_up_normal.xyz /= accumulated_weight;
+    looked_up_pbr.xyz   /=  accumulated_weight;
+    looked_up_color.xyz /=  accumulated_weight;
 
     out_color = vec4(pow( looked_up_color.xyz, vec3(1.4,1.4,1.4) ), 1.0);
     out_normal = (looked_up_normal.xyz + vec3(1.0, 1.0, 1.0)) / 2.0;
@@ -214,10 +205,4 @@ void main() {
 
   }
 
-
-
-
-
-
 }
-

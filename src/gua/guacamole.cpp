@@ -40,13 +40,18 @@ void init(int argc, char** argv) {
   if (!glfwInit()) {
     Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
   }
+  else {
+    Logger::LOG_DEBUG << "Succeed to initialize GLFW!" << std::endl;
+  }
 #endif
 
   scm::gl::sampler_state_desc sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                             scm::gl::WRAP_CLAMP_TO_EDGE,
                                             scm::gl::WRAP_CLAMP_TO_EDGE);
+
   gua::TextureDatabase::instance()->add("gua_loading_texture",
       std::make_shared<Texture2D>(gua::make_loading_image(), 1, sampler_state));
+
   gua::TextureDatabase::instance()->add("gua_default_texture",
       std::make_shared<Texture2D>(gua::make_default_image(), 1, sampler_state));
   gua::TextureDatabase::instance()->add("gua_noise_texture",
@@ -88,6 +93,8 @@ void init(int argc, char** argv) {
 #endif
 
   PBSMaterialFactory::create_material(PBSMaterialFactory::ALL);
+
+  Logger::LOG_DEBUG << "Guacamole initialization finished." << std::endl;
 }
 
 

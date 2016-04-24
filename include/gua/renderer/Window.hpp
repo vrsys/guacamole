@@ -57,7 +57,7 @@ class GUA_DLL Window : public WindowBase {
   virtual bool should_close() const;
   virtual void close();
 
-  virtual void process_events() { }
+  virtual void process_events();
 
   /**
    * Activate the context of this window.

@@ -94,9 +94,9 @@ namespace gua {
 
     shader_stages_.clear();
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p03_fill_holes.vert")) );
+                             factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p03_fill_holes.vert")) );
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p03_fill_holes.frag")) );
+                             factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p03_fill_holes.frag")) );
 
     shaders_loaded_ = true;
    }

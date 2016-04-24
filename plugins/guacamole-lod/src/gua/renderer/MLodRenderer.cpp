@@ -63,11 +63,11 @@ namespace gua {
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
-    std::string v_shader = factory.read_shader_file("TODO.vert");
-    std::string f_shader = factory.read_shader_file("TODO.frag");
+    std::string v_shader = factory.read_shader_file("resources/shaders/mlod/tri_mesh_lod_shader.vert");
+    std::string f_shader = factory.read_shader_file("resources/shaders/mlod/tri_mesh_lod_shader.frag");
 #else
-    std::string v_shader = Resources::lookup_shader("TODO.vert");
-    std::string f_shader = Resources::lookup_shader("TODO.frag");
+    std::string v_shader = Resources::lookup_shader("shaders/mlod/tri_mesh_lod_shader.vert");
+    std::string f_shader = Resources::lookup_shader("shaders/mlod/tri_mesh_lod_shader.frag");
 #endif
 
     program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, v_shader));
@@ -80,9 +80,53 @@ namespace gua {
     rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
   }
 
+
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  std::shared_ptr<ShaderProgram> MLodRenderer::_get_material_program(MaterialShader* material,
+                                                                     std::shared_ptr<ShaderProgram> const& current_program,
+                                                                     bool& program_changed) {
+    auto shader_iterator = programs_.find(material);
+    if (shader_iterator == programs_.end()) {
+      try {
+        _initialize_tri_mesh_lod_program(material);
+        program_changed = true;
+        return programs_.at(material);
+      } 
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "LodPass::_get_material_program(): Cannot create material for tri_mesh_lod program: " << e.what() << std::endl;
+        return std::shared_ptr<ShaderProgram>();
+      }
+    }
+    else {
+      if (current_program == shader_iterator->second) {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  void MLodRenderer::_initialize_tri_mesh_lod_program(MaterialShader* material) {
+    if(!programs_.count(material)) {
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+      programs_[material] = program;
+    }
+    assert(programs_.count(material));
+  }
+
   ///////////////////////////////////////////////////////////////////////////////
   void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
-
     RenderContext const& ctx(pipe.get_context());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -150,38 +194,42 @@ namespace gua {
 
     lamure::view_t lamure_view_id = controller->deduce_view_id(context_id, gua_view_id);
 
+    int view_id(camera.config.get_view_id());
+
     lamure::ren::camera cut_update_cam(lamure_view_id, frustum.get_clip_near(), math::mat4f(frustum.get_view()), math::mat4f(frustum.get_projection()));
 
     cuts->send_camera(context_id, lamure_view_id, cut_update_cam);
     cuts->send_height_divided_by_top_minus_bottom(context_id, lamure_view_id, height_divided_by_top_minus_bottom);
 
-    auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
 
     std::unordered_map<node::MLodNode*, lamure::ren::cut*> cut_map;
     std::unordered_map<lamure::model_t, std::unordered_set<lamure::node_t> > nodes_in_frustum_per_model;
 
+    bool write_depth = true;
+    target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
 
     //loop through all models and perform frustum culling
     for (auto const& object : sorted_objects->second) {
 
-      auto plod_node(reinterpret_cast<node::MLodNode*>(object));
+      auto mlod_node(reinterpret_cast<node::MLodNode*>(object));
 
-      lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
+      lamure::model_t model_id = controller->deduce_model_id(mlod_node->get_geometry_description());
 
-      auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+      auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
       auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
       auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
       auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
       cuts->send_transform(context_id, model_id, math::mat4f(scm_model_matrix));
       cuts->send_rendered(context_id, model_id);
-      cuts->send_threshold(context_id, model_id, plod_node->get_error_threshold());
+      cuts->send_threshold(context_id, model_id, mlod_node->get_error_threshold());
 
       // update current model matrix for LodLibrary in order to make bundle pick work
       database->get_model(model_id)->set_transform(math::mat4f(scm_model_matrix));
 
       lamure::ren::cut& cut = cuts->get_cut(context_id, lamure_view_id, model_id);
-      cut_map.insert(std::make_pair(plod_node, &cut));
+      cut_map.insert(std::make_pair(mlod_node, &cut));
 
       std::vector<lamure::ren::cut::node_slot_aggregate>& node_list = cut.complete_set();
 
@@ -228,6 +276,101 @@ namespace gua {
 
     }
  
+
+    scm::gl::context_all_guard context_guard(ctx.render_context);
+
+    std::string const gpu_query_name= "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / MLodRenderer";
+    pipe.begin_gpu_query(ctx, gpu_query_name);
+
+
+    MaterialShader* current_material(nullptr);
+    std::shared_ptr<ShaderProgram> current_material_program;
+
+
+    bool program_changed = false;
+
+    auto current_rasterizer_state = rs_cull_back_;
+
+    for (auto const& object : sorted_objects->second) {
+
+      auto mlod_node(reinterpret_cast<node::MLodNode*>(object));
+
+      lamure::model_t model_id = controller->deduce_model_id(mlod_node->get_geometry_description());
+
+      auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
+      auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+      auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
+      auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
+      current_material = mlod_node->get_material()->get_shader();
+
+      current_material_program = _get_material_program(current_material,
+        current_material_program,
+        program_changed);
+
+    if (current_material_program) {
+      current_material_program->use(ctx);
+      current_material_program->set_uniform(ctx, math::vec2i(target.get_width(),
+                                                   target.get_height()),
+                                  "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
+      current_material_program->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+      current_material_program->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+      // hack
+      current_material_program->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+                                  "gua_gbuffer_depth");
+    }
+
+
+      auto const& mlod_resource = mlod_node->get_geometry();
+
+      std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
+
+      if (mlod_resource && current_material_program) {
+
+        if (program_changed) {
+          current_material_program->unuse(ctx);
+          current_material_program->use(ctx);          
+        }
+
+        int rendering_mode = pipe.current_viewstate().shadow_mode ? (mlod_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
+        current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(mlod_node->get_cached_world_transform()));
+        current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+        current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix) );
+        current_material_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+
+        // lowfi shadows dont need material input
+        //if (rendering_mode != 1) {
+          mlod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+        //}
+
+        current_rasterizer_state = mlod_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+
+        if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
+          ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+          ctx.render_context->apply_state_objects();
+        }
+
+        ctx.render_context->apply_program();
+        ctx.render_context->apply();
+
+        mlod_resource->draw(ctx,
+          context_id,
+          lamure_view_id,
+          model_id,
+          controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::TRIMESH, ctx.render_device),
+          nodes_in_frustum,
+          scm::gl::primitive_topology::PRIMITIVE_TRIANGLE_LIST);
+
+        program_changed = false;
+      }
+      else {
+        Logger::LOG_WARNING << "MLodRenderer::render(): Cannot find ressources for node: " << mlod_node->get_name() << std::endl;
+      }
+    }
+
+    current_material_program->unuse(ctx);
+
 
     //////////////////////////////////////////////////////////////////////////
     // Draw finished -> unbind g-buffer

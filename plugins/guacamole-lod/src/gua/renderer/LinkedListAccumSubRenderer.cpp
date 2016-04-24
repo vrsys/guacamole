@@ -149,34 +149,8 @@ namespace gua {
   );
 
 
-/*
-  dist_image_ptr->image_sub_data( *(ctx.render_context),
-                                 scm::gl::texture_region(scm::math::vec3ui(0,0,0),
-                                                         scm::math::vec3ui(render_target_dims[0],
-                                                                           render_target_dims[1],
-                                                                           0)),
-                                                         0,
-                                                         scm::gl::FORMAT_R_32UI,
-                                                         0);
-*/
-/*
-  ctx.render_context
-    ->clear_image_data( dist_image_ptr,
-                        0 );
-*/
-
-  //ctx.render_context
-  //  ->clear_color_buffer(custom_FBO_ptr_, 1, scm::math::vec4f(0.0, 0.0, 0.0, 0.0) );
-
   ctx.render_context->apply();
 
-/*
-  custom_FBO_ptr_->clear_attachments();
-    //custom_FBO_ptr_->attach_depth_stencil_buffer(shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH]);
-  custom_FBO_ptr_->attach_color_buffer(0, shared_resources.attachments_[plod_shared_resources::AttachmentID::LINKED_LIST_ACCUM_PASS_FRAG_COUNT]);
-*/
-  //ctx.render_context
-  //  ->clear_depth_stencil_buffer(custom_FBO_ptr_);
 
   MaterialShader* current_material(nullptr);
   std::shared_ptr<ShaderProgram> current_material_program;
@@ -191,19 +165,12 @@ namespace gua {
 
     ctx.render_context->set_frame_buffer(custom_FBO_ptr_);
 
-    //auto frag_count_image_ptr = shared_resources.attachments_[plod_shared_resources::AttachmentID::LINKED_LIST_ACCUM_PASS_FRAG_COUNT];
-    //auto min_es_dist_image_ptr = shared_resources.attachments_[plod_shared_resources::AttachmentID::LINKED_LIST_ACCUM_PASS_MIN_ES_DIST];
-    //auto min_es_dist_image_ptr = shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH];
 
     auto pbr_image_ptr    = shared_resources.attachments_[plod_shared_resources::AttachmentID::LINKED_LIST_ACCUM_PASS_PBR_IMAGE];
     auto normal_image_ptr = shared_resources.attachments_[plod_shared_resources::AttachmentID::LINKED_LIST_ACCUM_PASS_NORMAL_IMAGE];
 
     auto linked_list_buffer_tex_ptr = shared_resources.tex_buffers_[plod_shared_resources::TextureBufferID::LINKED_LIST_BUFFER];
 
-
-
-
-    //custom_FBO_ptr_->attach_depth_stencil_buffer(shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH]);
 
     int view_id(camera.config.get_view_id());
 
@@ -279,6 +246,7 @@ namespace gua {
                           model_id,
                           controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
                           nodes_in_frustum,
+                          scm::gl::primitive_topology::PRIMITIVE_POINT_LIST,
                           pipe.current_viewstate().frustum.get_view() * plod_node->get_cached_world_transform(),
                           true);
 
@@ -304,9 +272,9 @@ namespace gua {
 #endif
     ResourceFactory factory;
     shader_stages_.clear();
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p01_ll_accum.vert")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p01_ll_accum.geom")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p01_ll_accum.frag")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p01_ll_accum.vert")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p01_ll_accum.geom")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p01_ll_accum.frag")));
     shaders_loaded_ = true;
    }
   }
@@ -327,7 +295,6 @@ namespace gua {
     current_material_shader->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
 
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
-    //current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
 
     current_material_shader->apply_uniform(ctx, "inverse_model_matrix", math::mat4f(scm_inv_model_matrix) );
     current_material_shader->apply_uniform(ctx, "inverse_view_matrix",  math::mat4f(scm_inv_view_matrix) );

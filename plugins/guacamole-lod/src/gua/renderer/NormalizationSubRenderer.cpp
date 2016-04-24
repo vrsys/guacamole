@@ -100,9 +100,9 @@ namespace gua {
 
     shader_stages_.clear();
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/two_pass_splatting/p03_normalization.vert")) );
+                             factory.read_shader_file("resources/shaders/plod/two_pass_splatting/p03_normalization.vert")) );
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/two_pass_splatting/p03_normalization.frag")) );
+                             factory.read_shader_file("resources/shaders/plod/two_pass_splatting/p03_normalization.frag")) );
 
     shaders_loaded_ = true;
    }
