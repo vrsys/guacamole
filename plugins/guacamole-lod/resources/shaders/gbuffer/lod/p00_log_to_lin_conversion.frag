@@ -44,5 +44,4 @@ void main() {
   float compressed_depth = -(get_eyespace_depth_from_sampler() / gua_clip_far);
 
   gl_FragDepth = (compressed_depth < 1.0) ? compressed_depth : 1.0;
-  
 }

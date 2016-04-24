@@ -20,9 +20,11 @@
 ******************************************************************************/
 
 #include <functional>
+#include <memory>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
@@ -42,31 +44,33 @@ int main(int argc, char** argv) {
   auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
 
+/*
   //create material for pointcloud
   auto lod_rough = lod_keep_color_shader->make_new_material();
   lod_rough->set_uniform("metalness", 0.0f);
   lod_rough->set_uniform("roughness", 0.8f);
   lod_rough->set_uniform("emissivity", 0.0f);
-
+*/
   //configure lod backend
   gua::LodLoader lod_loader;
-  lod_loader.set_out_of_core_budget_in_mb(4096);
-  lod_loader.set_render_budget_in_mb(2048);
+  lod_loader.set_out_of_core_budget_in_mb(512);
+  lod_loader.set_render_budget_in_mb(512);
   lod_loader.set_upload_budget_in_mb(20);
 
+
   //load a sample pointcloud
-  auto lod_node = lod_loader.load_lod_pointcloud(
-    "pointcloud", 
-    "/opt/3d_models/point_based/plod/pig_pr.bvh", 
-    lod_rough, 
+  auto lod_node1 = lod_loader.load_lod_pointcloud(
+    //"pointcloud", 
+    "/opt/3d_models/point_based/plod/pig_pr.bvh",
+    //lod_rough, 
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
   //setup scenegraph
   gua::SceneGraph graph("main_scenegraph");
   auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto lod_transform = graph.add_node<gua::node::TransformNode>("/transform", "lod_transform");
-  graph.add_node("/transform/lod_transform", lod_node);
-  lod_node->set_draw_bounding_box(true);
+
+  graph.add_node("/transform/lod_transform", lod_node1);
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -89,8 +93,8 @@ int main(int argc, char** argv) {
   camera->config.set_resolution(resolution);
   
   //use close near plane to allow inspection of details
-  camera->config.set_near_clip(0.01f);
-  camera->config.set_far_clip(20.0f);
+  //camera->config.set_near_clip(0.01f);
+  //camera->config.set_far_clip(200.0f);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
@@ -98,11 +102,14 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::PLodPassDescription>());
+
+  auto PLod_Pass = std::make_shared<gua::PLodPassDescription>();
+  
+  pipe->add_pass(PLod_Pass);
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   camera->set_pipeline_description(pipe);
 
   pipe->get_resolve_pass()->tone_mapping_exposure(5.f);
@@ -168,6 +175,16 @@ int main(int argc, char** argv) {
   window->on_key_press.connect(std::bind([&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
     if (action == 0) return;
     switch (std::tolower(key)) {
+
+      case '1':
+        PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS);
+        PLod_Pass->touch();
+        break;
+      case '2':
+        PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST);
+        PLod_Pass->touch();
+        break;
+
       default:
         break;
     }
@@ -182,14 +199,12 @@ int main(int argc, char** argv) {
   window->open();
 
   gua::Renderer renderer;
-
+  bool bla = true;
   //application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
-
   ticker.on_tick.connect([&]() {
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
-
     window->process_events();
     if (window->should_close()) {
       renderer.stop();
@@ -197,7 +212,10 @@ int main(int argc, char** argv) {
       loop.stop();
     }
     else {
+
+
       renderer.queue_draw({ &graph });
+      std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
     }
   });
 

@@ -22,4 +22,5 @@ void main() {
 
 @include "../common_LOD/PLOD_vertex_pass_through.glsl"
 
+  VertexOut.pass_normal = normalize((gua_normal_matrix * vec4(in_normal, 0.0)).xyz);
 }
