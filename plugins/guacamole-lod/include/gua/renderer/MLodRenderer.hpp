@@ -56,7 +56,13 @@ class MLodRenderer {
 
  private:  //lamure auxiliary methods
   
-   lamure::context_t _lamure_register_context(gua::RenderContext const& ctx);
+  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
+                                                       std::shared_ptr<ShaderProgram> const& current_program,
+                                                       bool& program_changed);
+
+  void                           _initialize_tri_mesh_lod_program(MaterialShader* material);
+
+   lamure::context_t             _lamure_register_context(gua::RenderContext const& ctx);
 
    bool _intersects(scm::gl::boxf const& bbox,
                     std::vector<math::vec4> const& global_planes) const;

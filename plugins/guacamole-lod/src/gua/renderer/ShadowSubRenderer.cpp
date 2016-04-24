@@ -109,7 +109,8 @@ namespace gua {
           lamure_view_id,
           model_id,
           controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-          nodes_in_frustum);
+          nodes_in_frustum,
+          scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
       }
       else {
         Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
@@ -132,11 +133,11 @@ namespace gua {
     ResourceFactory factory;
     shader_stages_.clear();
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/shadow_splatting/p01_depth.vert")));
+                             factory.read_shader_file("resources/shaders/plod/shadow_splatting/p01_depth.vert")));
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/shadow_splatting/p01_depth.geom")));
+                             factory.read_shader_file("resources/shaders/plod/shadow_splatting/p01_depth.geom")));
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, 
-                             factory.read_shader_file("resources/shaders/gbuffer/lod/shadow_splatting/p01_depth.frag")));
+                             factory.read_shader_file("resources/shaders/plod/shadow_splatting/p01_depth.frag")));
 
     shaders_loaded_ = true;
    }

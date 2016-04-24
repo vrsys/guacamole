@@ -79,6 +79,7 @@ void LodResource::draw(
     lamure::model_t model_id,
     scm::gl::vertex_array_ptr const& vertex_array,
     std::unordered_set<lamure::node_t> const& nodes_in_frustum,
+    scm::gl::primitive_topology const type,
     scm::math::mat4d model_view_matrix,
     bool draw_sorted) const {
 
@@ -97,13 +98,12 @@ void LodResource::draw(
   ctx.render_context->bind_vertex_array(vertex_array);
   ctx.render_context->apply();
   
-
-
 if( draw_sorted ) {
   //sorting BEGIN
   std::vector<lamure::ren::cut::node_slot_aggregate> node_render_list;
 
   node_render_list.reserve(nodes_in_frustum.size());
+ 
   for (const auto& n : node_list) {
     if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
       node_render_list.push_back(n);
@@ -131,7 +131,7 @@ if( draw_sorted ) {
     //result inside vector means the node is out of frustum
     //if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
     
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
+      ctx.render_context->draw_arrays(type,
                                       n.slot_id_ * primitives_per_node,
                                       primitives_per_node_of_model);
     //}
@@ -140,7 +140,7 @@ if( draw_sorted ) {
 } else {
   for (const auto& n : node_list) {
     if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
+      ctx.render_context->draw_arrays(type,
                                       n.slot_id_ * primitives_per_node,
                                       primitives_per_node_of_model);
     }
@@ -202,7 +202,7 @@ void LodResource::ray_test(Ray const& ray,
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit) {
+  if (has_hit && (pick.intersection < hits.begin()->distance)) {
     hits.insert(pick);
   }
 */

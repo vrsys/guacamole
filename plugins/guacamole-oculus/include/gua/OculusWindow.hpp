@@ -48,7 +48,6 @@
 
 namespace gua {
 
-
 class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
  public:
 
@@ -72,8 +71,6 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
   math::vec3 const get_right_screen_translation() const;
   float const get_IPD() const;
   
-
-  math::vec2ui get_eye_resolution() const;
   math::vec2ui get_window_resolution() const;
   math::mat4 get_oculus_sensor_orientation() const;
 
@@ -92,32 +89,19 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
 
     math::mat4 oculus_sensor_orientation_;
 
-    #ifdef _WIN32
-    ovrSwapTextureSet*         swap_texures_ = 0;
-                               
+    ovrTextureSwapChain        texture_swap_chain_ = 0;
+    ovrTextureSwapChainDesc    texture_swap_chain_desc_ = {};
+                      
     ovrLayerEyeFov             color_layer_;
-    ovrLayerEyeFovDepth        depth_layer_;
 
-    GLuint                     blit_fbo_read_;
-    GLuint                     blit_fbo_write_;
-    #else
-        void initialize_distortion_meshes(ovrHmd const& hmd, RenderContext const& ctx);
-        scm::gl::buffer_ptr distortion_mesh_vertices_[2];
-        scm::gl::buffer_ptr distortion_mesh_indices_[2];
-        scm::gl::vertex_array_ptr distortion_mesh_vertex_array_[2];
+    unsigned int               blit_fbo_read_;
+    unsigned int               blit_fbo_write_;
 
-        // for distorted rendering as a replacement of the distortion shader
-        unsigned num_distortion_mesh_indices_[2];
-        scm::gl::rasterizer_state_ptr no_backface_culling_state_;
-        bool has_vertical_display_;
-    #endif
+    ovrHmdDesc                 hmd_desc_;
+    ovrSession                 hmd_session_;
+    unsigned                   framecount_ = 0;
 
-    // oculus device associated with the window
-   ovrHmd     registered_HMD_; 
-#if OVR_PRODUCT_VERSION <= 0 && OVR_MAJOR_VERSION >= 8
-   ovrHmdDesc registered_HMD_desc_;
-#endif
-   
+
 };
 
 }

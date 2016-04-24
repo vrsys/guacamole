@@ -34,6 +34,10 @@
 #include <sstream>
 #include <iostream>
 
+#if WIN32 
+  #include <Windows.h>
+#endif
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +57,7 @@ Window::~Window() {
 void Window::open() {
 
   if (window_) {
-    window_->hide();
+   window_->hide();
   }
 
   ctx_.context.reset();
@@ -86,20 +90,18 @@ void Window::open() {
       forward_compatible,
       es_profile);
 
-  ctx_.display =
-      scm::gl::wm::display_ptr(new scm::gl::wm::display(config.get_display_name()));
+  ctx_.display.reset(new scm::gl::wm::display(config.get_display_name()));
 
-  window_ = scm::gl::wm::window_ptr(new scm::gl::wm::window(
+  window_.reset(new scm::gl::wm::window(
       ctx_.display,
-      0,
       config.get_title(),
-      math::vec2i(0, 0),
+      config.get_window_position(),
       math::vec2ui(config.get_size().x, config.get_size().y),
       window_format));
 
-  ctx_.context = scm::gl::wm::context_ptr(
-      new scm::gl::wm::context(window_, context_attribs));
+  ctx_.context.reset(new scm::gl::wm::context(window_, context_attribs));
 
+  set_active(true);
   window_->show();
 }
 
@@ -137,6 +139,23 @@ void Window::set_active(bool active) {
 void Window::swap_buffers_impl() {
   // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
   window_->swap_buffers(config.get_enable_vsync());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Window::process_events()
+{
+#if WIN32
+  MSG message;
+  if (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) 
+  {
+    // handle events?
+
+    // process and pass message forwards
+    TranslateMessage(&message);
+    DispatchMessage(&message);
+  }
+#else
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

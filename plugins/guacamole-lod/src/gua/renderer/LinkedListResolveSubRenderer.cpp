@@ -212,8 +212,8 @@ namespace gua {
 #endif
     ResourceFactory factory;
     shader_stages_.clear();
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p02_ll_resolve.vert")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/linked_list_splatting/p02_ll_resolve.frag")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p02_ll_resolve.vert")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/linked_list_splatting/p02_ll_resolve.frag")));
     shaders_loaded_ = true;
    }
   }

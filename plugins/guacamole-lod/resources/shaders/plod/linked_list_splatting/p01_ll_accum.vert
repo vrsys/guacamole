@@ -61,8 +61,6 @@ void main() {
     face_forward_normal = -face_forward_normal;
   }
 
-
-
   imageStore(out_surfels_normal, surfel_pos, vec4( face_forward_normal, 0.0 ) );
 
   VertexOut.pass_global_surfel_id = global_surfel_idx;

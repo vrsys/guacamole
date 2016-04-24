@@ -144,9 +144,9 @@ namespace gua {
 
     shader_stages_.clear();
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, 
-                              factory.read_shader_file("resources/shaders/gbuffer/lod/p00_log_to_lin_conversion.vert")));
+                              factory.read_shader_file("resources/shaders/plod/p00_log_to_lin_conversion.vert")));
     shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, 
-                              factory.read_shader_file("resources/shaders/gbuffer/lod/p00_log_to_lin_conversion.frag")));
+                              factory.read_shader_file("resources/shaders/plod/p00_log_to_lin_conversion.frag")));
 
     shaders_loaded_ = true;
    }

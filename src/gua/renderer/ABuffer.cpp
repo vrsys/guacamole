@@ -21,7 +21,7 @@
 
 // class header
 #include <gua/renderer/ABuffer.hpp>
-
+ 
 namespace gua {
 
 void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {

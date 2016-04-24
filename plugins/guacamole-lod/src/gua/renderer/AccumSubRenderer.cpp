@@ -190,7 +190,8 @@ namespace gua {
           lamure_view_id,
           model_id,
           controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-          nodes_in_frustum);
+          nodes_in_frustum,
+          scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
 
         program_changed = false;
       }
@@ -214,9 +215,9 @@ namespace gua {
 #endif
     ResourceFactory factory;
     shader_stages_.clear();
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/two_pass_splatting/p02_accum.vert")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/two_pass_splatting/p02_accum.geom")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/lod/two_pass_splatting/p02_accum.frag")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/two_pass_splatting/p02_accum.vert")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/plod/two_pass_splatting/p02_accum.geom")));
+    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/two_pass_splatting/p02_accum.frag")));
     shaders_loaded_ = true;
    }
   }

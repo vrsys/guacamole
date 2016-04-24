@@ -35,11 +35,39 @@
 void toggle_raycasting(std::shared_ptr<gua::node::Node> const& node)
 {
   auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
-  if (nurbs_node)
+  if (nurbs_node) {
     nurbs_node->raycasting(!nurbs_node->raycasting());
+    std::cout << "Raycasting = " << nurbs_node->raycasting() << std::endl;
+  }
 
   for (auto const& node : node->get_children()) {
     toggle_raycasting(node);
+  }
+}
+
+void increase_error(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node) {
+    nurbs_node->max_tesselation_error(nurbs_node->max_tesselation_error() + 1.0);
+    std::cout << "Error = " << nurbs_node->max_tesselation_error() << std::endl;
+  }
+
+  for (auto const& node : node->get_children()) {
+    increase_error(node);
+  }
+}
+
+void decrease_error(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node) {
+    nurbs_node->max_tesselation_error(std::max(1.0, nurbs_node->max_tesselation_error() - 1.0));
+    std::cout << "Error = " << nurbs_node->max_tesselation_error() << std::endl;
+  }
+
+  for (auto const& node : node->get_children()) {
+    decrease_error(node);
   }
 }
 
@@ -116,6 +144,12 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   case 'y':
     toggle_trimming(graph.get_root());
     break;
+  case 'u':
+    increase_error(graph.get_root());
+    break;
+  case 'j':
+    decrease_error(graph.get_root());
+    break;
   case 'q':
     d_r->debug_tiles(!d_r->debug_tiles());
     d_r->touch();
@@ -132,13 +166,15 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 std::shared_ptr<gua::node::Node> create_node_from_igs_file(std::string const& nodename, std::string const& filepath, std::shared_ptr<gua::Material> const& material)
 {
   gua::NURBSLoader nurbs_loader;
-  return nurbs_loader.load_geometry(nodename, filepath, material, gua::NURBSLoader::RAYCASTING);
+  auto node = nurbs_loader.load_geometry(nodename, filepath, material, gua::NURBSLoader::DEFAULTS);
+  node->max_tesselation_error(8.0f);
+  return node;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // application
 /////////////////////////////////////////////////////////////////////////////
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
   // some global constants
   gua::math::vec4f iron(0.560, 0.570, 0.580, 1);
@@ -166,20 +202,20 @@ int main(int argc, char** argv)
 
   // create new material configurations for material shader
   gua::MaterialShaderDatabase::instance()->add(material_shader);
-  auto lack  = material_shader->make_new_material();
+  auto lack = material_shader->make_new_material();
   auto glass = material_shader->make_new_material();
-  auto gum   = material_shader->make_new_material();
+  auto gum = material_shader->make_new_material();
 
   // configure materials 
   lack->set_uniform("Color", copper);
-  lack->set_uniform("Roughness", 0.5f);
-  lack->set_uniform("Metalness", 0.8f);
+  lack->set_uniform("Roughness", 0.3f);
+  lack->set_uniform("Metalness", 0.0f);
   lack->set_uniform("Opacity", 1.0f);
 
   glass->set_uniform("Color", water);
   glass->set_uniform("Roughness", 0.3f);
   glass->set_uniform("Metalness", 1.0f);
-  glass->set_uniform("Opacity", 0.1f);
+  glass->set_uniform("Opacity", 0.3f);
 
   gum->set_uniform("Color", gua::math::vec4f(0.1, 0.1, 0.1, 1.0));
   gum->set_uniform("Roughness", 1.0f);
@@ -190,8 +226,28 @@ int main(int argc, char** argv)
   // setup scene 
   /////////////////////////////////////////////////////////////////////////////
   auto input_transform = graph.add_node<gua::node::TransformNode>("/", "nurbs_transform");
+  auto model_transform = graph.add_node<gua::node::TransformNode>("/nurbs_transform", "model_transform");
+
+  // add light proxy
+  //gua::TriMeshLoader triloader;
+  //auto center(triloader.create_geometry_from_file("center", "./data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+  //center->scale(1.1f);
+  //input_transform->add_child(center);
+
   auto count = 0;
-  input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/teapot.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/ablauf.igs", gum));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/antenne.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontblinker.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer.igs", glass));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/grill_innen.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer_innen.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/karosserie.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/kuehlergrill.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/nebelscheinwerfer.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/seitenscheiben.igs", glass));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/tuergriffe.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/windschutzscheibe.igs", glass));
+
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_links.igs", lack));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_rechts.igs", lack));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
@@ -209,74 +265,98 @@ int main(int argc, char** argv)
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
   //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
-  
+
 
   graph.update_cache();
-  auto bbox = input_transform->get_bounding_box();
-  input_transform->translate(-bbox.center());
+
+  auto bbox = model_transform->get_bounding_box();
+  std::cout << "Original size of loaded model : [" << bbox.min << " - " << bbox.max << "]" << std::endl;
+  model_transform->scale(0.01f);
+
   graph.update_cache();
-  
+
+  bbox = model_transform->get_bounding_box();
+  std::cout << "Model bbox after scale: [" << bbox.min << " - " << bbox.max << "]" << std::endl;
+
+  graph.update_cache();
+
+  bbox = model_transform->get_bounding_box();
+  model_transform->translate(-bbox.center());
+
+  graph.update_cache();
+  bbox = model_transform->get_bounding_box();
+  std::cout << "Model bbox after translation: [" << bbox.min << " - " << bbox.max << "]" << std::endl;
+
+  auto scene_center = model_transform->get_bounding_box().center();
   float scene_size = scm::math::length(bbox.max - bbox.min);
   scene_size = std::max(scene_size, 1.0f);
+  
+  std::cout << "Size of loaded model : " << scene_size << std::endl;
 
-  unsigned const max_lights = 50;
+  unsigned const max_lights = 10;
   unsigned const max_light_intensity = 100.0f;
   unsigned const min_light_intensity = 10.0f;
-  float const light_scale = 10.0f;
+  float const light_scale = 5.0f;
 
   for (unsigned i = 0; i != max_lights; ++i)
   {
     // create random light
     float relative_intensity = float(std::rand()) / float(RAND_MAX);
 
-    float x = float(std::rand() % unsigned(scene_size)) - scene_size/2;
-    float y = float(std::rand() % unsigned(scene_size)) - scene_size/2;
-    float z = float(std::rand() % unsigned(scene_size)) - scene_size;
+    gua::math::vec3 light_pos = (i % 2) ? bbox.min : bbox.max;
+
+    auto dim = std::rand() % 3;
+    light_pos[dim] = float(std::rand() % unsigned(scene_size)) - scene_size / 2;
 
     std::string lightname = std::string("light") + std::to_string(i);
     auto light = graph.add_node<gua::node::LightNode>("/", lightname);
     light->data.set_type(gua::node::LightNode::Type::POINT);
 
     light->data.color = gua::utils::Color3f(1.0f, 1.0f, 1.0f);
-    //light->scale(light_scale * scene_size * relative_intensity);
-    light->scale(1000.0f);
+    light->scale(light_scale * scene_size * relative_intensity);
     light->data.brightness = min_light_intensity + relative_intensity * (max_light_intensity - min_light_intensity);
-    light->translate(x, y, z);
+    light->translate(light_pos);
 
+#if 0
     // add light proxy
     gua::TriMeshLoader loader;
     auto light_proxy(loader.create_geometry_from_file("light_proxy", "./data/objects/sphere.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     light_proxy->scale(0.1f * (1.0f / light_scale));
     light->add_child(light_proxy);
+#endif
   }
 
-  auto resolution   = gua::math::vec2ui(1920, 1080);
+  float screen_height = 0.4;
+  float viewer_screen_distance = 0.8;
+
+  auto resolution   = gua::math::vec2ui(2560, 1600);
   auto aspect_ratio = float(resolution.x) / float(resolution.y);
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(scene_size * aspect_ratio, scene_size));
+  screen->data.set_size(gua::math::vec2(screen_height * aspect_ratio, screen_height));
   screen->translate(0, 0, scene_size);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2 * scene_size);
+  camera->translate(0, 0, viewer_screen_distance);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_frustum_culling(false);
-  camera->config.set_near_clip(0.01f * scene_size);
-  camera->config.set_far_clip(10.0f * scene_size);
+  camera->config.set_near_clip(0.01f);
+  camera->config.set_far_clip(100.0f);
+
+  std::cout << "Setting near / far clip to : " << 0.01f * scene_size << " - " << 100.0f * scene_size << std::endl;
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::NURBSPassDescription>());
-  pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
 
   auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
-  light_visibility_pass->rasterization_mode(gua::LightVisibilityPassDescription::FULLSCREEN_FALLBACK);
   pipe->add_pass(light_visibility_pass);
   
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->tone_mapping_exposure(64.0f);
+  resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->tone_mapping_exposure(1.0f);
   pipe->add_pass(resolve_pass);
 
   pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
@@ -285,7 +365,7 @@ int main(int argc, char** argv)
   
   camera->set_pipeline_description(pipe);
 
-  gua::utils::Trackball trackball(0.01 * scene_size, 0.002 * scene_size, 0.2);
+  gua::utils::Trackball trackball(0.1, 0.02, 0.2);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -336,8 +416,8 @@ int main(int argc, char** argv)
 
     input_transform->set_transform(modelmatrix);
 
-    //if (frame_counter++ % 500 == 0)
-    // std::cout << window->get_rendering_fps() << " " << camera->get_application_fps() << std::endl;
+    if (frame_counter++ % 500 == 0)
+     std::cout << window->get_rendering_fps() << std::endl;
 
     window->process_events();
     if (window->should_close()) {

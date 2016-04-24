@@ -92,8 +92,8 @@ void main() {
   gua_roughness  = 1.0;
   gua_emissivity = 1.0; // pass through if unshaded
 
-  //@material_input@
-  //@material_method_calls_frag@
+  @material_input@
+  @material_method_calls_frag@
 
   out_accumulated_color  = vec3(weight * gua_color);
   out_accumulated_normal = vec3(weight * face_forward_normal);

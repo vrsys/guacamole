@@ -87,6 +87,7 @@ class GUA_DLL WindowBase {
     GUA_ADD_PROPERTY(math::vec2ui, left_position, math::vec2ui(0, 0));
     GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
     GUA_ADD_PROPERTY(math::vec2ui, right_position, math::vec2ui(0, 0));
+    GUA_ADD_PROPERTY(math::vec2i, window_position, math::vec2i(0, 0));
     GUA_ADD_PROPERTY(bool, fullscreen_mode, false);
     GUA_ADD_PROPERTY(bool, enable_vsync, true);
     GUA_ADD_PROPERTY(bool, debug, false);
@@ -138,9 +139,6 @@ class GUA_DLL WindowBase {
   virtual bool get_is_open() const = 0;
   virtual bool should_close() const = 0;
   virtual void close() = 0;
-
-  virtual void process_events() = 0;
-
   virtual void init_context();
   void destroy_context();
 
@@ -174,6 +172,8 @@ class GUA_DLL WindowBase {
   virtual void display(std::shared_ptr<Texture> const& center_texture,
                        bool is_left);
 
+  virtual void process_events() = 0;
+
   /**
    * Get the RenderContext of this window.
    *
@@ -190,7 +190,6 @@ class GUA_DLL WindowBase {
 protected:
 
   std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
-
 
   virtual void swap_buffers_impl() {};
 

@@ -89,7 +89,7 @@ namespace Resources {
   //////////////////////////////////////////////////////////////////////////////
 
   std::string lookup_string(std::vector<unsigned char> const& resource) {
-    return std::string(reinterpret_cast<char const*>(&resource[0]), resource.size());
+    return std::string(reinterpret_cast<char const*>(resource.data()), resource.size());
   }
 
   //////////////////////////////////////////////////////////////////////////////

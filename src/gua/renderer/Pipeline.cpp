@@ -634,7 +634,7 @@ void Pipeline::bind_gbuffer_input(
 
   shader->set_uniform(
       context_,
-      math::vec2i(gbuffer_->get_width(), gbuffer_->get_height()),
+      math::vec2ui(gbuffer_->get_width(), gbuffer_->get_height()),
       "gua_resolution");
 
   shader->set_uniform(context_,
