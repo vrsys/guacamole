@@ -79,7 +79,9 @@ void LodResource::draw(
     lamure::model_t model_id,
     scm::gl::vertex_array_ptr const& vertex_array,
     std::unordered_set<lamure::node_t> const& nodes_in_frustum,
-    scm::gl::primitive_topology const type ) const {
+    scm::gl::primitive_topology const type,
+    scm::math::mat4d model_view_matrix,
+    bool draw_sorted) const {
 
   lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
   lamure::ren::cut_database* cuts = lamure::ren::cut_database::get_instance();
@@ -96,17 +98,55 @@ void LodResource::draw(
   ctx.render_context->bind_vertex_array(vertex_array);
   ctx.render_context->apply();
   
- 
+if( draw_sorted ) {
+  //sorting BEGIN
+  std::vector<lamure::ren::cut::node_slot_aggregate> node_render_list;
 
+  node_render_list.reserve(nodes_in_frustum.size());
+ 
   for (const auto& n : node_list) {
-    //result inside vector means the node is out of frustum
     if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
+      node_render_list.push_back(n);
+    }
+  }
+  auto const & bounding_box_vector = bvh->get_bounding_boxes();
+
+  auto compute_dist = [](scm::math::vec3f const& v3, scm::math::vec4d const& v4) {
+      scm::math::vec3d dist_vec(double(v3[2]) - v4[2]);
+
+      return scm::math::length_sqr(dist_vec);
+  };
+
+  std::sort(node_render_list.begin(), node_render_list.end(), [&](lamure::ren::cut::node_slot_aggregate const & lhs,
+                                                                  lamure::ren::cut::node_slot_aggregate const & rhs) {
+                                                          
+    bool result = compute_dist(scm::math::vec3f(0), scm::math::vec4d(model_view_matrix *  scm::math::vec4d( scm::math::vec3d(bounding_box_vector[lhs.node_id_].center()) ,1.0)) ) <
+                 compute_dist(scm::math::vec3f(0), scm::math::vec4d(model_view_matrix *  scm::math::vec4d(scm::math::vec3d(bounding_box_vector[rhs.node_id_].center()),1.0) ) );
+
+    return  result;
+    } 
+  );
+
+  for (const auto& n : node_render_list) {
+    //result inside vector means the node is out of frustum
+    //if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
     
+      ctx.render_context->draw_arrays(type,
+                                      n.slot_id_ * primitives_per_node,
+                                      primitives_per_node_of_model);
+    //}
+  }
+
+} else {
+  for (const auto& n : node_list) {
+    if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
       ctx.render_context->draw_arrays(type,
                                       n.slot_id_ * primitives_per_node,
                                       primitives_per_node_of_model);
     }
   }
+
+}
 
 }
 
