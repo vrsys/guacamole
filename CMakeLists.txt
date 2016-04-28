@@ -108,12 +108,7 @@ mark_as_advanced(Boost_DIR)
 find_package( Boost 1.54.0 COMPONENTS
   system
   regex
-  thread
   filesystem
-  date_time
-  program_options
-  timer
-  chrono
   REQUIRED
   )
 
@@ -202,9 +197,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (UNIX)
-  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11")
+  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11 -Wall")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11 -Wall")
 elseif(MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D _USE_MATH_DEFINES -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
   set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D _USE_MATH_DEFINES /MDd /Zi /MP")
