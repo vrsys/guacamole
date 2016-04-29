@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
   gua::WindowDatabase::instance()->add("main_window", window);
   window->config.set_enable_vsync(false);
   window->config.set_fullscreen_mode(false);
-  window->open();
+  //window->open();
 #else
   auto window = std::make_shared<gua::OculusWindow>(":0.0");
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -226,6 +226,7 @@ int main(int argc, char** argv) {
       break;
     case '5': // alternate frame rendering
       pipeline_enable_alternate_frame_rendering = !pipeline_enable_alternate_frame_rendering;
+      std::cout << "pipeline_enable_alternate_frame_rendering maps = " << pipeline_enable_alternate_frame_rendering << std::endl;
       break;
     default: break;
     };

@@ -126,11 +126,14 @@ void Renderer::renderclient(Mailbox in) {
             cmd.serialized_cam->uuid);
 
         if (pipe_iter == window->get_context()->render_pipelines.end()) {
+
           pipe = std::make_shared<Pipeline>(
               *window->get_context(),
               cmd.serialized_cam->config.get_resolution());
+
           window->get_context()->render_pipelines.insert(
               std::make_pair(cmd.serialized_cam->uuid, pipe));
+
         } else {
           pipe = pipe_iter->second;
         }
@@ -151,11 +154,13 @@ void Renderer::renderclient(Mailbox in) {
             Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
             #endif
           } else {
+            // TODO: add alternate frame rendering here? -> take clear and render methods
             auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
             if (img) window->display(img, true);
             img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
             if (img) window->display(img, false);
           }
+          
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
                    *cmd.serialized_cam, *cmd.scene_graphs));
@@ -242,6 +247,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           if (window->get_context()->framecount == 0) {
             display_loading_screen(*window);
           }
+
 
           // make sure pipeline was created
           std::shared_ptr<Pipeline> pipe = nullptr;

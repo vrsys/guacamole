@@ -168,8 +168,6 @@ int main(int argc, char** argv) {
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add(window_name, window);
     set_window_default(window, cam_node->config.get_resolution());
-    window->open();
-
     cam_node->config.set_output_window_name(window_name);
   };
 
@@ -230,6 +228,23 @@ int main(int argc, char** argv) {
     }
     if (cnt == 30) {
       add_window("window4", cam4);
+    }
+
+    // GLFW only allows event processing from main thread
+    if (gua::WindowDatabase::instance()->lookup("window1")) {
+      gua::WindowDatabase::instance()->lookup("window1")->process_events();
+    }
+
+    if (gua::WindowDatabase::instance()->lookup("window2")) {
+      gua::WindowDatabase::instance()->lookup("window2")->process_events();
+    }
+
+    if (gua::WindowDatabase::instance()->lookup("window3")) {
+      gua::WindowDatabase::instance()->lookup("window3")->process_events();
+    }
+
+    if (gua::WindowDatabase::instance()->lookup("window4")) {
+      gua::WindowDatabase::instance()->lookup("window4")->process_events();
     }
 
     plate->translate(-plate->get_bounding_box().center());
