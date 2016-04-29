@@ -65,15 +65,7 @@ int main(int argc, char** argv) {
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
     "data/objects/pig_pr.bvh",
-    plod_rough,
-    gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
-
-
-  //load a sample pointcloud
-  auto plod_node = lod_loader.load_lod_pointcloud(
-    "pointcloud", 
-    "/opt/3d_models/point_based/plod/pig_pr.bvh",
-    lod_rough, 
+    lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
   //load a sample mesh-based lod model 
