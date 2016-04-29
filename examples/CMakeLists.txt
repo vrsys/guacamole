@@ -52,7 +52,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(tiled_shading_test)
     add_subdirectory(clipping)
   ENDIF (${GUACAMOLE_GLFW3})
-  add_subdirectory(screenshot)
 
   # skelanim example requires skelanim-plugin and the fbx sdk
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})

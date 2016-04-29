@@ -42,13 +42,25 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PLodPassDescription::PLodPassDescription()
-  : PipelinePassDescription()
+PLodPassDescription::PLodPassDescription(SurfelRenderMode const mode)
+  : PipelinePassDescription(),
+    surfel_render_mode_(mode)
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
   enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+PLodPassDescription& PLodPassDescription::mode(SurfelRenderMode const mode) {
+  surfel_render_mode_ = mode;
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+PLodPassDescription::SurfelRenderMode PLodPassDescription::mode() const {
+  return surfel_render_mode_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
