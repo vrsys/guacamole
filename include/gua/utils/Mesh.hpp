@@ -44,7 +44,7 @@ struct GUA_DLL Mesh {
   Mesh();
 
   Mesh(aiMesh const& mesh);
-  
+
 #ifdef GUACAMOLE_FBX
   Mesh(FbxMesh& mesh, int material_index = -1);
 #endif
@@ -62,7 +62,7 @@ struct GUA_DLL Mesh {
 
   /**
    * @brief writes vertex info to given buffer
-   * 
+   *
    * @param vertex_buffer buffer to write to
    */
   void copy_to_buffer(Vertex* vertex_buffer) const;
@@ -93,13 +93,12 @@ struct GUA_DLL Mesh {
      old_index{oindex},
      point{pt},
      normal{},
-     uv{},
      tangent{},
      bitangent{},
-     tris{}
-    {
-      tris.push_back(std::make_pair(tr, ind));
-    }
+     uv{},
+     tris{std::make_pair(tr, ind)}
+    {}
+
     unsigned old_index;
     unsigned point;
     scm::math::vec3f normal;
@@ -122,10 +121,10 @@ struct GUA_DLL Mesh {
   /**
    * @brief constructs this mesh from the given fbxmesh
    * @details if material index is given only triangles with this material are imported
-   * 
+   *
    * @param mesh mesh to convert
    * @param material_index material to filter with
-   * 
+   *
    * @return indices of triangles that were added to this mesh
    */
   std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
@@ -133,7 +132,7 @@ struct GUA_DLL Mesh {
   /**
    * @brief gets function to acces fbx vertex attribute
    * @details the returned function allows to acces a vertex attribute regardless of internal mapping
-   * 
+   *
    * @return access function
    */
   template<typename T>
