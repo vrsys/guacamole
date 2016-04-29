@@ -51,10 +51,6 @@ namespace gua {
 class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
  public:
 
-
-  static void initialize_oculus_environment();
-  static void shutdown_oculus_environment();
-
   OculusWindow(std::string const& display);
   virtual ~OculusWindow();
 
@@ -80,10 +76,9 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
 
   private:
 
+    void initialize_oculus_environment();
+    void shutdown_oculus_environment();
     void calculate_viewing_setup();
-
-    static bool oculus_environment_initialized_;
-    static unsigned registered_oculus_device_count_;
 
     std::string display_name_;
 
