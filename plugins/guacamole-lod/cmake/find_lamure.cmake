@@ -3,7 +3,7 @@
 ##############################################################################
 SET(LAMURE_INCLUDE_SEARCH_DIRS
   ${LAMURE_ROOT}/include
-  ${GLOBAL_EXT_DIR}/inc/pbr
+  ${GLOBAL_EXT_DIR}/lamure/include
   ${LAMURE_INCLUDE_SEARCH_DIR}
   ${LAMURE_ROOT}/include
   /usr/include
@@ -11,7 +11,7 @@ SET(LAMURE_INCLUDE_SEARCH_DIRS
 )
 
 SET(LAMURE_LIBRARY_SEARCH_DIRS
-  ${GLOBAL_EXT_DIR}/lib
+  ${GLOBAL_EXT_DIR}/lamure/lib
   ${LAMURE_LIBRARY_SEARCH_DIR}
   ${LAMURE_ROOT}/lib
   /usr/lib

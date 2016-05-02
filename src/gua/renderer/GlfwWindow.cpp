@@ -100,7 +100,8 @@ void on_window_enter(GLFWwindow* glfw_window, int enter) {
 GlfwWindow::GlfwWindow(Configuration const& configuration)
   : WindowBase(configuration),
     glfw_window_(nullptr),
-    cursor_mode_{CursorMode::NORMAL} {}
+    cursor_mode_{CursorMode::NORMAL} 
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 

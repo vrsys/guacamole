@@ -14,7 +14,7 @@ INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
                      ${GUACAMOLE_SOURCE_DIR}/include
                      ${OVR_INCLUDE_DIR} 
                      ${GUACAMOLE_OCULUS_INCLUDE_DIR}
-                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
+                     ${GUACAMOLE_LOD_INCLUDE_DIR}
 )
 
 ADD_EXECUTABLE( ${_EXE_NAME}
@@ -35,7 +35,7 @@ ELSEIF (UNIX)
                        )
 ENDIF (MSVC)
 
-target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-PLOD guacamole-oculus)
+target_link_libraries( ${_EXE_NAME} ${LIBS} guacamole-LOD guacamole-oculus)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
