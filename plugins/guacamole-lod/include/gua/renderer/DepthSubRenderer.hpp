@@ -34,7 +34,7 @@
 
   class PLodSubRenderer;
 
-  class GUA_DLL DepthSubRenderer : public PLodSubRenderer {
+  class GUA_LOD_DLL DepthSubRenderer : public PLodSubRenderer {
 
   public:
   	DepthSubRenderer();

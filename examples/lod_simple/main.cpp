@@ -60,13 +60,12 @@ int main(int argc, char** argv) {
   lod_loader.set_out_of_core_budget_in_mb(512);
   lod_loader.set_render_budget_in_mb(512);
   lod_loader.set_upload_budget_in_mb(20);
-
-
+#if WIN32
   //load a sample pointcloud
   auto plod_node = lod_loader.load_lod_pointcloud(
-    "pointcloud", 
-    "/opt/3d_models/point_based/plod/pig_pr.bvh",
-    lod_rough, 
+    "pointcloud",
+    "data/objects/pig_pr.bvh",
+    lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
   //load a sample mesh-based lod model 
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
     //plod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE/* | gua::LodLoader::MAKE_PICKABLE*/
   );
-
+#endif
   mlod_node->set_error_threshold(0.25);
 
   //setup scenegraph

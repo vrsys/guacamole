@@ -96,8 +96,10 @@ struct GUA_DLL Mesh {
      tangent{},
      bitangent{},
      uv{},
-     tris{std::make_pair(tr, ind)}
-    {}
+     tris{}
+    {
+      tris.push_back(std::make_pair(tr, ind));
+    }
 
     unsigned old_index;
     unsigned point;
