@@ -60,11 +60,11 @@ int main(int argc, char** argv) {
   lod_loader.set_out_of_core_budget_in_mb(512);
   lod_loader.set_render_budget_in_mb(512);
   lod_loader.set_upload_budget_in_mb(20);
-#if WIN32
+
   //load a sample pointcloud
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
-    "data/objects/pig_pr.bvh",
+    "/opt/3d_models/lamure/plod/pig_pr.bvh",
     lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     //plod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE/* | gua::LodLoader::MAKE_PICKABLE*/
   );
-#endif
+
   mlod_node->set_error_threshold(0.25);
 
   //setup scenegraph
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
   window->open();
 
   gua::Renderer renderer;
-  bool bla = true;
+
   //application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
