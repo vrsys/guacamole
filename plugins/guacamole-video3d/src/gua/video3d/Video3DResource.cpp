@@ -84,6 +84,16 @@ void Video3DResource::init() {
       } else if (token == "kinect") {
         istr >> token;
         std::string cf_absolute_path = ks_dir.string() + "/" + token;
+        // detect absolute paths on win/unix
+        #ifdef _WIN32
+        if(token[1] == ':') {
+          cf_absolute_path = token;
+        }
+        #else
+        if(token[0] == '/') {
+          cf_absolute_path = token;
+        }
+        #endif
 
         auto calib_file_ptr =
             std::make_shared<KinectCalibrationFile>(cf_absolute_path.c_str());
