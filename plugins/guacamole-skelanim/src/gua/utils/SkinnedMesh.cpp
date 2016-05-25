@@ -164,9 +164,9 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 }
 
 void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer,
-  unsigned resource_offset) const {
-  unsigned bone_offset{ resource_offset }
-  ;
+  unsigned resource_offset_bytes) const {
+  unsigned bone_offset = resource_offset_bytes / sizeof(unsigned);
+
   for (unsigned v(0); v < num_vertices; ++v) {
 
     vertex_buffer[v].pos = positions[v];
@@ -188,13 +188,14 @@ void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer,
 }
 
 scm::gl::vertex_format SkinnedMesh::get_vertex_format() const {
-  return scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-      0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
-      0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-      0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-      0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-      0, 5, scm::gl::TYPE_UINT, sizeof(Vertex))(
-      0, 6, scm::gl::TYPE_UINT, sizeof(Vertex));
+  return scm::gl::vertex_format(
+    0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(
+    0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 5, scm::gl::TYPE_UINT, sizeof(Vertex))(
+    0, 6, scm::gl::TYPE_UINT, sizeof(Vertex));
 }
 
 std::vector<unsigned> const& SkinnedMesh::get_bone_ids() const { return bone_ids; }

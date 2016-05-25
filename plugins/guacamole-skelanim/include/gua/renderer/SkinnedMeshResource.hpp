@@ -54,7 +54,7 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
   struct SharedBoneResource {
     scm::gl::buffer_ptr bone_ids_;
     scm::gl::buffer_ptr bone_weights_;
-    size_t offset = 0;
+    size_t offset_bytes = 0;
   };
 
   /**
@@ -113,6 +113,7 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
 
   SkinnedMesh mesh_;
   std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
+  std::shared_ptr<SharedBoneResource> m_shared_res_ptr;
 
  // public:
  //  KDTree kd_tree_;
