@@ -106,9 +106,10 @@ endif (UNIX)
 mark_as_advanced(Boost_DIR)
 
 find_package( Boost 1.54.0 COMPONENTS
-  system
-  regex
+  chrono
   filesystem
+  regex
+  system
   REQUIRED
   )
 

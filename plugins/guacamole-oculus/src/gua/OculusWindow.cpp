@@ -292,12 +292,12 @@ void OculusWindow::initialize_oculus_environment()
     color_layer_.Fov[1] = eyeRenderDesc[1].Fov;
 
     ovrRecti left_viewport;
-    left_viewport.Size = { config.left_resolution().x, config.left_resolution().y };
-    left_viewport.Pos = { config.left_position().x, config.left_position().y };
+    left_viewport.Size = { int(config.left_resolution().x), int(config.left_resolution().y) };
+    left_viewport.Pos = { int(config.left_position().x), int(config.left_position().y) };
 
     ovrRecti right_viewport;
-    right_viewport.Size = { config.right_resolution().x, config.right_resolution().y };
-    right_viewport.Pos = { config.right_position().x, config.right_position().y };
+    right_viewport.Size = { int(config.right_resolution().x), int(config.right_resolution().y) };
+    right_viewport.Pos = { int(config.right_position().x), int(config.right_position().y) };
 
     color_layer_.Viewport[0] = left_viewport;
     color_layer_.Viewport[1] = right_viewport;
