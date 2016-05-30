@@ -221,6 +221,11 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
 
           bones_block_.update(ctx.render_context,
                               skel_anim_node->get_bone_transforms());
+          // upload data if necessary
+          auto iter = ctx.meshes.find(geometries[i]->uuid());
+          if (iter == ctx.meshes.end()) {
+            geometries[i]->upload_to(ctx, skinning_resource_);
+          }
 
           geometries[i]->draw(ctx);
         }
