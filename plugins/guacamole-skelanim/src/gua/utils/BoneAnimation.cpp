@@ -133,7 +133,7 @@ namespace gua {
     if (last_index == -1) {
       return keys[0].value;
     }
-    else if (last_index == keys.size() - 1) {
+    else if (last_index == int(keys.size()) - 1) {
       return keys.back().value;
     }
 
