@@ -1,0 +1,57 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+
+      float gua_my_atan2(float a, float b) {
+        return 2.0 * atan(a/(sqrt(b*b + a*a) + b));
+      }
+
+        vec3 get_reflection() {
+          vec3 pos = gua_world_position;
+          vec3 view = normalize(pos - gua_camera_position);
+
+          if (dot(gua_normal, view) > 0) {
+            discard;
+          }
+
+          view = reflect(view, gua_normal);
+          const float pi = 3.14159265359;
+          float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
+          float y = 1.0 - acos(view.y)/pi;
+          vec2 texcoord = vec2(x, y);
+          return texture(sampler2D(ReflectionMap), texcoord).xyz * 2 * (1-0.8*dot(view, gua_normal));
+        }
+
+        // color generation ----------------------------------------------------
+        void FragmentColor() {
+
+          vec3 reflection = get_reflection();
+          float maxi = max(max(reflection.r, reflection.g), reflection.b);
+          float mini = min(min(reflection.r, reflection.g), reflection.b);
+          float saturation = pow(maxi - mini, 0.4);
+          vec4 color = vec4(0.25, 0.3, 0.25, 0.3) + vec4(reflection, min(maxi * (1-saturation), 0.6));
+
+          gua_alpha = color.a;
+
+          gua_color = color.rgb;
+          gua_metalness = 0.0;
+          gua_emissivity = 0.0;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "ReflectionMap",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    }
+  ]
+}
