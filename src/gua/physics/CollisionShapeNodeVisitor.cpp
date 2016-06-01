@@ -35,22 +35,10 @@
 namespace gua {
 namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
-
 CollisionShapeNodeVisitor::CollisionShapeNodeVisitor()
-    : rigid_body_(nullptr),
-      last_depth_(0),
-      resync_(false),
-      shape_index_(0) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CollisionShapeNodeVisitor::~CollisionShapeNodeVisitor() {}
-
-////////////////////////////////////////////////////////////////////////////////
+    : rigid_body_(nullptr), last_depth_(0), resync_(false), shape_index_(0) {}
 
 void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
-
   rigid_body_ = rigid_body;
   rigid_body_->set_dirty();
 
@@ -76,8 +64,6 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
     rigid_body_->sync_shapes();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 /* virtual */ void CollisionShapeNodeVisitor::visit(RigidBodyNode* node) {
 
   if (node != rigid_body_) {
@@ -88,8 +74,6 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
       child->accept(*this);
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void CollisionShapeNodeVisitor::visit(CollisionShapeNode* node) {
 
@@ -106,7 +90,8 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
     resync_ = true;
   }
   if (sh.shape_name != node->data.get_shape()) {
-    sh.shape = CollisionShapeDatabase::instance()->lookup(node->data.get_shape());
+    sh.shape =
+        CollisionShapeDatabase::instance()->lookup(node->data.get_shape());
     sh.shape_name = node->data.get_shape();
     resync_ = true;
   }
@@ -121,8 +106,6 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void CollisionShapeNodeVisitor::generic_visit(node::Node* node) {
 
   pop_stack(node);
@@ -136,15 +119,11 @@ void CollisionShapeNodeVisitor::generic_visit(node::Node* node) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void CollisionShapeNodeVisitor::push_stack(math::mat4 const& current_matrix) {
 
   matrix_stack_.push(current_matrix);
   ++last_depth_;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 void CollisionShapeNodeVisitor::pop_stack(node::Node* new_node) {
 
@@ -156,7 +135,5 @@ void CollisionShapeNodeVisitor::pop_stack(node::Node* new_node) {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
+}  // namespace physics
 }  // namespace gua
-}

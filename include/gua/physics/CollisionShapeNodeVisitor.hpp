@@ -58,13 +58,6 @@ class CollisionShapeNodeVisitor : public NodeVisitor {
   CollisionShapeNodeVisitor();
 
   /**
-   * Destructor.
-   *
-   * This destroys an CollisionShapeNodeVisitor.
-   */
-  virtual ~CollisionShapeNodeVisitor();
-
-  /**
    * Synchronizes collision shapes associated with the given
    *        rigid body.
    *
