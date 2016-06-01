@@ -55,14 +55,17 @@ RigidBodyNode::RigidBodyNode(const std::string& name,
                              float friction,
                              float restitution,
                              const math::mat4& transform)
-    : node::Node(name, transform),
+    : node::TransformNode(name, transform),
       ph_(nullptr),
+      body_(nullptr),
+      motion_state_(new GuaMotionState(math::mat4_to_btTransform(transform))),
       mass_(mass),
-      inertia_(btVector3(1, 1, 1)) {
-    bullet_empty_shape_ = new btEmptyShape();
-    bullet_compound_shape_ = nullptr;
-
-    motion_state_ = new GuaMotionState(math::mat4_to_btTransform(transform));
+      inertia_(btVector3(1, 1, 1)),
+      shapes_(),
+      bullet_compound_shape_(nullptr),
+      bullet_empty_shape_(new btEmptyShape()),
+      last_body_transform_()
+  {
     btRigidBody::btRigidBodyConstructionInfo body_ci(
         mass_, motion_state_, bullet_empty_shape_, inertia_);
     body_ci.m_friction = friction;
@@ -389,7 +392,7 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
 }
 
 std::shared_ptr<node::Node> RigidBodyNode::copy() const {
-    return std::make_shared<node::TransformNode>(get_name(), get_transform());
+  return std::make_shared<TransformNode>(*this);
 }
 
 }
