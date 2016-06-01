@@ -72,12 +72,6 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  auto teapot(loader.create_geometry_from_file(
-      "teapot", "data/objects/teapot.obj",
-      gua::TriMeshLoader::NORMALIZE_POSITION |
-          gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/transform", teapot);
-
   auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
   light->data.set_type(gua::node::LightNode::Type::POINT);
   light->data.brightness = 150.0f;
@@ -86,7 +80,7 @@ int main(int argc, char** argv) {
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
+  screen->translate(0, 2, 1.0);
 
   // PLANE
   auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
@@ -120,7 +114,7 @@ int main(int argc, char** argv) {
   floor_body->add_child(floor_shape);
   physics->add_rigid_body(floor_body);
 
-  std::list<std::shared_ptr<gua::physics::RigidBodyNode>> balls;
+  std::vector<std::shared_ptr<gua::physics::RigidBodyNode>> balls;
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -193,6 +187,16 @@ int main(int argc, char** argv) {
   gua::Timer frame_timer;
   frame_timer.start();
 
+  auto too_old = [physics, transform](std::shared_ptr<gua::physics::RigidBodyNode> const& b) {
+    if (gua::math::get_translation(b->get_transform()).y < -5.0) {
+      physics->remove_rigid_body(b);
+      transform->remove_child(b);
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
@@ -208,16 +212,7 @@ int main(int argc, char** argv) {
       add_sphere();
     }
 
-    auto b(balls.begin());
-    while (b != balls.end()) {
-      if ((*b)->get_world_position().y < -5.0) {
-        physics->remove_rigid_body(*b);
-        transform->remove_child(*b);
-        b = balls.erase(b);
-      } else {
-        ++b;
-      }
-    }
+    balls.erase( std::remove_if(balls.begin(), balls.end(), too_old), balls.end() );
 
     physics->synchronize(true);
 
