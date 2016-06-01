@@ -8,24 +8,13 @@ file(GLOB_RECURSE GUACAMOLE_VOLUME_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     include/*.hpp
 )
 
-SET(GUACAMOLE_VOLUME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-volume includes.")
+set(GUACAMOLE_VOLUME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-volume includes.")
 
-LINK_DIRECTORIES(${LIB_PATHS})
+add_library( guacamole-volume SHARED ${GUACAMOLE_VOLUME_SRC})
 
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_VOLUME_INCLUDE_DIR}
-)
+target_include_directories(guacamole-volume PUBLIC ${GUACAMOLE_VOLUME_INCLUDE_DIR})
 
-ADD_LIBRARY( guacamole-volume SHARED
-    ${GUACAMOLE_VOLUME_SRC}
-)
-
-TARGET_LINK_LIBRARIES( guacamole-volume
-                       guacamole
-                       general ${GL_LIBRARIES})
-
-ADD_DEPENDENCIES(guacamole-volume guacamole)
+target_link_libraries( guacamole-volume guacamole)
 
 IF (MSVC)
 	set_target_properties(guacamole-volume PROPERTIES COMPILE_FLAGS "-D GUA_VOLUME_LIBRARY")

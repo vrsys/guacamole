@@ -12,17 +12,14 @@ SET(GUACAMOLE_OCULUS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTER
 
 LINK_DIRECTORIES(${LIB_PATHS} ${OVR_LIBRARY_DIRS})
 
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-		     ${GUACAMOLE_SOURCE_DIR}
-		     ${OVR_INCLUDE_DIR}
-		     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
-)
-
-ADD_LIBRARY( guacamole-oculus SHARED
+add_library( guacamole-oculus SHARED
     ${GUACAMOLE_OCULUS_SRC}
 )
 
-ADD_DEPENDENCIES(guacamole-oculus guacamole)
+target_include_directories(guacamole-oculus PUBLIC
+		     ${OVR_INCLUDE_DIR}
+		     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
+)
 
 IF (MSVC)
   set_target_properties(guacamole-oculus PROPERTIES COMPILE_FLAGS "-D GUA_OCULUS_LIBRARY")
