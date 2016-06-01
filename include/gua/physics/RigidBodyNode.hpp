@@ -27,6 +27,7 @@
 #include <gua/node/TransformNode.hpp>
 
 // external headers
+#include <memory>
 #include <vector>
 #include <btBulletDynamicsCommon.h>
 
@@ -361,7 +362,7 @@ class GUA_DLL RigidBodyNode : public node::TransformNode {
 
   Physics* ph_;
   btRigidBody* body_;
-  GuaMotionState* motion_state_;
+  std::shared_ptr<GuaMotionState> motion_state_;
   btScalar mass_;
   btVector3 inertia_;
 
