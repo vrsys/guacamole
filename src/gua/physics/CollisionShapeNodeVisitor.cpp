@@ -52,6 +52,7 @@ CollisionShapeNodeVisitor::~CollisionShapeNodeVisitor() {}
 void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
 
   rigid_body_ = rigid_body;
+  rigid_body_->set_dirty();
 
   // clear matrix stack
   while (!matrix_stack_.empty())
@@ -91,7 +92,7 @@ void CollisionShapeNodeVisitor::check(RigidBodyNode* rigid_body) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void CollisionShapeNodeVisitor::visit(CollisionShapeNode* node) {
-  
+
   pop_stack(node);
   math::mat4 curr_matrix(matrix_stack_.top() * node->get_transform());
 
