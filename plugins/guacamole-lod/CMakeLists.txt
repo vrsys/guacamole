@@ -27,15 +27,7 @@ SOURCE_GROUP("resources" FILES ${GUA_LOD_SHADERS})
 
 SET(GUACAMOLE_LOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-lod includes." )
 
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_LOD_INCLUDE_DIR}
-                     ${LAMURE_INCLUDE_DIRS}
-)
-
-ADD_LIBRARY( guacamole-lod SHARED
+add_library( guacamole-lod SHARED
     ${GUA_LOD_NODE_SRC}
     ${GUA_LOD_NODE_INC}
     ${GUA_LOD_RENDERER_SRC}
@@ -45,8 +37,10 @@ ADD_LIBRARY( guacamole-lod SHARED
     ${GUA_LOD_SHADERS}
 )
 
-ADD_DEPENDENCIES( guacamole-lod guacamole)
-
+target_include_directories(guacamole-lod PUBLIC
+                     ${GUACAMOLE_LOD_INCLUDE_DIR}
+                     ${LAMURE_INCLUDE_DIRS}
+)
 #find_package(LOD REQUIRED)
 
 ###############################################################################

@@ -27,15 +27,7 @@ SOURCE_GROUP("resources" FILES ${GUA_PLOD_SHADERS})
 
 SET(GUACAMOLE_PLOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-PLOD includes." )
 
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${PBR_INCLUDE_DIRS}
-)
-
-ADD_LIBRARY( guacamole-PLOD SHARED
+add_library( guacamole-PLOD SHARED
     ${GUA_PLOD_NODE_SRC}
     ${GUA_PLOD_NODE_INC}
     ${GUA_PLOD_RENDERER_SRC}
@@ -45,7 +37,10 @@ ADD_LIBRARY( guacamole-PLOD SHARED
     ${GUA_PLOD_SHADERS}
 )
 
-ADD_DEPENDENCIES(guacamole-PLOD guacamole)
+target_include_directories(guacamole-PLOD PUBLIC
+                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
+                     ${PBR_INCLUDE_DIRS}
+)
 
 LIST(APPEND LIB_PATHS ${PROTOBUF_LIBRARY_DIRS})
 LIST(APPEND INCLUDE_PATHS ${PROTOBUF_INCLUDE_DIRS})

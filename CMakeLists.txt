@@ -4,7 +4,7 @@
 
 PROJECT(GUACAMOLE CXX)
 
-# neccessary for try_compile_scripts under linux
+# neccessary for try_compile_scripts under liunx
 ENABLE_LANGUAGE(C)
 
 # version number
@@ -170,12 +170,15 @@ set(LIB_PATHS
     ${ZMQ_LIBRARY_DIRS}
     ${X11_LIBRARY_DIRS}
 )
+LINK_DIRECTORIES(${LIB_PATHS})
 
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/externals
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
+)
+set(INCLUDE_PATHS_EXTERNAL
     ${SCHISM_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
