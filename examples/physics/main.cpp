@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
   if (casted) {
     casted->get_material()->set_show_back_faces(true);
-    casted->get_material()->set_uniform("Metalness", 0.1f);
+    casted->get_material()->set_uniform("Metalness", 0.0f);
     casted->get_material()->set_uniform("Roughness", 0.5f);
     casted->get_material()->set_uniform("RoughnessMap", std::string("data/textures/tiles_specular.jpg"));
     casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
