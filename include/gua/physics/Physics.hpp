@@ -70,6 +70,7 @@ class Constraint;
 class GUA_DLL Physics {
 public:
 
+    Physics();
     /**
      * Constructor.
      *
@@ -79,8 +80,7 @@ public:
      * \param fixed_timestep Fixed internal timestep in seconds. See
      *                       set_fixed_timestep() description for more details.
      */
-    Physics(float gravity = physics_default_gravity,
-            float fixed_timestep = physics_default_fixed_timestep);
+    Physics(float gravity, float fixed_timestep);
 
     /**
      * Destructor.
@@ -278,8 +278,10 @@ public:
     ///@}
 
 // No copying construction. No assignment.
-    Physics(const Physics& other) = delete;
+    Physics(const Physics&) = delete;
+    Physics(Physics&&) = delete;
     Physics& operator=(const Physics&) = delete;
+    Physics& operator=(Physics&&) = delete;
 
 private:
 
@@ -301,7 +303,7 @@ private:
 
     SpinLock pause_mutex_;
 
-    std::thread* thread_;
+    std::thread* thread_ = nullptr;
     std::atomic<bool> is_stopped_;
 
     float fixed_timestep_;
@@ -316,11 +318,11 @@ private:
     std::mutex call_once_queue_mutex_;
 
     // Bullet's objects
-    btDynamicsWorld* dw_;
-    btBroadphaseInterface* broadphase_;
-    btDefaultCollisionConfiguration* collision_configuration_;
-    btCollisionDispatcher* dispatcher_;
-    btSequentialImpulseConstraintSolver* solver_;
+    btBroadphaseInterface* broadphase_ = nullptr;
+    btDefaultCollisionConfiguration* collision_configuration_ = nullptr;
+    btCollisionDispatcher* dispatcher_ = nullptr;
+    btSequentialImpulseConstraintSolver* solver_ = nullptr;
+    btDynamicsWorld* dw_ = nullptr;
     std::vector<std::shared_ptr<RigidBodyNode>> rigid_bodies_;
     std::vector<Constraint*> constraints_;
 

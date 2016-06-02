@@ -49,6 +49,27 @@ namespace gua {
 namespace physics {
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+RigidBodyNode::RigidBodyNode()
+    : node::TransformNode(),
+      ph_(nullptr),
+      body_(nullptr),
+      motion_state_(std::make_shared<GuaMotionState>()),
+      mass_(1),
+      inertia_(btVector3(1, 1, 1)),
+      shapes_(),
+      bullet_compound_shape_(nullptr),
+      bullet_empty_shape_(new btEmptyShape()),
+      last_body_transform_() {
+  btRigidBody::btRigidBodyConstructionInfo body_ci(
+      mass_, motion_state_.get(), bullet_empty_shape_, inertia_);
+  body_ci.m_friction = friction;
+  body_ci.m_restitution = restitution;
+
+  body_ = new btRigidBody(body_ci);
+  body_->setActivationState(DISABLE_DEACTIVATION);
+}
+*/
 
 RigidBodyNode::RigidBodyNode(const std::string& name,
                              float mass,
@@ -315,7 +336,7 @@ math::vec3 RigidBodyNode::linear_velocity() const {
 
 void RigidBodyNode::sync_shapes(bool do_not_lock) {
   has_static_shapes_ = false;
-  if (!shapes_.size()) {
+  if (shapes_.empty()) {
     if (body_->getCollisionShape() != bullet_empty_shape_) {
       CONDITION_LOCK(ph_ && !do_not_lock, ph_->lock());
       body_->setCollisionShape(bullet_empty_shape_);
@@ -323,7 +344,7 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
   } else {
     if (body_->isStaticObject()) {  //Static rigid body shape construction
 
-      if (shapes_.size() == 1 && shapes_[0].shape->is_static_shape()) {
+      if (shapes_.size() == 1 && shapes_[0].shape && shapes_[0].shape->is_static_shape()) {
         //Rigid body has only one collision shape
         //
         //TODO: Implement offset transform for static rigid bodies.
@@ -340,12 +361,15 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
         //it cannot be static
         auto cs = new btCompoundShape();
         for (auto sh : shapes_) {
-          if (sh.shape->is_static_shape()) {
+          if (sh.shape == nullptr) {
+            std::cerr << "RigidBodyNode::sync_shapes 365 ERROR sh.shape == nullptr" << std::endl;
+          }
+          if (sh.shape && sh.shape->is_static_shape()) {
             cs->addChildShape(math::mat4_to_btTransform(sh.transform),
                               sh.shape->construct_static());
             if (!sh.shape->has_identical_shape_constructor())
               has_static_shapes_ = true;
-          } else if (sh.shape->is_dynamic_shape())
+          } else if (sh.shape && sh.shape->is_dynamic_shape())
             sh.shape->construct_dynamic(
                 cs, math::mat4_to_btTransform(sh.transform));
         }
@@ -367,9 +391,13 @@ void RigidBodyNode::sync_shapes(bool do_not_lock) {
       auto cs = new btCompoundShape();
 
       for (auto sh : shapes_) {
-        if (sh.shape->is_dynamic_shape())
+        if (sh.shape == nullptr) {
+          std::cerr << "gua::RigidBodyNode::sync_shapes 395 ERROR sh.shape == nullptr" << std::endl;
+        }
+        if (sh.shape && sh.shape->is_dynamic_shape()) {
           sh.shape
               ->construct_dynamic(cs, math::mat4_to_btTransform(sh.transform));
+        }
       }
       cs->calculateLocalInertia(mass_, inertia_);
       body_->setMassProps(mass_, inertia_);

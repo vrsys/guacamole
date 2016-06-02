@@ -336,12 +336,16 @@ class GUA_DLL RigidBodyNode : public node::TransformNode {
   ///@}
 
   // No copying construction. No assignment.
-  RigidBodyNode(const RigidBodyNode& other) = delete;
+  RigidBodyNode() = delete;
+  RigidBodyNode(const RigidBodyNode& ) = delete;
+  RigidBodyNode(RigidBodyNode&& ) = delete;
   RigidBodyNode& operator=(const RigidBodyNode&) = delete;
+  RigidBodyNode& operator=(RigidBodyNode&&) = delete;
 
  private:
 
   struct ShapeElement {
+    ShapeElement() : transform(), shape_name(""), shape(nullptr) {}
     math::mat4 transform;
     std::string shape_name;
     std::shared_ptr<CollisionShape> shape;
@@ -360,17 +364,17 @@ class GUA_DLL RigidBodyNode : public node::TransformNode {
   // the type of the body changes.
   bool has_static_shapes_;
 
-  Physics* ph_;
-  btRigidBody* body_;
-  std::shared_ptr<GuaMotionState> motion_state_;
+  Physics* ph_ = nullptr;
+  btRigidBody* body_ = nullptr;
+  std::shared_ptr<GuaMotionState> motion_state_ = nullptr;
   btScalar mass_;
   btVector3 inertia_;
 
   // the list of shapes obtained from the scene graph.
   std::vector<ShapeElement> shapes_;
 
-  btCompoundShape* bullet_compound_shape_;
-  btEmptyShape* bullet_empty_shape_;
+  btCompoundShape* bullet_compound_shape_ = nullptr;
+  btEmptyShape* bullet_empty_shape_ = nullptr;
 
   // stores last transform acquired by get_transform(). Useful for checking
   // whether bounding boxes needs to be updated.
