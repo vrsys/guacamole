@@ -41,7 +41,10 @@ IF (MSVC)
 
   set(ZMQ_LIBRARY_NAME "libzmq-v${COMPILER_SUFFIX_VERSION}-mt-${_ZMQ_MAJOR_VERSION}_${_ZMQ_MINOR_VERSION}_${_ZMQ_PATCH_VERSION}.lib")
   set(ZMQ_LIBRARY_NAME_DEBUG "libzmq-v${COMPILER_SUFFIX_VERSION}-mt-gd-${_ZMQ_MAJOR_VERSION}_${_ZMQ_MINOR_VERSION}_${_ZMQ_PATCH_VERSION}.lib")
-
+ 
+  message(${ZMQ_LIBRARY_NAME})
+  message(${ZMQ_LIBRARY_NAME_DEBUG})
+ 
   find_library (ZMQ_LIBRARY
                   NAMES ${ZMQ_LIBRARY_NAME} libzmq
                   PATH_SUFFIXES release
