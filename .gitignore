@@ -54,4 +54,5 @@ examples/smooth_lighting/example-smooth_lighting
 examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/animation/example-animation
+examples/physics/example-physics
 install

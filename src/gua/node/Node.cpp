@@ -60,9 +60,9 @@ void Node::update_cache() {
     math::mat4 old_world_trans(world_transform_);
 
     if (is_root()) {
-      world_transform_ = transform_;
+      world_transform_ = get_transform(); // transform_;
     } else {
-      world_transform_ = parent_->world_transform_ * transform_;
+      world_transform_ = parent_->world_transform_ * get_transform(); // transform_;
     }
 
     if (world_transform_ != old_world_trans) {

@@ -23,7 +23,7 @@
 #define GUA_COLLISION_SHAPE_NODE_HPP
 
 #include <gua/platform.hpp>
-#include <gua/node/Node.hpp>
+#include <gua/node/TransformNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
 /**
@@ -34,7 +34,7 @@
 namespace gua {
 namespace physics {
 
-class GUA_DLL CollisionShapeNode : public node::Node {
+class GUA_DLL CollisionShapeNode : public node::TransformNode {
  public:
 
   struct Configuration {
@@ -53,13 +53,6 @@ class GUA_DLL CollisionShapeNode : public node::Node {
    */
   CollisionShapeNode(const std::string& name,
                      const math::mat4& transform = math::mat4::identity());
-
-  /**
-   * Destructor.
-   *
-   * This destructs a CollisionShapeNode.
-   */
-  virtual ~CollisionShapeNode();
 
   /**
    * Accepts a visitor and calls concrete visit method
