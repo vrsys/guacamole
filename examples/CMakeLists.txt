@@ -103,4 +103,6 @@ IF (GUACAMOLE_EXAMPLES)
       add_subdirectory(video3d)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
+  add_subdirectory(physics)
+
 ENDIF (GUACAMOLE_EXAMPLES)

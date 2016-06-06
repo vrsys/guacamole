@@ -45,24 +45,61 @@ namespace chrono = std::chrono;
 namespace gua {
 namespace physics {
 
+Physics::Physics()
+    : simulation_mutex_()
+    , start_stop_mutex_()
+    , motion_state_update_mutex_()
+    , pause_mutex_()
+    , thread_(nullptr)
+    , is_stopped_(true)
+    , fixed_timestep_(physics_default_fixed_timestep)
+    , reduce_sim_rate_(physics_default_reduce_sim_rate)
+    , max_sim_time_(chrono::microseconds(physics_default_max_sim_time))
+    , shape_visitor_()
+    , call_once_queue_()
+    , call_once_queue_mutex_()
+    , broadphase_(new btDbvtBroadphase())
+    , collision_configuration_(new btDefaultCollisionConfiguration())
+    , dispatcher_(new btCollisionDispatcher(collision_configuration_))
+    , solver_(new btSequentialImpulseConstraintSolver())
+    , dw_(new btDiscreteDynamicsWorld(
+        dispatcher_, broadphase_, solver_, collision_configuration_))
+    , rigid_bodies_()
+    , constraints_()
+    , physics_fps_(0.0f)
+  {
+    if (dw_)
+      dw_->setGravity(btVector3(0, physics_default_gravity, 0));
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Physics::Physics(float gravity, float fixed_timestep)
-    : fixed_timestep_(fixed_timestep),
-      reduce_sim_rate_(physics_default_reduce_sim_rate),
-      max_sim_time_(chrono::microseconds(physics_default_max_sim_time)) {
-
-    is_stopped_.store(true);
-    //physics_fps_.store(0.f);
-    physics_fps_ = 0.f;
-
-    broadphase_ = new btDbvtBroadphase();
-    collision_configuration_ = new btDefaultCollisionConfiguration();
-    dispatcher_ = new btCollisionDispatcher(collision_configuration_);
-    solver_ = new btSequentialImpulseConstraintSolver();
-    dw_ = new btDiscreteDynamicsWorld(
-        dispatcher_, broadphase_, solver_, collision_configuration_);
-    dw_->setGravity(btVector3(0, gravity, 0));
+    : simulation_mutex_()
+    , start_stop_mutex_()
+    , motion_state_update_mutex_()
+    , pause_mutex_()
+    , thread_(nullptr)
+    , is_stopped_(true)
+    , fixed_timestep_(fixed_timestep)
+    , reduce_sim_rate_(physics_default_reduce_sim_rate)
+    , max_sim_time_(chrono::microseconds(physics_default_max_sim_time))
+    , shape_visitor_()
+    , call_once_queue_()
+    , call_once_queue_mutex_()
+    , broadphase_(new btDbvtBroadphase())
+    , collision_configuration_(new btDefaultCollisionConfiguration())
+    , dispatcher_(new btCollisionDispatcher(collision_configuration_))
+    , solver_(new btSequentialImpulseConstraintSolver())
+    , dw_(new btDiscreteDynamicsWorld(
+        dispatcher_, broadphase_, solver_, collision_configuration_))
+    , rigid_bodies_()
+    , constraints_()
+    , physics_fps_(0.0f)
+  {
+    if (dw_)
+      dw_->setGravity(btVector3(0, gravity, 0));
 
     // Collision calback example
     /*
