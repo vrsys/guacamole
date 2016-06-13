@@ -29,7 +29,6 @@ before_install:
   #- sudo ln -s /usr/local/cuda-6.0 /opt/cuda/current/cuda
 
   # build schism
-  - mkdir -p externals
   - cd externals/
   - git clone https://github.com/chrislu/schism.git schism
   - cd schism/build && mkdir build && cd build
