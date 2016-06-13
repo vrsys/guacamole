@@ -1,49 +1,9 @@
 # guacamole examples
-
-set(LIB_PATH
-  ${PROJECT_SOURCE_DIR}/lib
-  ${SCHISM_LIBRARY_DIRS}
-  ${Boost_LIBRARY_DIRS}
-  ${BULLET_LIBRARY_DIRS}
-  ${GUACAMOLE_LIBRARY_DIRS}
-  ${ASSIMP_LIBRARY_DIRS}
-  ${FBX_LIBRARY_DIRS}
-  ${JSON_LIBRARY_DIRS}
-  )
-link_directories(${LIB_PATH})
-
-set(LIBS
-  ${SCHISM_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${BULLET_LIBRARIES}
-  ${GUACAMOLE_LIBRARIES}
-  ${FBX_LIBRARIES}
-  ${ASSIMP_LIBRARIES}
-  ${JSON_LIBRARIES}
-  ${LIBUSB_LIBRARIES}
-  )
-# link_libraries(${LIBS})
-
-set(INCLUDE_PATHS
-  ${PROJECT_SOURCE_DIR}/externals
-  ${SCHISM_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${BULLET_INCLUDE_DIRS}
-  ${GUACAMOLE_INCLUDE_DIRS}
-  ${ASSIMP_INCLUDE_DIR}
-  ${FBX_INCLUDE_DIR}
-  ${JSON_INCLUDE_DIRS}
-  ${GLFW_INCLUDE_DIRS}
-  )
-
 IF (GUACAMOLE_EXAMPLES)
 
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
-    IF (${PLUGIN_guacamole-gui})
-      add_subdirectory(depth_cube_map)
-    ENDIF()
     add_subdirectory(projective_texturing)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(smooth_lighting)
@@ -82,6 +42,11 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-plod})
     add_subdirectory(plod_simple)
     add_subdirectory(plod_shadows)
+    # multicontext example requires plod-plugin
+    add_subdirectory(multicontext)
+    IF (${PLUGIN_guacamole-gui})
+      add_subdirectory(depth_cube_map)
+    ENDIF()
   ENDIF (${PLUGIN_guacamole-plod})
 
   # lod example requires lod-plugin
@@ -99,18 +64,15 @@ IF (GUACAMOLE_EXAMPLES)
    ENDIF (${PLUGIN_guacamole-volume})
   ENDIF (${PLUGIN_guacamole-gui})
 
-
-  # multicontext example requires plod-plugin
-  IF (${PLUGIN_guacamole-plod})
-    add_subdirectory(multicontext)
-  ENDIF (${PLUGIN_guacamole-plod})
   add_subdirectory(tiledwall)
 
   # video3d example requires glfw and video3d-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
-      add_subdirectory(video3d)
+    add_subdirectory(video3d)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
-  add_subdirectory(physics)
+  IF (GUACAMOLE_ENABLE_PHYSICS)
+    add_subdirectory(physics)
+  ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
 ENDIF (GUACAMOLE_EXAMPLES)

@@ -10,22 +10,9 @@ list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 link_directories(${LIB_PATHS})
 
-include_directories( ${INCLUDE_PATHS}
-                     ${PROJECT_SOURCE_DIR}/include
-                     ${AWESOMIUM_INCLUDE_DIR}
-                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${GUACAMOLE_GUI_INCLUDE_DIR}
-                     ${GUACAMOLE_OCULUS_INCLUDE_DIR}
-                     ${OVR_INCLUDE_DIR}
-)
+add_executable(${_EXE_NAME} ${EXAMPLE_SRC})
 
-add_executable( ${_EXE_NAME} ${EXAMPLE_SRC})
-
-add_dependencies(${_EXE_NAME} guacamole-gui guacamole-PLOD)
-
-list(APPEND LIBS guacamole-gui guacamole guacamole-PLOD)
-
-target_link_libraries( ${_EXE_NAME} debug ${LIBS} optimized ${LIBS})
+target_link_libraries(${_EXE_NAME} guacamole-gui guacamole-PLOD)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
