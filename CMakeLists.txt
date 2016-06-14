@@ -267,20 +267,17 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 ################################################################
 # Build external sources
 ################################################################
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(externals)
 
 ################################################################
 # Create libraries
 ################################################################
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(src)
 
 ################################################################
