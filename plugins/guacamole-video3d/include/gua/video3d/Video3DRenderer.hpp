@@ -68,7 +68,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   }
 
   void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
-  void update_buffers(RenderContext const& ctx, Video3DResource const& video3d);
+  void update_buffers(RenderContext const& ctx, Video3DResource const& video3d, Pipeline& pipe);
 
  private:  // attributes
 
@@ -113,7 +113,6 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
   std::unordered_map<std::size_t, Video3DData> video3Ddata_;
   scm::gl::frame_buffer_ptr fbo_depth_;
   std::shared_ptr<ShaderProgram> depth_process_program_;
-
 };
 
 }

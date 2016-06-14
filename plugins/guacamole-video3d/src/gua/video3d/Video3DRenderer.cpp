@@ -234,13 +234,14 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   std::vector<ShaderProgramStage> depth_process_stages;
   depth_process_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
-                         factory.read_shader_file("resources/depth_process.vert")));
+                         factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
   depth_process_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
                          factory.read_shader_file("resources/depth_process.frag")));
 
   depth_process_program_ = std::make_shared<ShaderProgram>();
   depth_process_program_->set_shaders(depth_process_stages);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,7 +263,8 @@ void Video3DRenderer::draw_video3dResource(
 
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::update_buffers(RenderContext const& ctx,
-                                     Video3DResource const& video3d_ressource) {
+                                     Video3DResource const& video3d_ressource,
+                                     Pipeline& pipe) {
   auto iter = video3Ddata_.find(video3d_ressource.uuid());
   if (iter == video3Ddata_.end()) {
     video3Ddata_[video3d_ressource.uuid()] =
@@ -277,10 +279,18 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
     return;
   }
 
-  ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0), scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
-  fbo_depth_ = ctx.render_device->create_frame_buffer();
-  
   if (video3d_data.nka_->update()) {
+    ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0),
+      scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
+    fbo_depth_ = ctx.render_device->create_frame_buffer();
+
+    depth_process_program_->use(ctx);
+    // bind depth texture to unit
+    ctx.render_context
+      ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 0);
+    depth_process_program_->get_program(ctx)
+      ->uniform_sampler("depth_video3d_texture", 0);
+
     unsigned char* buff = video3d_data.nka_->getBuffer();
     for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
 
@@ -310,14 +320,29 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
       fbo_depth_->clear_attachments();
       ctx.render_context->set_frame_buffer(fbo_depth_);
 
+      depth_process_program_->set_uniform(ctx, int(i), "layer");
+      depth_process_program_->set_uniform(
+          ctx,
+          video3d_ressource.calibration_file(i).getTexSizeInvD(),
+          "tex_size_inv");
+      depth_process_program_->set_uniform(
+          ctx,
+          video3d_ressource.calibration_file(i).cv_min_d,
+          "cv_min_d");
+      depth_process_program_->set_uniform(
+          ctx,
+          video3d_ressource.calibration_file(i).cv_max_d,
+          "cv_max_d");
       // render to fbo
-      ctx.render_context->reset_framebuffer();
+      // pipe.draw_quad();
+
     }
+    ctx.render_context->reset_state_objects();
+    depth_process_program_->unuse(ctx);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 void Video3DRenderer::render(Pipeline& pipe,
                              PipelinePassDescription const& desc) {
   ///////////////////////////////////////////////////////////////////////////
@@ -334,7 +359,7 @@ void Video3DRenderer::render(Pipeline& pipe,
     initialized_ = true;
 
     warp_pass_program_->upload_to(ctx);
-
+    depth_process_program_->upload_to(ctx);
     // TODO:::::
     // if (warp_color_result_) {
     //   return upload_succeeded;
@@ -396,7 +421,7 @@ void Video3DRenderer::render(Pipeline& pipe,
       }
 
       // update stream data
-      update_buffers(pipe.get_context(), *video3d_ressource);
+      update_buffers(pipe.get_context(), *video3d_ressource, pipe);
       auto const& video3d_data = video3Ddata_[video3d_ressource->uuid()];
 
       auto model_matrix(video_node->get_cached_world_transform());
