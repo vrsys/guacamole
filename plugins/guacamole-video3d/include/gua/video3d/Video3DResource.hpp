@@ -38,10 +38,6 @@
 #include <vector>
 #include <string>
 
-namespace video3d{
-  class NetKinectArray;
-}
-
 namespace gua {
 
 struct RenderContext;

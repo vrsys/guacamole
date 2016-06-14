@@ -29,8 +29,8 @@ private:
   std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
   unsigned m_colorsize_byte;
   unsigned m_depthsize_byte;
-  std::vector<unsigned char> m_buffer;
-  std::vector<unsigned char> m_buffer_back;
+  std::vector<uint8_t> m_buffer;
+  std::vector<uint8_t> m_buffer_back;
   std::atomic<bool> m_need_swap;
   std::thread m_recv;
 };

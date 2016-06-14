@@ -73,11 +73,11 @@ gua::RenderContext::Mesh create_proxy_mesh(gua::RenderContext& ctx,
                                            unsigned height_depthimage,
                                            unsigned width_depthimage) {
   int num_vertices = height_depthimage * width_depthimage;
-  int num_indices = height_depthimage * width_depthimage;
+  // int num_indices = height_depthimage * width_depthimage;
   int num_triangles = ((height_depthimage - 1) * (width_depthimage - 1)) * 2;
   int num_triangle_indices = 3 * num_triangles;
-  int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
-                                                    1) + (width_depthimage - 1);
+  // int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
+  //                                                   1) + (width_depthimage - 1);
 
   float step = 1.0f / width_depthimage;
 
@@ -144,6 +144,14 @@ Video3DRenderer::Video3DData::Video3DData(
       scm::math::vec2ui(video3d_ressource.width_depthimage(),
                         video3d_ressource.height_depthimage()),
       scm::gl::FORMAT_R_32F,
+      0,
+      video3d_ressource.number_of_cameras(),
+      1);
+
+  depth_tex2_ = ctx.render_device->create_texture_2d(
+      scm::math::vec2ui(video3d_ressource.width_depthimage(),
+                        video3d_ressource.height_depthimage()),
+      scm::gl::FORMAT_RG_32F,
       0,
       video3d_ressource.number_of_cameras(),
       1);
@@ -221,6 +229,18 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   program_stages_.push_back(ShaderProgramStage(
       scm::gl::STAGE_FRAGMENT_SHADER,
       factory.read_shader_file("resources/blend_pass.frag")));
+
+  // create depth process shader
+  std::vector<ShaderProgramStage> depth_process_stages;
+  depth_process_stages.push_back(
+      ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
+                         factory.read_shader_file("resources/depth_process.vert")));
+  depth_process_stages.push_back(
+      ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
+                         factory.read_shader_file("resources/depth_process.frag")));
+
+  depth_process_program_ = std::make_shared<ShaderProgram>();
+  depth_process_program_->set_shaders(depth_process_stages);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,9 +277,12 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
     return;
   }
 
+  ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0), scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
+  fbo_depth_ = ctx.render_device->create_frame_buffer();
+  
   if (video3d_data.nka_->update()) {
     unsigned char* buff = video3d_data.nka_->getBuffer();
-    for (int i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
+    for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
 
       ctx.render_context->update_sub_texture(
           video3d_data.color_tex_,
@@ -281,6 +304,14 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
           scm::gl::FORMAT_R_32F,
           static_cast<void*>(buff));
       buff += video3d_ressource.depth_size_byte();
+
+
+      fbo_depth_->attach_color_buffer(0, video3d_data.depth_tex2_,0,i);
+      fbo_depth_->clear_attachments();
+      ctx.render_context->set_frame_buffer(fbo_depth_);
+
+      // render to fbo
+      ctx.render_context->reset_framebuffer();
     }
   }
 }
