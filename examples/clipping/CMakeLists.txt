@@ -4,10 +4,6 @@ get_filename_component(_EXE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
-
-link_directories(${LIB_PATHS})
-
 add_executable(${_EXE_NAME} main.cpp)
 
 target_link_libraries(${_EXE_NAME} guacamole)

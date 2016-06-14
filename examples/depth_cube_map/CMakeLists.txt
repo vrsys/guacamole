@@ -6,10 +6,6 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
-
-link_directories(${LIB_PATHS})
-
 add_executable(${_EXE_NAME} ${EXAMPLE_SRC})
 
 target_link_libraries(${_EXE_NAME} guacamole-gui guacamole-PLOD)
