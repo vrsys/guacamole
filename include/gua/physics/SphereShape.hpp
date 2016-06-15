@@ -24,6 +24,7 @@
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
+#include <memory>
 
 class btSphereShape;
 
@@ -48,25 +49,18 @@ class GUA_DLL SphereShape : public CollisionShape {
    */
   SphereShape(float radius);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the sphere shape and frees all associated data.
-   */
-  virtual ~SphereShape();
-
-  float get_radius() const;
+  inline float get_radius() const { return radius_; }
 
   void set_radius(float radius);
 
  private:
 
-  virtual void construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform);
+  void construct_dynamic(btCompoundShape* bullet_shape,
+                         const btTransform& base_transform) override;
 
-  virtual btCollisionShape* construct_static();
+  btCollisionShape* construct_static() override;
 
-  btSphereShape* shape_;
+  std::unique_ptr<btSphereShape> shape_;
   float radius_;
 };
 

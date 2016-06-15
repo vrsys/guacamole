@@ -27,6 +27,8 @@
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
 
+#include <memory>
+
 class btBoxShape;
 
 namespace gua {
@@ -72,28 +74,19 @@ class GUA_DLL BoxShape : public CollisionShape {
    */
   BoxShape(float half_extent);
 
-  math::vec3 const& get_half_extents() const;
+  math::vec3 const& get_half_extents() const { return half_extents_; }
 
   void set_half_extents(math::vec3 const& half_extents);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the box shape and frees all associated data.
-   */
-  virtual ~BoxShape();
-
  private:
 
-  void create_box(const btVector3& half_extents);
+  void construct_dynamic(btCompoundShape* bullet_shape,
+                         const btTransform& base_transform) override;
 
-  virtual void construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform);
+  btCollisionShape* construct_static() override;
 
-  virtual btCollisionShape* construct_static();
-
-  btBoxShape* shape_;
-  math::vec3  half_extents_;
+  std::unique_ptr<btBoxShape> shape_;
+  math::vec3 half_extents_;
 };
 
 }
