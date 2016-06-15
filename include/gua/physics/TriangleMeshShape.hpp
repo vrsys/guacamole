@@ -29,7 +29,6 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 
-
 // external headers
 #include <memory>
 #include <string>
@@ -145,7 +144,8 @@ class GUA_DLL TriangleMeshShape : public CollisionShape {
   static TriangleMeshShape* FromGeometryFile(const std::string& file_name,
                                              bool build_static,
                                              bool build_dynamic,
-                                             unsigned flags = TriMeshLoader::DEFAULTS);
+                                             unsigned flags =
+                                                 TriMeshLoader::DEFAULTS);
 
  private:
   virtual void construct_dynamic(btCompoundShape* bullet_shape,
