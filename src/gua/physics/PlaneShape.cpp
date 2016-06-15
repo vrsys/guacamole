@@ -28,6 +28,7 @@
 // external headers
 #include <BulletCollision/CollisionShapes/btStaticPlaneShape.h>
 #include <stdexcept>
+#include <gua/memory.hpp>
 
 namespace gua {
 namespace physics {
@@ -39,74 +40,32 @@ PlaneShape::PlaneShape(float x_normal,
                        float z_normal,
                        float plane_constant)
     : CollisionShape(true, false, false),
+      shape_(gua::make_unique<btStaticPlaneShape>(
+          btVector3(x_normal, y_normal, z_normal),
+          plane_constant)),
       normal_(x_normal, y_normal, z_normal),
-      plane_constant_(plane_constant) {
+      plane_constant_(plane_constant) {}
 
-  shape_ = new btStaticPlaneShape(btVector3(x_normal, y_normal, z_normal),
-                                  plane_constant);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-PlaneShape::~PlaneShape() { delete shape_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void PlaneShape::construct_dynamic(
-    btCompoundShape* bullet_shape,
-    const btTransform& base_transform) {
+void PlaneShape::construct_dynamic(btCompoundShape* bullet_shape,
+                                   const btTransform& base_transform) {
   throw std::runtime_error("Plane shapes cannot take part in dynamical "
                            "simulations.");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec3 const& PlaneShape::get_normal() const {
-
-  return normal_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void PlaneShape::set_normal(math::vec3 const& normal) {
-
   normal_ = normal;
-  if (shape_)
-    delete shape_;
-
-   shape_ = new btStaticPlaneShape(math::vec3_to_btVector3(normal_),
-                                   plane_constant_);
+  shape_ = gua::make_unique<btStaticPlaneShape>(
+      math::vec3_to_btVector3(normal_), plane_constant_);
 
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-float PlaneShape::get_plane_constant() const {
-
-  return plane_constant_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void PlaneShape::set_plane_constant(float plane_constant) {
-
   plane_constant_ = plane_constant;
-  if (shape_)
-    delete shape_;
-
-   shape_ = new btStaticPlaneShape(math::vec3_to_btVector3(normal_),
-                                   plane_constant_);
-
+  shape_ = gua::make_unique<btStaticPlaneShape>(
+      math::vec3_to_btVector3(normal_), plane_constant_);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ btCollisionShape* PlaneShape::construct_static() {
-  return shape_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+btCollisionShape* PlaneShape::construct_static() { return shape_.get(); }
 
 }
 }

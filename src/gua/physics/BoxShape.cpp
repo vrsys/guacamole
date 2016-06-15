@@ -25,73 +25,39 @@
 // external headers
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <gua/memory.hpp>
 
 namespace gua {
 namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
-
 BoxShape::BoxShape(const math::vec3& half_extents)
     : CollisionShape(true, true, true),
-      half_extents_(half_extents) {
-  create_box(math::vec3_to_btVector3(half_extents));
-}
-
-////////////////////////////////////////////////////////////////////////////////
+      shape_(
+          gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents))),
+      half_extents_(half_extents) {}
 
 BoxShape::BoxShape(float x, float y, float z)
     : CollisionShape(true, true, true),
-      half_extents_(x, y, z) {
-  create_box(btVector3(x, y, z));
-}
-
-////////////////////////////////////////////////////////////////////////////////
+      shape_(gua::make_unique<btBoxShape>(btVector3(x, y, z))),
+      half_extents_(x, y, z) {}
 
 BoxShape::BoxShape(float half_extent)
     : CollisionShape(true, true, true),
-      half_extents_(half_extent, half_extent, half_extent) {
-  create_box(btVector3(half_extent, half_extent, half_extent));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-BoxShape::~BoxShape() { delete shape_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec3 const& BoxShape::get_half_extents() const {
-  return half_extents_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+      shape_(gua::make_unique<btBoxShape>(
+          btVector3(half_extent, half_extent, half_extent))),
+      half_extents_(half_extent, half_extent, half_extent) {}
 
 void BoxShape::set_half_extents(math::vec3 const& half_extents) {
   half_extents_ = half_extents;
-  if (shape_)
-    delete shape_;
-
-  create_box(math::vec3_to_btVector3(half_extents_));
+  shape_ = gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents_));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void BoxShape::create_box(const btVector3& half_extents) {
-  shape_ = new btBoxShape(half_extents);
+void BoxShape::construct_dynamic(btCompoundShape* bullet_shape,
+                                 const btTransform& base_transform) {
+  bullet_shape->addChildShape(base_transform, shape_.get());
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void BoxShape::construct_dynamic(
-    btCompoundShape* bullet_shape,
-    const btTransform& base_transform) {
-  bullet_shape->addChildShape(base_transform, shape_);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ btCollisionShape* BoxShape::construct_static() { return shape_; }
-
-////////////////////////////////////////////////////////////////////////////////
+btCollisionShape* BoxShape::construct_static() { return shape_.get(); }
 
 }
 }

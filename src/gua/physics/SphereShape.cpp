@@ -21,6 +21,7 @@
 
 // class header
 #include <gua/physics/SphereShape.hpp>
+#include <gua/memory.hpp>
 
 // external headers
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
@@ -29,51 +30,22 @@
 namespace gua {
 namespace physics {
 
-////////////////////////////////////////////////////////////////////////////////
-
 SphereShape::SphereShape(float radius)
-  : CollisionShape(true, true, true),
-    radius_(radius) {
-  shape_ = new btSphereShape(radius_);
-}
+    : CollisionShape(true, true, true),
+      shape_(gua::make_unique<btSphereShape>(radius)),
+      radius_(radius) {}
 
-////////////////////////////////////////////////////////////////////////////////
-
-SphereShape::~SphereShape() { delete shape_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-float
-SphereShape::get_radius() const {
-  return radius_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void
-SphereShape::set_radius(float radius) {
+void SphereShape::set_radius(float radius) {
   radius_ = radius;
-
-  if (shape_)
-    delete shape_;
-  shape_ = new btSphereShape(radius_);
+  shape_ = gua::make_unique<btSphereShape>(radius_);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ void SphereShape::construct_dynamic(
-    btCompoundShape* bullet_shape,
-    const btTransform& base_transform) {
-  bullet_shape->addChildShape(base_transform, shape_);
+void SphereShape::construct_dynamic(btCompoundShape* bullet_shape,
+                                    const btTransform& base_transform) {
+  bullet_shape->addChildShape(base_transform, shape_.get());
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* virtual */ btCollisionShape* SphereShape::construct_static() {
-  return shape_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+btCollisionShape* SphereShape::construct_static() { return shape_.get(); }
 
 }
 }
