@@ -122,7 +122,6 @@ namespace gua {
   ///@}
 
  protected:
-  std::vector<void*>& get_data();
 
   mutable unsigned width_;
   mutable unsigned height_;
