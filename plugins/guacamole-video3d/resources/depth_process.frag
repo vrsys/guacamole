@@ -30,7 +30,6 @@ uniform float cv_max_d;
 in vec2 gua_quad_coords;
 
 // write outputs
-// layout(location=0) out float gua_out_color;
 layout(location=0) out vec2 gua_out_color;
 
 // bilateral filter
@@ -114,7 +113,4 @@ vec2 bilateral_filter(vec3 coords){
 
 void main() {
   gua_out_color = bilateral_filter(vec3(gua_quad_coords, layer));
-  // gua_out_color.r = (texture2DArray(depth_texture, vec3(gua_quad_coords, layer)).r - 0.5f) / 4.0f;
-  // gua_out_color = vec2(gua_out_color.r, 1.0f / pow(2.0f, float(layer)));
-  // gua_out_color = vec2(texture2DArray(depth_texture, vec3(gua_quad_coords, layer)).r, 0.0f);
 }
