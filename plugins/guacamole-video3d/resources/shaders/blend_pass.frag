@@ -23,8 +23,6 @@ uniform sampler2DArray video_color_texture;
 
 @material_method_declarations_frag@
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,10 +41,6 @@ void main() {
   const float maxdist = 1.0 / 0.0; // infinity 1000.0;
   vec4 layer_contributions[MAX_VIEWS];
 
-
-
-
-
   float mindist = maxdist;
   float ogldepth = 1.0;
 
@@ -54,7 +48,7 @@ void main() {
   for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l)
   {
     coords.z = float(l);
-    const float depth             = texture(depth_texture, coords).r;
+    const float depth         = texture(depth_texture, coords).r;
     if(depth < 1.0){ // found kinect surface in layer
       vec4 layer_contribution = texture(quality_texture, coords);
       vec3 normal             = unpack_vec3(layer_contribution.b);
@@ -69,14 +63,11 @@ void main() {
       	ogldepth = depth;
         output_normal = normal;
       }
-
     }
     else{
       layer_contributions[l] = vec4(1.0,1.0,maxdist,1.0);
     }
   }
-
-
 
   int accum = 0;
   int best_layer = 0;
@@ -84,20 +75,19 @@ void main() {
   if(mindist < maxdist) {  // we found at least one kinect surface
     vec4 finalcol = vec4(0.0);
 
-
     for(int l = 0; l  < numlayers && l < MAX_VIEWS;++l){
       if( abs(layer_contributions[l].b - mindist) < epsilon){
-	++accum;
-	vec4 layer_contribution = layer_contributions[l];
-	vec3 color = texture( video_color_texture, vec3(layer_contribution.xy,float(l))).rgb;
+      	++accum;
+      	vec4 layer_contribution = layer_contributions[l];
+      	vec3 color = texture( video_color_texture, vec3(layer_contribution.xy,float(l))).rgb;
 
-	finalcol.rgb += color * layer_contribution.a;
-	finalcol.a   += layer_contribution.a;
+      	finalcol.rgb += color * layer_contribution.a;
+      	finalcol.a   += layer_contribution.a;
 
-	if(layer_contribution.a > best_quality){ // track best layer
-	  best_quality = layer_contribution.a;
-	  best_layer = l;
-	}
+      	if(layer_contribution.a > best_quality){ // track best layer
+      	  best_quality = layer_contribution.a;
+      	  best_layer = l;
+      	}
       }
     }
     finalcol.rgba = finalcol.rgba/finalcol.a;
