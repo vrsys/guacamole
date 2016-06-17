@@ -211,13 +211,13 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   std::vector<ShaderProgramStage> warp_pass_stages;
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
-                         factory.read_shader_file("resources/warp_pass.vert")));
+                         factory.read_shader_file("resources/shaders/warp_pass.vert")));
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER,
-                         factory.read_shader_file("resources/warp_pass.geom")));
+                         factory.read_shader_file("resources/shaders/warp_pass.geom")));
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
-                         factory.read_shader_file("resources/warp_pass.frag")));
+                         factory.read_shader_file("resources/shaders/warp_pass.frag")));
 
   warp_pass_program_ = std::make_shared<ShaderProgram>();
   warp_pass_program_->set_shaders(warp_pass_stages);
@@ -225,10 +225,10 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   // create final shader description
   program_stages_.push_back(ShaderProgramStage(
       scm::gl::STAGE_VERTEX_SHADER,
-      factory.read_shader_file("resources/blend_pass.vert")));
+      factory.read_shader_file("resources/shaders/blend_pass.vert")));
   program_stages_.push_back(ShaderProgramStage(
       scm::gl::STAGE_FRAGMENT_SHADER,
-      factory.read_shader_file("resources/blend_pass.frag")));
+      factory.read_shader_file("resources/shaders/blend_pass.frag")));
 
   // create depth process shader
   std::vector<ShaderProgramStage> depth_process_stages;
@@ -237,7 +237,7 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
                          factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
   depth_process_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
-                         factory.read_shader_file("resources/depth_process.frag")));
+                         factory.read_shader_file("resources/shaders/depth_process.frag")));
 
   depth_process_program_ = std::make_shared<ShaderProgram>();
   depth_process_program_->set_shaders(depth_process_stages);

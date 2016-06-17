@@ -56,7 +56,7 @@ namespace gua {
 	    // add a default video 3D material if not already loaded
 	    if (!gua::MaterialShaderDatabase::instance()->contains("gua_default_video3d_material")) {
 	  	  ResourceFactory factory;
-	  	  auto material = factory.read_plain_file("resources/video3d.gmd");
+	  	  auto material = factory.read_plain_file("resources/materials/video3d.gmd");
 	  	  auto desc(std::make_shared<gua::MaterialShaderDescription>());
 	  	  desc->load_from_json(material.c_str());
 	  	  auto shader(std::make_shared<gua::MaterialShader>("gua_default_video3d_material", desc));
