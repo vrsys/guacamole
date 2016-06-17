@@ -133,7 +133,8 @@ vec2 bilateral_filter(){
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
 
-  vec2 bf_result          = bilateral_filter();
+  vec3 coords = vec3(gua_in_position.xy,layer);
+  vec2 bf_result          = texture2DArray(depth_video3d_texture, coords).rg;
   float depth             = bf_result.x;
 
   // lookup from calibvolume

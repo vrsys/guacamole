@@ -241,7 +241,6 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
 
   depth_process_program_ = std::make_shared<ShaderProgram>();
   depth_process_program_->set_shaders(depth_process_stages);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,17 +279,6 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
   }
 
   if (video3d_data.nka_->update()) {
-    ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0),
-      scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
-    fbo_depth_ = ctx.render_device->create_frame_buffer();
-
-    depth_process_program_->use(ctx);
-    // bind depth texture to unit
-    ctx.render_context
-      ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 0);
-    depth_process_program_->get_program(ctx)
-      ->uniform_sampler("depth_video3d_texture", 0);
-
     unsigned char* buff = video3d_data.nka_->getBuffer();
     for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
 
@@ -314,32 +302,57 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
           scm::gl::FORMAT_R_32F,
           static_cast<void*>(buff));
       buff += video3d_ressource.depth_size_byte();
-
-
-      fbo_depth_->attach_color_buffer(0, video3d_data.depth_tex2_,0,i);
-      fbo_depth_->clear_attachments();
-      ctx.render_context->set_frame_buffer(fbo_depth_);
-
-      depth_process_program_->set_uniform(ctx, int(i), "layer");
-      depth_process_program_->set_uniform(
-          ctx,
-          video3d_ressource.calibration_file(i).getTexSizeInvD(),
-          "tex_size_inv");
-      depth_process_program_->set_uniform(
-          ctx,
-          video3d_ressource.calibration_file(i).cv_min_d,
-          "cv_min_d");
-      depth_process_program_->set_uniform(
-          ctx,
-          video3d_ressource.calibration_file(i).cv_max_d,
-          "cv_max_d");
-      // render to fbo
-      // pipe.draw_quad();
-
     }
-    ctx.render_context->reset_state_objects();
-    depth_process_program_->unuse(ctx);
+
+    process_textures(ctx, video3d_ressource, pipe);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void Video3DRenderer::process_textures(RenderContext const& ctx,
+                                       Video3DResource const& video3d_ressource,
+                                       Pipeline& pipe) {
+  Video3DData& video3d_data = video3Ddata_[video3d_ressource.uuid()];
+
+  // store current state
+  scm::gl::context_all_guard all_guard(ctx.render_context);
+
+  ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0),
+    scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
+  ctx.render_context
+      ->set_depth_stencil_state(depth_stencil_state_tex_process_);
+
+  depth_process_program_->use(ctx);
+  // bind depth texture to unit
+  ctx.render_context
+    ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 1);
+  depth_process_program_->get_program(ctx)
+      ->uniform_sampler("depth_texture", 1);
+
+  for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
+    fbo_depth_->clear_attachments();
+    fbo_depth_->attach_color_buffer(0, video3d_data.depth_tex2_, 0, i);
+    ctx.render_context->set_frame_buffer(fbo_depth_);
+
+    depth_process_program_->set_uniform(ctx, int(i), "layer");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).getTexSizeInvD(),
+        "tex_size_inv");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).cv_min_d,
+        "cv_min_d");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).cv_max_d,
+        "cv_max_d");
+
+    // render to fbo
+    pipe.draw_quad();
+  }
+
+  depth_process_program_->unuse(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +363,7 @@ void Video3DRenderer::render(Pipeline& pipe,
   ///////////////////////////////////////////////////////////////////////////
   auto& scene = *pipe.current_viewstate().scene;
   auto const& camera = pipe.current_viewstate().camera;
-  auto const& frustum = pipe.current_viewstate().frustum;
+  // auto const& frustum = pipe.current_viewstate().frustum;
   auto& target = *pipe.current_viewstate().target;
 
   auto const& ctx(pipe.get_context());
@@ -394,6 +407,10 @@ void Video3DRenderer::render(Pipeline& pipe,
         ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     no_bfc_rasterizer_state_ = ctx.render_device
         ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+
+    fbo_depth_ = ctx.render_device->create_frame_buffer();
+    depth_stencil_state_tex_process_ = ctx.render_device
+        ->create_depth_stencil_state(false, false);
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::Video3DNode))));
@@ -440,9 +457,11 @@ void Video3DRenderer::render(Pipeline& pipe,
 
         // set uniforms
         ctx.render_context
-            ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 0);
+            ->bind_texture(video3d_data.depth_tex2_, nearest_sampler_state_, 0);
         warp_pass_program_->get_program(ctx)
             ->uniform_sampler("depth_video3d_texture", 0);
+        ctx.render_context
+            ->bind_texture(video3d_data.depth_tex2_, nearest_sampler_state_, 2);
 
         warp_pass_program_->apply_uniform(
             ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
