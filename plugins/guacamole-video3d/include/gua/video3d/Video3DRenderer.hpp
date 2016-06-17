@@ -102,7 +102,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
     scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
     scm::gl::texture_2d_ptr color_tex_ = nullptr;
     scm::gl::texture_2d_ptr depth_tex_ = nullptr;
-    scm::gl::texture_2d_ptr depth_tex2_ = nullptr;
+    scm::gl::texture_2d_ptr depth_tex_processed_ = nullptr;
 
     // cpu resources
     std::shared_ptr<video3d::NetKinectArray> nka_ = nullptr;
@@ -113,7 +113,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
 
   std::unordered_map<std::size_t, Video3DData> video3Ddata_;
   
-  scm::gl::frame_buffer_ptr fbo_depth_;
+  scm::gl::frame_buffer_ptr fbo_depth_process_;
   std::shared_ptr<ShaderProgram> depth_process_program_;
   scm::gl::depth_stencil_state_ptr depth_stencil_state_tex_process_;
 };

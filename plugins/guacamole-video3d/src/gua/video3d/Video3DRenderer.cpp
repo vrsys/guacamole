@@ -148,7 +148,7 @@ Video3DRenderer::Video3DData::Video3DData(
       video3d_ressource.number_of_cameras(),
       1);
 
-  depth_tex2_ = ctx.render_device->create_texture_2d(
+  depth_tex_processed_ = ctx.render_device->create_texture_2d(
       scm::math::vec2ui(video3d_ressource.width_depthimage(),
                         video3d_ressource.height_depthimage()),
       scm::gl::FORMAT_RG_32F,
@@ -313,7 +313,6 @@ void Video3DRenderer::process_textures(RenderContext const& ctx,
                                        Video3DResource const& video3d_ressource,
                                        Pipeline& pipe) {
   Video3DData& video3d_data = video3Ddata_[video3d_ressource.uuid()];
-
   // store current state
   scm::gl::context_all_guard all_guard(ctx.render_context);
 
@@ -321,18 +320,15 @@ void Video3DRenderer::process_textures(RenderContext const& ctx,
     scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
   ctx.render_context
       ->set_depth_stencil_state(depth_stencil_state_tex_process_);
+  ctx.render_context->set_frame_buffer(fbo_depth_process_);
 
   depth_process_program_->use(ctx);
   // bind depth texture to unit
   ctx.render_context
     ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 1);
-  depth_process_program_->get_program(ctx)
-      ->uniform_sampler("depth_texture", 1);
 
   for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
-    fbo_depth_->clear_attachments();
-    fbo_depth_->attach_color_buffer(0, video3d_data.depth_tex2_, 0, i);
-    ctx.render_context->set_frame_buffer(fbo_depth_);
+    fbo_depth_process_->attach_color_buffer(0, video3d_data.depth_tex_processed_, 0, i);
 
     depth_process_program_->set_uniform(ctx, int(i), "layer");
     depth_process_program_->set_uniform(
@@ -408,9 +404,17 @@ void Video3DRenderer::render(Pipeline& pipe,
     no_bfc_rasterizer_state_ = ctx.render_device
         ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 
-    fbo_depth_ = ctx.render_device->create_frame_buffer();
+    warp_pass_program_->get_program(ctx)
+    ->uniform_sampler("depth_video3d_texture", 0);
+    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
+    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
+
+    fbo_depth_process_ = ctx.render_device->create_frame_buffer();
     depth_stencil_state_tex_process_ = ctx.render_device
         ->create_depth_stencil_state(false, false);
+    // input texture bound to unit 1
+    depth_process_program_->get_program(ctx)
+      ->uniform_sampler("depth_texture", 1);
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::Video3DNode))));
@@ -441,7 +445,7 @@ void Video3DRenderer::render(Pipeline& pipe,
       update_buffers(pipe.get_context(), *video3d_ressource, pipe);
       auto const& video3d_data = video3Ddata_[video3d_ressource->uuid()];
 
-      auto model_matrix(video_node->get_cached_world_transform());
+      auto const& model_matrix(video_node->get_cached_world_transform());
       auto normal_matrix(scm::math::transpose(
           scm::math::inverse(video_node->get_cached_world_transform())));
       auto view_matrix(pipe.current_viewstate().frustum.get_view());
@@ -457,11 +461,7 @@ void Video3DRenderer::render(Pipeline& pipe,
 
         // set uniforms
         ctx.render_context
-            ->bind_texture(video3d_data.depth_tex2_, nearest_sampler_state_, 0);
-        warp_pass_program_->get_program(ctx)
-            ->uniform_sampler("depth_video3d_texture", 0);
-        ctx.render_context
-            ->bind_texture(video3d_data.depth_tex2_, nearest_sampler_state_, 2);
+            ->bind_texture(video3d_data.depth_tex_processed_, nearest_sampler_state_, 0);
 
         warp_pass_program_->apply_uniform(
             ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
@@ -469,7 +469,7 @@ void Video3DRenderer::render(Pipeline& pipe,
             ctx, "gua_model_matrix", math::mat4f(model_matrix));
         warp_pass_program_->set_uniform(ctx, int(1), "bbxclip");
 
-        auto bbox(video3d_ressource->get_bounding_box());
+        auto const& bbox(video3d_ressource->get_bounding_box());
         warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.min), "bbx_min");
         warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.max), "bbx_max");
 
@@ -501,11 +501,9 @@ void Video3DRenderer::render(Pipeline& pipe,
 
           ctx.render_context->bind_texture(
               video3d_data.cv_xyz_[layer], linear_sampler_state_, 1);
-          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
           ctx.render_context->bind_texture(
               video3d_data.cv_uv_[layer], linear_sampler_state_, 2);
-          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
 
           warp_pass_program_->set_uniform(
               ctx,
@@ -565,44 +563,41 @@ void Video3DRenderer::render(Pipeline& pipe,
 
         // second pass
         {
-          if (video3d_ressource) {
-            current_shader->apply_uniform(
-                ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
-            current_shader->apply_uniform(
-                ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
+          current_shader->apply_uniform(
+              ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
+          current_shader->apply_uniform(
+              ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
 
-            // needs to be multiplied with scene scaling
-            current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
-            current_shader->set_uniform(
-                ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
-            current_shader->set_uniform(
-                ctx,
-                int(video3d_ressource->do_overwrite_normal()),
-                "overwrite_normal");
-            current_shader->set_uniform(
-                ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
+          // needs to be multiplied with scene scaling
+          current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
+          current_shader->set_uniform(
+              ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
+          current_shader->set_uniform(
+              ctx,
+              int(video3d_ressource->do_overwrite_normal()),
+              "overwrite_normal");
+          current_shader->set_uniform(
+              ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
 
-            ctx.render_context
-                ->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("quality_texture", 0);
+          ctx.render_context
+              ->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("quality_texture", 0);
 
-            ctx.render_context
-                ->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("depth_texture", 1);
+          ctx.render_context
+              ->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("depth_texture", 1);
 
-            ctx.render_context->bind_texture(
-                video3d_data.color_tex_, linear_sampler_state_, 2);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("video_color_texture", 2);
+          ctx.render_context->bind_texture(
+              video3d_data.color_tex_, linear_sampler_state_, 2);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("video_color_texture", 2);
 
-            video_node->get_material()
-                ->apply_uniforms(ctx, current_shader.get(), view_id);
+          video_node->get_material()
+              ->apply_uniforms(ctx, current_shader.get(), view_id);
 
-            ctx.render_context->apply();
-            pipe.draw_quad();
-          }
+          pipe.draw_quad();
         }
         current_shader->unuse(ctx);
       }

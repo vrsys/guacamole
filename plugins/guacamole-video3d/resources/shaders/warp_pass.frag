@@ -38,15 +38,12 @@ layout (location=0) out vec4 out_color;
 // methods 
 
 bool clip(vec3 p){
-  if(p.x < bbx_min.x ||
-     p.y < bbx_min.y ||
-     p.z < bbx_min.z ||
-     p.x > bbx_max.x ||
-     p.y > bbx_max.y ||
-     p.z > bbx_max.z){
-    return true;
-  }
-  return false;
+  return (p.x < bbx_min.x
+      || p.y < bbx_min.y
+      || p.z < bbx_min.z
+      || p.x > bbx_max.x
+      || p.y > bbx_max.y
+      || p.z > bbx_max.z);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
