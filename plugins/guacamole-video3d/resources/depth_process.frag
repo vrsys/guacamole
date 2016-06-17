@@ -21,7 +21,7 @@
 
 @include "shaders/common/header.glsl"
 
-uniform sampler2DArray depth_video3d_texture;
+uniform sampler2DArray depth_texture;
 uniform vec2 tex_size_inv;
 uniform int layer;
 uniform float cv_min_d;
@@ -30,6 +30,7 @@ uniform float cv_max_d;
 in vec2 gua_quad_coords;
 
 // write outputs
+// layout(location=0) out float gua_out_color;
 layout(location=0) out vec2 gua_out_color;
 
 // bilateral filter
@@ -57,7 +58,7 @@ bool is_outside(float d){
 
 vec2 bilateral_filter(vec3 coords){
 
-  float depth = texture2DArray(depth_video3d_texture, coords).r;
+  float depth = texture2DArray(depth_texture, coords).r;
   if(is_outside(depth)){
     return vec2(0.0,0.0);
   }
@@ -79,7 +80,7 @@ vec2 bilateral_filter(vec3 coords){
       num_samples += 1.0;
       vec3 coords_s = vec3(coords.s + float(x) * tex_size_inv.x, coords.t + float(y) * tex_size_inv.y, float(layer));
       
-      const float depth_s = texture2DArray(depth_video3d_texture, coords_s).r;
+      const float depth_s = texture2DArray(depth_texture, coords_s).r;
       const float depth_range = abs(depth_s - depth);
       if(is_outside(depth_s) || (depth_range > dist_range_max)){
 				border_samples += 1.0;
@@ -112,6 +113,8 @@ vec2 bilateral_filter(vec3 coords){
 }
 
 void main() {
-  // gua_out_color = bilateral_filter(vec3(gua_quad_coords, layer));
-  gua_out_color = vec2(texture2DArray(depth_video3d_texture, vec3(gua_quad_coords, layer)).r, 0.0f);
+  gua_out_color = bilateral_filter(vec3(gua_quad_coords, layer));
+  // gua_out_color.r = (texture2DArray(depth_texture, vec3(gua_quad_coords, layer)).r - 0.5f) / 4.0f;
+  // gua_out_color = vec2(gua_out_color.r, 1.0f / pow(2.0f, float(layer)));
+  // gua_out_color = vec2(texture2DArray(depth_texture, vec3(gua_quad_coords, layer)).r, 0.0f);
 }
