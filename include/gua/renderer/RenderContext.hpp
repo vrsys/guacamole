@@ -25,7 +25,6 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/InstanceCollection.hpp>
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
  
 // external headers
 #include <scm/gl_core/config.h>
@@ -145,11 +144,6 @@ struct GUA_DLL RenderContext {
   * Resources associated with this context
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
-
- /**
-  * Animated Bone Uniforms
-  */
-  std::unordered_map<node::Node*, std::shared_ptr<BoneTransformUniformBlock>> bone_transform_blocks;
 };
 
 }

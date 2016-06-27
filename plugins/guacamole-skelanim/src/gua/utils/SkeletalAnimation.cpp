@@ -58,7 +58,6 @@ namespace gua {
     numFrames =
       take->mLocalTimeSpan.GetDuration().GetFrameCount(FbxTime::eFrames30);
     duration = double(numFrames) / numFPS;
-
     for (FbxNode* const bone : bones) {
       boneAnims.push_back(BoneAnimation{
         *take, *bone

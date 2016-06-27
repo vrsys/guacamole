@@ -37,6 +37,15 @@ class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
+    /**
+   * @brief holds bone mapping offsets
+   * @details holds info about where to read from the bonetransformblock buffers
+   */
+  struct SharedSkinningResource {
+    scm::gl::buffer_ptr bone_ids_ = nullptr;
+    scm::gl::buffer_ptr bone_weights_ = nullptr;
+    size_t offset_bytes = 0;
+  };
 class GUA_SKELANIM_DLL SkeletalAnimationRenderer {
 
  public:
@@ -53,8 +62,6 @@ class GUA_SKELANIM_DLL SkeletalAnimationRenderer {
   void create_state_objects(RenderContext const& ctx);
 
  private:
-  unsigned last_frame_;
-
   scm::gl::rasterizer_state_ptr rs_cull_back_;
   scm::gl::rasterizer_state_ptr rs_cull_none_;
 
@@ -64,6 +71,10 @@ class GUA_SKELANIM_DLL SkeletalAnimationRenderer {
   SubstitutionMap global_substitution_map_;
 
   BoneTransformUniformBlock bones_block_;
+
+  SharedSkinningResource skinning_resource_;
+
+  unsigned last_frame_;
 };
 
 }
