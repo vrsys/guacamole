@@ -111,6 +111,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
     auto current_rasterizer_state = rs_cull_back_;
     ctx.render_context->apply();
 
+    ctx.render_context->bind_uniform_buffer(bones_block_.block().block_buffer(), 2);
     // loop through all objects, sorted by material ----------------------------
     for (auto const& object : sorted_objects->second) {
 
@@ -216,18 +217,22 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
 
           if (ctx.framecount > last_frame_) {
             skel_anim_node->update_bone_transforms();
-            last_frame_ = ctx.framecount;
           }
 
           bones_block_.update(ctx.render_context,
                               skel_anim_node->get_bone_transforms());
-          ctx.render_context
-              ->bind_uniform_buffer(bones_block_.block().block_buffer(), 2);
+          // upload data if necessary
+          auto iter = ctx.meshes.find(geometries[i]->uuid());
+          if (iter == ctx.meshes.end()) {
+            geometries[i]->upload_to(ctx, skinning_resource_);
+          }
 
           geometries[i]->draw(ctx);
         }
       }
     }
+
+    last_frame_ = ctx.framecount;
 
     target.unbind(ctx);
 

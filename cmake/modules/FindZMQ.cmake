@@ -55,7 +55,7 @@ IF (MSVC)
 
 ELSEIF (UNIX)
   find_library (ZMQ_LIBRARY
-                NAMES libzmq
+                NAMES zmq
                 PATHS ${ZMQ_LIBRARY_SEARCH_DIRS}
                 )
   SET(ZMQ_LIBRARY_DEBUG ${ZMQ_LIBRARY} CACHE STRING "zmq libraries.")   

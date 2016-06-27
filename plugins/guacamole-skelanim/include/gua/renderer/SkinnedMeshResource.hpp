@@ -35,6 +35,7 @@
 namespace gua {
 
 struct RenderContext;
+struct SharedSkinningResource;
 
 /**
  * Stores geometry data.
@@ -46,16 +47,6 @@ struct RenderContext;
  */
 class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
  public:
-
-  /**
-   * @brief holds bone mapping offsets
-   * @details holds info about where to read from the bonetransformblock buffers
-   */
-  struct SharedBoneResource {
-    scm::gl::buffer_ptr bone_ids_;
-    scm::gl::buffer_ptr bone_weights_;
-    size_t offset = 0;
-  };
 
   /**
    * Default constructor.
@@ -93,6 +84,7 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
 
   scm::math::vec3 get_vertex(unsigned int i) const;
   std::vector<unsigned int> get_face(unsigned int i) const;
+  SkinnedMesh const& get_mesh() const;
 
   /**
    * @brief calculates the bone bounding boxes
@@ -107,13 +99,12 @@ class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
   friend class SkeletalAnimationRenderer;
   friend class LightingPass;
 
+  void upload_to(RenderContext& ctx, SharedSkinningResource& resource);
  private:
   void init_bone_boxes();
-  void upload_to(RenderContext& ctx) /*const*/;
 
   SkinnedMesh mesh_;
   std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
-
  // public:
  //  KDTree kd_tree_;
 };
