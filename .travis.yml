@@ -31,7 +31,7 @@ before_install:
   # build schism
   - mkdir -p externals
   - cd externals/
-  - git clone https://github.com/bernstein/schism.git schism
+  - git clone https://github.com/chrislu/schism.git schism
   - cd schism/build && mkdir build && cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DSCHISM_BUILD_STATIC=OFF -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=${BOOST_LIB_DIR} -DSCM_ENABLE_CUDA_CL_SUPPORT=OFF ../cmake
   - make -j2
