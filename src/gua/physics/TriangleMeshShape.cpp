@@ -179,8 +179,7 @@ void TriangleMeshShape::set_scaling(const math::vec3& scaling) {
         add_all_geometries(n);
       }
 
-    }
-    ;
+    };
 
     add_all_geometries(node);
 
