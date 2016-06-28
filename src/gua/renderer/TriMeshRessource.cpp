@@ -126,7 +126,10 @@ math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
-  std::vector<unsigned int> face{mesh_.indices[i]};
+  std::vector<unsigned int> face;
+  face.push_back(mesh_.indices[3*i]);
+  face.push_back(mesh_.indices[3*i+1]);
+  face.push_back(mesh_.indices[3*i+2]);
   return face;
 }
 
