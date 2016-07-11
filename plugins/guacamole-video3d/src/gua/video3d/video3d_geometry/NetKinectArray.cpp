@@ -48,12 +48,12 @@ void NetKinectArray::readloop() {
   zmq::socket_t  socket(ctx, ZMQ_SUB); // means a subscriber
 
   socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-#if WIN32
-  int hwm = 1;
-  socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
-#else
+#if ZMQ_VERSION_MAJOR < 3
   int64_t hwm = 1;
   socket.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+#else
+  int hwm = 1;
+  socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
   socket.connect(endpoint.c_str());

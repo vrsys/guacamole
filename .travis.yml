@@ -24,16 +24,16 @@ before_install:
       export CXX="g++-4.8" CC="gcc-4.8";
     fi
   # install cuda
-  - sudo apt-get install cuda
-  - sudo mkdir -p /opt/cuda/current
-  - sudo ln -s /usr/local/cuda-6.0 /opt/cuda/current/cuda
+  #- sudo apt-get install cuda
+  #- sudo mkdir -p /opt/cuda/current
+  #- sudo ln -s /usr/local/cuda-6.0 /opt/cuda/current/cuda
 
   # build schism
-  - mkdir externals
+  - mkdir -p externals
   - cd externals/
-  - git clone https://github.com/bernstein/schism.git schism
+  - git clone https://github.com/chrislu/schism.git schism
   - cd schism/build && mkdir build && cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DSCHISM_BUILD_STATIC=OFF -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=${BOOST_LIB_DIR} ../cmake
+  - cmake -DCMAKE_BUILD_TYPE=Release -DSCHISM_BUILD_STATIC=OFF -DSCM_BOOST_INC_DIR=/usr/include -DSCM_BOOST_LIB_DIR=${BOOST_LIB_DIR} -DSCM_ENABLE_CUDA_CL_SUPPORT=OFF ../cmake
   - make -j2
   - cd ../../../..
 

@@ -53,9 +53,9 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       root_(root),
       first_run_ { true }, 
       has_anims_ { false }, 
+      blend_factor_ { 1.0 },
       anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
-      anim_2_ ( "none" ), 
-      blend_factor_ { 1.0 }
+      anim_2_ ( "none" ) 
 {
   root_->collect_indices(bone_mapping_);
   num_bones_ = bone_mapping_.size();

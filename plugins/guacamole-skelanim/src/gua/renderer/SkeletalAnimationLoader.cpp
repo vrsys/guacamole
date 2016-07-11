@@ -401,14 +401,14 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
   std::vector<std::shared_ptr<Material> > materials {}
   ;
   unsigned mesh_count = 0;
-  for (unsigned i = 0; i < scene->GetGeometryCount(); ++i) {
+  for (size_t i = 0; i < size_t(scene->GetGeometryCount()); ++i) {
     FbxGeometry* geo = scene->GetGeometry(i);
     if (geo->GetAttributeType() == FbxNodeAttribute::eMesh) {
 
       FbxNode* node = geo->GetNode();
       FbxMesh* mesh = dynamic_cast<FbxMesh*>(geo);
 
-      for (unsigned j = 0; j < node->GetMaterialCount(); ++j) {
+      for (unsigned j = 0; j < unsigned(node->GetMaterialCount()); ++j) {
         GeometryDescription desc(
             "SkeletalAnimation", file_name, mesh_count, flags);
         geometry_descriptions.push_back(desc.unique_key());

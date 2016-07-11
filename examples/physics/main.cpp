@@ -26,6 +26,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <gua/physics.hpp>
+#include <GLFW/glfw3.h>
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
@@ -45,7 +46,7 @@ void mouse_button(gua::utils::Trackball& trackball,
     case 1:
       button = gua::utils::Trackball::right;
       break;
-  };
+  }
 
   switch (action) {
     case 0:
@@ -54,9 +55,44 @@ void mouse_button(gua::utils::Trackball& trackball,
     case 1:
       state = gua::utils::Trackball::pressed;
       break;
-  };
+  }
 
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
+}
+
+void add_sphere(std::vector<std::shared_ptr<gua::physics::RigidBodyNode>>& balls,
+    std::shared_ptr<gua::node::TransformNode>& transform,
+    std::shared_ptr<gua::physics::Physics>& physics,
+    gua::TriMeshLoader& loader) {
+  auto sphere_body = std::make_shared<gua::physics::RigidBodyNode>(
+      "sphere_body",
+      5,
+      0.5,
+      0.7,
+      scm::math::make_translation(1.0 - 2.0 * std::rand() / RAND_MAX,
+                                  5.0,
+                                  1.0 - 2.0 * std::rand() / RAND_MAX));
+  auto sphere_shape =
+      std::make_shared<gua::physics::CollisionShapeNode>("sphere_shape");
+  sphere_shape->data.set_shape("sphere");
+  //graph.get_root()->add_child(sphere_body);
+  transform->add_child(sphere_body);
+  sphere_body->add_child(sphere_shape);
+
+  auto sphere_geometry(loader.create_geometry_from_file(
+      "sphere_geometry",
+      "data/objects/sphere.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+          gua::TriMeshLoader::NORMALIZE_POSITION |
+          gua::TriMeshLoader::LOAD_MATERIALS |
+          gua::TriMeshLoader::OPTIMIZE_MATERIALS |
+          gua::TriMeshLoader::NORMALIZE_SCALE));
+  sphere_shape->add_child(sphere_geometry);
+  sphere_geometry->scale(0.5);
+
+  physics->add_rigid_body(sphere_body);
+
+  balls.push_back(sphere_body);
 }
 
 int main(int argc, char** argv) {
@@ -83,9 +119,12 @@ int main(int argc, char** argv) {
   screen->translate(0, 2, 1.0);
 
   // PLANE
-  auto plane(loader.create_geometry_from_file("plane", "data/objects/plane.obj",
-    gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::NORMALIZE_SCALE));
+  auto plane(loader.create_geometry_from_file(
+      "plane",
+      "data/objects/plane.obj",
+      gua::TriMeshLoader::OPTIMIZE_GEOMETRY |
+          gua::TriMeshLoader::NORMALIZE_POSITION |
+          gua::TriMeshLoader::NORMALIZE_SCALE));
   plane->scale(10);
   plane->translate(0, 1, 0);
   auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(plane));
@@ -93,20 +132,27 @@ int main(int argc, char** argv) {
     casted->get_material()->set_show_back_faces(true);
     casted->get_material()->set_uniform("Metalness", 0.0f);
     casted->get_material()->set_uniform("Roughness", 0.5f);
-    casted->get_material()->set_uniform("RoughnessMap", std::string("data/textures/tiles_specular.jpg"));
-    casted->get_material()->set_uniform("ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
-    casted->get_material()->set_uniform("NormalMap", std::string("data/textures/tiles_normal.jpg"));
+    casted->get_material()->set_uniform(
+        "RoughnessMap", std::string("data/textures/tiles_specular.jpg"));
+    casted->get_material()->set_uniform(
+        "ColorMap", std::string("data/textures/tiles_diffuse.jpg"));
+    casted->get_material()->set_uniform(
+        "NormalMap", std::string("data/textures/tiles_normal.jpg"));
   }
 
   graph.add_node("/transform", plane);
 
   // PHYSICS
 
-  gua::physics::CollisionShapeDatabase::add_shape("sphere", new gua::physics::SphereShape(0.25));
-  gua::physics::CollisionShapeDatabase::add_shape("box", new gua::physics::BoxShape(gua::math::vec3(5, 1, 5)));
+  gua::physics::CollisionShapeDatabase::add_shape(
+      "sphere", new gua::physics::SphereShape(0.25));
+  gua::physics::CollisionShapeDatabase::add_shape(
+      "box", new gua::physics::BoxShape(gua::math::vec3(5, 1, 5)));
 
-  auto floor_body = std::make_shared<gua::physics::RigidBodyNode>("floor_body", 0, 0.5, 0.7);
-  auto floor_shape = std::make_shared<gua::physics::CollisionShapeNode>("floor_shape");
+  auto floor_body =
+      std::make_shared<gua::physics::RigidBodyNode>("floor_body", 0, 0.5, 0.7);
+  auto floor_shape =
+      std::make_shared<gua::physics::CollisionShapeNode>("floor_shape");
   floor_shape->data.set_shape("box");
   //graph.get_root()->add_child(floor_body);
   transform->add_child(floor_body);
@@ -114,30 +160,10 @@ int main(int argc, char** argv) {
   floor_body->add_child(floor_shape);
   physics->add_rigid_body(floor_body);
 
-  std::vector<std::shared_ptr<gua::physics::RigidBodyNode>> balls;
+  std::vector<std::shared_ptr<gua::physics::RigidBodyNode> > balls;
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
-
-  auto add_sphere = [&](){
-    auto sphere_body = std::make_shared<gua::physics::RigidBodyNode>("sphere_body", 5, 0.5, 0.7, scm::math::make_translation(1.0-2.0*std::rand()/RAND_MAX, 5.0, 1.0-2.0*std::rand()/RAND_MAX));
-    auto sphere_shape = std::make_shared<gua::physics::CollisionShapeNode>("sphere_shape");
-    sphere_shape->data.set_shape("sphere");
-    //graph.get_root()->add_child(sphere_body);
-    transform->add_child(sphere_body);
-    sphere_body->add_child(sphere_shape);
-
-    auto sphere_geometry(loader.create_geometry_from_file("sphere_geometry", "data/objects/sphere.obj",
-      gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::OPTIMIZE_MATERIALS |
-      gua::TriMeshLoader::NORMALIZE_SCALE));
-    sphere_shape->add_child(sphere_geometry);
-    sphere_geometry->scale(0.5);
-
-    physics->add_rigid_body(sphere_body);
-
-    balls.push_back(sphere_body);
-  };
 
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
@@ -155,8 +181,8 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-    1.0f);
+  camera->get_pipeline_description()->get_resolve_pass()
+      ->tone_mapping_exposure(1.0f);
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -166,28 +192,39 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
 
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+  window->on_resize.connect([&](gua::math::vec2ui const & new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
-    screen->data.set_size(
-        gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    screen->data
+        .set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
-  window->on_move_cursor.connect(
-      [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
-  window->on_button_press.connect(
-      std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3));
+  window->on_move_cursor.connect([&](gua::math::vec2 const & pos) {
+    trackball.motion(pos.x, pos.y);
+  });
+  window->on_button_press.connect(std::bind(mouse_button,
+                                            std::ref(trackball),
+                                            std::placeholders::_1,
+                                            std::placeholders::_2,
+                                            std::placeholders::_3));
+
+  bool done = false;
+  window->on_key_press.connect([&done](int key, int scancode, int action, int mods) {
+      if (key == GLFW_KEY_ESCAPE)
+        done = true;
+  });
 
   gua::Renderer renderer;
 
   // application loop
   gua::events::MainLoop loop;
+
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
   gua::Timer frame_timer;
   frame_timer.start();
 
-  auto too_old = [physics, transform](std::shared_ptr<gua::physics::RigidBodyNode> const& b) {
+  auto too_old = [&physics, &transform](
+      std::shared_ptr<gua::physics::RigidBodyNode> const & b) {
     if (gua::math::get_translation(b->get_transform()).y < -5.0) {
       physics->remove_rigid_body(b);
       transform->remove_child(b);
@@ -200,32 +237,35 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix =
-        scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
-                                    trackball.distance()) *
-        gua::math::mat4(trackball.rotation());
+    gua::math::mat4 modelmatrix = scm::math::make_translation(
+        trackball.shiftx(), trackball.shifty(), trackball.distance()) *
+                                  gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
 
     if (frame_timer.get_elapsed() > 0.02f) {
       frame_timer.reset();
-      add_sphere();
+      add_sphere(balls, transform, physics, loader);
     }
 
-    balls.erase( std::remove_if(balls.begin(), balls.end(), too_old), balls.end() );
+    balls.erase(std::remove_if(balls.begin(), balls.end(), too_old),
+                balls.end());
 
     physics->synchronize(true);
 
-    if (window->should_close()) {
-      renderer.stop();
-      window->close();
+    if (done || window->should_close()) {
       loop.stop();
     } else {
-      renderer.queue_draw({&graph});
+      renderer.queue_draw({
+        &graph
+      });
     }
   });
 
   loop.start();
+
+  renderer.stop();
+  window->close();
 
   return 0;
 }

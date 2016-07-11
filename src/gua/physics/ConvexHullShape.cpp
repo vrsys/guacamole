@@ -30,7 +30,6 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 
-
 // external headers
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btConvexHull.h>
@@ -42,7 +41,7 @@ namespace physics {
 ////////////////////////////////////////////////////////////////////////////////
 
 ConvexHullShape::ConvexHullShape() : CollisionShape(true, true, true) {
-    shape_ = new btConvexHullShape();
+  shape_ = new btConvexHullShape();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +51,7 @@ ConvexHullShape::~ConvexHullShape() { delete shape_; }
 ////////////////////////////////////////////////////////////////////////////////
 
 void ConvexHullShape::add_point(const math::vec3& point) {
-    shape_->addPoint(math::vec3_to_btVector3(point));
+  shape_->addPoint(math::vec3_to_btVector3(point));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,28 +59,29 @@ void ConvexHullShape::add_point(const math::vec3& point) {
 void ConvexHullShape::build_from_geometry(
     const std::vector<std::string>& geometry_list,
     bool compensate_collision_margin) {
-    btAlignedObjectArray<btVector3> vertices;
+  btAlignedObjectArray<btVector3> vertices;
 
-    for (auto const& geom_name : geometry_list) {
-      std::shared_ptr<TriMeshRessource> mesh = std::dynamic_pointer_cast<TriMeshRessource>(
+  for (auto const& geom_name : geometry_list) {
+    std::shared_ptr<TriMeshRessource> mesh =
+        std::dynamic_pointer_cast<TriMeshRessource>(
             gua::GeometryDatabase::instance()->lookup(geom_name));
-        if (mesh)
-            for (unsigned i(0); i < mesh->num_vertices(); ++i) {
-                btVector3 v = math::vec3_to_btVector3(mesh->get_vertex(i));
-                vertices.push_back(v);
-            }
-    }
+    if (mesh)
+      for (unsigned i(0); i < mesh->num_vertices(); ++i) {
+        btVector3 v = math::vec3_to_btVector3(mesh->get_vertex(i));
+        vertices.push_back(v);
+      }
+  }
 
-    delete shape_;
-    shape_ = new btConvexHullShape(&(vertices[0].getX()), vertices.size());
+  delete shape_;
+  shape_ = new btConvexHullShape(&(vertices[0].getX()), vertices.size());
 
-    if (compensate_collision_margin) {
-        // workaround
-        shape_->setMargin(0.012f);
+  if (compensate_collision_margin) {
+    // workaround
+    shape_->setMargin(0.012f);
 
-        // this code works strange. Converting plain equations back to
-        // vertices produces too many vertices and bullet becomes very slow.
-        /*
+    // this code works strange. Converting plain equations back to
+    // vertices produces too many vertices and bullet becomes very slow.
+    /*
         HullDesc hd;
         hd.mFlags = QF_TRIANGLES;
         hd.mVcount = static_cast<unsigned int>(vertices.size());
@@ -110,65 +110,68 @@ void ConvexHullShape::build_from_geometry(
         btGeometryUtil::getVerticesFromPlaneEquations(planes_s, vertices);
 
         delete shape_;
-        shape_ = new btConvexHullShape(&(vertices[0].getX()),vertices.size());
+        shape_ = new
+    btConvexHullShape(&(vertices[0].getX()),vertices.size());
         */
-    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ void ConvexHullShape::construct_dynamic(
-    btCompoundShape * bullet_shape, const btTransform & base_transform) {
-    bullet_shape->addChildShape(base_transform, shape_);
+    btCompoundShape* bullet_shape,
+    const btTransform& base_transform) {
+  bullet_shape->addChildShape(base_transform, shape_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /* virtual */ btCollisionShape* ConvexHullShape::construct_static() {
-    return shape_;
+  return shape_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /* static */ ConvexHullShape* ConvexHullShape::FromGeometry(
-    const std::vector<std::string> & geometry_list,
+    const std::vector<std::string>& geometry_list,
     bool compensate_collision_margin) {
-    ConvexHullShape* shape = new ConvexHullShape();
-    shape->build_from_geometry(geometry_list, compensate_collision_margin);
-    return shape;
+  ConvexHullShape* shape = new ConvexHullShape();
+  shape->build_from_geometry(geometry_list, compensate_collision_margin);
+  return shape;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /* static */ ConvexHullShape* ConvexHullShape::FromGeometryFile(
-    const std::string & file_name,
+    const std::string& file_name,
     bool compensate_collision_margin,
     unsigned flags) {
-    ConvexHullShape* shape = new ConvexHullShape();
+  ConvexHullShape* shape = new ConvexHullShape();
 
-    TriMeshLoader factory;
-    auto node(factory.create_geometry_from_file("", file_name, std::make_shared<Material>(), flags));
-    if (node) {
-      std::vector<std::string> geom_list;
+  TriMeshLoader factory;
+  auto node(factory.create_geometry_from_file(
+      "", file_name, std::make_shared<Material>(), flags));
+  if (node) {
+    std::vector<std::string> geom_list;
 
-      if (node->has_children()) {
-        for (auto const& n : node->get_children()) {
-            auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(n);
-            if (gnode) {
-                geom_list.push_back(gnode->get_geometry_description());
-            }
-        }
-      } else {
-        auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
+    if (node->has_children()) {
+      for (auto const& n : node->get_children()) {
+        auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(n);
         if (gnode) {
           geom_list.push_back(gnode->get_geometry_description());
         }
       }
-
-      shape->build_from_geometry(geom_list, compensate_collision_margin);
+    } else {
+      auto gnode = std::dynamic_pointer_cast<node::TriMeshNode>(node);
+      if (gnode) {
+        geom_list.push_back(gnode->get_geometry_description());
+      }
     }
 
-    return shape;
+    shape->build_from_geometry(geom_list, compensate_collision_margin);
+  }
+
+  return shape;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

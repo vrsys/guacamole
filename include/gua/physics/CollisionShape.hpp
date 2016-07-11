@@ -102,7 +102,8 @@ class GUA_DLL CollisionShape {
     return has_identical_shape_constructor_;
   }
 
-  void set_has_identical_shape_constructor(bool has_identical_shape_constructor) {
+  void set_has_identical_shape_constructor(
+      bool has_identical_shape_constructor) {
     has_identical_shape_constructor_ = has_identical_shape_constructor;
   }
 

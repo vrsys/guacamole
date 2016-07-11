@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/physics/PhysicsUtils.hpp>
+#include <memory>
 
 class btCylinderShape;
 
@@ -53,25 +54,18 @@ class GUA_DLL CylinderShape : public CollisionShape {
    */
   CylinderShape(const math::vec3& half_extents);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the cylinder shape and frees all associated data.
-   */
-  virtual ~CylinderShape();
-
-  math::vec3 const& get_half_extents() const;
+  inline math::vec3 const& get_half_extents() const { return half_extents_; }
 
   void set_half_extents(math::vec3 const& half_extents);
 
  private:
 
-  virtual void construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform);
+  void construct_dynamic(btCompoundShape* bullet_shape,
+                         const btTransform& base_transform) override;
 
-  virtual btCollisionShape* construct_static();
+  btCollisionShape* construct_static() override;
 
-  btCylinderShape* shape_;
+  std::unique_ptr<btCylinderShape> shape_;
   math::vec3 half_extents_;
 };
 
