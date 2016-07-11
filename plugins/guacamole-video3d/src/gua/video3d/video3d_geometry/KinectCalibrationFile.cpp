@@ -471,7 +471,6 @@ bool KinectCalibrationFile::parse()
       //std::cerr << "loading " << fpath << std::endl;
 
       std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
-      unsigned nbr = 0;
       if (fstr.good())
       {
         fstr.read((char*)&cv_width, sizeof(unsigned));
@@ -496,7 +495,6 @@ bool KinectCalibrationFile::parse()
       //std::cerr << "loading " << fpath << std::endl;
 
       std::fstream fstr(fpath.c_str(), std::ios::in | std::ios::binary);
-      unsigned nbr = 0;
       if (fstr.good())
       {
         fstr.read((char*)&cv_width, sizeof(unsigned));

@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/physics/CollisionShape.hpp>
 #include <gua/math.hpp>
+#include <memory>
 
 class btStaticPlaneShape;
 
@@ -56,29 +57,22 @@ class GUA_DLL PlaneShape : public CollisionShape {
              float z_normal,
              float plane_constant);
 
-  /**
-   * Destructor.
-   *
-   * Deletes the plane shape and frees all associated data.
-   */
-  virtual ~PlaneShape();
-
-  math::vec3 const& get_normal() const;
+  inline math::vec3 const& get_normal() const { return normal_; }
 
   void set_normal(math::vec3 const& normal);
 
-  float get_plane_constant() const;
+  inline float get_plane_constant() const { return plane_constant_; }
 
   void set_plane_constant(float plane_constant);
 
  private:
 
-  virtual void construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform);
+  void construct_dynamic(btCompoundShape* bullet_shape,
+                         const btTransform& base_transform) override;
 
-  virtual btCollisionShape* construct_static();
+  btCollisionShape* construct_static() override;
 
-  btStaticPlaneShape* shape_;
+  std::unique_ptr<btStaticPlaneShape> shape_;
   math::vec3 normal_;
   float plane_constant_;
 

@@ -287,7 +287,7 @@ BackgroundDetector::RGB_to_CIELab(){
 	double xyz[3];
 	
 #pragma omp parallel for private(offset,xyz,c) shared(lab)
-	for(int offset=0;offset<m_w*m_h;offset++){		
+	for(unsigned offset=0;offset<m_w*m_h;offset++){		
 		// Convert RGB to XYZ
 		xyz[0]=xyz[1]=xyz[2]=0;			
 		FORC3{
@@ -322,7 +322,7 @@ BackgroundDetector::CIELab_to_RGB(){
 	double xyz[3],rgb[3],f[3];	
 	
 #pragma omp parallel for private(offset,xyz,c,f,L,rgb) shared(image) 
-	for(int offset=0;offset<m_w*m_h;offset++){		
+	for(unsigned offset=0;offset<m_w*m_h;offset++){		
 		// Convert L*a*b* to XYZ
 
 #if 0		

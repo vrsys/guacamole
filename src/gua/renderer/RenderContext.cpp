@@ -35,7 +35,6 @@ namespace gua {
     render_device(),
     render_window(nullptr),
     id(0),
-    framecount(0),
-    bone_transform_blocks{}
+    framecount(0)
     {}
 }

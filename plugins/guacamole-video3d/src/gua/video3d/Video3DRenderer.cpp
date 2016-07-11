@@ -73,11 +73,11 @@ gua::RenderContext::Mesh create_proxy_mesh(gua::RenderContext& ctx,
                                            unsigned height_depthimage,
                                            unsigned width_depthimage) {
   int num_vertices = height_depthimage * width_depthimage;
-  int num_indices = height_depthimage * width_depthimage;
+  // int num_indices = height_depthimage * width_depthimage;
   int num_triangles = ((height_depthimage - 1) * (width_depthimage - 1)) * 2;
   int num_triangle_indices = 3 * num_triangles;
-  int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
-                                                    1) + (width_depthimage - 1);
+  // int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
+  //                                                   1) + (width_depthimage - 1);
 
   float step = 1.0f / width_depthimage;
 
@@ -148,6 +148,14 @@ Video3DRenderer::Video3DData::Video3DData(
       video3d_ressource.number_of_cameras(),
       1);
 
+  depth_tex_processed_ = ctx.render_device->create_texture_2d(
+      scm::math::vec2ui(video3d_ressource.width_depthimage(),
+                        video3d_ressource.height_depthimage()),
+      scm::gl::FORMAT_RG_32F,
+      0,
+      video3d_ressource.number_of_cameras(),
+      1);
+
   color_tex_ = ctx.render_device->create_texture_2d(
       scm::math::vec2ui(video3d_ressource.width_colorimage(),
                         video3d_ressource.height_colorimage()),
@@ -203,13 +211,13 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   std::vector<ShaderProgramStage> warp_pass_stages;
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
-                         factory.read_shader_file("resources/warp_pass.vert")));
+                         factory.read_shader_file("resources/shaders/warp_pass.vert")));
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER,
-                         factory.read_shader_file("resources/warp_pass.geom")));
+                         factory.read_shader_file("resources/shaders/warp_pass.geom")));
   warp_pass_stages.push_back(
       ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
-                         factory.read_shader_file("resources/warp_pass.frag")));
+                         factory.read_shader_file("resources/shaders/warp_pass.frag")));
 
   warp_pass_program_ = std::make_shared<ShaderProgram>();
   warp_pass_program_->set_shaders(warp_pass_stages);
@@ -217,10 +225,22 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
   // create final shader description
   program_stages_.push_back(ShaderProgramStage(
       scm::gl::STAGE_VERTEX_SHADER,
-      factory.read_shader_file("resources/blend_pass.vert")));
+      factory.read_shader_file("resources/shaders/blend_pass.vert")));
   program_stages_.push_back(ShaderProgramStage(
       scm::gl::STAGE_FRAGMENT_SHADER,
-      factory.read_shader_file("resources/blend_pass.frag")));
+      factory.read_shader_file("resources/shaders/blend_pass.frag")));
+
+  // create depth process shader
+  std::vector<ShaderProgramStage> depth_process_stages;
+  depth_process_stages.push_back(
+      ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,
+                         factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
+  depth_process_stages.push_back(
+      ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER,
+                         factory.read_shader_file("resources/shaders/depth_process.frag")));
+
+  depth_process_program_ = std::make_shared<ShaderProgram>();
+  depth_process_program_->set_shaders(depth_process_stages);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +262,8 @@ void Video3DRenderer::draw_video3dResource(
 
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::update_buffers(RenderContext const& ctx,
-                                     Video3DResource const& video3d_ressource) {
+                                     Video3DResource const& video3d_ressource,
+                                     Pipeline& pipe) {
   auto iter = video3Ddata_.find(video3d_ressource.uuid());
   if (iter == video3Ddata_.end()) {
     video3Ddata_[video3d_ressource.uuid()] =
@@ -259,7 +280,7 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
 
   if (video3d_data.nka_->update()) {
     unsigned char* buff = video3d_data.nka_->getBuffer();
-    for (int i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
+    for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
 
       ctx.render_context->update_sub_texture(
           video3d_data.color_tex_,
@@ -282,11 +303,55 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
           static_cast<void*>(buff));
       buff += video3d_ressource.depth_size_byte();
     }
+
+    process_textures(ctx, video3d_ressource, pipe);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void Video3DRenderer::process_textures(RenderContext const& ctx,
+                                       Video3DResource const& video3d_ressource,
+                                       Pipeline& pipe) {
+  Video3DData& video3d_data = video3Ddata_[video3d_ressource.uuid()];
+  // store current state
+  scm::gl::context_all_guard all_guard(ctx.render_context);
 
+  ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2ui(0, 0),
+    scm::math::vec3ui(video3d_data.depth_tex_->dimensions())));
+  ctx.render_context
+      ->set_depth_stencil_state(depth_stencil_state_tex_process_);
+  ctx.render_context->set_frame_buffer(fbo_depth_process_);
+
+  depth_process_program_->use(ctx);
+  // bind depth texture to unit
+  ctx.render_context
+    ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 1);
+
+  for (unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i) {
+    fbo_depth_process_->attach_color_buffer(0, video3d_data.depth_tex_processed_, 0, i);
+
+    depth_process_program_->set_uniform(ctx, int(i), "layer");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).getTexSizeInvD(),
+        "tex_size_inv");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).cv_min_d,
+        "cv_min_d");
+    depth_process_program_->set_uniform(
+        ctx,
+        video3d_ressource.calibration_file(i).cv_max_d,
+        "cv_max_d");
+
+    // render to fbo
+    pipe.draw_quad();
+  }
+
+  depth_process_program_->unuse(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::render(Pipeline& pipe,
                              PipelinePassDescription const& desc) {
   ///////////////////////////////////////////////////////////////////////////
@@ -294,7 +359,7 @@ void Video3DRenderer::render(Pipeline& pipe,
   ///////////////////////////////////////////////////////////////////////////
   auto& scene = *pipe.current_viewstate().scene;
   auto const& camera = pipe.current_viewstate().camera;
-  auto const& frustum = pipe.current_viewstate().frustum;
+  // auto const& frustum = pipe.current_viewstate().frustum;
   auto& target = *pipe.current_viewstate().target;
 
   auto const& ctx(pipe.get_context());
@@ -303,7 +368,7 @@ void Video3DRenderer::render(Pipeline& pipe,
     initialized_ = true;
 
     warp_pass_program_->upload_to(ctx);
-
+    depth_process_program_->upload_to(ctx);
     // TODO:::::
     // if (warp_color_result_) {
     //   return upload_succeeded;
@@ -338,6 +403,18 @@ void Video3DRenderer::render(Pipeline& pipe,
         ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS);
     no_bfc_rasterizer_state_ = ctx.render_device
         ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+
+    warp_pass_program_->get_program(ctx)
+    ->uniform_sampler("depth_video3d_texture", 0);
+    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
+    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
+
+    fbo_depth_process_ = ctx.render_device->create_frame_buffer();
+    depth_stencil_state_tex_process_ = ctx.render_device
+        ->create_depth_stencil_state(false, false);
+    // input texture bound to unit 1
+    depth_process_program_->get_program(ctx)
+      ->uniform_sampler("depth_texture", 1);
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::Video3DNode))));
@@ -365,10 +442,10 @@ void Video3DRenderer::render(Pipeline& pipe,
       }
 
       // update stream data
-      update_buffers(pipe.get_context(), *video3d_ressource);
+      update_buffers(pipe.get_context(), *video3d_ressource, pipe);
       auto const& video3d_data = video3Ddata_[video3d_ressource->uuid()];
 
-      auto model_matrix(video_node->get_cached_world_transform());
+      auto const& model_matrix(video_node->get_cached_world_transform());
       auto normal_matrix(scm::math::transpose(
           scm::math::inverse(video_node->get_cached_world_transform())));
       auto view_matrix(pipe.current_viewstate().frustum.get_view());
@@ -384,9 +461,7 @@ void Video3DRenderer::render(Pipeline& pipe,
 
         // set uniforms
         ctx.render_context
-            ->bind_texture(video3d_data.depth_tex_, nearest_sampler_state_, 0);
-        warp_pass_program_->get_program(ctx)
-            ->uniform_sampler("depth_video3d_texture", 0);
+            ->bind_texture(video3d_data.depth_tex_processed_, nearest_sampler_state_, 0);
 
         warp_pass_program_->apply_uniform(
             ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
@@ -394,7 +469,7 @@ void Video3DRenderer::render(Pipeline& pipe,
             ctx, "gua_model_matrix", math::mat4f(model_matrix));
         warp_pass_program_->set_uniform(ctx, int(1), "bbxclip");
 
-        auto bbox(video3d_ressource->get_bounding_box());
+        auto const& bbox(video3d_ressource->get_bounding_box());
         warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.min), "bbx_min");
         warp_pass_program_->set_uniform(ctx, math::vec3f(bbox.max), "bbx_max");
 
@@ -426,11 +501,9 @@ void Video3DRenderer::render(Pipeline& pipe,
 
           ctx.render_context->bind_texture(
               video3d_data.cv_xyz_[layer], linear_sampler_state_, 1);
-          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
 
           ctx.render_context->bind_texture(
               video3d_data.cv_uv_[layer], linear_sampler_state_, 2);
-          warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
 
           warp_pass_program_->set_uniform(
               ctx,
@@ -490,44 +563,41 @@ void Video3DRenderer::render(Pipeline& pipe,
 
         // second pass
         {
-          if (video3d_ressource) {
-            current_shader->apply_uniform(
-                ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
-            current_shader->apply_uniform(
-                ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
+          current_shader->apply_uniform(
+              ctx, "gua_normal_matrix", gua::math::mat4f(normal_matrix));
+          current_shader->apply_uniform(
+              ctx, "gua_model_matrix", gua::math::mat4f(model_matrix));
 
-            // needs to be multiplied with scene scaling
-            current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
-            current_shader->set_uniform(
-                ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
-            current_shader->set_uniform(
-                ctx,
-                int(video3d_ressource->do_overwrite_normal()),
-                "overwrite_normal");
-            current_shader->set_uniform(
-                ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
+          // needs to be multiplied with scene scaling
+          current_shader->set_uniform(ctx, 0.075f * scaling, "epsilon");
+          current_shader->set_uniform(
+              ctx, int(video3d_ressource->number_of_cameras()), "numlayers");
+          current_shader->set_uniform(
+              ctx,
+              int(video3d_ressource->do_overwrite_normal()),
+              "overwrite_normal");
+          current_shader->set_uniform(
+              ctx, video3d_ressource->get_overwrite_normal(), "o_normal");
 
-            ctx.render_context
-                ->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("quality_texture", 0);
+          ctx.render_context
+              ->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("quality_texture", 0);
 
-            ctx.render_context
-                ->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("depth_texture", 1);
+          ctx.render_context
+              ->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("depth_texture", 1);
 
-            ctx.render_context->bind_texture(
-                video3d_data.color_tex_, linear_sampler_state_, 2);
-            current_shader->get_program(ctx)
-                ->uniform_sampler("video_color_texture", 2);
+          ctx.render_context->bind_texture(
+              video3d_data.color_tex_, linear_sampler_state_, 2);
+          current_shader->get_program(ctx)
+              ->uniform_sampler("video_color_texture", 2);
 
-            video_node->get_material()
-                ->apply_uniforms(ctx, current_shader.get(), view_id);
+          video_node->get_material()
+              ->apply_uniforms(ctx, current_shader.get(), view_id);
 
-            ctx.render_context->apply();
-            pipe.draw_quad();
-          }
+          pipe.draw_quad();
         }
         current_shader->unuse(ctx);
       }

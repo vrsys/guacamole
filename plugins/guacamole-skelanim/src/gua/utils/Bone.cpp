@@ -16,8 +16,8 @@
 namespace gua {
 
 Bone::Bone()
-  : index (-1),
-    name( "none" ),
+  : name( "none" ),
+    index (-1),
     parentName ( "none" ),
     numChildren ( 0 ),
     transformation ( scm::math::mat4f::identity() ),
@@ -25,8 +25,8 @@ Bone::Bone()
 {}
 
 Bone::Bone(aiNode const& node)
-  : index ( -1 ),
-    name ( node.mName.C_Str() ),
+  : name ( node.mName.C_Str() ),
+    index ( -1 ),
     parentName ( node.mParent != nullptr ? node.mParent->mName.C_Str() : "none" ),
     numChildren ( node.mNumChildren ),
     transformation ( to_gua::mat4f(node.mTransformation) ),
@@ -68,13 +68,13 @@ Bone::Bone(FbxScene& scene) {
   std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info{}
   ;
   unsigned num_bones = 0;
-  for (unsigned int i = 0; i < scene.GetGeometryCount(); i++) {
+  for (size_t i = 0; i < size_t(scene.GetGeometryCount()); i++) {
     FbxGeometry* geo = scene.GetGeometry(i);
     if (geo->GetAttributeType() == FbxNodeAttribute::eMesh) {
 
       //check for skinning, use first skin deformer
-      FbxSkin* skin;
-      for (unsigned i = 0; i < geo->GetDeformerCount(); ++i) {
+      FbxSkin* skin = nullptr;
+      for (size_t i = 0; i < size_t(geo->GetDeformerCount()); ++i) {
         FbxDeformer* defPtr = { geo->GetDeformer(i) };
         if (defPtr->GetDeformerType() == FbxDeformer::eSkin) {
           skin = static_cast<FbxSkin*>(defPtr);
@@ -88,7 +88,7 @@ Bone::Bone(FbxScene& scene) {
       }
 
       //one cluster corresponds to one bone
-      for (unsigned i = 0; i < skin->GetClusterCount(); ++i) {
+      for (size_t i = 0; i < size_t(skin->GetClusterCount()); ++i) {
         FbxCluster* cluster = skin->GetCluster(i);
         FbxNode* node = cluster->GetLink();
 
@@ -136,8 +136,8 @@ Bone::Bone(FbxScene& scene) {
 }
 
 Bone::Bone(FbxNode& node)
-  : index ( -1 )
-  , name ( node.GetName() )
+  : name ( node.GetName() )
+  , index ( -1 )
   , parentName ( node.GetParent() != nullptr ? node.GetParent()->GetName() : "none" )
   , numChildren ( unsigned(node.GetChildCount()) )
   , transformation ( to_gua::mat4f(node.EvaluateLocalTransform()) )
