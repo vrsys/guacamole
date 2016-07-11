@@ -201,6 +201,8 @@ IF (GUACAMOLE_ENABLE_PHYSICS)
                          optimized ${BULLET_COLLISION_LIBRARY} debug ${BULLET_COLLISION_LIBRARY_DEBUG}
                          optimized ${BULLET_MATH_LIBRARY} debug ${BULLET_MATH_LIBRARY_DEBUG} 
                          optimized ${BULLET_HACD_LIBRARY} debug ${BULLET_HACD_LIBRARY_DEBUG} 
+                         optimized ${BULLET_MATH_LIBRARY} debug ${BULLET_MATH_LIBRARY_DEBUG} 
+                         optimized ${BULLET_SOFTBODY_LIBRARY} debug ${BULLET_SOFTBODY_LIBRARY_DEBUG} 
                        )
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
