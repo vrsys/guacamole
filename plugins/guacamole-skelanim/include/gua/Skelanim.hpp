@@ -34,7 +34,7 @@
 
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/renderer/SkeletalAnimationPass.hpp>
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
+//#include <gua/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/renderer/SkeletalAnimationLoader.hpp>
 
 #endif  // GUA_INCLUDE_SKELANIM_HPP

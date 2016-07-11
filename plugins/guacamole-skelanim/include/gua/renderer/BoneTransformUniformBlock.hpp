@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/Skelanim.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
@@ -35,7 +36,7 @@ namespace gua {
  * @brief holds the transformations of all bones
  * of skeletalanimationnodes
  */
-class GUA_DLL BoneTransformUniformBlock
+class GUA_SKELANIM_DLL BoneTransformUniformBlock
 {
 public:
   struct BoneTransformBlock {

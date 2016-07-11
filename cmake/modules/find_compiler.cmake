@@ -28,6 +28,11 @@ if (WIN32)
         set (_COMPILER_SUFFIX "vc120")
         set (_COMPILER_SUFFIX_VERSION "120")
     endif(MSVC12)
+
+    if (MSVC14)
+        set (_COMPILER_SUFFIX "vc140")
+        set (_COMPILER_SUFFIX_VERSION "140")
+    endif(MSVC14)
 endif (WIN32)
 
 macro(GET_WIN32_WINNT version)
