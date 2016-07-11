@@ -235,7 +235,7 @@ int main(int argc, char** argv)
   //input_transform->add_child(center);
 
   auto count = 0;
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/G3_body_Catia_surfaces.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/motor.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/antenne.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontblinker.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer.igs", glass));
