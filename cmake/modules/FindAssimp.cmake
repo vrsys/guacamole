@@ -28,12 +28,12 @@ find_path (ASSIMP_INCLUDE_DIR
 
 find_library (ASSIMP_LIBRARY_DEBUG 
               NAMES assimpd libassimpd libassimp_d assimp-${COMPILER_SUFFIX}-mtd
-			  PATH_SUFFIXES release debug 
+			  PATH_SUFFIXES debug 
 			  PATHS ${ASSIMP_SEARCH_PATHS})
 			  
 find_library (ASSIMP_LIBRARY_RELEASE
               NAMES assimp libassimp assimp-${COMPILER_SUFFIX}-mt 
-			  PATH_SUFFIXES release debug 
+			  PATH_SUFFIXES release 
 			  PATHS ${ASSIMP_SEARCH_PATHS})
 
 if (ASSIMP_INCLUDE_DIR AND ASSIMP_LIBRARY_RELEASE)

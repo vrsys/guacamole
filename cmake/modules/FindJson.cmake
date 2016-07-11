@@ -20,7 +20,7 @@ find_library(JSON_LIBRARY
             )
 
 find_library(JSON_LIBRARY_DEBUG
-            NAMES jsoncpp jsond
+            NAMES jsoncppd jsond jsoncpp json
             PATHS /usr/lib
                   ${GLOBAL_EXT_DIR}/json/lib
                   ${GUACAMOLE_EXT_DIR}/lib

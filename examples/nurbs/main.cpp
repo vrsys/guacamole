@@ -235,15 +235,15 @@ int main(int argc, char** argv)
   //input_transform->add_child(center);
 
   auto count = 0;
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/ablauf.igs", gum));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/antenne.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontblinker.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer.igs", glass));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/grill_innen.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer_innen.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/karosserie.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/kuehlergrill.igs", lack));
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/nebelscheinwerfer.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/motor.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/antenne.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontblinker.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer.igs", glass));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/grill_innen.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer_innen.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/karosserie.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/kuehlergrill.igs", lack));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/nebelscheinwerfer.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/seitenscheiben.igs", glass));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/tuergriffe.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/windschutzscheibe.igs", glass));

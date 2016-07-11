@@ -99,6 +99,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       if (flags & TRIM_TEXTURE_32) trim_resolution = 32;
 
       auto ressource = std::make_shared<NURBSResource>(bezier_object, pre_subdivision_u, pre_subdivision_v, trim_resolution, fill_mode);
+      Logger::LOG_WARNING << "NURBS Object loaded with " << bezier_object->surfaces() << " surfaces.\n";
 
       // add resource to database
       GeometryDescription desc("NURBS", filename, 0, flags);
@@ -122,7 +123,6 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       }
 
       node->raycasting(flags & RAYCASTING);
-
       return node;
     }
   } catch (std::exception & e) {

@@ -174,7 +174,6 @@ IF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general ${X11_LIBRARIES})
 ELSEIF (MSVC)
   TARGET_LINK_LIBRARIES( guacamole 
-                         optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
                          optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE} debug ${Boost_FILESYSTEM_LIBRARY_DEBUG}
                          optimized ${Boost_SYSTEM_LIBRARY_RELEASE} debug ${Boost_SYSTEM_LIBRARY_DEBUG}
                          optimized ${Boost_REGEX_LIBRARY_RELEASE} debug ${Boost_REGEX_LIBRARY_DEBUG}
@@ -202,6 +201,8 @@ IF (GUACAMOLE_ENABLE_PHYSICS)
                          optimized ${BULLET_COLLISION_LIBRARY} debug ${BULLET_COLLISION_LIBRARY_DEBUG}
                          optimized ${BULLET_MATH_LIBRARY} debug ${BULLET_MATH_LIBRARY_DEBUG} 
                          optimized ${BULLET_HACD_LIBRARY} debug ${BULLET_HACD_LIBRARY_DEBUG} 
+                         optimized ${BULLET_MATH_LIBRARY} debug ${BULLET_MATH_LIBRARY_DEBUG} 
+                         optimized ${BULLET_SOFTBODY_LIBRARY} debug ${BULLET_SOFTBODY_LIBRARY_DEBUG} 
                        )
 ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 

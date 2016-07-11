@@ -6,7 +6,7 @@
 find_path(FBX_INCLUDE_DIR fbxsdk.h
             HINTS 
             ${GLOBAL_EXT_DIR}/fbx2016/include
-             ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
+            ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
             PATHS
              /usr/include/fbx20151
              /opt/project_animation/fbx20151/include
@@ -15,7 +15,7 @@ find_path(FBX_INCLUDE_DIR fbxsdk.h
             )
 
 IF (MSVC)
-	SET(FBX_LIBRARY_NAME libfbxsdk-md.lib)			
+  SET(FBX_LIBRARY_NAME libfbxsdk-md.lib)			
 ELSEIF (UNIX)
 	SET(FBX_LIBRARY_NAME libfbxsdk.a )			
 ENDIF(MSVC)
@@ -23,25 +23,23 @@ ENDIF(MSVC)
 find_library(FBX_LIBRARY
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
-            ${GLOBAL_EXT_DIR}/fbx2016/lib/vs2013/x64/release
-             ${CMAKE_SOURCE_DIR}/externals/fbx20151/lib/gcc4/x64/release
-			       ${CMAKE_SOURCE_DIR}/externals/lib/release
+             ${GLOBAL_EXT_DIR}/fbx2016/lib
             PATHS
              /usr/lib
              /opt/project_animation/fbx20151/lib/gcc4/x64/release
              /opt/fbx20151/lib/gcc4/x64/release
+             PATH_SUFFIXES release
             )
 
 find_library(FBX_LIBRARY_DEBUG
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
-            ${GLOBAL_EXT_DIR}/fbx2016/lib/vs2013/x64/debug
-             ${CMAKE_SOURCE_DIR}/externals/fbx20151/lib/gcc4/x64/debug
-			 ${CMAKE_SOURCE_DIR}/externals/lib/debug
+            ${GLOBAL_EXT_DIR}/fbx2016/lib
             PATHS 
              /usr/lib
              /opt/project_animation/fbx20151/lib/gcc4/x64/debug
              /opt/fbx20151/lib/gcc4/x64/debug
+             PATH_SUFFIXES debug
             )
 
 # set variables if found
