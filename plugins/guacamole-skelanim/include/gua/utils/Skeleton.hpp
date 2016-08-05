@@ -19,13 +19,15 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_BONE_HPP
-#define GUA_BONE_HPP
+#ifndef GUA_SKELETON_HPP
+#define GUA_SKELETON_HPP
 
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/utils/fbxfwd.hpp>
 #include <gua/Skelanim.hpp>
+
+#include <gua/utils/Bone.hpp>
 
 // external headers
 #include <scm/gl_core.h>
@@ -38,20 +40,19 @@ struct aiNode;
 namespace gua {
 
 class SkeletalPose;
-class Skeleton;
+
 /**
  * @brief represents one node in skeletal hierarchy
  * @details has methods to traverse skeleton hierarchy
  */
-class GUA_SKELANIM_DLL Bone {
+class GUA_SKELANIM_DLL Skeleton {
  public:
-  Bone();
-  Bone(aiNode const& node);
-  Bone(aiScene const& scene);
+  unsigned addBone(aiNode const& node);
+  Skeleton(aiScene const& scene);
 
 #ifdef GUACAMOLE_FBX
-  Bone(FbxNode& node);
-  Bone(FbxScene& scene);
+  unsigned addBone(FbxNode& node);
+  Skeleton(FbxScene& scene);
 #endif
 
   /**
@@ -62,15 +63,6 @@ class GUA_SKELANIM_DLL Bone {
    * @param ids map to store bone ids
    */
   void collect_indices(std::map<std::string, int>& ids) const;
-  /**
-   * @brief collects 
-   * @details adds itself to given vector
-   * and calls method on children
-   * 
-   * @param bones container to store bones
-   */
-  void collect_bones(std::vector<Bone>& bones) const;
-  void create_bones(std::vector<Bone> const& bones);
 
   /**
    * @brief sets offset matrix and index
@@ -80,7 +72,7 @@ class GUA_SKELANIM_DLL Bone {
    * @param infos map with index and offset matrix of each bone
    */
   void set_properties(
-      std::map<std::string, scm::math::mat4f> const& infos, std::size_t& idx);
+      std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > const& infos);
 
 
   /**
@@ -93,9 +85,7 @@ class GUA_SKELANIM_DLL Bone {
    * @param parentTransform transform matrix of parent bone
    */
   void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
-                           SkeletalPose const& pose,
-                           scm::math::mat4f const& parentTransform =
-                               scm::math::mat4f::identity()) const;
+                           SkeletalPose const& pose) const;
 
   /**
    * @brief finds bone in hierarchy
@@ -105,27 +95,14 @@ class GUA_SKELANIM_DLL Bone {
    * @param name name of bone
    * @return pointer to found bone, nullptr if not found
    */
-  std::shared_ptr<Bone> find(std::string const& name) const;
+  Bone const* find(std::string const& name) const;
 
-  std::size_t num_bones() const;
-
-  std::string name;
-  std::vector<std::shared_ptr<Bone> > children;
-  std::vector<unsigned> children2;
-
+  std::vector<Bone> m_bones;
+  std::map<std::string, int> m_mapping;
  private:
-  std::vector<unsigned> children2;
-
-  int index;
-  std::string parentName;
-  unsigned numChildren;
-  scm::math::mat4f transformation;
-  //transforms to bone space
-  scm::math::mat4f offsetMatrix;
-
-  friend class Skeleton;
+  void store_mapping();
 };
 
 }
 
-#endif  //GUA_BONE_HPP
+#endif  //GUA_SKELETON_HPP
