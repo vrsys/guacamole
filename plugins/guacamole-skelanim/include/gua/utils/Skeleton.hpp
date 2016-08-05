@@ -47,6 +47,7 @@ class SkeletalPose;
  */
 class GUA_SKELANIM_DLL Skeleton {
  public:
+  Skeleton() {};
   unsigned addBone(aiNode const& node);
   Skeleton(aiScene const& scene);
 
@@ -84,8 +85,11 @@ class GUA_SKELANIM_DLL Skeleton {
    * @param pose pose from which transformation is calculated 
    * @param parentTransform transform matrix of parent bone
    */
-  void accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
-                           SkeletalPose const& pose) const;
+  void accumulate_matrices(unsigned start_node,
+                           std::vector<scm::math::mat4f>& transformMat4s,
+                           SkeletalPose const& pose,
+                           scm::math::mat4f const& parentTransform =
+                           scm::math::mat4f::identity()) const;
 
   /**
    * @brief finds bone in hierarchy

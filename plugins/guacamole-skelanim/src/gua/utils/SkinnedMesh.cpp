@@ -5,6 +5,7 @@
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Logger.hpp>
 
+
 //external headers
 #ifdef GUACAMOLE_FBX
   #include <fbxsdk.h>
@@ -122,6 +123,108 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 
   return temp_weights;
 }
+////////////////////////////////////////////////////////////////////////////////////
+SkinnedMesh::SkinnedMesh(FbxMesh& mesh,
+                         Skeleton const& root,
+                         unsigned const material_index) {
+  //weights are associated to controlpoints and there can be control points with
+  //same positions after another
+  //so its not possible to get the controlpoint associations just from positions
+  std::vector<unsigned> point_indices { construct(mesh, material_index) }
+  ;
+
+  bool has_weights = false;
+  std::vector<bone_influences> ctrlpt_weights {}
+  ;
+  //get weights of original control points
+  if (root.m_bones.size() > 0) {
+    ctrlpt_weights = get_weights(mesh, root);
+    has_weights = ctrlpt_weights.size() > 0;
+  }
+
+  if (!has_weights) {
+    //just map to first bone, with no mapping or weight 0 triangles wouldnt be
+    //rendered
+    bone_counts.resize(num_vertices, 1);
+    bone_ids.resize(num_vertices, 0);
+    bone_weights.resize(num_vertices, 1.0f);
+  } else {
+    bone_counts.reserve(num_vertices);
+    bone_ids.reserve(num_vertices);
+    bone_weights.reserve(num_vertices);
+
+    //iterate over vertices
+    for (unsigned index : point_indices) {
+      bone_influences const& curr_influence { ctrlpt_weights[index] }
+      ;
+      //push all bone influences for current vert
+      for (unsigned j = 0; j < curr_influence.weights.size(); ++j) {
+        bone_ids.push_back(curr_influence.IDs[j]);
+        bone_weights.push_back(curr_influence.weights[j]);
+      }
+
+      bone_counts.push_back(curr_influence.weights.size());
+    }
+  }
+}
+
+std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
+    FbxMesh const& mesh,
+    Skeleton const& root) {
+  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  //check for skinning
+  FbxSkin* skin = nullptr;
+  for (size_t i = 0; i < size_t(mesh.GetDeformerCount()); ++i) {
+    FbxDeformer* defPtr = { mesh.GetDeformer(i) };
+    if (defPtr->GetDeformerType() == FbxDeformer::eSkin) {
+      skin = static_cast<FbxSkin*>(defPtr);
+      break;
+    }
+  }
+
+  if (!skin) {
+    Logger::LOG_WARNING
+        << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
+    return std::vector<bone_influences> {};
+  }
+  //set up temporary weights, for control points, not actual vertices
+  std::vector<bone_influences> temp_weights {
+    unsigned(mesh.GetControlPointsCount())
+  }
+  ;
+  //one cluster corresponds to one bone
+  for (size_t i = 0; i < size_t(skin->GetClusterCount()); ++i) {
+    FbxCluster* cluster = skin->GetCluster(i);
+    FbxNode* bone = cluster->GetLink();
+
+    if (!bone) {
+      Logger::LOG_ERROR << "associated Bone does not exist!" << std::endl;
+      assert(false);
+    }
+
+    std::string bone_name { bone->GetName() }
+    ;
+    unsigned bone_index;
+    if (bone_mapping_.find(bone_name) != bone_mapping_.end()) {
+      bone_index = bone_mapping_.at(bone_name);
+    } else {
+      Logger::LOG_ERROR << "Bone with name '" << bone_name
+                        << "' does not exist!, ignoring weights" << std::endl;
+      return std::vector<bone_influences> {};
+    }
+
+    int* indices = cluster->GetControlPointIndices();
+    double* weights = cluster->GetControlPointWeights();
+    for (size_t i = 0; i < size_t(cluster->GetControlPointIndicesCount()); ++i) {
+      //update mapping info of current control point
+      temp_weights[indices[i]].add_bone(bone_index, weights[i]);
+    }
+  }
+
+  return temp_weights;
+}
 
 #endif
 
@@ -161,7 +264,46 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 
   return temp_weights;
 }
+///////////////////////////////////////////////////////////////////////////////
 
+SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Skeleton const& root) : Mesh { mesh }
+{
+  //get weights and write them to vectors
+  auto temp_weights = get_weights(mesh, root);
+  for (auto const& w : temp_weights) {
+    for (unsigned i(0); i < w.weights.size(); ++i) {
+      bone_ids.push_back(w.IDs[i]);
+      bone_weights.push_back(w.weights[i]);
+    }
+    bone_counts.push_back(w.weights.size());
+  }
+}
+
+std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
+    aiMesh const& mesh,
+    Skeleton const& root) {
+  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
+  root.collect_indices(bone_mapping_);
+
+  std::vector<bone_influences> temp_weights { mesh.mNumVertices }
+  ;
+
+  for (unsigned i = 0; i < mesh.mNumBones; i++) {
+    std::string bone_name { mesh.mBones[i]->mName.data }
+    ;
+    unsigned bone_index = bone_mapping_.at(bone_name);
+
+    for (unsigned j = 0; j < mesh.mBones[i]->mNumWeights; j++) {
+      unsigned vertex_index = mesh.mBones[i]->mWeights[j].mVertexId;
+      float weight = mesh.mBones[i]->mWeights[j].mWeight;
+      temp_weights[vertex_index].add_bone(bone_index, weight);
+    }
+  }
+
+  return temp_weights;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer,
   unsigned resource_offset_bytes) const {
   unsigned bone_offset = resource_offset_bytes / sizeof(unsigned);
