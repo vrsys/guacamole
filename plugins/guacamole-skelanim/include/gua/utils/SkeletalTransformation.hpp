@@ -31,6 +31,7 @@
 
 namespace gua {
   class Bone;
+  class Skeleton;
   class SkeletalAnimation;
 
 namespace SkeletalTransformation {
@@ -40,21 +41,27 @@ namespace SkeletalTransformation {
  * @details returns the binding/default transformation
  *  stored in the skeleton
  * 
- * @param anim_start_node_ node from which to start calculating transforms
+ * @param anim_start_node node from which to start calculating transforms
  * @param Transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void from_hierarchy(std::shared_ptr<Bone> const& anim_start_node,
+                    std::vector<scm::math::mat4f>& Transforms);
+  GUA_SKELANIM_DLL void from_hierarchy(Skeleton const& skeleton, unsigned anim_start_node,
                     std::vector<scm::math::mat4f>& Transforms);
 /**
  * @brief creates transformations from anim at given time
  * @details calculates transforms from the pose at given time 
  * 
- * @param anim_start_node_ node from which to start calculating transforms
+ * @param anim_start_node node from which to start calculating transforms
  * @param time_normalized time for which to calculate transforms
  * @param anim anim from which to calculate pose
  * @param Transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL void from_anim(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void from_anim(std::shared_ptr<Bone> const& anim_start_node,
+               float time_normalized,
+               SkeletalAnimation const& anim,
+               std::vector<scm::math::mat4f>& Transforms);
+  GUA_SKELANIM_DLL void from_anim(Skeleton const& skeleton, unsigned anim_start_node,
                float time_normalized,
                SkeletalAnimation const& anim,
                std::vector<scm::math::mat4f>& Transforms);
@@ -62,7 +69,7 @@ namespace SkeletalTransformation {
  * @brief calculates two poses and blends them
  * @details calculates poses for both anims at given time and blend swith blend factor
  * 
- * @param anim_start_node_ node from which to start calculating transforms
+ * @param anim_start_node node from which to start calculating transforms
  * @param blend_factor factor to blend anims with
  * @param time_normalized1 time for which to calculate transforms from anim_1
  * @param time_normalized2 time for which to calculate transforms frim anim_2
@@ -70,7 +77,14 @@ namespace SkeletalTransformation {
  * @param anim_2 second anim
  * @param transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL void blend_anims(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void blend_anims(std::shared_ptr<Bone> const& anim_start_node,
+                 float blend_factor,
+                 float time_normalized1,
+                 float time_normalized2,
+                 SkeletalAnimation const& anim_1,
+                 SkeletalAnimation const& anim_2,
+                 std::vector<scm::math::mat4f>& transforms);
+  GUA_SKELANIM_DLL void blend_anims(Skeleton const& skeleton, unsigned anim_start_node,
                  float blend_factor,
                  float time_normalized1,
                  float time_normalized2,
@@ -81,7 +95,7 @@ namespace SkeletalTransformation {
  * @brief calculates two poses and changes them from node on
  * @details overwrites first pose with second pose on from given node
  * 
- * @param anim_start_node_ node from which to start calculating transforms
+ * @param anim_start_node node from which to start calculating transforms
  * @param time_normalized1 time for which to calculate transforms from anim_1
  * @param time_normalized2 time for which to calculate transforms frim anim_2
  * @param anim_1 base anim
@@ -89,7 +103,14 @@ namespace SkeletalTransformation {
  * @param node_name node form which to start overwriting pose1 with pose2
  * @param transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL void partial_blend(std::shared_ptr<Bone> const& anim_start_node_,
+  GUA_SKELANIM_DLL void partial_blend(std::shared_ptr<Bone> const& anim_start_node,
+                   float time_normalized1,
+                   float time_normalized2,
+                   SkeletalAnimation const& anim_1,
+                   SkeletalAnimation const& anim_2,
+                   std::string const& split_node_name,
+                   std::vector<scm::math::mat4f>& transforms);
+  GUA_SKELANIM_DLL void partial_blend(Skeleton const& skeleton, unsigned anim_start_node,
                    float time_normalized1,
                    float time_normalized2,
                    SkeletalAnimation const& anim_1,

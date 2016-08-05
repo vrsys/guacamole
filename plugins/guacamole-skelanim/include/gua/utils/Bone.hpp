@@ -112,11 +112,11 @@ class GUA_SKELANIM_DLL Bone {
   std::string name;
   std::vector<std::shared_ptr<Bone> > children;
   std::vector<unsigned> children2;
+  int index;
 
  private:
   std::vector<unsigned> children2;
 
-  int index;
   std::string parentName;
   unsigned numChildren;
   scm::math::mat4f transformation;

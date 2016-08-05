@@ -24,10 +24,11 @@
 
 // guacamole headers
 #include <gua/utils/Mesh.hpp>
-#include <gua/utils/Bone.hpp>
 #include <gua/utils/fbxfwd.hpp>
+#include <gua/Skelanim.hpp>
 #include <gua/config.hpp>
-
+#include <gua/utils/Skeleton.hpp>
+#include <gua/utils/Bone.hpp>
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
@@ -36,8 +37,8 @@
 struct aiMesh;
 
 namespace gua {
-  class Bone;
-
+  // class Bone;
+  // class Skeleton;
 /**
  * @brief mesh with vertex-bone mapping
  */
@@ -46,13 +47,18 @@ namespace gua {
   SkinnedMesh();
 
   SkinnedMesh(aiMesh const& mesh,
-              Bone const& root = Bone {
-  });
+              Bone const& root = Bone {}
+  );
+  SkinnedMesh(aiMesh const& mesh,
+              Skeleton const& skeleton = Skeleton{} 
+  );
 
 #ifdef GUACAMOLE_FBX
   SkinnedMesh(FbxMesh& mesh,
-              Bone const& root = Bone {
-  },
+              Bone const& root = Bone {},
+              unsigned const material_index = 0);
+  SkinnedMesh(FbxMesh& mesh,
+              Skeleton const& skeleton = Skeleton{},
               unsigned const material_index = 0);
 #endif
 /**
@@ -121,6 +127,8 @@ namespace gua {
    */
   static std::vector<bone_influences> get_weights(aiMesh const& mesh,
                                                   Bone const& root);
+  static std::vector<bone_influences> get_weights(aiMesh const& mesh,
+                                                  Skeleton const& root);
 
   /**
    * @brief create bone influences from fbx mesh and hierarchy
@@ -136,6 +144,9 @@ namespace gua {
   static std::vector<bone_influences> get_weights(
       FbxMesh const& mesh,
       Bone const& root);
+  static std::vector<bone_influences> get_weights(
+      FbxMesh const& mesh,
+      Skeleton const& root);
 #endif
 };
 
