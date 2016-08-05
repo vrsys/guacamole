@@ -179,6 +179,7 @@ namespace node {
   std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
 
   std::shared_ptr<Bone> root_;
+  std::vector<Bone*> bones_;
   std::shared_ptr<Bone> anim_start_node_;
 
   std::map<std::string, SkeletalAnimation> animations_;

@@ -30,6 +30,7 @@
 
 namespace gua {
 class Bone;
+class Skeleton;
 struct BonePose;
 
 /**
@@ -98,7 +99,11 @@ class GUA_SKELANIM_DLL SkeletalPose {
    * replacing  
    */
   void partial_replace(SkeletalPose const& pose2,
-                       std::shared_ptr<Bone> const& pNode);
+                       Bone const* pNode);
+
+  void partial_replace(SkeletalPose const& pose2,
+                       Skeleton const& skeleton,
+                       unsigned bone);
 
  private:
   std::map<std::string, BonePose> transforms;

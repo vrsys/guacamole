@@ -179,21 +179,25 @@ void Skeleton::set_properties(
   }
 }
 
-void Skeleton::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
-                               SkeletalPose const& pose) const {
-  for (auto const& bone : m_bones) {
-    // initialize with idle transformation
-    scm::math::mat4f nodeTransformation{bone.transformation};
-    if (pose.contains(bone.name)) {
-      nodeTransformation = pose.get_transform(bone.name).to_matrix();
-    }
-    auto const& parentTransform = transformMat4s.at(m_mapping.at(bone.parentName));
-    scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
+void Skeleton::accumulate_matrices(unsigned start_node, std::vector<scm::math::mat4f>& transformMat4s,
+                               SkeletalPose const& pose,
+                                scm::math::mat4f const& parentTransform) const {
+  auto const& bone = m_bones[start_node];
+  // initialize with idle transform
+  scm::math::mat4f nodeTransformation{bone.transformation};
+  if (pose.contains(bone.name)) {
+    nodeTransformation = pose.get_transform(bone.name).to_matrix();
+  }
 
-    //update transform if bone is mapped
-    if (bone.index >= 0) {
-      transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
-    }
+  scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
+
+  //update transform if bone is mapped
+  if (bone.index >= 0) {
+    transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
+  }
+
+  for (auto const& child : bone.children2) {
+    accumulate_matrices(child, transformMat4s, pose, finalTransformation);
   }
 }
 
