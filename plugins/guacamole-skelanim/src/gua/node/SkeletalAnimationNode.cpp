@@ -62,6 +62,33 @@ SkeletalAnimationNode::SkeletalAnimationNode(
   geometries_.resize(geometry_descriptions_.size());
 }
 
+SkeletalAnimationNode::SkeletalAnimationNode(
+    std::string const& name,
+    std::vector<std::string> const& geometry_descriptions,
+    std::vector<std::shared_ptr<Material> > const& materials,
+    Skeleton const& skeleton,
+    math::mat4 const& transform)
+    : GeometryNode(name, transform),
+      geometries_(),
+      geometry_descriptions_(geometry_descriptions),
+      geometry_changed_(true),
+      materials_(materials),
+      render_to_gbuffer_(true),
+      render_to_stencil_buffer_(false),
+      root_(nullptr),
+      skeleton_(skeleton),
+      first_run_ { true }, 
+      has_anims_ { false }, 
+      blend_factor_ { 1.0 },
+      anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
+      anim_2_ ( "none" ) 
+{
+  skeleton_.collect_indices(bone_mapping_);
+  num_bones_ = bone_mapping_.size();
+
+  geometries_.resize(geometry_descriptions_.size());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 Node* SkeletalAnimationNode::get() {
   Node* base = this;
@@ -144,6 +171,8 @@ void SkeletalAnimationNode::add_animations(std::string const& file_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 void SkeletalAnimationNode::update_bone_transforms() {
   if (!has_anims_ && !first_run_)
     return;
@@ -185,7 +214,49 @@ void SkeletalAnimationNode::update_bone_transforms() {
                                         bone_transforms_);
   }
 }
+#else
+void SkeletalAnimationNode::update_bone_transforms() {
+  if (!has_anims_ && !first_run_)
+    return;
+  if (!has_anims_)
+    first_run_ = false;
 
+  //reserve vector for transforms
+  bone_transforms_ = std::vector<scm::math::mat4f> {
+    num_bones_, scm::math::mat4f::identity()
+  }
+  ;
+
+  if (!has_anims_) {
+    SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+  }
+
+  // TODO better checking for unset anims
+  if (blend_factor_ <= 0) {
+    if (anim_1_ != "none") {
+      SkeletalTransformation::from_anim(
+          skeleton_, 0, anim_time_1_, animations_.at(anim_1_), bone_transforms_);
+    } else {
+      SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+    }
+  } else if (blend_factor_ >= 1) {
+    if (anim_2_ != "none") {
+      SkeletalTransformation::from_anim(
+          skeleton_, 0, anim_time_2_, animations_.at(anim_2_), bone_transforms_);
+    } else {
+      SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+    }
+  } else {
+    SkeletalTransformation::blend_anims(skeleton_, 0,
+                                        blend_factor_,
+                                        anim_time_1_,
+                                        anim_time_2_,
+                                        animations_.at(anim_1_),
+                                        animations_.at(anim_2_),
+                                        bone_transforms_);
+  }
+}
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 bool SkeletalAnimationNode::get_render_to_gbuffer() const {
   return render_to_gbuffer_;
