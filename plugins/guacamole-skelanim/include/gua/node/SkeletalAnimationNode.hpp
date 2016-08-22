@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
 #include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/utils/Skeleton.hpp>
 
 namespace gua {
 
@@ -53,6 +54,13 @@ namespace node {
       std::vector<std::shared_ptr<Material> > const& materials = {
   },
       std::shared_ptr<Bone> const& = nullptr,
+      math::mat4 const& transform = math::mat4::identity());
+
+  SkeletalAnimationNode(
+      std::string const& node_name,
+      std::vector<std::string> const& geometry_description,
+      std::vector<std::shared_ptr<Material> > const& materials,
+      Skeleton const&,
       math::mat4 const& transform = math::mat4::identity());
 
 
@@ -179,7 +187,7 @@ namespace node {
   std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
 
   std::shared_ptr<Bone> root_;
-  std::vector<Bone*> bones_;
+  Skeleton skeleton_;
   std::shared_ptr<Bone> anim_start_node_;
 
   std::map<std::string, SkeletalAnimation> animations_;

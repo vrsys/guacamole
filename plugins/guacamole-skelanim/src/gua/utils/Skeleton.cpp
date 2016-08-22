@@ -19,14 +19,14 @@ namespace gua {
 unsigned Skeleton::addBone(aiNode const& node) {
   m_bones.emplace_back(node);
   auto& curr_bone = m_bones.back();
-  unsigned index = m_bones.size() - 1;
+  curr_bone.index = m_bones.size() - 1;
 
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     unsigned child_index = addBone(*(node.mChildren[i]));
     curr_bone.children2.push_back(child_index);
   }
 
-  return index;
+  return curr_bone.index;
 }
 
 Skeleton::Skeleton(aiScene const& scene) {
@@ -55,9 +55,10 @@ Skeleton::Skeleton(aiScene const& scene) {
 
 #ifdef GUACAMOLE_FBX
 unsigned Skeleton::addBone(FbxNode& node) {
+  unsigned index = m_bones.size();
   m_bones.emplace_back(node);
-  auto& curr_bone = m_bones.back();
-  unsigned index = m_bones.size() - 1;
+  m_bones[index].index = index;
+  m_bones[index].children2.resize(node.GetChildCount());
 
   for (int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() };
@@ -67,7 +68,7 @@ unsigned Skeleton::addBone(FbxNode& node) {
                         << " is effector, ignoring it" << std::endl;
     } else {
       unsigned child_index = addBone(*(node.GetChild(i)));
-      curr_bone.children2.push_back(child_index);
+      m_bones[index].children2.at(i) = child_index;
     }
   }
 
