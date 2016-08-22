@@ -29,6 +29,7 @@
 #include <gua/utils/SkeletalAnimation.hpp>
 #include <gua/utils/BoneAnimation.hpp>
 #include <gua/utils/Bone.hpp>
+#include <gua/utils/Skeleton.hpp>
 #include <gua/node/SkeletalAnimationNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
@@ -394,7 +395,8 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
+  // std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
+  Skeleton root{*scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -417,7 +419,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
             desc.unique_key(),
             std::make_shared<SkinnedMeshResource>(
                 SkinnedMesh {
-          *mesh, *root, j
+          *mesh, root, j
         },
                 flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -450,7 +452,8 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  auto root = std::make_shared<Bone>(*ai_scene);
+  // auto root = std::make_shared<Bone>(*ai_scene);
+  Skeleton root{*ai_scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -466,7 +469,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
         desc.unique_key(),
         std::make_shared<SkinnedMeshResource>(
             SkinnedMesh {
-      *ai_scene->mMeshes[i], *root
+      *ai_scene->mMeshes[i], root
     },
             flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 

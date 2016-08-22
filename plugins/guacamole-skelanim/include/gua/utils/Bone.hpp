@@ -25,7 +25,16 @@
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/utils/fbxfwd.hpp>
-#include <gua/Skelanim.hpp>
+// #include <gua/Skelanim.hpp>
+ #if defined (_MSC_VER)
+#if defined (GUA_SKELANIM_LIBRARY)
+#define GUA_SKELANIM_DLL __declspec( dllexport )
+#else
+#define GUA_SKELANIM_DLL __declspec( dllimport )
+#endif
+#else
+#define GUA_SKELANIM_DLL
+#endif // #if defined(_MSC_VER)
 
 // external headers
 #include <scm/gl_core.h>
