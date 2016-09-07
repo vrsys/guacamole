@@ -40,7 +40,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass,
   if (!empty_fbo_) {
     empty_fbo_ = ctx.render_device->create_frame_buffer();
 
-#if WIN32 // workaround to avoid GL assertions 
+#if 1 // workaround to avoid GL assertions 
     empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
     empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
 #else
