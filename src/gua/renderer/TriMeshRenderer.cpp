@@ -134,7 +134,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         }
         if (current_shader) {
           current_shader->use(ctx);
-          current_shader->set_uniform(ctx, math::vec2i(target.get_width(),
+          current_shader->set_uniform(ctx, math::vec2ui(target.get_width(),
                                                        target.get_height()),
                                       "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
           current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
