@@ -33,6 +33,10 @@ void UniformValue::apply<std::string>(UniformValue const* self,
                                       scm::gl::program_ptr const& prog,
                                       unsigned location) {
 
+  if (!self) {
+    std::cerr << "UniformValue::apply<std::string> : self is nullptr" << std::endl;
+    return;
+  }
   auto tex_name = boost::get<std::string>(self->data);
   if (tex_name == "0") {
     prog->uniform(name, location, math::vec2ui(0, 0));
