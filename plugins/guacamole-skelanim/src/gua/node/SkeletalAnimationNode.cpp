@@ -57,8 +57,7 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
       anim_2_ ( "none" ) 
 {
-  root_->collect_indices(bone_mapping_);
-  num_bones_ = bone_mapping_.size();
+  num_bones_ = root->num_bones();
 
   geometries_.resize(geometry_descriptions_.size());
 }

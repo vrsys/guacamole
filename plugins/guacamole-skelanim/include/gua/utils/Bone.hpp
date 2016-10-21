@@ -107,6 +107,8 @@ class GUA_SKELANIM_DLL Bone {
    */
   std::shared_ptr<Bone> find(std::string const& name) const;
 
+  std::size_t num_bones() const;
+
   std::string name;
   std::vector<std::shared_ptr<Bone> > children;
 
