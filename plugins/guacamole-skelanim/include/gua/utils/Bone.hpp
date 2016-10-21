@@ -53,8 +53,6 @@ class GUA_SKELANIM_DLL Bone {
   Bone(FbxNode& node);
   Bone(FbxScene& scene);
 #endif
-  
-  ~Bone();
 
   /**
    * @brief collects 
@@ -64,6 +62,15 @@ class GUA_SKELANIM_DLL Bone {
    * @param ids map to store bone ids
    */
   void collect_indices(std::map<std::string, int>& ids) const;
+  /**
+   * @brief collects 
+   * @details adds itself to given vector
+   * and calls method on children
+   * 
+   * @param bones container to store bones
+   */
+  void collect_bones(std::vector<Bone>& bones) const;
+  void create_bones(std::vector<Bone> const& bones);
 
   /**
    * @brief sets offset matrix and index
@@ -73,7 +80,7 @@ class GUA_SKELANIM_DLL Bone {
    * @param infos map with index and offset matrix of each bone
    */
   void set_properties(
-      std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > const& infos);
+      std::map<std::string, scm::math::mat4f> const& infos, std::size_t& idx);
 
 
   /**
@@ -104,6 +111,7 @@ class GUA_SKELANIM_DLL Bone {
   std::vector<std::shared_ptr<Bone> > children;
 
  private:
+  std::vector<unsigned> children2;
 
   int index;
   std::string parentName;

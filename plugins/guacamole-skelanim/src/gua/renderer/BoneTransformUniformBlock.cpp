@@ -13,11 +13,11 @@ BoneTransformUniformBlock::~BoneTransformUniformBlock() {
 
 void BoneTransformUniformBlock::update(const scm::gl::render_context_ptr& context,
                            std::vector<math::mat4f> const& new_transforms) {
-
-
+  // sanity check remove later
+  if(new_transforms.size() > NUM_MAX_BONES) throw std::range_error("too many bones");
   uniform_block_.begin_manipulation(context); {
 
-  for (unsigned i = 0; i < 100 && i < new_transforms.size(); ++i) {
+  for (unsigned i = 0; i < new_transforms.size(); ++i) {
     uniform_block_->transforms[i] = new_transforms[i];
   }
 
