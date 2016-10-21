@@ -204,13 +204,11 @@ void Bone::set_properties(
     std::map<std::string, scm::math::mat4f> const& infos, std::size_t& idx) {
   if (infos.find(name) != infos.end()) {
     offsetMatrix = infos.at(name);
-    index = idx;
-    ++idx;
   }
-  else {
-    std::cout << "no info for " << name << std::endl;
-  }
-  // std::cout << name << " - " << index << std::endl;
+
+  index = idx;
+  ++idx;
+
   for (std::shared_ptr<Bone>& child : children) {
     child->set_properties(infos, idx);
   }
@@ -223,20 +221,24 @@ void Bone::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
   if (pose.contains(name)) {
     nodeTransformation = pose.get_transform(name).to_matrix();
   }
-  else {
-    // std::cout << "pose does not contain info for " << name << std::endl;
-  }
 
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
 
   //update transform if bone is mapped
-  if (index >= 0) {
-    transformMat4s[index] = finalTransformation * offsetMatrix;
-  }
+  transformMat4s.at(index) = finalTransformation * offsetMatrix;
 
   for (auto const& child : children) {
     child->accumulate_matrices(transformMat4s, pose, finalTransformation);
   }
 }
+
+std::size_t Bone::num_bones() const {
+  std::size_t num = 0;
+  for (auto const& child : children) {
+     num += child->num_bones();
+  } 
+  return num + 1;
+}
+
 
 }  // namespace gua
