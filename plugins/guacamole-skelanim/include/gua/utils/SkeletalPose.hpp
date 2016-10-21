@@ -40,8 +40,6 @@ class GUA_SKELANIM_DLL SkeletalPose {
  public:
   SkeletalPose();
 
-  ~SkeletalPose();
-
   /**
    * @brief returns if pose contains bonepose
    * @details checks if the pose 

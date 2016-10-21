@@ -13,8 +13,6 @@ const BonePose SkeletalPose::blank_pose = BonePose{};
 SkeletalPose::SkeletalPose() : transforms {}
 {}
 
-SkeletalPose::~SkeletalPose() {}
-
 bool SkeletalPose::contains(std::string const& name) const {
   return transforms.find(name) != transforms.end();
 }

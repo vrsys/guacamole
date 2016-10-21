@@ -42,22 +42,21 @@ Bone::Bone(aiScene const& scene) {
   //construct hierarchy
   *this = Bone { *(scene.mRootNode) };
 
-  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info {};
-  unsigned num_bones = 0;
+  std::map<std::string, scm::math::mat4f> bone_info {};
   for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
     for (unsigned int b = 0; b < scene.mMeshes[i]->mNumBones; ++b) {
 
       std::string BoneName(scene.mMeshes[i]->mBones[b]->mName.data);
       if (bone_info.find(BoneName) == bone_info.end()) {
-
-        bone_info[BoneName] = std::make_pair(
-            num_bones,
-            to_gua::mat4f(scene.mMeshes[i]->mBones[b]->mOffsetMatrix));
-        ++num_bones;
+        bone_info[BoneName] = to_gua::mat4f(scene.mMeshes[i]->mBones[b]->mOffsetMatrix);
+      }
+      else {
+        std::cout << "bone " << name << " already in info" << std::endl;
       }
     }
   }
-  this->set_properties(bone_info);
+  std::size_t idx = 0;
+  set_properties(bone_info, idx);
 }
 
 #ifdef GUACAMOLE_FBX
@@ -65,9 +64,7 @@ Bone::Bone(FbxScene& scene) {
   //construct hierarchy
   *this = Bone { *(scene.GetRootNode()) };
 
-  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info{}
-  ;
-  unsigned num_bones = 0;
+  std::map<std::string, scm::math::mat4f> bone_info{};
   for (size_t i = 0; i < size_t(scene.GetGeometryCount()); i++) {
     FbxGeometry* geo = scene.GetGeometry(i);
     if (geo->GetAttributeType() == FbxNodeAttribute::eMesh) {
@@ -122,15 +119,16 @@ Bone::Bone(FbxScene& scene) {
         }
         //add bone to list if it is not already included
         if (bone_info.find(bone_name) == bone_info.end()) {
-          bone_info[bone_name] = std::make_pair(
-              num_bones,
-              to_gua::mat4f(bind_transform.Inverse() * cluster_transform));
-          ++num_bones;
+          bone_info[bone_name] = to_gua::mat4f(bind_transform.Inverse() * cluster_transform);
+        }
+        else {
+          std::cout << "bone " << name << " already in info" << std::endl;
         }
       }
 
       // traverse hierarchy and set accumulated values in the bone
-      this->set_properties(bone_info);
+      std::size_t idx = 0;
+      set_properties(bone_info, idx);
     }
   }
 }
@@ -157,8 +155,6 @@ Bone::Bone(FbxNode& node)
 }
 #endif
 
-Bone::~Bone() {}
-
 std::shared_ptr<Bone> Bone::find(std::string const& name) const {
 
   for (auto const& child : children) {
@@ -175,21 +171,48 @@ std::shared_ptr<Bone> Bone::find(std::string const& name) const {
 
 void Bone::collect_indices(std::map<std::string, int>& ids) const {
   ids[name] = index;
-
   for (auto const& child : children) {
     child->collect_indices(ids);
   }
 }
 
-void Bone::set_properties(
-    std::map<std::string, std::pair<unsigned, scm::math::mat4f> > const& infos) {
-  if (infos.find(name) != infos.end()) {
-    offsetMatrix = infos.at(name).second;
-    index = infos.at(name).first;
-  }
+void Bone::collect_bones(std::vector<Bone>& bones) const {
+  // sanity check, remove later
+  if (index < 0) throw std::runtime_error{std::string{"Bone "} + name + std::string{" has index "} + std::to_string(index)};
 
+  if (bones.size() <= unsigned(index)) {
+    bones.resize(index + 1);
+  }
+  bones.at(index) = *this;
+ 
+  for(auto const& child : children) {
+    child->collect_bones(bones);
+    bones.at(index).children2.push_back(child->index);
+  }
+}
+
+void Bone::create_bones(std::vector<Bone> const& bones) {
+  // sanity check, remove later
+  if (index < 0) throw std::runtime_error{std::string{"Bone "} + name + std::string{" has index "} + std::to_string(index)};
+  for(std::size_t i = 0; i < children2.size(); ++i) {
+    children[i] = std::make_shared<Bone>(bones.at(children2[i]));
+    children[i]->create_bones(bones);
+  }
+}
+
+void Bone::set_properties(
+    std::map<std::string, scm::math::mat4f> const& infos, std::size_t& idx) {
+  if (infos.find(name) != infos.end()) {
+    offsetMatrix = infos.at(name);
+    index = idx;
+    ++idx;
+  }
+  else {
+    std::cout << "no info for " << name << std::endl;
+  }
+  // std::cout << name << " - " << index << std::endl;
   for (std::shared_ptr<Bone>& child : children) {
-    child->set_properties(infos);
+    child->set_properties(infos, idx);
   }
 }
 
@@ -199,6 +222,9 @@ void Bone::accumulate_matrices(std::vector<scm::math::mat4f>& transformMat4s,
   scm::math::mat4f nodeTransformation{transformation};
   if (pose.contains(name)) {
     nodeTransformation = pose.get_transform(name).to_matrix();
+  }
+  else {
+    // std::cout << "pose does not contain info for " << name << std::endl;
   }
 
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
