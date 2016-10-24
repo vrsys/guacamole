@@ -23,7 +23,7 @@ unsigned Skeleton::addBone(aiNode const& node) {
 
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     unsigned child_index = addBone(*(node.mChildren[i]));
-    m_bones[index].children2.push_back(child_index);
+    m_bones[index].children.push_back(child_index);
   }
 
   return index;
@@ -33,22 +33,19 @@ Skeleton::Skeleton(aiScene const& scene) {
   //construct hierarchy
   addBone(*(scene.mRootNode));
 
-  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info {};
-  unsigned num_bones = 0;
+  std::map<std::string, scm::math::mat4f> bone_offsets{};
   for (unsigned int i = 0; i < scene.mNumMeshes; i++) {
     for (unsigned int b = 0; b < scene.mMeshes[i]->mNumBones; ++b) {
 
       std::string BoneName(scene.mMeshes[i]->mBones[b]->mName.data);
-      if (bone_info.find(BoneName) == bone_info.end()) {
+      if (bone_offsets.find(BoneName) == bone_offsets.end()) {
 
-        bone_info[BoneName] = std::make_pair(
-            num_bones,
-            to_gua::mat4f(scene.mMeshes[i]->mBones[b]->mOffsetMatrix));
-        ++num_bones;
+        bone_offsets[BoneName] = 
+            to_gua::mat4f(scene.mMeshes[i]->mBones[b]->mOffsetMatrix);
       }
     }
   }
-  set_properties(bone_info);
+  set_offsets(bone_offsets);
 
   store_mapping();
 }
@@ -58,7 +55,7 @@ unsigned Skeleton::addBone(FbxNode& node) {
   unsigned index = m_bones.size();
   m_bones.emplace_back(node);
   m_bones[index].index = index;
-  m_bones[index].children2.resize(node.GetChildCount());
+  m_bones[index].children.resize(node.GetChildCount());
 
   for (int i = 0; i < node.GetChildCount(); ++i) {
     FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() };
@@ -68,7 +65,7 @@ unsigned Skeleton::addBone(FbxNode& node) {
                         << " is effector, ignoring it" << std::endl;
     } else {
       unsigned child_index = addBone(*(node.GetChild(i)));
-      m_bones[index].children2.at(i) = child_index;
+      m_bones[index].children.at(i) = child_index;
     }
   }
 
@@ -79,9 +76,7 @@ Skeleton::Skeleton(FbxScene& scene) {
   //construct hierarchy
   addBone(*(scene.GetRootNode()));
 
-  std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > bone_info{}
-  ;
-  unsigned num_bones = 0;
+  std::map<std::string, scm::math::mat4f> bone_offsets{};
   for (size_t i = 0; i < size_t(scene.GetGeometryCount()); i++) {
     FbxGeometry* geo = scene.GetGeometry(i);
     if (geo->GetAttributeType() == FbxNodeAttribute::eMesh) {
@@ -135,16 +130,14 @@ Skeleton::Skeleton(FbxScene& scene) {
               << "' has transformation, animation will be skewed" << std::endl;
         }
         //add bone to list if it is not already included
-        if (bone_info.find(bone_name) == bone_info.end()) {
-          bone_info[bone_name] = std::make_pair(
-              num_bones,
-              to_gua::mat4f(bind_transform.Inverse() * cluster_transform));
-          ++num_bones;
+        if (bone_offsets.find(bone_name) == bone_offsets.end()) {
+          bone_offsets[bone_name] =
+            to_gua::mat4f(bind_transform.Inverse() * cluster_transform);
         }
       }
 
       // traverse hierarchy and set accumulated values in the bone
-      set_properties(bone_info);
+      set_offsets(bone_offsets);
     }
   }
   store_mapping();
@@ -170,12 +163,11 @@ void Skeleton::store_mapping() {
   }
 }
 
-void Skeleton::set_properties(
-    std::map<std::string, std::pair<unsigned, scm::math::mat4f> > const& infos) {
+void Skeleton::set_offsets(
+    std::map<std::string, scm::math::mat4f> const& offsets) {
   for (auto& bone : m_bones) {
-    if (infos.find(bone.name) != infos.end()) {
-      bone.offsetMatrix = infos.at(bone.name).second;
-      // bone.index = infos.at(bone.name).first;
+    if (offsets.find(bone.name) != offsets.end()) {
+      bone.offsetMatrix = offsets.at(bone.name);
     }
   }
 }
@@ -192,12 +184,9 @@ void Skeleton::accumulate_matrices(unsigned start_node, std::vector<scm::math::m
 
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
 
-  //update transform if bone is mapped
-  if (bone.index >= 0) {
-    transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
-  }
+  transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
 
-  for (auto const& child : bone.children2) {
+  for (auto const& child : bone.children) {
     accumulate_matrices(child, transformMat4s, pose, finalTransformation);
   }
 }

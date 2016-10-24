@@ -79,10 +79,10 @@ class GUA_SKELANIM_DLL Skeleton {
    * @details offset matrices may be stored somewhere else
    * therefore they cant be set at construction 
    * 
-   * @param infos map with index and offset matrix of each bone
+   * @param offsets map with offset matrix of each mapped bone
    */
-  void set_properties(
-      std::map<std::string, std::pair<unsigned int, scm::math::mat4f> > const& infos);
+  void set_offsets(
+      std::map<std::string, scm::math::mat4f> const& offsets);
 
 
   /**
