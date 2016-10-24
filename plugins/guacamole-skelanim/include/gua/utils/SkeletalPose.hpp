@@ -29,7 +29,6 @@
 #include <memory>
 
 namespace gua {
-class Bone;
 class Skeleton;
 struct BonePose;
 
@@ -98,9 +97,6 @@ class GUA_SKELANIM_DLL SkeletalPose {
    * @param pNode bone from which to start
    * replacing  
    */
-  void partial_replace(SkeletalPose const& pose2,
-                       Bone const* pNode);
-
   void partial_replace(SkeletalPose const& pose2,
                        Skeleton const& skeleton,
                        unsigned bone);
