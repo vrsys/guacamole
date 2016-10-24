@@ -17,16 +17,16 @@
 namespace gua {
 
 unsigned Skeleton::addBone(aiNode const& node) {
+  unsigned index = m_bones.size();
   m_bones.emplace_back(node);
-  auto& curr_bone = m_bones.back();
-  curr_bone.index = m_bones.size() - 1;
+  m_bones[index].index = index;
 
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     unsigned child_index = addBone(*(node.mChildren[i]));
-    curr_bone.children2.push_back(child_index);
+    m_bones[index].children2.push_back(child_index);
   }
 
-  return curr_bone.index;
+  return index;
 }
 
 Skeleton::Skeleton(aiScene const& scene) {
@@ -201,5 +201,10 @@ void Skeleton::accumulate_matrices(unsigned start_node, std::vector<scm::math::m
     accumulate_matrices(child, transformMat4s, pose, finalTransformation);
   }
 }
+
+std::size_t Skeleton::num_bones() const {
+  return m_bones.size();
+}
+
 
 }  // namespace gua

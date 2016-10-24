@@ -395,8 +395,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  // std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
-  Skeleton root{*scene};
+  Skeleton skeleton{*scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -419,7 +418,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
             desc.unique_key(),
             std::make_shared<SkinnedMeshResource>(
                 SkinnedMesh {
-          *mesh, root, j
+          *mesh, skeleton, j
         },
                 flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -441,7 +440,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
   }
 
   return std::make_shared<node::SkeletalAnimationNode>(
-      file_name + "_" + node_name, geometry_descriptions, materials, root);
+      file_name + "_" + node_name, geometry_descriptions, materials, skeleton);
 }
 #endif
 /////////////////////////////////////////////////////////////////////////////
@@ -452,8 +451,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  // auto root = std::make_shared<Bone>(*ai_scene);
-  Skeleton root{*ai_scene};
+  Skeleton skeleton{*ai_scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -469,7 +467,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
         desc.unique_key(),
         std::make_shared<SkinnedMeshResource>(
             SkinnedMesh {
-      *ai_scene->mMeshes[i], root
+      *ai_scene->mMeshes[i], skeleton
     },
             flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -488,7 +486,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
   }
 
   return std::make_shared<node::SkeletalAnimationNode>(
-      file_name + "_" + node_name, geometry_descriptions, materials, root);
+      file_name + "_" + node_name, geometry_descriptions, materials, skeleton);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
