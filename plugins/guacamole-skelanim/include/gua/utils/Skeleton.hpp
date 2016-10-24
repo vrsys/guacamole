@@ -66,24 +66,11 @@ class GUA_SKELANIM_DLL Skeleton {
 #endif
 
   /**
-   * @brief collects 
-   * @details adds entry for itself to given map
-   * and calls method on children
-   * 
-   * @param ids map to store bone ids
+   * @brief collects bone associations 
+   * @details collects mapping from bone name to index
+   * @return map of associations
    */
-  void collect_indices(std::map<std::string, int>& ids) const;
-
-  /**
-   * @brief sets offset matrix and index
-   * @details offset matrices may be stored somewhere else
-   * therefore they cant be set at construction 
-   * 
-   * @param offsets map with offset matrix of each mapped bone
-   */
-  void set_offsets(
-      std::map<std::string, scm::math::mat4f> const& offsets);
-
+  std::map<std::string, int> const& get_mapping() const;
 
   /**
    * @brief calculates tranform matricex from skeletalpose
@@ -94,7 +81,7 @@ class GUA_SKELANIM_DLL Skeleton {
    * @param pose pose from which transformation is calculated 
    * @param parentTransform transform matrix of parent bone
    */
-  void accumulate_matrices(unsigned start_node,
+  void accumulate_matrices(unsigned index_bone,
                            std::vector<scm::math::mat4f>& transformMat4s,
                            SkeletalPose const& pose,
                            scm::math::mat4f const& parentTransform =
@@ -102,20 +89,31 @@ class GUA_SKELANIM_DLL Skeleton {
 
   /**
    * @brief finds bone in hierarchy
-   * @details checks if child and given name and
-   * calls method on children
-   * 
+   * @details 
    * @param name name of bone
-   * @return pointer to found bone, nullptr if not found
+   * @return index >= 0, -1 if not found
    */
-  Bone const* find(std::string const& name) const;
+  int find(std::string const& name) const;
+
+  Bone const& get(std::size_t index) const;
 
   std::size_t num_bones() const;
 
+ private:
+  /**
+   * @brief sets offset matrix and index
+   * @details offset matrices may be stored somewhere else
+   * therefore they cant be set at construction 
+   * 
+   * @param offsets map with offset matrix of each mapped bone
+   */
+  void set_offsets(
+      std::map<std::string, scm::math::mat4f> const& offsets);
+  
+  void store_mapping();
+
   std::vector<Bone> m_bones;
   std::map<std::string, int> m_mapping;
- private:
-  void store_mapping();
 };
 
 }

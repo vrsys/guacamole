@@ -145,20 +145,31 @@ Skeleton::Skeleton(FbxScene& scene) {
 
 #endif
 
-gua::Bone const* Skeleton::find(std::string const& name) const {
-  for (auto const& bone : m_bones) {
-    if (bone.name == name)
-      return &bone;
+int Skeleton::find(std::string const& name) const {
+  auto iter = m_mapping.find(name);
+  if(iter != m_mapping.end()) {
+    return iter->second;
   }
-  return nullptr;
+  else {
+    return -1;
+  }
 }
 
-void Skeleton::collect_indices(std::map<std::string, int>& ids) const {
-  ids = m_mapping;
+gua::Bone const& Skeleton::get(std::size_t index) const {
+  return m_bones[index];
+}
+
+
+std::map<std::string, int> const& Skeleton::get_mapping() const {
+  return m_mapping;
 }
 
 void Skeleton::store_mapping() {
   for (std::size_t i = 0; i < m_bones.size(); ++i) {
+    if(m_mapping.find(m_bones[i].name) != m_mapping.end()) {
+      Logger::LOG_WARNING << "two bones named '" << m_bones[i].name 
+                          << "' exist, overrriding"  << std::endl;
+    }
     m_mapping[m_bones[i].name] = i;
   }
 }
@@ -172,10 +183,10 @@ void Skeleton::set_offsets(
   }
 }
 
-void Skeleton::accumulate_matrices(unsigned start_node, std::vector<scm::math::mat4f>& transformMat4s,
+void Skeleton::accumulate_matrices(unsigned index_bone, std::vector<scm::math::mat4f>& transformMat4s,
                                SkeletalPose const& pose,
                                 scm::math::mat4f const& parentTransform) const {
-  auto const& bone = m_bones[start_node];
+  auto const& bone = m_bones[index_bone];
   // initialize with idle transform
   scm::math::mat4f nodeTransformation{bone.transformation};
   if (pose.contains(bone.name)) {
@@ -186,8 +197,8 @@ void Skeleton::accumulate_matrices(unsigned start_node, std::vector<scm::math::m
 
   transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
 
-  for (auto const& child : bone.children) {
-    accumulate_matrices(child, transformMat4s, pose, finalTransformation);
+  for (auto const& index_child : bone.children) {
+    accumulate_matrices(index_child, transformMat4s, pose, finalTransformation);
   }
 }
 

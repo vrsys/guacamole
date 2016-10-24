@@ -82,11 +82,11 @@ SkeletalPose SkeletalPose::operator*(float const factor) const {
 void SkeletalPose::partial_replace(SkeletalPose const& pose2,
                                    Skeleton const& skeleton,
                                    unsigned bone) {
-  if (pose2.contains(skeleton.m_bones.at(bone).name)) {
-    set_transform(skeleton.m_bones.at(bone).name, pose2.get_transform(skeleton.m_bones.at(bone).name));
+  if (pose2.contains(skeleton.get(bone).name)) {
+    set_transform(skeleton.get(bone).name, pose2.get_transform(skeleton.get(bone).name));
   }
 
-  for (auto const& child : skeleton.m_bones[bone].children) {
+  for (auto const& child : skeleton.get(bone).children) {
     partial_replace(pose2, skeleton, child);
   }
 }
