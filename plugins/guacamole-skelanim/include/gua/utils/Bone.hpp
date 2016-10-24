@@ -41,7 +41,6 @@
 #include <vector>
 #include <map>
 
-struct aiScene;
 struct aiNode;
 
 namespace gua {
@@ -62,13 +61,10 @@ class GUA_SKELANIM_DLL Bone {
 #endif
 
   std::string name;
-  std::vector<std::
-  shared_ptr<Bone> > children;
-  std::vector<unsigned> children2;
+  std::vector<unsigned> children;
   int index;
 
  private:
-  // std::vector<unsigned> children2;
 
   std::string parentName;
   unsigned numChildren;

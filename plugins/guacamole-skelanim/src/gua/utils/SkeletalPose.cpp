@@ -4,7 +4,6 @@
 // guacamole headers
 #include <gua/utils/BonePose.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Bone.hpp>
 #include <gua/utils/Skeleton.hpp>
 
 namespace gua {
@@ -81,24 +80,13 @@ SkeletalPose SkeletalPose::operator*(float const factor) const {
 }
 
 void SkeletalPose::partial_replace(SkeletalPose const& pose2,
-                                   Bone const* pNode) {
-  if (pose2.contains(pNode->name)) {
-    set_transform(pNode->name, pose2.get_transform(pNode->name));
-  }
-
-  for (std::shared_ptr<Bone> const& child : pNode->children) {
-    partial_replace(pose2, child.get());
-  }
-}
-
-void SkeletalPose::partial_replace(SkeletalPose const& pose2,
                                    Skeleton const& skeleton,
                                    unsigned bone) {
   if (pose2.contains(skeleton.m_bones.at(bone).name)) {
     set_transform(skeleton.m_bones.at(bone).name, pose2.get_transform(skeleton.m_bones.at(bone).name));
   }
 
-  for (auto const& child : skeleton.m_bones[bone].children2) {
+  for (auto const& child : skeleton.m_bones[bone].children) {
     partial_replace(pose2, skeleton, child);
   }
 }
