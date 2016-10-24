@@ -38,20 +38,16 @@
 
 // external headers
 #include <scm/gl_core.h>
-#include <vector>
-#include <map>
 
 struct aiNode;
 
 namespace gua {
 
-class SkeletalPose;
-class Skeleton;
 /**
  * @brief represents one node in skeletal hierarchy
  * @details has methods to traverse skeleton hierarchy
  */
-class GUA_SKELANIM_DLL Bone {
+struct GUA_SKELANIM_DLL Bone {
  public:
   Bone();
   Bone(aiNode const& node);
@@ -64,15 +60,9 @@ class GUA_SKELANIM_DLL Bone {
   std::vector<unsigned> children;
   int index;
 
- private:
-
-  std::string parentName;
-  unsigned numChildren;
   scm::math::mat4f transformation;
   //transforms to bone space
   scm::math::mat4f offsetMatrix;
-
-  friend class Skeleton;
 };
 
 }
