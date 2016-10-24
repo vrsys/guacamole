@@ -41,31 +41,6 @@ SkeletalAnimationNode::SkeletalAnimationNode(
     std::string const& name,
     std::vector<std::string> const& geometry_descriptions,
     std::vector<std::shared_ptr<Material> > const& materials,
-    std::shared_ptr<Bone> const& root,
-    math::mat4 const& transform)
-    : GeometryNode(name, transform),
-      geometries_(),
-      geometry_descriptions_(geometry_descriptions),
-      geometry_changed_(true),
-      materials_(materials),
-      render_to_gbuffer_(true),
-      render_to_stencil_buffer_(false),
-      root_(root),
-      first_run_ { true }, 
-      has_anims_ { false }, 
-      blend_factor_ { 1.0 },
-      anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
-      anim_2_ ( "none" ) 
-{
-  num_bones_ = root->num_bones();
-
-  geometries_.resize(geometry_descriptions_.size());
-}
-
-SkeletalAnimationNode::SkeletalAnimationNode(
-    std::string const& name,
-    std::vector<std::string> const& geometry_descriptions,
-    std::vector<std::shared_ptr<Material> > const& materials,
     Skeleton const& skeleton,
     math::mat4 const& transform)
     : GeometryNode(name, transform),
@@ -75,7 +50,6 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       materials_(materials),
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
-      root_(nullptr),
       skeleton_(skeleton),
       first_run_ { true }, 
       has_anims_ { false }, 
@@ -83,8 +57,7 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
       anim_2_ ( "none" ) 
 {
-  skeleton_.collect_indices(bone_mapping_);
-  num_bones_ = bone_mapping_.size();
+  num_bones_ = skeleton_.num_bones();
 
   geometries_.resize(geometry_descriptions_.size());
 }
@@ -279,14 +252,14 @@ void SkeletalAnimationNode::set_render_to_stencil_buffer(bool enable) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::set_bones(std::vector<Bone> const& bones) {
-  root_ = std::make_shared<Bone>(bones[0]);
-  root_->create_bones(bones);
+  // root_ = std::make_shared<Bone>(bones[0]);
+  // root_->create_bones(bones);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<gua::Bone> SkeletalAnimationNode::get_bones() const {
   std::vector<Bone> bones{};
-  root_->collect_bones(bones);
+  // root_->collect_bones(bones);
   return bones;
 }
 
