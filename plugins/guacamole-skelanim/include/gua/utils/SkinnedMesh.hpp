@@ -113,11 +113,11 @@ namespace gua {
    * mapping info from the mesh
    * 
    * @param mesh skinned assimp mesh
-   * @param root root of hierarchy
+   * @param skeleton the bone hierarchy
    * @return the calculated bone influences
    */
   static std::vector<bone_influences> get_weights(aiMesh const& mesh,
-                                                  Skeleton const& root);
+                                                  Skeleton const& skeleton);
 
   /**
    * @brief create bone influences from fbx mesh and hierarchy
@@ -125,14 +125,14 @@ namespace gua {
    * mapping info from the mesh
    * 
    * @param mesh skinned fbx mesh
-   * @param root root of hierarchy
+   * @param skeleton the bone hierarchy
    * 
    * @return the calculated bone influences
    */
 #ifdef GUACAMOLE_FBX
   static std::vector<bone_influences> get_weights(
       FbxMesh const& mesh,
-      Skeleton const& root);
+      Skeleton const& skeleton);
 #endif
 };
 

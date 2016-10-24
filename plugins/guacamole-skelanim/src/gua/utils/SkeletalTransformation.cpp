@@ -43,12 +43,9 @@ void partial_blend(Skeleton const& skeleton, unsigned start_node,
   SkeletalPose upper_body { anim_2.calculate_pose(time_normalized2) }
   ;
 
-  Bone const* split_node {
-    skeleton.find(split_node_name)
-  }
-  ;
-  if (split_node) {
-    full_body.partial_replace(upper_body, skeleton, split_node->index);
+  int split_index = skeleton.find(split_node_name);
+  if (split_index >= 0) {
+    full_body.partial_replace(upper_body, skeleton, split_index);
   } else {
     Logger::LOG_ERROR << "Bone '" << split_node_name << "' not found"
                       << std::endl;

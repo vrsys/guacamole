@@ -57,8 +57,6 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
       anim_2_ ( "none" ) 
 {
-  num_bones_ = skeleton_.num_bones();
-
   geometries_.resize(geometry_descriptions_.size());
 }
 
@@ -152,7 +150,7 @@ void SkeletalAnimationNode::update_bone_transforms() {
 
   //reserve vector for transforms
   bone_transforms_ = std::vector<scm::math::mat4f> {
-    num_bones_, scm::math::mat4f::identity()
+    skeleton_.num_bones(), scm::math::mat4f::identity()
   }
   ;
 

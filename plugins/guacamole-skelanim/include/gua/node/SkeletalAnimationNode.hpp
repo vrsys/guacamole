@@ -177,17 +177,11 @@ namespace node {
   bool render_to_stencil_buffer_;
 
   // attributes related to animation
-
-  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
-
   Skeleton skeleton_;
-  std::shared_ptr<Bone> anim_start_node_;
-
   std::map<std::string, SkeletalAnimation> animations_;
 
   bool first_run_;
   bool has_anims_;
-  unsigned num_bones_;
 
   const static std::string none_loaded;
 
