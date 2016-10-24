@@ -144,50 +144,6 @@ void SkeletalAnimationNode::add_animations(std::string const& file_name,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-void SkeletalAnimationNode::update_bone_transforms() {
-  if (!has_anims_ && !first_run_)
-    return;
-  if (!has_anims_)
-    first_run_ = false;
-
-  //reserve vector for transforms
-  bone_transforms_ = std::vector<scm::math::mat4f> {
-    num_bones_, scm::math::mat4f::identity()
-  }
-  ;
-
-  if (!has_anims_) {
-    SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
-  }
-
-  // TODO better checking for unset anims
-  if (blend_factor_ <= 0) {
-    if (anim_1_ != "none") {
-      SkeletalTransformation::from_anim(
-          root_, anim_time_1_, animations_.at(anim_1_), bone_transforms_);
-    } else {
-      SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
-    }
-  } else if (blend_factor_ >= 1) {
-    if (anim_2_ != "none") {
-      SkeletalTransformation::from_anim(
-          root_, anim_time_2_, animations_.at(anim_2_), bone_transforms_);
-    } else {
-      SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
-    }
-  } else {
-    SkeletalTransformation::blend_anims(root_,
-                                        blend_factor_,
-                                        anim_time_1_,
-                                        anim_time_2_,
-                                        animations_.at(anim_1_),
-                                        animations_.at(anim_2_),
-                                        bone_transforms_);
-  }
-}
-#else
 void SkeletalAnimationNode::update_bone_transforms() {
   if (!has_anims_ && !first_run_)
     return;
@@ -229,7 +185,6 @@ void SkeletalAnimationNode::update_bone_transforms() {
                                         bone_transforms_);
   }
 }
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 bool SkeletalAnimationNode::get_render_to_gbuffer() const {
   return render_to_gbuffer_;
