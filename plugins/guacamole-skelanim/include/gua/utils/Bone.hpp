@@ -119,12 +119,13 @@ class GUA_SKELANIM_DLL Bone {
   std::size_t num_bones() const;
 
   std::string name;
-  std::vector<std::shared_ptr<Bone> > children;
+  std::vector<std::
+  shared_ptr<Bone> > children;
   std::vector<unsigned> children2;
   int index;
 
  private:
-  std::vector<unsigned> children2;
+  // std::vector<unsigned> children2;
 
   std::string parentName;
   unsigned numChildren;

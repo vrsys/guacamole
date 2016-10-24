@@ -56,13 +56,13 @@ class SkeletalPose;
  */
 class GUA_SKELANIM_DLL Skeleton {
  public:
-  Skeleton() {};
-  unsigned addBone(aiNode const& node);
+  inline Skeleton() {};
   Skeleton(aiScene const& scene);
+  unsigned addBone(aiNode const& node);
 
 #ifdef GUACAMOLE_FBX
-  unsigned addBone(FbxNode& node);
   Skeleton(FbxScene& scene);
+  unsigned addBone(FbxNode& node);
 #endif
 
   /**
@@ -109,6 +109,8 @@ class GUA_SKELANIM_DLL Skeleton {
    * @return pointer to found bone, nullptr if not found
    */
   Bone const* find(std::string const& name) const;
+
+  std::size_t num_bones() const;
 
   std::vector<Bone> m_bones;
   std::map<std::string, int> m_mapping;
