@@ -99,6 +99,9 @@ class GUA_SKELANIM_DLL Skeleton {
 
   std::size_t num_bones() const;
 
+  std::vector<Bone> const& get_bones() const;
+  void set_bones(std::vector<Bone> const&);
+  
  private:
   /**
    * @brief sets offset matrix and index

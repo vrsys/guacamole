@@ -96,7 +96,7 @@ namespace node {
   void set_render_to_stencil_buffer(bool enable);
 
   void set_bones(std::vector<Bone> const& bones);
-  std::vector<Bone> get_bones() const;
+  std::vector<Bone> const& get_bones() const;
   /**
   * Implements ray picking for a triangular mesh
   */

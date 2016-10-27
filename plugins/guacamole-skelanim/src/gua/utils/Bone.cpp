@@ -13,25 +13,23 @@
 namespace gua {
 
 Bone::Bone()
-  : name( "none" ),
-    index (-1),
-    transformation ( scm::math::mat4f::identity() ),
-    offsetMatrix ( scm::math::mat4f::identity() )
+ :Bone{"none", scm::math::mat4f::identity()}
+{}
+
+Bone::Bone(std::string const& nm, scm::math::mat4f const& idle, scm::math::mat4f const& offset, std::vector<unsigned> childs)
+ :name{nm}
+ ,children{childs}
+ ,idle_matrix{idle}
+ ,offset_matrix{offset}
 {}
 
 Bone::Bone(aiNode const& node)
-  : name ( node.mName.C_Str() ),
-    index ( -1 ),
-    transformation ( to_gua::mat4f(node.mTransformation) ),
-    offsetMatrix ( scm::math::mat4f::identity() )
+ :Bone{node.mName.C_Str(), to_gua::mat4f(node.mTransformation)}
 {}
 
 #ifdef GUACAMOLE_FBX
 Bone::Bone(FbxNode& node)
-  : name ( node.GetName() )
-  , index ( -1 )
-  , transformation ( to_gua::mat4f(node.EvaluateLocalTransform()) )
-  , offsetMatrix ( scm::math::mat4f::identity() )
+ :Bone{node.GetName(), to_gua::mat4f(node.EvaluateLocalTransform())}
 {}
 #endif
 
