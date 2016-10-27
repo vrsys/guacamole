@@ -19,7 +19,7 @@ namespace gua {
 unsigned Skeleton::addBone(aiNode const& node) {
   unsigned index = m_bones.size();
   m_bones.emplace_back(node);
-  m_bones[index].index = index;
+  // m_bones[index].index = index;
 
   for (unsigned i = 0; i < node.mNumChildren; ++i) {
     unsigned child_index = addBone(*(node.mChildren[i]));
@@ -54,7 +54,7 @@ Skeleton::Skeleton(aiScene const& scene) {
 unsigned Skeleton::addBone(FbxNode& node) {
   unsigned index = m_bones.size();
   m_bones.emplace_back(node);
-  m_bones[index].index = index;
+  // m_bones[index].index = index;
   m_bones[index].children.resize(node.GetChildCount());
 
   for (int i = 0; i < node.GetChildCount(); ++i) {
@@ -145,6 +145,15 @@ Skeleton::Skeleton(FbxScene& scene) {
 
 #endif
 
+std::vector<Bone> const& Skeleton::get_bones() const {
+  return m_bones;
+}
+
+void Skeleton::set_bones(std::vector<Bone> const& bones) {
+  m_bones = bones;
+}
+
+
 int Skeleton::find(std::string const& name) const {
   auto iter = m_mapping.find(name);
   if(iter != m_mapping.end()) {
@@ -178,7 +187,7 @@ void Skeleton::set_offsets(
     std::map<std::string, scm::math::mat4f> const& offsets) {
   for (auto& bone : m_bones) {
     if (offsets.find(bone.name) != offsets.end()) {
-      bone.offsetMatrix = offsets.at(bone.name);
+      bone.offset_matrix = offsets.at(bone.name);
     }
   }
 }
@@ -188,14 +197,14 @@ void Skeleton::accumulate_matrices(unsigned index_bone, std::vector<scm::math::m
                                 scm::math::mat4f const& parentTransform) const {
   auto const& bone = m_bones[index_bone];
   // initialize with idle transform
-  scm::math::mat4f nodeTransformation{bone.transformation};
+  scm::math::mat4f nodeTransformation{bone.idle_matrix};
   if (pose.contains(bone.name)) {
     nodeTransformation = pose.get_transform(bone.name).to_matrix();
   }
 
   scm::math::mat4f finalTransformation = parentTransform * nodeTransformation;
 
-  transformMat4s[bone.index] = finalTransformation * bone.offsetMatrix;
+  transformMat4s[index_bone] = finalTransformation * bone.offset_matrix;
 
   for (auto const& index_child : bone.children) {
     accumulate_matrices(index_child, transformMat4s, pose, finalTransformation);
