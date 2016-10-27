@@ -205,15 +205,12 @@ void SkeletalAnimationNode::set_render_to_stencil_buffer(bool enable) {
 
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::set_bones(std::vector<Bone> const& bones) {
-  // root_ = std::make_shared<Bone>(bones[0]);
-  // root_->create_bones(bones);
+  skeleton_.set_bones(bones);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<gua::Bone> SkeletalAnimationNode::get_bones() const {
-  std::vector<Bone> bones{};
-  // root_->collect_bones(bones);
-  return bones;
+std::vector<gua::Bone> const& SkeletalAnimationNode::get_bones() const {
+  return skeleton_.get_bones();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
