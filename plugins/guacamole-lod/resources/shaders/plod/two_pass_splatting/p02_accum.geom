@@ -6,6 +6,7 @@
 @include "common/gua_camera_uniforms.glsl"
 
 uniform bool enable_backface_culling;
+uniform mat4 inverse_transpose_model_view_matrix;
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
@@ -30,13 +31,20 @@ out VertexData {
  
 
 void main() {
+    
+    vec4 world_normal = gua_normal_matrix * vec4(VertexIn[0].pass_normal, 0.0);
+    vec4 view_normal  = inverse_transpose_model_view_matrix * vec4(VertexIn[0].pass_normal, 0.0);
 
-    if(enable_backface_culling == false) {
+    if (enable_backface_culling == false || view_normal.z > 0.0) {
+
+      if (view_normal.z < 0.0) {
+        world_normal = -world_normal;
+      }
 
       // --------------------------- common attributes -----------------------------------
       VertexOut.pass_point_color = VertexIn[0].pass_point_color;
 
-      VertexOut.pass_normal      = VertexIn[0].pass_normal; 
+      VertexOut.pass_normal      = normalize(world_normal.xyz); 
 
       mat3x3 step_uv = mat3x3(gl_in[0].gl_Position.xyz,
                               VertexIn[0].pass_ms_u,

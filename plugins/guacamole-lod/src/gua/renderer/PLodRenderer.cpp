@@ -27,6 +27,7 @@
 #include <gua/renderer/HoleFillingSubRenderer.hpp>
 #include <gua/renderer/LinkedListResolveSubRenderer.hpp>
 #include <gua/renderer/LinkedListAccumSubRenderer.hpp>
+#include <gua/renderer/LowQualitySplattingSubRenderer.hpp>
 #include <gua/renderer/ShadowSubRenderer.hpp>
 #include <gua/renderer/NormalizationSubRenderer.hpp>
 #include <gua/renderer/AccumSubRenderer.hpp>
@@ -124,7 +125,7 @@ namespace gua {
   {
     std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > HQ_two_pass_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
     std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > LQ_shadow_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
-
+    std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > LQ_one_pass_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
     std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > HQ_linked_list_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
 
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<LogToLinSubRenderer>() );
@@ -132,7 +133,9 @@ namespace gua {
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<AccumSubRenderer>() );
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<NormalizationSubRenderer>() );
 
-    LQ_shadow_splatting_pipeline_ptr->push_back( std::make_shared<ShadowSubRenderer>() );
+    LQ_shadow_splatting_pipeline_ptr->push_back( std::make_shared<DepthSubRenderer>() );
+
+    LQ_one_pass_splatting_pipeline_ptr->push_back(std::make_shared<LowQualitySplattingSubRenderer>());
 
     HQ_linked_list_pipeline_ptr->push_back( std::make_shared<LinkedListAccumSubRenderer>() );
     HQ_linked_list_pipeline_ptr->push_back( std::make_shared<LinkedListResolveSubRenderer>() );
@@ -141,6 +144,7 @@ namespace gua {
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS]    = HQ_two_pass_splatting_pipeline_ptr;
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_SHADOW]      = LQ_shadow_splatting_pipeline_ptr;
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST] = HQ_linked_list_pipeline_ptr;
+    plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]    = LQ_one_pass_splatting_pipeline_ptr;
   }
 
 
