@@ -43,6 +43,7 @@ PLodNode::PLodNode(std::string const& name,
                    std::string const& geometry_file_path,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform,
+                   float const max_surfel_size,
                    float const scale,
                    float const threshold,
                    bool const enable_backface_culling_by_normal)
@@ -53,6 +54,7 @@ PLodNode::PLodNode(std::string const& name,
       geometry_file_path_(geometry_file_path),
       material_(material),
       radius_scale_(scale),
+      max_surfel_size_(max_surfel_size),
       error_threshold_(threshold),
       enable_backface_culling_by_normal_(enable_backface_culling_by_normal) {
 }
@@ -105,25 +107,38 @@ void PLodNode::set_material(std::shared_ptr<Material> const& material) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLodNode::set_radius_scale(float const scale) {
+float PLodNode::get_radius_scale() const {
+  return radius_scale_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_radius_scale(float scale) {
   radius_scale_ = scale;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float PLodNode::get_radius_scale() {
-  return radius_scale_;
+float PLodNode::get_max_surfel_size() const
+{
+  return max_surfel_size_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLodNode::set_error_threshold(float const threshold) {
-  error_threshold_ = threshold;
+void PLodNode::set_max_surfel_size(float threshold)
+{
+  max_surfel_size_ = threshold;
   self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float PLodNode::get_error_threshold() {
+float PLodNode::get_error_threshold() const {
   return error_threshold_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_error_threshold(float threshold) {
+  error_threshold_ = threshold;
+  self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +149,7 @@ void PLodNode::set_enable_backface_culling_by_normal(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool PLodNode::get_enable_backface_culling_by_normal() {
+bool PLodNode::get_enable_backface_culling_by_normal() const {
   return enable_backface_culling_by_normal_;
 }
 
@@ -261,6 +276,7 @@ std::shared_ptr<Node> PLodNode::copy() const {
 
   result->shadow_mode_ = shadow_mode_;
   result->radius_scale_ = radius_scale_;
+  result->max_surfel_size_ = max_surfel_size_;
   result->error_threshold_ = error_threshold_;
   result->enable_backface_culling_by_normal_ =
       enable_backface_culling_by_normal_;

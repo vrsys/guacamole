@@ -230,16 +230,17 @@ namespace gua {
     auto const& scm_model_matrix = plod_node->get_cached_world_transform();
     auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
     auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
-    auto scm_inv_view_matrix = scm::math::transpose(scm::math::inverse(frustum.get_view()) );
-    auto scm_inv_model_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+    auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+    auto scm_inv_trans_model_view_matrix = scm::math::transpose(scm::math::inverse(scm_model_view_matrix));
 
     current_material_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(scm_model_matrix));
     current_material_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
+    current_material_shader->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
     current_material_shader->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(scm_model_view_projection_matrix));
-    current_material_shader->apply_uniform(ctx, "inverse_model_matrix", math::mat4f(scm_inv_model_matrix) );
-    current_material_shader->apply_uniform(ctx, "inverse_view_matrix", math::mat4f(scm_inv_view_matrix));
+    current_material_shader->apply_uniform(ctx, "inverse_transpose_model_view_matrix", math::mat4f(scm_inv_trans_model_view_matrix));
 
-    current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
+    current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale()); 
+    current_material_shader->apply_uniform(ctx, "max_surfel_size", plod_node->get_max_surfel_size());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
   }
 

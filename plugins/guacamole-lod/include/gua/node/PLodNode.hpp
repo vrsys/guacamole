@@ -54,6 +54,7 @@ public:
            std::string const& geometry_file_path = "gua_no_path_specified",
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity(),
+           float const max_surfel_size = 0.2f,
            float const radius_scale = 1.0f,
            float const error_threshold = 2.5f,
            bool const enable_backface_culling_by_normal = false);
@@ -74,13 +75,16 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void               set_material(std::shared_ptr<Material> const& material);
 
-  float              get_radius_scale();
-  void               set_radius_scale(float const scale);
+  float              get_radius_scale() const;
+  void               set_radius_scale(float scale);
 
-  float              get_error_threshold();
-  void               set_error_threshold(float const threshold);
+  float              get_max_surfel_size() const;
+  void               set_max_surfel_size(float threshold);
 
-  bool               get_enable_backface_culling_by_normal();
+  float              get_error_threshold() const;
+  void               set_error_threshold(float threshold);
+
+  bool               get_enable_backface_culling_by_normal() const;
   void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
 public:
@@ -113,6 +117,7 @@ private:  // attributes e.g. special attributes for drawing
   bool                          material_changed_;
 
   float                         radius_scale_;
+  float                         max_surfel_size_;
   float                         error_threshold_;
   bool                          enable_backface_culling_by_normal_;
 };

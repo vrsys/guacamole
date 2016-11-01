@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <memory>
+#include <algorithm>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -64,35 +65,54 @@ int main(int argc, char** argv) {
   //load a sample pointcloud
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
+#if WIN32
+    "data/objects/plod/pig_pr.bvh",
+#else
     "/opt/3d_models/lamure/plod/pig_pr.bvh",
+#endif
     lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
   //load a sample mesh-based lod model 
   auto mlod_node = lod_loader.load_lod_trimesh(
     //"tri_mesh", 
-    "/opt/3d_models/lamure/mlod/xyzrgb_dragon_7219k.bvh", 
+#if WIN32
+    "data/objects/mlod/xyzrgb_dragon_7219k.bvh",
+#else
+    "/opt/3d_models/lamure/mlod/xyzrgb_dragon_7219k.bvh",
+#endif
     //plod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE/* | gua::LodLoader::MAKE_PICKABLE*/
   );
 
   mlod_node->set_error_threshold(0.25);
 
+  gua::TriMeshLoader loader;
+  auto teapot(loader.create_geometry_from_file(
+    "teapot", "data/objects/teapot.obj",
+    gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
+
+
   //setup scenegraph
   gua::SceneGraph graph("main_scenegraph");
   auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
 
+  auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
   auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
+  auto tri_transform  = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
   graph.add_node("/transform/mlod_transform", mlod_node);
-
   graph.add_node("/transform/plod_transform", plod_node);
+  graph.add_node("/transform/tri_transform", teapot);
 
   mlod_transform->translate(-0.4, 0.0, 0.0);
 
   plod_transform->rotate(180.0, 0.0, 1.0, 0.0);
   plod_transform->translate(0.3, 0.08, 0.0);
+
+  tri_transform->scale(0.3);
+  tri_transform->translate(0.0, 0.0, 0.5);
 
   //create a lightsource
   auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
@@ -121,7 +141,7 @@ int main(int argc, char** argv) {
   int button_state = -1;
 
   //setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+  auto resolution = gua::math::vec2ui(2560, 1600);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0.0f, 0, 2.5f);
@@ -138,6 +158,7 @@ int main(int argc, char** argv) {
   auto PLod_Pass = std::make_shared<gua::PLodPassDescription>();
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
   pipe->add_pass(PLod_Pass);
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
@@ -214,12 +235,30 @@ int main(int argc, char** argv) {
       case '1':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS);
         PLod_Pass->touch();
+        std::cout << "PLOD rendering set to high-quality two pass splatting." << std::endl;
         break;
       case '2':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST);
         PLod_Pass->touch();
+        std::cout << "PLOD rendering set to high-quality one-pass splatting via linked lists." << std::endl;
         break;
-
+      case '3':
+        PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
+        PLod_Pass->touch();
+        std::cout << "PLOD rendering set to low-quality one-pass splatting with ellipsoid surfels." << std::endl;
+        break;
+      case 'b':
+        plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
+        break;
+      // change max surfel size
+      case '4':
+        plod_node->set_max_surfel_size(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_size()));
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
+        break;
+      case '5':
+        plod_node->set_max_surfel_size(1.1 * plod_node->get_max_surfel_size());
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
+        break;
       default:
         break;
     }
@@ -238,6 +277,8 @@ int main(int argc, char** argv) {
   //application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
+  std::size_t framecount = 0;
+
   ticker.on_tick.connect([&]() {
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
@@ -252,7 +293,9 @@ int main(int argc, char** argv) {
 
 
       renderer.queue_draw({ &graph });
-      std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+      if (framecount++ % 50 == 0) {
+        std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+      }
     }
   });
 

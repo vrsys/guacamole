@@ -83,7 +83,6 @@ namespace gua {
 
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
 
-    std::cout << "Started shadow pass\n";
     shader_program_->use(ctx);
 
     for (auto const& object : sorted_models) {
