@@ -162,6 +162,7 @@ namespace gua {
     current_material_shader->apply_uniform(ctx, "inverse_transpose_model_view_matrix", math::mat4f(scm_inv_trans_model_view_matrix));
 
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
+    current_material_shader->apply_uniform(ctx, "max_surfel_size", plod_node->get_max_surfel_size());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
   }
 

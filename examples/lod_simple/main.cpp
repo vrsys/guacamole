@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <memory>
+#include <algorithm>
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -234,17 +235,29 @@ int main(int argc, char** argv) {
       case '1':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS);
         PLod_Pass->touch();
+        std::cout << "PLOD rendering set to high-quality two pass splatting." << std::endl;
         break;
       case '2':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST);
         PLod_Pass->touch();
+        std::cout << "PLOD rendering set to high-quality one-pass splatting via linked lists." << std::endl;
         break;
       case '3':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
         PLod_Pass->touch();
+        std::cout << "PLOD rendering set to low-quality one-pass splatting with ellipsoid surfels." << std::endl;
         break;
       case 'b':
         plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
+        break;
+      // change max surfel size
+      case '4':
+        plod_node->set_max_surfel_size(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_size()));
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
+        break;
+      case '5':
+        plod_node->set_max_surfel_size(1.1 * plod_node->get_max_surfel_size());
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
         break;
       default:
         break;
