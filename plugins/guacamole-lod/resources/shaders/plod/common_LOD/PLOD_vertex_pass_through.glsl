@@ -2,4 +2,4 @@
 
 @include "PLOD_assign_tangents.glsl"
 
-  gl_Position = vec4(in_position, 1.0);
+gl_Position = vec4(in_position, 1.0);

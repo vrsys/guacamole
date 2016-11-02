@@ -118,13 +118,13 @@ void PLodNode::set_radius_scale(float scale) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-float PLodNode::get_max_surfel_size() const
+float PLodNode::get_max_surfel_radius() const
 {
   return max_surfel_size_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLodNode::set_max_surfel_size(float threshold)
+void PLodNode::set_max_surfel_radius(float threshold)
 {
   max_surfel_size_ = threshold;
   self_dirty_ = true;
