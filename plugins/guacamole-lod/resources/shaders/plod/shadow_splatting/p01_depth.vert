@@ -11,6 +11,7 @@ layout(location = 5) in float in_radius;
 layout(location = 6) in vec3 in_normal;
 
 uniform float radius_scaling;
+uniform float max_surfel_radius;
 
 out VertexData {
   vec3 pass_ms_u;

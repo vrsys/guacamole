@@ -78,8 +78,8 @@ public:  // methods
   float              get_radius_scale() const;
   void               set_radius_scale(float scale);
 
-  float              get_max_surfel_size() const;
-  void               set_max_surfel_size(float threshold);
+  float              get_max_surfel_radius() const;
+  void               set_max_surfel_radius(float threshold);
 
   float              get_error_threshold() const;
   void               set_error_threshold(float threshold);
