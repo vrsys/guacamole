@@ -66,7 +66,8 @@ int main(int argc, char** argv) {
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
 #if WIN32
-    "data/objects/plod/pig_pr.bvh",
+    //"data/objects/plod/pig_pr.bvh",
+    "data/objects/Tempelherrenhaus/Pointcloud_Ruine_xyz_parts_00001.bvh",
 #else
     "/opt/3d_models/lamure/plod/pig_pr.bvh",
 #endif
@@ -252,12 +253,12 @@ int main(int argc, char** argv) {
         break;
       // change max surfel size
       case '4':
-        plod_node->set_max_surfel_size(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_size()));
-        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
+        plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_radius()));
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
         break;
       case '5':
-        plod_node->set_max_surfel_size(1.1 * plod_node->get_max_surfel_size());
-        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_size() << std::endl;
+        plod_node->set_max_surfel_radius(1.1 * plod_node->get_max_surfel_radius());
+        std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
         break;
       default:
         break;

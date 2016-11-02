@@ -1,9 +1,7 @@
-  //steppo
-  //vec3 tmp_ms_v       = normalize( cross(ms_n,ms_u) );
-  //VertexOut.pass_ms_u = normalize( cross(tmp_ms_v,ms_n) ) * radius_importance_scaling  * 2.0 * in_radius;
-  //VertexOut.pass_ms_v = normalize(tmp_ms_v) * 2.0 * in_radius ;
+// clamp splat size to max. surfel size
+float splat_size = clamp(radius_scaling * in_radius, 0.0, max_surfel_radius);
 
-  //adrian
-VertexOut.pass_ms_u = normalize(ms_u) * radius_scaling * in_radius;
-VertexOut.pass_ms_v = normalize(cross(ms_n, ms_u)) * radius_scaling  * in_radius;
+// scale tangent to desired splat size
+VertexOut.pass_ms_u = ms_u * splat_size;
+VertexOut.pass_ms_v = ms_v * splat_size;
   

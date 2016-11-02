@@ -25,6 +25,8 @@ layout(binding = 4, R32UI) coherent uniform restrict uimage2D min_es_distance_im
 
 uniform mat4 inverse_transpose_model_view_matrix;
 uniform float radius_scaling;
+uniform float max_surfel_radius;
+uniform bool enable_backface_culling;
 
 out VertexData {
   vec3 pass_ms_u;
@@ -35,7 +37,7 @@ out VertexData {
 void main() {
 
   @include "../common_LOD/PLOD_vertex_pass_through.glsl"
-
+  
   //compute unique surfel index in attribute textures and write attributes
   uint image_width = imageSize(out_surfels_pbr).x;
   uint global_surfel_idx = gl_VertexID;
@@ -52,8 +54,12 @@ void main() {
   vec4 world_normal = gua_normal_matrix * vec4(in_normal, 0.0);
   vec4 view_normal  = inverse_transpose_model_view_matrix * vec4(in_normal, 0.0);
 
-  if (view_normal.z < 0.0) {
-    world_normal = -world_normal;
+  if (enable_backface_culling && view_normal.z < 0.0) {
+    VertexOut.pass_ms_u = vec3(0.0);
+    VertexOut.pass_ms_v = vec3(0.0);  
+  } else {
+    float flip_normal = 1.0 - 2.0 * float(view_normal.z < 0.0);
+    world_normal = flip_normal * world_normal;
   }
 
   imageStore(out_surfels_normal, surfel_pos, vec4( normalize(world_normal.xyz), 0.0 ) );
