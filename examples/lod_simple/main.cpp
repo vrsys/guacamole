@@ -37,6 +37,9 @@
 #include <gua/node/MLodNode.hpp>
 #include <scm/gl_util/manipulators/trackball_manipulator.h>
 
+#define USE_MESH_LOD_MODEL 0
+#define USE_POINTCLOUD_LOD_MODEL 1
+
 
 int main(int argc, char** argv) {
 
@@ -58,10 +61,11 @@ int main(int argc, char** argv) {
 
   //configure lod backend
   gua::LodLoader lod_loader;
-  lod_loader.set_out_of_core_budget_in_mb(512);
-  lod_loader.set_render_budget_in_mb(512);
+  lod_loader.set_out_of_core_budget_in_mb(8192);
+  lod_loader.set_render_budget_in_mb(4096);
   lod_loader.set_upload_budget_in_mb(20);
 
+#if USE_POINTCLOUD_LOD_MODEL
   //load a sample pointcloud
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
@@ -73,7 +77,9 @@ int main(int argc, char** argv) {
 #endif
     lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+#endif
 
+#if USE_MESH_LOD_MODEL
   //load a sample mesh-based lod model 
   auto mlod_node = lod_loader.load_lod_trimesh(
     //"tri_mesh", 
@@ -86,7 +92,8 @@ int main(int argc, char** argv) {
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE/* | gua::LodLoader::MAKE_PICKABLE*/
   );
 
-  mlod_node->set_error_threshold(0.25);
+  mlod_node->set_error_threshold(0.25); 
+#endif
 
   gua::TriMeshLoader loader;
   auto teapot(loader.create_geometry_from_file(
@@ -103,8 +110,13 @@ int main(int argc, char** argv) {
   auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
   auto tri_transform  = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
+#if USE_MESH_LOD_MODEL
   graph.add_node("/transform/mlod_transform", mlod_node);
+#endif
+
+#if USE_POINTCLOUD_LOD_MODEL
   graph.add_node("/transform/plod_transform", plod_node);
+#endif
   graph.add_node("/transform/tri_transform", teapot);
 
   mlod_transform->translate(-0.4, 0.0, 0.0);
@@ -127,7 +139,6 @@ int main(int argc, char** argv) {
   light->scale(4.f);
   light->translate(0.f, 0.f, 1.f);
 
-
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
@@ -142,19 +153,19 @@ int main(int argc, char** argv) {
   int button_state = -1;
 
   //setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(2560, 1600);
+  auto resolution = gua::math::vec2ui(3840, 2160);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0.0f, 0, 2.5f);
   camera->config.set_resolution(resolution);
   
   //use close near plane to allow inspection of details
-  //camera->config.set_near_clip(0.01f);
-  //camera->config.set_far_clip(200.0f);
+  camera->config.set_near_clip(0.01f);
+  camera->config.set_far_clip(200.0f);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
+  //camera->config.set_enable_stereo(true);
 
   auto PLod_Pass = std::make_shared<gua::PLodPassDescription>();
 
@@ -294,7 +305,7 @@ int main(int argc, char** argv) {
 
 
       renderer.queue_draw({ &graph });
-      if (framecount++ % 50 == 0) {
+      if (framecount++ % 200 == 0) {
         std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
       }
     }

@@ -1,6 +1,11 @@
 @include "common/header.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
+// configuration
+///////////////////////////////////////////////////////////////////////////////
+#define ENABLE_PLOD_FOR_ABUFFER 1
+
+///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
 in VertexData {
@@ -36,8 +41,14 @@ layout(binding=0) uniform sampler2D p01_linear_depth_texture;
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
-void main() {
+void main() 
+{
+  // early discard of fragments not on surfel
   vec2 uv_coords = VertexIn.pass_uv_coords;
+
+  if( dot(uv_coords, uv_coords) > 1) {
+    discard;
+  }
 
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
@@ -48,25 +59,14 @@ void main() {
   gua_roughness  = 1.0;
   gua_emissivity = 1.0; // pass through if unshaded
 
-  if( dot(uv_coords, uv_coords) > 1) {
-    discard;
-  }
-
-  //clip against global clipping planes
   vec3 gua_world_position = VertexIn.pass_world_position;
-
-  for (int i=0; i < gua_clipping_plane_count; ++i) {
-
-    if (dot(gua_clipping_planes[i].xyz, gua_world_position.xyz) + gua_clipping_planes[i].w < 0) {
-      discard;
-    }
-  }
 
   // normal mode or high fidelity shadows
   if (gua_rendering_mode != 1) {
     @material_method_calls_frag@
   }
 
+  // clipping against clipping planes is performed in submit_fragment
   submit_fragment(gl_FragCoord.z);
 }
 

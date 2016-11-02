@@ -351,12 +351,10 @@ namespace gua {
     std::unordered_map<node::PLodNode*, lamure::ren::cut*> cut_map;
     std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> > nodes_in_frustum_per_model;
 
-
     for (auto const& object : sorted_objects->second) {
 
       auto plod_node(reinterpret_cast<node::PLodNode*>(object));
       lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
-
 
       auto const& scm_model_matrix = plod_node->get_cached_world_transform();
 
@@ -371,9 +369,26 @@ namespace gua {
       cut_map.insert(std::make_pair(plod_node, &cut));
     }
 
-
     perform_frustum_culling_for_scene(sorted_objects->second, nodes_in_frustum_per_model, cut_map, cut_update_cam, pipe);
 
+    // count splats in cut
+#if 0
+    std::size_t surfels_in_cut = 0;
+    for (auto const& object : sorted_objects->second) {
+
+      auto plod_node(reinterpret_cast<node::PLodNode*>(object));
+      lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
+
+      auto bvh = database->get_model(model_id)->get_bvh();
+      size_t surfels_per_node_of_model = bvh->get_primitives_per_node();
+      
+      lamure::ren::cut& cut = cuts->get_cut(context_id, lamure_view_id, model_id);
+      for (auto const& node_slot_aggregate : cut.complete_set()) {
+        surfels_in_cut += surfels_per_node_of_model;
+      }
+    }
+    std::cout << "Surfels : " << surfels_in_cut << "\n";
+#endif
 
 
     if (!pipe.current_viewstate().shadow_mode) {  //normal rendering branch
