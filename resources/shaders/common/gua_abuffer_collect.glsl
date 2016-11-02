@@ -86,7 +86,6 @@ void submit_fragment(float depth)
 {
   check_clipping_planes();
 
-
   // if abuffer enabled and not rendering shadows
   if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
 #if @enable_abuffer@
