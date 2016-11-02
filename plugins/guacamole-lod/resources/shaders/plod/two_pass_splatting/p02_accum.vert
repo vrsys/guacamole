@@ -16,7 +16,7 @@ layout (location = 6) in vec3 in_normal;
 
 uniform uint gua_material_id;
 uniform float radius_scaling;
-uniform float max_surfel_size;
+uniform float max_surfel_radius;
 
 out VertexData {
   //output to geometry shader
@@ -30,12 +30,6 @@ out VertexData {
 
 void main() {
   @include "../common_LOD/PLOD_vertex_pass_through.glsl"
-
-  // set surfel size to ZERO if it exceeds threshold
-  if (radius_scaling * in_radius > max_surfel_size) {
-    VertexOut.pass_ms_u = vec3(0.0);
-    VertexOut.pass_ms_v = vec3(0.0);
-  }
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   VertexOut.pass_normal = in_normal;
