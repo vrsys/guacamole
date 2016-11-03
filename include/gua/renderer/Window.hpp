@@ -52,12 +52,12 @@ class GUA_DLL Window : public WindowBase {
    */
   virtual ~Window();
 
-  virtual void open();
-  virtual bool get_is_open() const;
-  virtual bool should_close() const;
-  virtual void close();
+  void open() override;
+  bool get_is_open() const override;
+  bool should_close() const override;
+  void close() override;
 
-  virtual void process_events();
+  void process_events() override;
 
   /**
    * Activate the context of this window.
@@ -65,7 +65,7 @@ class GUA_DLL Window : public WindowBase {
    * Makes the RenderContext of this window current. All preceeding
    * OpenGL calls will be invoked on this window.
    */
-  virtual void set_active(bool active);
+  void set_active(bool active) override;
 
 
  private:
