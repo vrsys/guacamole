@@ -31,7 +31,7 @@ namespace gua {
 
   public : // typedefs, enums
 
-  enum class SurfelRenderMode {
+  enum SurfelRenderMode {
     LQ_ONE_PASS = 0,
     HQ_TWO_PASS = 1,
     HQ_LINKED_LIST = 2,
