@@ -74,6 +74,11 @@ namespace node {
                                 unsigned index);
 
   /**
+  * Set the string referring to an entry in guacamole's GeometryDatabase.
+  */
+  void set_geometry_descriptions(std::vector<std::string> const& geometry_descriptions);
+
+  /**
   * This is only for the multifield handling in avango
   */
   void add_material(std::shared_ptr<Material> const& material);
@@ -180,7 +185,7 @@ namespace node {
   Skeleton skeleton_;
   std::map<std::string, SkeletalAnimation> animations_;
 
-  bool first_run_;
+  bool new_bones_;
   bool has_anims_;
 
   const static std::string none_loaded;
