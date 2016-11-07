@@ -179,11 +179,11 @@ void LodResource::ray_test(Ray const& ray,
   const auto model_transform = owner->get_cached_world_transform();
   const auto world_origin = ray.origin_;
   const auto world_direction = scm::math::normalize(ray.direction_);
-  /*
+  
   lamure::ren::ray lod_ray(math::vec3f(world_origin), math::vec3f(world_direction), scm::math::length(ray.direction_));
   lamure::ren::ray::intersection intersection;
 
-  auto lod_node = reinterpret_cast<node::LodNode*>(owner);
+  auto lod_node = reinterpret_cast<node::PLodNode*>(owner);
 
   float aabb_scale = 9.0f;
   unsigned int max_depth = 255;
@@ -202,10 +202,10 @@ void LodResource::ray_test(Ray const& ray,
     pick.normal = intersection.normal_;
   }
 
-  if (has_hit && (pick.intersection < hits.begin()->distance)) {
+  if (has_hit && (pick.distance < hits.begin()->distance)) {
     hits.insert(pick);
   }
-*/
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
