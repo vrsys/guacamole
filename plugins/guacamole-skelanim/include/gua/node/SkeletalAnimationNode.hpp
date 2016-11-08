@@ -68,13 +68,11 @@ namespace node {
   std::vector<std::string> const& get_geometry_descriptions() const;
 
   /**
-  * Set the string referring to an entry in guacamole's GeometryDatabase.
+  * Set the path to the model file containing a skeleton.
   */
-  void set_geometry_description(std::string const& geometry_description,
-                                unsigned index);
-
+  void set_skeleton_description(std::string const& geometry_description);
   /**
-  * Set the string referring to an entry in guacamole's GeometryDatabase.
+  * Set the strings referring to entries in guacamole's GeometryDatabase.
   */
   void set_geometry_descriptions(std::vector<std::string> const& geometry_descriptions);
 
