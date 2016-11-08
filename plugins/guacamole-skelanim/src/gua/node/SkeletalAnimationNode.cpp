@@ -71,24 +71,17 @@ std::vector<std::string> const&
 SkeletalAnimationNode::get_geometry_descriptions() const {
   return geometry_descriptions_;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-void SkeletalAnimationNode::set_geometry_description(std::string const& v,
-                                                     unsigned index) {
-  if (index < geometry_descriptions_.size()) {
-    geometry_descriptions_[index] = v;
-    geometry_changed_ = self_dirty_ = true;
-  } else {
-    Logger::LOG_ERROR
-        << "Can't 'set_geometry_description()'! Index out of bounds! "
-        << std::endl;
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::set_geometry_descriptions(std::vector<std::string> const& v) {
   geometry_descriptions_ = v;
   geometry_changed_ = self_dirty_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void SkeletalAnimationNode::set_skeleton_description(std::string const& description) {
+  gua::SkeletalAnimationLoader loader;
+  skeleton_ = loader.load_skeleton(description);
+  new_bones_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +123,6 @@ void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 void SkeletalAnimationNode::add_animations(std::string const& file_name,
                                            std::string const& name) {
 
@@ -171,6 +163,7 @@ void SkeletalAnimationNode::update_bone_transforms() {
           skeleton_, 0, anim_time_1_, animations_.at(anim_1_), bone_transforms_);
     } else {
       SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+
     }
   } else if (blend_factor_ >= 1) {
     if (anim_2_ != "none") {
@@ -482,7 +475,25 @@ void SkeletalAnimationNode::update_bounding_box() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> SkeletalAnimationNode::copy() const {
-  return std::make_shared<SkeletalAnimationNode>(*this);
+  auto result = std::make_shared<SkeletalAnimationNode>(*this);
+
+  result->update_cache();
+
+  result->geometries_ = geometries_;
+  result->geometry_descriptions_ = geometry_descriptions_;
+  result->geometry_changed_ = geometry_changed_;
+  result->skeleton_ = skeleton_;
+  result->animations_ = animations_;
+  result->new_bones_ = new_bones_;
+  result->has_anims_ = has_anims_;
+  result->anim_1_ = anim_1_;
+  result->anim_2_ = anim_2_;
+  result->blend_factor_ = blend_factor_;
+  result->anim_time_1_ = anim_time_1_;
+  result->anim_time_2_ = anim_time_2_;
+  result->bone_transforms_ = bone_transforms_;
+
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,12 +506,13 @@ std::string const& SkeletalAnimationNode::get_animation_1() const {
 }
 
 void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
-  if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // }
     anim_1_ = animation_name;
-  } else {
-    gua::Logger::LOG_ERROR << "No matching animation with name: '"
-                             << animation_name << "' found!" << std::endl;
-  }
+  //  else {
+  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //                            << animation_name << "' found!" << std::endl;
+  // }
 }
 std::string const& SkeletalAnimationNode::get_animation_2() const {
   if (has_anims_ && animations_.find(anim_2_) != animations_.end()) {
@@ -511,12 +523,13 @@ std::string const& SkeletalAnimationNode::get_animation_2() const {
 }
 
 void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
-  if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // }
     anim_2_ = animation_name;
-  } else {
-    gua::Logger::LOG_ERROR << "No matching animation with name: '"
-                             << animation_name << "' found!" << std::endl;
-  }
+  //  else {
+  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //                            << animation_name << "' found!" << std::endl;
+  // }
 }
 
 float SkeletalAnimationNode::get_duration(

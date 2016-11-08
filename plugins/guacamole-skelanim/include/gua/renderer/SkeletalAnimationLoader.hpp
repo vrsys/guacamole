@@ -39,6 +39,7 @@ struct aiScene;
 namespace gua {
 class SkeletalAnimation;
 class Material;
+class Skeleton;
 
 namespace node {
 class Node;
@@ -98,6 +99,9 @@ class GUA_SKELANIM_DLL SkeletalAnimationLoader {
   std::vector<SkeletalAnimation> load_animation(
       std::string const& file_name,
       std::string const& animation_name);
+
+  Skeleton load_skeleton(std::string const& file_name);
+
 
   /**
   *

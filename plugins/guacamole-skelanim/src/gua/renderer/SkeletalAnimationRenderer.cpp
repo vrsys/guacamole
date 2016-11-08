@@ -225,7 +225,6 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
           }
 
           ctx.render_context->apply_program();
-
           if (ctx.framecount > last_frame_) {
             skel_anim_node->update_bone_transforms();
           }
