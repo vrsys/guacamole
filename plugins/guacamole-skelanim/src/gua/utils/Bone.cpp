@@ -16,7 +16,10 @@ Bone::Bone()
  :Bone{"none", scm::math::mat4f::identity()}
 {}
 
-Bone::Bone(std::string const& nm, scm::math::mat4f const& idle, scm::math::mat4f const& offset, std::vector<unsigned> childs)
+Bone::Bone(std::string const& nm,
+  scm::math::mat4f const& idle,
+  scm::math::mat4f const& offset,
+  std::vector<unsigned> childs)
  :name{nm}
  ,children{childs}
  ,idle_matrix{idle}

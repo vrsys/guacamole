@@ -12,13 +12,12 @@ namespace gua {
 
 namespace SkeletalTransformation {
 
-void blend_anims(Skeleton const& skeleton, unsigned start_node,
+std::vector<scm::math::mat4f> blend_anims(Skeleton const& skeleton, unsigned start_node,
                  float blend_factor,
                  float time_normalized1,
                  float time_normalized2,
                  SkeletalAnimation const& anim_1,
-                 SkeletalAnimation const& anim_2,
-                 std::vector<scm::math::mat4f>& transforms) {
+                 SkeletalAnimation const& anim_2) {
 
   SkeletalPose pose1 { anim_1.calculate_pose(time_normalized1) }
   ;
@@ -27,16 +26,15 @@ void blend_anims(Skeleton const& skeleton, unsigned start_node,
 
   pose1.blend(pose2, blend_factor);
 
-  skeleton.accumulate_matrices(start_node, transforms, pose1);
+  return skeleton.accumulate_matrices(start_node, pose1);
 }
 
-void partial_blend(Skeleton const& skeleton, unsigned start_node,
+std::vector<scm::math::mat4f> partial_blend(Skeleton const& skeleton, unsigned start_node,
                    float time_normalized1,
                    float time_normalized2,
                    SkeletalAnimation const& anim_1,
                    SkeletalAnimation const& anim_2,
-                   std::string const& split_node_name,
-                   std::vector<scm::math::mat4f>& transforms) {
+                   std::string const& split_node_name) {
 
   SkeletalPose full_body { anim_1.calculate_pose(time_normalized1) }
   ;
@@ -51,22 +49,20 @@ void partial_blend(Skeleton const& skeleton, unsigned start_node,
                       << std::endl;
   }
 
-  skeleton.accumulate_matrices(start_node, transforms, full_body);
+  return skeleton.accumulate_matrices(start_node, full_body);
 }
 
-void from_anim(Skeleton const& skeleton, unsigned start_node,
+std::vector<scm::math::mat4f> from_anim(Skeleton const& skeleton, unsigned start_node,
                float time_normalized,
-               SkeletalAnimation const& anim,
-               std::vector<scm::math::mat4f>& transforms) {
+               SkeletalAnimation const& anim) {
 
-  skeleton.accumulate_matrices(start_node, transforms,
+  return skeleton.accumulate_matrices(start_node,
                                         anim.calculate_pose(time_normalized));
 }
 
-void from_hierarchy(Skeleton const& skeleton, unsigned start_node,
-                    std::vector<scm::math::mat4f>& transforms) {
+std::vector<scm::math::mat4f> from_hierarchy(Skeleton const& skeleton, unsigned start_node) {
 
-  skeleton.accumulate_matrices(start_node, transforms,
+  return skeleton.accumulate_matrices(start_node,
                                         SkeletalPose {
   });
 }
