@@ -50,7 +50,11 @@ namespace gua {
 struct GUA_SKELANIM_DLL Bone {
  public:
   Bone();
-  Bone(std::string const& name, scm::math::mat4f const& idle, scm::math::mat4f const& offset = scm::math::mat4f::identity(), std::vector<unsigned> childs = std::vector<unsigned>{});
+  Bone(std::string const& name, 
+    scm::math::mat4f const& idle,
+    scm::math::mat4f const& offset = scm::math::mat4f::identity(),
+    std::vector<unsigned> childs = std::vector<unsigned>{}
+  );
   Bone(aiNode const& node);
 
 #ifdef GUACAMOLE_FBX

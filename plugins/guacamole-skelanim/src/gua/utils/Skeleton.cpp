@@ -192,6 +192,12 @@ void Skeleton::set_offsets(
   }
 }
 
+std::vector<scm::math::mat4f> Skeleton::accumulate_matrices(unsigned index_bone, SkeletalPose const& pose) const {
+  std::vector<scm::math::mat4f> matrices{num_bones(), scm::math::mat4f::identity()};
+  accumulate_matrices(index_bone, matrices, pose, scm::math::mat4f::identity());
+  return matrices;
+}
+
 void Skeleton::accumulate_matrices(unsigned index_bone, std::vector<scm::math::mat4f>& transformMat4s,
                                SkeletalPose const& pose,
                                 scm::math::mat4f const& parentTransform) const {

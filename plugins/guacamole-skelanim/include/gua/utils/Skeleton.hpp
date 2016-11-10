@@ -73,19 +73,16 @@ class GUA_SKELANIM_DLL Skeleton {
   std::map<std::string, int> const& get_mapping() const;
 
   /**
-   * @brief calculates tranform matricex from skeletalpose
-   * @details writes own transform matrix at index in vector
-   * and calls method on children
+   * @brief calculates tranform matrices from skeletalpose
+   * @details returns transform matrices for all bones of skeleton
    * 
-   * @param transformMat4s vector to which matrix is written
    * @param pose pose from which transformation is calculated 
-   * @param parentTransform transform matrix of parent bone
+   * @return vector for transformation matrices
    */
-  void accumulate_matrices(unsigned index_bone,
-                           std::vector<scm::math::mat4f>& transformMat4s,
-                           SkeletalPose const& pose,
-                           scm::math::mat4f const& parentTransform =
-                           scm::math::mat4f::identity()) const;
+  std::vector<scm::math::mat4f> accumulate_matrices(
+                          unsigned index_bone, 
+                          SkeletalPose const& pose) const;
+
 
   /**
    * @brief finds bone in hierarchy
@@ -102,6 +99,21 @@ class GUA_SKELANIM_DLL Skeleton {
   std::vector<Bone> const& get_bones() const;
   void set_bones(std::vector<Bone> const&);
   
+  /**
+   * @brief calculates tranform matrices from skeletalpose
+   * @details writes transform matrices at index in vector
+   * and calls method on children of bone
+   * 
+   * @param index_bone index of bone to process
+   * @param transformMat4s vector to which matrix is written
+   * @param pose pose from which transformation is calculated 
+   * @param parentTransform transform matrix of parent bone
+   */
+  void accumulate_matrices(unsigned index_bone,
+                           std::vector<scm::math::mat4f>& transformMat4s,
+                           SkeletalPose const& pose,
+                           scm::math::mat4f const& parentTransform =
+                           scm::math::mat4f::identity()) const;
  private:
   /**
    * @brief sets offset matrix and index
