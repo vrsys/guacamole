@@ -23,11 +23,11 @@
 #define GUA_SKINNED_MESH_HPP
 
 // guacamole headers
+#include <gua/skelanim/platform.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/fbxfwd.hpp>
-#include <gua/skelanim.hpp>
 #include <gua/config.hpp>
-#include <gua/skelanim/utils/Skeleton.hpp>
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>

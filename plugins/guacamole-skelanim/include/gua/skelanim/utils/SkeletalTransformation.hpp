@@ -22,7 +22,7 @@
 #ifndef GUA_SKELETALTRANSFORMATION_HPP
 #define GUA_SKELETALTRANSFORMATION_HPP
 
-#include <gua/skelanim.hpp>
+#include <gua/skelanim/platform.hpp>
 
 // external headers
 #include <scm/gl_core.h>

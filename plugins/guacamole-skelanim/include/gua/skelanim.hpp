@@ -22,19 +22,8 @@
 #ifndef GUA_INCLUDE_SKELANIM_HPP
 #define GUA_INCLUDE_SKELANIM_HPP
 
-#if defined (_MSC_VER)
-#if defined (GUA_SKELANIM_LIBRARY)
-#define GUA_SKELANIM_DLL __declspec( dllexport )
-#else
-#define GUA_SKELANIM_DLL __declspec( dllimport )
-#endif
-#else
-#define GUA_SKELANIM_DLL
-#endif // #if defined(_MSC_VER)
-
 #include <gua/skelanim/node/SkeletalAnimationNode.hpp>
 #include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
 
 #endif  // GUA_INCLUDE_SKELANIM_HPP
