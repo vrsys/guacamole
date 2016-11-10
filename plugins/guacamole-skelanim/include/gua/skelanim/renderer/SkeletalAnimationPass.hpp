@@ -23,7 +23,7 @@
 #define GUA_SLELETAL_ANIMATION_PASS_HPP
 
 // guacamole headers
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 // external headers

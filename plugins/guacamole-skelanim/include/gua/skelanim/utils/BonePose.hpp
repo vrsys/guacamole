@@ -22,7 +22,7 @@
 #ifndef GUA_BONEPOSE_HPP
 #define GUA_BONEPOSE_HPP
 
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 
 // external headers
 #include <scm/gl_core.h>
