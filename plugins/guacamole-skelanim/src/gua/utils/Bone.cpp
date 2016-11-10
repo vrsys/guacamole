@@ -1,5 +1,5 @@
 // class header
-#include <gua/utils/Bone.hpp>
+#include <gua/skelanim/utils/Bone.hpp>
 
 // guacamole headers
 #include <gua/utils/ToGua.hpp>

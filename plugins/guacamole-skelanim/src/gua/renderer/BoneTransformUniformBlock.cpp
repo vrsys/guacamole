@@ -1,5 +1,5 @@
 // class header
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/skelanim/renderer/BoneTransformUniformBlock.hpp>
 
 namespace gua {
 

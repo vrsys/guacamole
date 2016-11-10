@@ -24,8 +24,8 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/Skeleton.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 
 namespace gua {
 

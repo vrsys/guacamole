@@ -20,10 +20,10 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/SkeletalAnimationPass.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
 
 // guacamole headers
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 
 namespace gua {

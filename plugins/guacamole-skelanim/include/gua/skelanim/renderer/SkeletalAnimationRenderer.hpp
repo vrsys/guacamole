@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/Skelanim.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-#include <gua/renderer/BoneTransformUniformBlock.hpp>
+#include <gua/skelanim/renderer/BoneTransformUniformBlock.hpp>
 
 // external headers
 #include <scm/gl_core/shader_objects.h>
