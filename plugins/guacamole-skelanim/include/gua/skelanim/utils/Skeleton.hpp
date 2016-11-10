@@ -36,7 +36,7 @@
 #define GUA_SKELANIM_DLL
 #endif // #if defined(_MSC_VER)
  
-#include <gua/utils/Bone.hpp>
+#include <gua/skelanim/utils/Bone.hpp>
 
 // external headers
 #include <scm/gl_core.h>

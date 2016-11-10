@@ -27,7 +27,7 @@
 #include <gua/utils/fbxfwd.hpp>
 #include <gua/Skelanim.hpp>
 #include <gua/config.hpp>
-#include <gua/utils/Skeleton.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>

@@ -19,22 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SKELANIM_HPP
-#define GUA_INCLUDE_SKELANIM_HPP
+#ifndef GUA_SKELETAL_ANIMATION_HPP
+#define GUA_SKELETAL_ANIMATION_HPP
 
-#if defined (_MSC_VER)
-#if defined (GUA_SKELANIM_LIBRARY)
-#define GUA_SKELANIM_DLL __declspec( dllexport )
-#else
-#define GUA_SKELANIM_DLL __declspec( dllimport )
+// guacamole headers
+#include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
+#include <gua/Skelanim.hpp>
+ 
+// external headers
+#include <vector>
+#include <string>
+
+struct aiAnimation;
+
+namespace gua {
+class SkeletalPose;
+
+/**
+ * @brief holds bone animations for one animation
+ */
+class GUA_SKELANIM_DLL SkeletalAnimation {
+ public:
+  SkeletalAnimation();
+
+  SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
+#ifdef GUACAMOLE_FBX
+  SkeletalAnimation(FbxAnimStack* anim,
+                    std::vector<FbxNode*> const& bones,
+                    std::string const& name = "");
 #endif
-#else
-#define GUA_SKELANIM_DLL
-#endif // #if defined(_MSC_VER)
+  ~SkeletalAnimation();
 
-#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
+  /**
+   * @brief calculates skelpose from this anim
+   * @details calculates the pose at the given time
+   * 
+   * @param time time for which to calculate pose
+   * @return SkeletalPose at given time
+   */
+  SkeletalPose calculate_pose(float time) const;
 
-#endif  // GUA_INCLUDE_SKELANIM_HPP
+  /**
+   * @brief returns anim duration
+   * @return duration in seconds
+   */
+  double get_duration() const;
+
+  std::string const& get_name() const;
+
+ private:
+  std::string name;
+  unsigned numFrames;
+  double numFPS;
+  double duration;
+  unsigned numBoneAnims;
+
+  std::vector<BoneAnimation> boneAnims;
+};
+
+}
+
+#endif  //GUA_SKELETAL_ANIMATION_HPP
