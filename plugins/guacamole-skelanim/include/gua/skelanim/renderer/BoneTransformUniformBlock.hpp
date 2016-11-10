@@ -23,8 +23,7 @@
 #define GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim/platform.hpp>
 #include <gua/math/math.hpp>
 
 // external headers
