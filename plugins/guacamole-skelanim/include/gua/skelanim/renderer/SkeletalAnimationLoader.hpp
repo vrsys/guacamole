@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/platform.hpp>
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 #include <gua/utils/fbxfwd.hpp>
 
 // external headers

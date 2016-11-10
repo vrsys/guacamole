@@ -26,7 +26,7 @@
 #include <gua/config.hpp>
 #include <gua/utils/fbxfwd.hpp>
 #include <gua/skelanim/utils/BoneAnimation.hpp>
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
  
 // external headers
 #include <vector>

@@ -22,7 +22,7 @@
 #ifndef GUA_POSE_HPP
 #define GUA_POSE_HPP
 
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 
 //external headers
 #include <map>

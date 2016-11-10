@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/fbxfwd.hpp>
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 #include <gua/config.hpp>
 #include <gua/skelanim/utils/Skeleton.hpp>
 // external headers
