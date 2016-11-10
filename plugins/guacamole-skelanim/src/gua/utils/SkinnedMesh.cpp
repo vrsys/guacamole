@@ -1,5 +1,5 @@
 // class header
-#include <gua/utils/SkinnedMesh.hpp>
+#include <gua/skelanim/utils/SkinnedMesh.hpp>
 
 // guacamole headers
 #include <gua/utils/Mesh.hpp>

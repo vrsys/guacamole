@@ -1,12 +1,12 @@
 // class header
-#include <gua/utils/SkeletalTransformation.hpp>
+#include <gua/skelanim/utils/SkeletalTransformation.hpp>
 
 // guacamole headers
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/SkeletalPose.hpp>
-#include <gua/utils/BonePose.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/Skeleton.hpp>
+#include <gua/skelanim/utils/SkeletalPose.hpp>
+#include <gua/skelanim/utils/BonePose.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 
 namespace gua {
 

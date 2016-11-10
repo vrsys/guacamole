@@ -20,15 +20,15 @@
  ******************************************************************************/
 
 // class header
-#include "gua/node/SkeletalAnimationNode.hpp"
+#include "gua/skelanim/node/SkeletalAnimationNode.hpp"
  
 // guacamole headers
-#include <gua/utils/Bone.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-#include <gua/utils/SkeletalTransformation.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/utils/Bone.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
+#include <gua/skelanim/utils/SkeletalTransformation.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 // #include <gua/node/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 #include <gua/databases/GeometryDatabase.hpp>

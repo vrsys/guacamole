@@ -19,22 +19,29 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SKELANIM_HPP
-#define GUA_INCLUDE_SKELANIM_HPP
+#ifndef GUA_SLELETAL_ANIMATION_PASS_HPP
+#define GUA_SLELETAL_ANIMATION_PASS_HPP
 
-#if defined (_MSC_VER)
-#if defined (GUA_SKELANIM_LIBRARY)
-#define GUA_SKELANIM_DLL __declspec( dllexport )
-#else
-#define GUA_SKELANIM_DLL __declspec( dllimport )
-#endif
-#else
-#define GUA_SKELANIM_DLL
-#endif // #if defined(_MSC_VER)
+// guacamole headers
+#include <gua/Skelanim.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
-#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
-#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
-#endif  // GUA_INCLUDE_SKELANIM_HPP
+namespace gua {
+
+  class GUA_SKELANIM_DLL SkeletalAnimationPassDescription
+    : public PipelinePassDescription {
+ public:
+  SkeletalAnimationPassDescription();
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
+
+ protected:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+};
+
+}
+
+#endif  // GUA_SLELETAL_ANIMATION_PASS_HPP
