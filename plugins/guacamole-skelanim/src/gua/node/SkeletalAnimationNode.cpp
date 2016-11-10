@@ -143,43 +143,37 @@ void SkeletalAnimationNode::add_animations(std::string const& file_name,
 void SkeletalAnimationNode::update_bone_transforms() {
   if (!has_anims_ && !new_bones_)
     return;
-  if (!has_anims_)
-    new_bones_ = false;
-
-  //reserve vector for transforms
-  bone_transforms_ = std::vector<scm::math::mat4f> {
-    skeleton_.num_bones(), scm::math::mat4f::identity()
-  }
-  ;
-
+  // no animation and new bones -> generate transforms once
   if (!has_anims_) {
-    SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+    new_bones_ = false;
+    bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
   }
-
-  // TODO better checking for unset anims
-  if (blend_factor_ <= 0) {
-    if (anim_1_ != "none") {
-      SkeletalTransformation::from_anim(
-          skeleton_, 0, anim_time_1_, animations_.at(anim_1_), bone_transforms_);
+  // use first anim
+  else if (blend_factor_ <= 0.0) {
+    if (anim_1_ != SkeletalAnimationNode::none_loaded) {
+      bone_transforms_ = SkeletalTransformation::from_anim(
+          skeleton_, 0, anim_time_1_, animations_.at(anim_1_));
     } else {
-      SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
-
+      bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
     }
-  } else if (blend_factor_ >= 1) {
-    if (anim_2_ != "none") {
+  } 
+  // use second anim
+  else if (blend_factor_ >= 1.0) {
+    if (anim_2_ != SkeletalAnimationNode::none_loaded) {
       SkeletalTransformation::from_anim(
-          skeleton_, 0, anim_time_2_, animations_.at(anim_2_), bone_transforms_);
+          skeleton_, 0, anim_time_2_, animations_.at(anim_2_));
     } else {
-      SkeletalTransformation::from_hierarchy(skeleton_, 0, bone_transforms_);
+      bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
     }
-  } else {
-    SkeletalTransformation::blend_anims(skeleton_, 0,
+  } 
+  // use both anims
+  else {
+    bone_transforms_ = SkeletalTransformation::blend_anims(skeleton_, 0,
                                         blend_factor_,
                                         anim_time_1_,
                                         anim_time_2_,
                                         animations_.at(anim_1_),
-                                        animations_.at(anim_2_),
-                                        bone_transforms_);
+                                        animations_.at(anim_2_));
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
