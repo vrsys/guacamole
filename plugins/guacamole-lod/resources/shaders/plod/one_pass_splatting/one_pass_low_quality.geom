@@ -46,7 +46,9 @@ void main()
   vec4 view_normal  = inverse_transpose_model_view_matrix * object_normal;
 
   // do not emit primitives for backfaces 
-  if (enable_backface_culling && view_normal.z < 0.0) {
+  //if (enable_backface_culling && view_normal.z < 0.0) {
+  if (enable_backface_culling && 0.0 > 
+      dot(normalize(view_normal.xyz), normalize(-(gua_model_view_matrix * gl_in[0].gl_Position).xyz))) {
     return;
   } 
 

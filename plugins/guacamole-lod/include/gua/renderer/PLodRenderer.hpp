@@ -86,28 +86,16 @@ namespace gua {
   private:  //member variables
 
 
-    gua::plod_shared_resources                     shared_pass_resources_;
-
     std::map<PLodPassDescription::SurfelRenderMode, 
-    std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > > plod_pipelines_;
+    std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > >               plod_pipelines_;
+    std::vector<std::map<lamure::model_t, std::vector<bool> > >                       model_frustum_culling_results_;
+    std::map<std::size_t, std::pair<gua::math::vec2ui, gua::plod_shared_resources>>   shared_pass_resources_;
 
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    std::vector<std::map<lamure::model_t, std::vector<bool> > >  model_frustum_culling_results_;
-    //misc:
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    bool                                         gpu_resources_already_created_;
-    unsigned                                     previous_frame_count_;
-
-
-    //render target dependent resources
-    unsigned                                                             current_rendertarget_width_;  
-    unsigned                                                             current_rendertarget_height_;
+    unsigned                                                                          previous_frame_count_;
 
     //CPU resources
-    SubstitutionMap                                                      global_substitution_map_;
-    ResourceFactory                                                      factory_;
+    SubstitutionMap                                                                   global_substitution_map_;
+    ResourceFactory                                                                   factory_;
 
   };
 

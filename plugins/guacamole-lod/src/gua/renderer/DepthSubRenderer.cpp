@@ -36,11 +36,9 @@ namespace gua {
                                                scm::math::vec2ui const& render_target_dims,
                                                gua::plod_shared_resources& shared_resources) {
 
+    // initialize FBO lazy during runtime
+    custom_FBO_ptr_.reset();
 
-    // fbo
-    custom_FBO_ptr_ = ctx.render_device->create_frame_buffer();
-    custom_FBO_ptr_->clear_attachments();
-    custom_FBO_ptr_->attach_depth_stencil_buffer(shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH]);
     //state objects
     no_backface_culling_rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID,
@@ -66,17 +64,20 @@ namespace gua {
   				        ) {
 
   	RenderContext const& ctx(pipe.get_context());
-
     scm::gl::context_all_guard context_guard(ctx.render_context);
     
-	_check_for_shader_program();
+    if (!custom_FBO_ptr_)
+    {
+      custom_FBO_ptr_ = ctx.render_device->create_frame_buffer();
+      custom_FBO_ptr_->clear_attachments();
+      custom_FBO_ptr_->attach_depth_stencil_buffer(shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH]);
+    }
 
-	assert(shader_program_);
+	  _check_for_shader_program();
 
+	  assert(shader_program_);
 
-
-	  ctx.render_context
-      ->clear_color_buffer(custom_FBO_ptr_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	  ctx.render_context->clear_color_buffer(custom_FBO_ptr_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
     custom_FBO_ptr_->attach_depth_stencil_buffer(shared_resources.attachments_[plod_shared_resources::AttachmentID::DEPTH_PASS_LIN_DEPTH]);
     ctx.render_context->set_frame_buffer(custom_FBO_ptr_);
