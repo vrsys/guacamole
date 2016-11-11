@@ -56,8 +56,8 @@ void main()
   gua_color      = pow(VertexIn.pass_color, vec3(1.4));
   gua_normal     = VertexIn.pass_normal;
   gua_metalness  = 0.0;
-  gua_roughness  = 1.0;
-  gua_emissivity = 1.0; // pass through if unshaded
+  gua_roughness  = 0.0;
+  gua_emissivity = 0.0; // pass through if unshaded
 
   vec3 gua_world_position = VertexIn.pass_world_position;
 

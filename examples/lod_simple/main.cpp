@@ -39,44 +39,57 @@
 
 #define USE_MESH_LOD_MODEL 0
 #define USE_POINTCLOUD_LOD_MODEL 1
+#define USE_REGULAR_TRIMESH_MODEL 1
 
-
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv) 
+{
+  // init guacamole
   gua::init(argc, argv);
 
-
-  //create simple untextured material shader
+  // create simple untextured material shader
   auto lod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
   auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
 
-
   //create material for pointcloud
   auto lod_rough = lod_keep_color_shader->make_new_material();
-  lod_rough->set_uniform("metalness", 0.2f);
-  lod_rough->set_uniform("roughness", 0.4f);
-  lod_rough->set_uniform("emissivity", 0.8f);
+  lod_rough->set_uniform("metalness", 0.0f);
+  lod_rough->set_uniform("roughness", 0.3f);
+  lod_rough->set_uniform("emissivity", 0.0f);
 
-
-  //configure lod backend
+  // configure lod backend
   gua::LodLoader lod_loader;
-  lod_loader.set_out_of_core_budget_in_mb(8192);
-  lod_loader.set_render_budget_in_mb(4096);
-  lod_loader.set_upload_budget_in_mb(20);
+  lod_loader.set_out_of_core_budget_in_mb(4096);
+  lod_loader.set_render_budget_in_mb(1024);
+  lod_loader.set_upload_budget_in_mb(30);
+
+  //setup scenegraph
+  gua::SceneGraph graph("main_scenegraph");
+  auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+
+  auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
+  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
+  auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
 #if USE_POINTCLOUD_LOD_MODEL
   //load a sample pointcloud
   auto plod_node = lod_loader.load_lod_pointcloud(
     "pointcloud",
 #if WIN32
-    //"data/objects/plod/pig_pr.bvh",
-    "data/objects/Tempelherrenhaus/Pointcloud_Ruine_xyz_parts_00001.bvh",
+    "data/objects/plod/pig_pr.bvh",
+    //"data/objects/Tempelherrenhaus/Pointcloud_Ruine_xyz_parts_00001.bvh",
+    //"data/objects/wappen_local.bvh",
 #else
     "/opt/3d_models/lamure/plod/pig_pr.bvh",
 #endif
     lod_rough,
     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+
+  graph.add_node("/transform/plod_transform", plod_node);
+
+  plod_transform->rotate(90.0, 0.0, 1.0, 0.0);
+  //plod_transform->rotate(180.0, 0.0, 1.0, 0.0);
+  plod_transform->translate(0.3, 0.08, 0.0);
 #endif
 
 #if USE_MESH_LOD_MODEL
@@ -93,51 +106,51 @@ int main(int argc, char** argv) {
   );
 
   mlod_node->set_error_threshold(0.25); 
+  graph.add_node("/transform/mlod_transform", mlod_node);
+
+  mlod_transform->translate(-0.4, 0.0, 0.0);
 #endif
 
+#if USE_REGULAR_TRIMESH_MODEL
   gua::TriMeshLoader loader;
+  auto ground(loader.create_geometry_from_file(
+    "teapot", "data/objects/plane.obj",
+    gua::TriMeshLoader::NORMALIZE_POSITION |
+    gua::TriMeshLoader::NORMALIZE_SCALE));
   auto teapot(loader.create_geometry_from_file(
-    "teapot", "data/objects/teapot.obj",
+    "teapot", "data/objects/teapot.obj", 
     gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::NORMALIZE_SCALE));
 
-
-  //setup scenegraph
-  gua::SceneGraph graph("main_scenegraph");
-  auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-
-  auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
-  auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
-  auto tri_transform  = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
-
-#if USE_MESH_LOD_MODEL
-  graph.add_node("/transform/mlod_transform", mlod_node);
-#endif
-
-#if USE_POINTCLOUD_LOD_MODEL
-  graph.add_node("/transform/plod_transform", plod_node);
-#endif
+  graph.add_node("/transform/tri_transform", ground);
   graph.add_node("/transform/tri_transform", teapot);
 
-  mlod_transform->translate(-0.4, 0.0, 0.0);
+  teapot->translate(0.0, -0.17, 0.0);
 
-  plod_transform->rotate(180.0, 0.0, 1.0, 0.0);
-  plod_transform->translate(0.3, 0.08, 0.0);
+  ground->scale(10.0, 1.0, 10.0);
+  ground->translate(0.0, -0.4, 0.0);
 
   tri_transform->scale(0.3);
   tri_transform->translate(0.0, 0.0, 0.5);
+#endif
 
   //create a lightsource
   auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
   auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
-  light->data.set_type(gua::node::LightNode::Type::POINT);
-  light->data.set_enable_shadows(false);
+  light->data.set_type(gua::node::LightNode::Type::SPOT);
+  light->data.set_enable_shadows(true);
 
-  light->data.set_shadow_map_size(4096);
-  light->data.brightness = 5.0f;
-  light->translate(0.f, 0.2f, 0.f);
-  light->scale(4.f);
-  light->translate(0.f, 0.f, 1.f);
+  light->data.set_shadow_map_size(1920);
+  light->data.set_shadow_offset(0.001f);
+  light->data.set_softness(0.6f);
+  light->data.set_shadow_far_clipping_in_sun_direction(2.0f);
+  light->data.set_shadow_near_clipping_in_sun_direction(0.1f);
+
+  light->data.brightness = 10.0f;
+  light->scale(6.0f);
+  light_transform->rotate(-90, 1.0, 0.0, 0.0);
+  light_transform->translate(0.f, 3.f, 1.0f);
+  
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -153,7 +166,8 @@ int main(int argc, char** argv) {
   int button_state = -1;
 
   //setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(3840, 2160);
+  //auto resolution = gua::math::vec2ui(3840, 2160);
+  auto resolution = gua::math::vec2ui(1920, 1080);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0.0f, 0, 2.5f);
@@ -161,7 +175,7 @@ int main(int argc, char** argv) {
   
   //use close near plane to allow inspection of details
   camera->config.set_near_clip(0.01f);
-  camera->config.set_far_clip(200.0f);
+  camera->config.set_far_clip(20.0f);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
@@ -250,11 +264,6 @@ int main(int argc, char** argv) {
         std::cout << "PLOD rendering set to high-quality two pass splatting." << std::endl;
         break;
       case '2':
-        PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST);
-        PLod_Pass->touch();
-        std::cout << "PLOD rendering set to high-quality one-pass splatting via linked lists." << std::endl;
-        break;
-      case '3':
         PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
         PLod_Pass->touch();
         std::cout << "PLOD rendering set to low-quality one-pass splatting with ellipsoid surfels." << std::endl;
@@ -294,7 +303,7 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
     screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
-    light->rotate(0.1, 0.f, 1.f, 0.f);
+    light_transform->rotate(0.1, 0.f, 1.f, 0.f);
     window->process_events();
     if (window->should_close()) {
       renderer.stop();

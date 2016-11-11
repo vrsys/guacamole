@@ -61,7 +61,7 @@ namespace gua {
       LINKED_LIST_BUFFER                 = 0
     };
 
-    std::map<AttachmentID, scm::gl::texture_2d_ptr>    attachments_;
+    std::map<AttachmentID, scm::gl::texture_2d_ptr>        attachments_;
     std::map<TextureBufferID, scm::gl::texture_buffer_ptr> tex_buffers_;
     
   };
