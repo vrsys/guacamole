@@ -87,12 +87,19 @@ namespace gua {
   }
 
   void PLodSubRenderer::_register_shared_resources(gua::plod_shared_resources& shared_resources) {
+
     for (auto const& attachment_ptr_entry : resource_ptrs_.attachments_) {
-      shared_resources.attachments_[attachment_ptr_entry.first] = attachment_ptr_entry.second;
+      if (!shared_resources.attachments_.count(attachment_ptr_entry.first) || 
+           shared_resources.attachments_.at(attachment_ptr_entry.first) == nullptr) {
+        shared_resources.attachments_[attachment_ptr_entry.first] = attachment_ptr_entry.second;
+      }
     }
 
     for (auto const& tex_buffer_ptr_entry : resource_ptrs_.tex_buffers_) {
-      shared_resources.tex_buffers_[tex_buffer_ptr_entry.first] = tex_buffer_ptr_entry.second;
+      if (!shared_resources.tex_buffers_.count(tex_buffer_ptr_entry.first) ||
+           shared_resources.tex_buffers_.at(tex_buffer_ptr_entry.first) == nullptr) {
+        shared_resources.tex_buffers_[tex_buffer_ptr_entry.first] = tex_buffer_ptr_entry.second;
+      }
     }
   }
 

@@ -109,6 +109,7 @@ void main() {
     uint new_idx = pixel_chunk_start + write_offset;
 
     imageStore(linked_list_buffer, int(new_idx), insert_into_list);
+    discard;
   } else {
     discard;
   }

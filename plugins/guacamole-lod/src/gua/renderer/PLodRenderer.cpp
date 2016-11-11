@@ -24,11 +24,7 @@
 #include <gua/renderer/PLodPass.hpp>
 
 //sub rendering passes
-#include <gua/renderer/HoleFillingSubRenderer.hpp>
-#include <gua/renderer/LinkedListResolveSubRenderer.hpp>
-#include <gua/renderer/LinkedListAccumSubRenderer.hpp>
 #include <gua/renderer/LowQualitySplattingSubRenderer.hpp>
-#include <gua/renderer/ShadowSubRenderer.hpp>
 #include <gua/renderer/NormalizationSubRenderer.hpp>
 #include <gua/renderer/AccumSubRenderer.hpp>
 #include <gua/renderer/DepthSubRenderer.hpp>
@@ -118,32 +114,19 @@ namespace gua {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  PLodRenderer::PLodRenderer() : 
-                                 gpu_resources_already_created_(false),
-                                 current_rendertarget_width_(0),
-                                 current_rendertarget_height_(0)
+  PLodRenderer::PLodRenderer() 
   {
     std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > HQ_two_pass_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
-    std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > LQ_shadow_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
     std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > LQ_one_pass_splatting_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
-    std::shared_ptr<std::vector< std::shared_ptr<PLodSubRenderer> > > HQ_linked_list_pipeline_ptr = std::make_shared<std::vector< std::shared_ptr<PLodSubRenderer> > >();
 
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<LogToLinSubRenderer>() );
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<DepthSubRenderer>() );
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<AccumSubRenderer>() );
     HQ_two_pass_splatting_pipeline_ptr->push_back( std::make_shared<NormalizationSubRenderer>() );
 
-    LQ_shadow_splatting_pipeline_ptr->push_back( std::make_shared<DepthSubRenderer>() );
-
     LQ_one_pass_splatting_pipeline_ptr->push_back(std::make_shared<LowQualitySplattingSubRenderer>());
 
-    HQ_linked_list_pipeline_ptr->push_back( std::make_shared<LinkedListAccumSubRenderer>() );
-    HQ_linked_list_pipeline_ptr->push_back( std::make_shared<LinkedListResolveSubRenderer>() );
-    HQ_linked_list_pipeline_ptr->push_back( std::make_shared<HoleFillingSubRenderer>() );
-
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS]    = HQ_two_pass_splatting_pipeline_ptr;
-    plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_SHADOW]      = LQ_shadow_splatting_pipeline_ptr;
-    plod_pipelines_[PLodPassDescription::SurfelRenderMode::HQ_LINKED_LIST] = HQ_linked_list_pipeline_ptr;
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]    = LQ_one_pass_splatting_pipeline_ptr;
   }
 
@@ -158,27 +141,37 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////////////////////
   void PLodRenderer::_check_for_resource_updates(gua::Pipeline const& pipe, RenderContext const& ctx) {
 
+    // get current unique view id and resolution
     auto const& camera = pipe.current_viewstate().camera;
-
     scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+    auto camera_id = pipe.current_viewstate().viewpoint_uuid;
+    auto view_direction = pipe.current_viewstate().view_direction;
+    std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
 
-    //allocate GPU resources if necessary
-    bool render_resolution_changed = current_rendertarget_width_ != render_target_dims[0] || current_rendertarget_height_ != render_target_dims[1];
+    // check if resources for this view and resolution are already available
+    auto view_resources_available = shared_pass_resources_.count(gua_view_id);
+    bool resolution_available = false;
 
-    if (!gpu_resources_already_created_ || render_resolution_changed) {
+    if (view_resources_available) {
+      auto latest_resolution = shared_pass_resources_[gua_view_id].first;
+      resolution_available = (latest_resolution == render_target_dims);
+    }
+    else {
+      // if not available create entry
+      shared_pass_resources_[gua_view_id] = { render_target_dims, gua::plod_shared_resources() };
+    }
 
-      current_rendertarget_width_ = render_target_dims[0];
-      current_rendertarget_height_ = render_target_dims[1];
-
+    // if not, allocate
+    if (!view_resources_available || !resolution_available) {
       for (auto const& pipeline_ptrs : plod_pipelines_ ) {
         for (auto const& pass : *(pipeline_ptrs.second) ) {
-          pass->create_gpu_resources( ctx, render_target_dims, shared_pass_resources_ );
+          auto& resources = shared_pass_resources_.at(gua_view_id).second;
+          pass->create_gpu_resources( ctx, render_target_dims, resources);
         }
       }
-
       _create_gpu_resources(ctx, render_target_dims);
-      gpu_resources_already_created_ = true;
     }
+
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +184,7 @@ namespace gua {
   }
 
 
-
+  /////////////////////////////////////////////////////////////////////////////////////////////
   void PLodRenderer::perform_frustum_culling_for_scene(std::vector<node::Node*>& models, 
                                                        std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& culling_results_per_model,
                                                        std::unordered_map<node::PLodNode*, lamure::ren::cut*> cut_map,
@@ -263,6 +256,7 @@ namespace gua {
     }
   }
 
+  /////////////////////////////////////////////////////////////////////////////////////////////
   void PLodRenderer::set_global_substitution_map(SubstitutionMap const& smap) {
 
     for (auto const& pipeline_ptrs : plod_pipelines_ ) {
@@ -397,17 +391,13 @@ namespace gua {
 
       auto const surfel_render_mode = plod_desc.mode();
 
-      for( auto const& pass : *(plod_pipelines_[surfel_render_mode]) ) {
-        pass->render_sub_pass(pipe, desc, shared_pass_resources_, sorted_objects->second, nodes_in_frustum_per_model,context_id, lamure_view_id);
+      for (auto const& pass : *(plod_pipelines_[surfel_render_mode])) {
+        pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id);
       }
-
-      //  gua::Logger::LOG_ERROR << "Error: PLodRenderer::render() : Unknown surfel render mode. " << std::endl;
-
     } else { //shadow branch
-
       {
-        for( auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_SHADOW]) ) {
-          pass->render_sub_pass(pipe, desc, shared_pass_resources_, sorted_objects->second, nodes_in_frustum_per_model,context_id, lamure_view_id);
+        for (auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS])) {
+          pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model,context_id, lamure_view_id);
         }
       }
 

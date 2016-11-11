@@ -35,6 +35,8 @@ namespace gua {
   void AccumSubRenderer::create_gpu_resources(gua::RenderContext const& ctx,
                                               scm::math::vec2ui const& render_target_dims,
                                               gua::plod_shared_resources& shared_resources) {
+    // initialize FBO lazy during runtime
+    custom_FBO_ptr_.reset();
 
   	// attachments
     resource_ptrs_.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_COLOR_RESULT] = ctx.render_device
@@ -57,23 +59,6 @@ namespace gua {
                           scm::gl::FORMAT_RG_32F,
                           1, 1, 1);
 
-    _register_shared_resources(shared_resources);
-
-
-    // fbo
-    custom_FBO_ptr_ = ctx.render_device->create_frame_buffer();
-    custom_FBO_ptr_->clear_attachments();
-    custom_FBO_ptr_->attach_color_buffer(0,
-                                         shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_COLOR_RESULT]);
-    custom_FBO_ptr_->attach_color_buffer(1,
-                                         shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_NORMAL_RESULT]);
-    custom_FBO_ptr_->attach_color_buffer(2,
-                                         shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_PBR_RESULT]);
-    custom_FBO_ptr_->attach_color_buffer(3,
-                                         shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_WEIGHT_AND_DEPTH_RESULT]);
-
-    //state objects
-
     depth_test_without_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL);
 
@@ -95,6 +80,8 @@ namespace gua {
                                 false,
                                 false,
                                 scm::gl::point_raster_state(false));
+
+    _register_shared_resources(shared_resources);
   }
 
   void AccumSubRenderer::
@@ -111,6 +98,19 @@ namespace gua {
   lamure::ren::controller* controller = lamure::ren::controller::get_instance(); 
 
   scm::gl::context_all_guard context_guard(ctx.render_context);
+
+  if (!custom_FBO_ptr_) {
+    custom_FBO_ptr_ = ctx.render_device->create_frame_buffer();
+    custom_FBO_ptr_->clear_attachments();
+    custom_FBO_ptr_->attach_color_buffer(0,
+      shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_COLOR_RESULT]);
+    custom_FBO_ptr_->attach_color_buffer(1,
+      shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_NORMAL_RESULT]);
+    custom_FBO_ptr_->attach_color_buffer(2,
+      shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_PBR_RESULT]);
+    custom_FBO_ptr_->attach_color_buffer(3,
+      shared_resources.attachments_[plod_shared_resources::AttachmentID::ACCUM_PASS_WEIGHT_AND_DEPTH_RESULT]);
+  }
 
   ctx.render_context
     ->clear_color_buffer(custom_FBO_ptr_,
