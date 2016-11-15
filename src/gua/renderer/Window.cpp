@@ -56,13 +56,13 @@ Window::~Window() {
 
 void Window::open() {
 
-  if (window_) {
-   window_->hide();
+  if (scm_window_) {
+   scm_window_->hide();
   }
 
   ctx_.context.reset();
   ctx_.display.reset();
-  window_.reset();
+  scm_window_.reset();
 
   scm::gl::data_format color_format = scm::gl::FORMAT_RGBA_8;
   scm::gl::data_format depth_stencil_format = scm::gl::FORMAT_D24_S8;
@@ -92,23 +92,23 @@ void Window::open() {
 
   ctx_.display.reset(new scm::gl::wm::display(config.get_display_name()));
 
-  window_.reset(new scm::gl::wm::window(
+  scm_window_.reset(new scm::gl::wm::window(
       ctx_.display,
       config.get_title(),
       config.get_window_position(),
       math::vec2ui(config.get_size().x, config.get_size().y),
       window_format));
 
-  ctx_.context.reset(new scm::gl::wm::context(window_, context_attribs));
+  ctx_.context.reset(new scm::gl::wm::context(scm_window_, context_attribs));
 
   set_active(true);
-  window_->show();
+  scm_window_->show();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool Window::get_is_open() const {
-  return window_ != nullptr;
+  return scm_window_ != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,24 +121,93 @@ bool Window::should_close() const {
 
 void Window::close() {
   if (get_is_open()) {
-    window_->hide();
+    scm_window_->hide();
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Window::set_active(bool active) {
-  ctx_.context->make_current(window_, active);
+  ctx_.context->make_current(scm_window_, active);
   if (!ctx_.render_device) {
     init_context();
+#if WIN32
+#else
+    fpJoinSwapGroupNV      = (PFNGLXJOINSWAPGROUPNVPROC)glXGetProcAddress((GLubyte*)"glXJoinSwapGroupNV");
+    fpBindSwapBarrierNV    = (PFNGLXBINDSWAPBARRIERNVPROC)glXGetProcAddress((GLubyte*)"glXBindSwapBarrierNV");
+    fpQuerySwapGroupNV     = (PFNGLXQUERYSWAPGROUPNVPROC)glXGetProcAddress((GLubyte*)"glXQuerySwapGroupNV");
+    fpQueryMaxSwapGroupsNV = (PFNGLXQUERYMAXSWAPGROUPSNVPROC)glXGetProcAddress((GLubyte*)"glXQueryMaxSwapGroupsNV");
+    fpQueryFrameCountNV    = (PFNGLXQUERYFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte*)"glXQueryFrameCountNV");
+    fpResetFrameCountNV    = (PFNGLXRESETFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte*)"glXResetFrameCountNV");
+    if (!fpJoinSwapGroupNV
+        || !fpBindSwapBarrierNV
+        || !fpQuerySwapGroupNV
+        || !fpQueryMaxSwapGroupsNV
+        || !fpQueryFrameCountNV
+        || !fpResetFrameCountNV
+        ) {
+      has_NV_swap_group_ext_ = false;
+    } else {
+      has_NV_swap_group_ext_ = true;
+      Display* display = glXGetCurrentDisplay();
+      int screen = config.get_display_name().back() - '0';
+      fpQueryMaxSwapGroupsNV(display, screen, &max_swap_groups_, &max_swap_barriers_ );
+    }
+#endif
+  }
+
+  if (has_NV_swap_group_ext_) {
+    if (last_swap_group_changes_ != swap_group_changes_) {
+      last_swap_group_changes_ = swap_group_changes_;
+#if WIN32
+      //bool result = fpJoinSwapGroupNV(hdc, swap_group_);
+#else
+      Display* display = glXGetCurrentDisplay();
+      auto drawable = glXGetCurrentDrawable( );
+      bool result = fpJoinSwapGroupNV(display,
+                                      drawable,
+                                      swap_group_);
+
+      if (!result) {
+        Logger::LOG_ERROR << "fpJoinSwapGroupNV: couldn't join swap group " << swap_group_ << std::endl;
+      }
+#endif
+    }
+    if (last_swap_barrier_changes_ != swap_barrier_changes_) {
+      last_swap_barrier_changes_ = swap_barrier_changes_;
+      Display* display = glXGetCurrentDisplay();
+      bool result = fpBindSwapBarrierNV(display,
+                                          swap_group_,
+                                          swap_barrier_);
+      if (!result) {
+        Logger::LOG_ERROR << "fpBindSwapBarrierNV: couldn't bind swap barrier " << swap_barrier_ << std::endl;
+      }
+    }
+  } else {
+    Logger::LOG_MESSAGE << config.get_display_name() << " no GL_NV_swap_group extension\n";
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void Window::swap_buffers_impl() {
-  // glfwSwapInterval(config.get_enable_vsync()? 1 : 0);
-  window_->swap_buffers(config.get_enable_vsync());
+
+  if (has_NV_swap_group_ext_ && swap_group_ != 0) {
+#if WIN32
+#else
+    Display* display = glXGetCurrentDisplay();
+    std::string d = config.get_display_name();
+    int screen = config.get_display_name().back() - '0';
+    auto result = fpQueryFrameCountNV(display, screen, &frame_count_);
+    if (!result) {
+      Logger::LOG_ERROR << "fpQueryFrameCountNV: couldn't successfully retrieve framecounter for display " << d << std::endl;
+    }
+    if (frame_count_ > 200) {
+      fpResetFrameCountNV(display, screen);
+    }
+#endif
+  }
+  scm_window_->swap_buffers(config.get_enable_vsync());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
