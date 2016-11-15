@@ -55,4 +55,5 @@ examples/clipping/clipping
 examples/oit_demo/example-oit_demo
 examples/animation/example-animation
 examples/physics/example-physics
+examples/tiledwall/example-tiledwall
 install

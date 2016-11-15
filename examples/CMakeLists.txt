@@ -98,6 +98,7 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-plod})
     add_subdirectory(multicontext)
   ENDIF (${PLUGIN_guacamole-plod})
+  add_subdirectory(tiledwall)
 
   # video3d example requires glfw and video3d-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
