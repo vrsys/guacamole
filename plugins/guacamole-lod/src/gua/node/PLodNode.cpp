@@ -158,6 +158,7 @@ void PLodNode::ray_test_impl(Ray const& ray,
                              int options,
                              Mask const& mask,
                              std::set<PickResult>& hits) {
+
   // first of all, check bbox
   auto box_hits(::gua::intersect(ray, bounding_box_));
 
