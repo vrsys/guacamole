@@ -33,11 +33,7 @@ namespace gua {
 
   enum SurfelRenderMode {
     LQ_ONE_PASS = 0,
-    HQ_TWO_PASS = 1,
-    HQ_LINKED_LIST = 2,
-
-    //automatically used by the PLod renderer when shadow mode is active
-    LQ_SHADOW = 999
+    HQ_TWO_PASS = 1
   };
 
    friend class Pipeline;

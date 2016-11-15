@@ -45,7 +45,7 @@ uniform float EPSILON;
 
 #define attr_tex_width  8192
 #define MAX_INT_32 2147483647
-#define NUM_BLEND_FRAGS 20
+#define NUM_BLEND_FRAGS 10
         //was 18
 ///////////////////////////////////////////////////////////////////////////////
 // output
