@@ -58,7 +58,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
     }
     else {
       lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
-
+      Logger::LOG_WARNING << "Trying to load " << filename << std::endl;
       GeometryDescription desc("PLod", filename, 0, flags);
 
       lamure::model_t model_id = database->add_model(filename, desc.unique_key());
