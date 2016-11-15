@@ -361,7 +361,7 @@ void WindowBase::swap_buffers_callback() {
 
 void WindowBase::swap_buffers() {
 
-  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+#ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
   if (config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
     if (nv_context_) {
       current_instance_ = this;
@@ -374,9 +374,9 @@ void WindowBase::swap_buffers() {
   } else {
     swap_buffers_impl();
   }
-  #else
-    swap_buffers_impl();
-  #endif
+#else
+  swap_buffers_impl();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
