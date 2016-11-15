@@ -35,7 +35,7 @@ using Char = NumericProperty<char>;
 using UInt = NumericProperty<unsigned>;
 using UChar = NumericProperty<unsigned char>;
 
-using Bool = LogicalProperty<bool>;
+//using Bool = LogicalProperty<bool>;
 
 }
 }
