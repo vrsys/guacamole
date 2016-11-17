@@ -199,6 +199,10 @@ int main(int argc, char** argv)
   pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
   pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
 
+  auto& p_desc = camera->get_pipeline_description();
+  p_desc->set_enable_abuffer(true);
+  p_desc->set_abuffer_size(1500);
+
   //init window and window behaviour
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
