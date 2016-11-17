@@ -132,6 +132,26 @@ void Window::set_active(bool active) {
   if (!ctx_.render_device) {
     init_context();
 #if WIN32
+    fpJoinSwapGroupNV = (PFNWGLJOINSWAPGROUPNVPROC)wglGetProcAddress((LPCSTR)"wglJoinSwapGroupNV");
+    fpBindSwapBarrierNV = (PFNWGLBINDSWAPBARRIERNVPROC)wglGetProcAddress((LPCSTR)"wglBindSwapBarrierNV");
+    fpQuerySwapGroupNV = (PFNWGLQUERYSWAPGROUPNVPROC)wglGetProcAddress((LPCSTR)"wglQuerySwapGroupNV");
+    fpQueryMaxSwapGroupsNV = (PFNWGLQUERYMAXSWAPGROUPSNVPROC)wglGetProcAddress((LPCSTR)"wglQueryMaxSwapGroupsNV");
+    fpQueryFrameCountNV = (PFNWGLQUERYFRAMECOUNTNVPROC)wglGetProcAddress((LPCSTR)"wglQueryFrameCountNV");
+    fpResetFrameCountNV = (PFNWGLRESETFRAMECOUNTNVPROC)wglGetProcAddress((LPCSTR)"wglResetFrameCountNV");
+    if (!fpJoinSwapGroupNV
+      || !fpBindSwapBarrierNV
+      || !fpQuerySwapGroupNV
+      || !fpQueryMaxSwapGroupsNV
+      || !fpQueryFrameCountNV
+      || !fpResetFrameCountNV
+      ) {
+      has_NV_swap_group_ext_ = false;
+    }
+    else {
+      has_NV_swap_group_ext_ = true;
+      auto wdc = GetDC(scm_window_->window_handle());
+      fpQueryMaxSwapGroupsNV(wdc, &max_swap_groups_, &max_swap_barriers_);
+    }
 #else
     fpJoinSwapGroupNV      = (PFNGLXJOINSWAPGROUPNVPROC)glXGetProcAddress((GLubyte*)"glXJoinSwapGroupNV");
     fpBindSwapBarrierNV    = (PFNGLXBINDSWAPBARRIERNVPROC)glXGetProcAddress((GLubyte*)"glXBindSwapBarrierNV");
@@ -160,25 +180,29 @@ void Window::set_active(bool active) {
     if (last_swap_group_changes_ != swap_group_changes_) {
       last_swap_group_changes_ = swap_group_changes_;
 #if WIN32
-      //bool result = fpJoinSwapGroupNV(hdc, swap_group_);
+      bool result = fpJoinSwapGroupNV(GetDC(scm_window_->window_handle()), swap_group_);
 #else
       Display* display = glXGetCurrentDisplay();
       auto drawable = glXGetCurrentDrawable( );
       bool result = fpJoinSwapGroupNV(display,
                                       drawable,
                                       swap_group_);
-
+#endif
       if (!result) {
         Logger::LOG_ERROR << "fpJoinSwapGroupNV: couldn't join swap group " << swap_group_ << std::endl;
       }
-#endif
+
     }
     if (last_swap_barrier_changes_ != swap_barrier_changes_) {
       last_swap_barrier_changes_ = swap_barrier_changes_;
+#if WIN32
+      bool result = fpBindSwapBarrierNV(swap_group_, swap_barrier_);
+#else
       Display* display = glXGetCurrentDisplay();
       bool result = fpBindSwapBarrierNV(display,
                                           swap_group_,
                                           swap_barrier_);
+#endif
       if (!result) {
         Logger::LOG_ERROR << "fpBindSwapBarrierNV: couldn't bind swap barrier " << swap_barrier_ << std::endl;
       }
