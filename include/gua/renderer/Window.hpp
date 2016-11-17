@@ -27,6 +27,8 @@
 #include <atomic>
 
 #if WIN32
+#include <windows.h>
+#include <scm/gl_core/gl_core_fwd.h>
 #else
 #include <X11/Xlib.h>
 #include <GL/glx.h>
@@ -115,10 +117,20 @@ class GUA_DLL Window : public WindowBase {
   uint32_t frame_count_{0};
 
 #if WIN32
-    PFNWGLJOINSWAPGROUPNVPROC           fpJoinSwapGroupNV;
-    PFNWGLBINDSWAPBARRIERNVPROC         fpBindSwapBarrierNV;
-    PFNWGLQUERYSWAPGROUPNVPROC          fpQuerySwapGroupNV;
-    PFNWGLQUERYMAXSWAPGROUPSNVPROC      fpQueryMaxSwapGroupsNV;
+  typedef unsigned int GLuint;
+  typedef BOOL(WINAPI * PFNWGLBINDSWAPBARRIERNVPROC) (GLuint group, GLuint barrier);
+  typedef BOOL(WINAPI * PFNWGLJOINSWAPGROUPNVPROC) (HDC hDC, GLuint group);
+  typedef BOOL(WINAPI * PFNWGLQUERYFRAMECOUNTNVPROC) (HDC hDC, GLuint* count);
+  typedef BOOL(WINAPI * PFNWGLQUERYMAXSWAPGROUPSNVPROC) (HDC hDC, GLuint* maxGroups, GLuint *maxBarriers);
+  typedef BOOL(WINAPI * PFNWGLQUERYSWAPGROUPNVPROC) (HDC hDC, GLuint* group, GLuint *barrier);
+  typedef BOOL(WINAPI * PFNWGLRESETFRAMECOUNTNVPROC) (HDC hDC);
+
+  PFNWGLJOINSWAPGROUPNVPROC           fpJoinSwapGroupNV;
+  PFNWGLBINDSWAPBARRIERNVPROC         fpBindSwapBarrierNV;
+  PFNWGLQUERYSWAPGROUPNVPROC          fpQuerySwapGroupNV;
+  PFNWGLQUERYMAXSWAPGROUPSNVPROC      fpQueryMaxSwapGroupsNV;
+  PFNWGLQUERYFRAMECOUNTNVPROC         fpQueryFrameCountNV;
+  PFNWGLRESETFRAMECOUNTNVPROC         fpResetFrameCountNV;
 #else
     PFNGLXJOINSWAPGROUPNVPROC           fpJoinSwapGroupNV;
     PFNGLXBINDSWAPBARRIERNVPROC         fpBindSwapBarrierNV;

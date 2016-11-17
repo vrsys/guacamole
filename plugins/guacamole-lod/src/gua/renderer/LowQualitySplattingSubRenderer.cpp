@@ -70,6 +70,7 @@ namespace gua {
 
     bool write_depth = true;
     target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
 
     MaterialShader* current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_material_program;
@@ -102,6 +103,7 @@ namespace gua {
         if (program_changed) {
           current_material_program->unuse(ctx);
           current_material_program->use(ctx);
+          current_material_program->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx), "gua_gbuffer_depth");
         }
 
         plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
