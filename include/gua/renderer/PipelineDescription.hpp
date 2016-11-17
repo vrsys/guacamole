@@ -26,6 +26,7 @@
 #include <gua/math.hpp>
 
 #include <memory>
+#include <algorithm>
 
 namespace gua {
 
