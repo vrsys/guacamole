@@ -262,7 +262,7 @@ std::pair<std::string, math::vec3> LodLoader::pick_lod_bvh(math::vec3 const& ray
   scm::math::vec3f ray_fwd = scm::math::vec3f(ray_forward.x, ray_forward.y, ray_forward.z);
 
   std::pair<std::string, math::vec3> result = std::make_pair("", math::vec3::zero());
-/*
+
   lamure::ren::ray ray(ray_pos, ray_fwd, max_distance);
   lamure::ren::ray::intersection_bvh intersection;
 
@@ -270,7 +270,7 @@ std::pair<std::string, math::vec3> LodLoader::pick_lod_bvh(math::vec3 const& ray
      result = std::make_pair(intersection.bvh_filename_, intersection.position_);
 
   }
-*/
+
   return result;
 
 }
@@ -291,7 +291,7 @@ std::set<PickResult> LodLoader::pick_lod_interpolate(math::vec3 const& bundle_or
   scm::math::vec3f ray_pos = scm::math::vec3f(bundle_origin.x, bundle_origin.y, bundle_origin.z);
   scm::math::vec3f ray_fwd = scm::math::vec3f(bundle_forward.x, bundle_forward.y, bundle_forward.z);
   scm::math::vec3f ray_up = scm::math::vec3f(bundle_up.x, bundle_up.y, bundle_up.z);
-/*  
+
   lamure::ren::ray ray(ray_pos, ray_fwd, max_distance);
   lamure::ren::ray::intersection intersection;
 
@@ -305,7 +305,7 @@ std::set<PickResult> LodLoader::pick_lod_interpolate(math::vec3 const& bundle_or
                       math::vec2());
     results.insert(result);
   }
-*/
+
   return results;
   
 }
