@@ -82,6 +82,7 @@ IF (GUACAMOLE_EXAMPLES)
   # lod example requires lod-plugin
   IF (${PLUGIN_guacamole-lod})
     add_subdirectory(lod_simple)
+    add_subdirectory(lod_mesh_textured)
   ENDIF (${PLUGIN_guacamole-lod})
 
   # gui example requires gui-plugin
