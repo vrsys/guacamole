@@ -30,8 +30,8 @@
 namespace gua {
 
 class SkinnedMeshResource;
-class Bone;
 class SkeletalAnimation;
+struct Bone;
 
 namespace node {
 
