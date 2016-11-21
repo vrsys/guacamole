@@ -55,6 +55,10 @@ endif()
 
 # output if search was successfull
 if (FBX_FOUND)
+  # set variables that are used on cmakelist calling this script
+  set(FBX_LIBRARIES ${FBX_LIBRARY} CACHE FILE "Paths to FBX libaries")
+  set(FBX_LIBRARIES_DEBUG ${FBX_LIBRARY_DEBUG} CACHE FILE "Paths to FBX debug libaries")
+  set(FBX_INCLUDE_DIRS ${FBX_INCLUDE_DIR} CACHE PATH "Paths to FBX headers")
   MESSAGE(STATUS "-- Found FBX SDK ${FBX_LIBRARIES}")
 endif()
 if (!FBX_FOUND)
