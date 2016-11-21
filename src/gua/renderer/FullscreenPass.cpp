@@ -39,13 +39,20 @@ FullscreenPassDescription::FullscreenPassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = R"(
-    @include "shaders/common/header.glsl"
-    @include "shaders/common/gua_camera_uniforms.glsl"
-    @include "shaders/common/gua_gbuffer_input.glsl"
-    layout(location=0) out vec3 gua_out_color;
-    void main() { 
-      gua_out_color = gua_get_color();
-    }
+#version 440
+// header
+#extension GL_NV_bindless_texture  : require
+#extension GL_ARB_bindless_texture : enable
+#extension GL_NV_gpu_shader5       : enable
+
+#ifdef GL_NV_shader_atomic_int64
+#extension GL_NV_shader_atomic_int64 : enable
+#endif
+
+layout(location=0) out vec3 gua_out_color;
+void main() {
+  gua_out_color = vec4(1,0,0,0);
+}
   )";
 
 #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
