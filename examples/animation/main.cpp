@@ -23,14 +23,13 @@
 #include <memory>
 
 #include <gua/guacamole.hpp>
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
-#include <gua/renderer/SkeletalAnimationPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 // forward mouse interaction to trackball
@@ -79,8 +78,11 @@ int main(int argc, char** argv) {
   
   character_node->add_animations("/opt/project_animation/Assets/Walk.FBX", "walk");
   character_node->set_animation_1("walk");
+  character_node->add_animations("/opt/project_animation/Assets/Run.FBX", "run");
+  character_node->set_animation_2("run");
+
   // play only anim nr. 1
-  character_node->set_blend_factor(0);
+  character_node->set_blend_factor(0.5);
 
   graph.add_node("/transform", ground_node);
   graph.add_node("/transform", character_node);
@@ -161,6 +163,7 @@ int main(int argc, char** argv) {
     i += 1.0 / 600.0;
     if (i > 1) i = 0;
     character_node->set_time_1(i);
+    character_node->set_time_2(i);
 
     window->process_events();
     if (window->should_close()) {
