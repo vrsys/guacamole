@@ -48,9 +48,10 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
     ViveWindow(std::string const& display);
     virtual ~ViveWindow();
+
     float const get_IPD() const;
     math::vec2ui get_window_resolution() const;
-    math::mat4 const& get_vive_sensor_orientation() const;
+    math::mat4 const& get_hmd_sensor_orientation() const; 
     math::vec2 const& get_left_screen_size() const;
     math::vec2 const& get_right_screen_size() const;
     math::vec3 const& get_left_screen_translation() const;
@@ -63,15 +64,15 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
  private:
 
-    void initialize_vive_environment();
+    void initialize_hmd_environment();
     void calculate_viewing_setup();
     void init_context();
     void open();
 
-    math::vec2 screen_size_[2]; // in meters?
-    math::vec3 screen_translation_[2]; // in meters?
+    math::vec2 screen_size_[2];
+    math::vec3 screen_translation_[2];
 
-    math::mat4 vive_sensor_orientation_;
+    math::mat4 hmd_sensor_orientation_;
 
     // GL Frame Buffers
     unsigned int blit_fbo_read_;
@@ -88,6 +89,6 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
     scm::gl::texture_2d_ptr right_texture_ = nullptr;
 };
 
-}  // namespace gua
+}
 
 #endif  // GUA_VIVE_WINDOW_HPP

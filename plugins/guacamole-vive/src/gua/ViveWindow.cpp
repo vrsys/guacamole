@@ -35,7 +35,7 @@ ViveWindow::ViveWindow(std::string const& display)
     , display_name_(display)
 {
     // initialize hmd and texture sizes
-    initialize_vive_environment();
+    initialize_hmd_environment();
 
     // calculate screen size, translation and eye distance
     calculate_viewing_setup();
@@ -45,7 +45,7 @@ ViveWindow::~ViveWindow() {
     vr::VR_Shutdown();
 }
 
-void ViveWindow::initialize_vive_environment() {
+void ViveWindow::initialize_hmd_environment() {
     vr::EVRInitError eError = vr::VRInitError_None;
     pVRSystem = vr::VR_Init(&eError, vr::VRApplication_Scene);
 
@@ -85,8 +85,8 @@ void ViveWindow::calculate_viewing_setup() {
     // do the viewing setup calculations for both eyes
     for (unsigned eye_num = 0; eye_num < 2; ++eye_num) {
         vr::EVREye eEye = eye_num == 0 ? vr::EVREye::Eye_Left : vr::EVREye::Eye_Right;
-        //retreive the correct projection matrix from the oculus API
-        auto const& vive_eye_projection = pVRSystem->GetProjectionMatrix(
+        //retreive the correct projection matrix from OpenVR
+        auto const& hmd_eye_projection = pVRSystem->GetProjectionMatrix(
             eEye, near_distance, far_distance, vr::EGraphicsAPIConvention::API_OpenGL
         );
 
@@ -94,16 +94,16 @@ void ViveWindow::calculate_viewing_setup() {
         scm::math::mat4 scm_eye_proj_matrix;
         for (int outer = 0; outer < 4; ++outer) {
             for (int inner = 0; inner < 4; ++inner) {
-                scm_eye_proj_matrix[outer*4 + inner] = vive_eye_projection.m[outer][inner];
+                scm_eye_proj_matrix[outer*4 + inner] = hmd_eye_projection.m[outer][inner];
             }
         }
 
         // unproject one frustum corner defining one clipping plane
-        scm::math::mat4 inv_oculus_eye_proj_matrix = scm::math::inverse(scm_eye_proj_matrix);
+        scm::math::mat4 inv_hmd_eye_proj_matrix = scm::math::inverse(scm_eye_proj_matrix);
         scm::math::vec4 back_right_top_frustum_corner = scm::math::vec4(-1.0, -1.0, -1.0,  1.0) *
-            inv_oculus_eye_proj_matrix;
+            inv_hmd_eye_proj_matrix;
         scm::math::vec4 back_left_bottom_frustum_corner = scm::math::vec4(1.0,  1.0, -1.0,  1.0) *
-            inv_oculus_eye_proj_matrix;
+            inv_hmd_eye_proj_matrix;
 
         scm::math::vec4 normalized_back_left_bottom_frustum_corner =
             back_left_bottom_frustum_corner / back_left_bottom_frustum_corner[3];
@@ -199,7 +199,6 @@ void ViveWindow::init_context() {
 }
 
 void ViveWindow::open() {
-    // open side-by-side debug window which shows exactly the same as oculus
     config.set_title("guacamole");
     config.set_display_name(display_name_);
     config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
@@ -213,8 +212,8 @@ math::vec2ui ViveWindow::get_window_resolution() const {
     return math::vec2ui(width, height);
 }
 
-math::mat4 const& ViveWindow::get_vive_sensor_orientation() const {
-    return vive_sensor_orientation_;
+math::mat4 const& ViveWindow::get_hmd_sensor_orientation() const {
+    return hmd_sensor_orientation_;
 }
 
 math::vec2 const& ViveWindow::get_left_screen_size() const {
@@ -262,7 +261,7 @@ void ViveWindow::start_frame() {
         pose.m[0][2], pose.m[1][2], pose.m[2][2], 0.0,
         pose.m[0][3], pose.m[1][3], pose.m[2][3], 1.0
     );
-    vive_sensor_orientation_ = orientation;
+    hmd_sensor_orientation_ = orientation;
 }
 
 void ViveWindow::finish_frame() {
