@@ -47,8 +47,6 @@ public:
 
   Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor = 0.25f);
 
-  /* virtual */ ~Trackball();
-
 public:
 
   math::mat4          rotation() const;
