@@ -73,6 +73,11 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(oculus_pitoti)
   ENDIF (${PLUGIN_guacamole-oculus} AND ${PLUGIN_guacamole-plod})
 
+  # vive example requires vive-plugin
+  IF (${PLUGIN_guacamole-vive})
+    add_subdirectory(vive)
+  ENDIF (${PLUGIN_guacamole-vive})
+
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod})
     add_subdirectory(plod_simple)
