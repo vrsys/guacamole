@@ -149,21 +149,21 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
     WindowBase::display(texture, is_left);
 }
 
-math::vec2 const OculusWindow::get_left_screen_size() const {
+math::vec2 const& OculusWindow::get_left_screen_size() const {
   return screen_size_[0];
 }
 
-math::vec2 const OculusWindow::get_right_screen_size() const {
+math::vec2 const& OculusWindow::get_right_screen_size() const {
   return screen_size_[1];
 }
 
 
-math::vec3 const OculusWindow::get_left_screen_translation() const {
+math::vec3 const& OculusWindow::get_left_screen_translation() const {
   return screen_translation_[0];
 }
 
 
-math::vec3 const OculusWindow::get_right_screen_translation() const {
+math::vec3 const& OculusWindow::get_right_screen_translation() const {
   return screen_translation_[1];
 }
 
@@ -189,7 +189,7 @@ math::vec2ui OculusWindow::get_window_resolution() const {
 }
 
 
-gua::math::mat4 OculusWindow::get_hmd_sensor_orientation() const {
+gua::math::mat4 const& OculusWindow::get_hmd_sensor_orientation() const {
   return hmd_sensor_orientation_;
 }
 
