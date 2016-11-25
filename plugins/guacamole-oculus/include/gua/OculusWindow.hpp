@@ -56,48 +56,44 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
 
     float const get_IPD() const;
     math::vec2ui get_window_resolution() const;
-    math::vec2 const get_left_screen_size() const;
-    math::vec2 const get_right_screen_size() const;
-    math::vec3 const get_left_screen_translation() const;
-    math::vec3 const get_right_screen_translation() const;
-    
-    
+    math::mat4 const& get_hmd_sensor_orientation() const;
+
+    math::vec2 const& get_left_screen_size() const;
+    math::vec2 const& get_right_screen_size() const;
+    math::vec3 const& get_left_screen_translation() const;
+    math::vec3 const& get_right_screen_translation() const;
+
     void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
+    void open() override;
+    void init_context() override;
     void start_frame() override;
     void finish_frame() override;
 
     void recenter();
-    void open() override;
-    void init_context() override;
-    math::mat4 get_hmd_sensor_orientation() const;
 
  private:
 
     void initialize_hmd_environment();
     void calculate_viewing_setup();
 
+    std::string display_name_;
+    math::mat4 hmd_sensor_orientation_;
 
-math::vec2 screen_size_[2];
+    math::vec2 screen_size_[2];
     math::vec3 screen_translation_[2];
 
-    math::mat4 hmd_sensor_orientation_;
-    
     unsigned int blit_fbo_read_;
     unsigned int blit_fbo_write_;
 
-    std::string display_name_;
+    ovrTextureSwapChain texture_swap_chain_ = 0;
+    ovrTextureSwapChainDesc texture_swap_chain_desc_ = {};
 
-    ovrTextureSwapChain        texture_swap_chain_ = 0;
-    ovrTextureSwapChainDesc    texture_swap_chain_desc_ = {};
-                                        
-    ovrLayerEyeFov             color_layer_;
+    ovrLayerEyeFov color_layer_;
 
-
-    ovrHmdDesc                 hmd_desc_;
-    ovrSession                 hmd_session_;
-    unsigned                   framecount_ = 0;
-
+    ovrHmdDesc hmd_desc_;
+    ovrSession hmd_session_;
+    unsigned framecount_ = 0;
 
 };
 
