@@ -26,30 +26,58 @@
 
 namespace gua {
 
-template <>
-void UniformValue::apply<std::string>(UniformValue const* self,
-                                      RenderContext const& ctx,
-                                      std::string const& name,
-                                      scm::gl::program_ptr const& prog,
-                                      unsigned location) {
+struct GUA_DLL ApplyUniform : public boost::static_visitor<> {
+  ApplyUniform(RenderContext const& context,
+               std::string const& str,
+               scm::gl::program_ptr const& p,
+               unsigned l = 0)
+    : ctx(context)
+    , name(str)
+    , prog(p)
+    , location(l)
+  {}
 
-  if (!self) {
-    std::cerr << "UniformValue::apply<std::string> : self is nullptr" << std::endl;
-    return;
-  }
-  auto tex_name = boost::get<std::string>(self->data);
-  if (tex_name == "0") {
-    prog->uniform(name, location, math::vec2ui(0, 0));
-  } else {
-    auto texture(TextureDatabase::instance()->lookup(tex_name));
-    if (!texture) {
-      TextureDatabase::instance()->load(tex_name);
-      texture = TextureDatabase::instance()->lookup(tex_name);
+  RenderContext const&        ctx;
+  std::string const&          name;
+  scm::gl::program_ptr const& prog;
+  unsigned                    location;
+
+  void operator()(int value) const { prog->uniform(name, location, value); }
+  void operator()(bool value) const { prog->uniform(name, location, value); }
+  void operator()(float value) const { prog->uniform(name, location, value); }
+  void operator()(math::mat3f const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::mat4f const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec2f const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec3f const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec4f const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec2i const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec3i const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec4i const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec2ui const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec3ui const& value) const { prog->uniform(name, location, value); }
+  void operator()(math::vec4ui const& value) const { prog->uniform(name, location, value); }
+  void operator()(std::string const& tex_name) const {
+    if (tex_name == "0") {
+      prog->uniform(name, location, math::vec2ui(0, 0));
+    } else {
+      auto texture = TextureDatabase::instance()->lookup(tex_name);
+      if (!texture) {
+        TextureDatabase::instance()->load(tex_name);
+        texture = TextureDatabase::instance()->lookup(tex_name);
+      }
+      if (texture) {
+        prog->uniform(name, location, texture->get_handle(ctx));
+      }
     }
-    if (texture) {
-      prog->uniform(name, location, texture->get_handle(ctx));
-    }
   }
+};
+
+void UniformValue::apply(RenderContext const& ctx,
+                         std::string const& name,
+                         scm::gl::program_ptr const& prog,
+                         unsigned location) const {
+  if (prog != nullptr)
+    boost::apply_visitor(ApplyUniform(ctx, name, prog, location), data);
 }
 
 template <>
@@ -113,8 +141,15 @@ UniformValue UniformValue::create_from_string_and_type(std::string const& value,
       return UniformValue(string_utils::from_string<scm::math::mat3f>(value));
     case UniformType::MAT4:
       return UniformValue(string_utils::from_string<scm::math::mat4f>(value));
+    //case UniformType::SAMPLER1D:
+    //  return UniformValue(value);
     case UniformType::SAMPLER2D:
       return UniformValue(value);
+    //case UniformType::SAMPLER3D:
+    //  return UniformValue(value);
+    //case UniformType::SAMPLERCUBE:
+    //  return UniformValue(value);
+    //case NONE
   }
   throw std::runtime_error(
       "UniformValue::create_from_string_and_type(): Invalid type");
