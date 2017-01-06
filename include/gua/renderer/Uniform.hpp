@@ -102,17 +102,12 @@ class GUA_DLL UniformValue {
   // -------------------------------------------------------------------------
   template <typename T>
   UniformValue(T const& val)
-      : apply_impl_(apply<T>)
-      , write_bytes_impl_(write_bytes_impl<T>)
+      : write_bytes_impl_(write_bytes_impl<T>)
       , serialize_to_stream_impl_(serialize_to_stream_impl<T>) {
-    set(val);
+    data = val;
   }
 
   UniformValue(UniformValue const& to_copy) = default;
-  // UniformValue(UniformValue const& to_copy) :
-  //   apply_impl_(to_copy.apply_impl_),
-  //   write_bytes_impl_(to_copy.write_bytes_impl_),
-  //   data(to_copy.data) {}
 
   // -------------------------------------------------------------------------
   static UniformValue create_from_string_and_type(std::string const& value,
@@ -127,9 +122,7 @@ class GUA_DLL UniformValue {
   void apply(RenderContext const& ctx,
              std::string const& name,
              scm::gl::program_ptr const& prog,
-             unsigned location = 0) const {
-    apply_impl_(this, ctx, name, prog, location);
-  }
+             unsigned location = 0) const;
 
   std::string get_glsl_type() const {
     return boost::apply_visitor(GetGlslType(), data);
@@ -148,7 +141,6 @@ class GUA_DLL UniformValue {
   }
 
   void operator=(UniformValue const& to_copy) {
-    apply_impl_ = to_copy.apply_impl_;
     write_bytes_impl_ = to_copy.write_bytes_impl_;
     serialize_to_stream_impl_ = to_copy.serialize_to_stream_impl_;
     data = to_copy.data;
@@ -159,15 +151,6 @@ class GUA_DLL UniformValue {
  private:
 
   template <typename T> void set(T const& val) { data = val; }
-
-  template <typename T>
-  static void apply(UniformValue const* self,
-                    RenderContext const& ctx,
-                    std::string const& name,
-                    scm::gl::program_ptr const& prog,
-                    unsigned location) {
-    prog->uniform(name, location, boost::get<T>(self->data));
-  }
 
   template <typename T>
   static void write_bytes_impl(UniformValue const* self,
@@ -182,12 +165,6 @@ class GUA_DLL UniformValue {
     return os;
   }
 
-  std::function<void(UniformValue const*,
-                     RenderContext const&,
-                     std::string const&,
-                     scm::gl::program_ptr const&,
-                     unsigned)> apply_impl_;
-
   std::function<void(UniformValue const*, RenderContext const&, char*)>
       write_bytes_impl_;
 
@@ -196,12 +173,6 @@ class GUA_DLL UniformValue {
 };
 
 // specializations
-template <>
-GUA_DLL void UniformValue::apply<std::string>(UniformValue const* self,
-                                              RenderContext const& ctx,
-                                              std::string const& name,
-                                              scm::gl::program_ptr const& prog,
-                                              unsigned location);
 
 template <>
 GUA_DLL void UniformValue::write_bytes_impl<std::string>(
@@ -293,6 +264,7 @@ GUA_DLL std::ostream& UniformValue::serialize_to_stream_impl<std::string>(
 //operators
 std::ostream& operator<<(std::ostream& os, UniformValue const& val);
 
+// This type trait maps a c++ type to a gpu compatible type.
 template<typename T> struct UniformCompatible { using type =T; };
 
 template <> struct UniformCompatible<math::mat4d>  { using type = math::mat4f; };

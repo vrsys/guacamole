@@ -109,7 +109,6 @@ ViewDependentUniform ViewDependentUniform::create_from_serialized_string(std::st
   }
 
   return new_uniform;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
