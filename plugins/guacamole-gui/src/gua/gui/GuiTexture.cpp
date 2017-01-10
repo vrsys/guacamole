@@ -34,6 +34,9 @@ GuiTexture::GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view
   {}
 
 math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
+  if (view_ == nullptr) {
+    return math::vec2ui(0, 0);
+  }
 
   auto surface = static_cast<GLSurface*>(view_->surface());
 

@@ -95,7 +95,7 @@ include(FindSchism)
 
 ## boost ######################################################
 if (UNIX)
-  set (BOOST_ROOT "/opt/boost/latest" CACHE PATH "Set to your boost install")
+  set (BOOST_ROOT "/opt/boost/current" CACHE PATH "Set to your boost install")
 elseif (WIN32)
   set(BOOST_ROOT ${GLOBAL_EXT_DIR}/boost CACHE PATH "Set to your boost install")
   #set(Boost_USE_STATIC_LIBS ON)

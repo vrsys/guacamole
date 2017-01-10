@@ -42,8 +42,6 @@ class GLSurface : public Awesomium::Surface {
   GLSurface(unsigned width, unsigned height);
 
 
-  ~GLSurface() {}
-
   // ------------------------------------------------------------ public methods
 
   //////////////////////////////////////////////////////////////////////////////

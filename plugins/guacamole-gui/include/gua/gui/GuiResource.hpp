@@ -120,12 +120,12 @@ class GuiResource {
     std::string name_;
     std::string url_;
 
-    std::shared_ptr<GuiTexture> gui_texture_;
+    std::shared_ptr<GuiTexture> gui_texture_ = nullptr;
 
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
-    Awesomium::WebView* view_;
-    Awesomium::JSValue* js_window_;
-    bool                interactive_;
+    Awesomium::WebView* view_ = nullptr;
+    Awesomium::JSValue* js_window_ = nullptr;
+    bool                interactive_ = true;
 
 };
 
