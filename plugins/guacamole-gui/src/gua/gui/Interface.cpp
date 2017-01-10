@@ -32,8 +32,6 @@
 #include <Awesomium/WebCore.h>
 #include <Awesomium/STLHelpers.h>
 
-#include <mutex>
-
 #include "GLSurface.inl"
 
 // Awesomium bug in linux

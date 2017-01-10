@@ -185,7 +185,7 @@ void GuiResource::inject_mouse_position_relative(math::vec2 const& position) con
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position(math::vec2 const& position) const {
-  if (interactive_) {
+  if (interactive_ && view_) {
     view_->InjectMouseMove(position.x, gui_texture_->height() - position.y);
   }
 }
@@ -193,7 +193,7 @@ void GuiResource::inject_mouse_position(math::vec2 const& position) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_button(Button button, int action, int mods) const {
-  if (interactive_) {
+  if (interactive_ && view_) {
     if (action == 0) {
       view_->InjectMouseUp(static_cast<Awesomium::MouseButton>(button));
     } else {
@@ -205,7 +205,7 @@ void GuiResource::inject_mouse_button(Button button, int action, int mods) const
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
-  if (interactive_) {
+  if (interactive_ && view_) {
     view_->InjectMouseWheel(direction.y*20, direction.x*20);
   }
 }
