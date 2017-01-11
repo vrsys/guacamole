@@ -56,4 +56,5 @@ examples/oit_demo/example-oit_demo
 examples/animation/example-animation
 examples/physics/example-physics
 examples/tiledwall/example-tiledwall
+examples/lod_mesh_textured/example-lod_mesh_textured
 install
