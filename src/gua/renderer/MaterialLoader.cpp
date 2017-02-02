@@ -96,7 +96,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     uniform_normal_map =              get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0));
   }
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
@@ -266,7 +266,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 #endif
   }
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
@@ -366,7 +366,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
   std::string uniform_emit_map{""};
   std::string uniform_normal_map{""};
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
