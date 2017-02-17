@@ -90,6 +90,9 @@ class GUA_DLL CameraNode : public Node {
     // window of the window database with this name
     GUA_ADD_PROPERTY(std::string,     output_window_name,     "");
 
+    GUA_ADD_PROPERTY(std::string,     left_output_window,       "");
+    GUA_ADD_PROPERTY(std::string,     right_output_window,      "");
+
     // clipping
     GUA_ADD_PROPERTY(float,           near_clip,              0.1f);
     GUA_ADD_PROPERTY(float,           far_clip,               1000.0f);
@@ -104,6 +107,10 @@ class GUA_DLL CameraNode : public Node {
 
     std::string const& get_screen_path() {
       return get_left_screen_path();
+    }
+
+    bool separate_windows() const {
+      return left_output_window() != right_output_window();
     }
   };
 
