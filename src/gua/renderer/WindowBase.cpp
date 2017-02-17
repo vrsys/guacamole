@@ -258,6 +258,7 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
                          bool is_left) {
 
   switch (config.get_stereo_mode()) {
+    case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
     case StereoMode::SIDE_BY_SIDE:
     #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
