@@ -96,13 +96,14 @@ Renderer::~Renderer() {
   stop();
 }
 
-void Renderer::renderclient(Mailbox in) {
+void Renderer::renderclient(Mailbox in, std::string window_name) {
 
   FpsCounter fpsc(20);
-  fpsc.start(); 
+  fpsc.start();
 
   for (auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in)) {
-    auto window_name(cmd.serialized_cam->config.get_output_window_name());
+    //auto window_name(cmd.serialized_cam->config.get_output_window_name());
+
     if (window_name != "") {
       auto window = WindowDatabase::instance()->lookup(window_name);
 
@@ -153,6 +154,15 @@ void Renderer::renderclient(Mailbox in) {
             #else
             Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
             #endif
+          } else if (window->config.get_stereo_mode() == StereoMode::SEPARATE_WINDOWS) {
+            bool is_left = cmd.serialized_cam->config.get_left_output_window() == window_name;
+            //auto mode = window->config.get_is_left() ? CameraMode::LEFT : CameraMode::RIGHT;
+            auto mode = is_left ? CameraMode::LEFT : CameraMode::RIGHT;
+            auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs);
+
+            if (img) {
+              window->display(img, false);
+            }
           } else {
             // TODO: add alternate frame rendering here? -> take clear and render methods
             auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
@@ -160,10 +170,9 @@ void Renderer::renderclient(Mailbox in) {
             img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
             if (img) window->display(img, false);
           }
-          
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
-                   *cmd.serialized_cam, *cmd.scene_graphs));
+                  *cmd.serialized_cam, *cmd.scene_graphs));
           if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
         }
 
@@ -178,6 +187,7 @@ void Renderer::renderclient(Mailbox in) {
 
       }
     }
+
   }
 }
 
@@ -197,23 +207,68 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
 
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
-      auto window_name(cam->config.get_output_window_name());
-      auto rclient(render_clients_.find(window_name));
-      if (rclient != render_clients_.end()) {
-        rclient->second.first->push_back(
-            Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-            sgs, alternate_frame_rendering));
+      if (cam->config.separate_windows()) {
+        {
+          auto left_window_name = cam->config.get_left_output_window();
+          auto rclient = render_clients_.find(left_window_name);
+          if (rclient != render_clients_.end()) {
+            rclient->second.first->push_back(
+                Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                sgs, alternate_frame_rendering));
 
+          } else {
+            auto window_left = WindowDatabase::instance()->lookup(left_window_name);
+
+            if (window_left) {
+              auto p = spawnDoublebufferred<Item>();
+              p.first->push_back(Item(
+                  std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                  sgs));
+              render_clients_[left_window_name] = std::make_pair(
+                  p.first, std::thread(Renderer::renderclient, p.second, left_window_name));
+            }
+          }
+        }
+        {
+          auto right_window_name = cam->config.get_right_output_window();
+          auto rclient = render_clients_.find(right_window_name);
+          if (rclient != render_clients_.end()) {
+            rclient->second.first->push_back(
+                Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                sgs, alternate_frame_rendering));
+
+          } else {
+            auto window_right = WindowDatabase::instance()->lookup(right_window_name);
+
+            if (window_right) {
+              auto p = spawnDoublebufferred<Item>();
+              p.first->push_back(Item(
+                  std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                  sgs));
+              render_clients_[right_window_name] = std::make_pair(
+                  p.first, std::thread(Renderer::renderclient, p.second, right_window_name));
+            }
+          }
+        }
       } else {
-        auto window(WindowDatabase::instance()->lookup(window_name));
+        auto window_name = cam->config.get_output_window_name();
+        auto rclient = render_clients_.find(window_name);
+        if (rclient != render_clients_.end()) {
+          rclient->second.first->push_back(
+              Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+              sgs, alternate_frame_rendering));
 
-        if (window) {
-          auto p = spawnDoublebufferred<Item>();
-          p.first->push_back(Item(
-              std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-              sgs));
-          render_clients_[window_name] = std::make_pair(
-              p.first, std::thread(Renderer::renderclient, p.second));
+        } else {
+          auto window = WindowDatabase::instance()->lookup(window_name);
+
+          if (window) {
+            auto p = spawnDoublebufferred<Item>();
+            p.first->push_back(Item(
+                std::make_shared<node::SerializedCameraNode>(cam->serialize()),
+                sgs));
+            render_clients_[window_name] = std::make_pair(
+                p.first, std::thread(Renderer::renderclient, p.second, window_name));
+          }
         }
       }
     }
@@ -247,7 +302,6 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           if (window->get_context()->framecount == 0) {
             display_loading_screen(*window);
           }
-
 
           // make sure pipeline was created
           std::shared_ptr<Pipeline> pipe = nullptr;

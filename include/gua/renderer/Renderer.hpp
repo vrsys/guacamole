@@ -101,7 +101,7 @@ class GUA_DLL Renderer {
   using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
   using Renderclient = std::pair<Mailbox, std::thread>;
 
-  static void renderclient(Mailbox in);
+  static void renderclient(Mailbox in, std::string name);
 
   std::map<std::string, Renderclient> render_clients_;
 
