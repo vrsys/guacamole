@@ -404,16 +404,16 @@ void Video3DRenderer::render(Pipeline& pipe,
     no_bfc_rasterizer_state_ = ctx.render_device
         ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 
-    warp_pass_program_->get_program(ctx)
+    warp_pass_program_->get_program()
     ->uniform_sampler("depth_video3d_texture", 0);
-    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_xyz", 1);
-    warp_pass_program_->get_program(ctx)->uniform_sampler("cv_uv", 2);
+    warp_pass_program_->get_program()->uniform_sampler("cv_xyz", 1);
+    warp_pass_program_->get_program()->uniform_sampler("cv_uv", 2);
 
     fbo_depth_process_ = ctx.render_device->create_frame_buffer();
     depth_stencil_state_tex_process_ = ctx.render_device
         ->create_depth_stencil_state(false, false);
     // input texture bound to unit 1
-    depth_process_program_->get_program(ctx)
+    depth_process_program_->get_program()
       ->uniform_sampler("depth_texture", 1);
   }
 
@@ -581,17 +581,17 @@ void Video3DRenderer::render(Pipeline& pipe,
 
           ctx.render_context
               ->bind_texture(warp_color_result_, nearest_sampler_state_, 0);
-          current_shader->get_program(ctx)
+          current_shader->get_program()
               ->uniform_sampler("quality_texture", 0);
 
           ctx.render_context
               ->bind_texture(warp_depth_result_, nearest_sampler_state_, 1);
-          current_shader->get_program(ctx)
+          current_shader->get_program()
               ->uniform_sampler("depth_texture", 1);
 
           ctx.render_context->bind_texture(
               video3d_data.color_tex_, linear_sampler_state_, 2);
-          current_shader->get_program(ctx)
+          current_shader->get_program()
               ->uniform_sampler("video_color_texture", 2);
 
           video_node->get_material()

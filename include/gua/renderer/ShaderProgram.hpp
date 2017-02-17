@@ -165,7 +165,7 @@ class GUA_DLL ShaderProgram {
 
   virtual bool upload_to(RenderContext const& context) const;
 
-  inline scm::gl::program_ptr const& get_program ( RenderContext const&) const { return program_; }
+  inline scm::gl::program_ptr const& get_program () const { return program_; }
 
   inline std::vector<ShaderProgramStage> const& get_program_stages() const {
     return stages_;
