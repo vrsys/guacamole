@@ -97,8 +97,8 @@ void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, i
   std::lock_guard<std::mutex> lock(mutex_);
 
     for (auto const& uniform : uniforms_) {
-      uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
-    } 
+      uniform.second.apply(ctx, uniform.first, view, shader->get_program());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
