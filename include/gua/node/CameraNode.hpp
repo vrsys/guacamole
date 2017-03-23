@@ -152,10 +152,7 @@ class GUA_DLL CameraNode : public Node {
     return pre_render_cameras_;
   }
 
-  void set_pre_render_cameras(std::vector<std::shared_ptr<CameraNode>> const& cams) {
-    pre_render_cameras_ = cams;
-  }
-
+  void set_pre_render_cameras(std::vector<std::shared_ptr<CameraNode>> const& cams);
 
   std::shared_ptr<PipelineDescription> const& get_pipeline_description() const {
     return pipeline_description_;
