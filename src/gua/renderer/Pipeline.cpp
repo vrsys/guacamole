@@ -41,6 +41,15 @@
 // external headers
 #include <iostream>
 
+namespace {
+
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = tex->native_handle();
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
+
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,14 +83,14 @@ Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> Pipeline::render_scene(
+scm::gl::texture_2d_ptr Pipeline::render_scene(
     CameraMode mode,
     node::SerializedCameraNode const& camera,
     std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs) {
 
   // return if pipeline is disabled
   if (!camera.config.get_enabled()) {
-    return std::shared_ptr<Texture2D>();
+    return {nullptr};
   }
 
   // store the current camera data
@@ -217,16 +226,34 @@ std::shared_ptr<Texture2D> Pipeline::render_scene(
   gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
-  auto const& tex(gbuffer_->get_color_buffer());
   auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
 
-  if (tex_name != "") {
-    TextureDatabase::instance()->add(tex_name, tex);
-    TextureDatabase::instance()->add(tex_name + "_depth", depth_tex);
+  scm::gl::texture_2d_ptr color_tex = gbuffer_->get_color_buffer();
+
+  auto depth_iter = context_.textures.find(depth_tex->uuid());
+  scm::gl::texture_2d_ptr depth = nullptr;
+  if (depth_iter != context_.textures.end())
+    depth = scm::dynamic_pointer_cast<scm::gl::texture_2d>(depth_iter->second.texture);
+
+  if (tex_name != "" && nullptr != color_tex) {
+    //TextureDatabase::instance()->add(tex_name + "_depth", depth_tex);
+
+    if (auto dummy_tex = TextureDatabase::instance()->lookup(tex_name)) {
+      context_.textures[dummy_tex->uuid()] = RenderContext::Texture{color_tex, gbuffer_->get_sampler_state()};
+      //context_.textures[dummy_tex->uuid()] = RenderContext::Texture{gbuffer_->get_color_buffer(), gbuffer_->get_sampler_state()};
+    }
+
+    if (auto dummy_tex = TextureDatabase::instance()->lookup(tex_name + "_depth")) {
+      context_.textures[dummy_tex->uuid()] = RenderContext::Texture{depth, gbuffer_->get_sampler_state()};
+    }
+    //
+    //  if (auto depth_tex = TextureDatabase::instance()->lookup("tex_name")) {
+    //    context_.textures[depth_tex->uuid()] = RenderContext::Texture{gbuffer_->get_depth_texture(), gbuffer_->get_sampler_state()};
+    //  }
   }
 
-  return tex;
+  return color_tex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,16 +665,16 @@ void Pipeline::bind_gbuffer_input(
       "gua_resolution");
 
   shader->set_uniform(context_,
-                      gbuffer_->get_color_buffer()->get_handle(context_),
+                      ::get_handle(gbuffer_->get_color_buffer()),
                       "gua_gbuffer_color");
   shader->set_uniform(context_,
-                      gbuffer_->get_pbr_buffer()->get_handle(context_),
+                      ::get_handle(gbuffer_->get_pbr_buffer()),
                       "gua_gbuffer_pbr");
   shader->set_uniform(context_,
-                      gbuffer_->get_normal_buffer()->get_handle(context_),
+                      ::get_handle(gbuffer_->get_normal_buffer()),
                       "gua_gbuffer_normal");
   shader->set_uniform(context_,
-                      gbuffer_->get_flags_buffer()->get_handle(context_),
+                      ::get_handle(gbuffer_->get_flags_buffer()),
                       "gua_gbuffer_flags");
   shader->set_uniform(context_,
                       gbuffer_->get_depth_buffer()->get_handle(context_),
