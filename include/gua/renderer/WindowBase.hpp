@@ -167,9 +167,9 @@ class GUA_DLL WindowBase {
   /**
    *
    */
-  virtual void display(std::shared_ptr<Texture> const& center_texture);
+  virtual void display(scm::gl::texture_2d_ptr const& center_texture);
 
-  virtual void display(std::shared_ptr<Texture> const& center_texture,
+  virtual void display(scm::gl::texture_2d_ptr const& center_texture,
                        bool is_left);
 
   virtual void process_events() = 0;
@@ -213,7 +213,7 @@ protected:
 
 
  private:
-  void display(std::shared_ptr<Texture> const& texture,
+  void display(scm::gl::texture_2d_ptr const& texture,
                math::vec2ui const& size,
                math::vec2ui const& position,
                TextureDisplayMode mode = FULL,
