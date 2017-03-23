@@ -59,7 +59,7 @@ void display_loading_screen(gua::WindowBase& window) {
   window.config.set_right_position(
       tmp_right_position + (tmp_right_resolution - loading_texture_size) / 2);
 
-  window.display(loading_texture);
+  //window.display(loading_texture);
   window.finish_frame();
   ++(window.get_context()->framecount);
 
