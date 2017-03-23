@@ -24,7 +24,6 @@
 
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/StencilRenderer.hpp>
-#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
