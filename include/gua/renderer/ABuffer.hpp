@@ -40,9 +40,6 @@ class GUA_DLL ABuffer {
     size_t              frag_count = 0;
   };
 
-  ABuffer() {}
-  virtual ~ABuffer() {}
-
   void allocate(RenderContext& ctx, size_t buffer_size);
   void clear(RenderContext const& ctx, math::vec2ui const& resolution);
   void bind(RenderContext const& ctx);
