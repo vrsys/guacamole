@@ -23,7 +23,6 @@
 #include <gua/renderer/TexturedQuadPass.hpp>
 
 #include <gua/node/TexturedQuadNode.hpp>
-#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/Resources.hpp>
