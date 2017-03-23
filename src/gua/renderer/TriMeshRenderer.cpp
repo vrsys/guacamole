@@ -28,8 +28,6 @@
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ABuffer.hpp>
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
