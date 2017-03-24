@@ -53,14 +53,14 @@ class ShadowMap : public RenderTarget {
 
   virtual void remove_buffers(RenderContext const& ctx) override;
 
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
+  scm::gl::texture_2d_ptr const& get_depth_buffer()  const override;
 
  private:
   scm::gl::frame_buffer_ptr fbo_;
-  std::shared_ptr<Texture2D> depth_buffer_;
+  scm::gl::texture_2d_ptr depth_buffer_;
+  scm::gl::sampler_state_ptr sampler_state_;
   math::vec2f viewport_offset_;
   math::vec2f viewport_size_;
-
 };
 
 struct CachedShadowMap {

@@ -37,20 +37,26 @@ namespace gua {
 
 ShadowMap::ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution) :
   RenderTarget(resolution),
+  fbo_(nullptr),
+  depth_buffer_(nullptr),
   viewport_offset_(math::vec2f(0.f, 0.f)),
-  viewport_size_(math::vec2f(resolution)) {
+  viewport_size_(math::vec2f(resolution))
+  {
 
-  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
+  scm::gl::sampler_state_desc sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
                                     // scm::gl::FILTER_ANISOTROPIC,
                                     scm::gl::WRAP_CLAMP_TO_EDGE,
                                     scm::gl::WRAP_CLAMP_TO_EDGE);
-  state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
-  state._max_anisotropy = 16;
+  sampler_state_desc._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
+  sampler_state_desc._max_anisotropy = 16;
 
-  depth_buffer_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D16, 1, state);
+  sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc);
+
+  depth_buffer_       = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_D16,  1);
+  ctx.render_context->make_resident(depth_buffer_, sampler_state_);
 
   fbo_ = ctx.render_device->create_frame_buffer();
-  fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
+  fbo_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +95,7 @@ void ShadowMap::set_viewport_size(math::vec2f const& size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Texture2D> const& ShadowMap::get_depth_buffer() const {
+scm::gl::texture_2d_ptr const& ShadowMap::get_depth_buffer() const {
   return depth_buffer_;
 }
 
@@ -101,7 +107,7 @@ void ShadowMap::remove_buffers(RenderContext const& ctx) {
   fbo_->clear_attachments();
 
   if (depth_buffer_) {
-    depth_buffer_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(depth_buffer_);
   }
 }
 
