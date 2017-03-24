@@ -67,19 +67,7 @@ namespace gua {
                                             scm::gl::WRAP_CLAMP_TO_EDGE,
                                             scm::gl::WRAP_CLAMP_TO_EDGE));
 
-
   virtual ~TextureDistance() {}
-
-  ///@{
-  /**
-   * Gets the size.
-   *
-   * Returns the size of the Texture2D.
-   */
-  unsigned width() const { return width_; }
-  unsigned height() const { return height_; }
-
-  ///@}
 
   void download_data(RenderContext const& ctx, float near_clip, float far_clip);
   std::vector<float> const& get_data();
