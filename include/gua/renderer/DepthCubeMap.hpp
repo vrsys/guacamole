@@ -56,15 +56,14 @@ class DepthCubeMap : public RenderTarget {
 
   void retrieve_data(RenderContext const& ctx, float near_clip, float far_clip);
 
-  std::shared_ptr<Texture2D> const& get_depth_buffer() const override;
+  scm::gl::texture_2d_ptr const& get_depth_buffer()  const override;
 
  private:
   scm::gl::frame_buffer_ptr fbo_;
-  std::shared_ptr<Texture2D> depth_buffer_;
+  std::shared_ptr<TextureDistance> texture_distance_;
+  scm::gl::texture_2d_ptr depth_buffer_;
   math::vec2f viewport_offset_;
   math::vec2f viewport_size_;
-  std::shared_ptr<Texture2D> texture2D_ptr;
-
 };
 
 struct SharedDepthCubeMapResource {

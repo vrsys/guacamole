@@ -340,7 +340,7 @@ namespace gua {
     cuts->send_camera(context_id, lamure_view_id, cut_update_cam);
     cuts->send_height_divided_by_top_minus_bottom(context_id, lamure_view_id, height_divided_by_top_minus_bottom);
 
-    auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
+    auto& gua_depth_buffer = target.get_depth_buffer();
 
     std::unordered_map<node::PLodNode*, lamure::ren::cut*> cut_map;
     std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> > nodes_in_frustum_per_model;

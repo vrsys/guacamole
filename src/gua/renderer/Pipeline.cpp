@@ -226,18 +226,10 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(
   gbuffer_->toggle_ping_pong();
 
   // add texture to texture database
-  auto const& depth_tex(gbuffer_->get_depth_buffer());
   auto tex_name(camera.config.get_output_texture_name());
-
   scm::gl::texture_2d_ptr color_tex = gbuffer_->get_color_buffer();
 
-  auto depth_iter = context_.textures.find(depth_tex->uuid());
-  scm::gl::texture_2d_ptr depth = nullptr;
-  if (depth_iter != context_.textures.end())
-    depth = scm::dynamic_pointer_cast<scm::gl::texture_2d>(depth_iter->second.texture);
-
-  if (tex_name != "" && nullptr != color_tex) {
-    //TextureDatabase::instance()->add(tex_name + "_depth", depth_tex);
+  if (tex_name != "") {
 
     if (auto dummy_tex = TextureDatabase::instance()->lookup(tex_name)) {
       context_.textures[dummy_tex->uuid()] = RenderContext::Texture{color_tex, gbuffer_->get_sampler_state()};
@@ -245,12 +237,9 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(
     }
 
     if (auto dummy_tex = TextureDatabase::instance()->lookup(tex_name + "_depth")) {
-      context_.textures[dummy_tex->uuid()] = RenderContext::Texture{depth, gbuffer_->get_sampler_state()};
+      scm::gl::texture_2d_ptr depth_tex = gbuffer_->get_depth_buffer();
+      context_.textures[dummy_tex->uuid()] = RenderContext::Texture{depth_tex, gbuffer_->get_sampler_state()};
     }
-    //
-    //  if (auto depth_tex = TextureDatabase::instance()->lookup("tex_name")) {
-    //    context_.textures[depth_tex->uuid()] = RenderContext::Texture{gbuffer_->get_depth_texture(), gbuffer_->get_sampler_state()};
-    //  }
   }
 
   return color_tex;
@@ -388,7 +377,7 @@ void Pipeline::generate_shadow_map(node::LightNode& light,
   bind_camera_uniform_block(0);
 
   light_block.shadow_offset = light.data.get_shadow_offset();
-  light_block.shadow_map = shadow_map->get_depth_buffer()->get_handle(context_);
+  light_block.shadow_map = ::get_handle(shadow_map->get_depth_buffer());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,7 +666,7 @@ void Pipeline::bind_gbuffer_input(
                       ::get_handle(gbuffer_->get_flags_buffer()),
                       "gua_gbuffer_flags");
   shader->set_uniform(context_,
-                      gbuffer_->get_depth_buffer()->get_handle(context_),
+                      ::get_handle(gbuffer_->get_depth_buffer()),
                       "gua_gbuffer_depth");
 }
 

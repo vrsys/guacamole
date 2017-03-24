@@ -45,7 +45,7 @@ class GUA_DLL RenderTarget {
 
   virtual void remove_buffers(RenderContext const& ctx) = 0;
 
-  virtual std::shared_ptr<Texture2D> const& get_depth_buffer() const = 0;
+  virtual scm::gl::texture_2d_ptr const& get_depth_buffer() const = 0;
 
   unsigned            get_width()  const      { return resolution_.x; }
   unsigned            get_height() const      { return resolution_.y; }

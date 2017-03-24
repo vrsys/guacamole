@@ -36,6 +36,9 @@ namespace gua {
 
 DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& tex_name)  :
   RenderTarget(resolution),
+  fbo_(nullptr),
+  texture_distance_(nullptr),
+  depth_buffer_(nullptr),
   viewport_offset_(math::vec2f(0.f, 0.f)),
   viewport_size_(math::vec2f(resolution)) {
 
@@ -46,11 +49,12 @@ DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolut
   state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
   state._max_anisotropy = 16;
 
-  depth_buffer_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D32, 1, state);
-  TextureDatabase::instance()->add(tex_name, std::dynamic_pointer_cast<TextureDistance>(depth_buffer_));
+  texture_distance_ = std::make_shared<TextureDistance>(resolution.x, resolution.y, scm::gl::FORMAT_D32, 1, state);
+  TextureDatabase::instance()->add(tex_name, texture_distance_);
+  depth_buffer_ = scm::dynamic_pointer_cast<scm::gl::texture_2d>(texture_distance_->get_buffer(ctx));
 
   fbo_ = ctx.render_device->create_frame_buffer();
-  fbo_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx), 0, 0);
+  fbo_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,8 +93,8 @@ void DepthCubeMap::set_viewport_size(math::vec2f const& size) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
- 
-std::shared_ptr<Texture2D> const& DepthCubeMap::get_depth_buffer() const {
+
+scm::gl::texture_2d_ptr const& DepthCubeMap::get_depth_buffer() const {
   return depth_buffer_;
 }
 
@@ -101,15 +105,15 @@ void DepthCubeMap::remove_buffers(RenderContext const& ctx) {
 
   fbo_->clear_attachments();
 
-  if (depth_buffer_) {
-    depth_buffer_->make_non_resident(ctx);
+  if (texture_distance_) {
+    texture_distance_->make_non_resident(ctx);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip) {
-  std::dynamic_pointer_cast<TextureDistance>(depth_buffer_)->download_data(ctx, near_clip, far_clip);
+  texture_distance_->download_data(ctx, near_clip, far_clip);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

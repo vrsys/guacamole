@@ -54,6 +54,15 @@
 #include <lamure/ren/controller.h>
 #include <boost/assign/list_of.hpp>
 
+namespace {
+
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = tex->native_handle();
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
+
 namespace gua {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -316,7 +325,7 @@ namespace gua {
       current_material_program->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
       current_material_program->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
       // hack
-      current_material_program->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
+      current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
                                   "gua_gbuffer_depth");
     }
 
