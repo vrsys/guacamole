@@ -22,11 +22,7 @@
 #ifndef GUA_FBXFWD_HPP
 #define GUA_FBXFWD_HPP
 
-#if WIN32
-  #define FBX_NAMESPACE fbxsdk
-#else
-  #define FBX_NAMESPACE fbxsdk_2015_1
-#endif
+#define FBX_NAMESPACE fbxsdk
 
 namespace FBX_NAMESPACE {
   class FbxMesh;

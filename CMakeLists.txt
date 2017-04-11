@@ -4,7 +4,7 @@
 
 PROJECT(GUACAMOLE CXX)
 
-# neccessary for try_compile_scripts under liunx
+# neccessary for try_compile_scripts under linux
 ENABLE_LANGUAGE(C)
 
 # version number
