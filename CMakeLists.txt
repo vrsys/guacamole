@@ -22,8 +22,11 @@ option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
-option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 option (GUACAMOLE_TESTS "Enable testing." OFF)
+# fbx import crashes on nodetype-cast on windows
+if (NOT WIN32)
+  option (GUACAMOLE_FBX "Set to enable FBX support." ON)
+endif(NOT WIN32)
 
 # We require at least version 3.0.2
 cmake_minimum_required(VERSION 3.0.2)
