@@ -26,6 +26,7 @@
 #include <gua/node/GeometryNode.hpp>
 #include <gua/skelanim/utils/SkeletalAnimation.hpp>
 #include <gua/skelanim/utils/Skeleton.hpp>
+#include <gua/platform.hpp>
 
 namespace gua {
 
