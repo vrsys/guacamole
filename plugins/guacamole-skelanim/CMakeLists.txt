@@ -26,8 +26,8 @@ IF (MSVC)
   set_target_properties(guacamole-skelanim PROPERTIES COMPILE_FLAGS "-D GUA_SKELANIM_LIBRARY")
 ENDIF (MSVC)
 
-SOURCE_GROUP("skelanim" FILES ${GUA_PLOD_RENDERER_SRC})
-SOURCE_GROUP("skelanim" FILES ${GUA_PLOD_RENDERER_INC})
+SOURCE_GROUP("skelanim" FILES ${GUA_SKELANIM_SRC})
+SOURCE_GROUP("skelanim" FILES ${GUA_SKELANIM_INC})
 ###############################################################################
 # install
 ###############################################################################

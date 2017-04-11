@@ -23,7 +23,7 @@
 #define GUA_SKELETAL_ANIMATION_RENDERER_HPP
 
 // guacamole headers
-#include <gua/skelanim.hpp>
+#include <gua/skelanim/platform.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/skelanim/renderer/BoneTransformUniformBlock.hpp>
 
