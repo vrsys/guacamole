@@ -20,11 +20,11 @@
  ******************************************************************************/
 
 // guacamole headers
-#include <gua/utils/OculusSDK2DistortionMesh.hpp>
+#include <gua/utils/OculusDistortionMesh.hpp>
 
 namespace gua {
 
-  OculusSDK2DistortionMesh::OculusSDK2DistortionMesh() : ndc_2d_positions(),
+  OculusDistortionMesh::OculusDistortionMesh() : ndc_2d_positions(),
                                                          tex_coords_r(),
                                                          tex_coords_g(),
                                                          tex_coords_b(),
@@ -35,10 +35,10 @@ namespace gua {
                                                          index_buffer_component_offset(0) {
   }
 
-  OculusSDK2DistortionMesh::~OculusSDK2DistortionMesh() {
+  OculusDistortionMesh::~OculusDistortionMesh() {
   }
 
-  void OculusSDK2DistortionMesh::initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
+  void OculusDistortionMesh::initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
                                                             ovrVector2f* UVScaleOffset,
                                                             bool isLeftEye) {
     num_vertices  = mesh_component.VertexCount;
@@ -137,7 +137,7 @@ namespace gua {
   }
 
 
-  void OculusSDK2DistortionMesh::copy_to_buffer(DistortionVertex* d_vertex_buffer) const {
+  void OculusDistortionMesh::copy_to_buffer(DistortionVertex* d_vertex_buffer) const {
     for (unsigned v(0); v < num_vertices; ++v) {
 
       d_vertex_buffer[v].ndc_2d_pos = ndc_2d_positions[v];
@@ -152,7 +152,7 @@ namespace gua {
     }
   }
 
-  scm::gl::vertex_format OculusSDK2DistortionMesh::get_vertex_format() const {
+  scm::gl::vertex_format OculusDistortionMesh::get_vertex_format() const {
     return scm::gl::vertex_format(
       0, 0, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
       0, 1, scm::gl::TYPE_VEC2F, sizeof(DistortionVertex))(
