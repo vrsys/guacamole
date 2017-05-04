@@ -59,7 +59,7 @@ void main()
   gua_roughness  = 0.0;
   gua_emissivity = 0.0; // pass through if unshaded
 
-  vec3 gua_world_position = VertexIn.pass_world_position;
+  gua_world_position = VertexIn.pass_world_position;
 
   // normal mode or high fidelity shadows
   if (gua_rendering_mode != 1) {
