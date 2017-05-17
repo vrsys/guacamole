@@ -12,6 +12,8 @@ effects, bloom and fog.
 
 Please cite our work when using our software in your own research or publication.
 
+https://www.uni-weimar.de/de/medien/professuren/vr/software/
+
 Installation
 ------------
 
