@@ -10,6 +10,8 @@ deferred shading system. Many common post processing effects are already
 integrated, e.g. screen space ambient occlusion, HDR, FXAA, volumetric light
 effects, bloom and fog.
 
+Please cite our work when using our software in your own research or publication.
+
 Installation
 ------------
 
