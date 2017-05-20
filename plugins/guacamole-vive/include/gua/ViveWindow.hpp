@@ -46,7 +46,7 @@ namespace gua {
 class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
  public:
 
-    ViveWindow(std::string const& display);
+    ViveWindow(std::string const& display = ":0.0");
     virtual ~ViveWindow();
 
     float const get_IPD() const;
@@ -58,7 +58,7 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
     math::vec3 const& get_left_screen_translation() const;
     math::vec3 const& get_right_screen_translation() const;
 
-    void display(std::shared_ptr<Texture> const& texture, bool is_left) override;
+    void display(scm::gl::texture_2d_ptr const& texture, bool is_left) override;
 
     void open() override;
     void init_context() override;

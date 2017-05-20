@@ -246,7 +246,7 @@ void ViveWindow::start_frame() {
 
     vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
     vr::HmdMatrix34_t pose;
-    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, ftiming);
     for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
         if (devices[i].bPoseIsValid) {
             if (pVRSystem->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_HMD) {
@@ -276,7 +276,7 @@ void ViveWindow::finish_frame() {
     GlfwWindow::finish_frame();
 }
 
-void ViveWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) {
+void ViveWindow::display(scm::gl::texture_2d_ptr const& texture, bool is_left) {
     auto const& glapi = ctx_.render_context->opengl_api();
 
     if (!left_tex_id_) {
@@ -296,16 +296,18 @@ void ViveWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) 
     }
 
     // setup read buffer
-    glapi.glBindTexture(GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id());
+    glapi.glBindTexture(GL_TEXTURE_2D, texture->object_id());
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, blit_fbo_read_);
-    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id(), 0);
+    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->object_id(), 0);
 
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         gua::Logger::LOG_WARNING << "Read Framebuffer Incomplete.\n";
     }
 
-    glapi.glBlitFramebuffer(0, 0, texture->width(), texture->height(),
+    scm::math::vec2ui const tex_dimensions = texture->dimensions();
+
+    glapi.glBlitFramebuffer(0, 0, tex_dimensions[0], tex_dimensions[1],
         config.left_position().x, config.left_position().y,
         config.left_resolution().x, config.left_resolution().y,
         GL_COLOR_BUFFER_BIT, GL_NEAREST);
