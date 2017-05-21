@@ -25,6 +25,7 @@
 // guacamole headers
 #include <exception>
 #include <gua/renderer/TV_3.hpp>
+#include <gua/renderer/TV_3Resource.hpp>
 #include <gua/renderer/Material.hpp>
 
 #include <gua/node/GeometryNode.hpp>
@@ -85,6 +86,9 @@ public:
   void update_cache() override;
 
   void accept(NodeVisitor& visitor) override;
+
+  int64_t const num_timesteps() const { return geometry_->get_num_volume_time_steps(); }
+  void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
 
 protected:
 

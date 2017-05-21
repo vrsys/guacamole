@@ -63,8 +63,13 @@ void mouse_button(gua::utils::Trackball& trackball,
 }
 
 int main(int argc, char** argv) {
+
+
+  std::string in_vol_resource_path = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
+
   // initialize guacamole
   gua::init(argc, argv);
+
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -91,7 +96,7 @@ int main(int argc, char** argv) {
   auto test_volume(tv_3_loader.load_geometry(
       "test_volume",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-       "./data/objects/head_w256_h256_d225_c1_b8.raw",
+       in_vol_resource_path,
        //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
       //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",

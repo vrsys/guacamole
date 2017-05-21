@@ -50,8 +50,62 @@
 // external headers
 #include <stack>
 #include <algorithm>
+#include <regex>
 
 namespace gua {
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens) {
+  size_t file_starting_pos = string_to_split.find_last_of("/") + 1;
+  std::string file_name = string_to_split.substr(file_starting_pos);
+  std::string extension_removed_string = file_name.substr(0,  file_name.find(".raw")  );
+  extension_removed_string = extension_removed_string.substr(0,  extension_removed_string.find(".bin")  );
+  extension_removed_string = extension_removed_string.substr(0,  extension_removed_string.find(".dp")  );
+
+  std::stringstream test(extension_removed_string);
+  std::string segment;
+
+  std::regex non_negative_number_regex("[[:digit:]]+");
+  std::vector<std::string> registered_tokens;
+
+  registered_tokens.push_back("w");
+  registered_tokens.push_back("ow");
+  registered_tokens.push_back("h");
+  registered_tokens.push_back("oh");
+  registered_tokens.push_back("d");
+  registered_tokens.push_back("od");
+  registered_tokens.push_back("cn");
+  registered_tokens.push_back("c");
+  registered_tokens.push_back("b");
+  registered_tokens.push_back("t");
+  registered_tokens.push_back("bs");
+  registered_tokens.push_back("i");
+  registered_tokens.push_back("p");
+  registered_tokens.push_back("sy");
+  registered_tokens.push_back("a");
+  registered_tokens.push_back("si");
+  registered_tokens.push_back("norm");
+  registered_tokens.push_back("min");
+  registered_tokens.push_back("max");
+  registered_tokens.push_back("fb");
+
+  while(std::getline(test, segment, '_')) {
+    for( auto const& potentially_matching_token : registered_tokens ) {
+      if( segment.find(potentially_matching_token) == 0 ) {
+        uint64_t length_of_token = potentially_matching_token.size();
+        std::string remaining_string = segment.substr(length_of_token);
+
+        bool regex_match_result = std::regex_match(remaining_string, non_negative_number_regex);
+        if(regex_match_result) {
+          tokens[potentially_matching_token] = std::atoi(remaining_string.c_str());
+          break;
+        }
+      }
+    }
+
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +113,7 @@ TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pick
   : resource_file_name_(resource_file_string),
     is_pickable_(is_pickable),
     local_transform_(),
-    volume_texture_(nullptr) {
+    volume_textures_() {
   bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
   bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
 
@@ -81,45 +135,66 @@ void TV_3Resource::draw(
 
 void TV_3Resource::upload_to(RenderContext const& ctx) const {
   
-  std::string raw_vol_path = resource_file_name_;
-
-
+  std::vector<std::string> volumes_to_load;
   if(resource_file_name_.find(".v_rsc") != std::string::npos) {
     std::string line_buffer;
     std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
     while(std::getline(volume_resource_file, line_buffer)) {
-      raw_vol_path = line_buffer;
+      if(line_buffer.find(".raw") != std::string::npos) {
+        volumes_to_load.push_back(line_buffer);
+      }
     }
+  } else {
+    volumes_to_load.push_back(resource_file_name_);
   }
 
-  scm::gl::volume_loader vl;
+  int64_t loaded_volumes_count = 0;
+  for( auto const& vol_path : volumes_to_load ) { 
 
-  scm::math::vec3ui vol_dims = vl.read_dimensions(raw_vol_path);
+    std::map<std::string, uint64_t> out_tokens;
+
+    tokenize_volume_name(vol_path, out_tokens);  
 
 
-  //volume_texture_ = ctx.render_device->create_texture_3d(scm::math::vec3ui(256,256,225), scm::gl::data_format::FORMAT_R_8);
-  /*
-  ctx.render_context->update_sub_texture(volume_texture_, scm::gl::texture_region(scm::math::vec3ui(0,0,0), scm::math::vec3ui(256,256,225)),
-                                         scm::gl::data_format::FORMAT_R_8, (void* const) &cpu_data[0]);
-  
-*/
 
-  
-  //volume_texture_ = vl.load_texture_3d(*ctx.render_device, raw_vol_path, false, false);
-  //volume_texture_ = ctx.render_device->create_texture_3d(vol_dims, scm::gl::data_format::FORMAT_R_16);
+    scm::math::vec3ui vol_dims = scm::math::vec3ui(out_tokens["w"], out_tokens["h"], out_tokens["d"]);
 
-  std::ifstream in_vol_file(raw_vol_path.c_str(), std::ios::in | std::ios::binary);
-  std::vector<void*> mip_data;
+    //volume_texture_ = ctx.render_device->create_texture_3d(scm::math::vec3ui(256,256,225), scm::gl::data_format::FORMAT_R_8);
+    /*
+    ctx.render_context->update_sub_texture(volume_texture_, scm::gl::texture_region(scm::math::vec3ui(0,0,0), scm::math::vec3ui(256,256,225)),
+                                           scm::gl::data_format::FORMAT_R_8, (void* const) &cpu_data[0]);
+    
+  */
 
-  uint64_t num_voxels = vol_dims[0] * vol_dims[1] * vol_dims[2] * 2;
-  std::vector<unsigned char> read_buffer(num_voxels);
+    
+    //volume_texture_ = vl.load_texture_3d(*ctx.render_device, raw_vol_path, false, false);
+    //volume_texture_ = ctx.render_device->create_texture_3d(vol_dims, scm::gl::data_format::FORMAT_R_16);
 
-  in_vol_file.read( (char*) &read_buffer[0], num_voxels);
-  in_vol_file.close();
-  mip_data.push_back( (void*) &read_buffer[0] );
+    std::ifstream in_vol_file(vol_path.c_str(), std::ios::in | std::ios::binary);
+    std::vector<void*> mip_data;
 
-  volume_texture_ = ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, scm::gl::data_format::FORMAT_R_8), scm::gl::data_format::FORMAT_R_8, mip_data);
+    int64_t num_bytes_per_voxel = out_tokens["b"] / 8;
 
+    int64_t num_voxels = vol_dims[0] * vol_dims[1] * vol_dims[2] * num_bytes_per_voxel;
+    std::vector<unsigned char> read_buffer(num_voxels);
+
+    in_vol_file.read( (char*) &read_buffer[0], num_voxels);
+    in_vol_file.close();
+    mip_data.push_back( (void*) &read_buffer[0] );
+
+    scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
+
+    if( 1 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_8;
+    } else if( 2 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_16;   
+    } else if( 4 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_32F;   
+    }
+
+
+    volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, mip_data) );
+  }
 
   /*
 
@@ -133,11 +208,11 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
 void TV_3Resource::bind_volume_texture(
   RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const {
 
-  if( nullptr == volume_texture_ ) {
+  if( volume_textures_.empty() ) {
     upload_to(ctx);
   }
 
-  ctx.render_context->bind_texture(volume_texture_, sampler_state, 0);
+  ctx.render_context->bind_texture(volume_textures_[ ((frame_counter_++) / 10) % volume_textures_.size()], sampler_state, 0);
 
 /*
   std::cout << "In drawing branch\n";
