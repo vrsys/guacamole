@@ -114,21 +114,21 @@ void main() {
   } else {
 	current_pos = ray_origin + t_min_max[0] * ray_direction;
   }
-  current_pos += 0.01*ray_increment;
+  current_pos += ray_increment;
 
   vec3 cam_to_box_end_vec =  FragmentIn.pos_ms - current_pos;
 
   t_min_max[0] = 0.0;
   t_min_max[1] = 1.0;
-
+/*
   //plane intersection
   compute_ray_plane_intersection(vec3(0.5, 0.5, 0.5), vec3(0.0, 0.0, 0.5),
   	                             current_pos, cam_to_box_end_vec,
   	                             t_min_max[0], t_min_max[1]);
+*/
+  //current_pos = current_pos + t_min_max[0] * cam_to_box_end_vec;
 
-  current_pos = current_pos + t_min_max[0] * cam_to_box_end_vec;
-
-  current_pos += ray_increment;
+ // current_pos += ray_increment;
 
   float max_intensity = 0.0;
 
@@ -141,9 +141,13 @@ void main() {
   	++num_samples;
   }
 
+  float alpha = 0.0;
+  if(num_samples != 0) {
+  	alpha = 1.0;
+  }
 
     //float density = texture(volume_texture, current_pos ).r;
-    out_color = vec4(max_intensity,max_intensity,max_intensity, max_intensity);	
+    out_color = vec4(max_intensity,max_intensity,max_intensity, alpha);	
  	
 
 

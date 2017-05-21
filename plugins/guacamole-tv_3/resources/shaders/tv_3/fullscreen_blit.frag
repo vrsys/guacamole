@@ -5,11 +5,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
+@include "common/gua_global_variable_declaration.glsl"
 
 layout(binding=0) uniform sampler2D blit_texture;
 
 
-layout(location = 0) out vec3 out_color;
+@include "common/gua_fragment_shader_output.glsl"
+//layout(location = 0) out vec3 out_color;
 
 
 void main() {
@@ -19,8 +21,9 @@ void main() {
     discard;
   }
 
-  out_color = vec3(fetched_texel.xyz) *fetched_texel.a;
+  
+  gua_color = vec3(fetched_texel.xyz);
 
-  //out_color = fetched_texel.rgba;
-  //out_color = vec3(gl_FragCoord.xy/1000, 0.0);
+
+  @include "common/gua_write_gbuffer.glsl"
 }
