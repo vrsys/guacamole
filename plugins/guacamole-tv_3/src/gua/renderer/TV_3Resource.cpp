@@ -80,18 +80,22 @@ void TV_3Resource::draw(
 }
 
 void TV_3Resource::upload_to(RenderContext const& ctx) const {
-
-  std::ifstream volume_file(resource_file_name_, std::ios::in | std::ios::binary);
   
+  std::string raw_vol_path = resource_file_name_;
+
+
+  if(resource_file_name_.find(".v_rsc") != std::string::npos) {
+    std::string line_buffer;
+    std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
+    while(std::getline(volume_resource_file, line_buffer)) {
+      raw_vol_path = line_buffer;
+    }
+  }
+
   scm::gl::volume_loader vl;
 
-  scm::math::vec3ui vol_dims = vl.read_dimensions(resource_file_name_);
+  scm::math::vec3ui vol_dims = vl.read_dimensions(raw_vol_path);
 
-  uint64_t num_test_voxels = vol_dims[0]*vol_dims[1]*vol_dims[2];
-  std::vector<uint8_t> cpu_data(num_test_voxels, 0);
-
-  volume_file.read((char*) &cpu_data[0], num_test_voxels);
-  volume_file.close();
 
   //volume_texture_ = ctx.render_device->create_texture_3d(scm::math::vec3ui(256,256,225), scm::gl::data_format::FORMAT_R_8);
   /*
@@ -100,8 +104,23 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
   
 */
 
+  
+  //volume_texture_ = vl.load_texture_3d(*ctx.render_device, raw_vol_path, false, false);
+  //volume_texture_ = ctx.render_device->create_texture_3d(vol_dims, scm::gl::data_format::FORMAT_R_16);
 
-  volume_texture_ = vl.load_volume_data(*ctx.render_device, resource_file_name_);
+  std::ifstream in_vol_file(raw_vol_path.c_str(), std::ios::in | std::ios::binary);
+  std::vector<void*> mip_data;
+
+  uint64_t num_voxels = vol_dims[0] * vol_dims[1] * vol_dims[2] * 2;
+  std::vector<unsigned char> read_buffer(num_voxels);
+
+  in_vol_file.read( (char*) &read_buffer[0], num_voxels);
+  in_vol_file.close();
+  mip_data.push_back( (void*) &read_buffer[0] );
+
+  volume_texture_ = ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, scm::gl::data_format::FORMAT_R_8), scm::gl::data_format::FORMAT_R_8, mip_data);
+
+
   /*
 
   std::make_shared<scm::gl::texture_3d>(

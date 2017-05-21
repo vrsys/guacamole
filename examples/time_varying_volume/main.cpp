@@ -91,7 +91,12 @@ int main(int argc, char** argv) {
   auto test_volume(tv_3_loader.load_geometry(
       "test_volume",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-       "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw",
+       "./data/objects/head_w256_h256_d225_c1_b8.raw",
+       //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
+      //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
+      //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
+      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
+      //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE));
   graph.add_node("/transform", test_volume);
