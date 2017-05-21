@@ -137,7 +137,7 @@ namespace gua {
                                             true);
 
     frontface_culling_rasterizer_state_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID,
-                                                                                     scm::gl::CULL_BACK,
+                                                                                     scm::gl::CULL_FRONT,
                                                                                      scm::gl::ORIENT_CCW,
                                                                                      true);
 
@@ -529,9 +529,9 @@ void TV_3Renderer::_load_shaders() {
 
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
       
-      
+      forward_cube_shader_program_->use(ctx);
       forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos));
+      forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
 
       ctx.render_context->bind_vertex_array(box_vertex_array_ );
@@ -576,7 +576,7 @@ void TV_3Renderer::_load_shaders() {
     compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
 
     auto const& glapi = ctx.render_context->opengl_api();
-
+    ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
 
