@@ -41,7 +41,7 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
-    IF (${PLUGIN_guacamole-gui})
+    IF (${PLUGIN_guacamole-gui} AND ${PLUGIN_guacamole-plod})
       add_subdirectory(depth_cube_map)
     ENDIF()
     add_subdirectory(projective_texturing)
