@@ -66,6 +66,8 @@ class TV_3Resource : public GeometryResource {
  
   public: // c'tor /d'tor
 
+    static void tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens);
+
     TV_3Resource(std::string const& resource_file_string, bool is_pickable);
 
     ~TV_3Resource();
@@ -90,6 +92,8 @@ class TV_3Resource : public GeometryResource {
     void bind_volume_texture(RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const;
     math::mat4 const& local_transform() const;
 
+    int64_t const get_num_volume_time_steps() const {return volume_textures_.size();}
+    void set_time_cursor_pos(float const time_cursor_pos ) { time_cursor_pos_ = std::min(float(volume_textures_.size()-1)-(10e-6f), time_cursor_pos); }
     void upload_to(RenderContext const& context) const;
 
     void ray_test(Ray const& ray,
@@ -99,11 +103,12 @@ class TV_3Resource : public GeometryResource {
 
  private:
   //std::shared_ptr<*/scm::gl::box_volume_geometry> volume_proxy_;
-  bool                                 is_pickable_;
-  math::mat4                           local_transform_;
-  mutable scm::gl::texture_3d_ptr      volume_texture_;
-
-  std::string                          resource_file_name_;
+  bool                                         is_pickable_;
+  math::mat4                                   local_transform_;
+  mutable std::vector<scm::gl::texture_3d_ptr> volume_textures_;
+  float                                        time_cursor_pos_ = 0.0f;
+  std::string                                  resource_file_name_;
+  mutable uint64_t                                     frame_counter_ = 0;
 };
 
 }

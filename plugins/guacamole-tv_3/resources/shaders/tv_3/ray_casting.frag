@@ -150,8 +150,10 @@ void main() {
   else
     out_color = vec4(1.0, 0.0, 0.0, 1.0);
 */
+if (max_intensity < 0.02)
+  discard;
     //float density = texture(volume_texture, current_pos ).r;
-    out_color = vec4(max_intensity,max_intensity,max_intensity, alpha) ;// + 0.2*vec4(first_pos,1.0) ;	
+    out_color = vec4(0.0, max_intensity*5,max_intensity*5, alpha) ;// + 0.2*vec4(first_pos,1.0) ;	
  	//out_color = vec4(num_samples/100.0, 0.0, 0.0, 1.0);
     //out_color = vec4(ray_origin, 1.0);
   //outColor = current_pos;

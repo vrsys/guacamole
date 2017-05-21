@@ -101,7 +101,9 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& nodename,
                                                       std::string const& filename,
-                                                      unsigned flags)
+                                                      unsigned flags,
+                                                      int64_t const cpu_budget,
+                                                      int64_t const gpu_budget)
 {
 
   
@@ -150,7 +152,9 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& nodenam
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& filename, unsigned flags) {
+std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& filename, unsigned flags,
+                                                      int64_t const cpu_budget,
+                                                      int64_t const gpu_budget) {
 
   auto desc = std::make_shared<gua::MaterialShaderDescription>();
   auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
