@@ -99,27 +99,28 @@ float step_size = 0.001;
 
 void main() {
 
-  vec3 ray_origin    = ms_eye_pos.xyz;
+  vec3 ray_origin    = FragmentIn.pos_ms;
+  //vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
   vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
 
-
-  vec2 t_min_max = intersect_ray_with_unit_box(ray_origin, ray_direction);
+  //vec2 t_min_max = intersect_ray_with_unit_box(ray_origin, ray_direction);
 
   vec3 ray_increment = ray_direction * step_size;
 
-  vec3 current_pos = vec3(0.0, 0.0, 0.0);
+  vec3 current_pos = ray_origin;
 
+  vec3 first_pos = vec3(0.0, 0.0, 0.0);
+  vec3 red = vec3(0.0, 0.0, 0.0);
+  /*
   if(t_min_max[0] < 0) {
 	current_pos = ms_eye_pos.xyz;
+    red = vec3(1.0,0.0,0.0);
   } else {
 	current_pos = ray_origin + t_min_max[0] * ray_direction;
-  }
+
+  }*/
+
   current_pos += ray_increment;
-
-  vec3 cam_to_box_end_vec =  FragmentIn.pos_ms - current_pos;
-
-  t_min_max[0] = 0.0;
-  t_min_max[1] = 1.0;
 /*
   //plane intersection
   compute_ray_plane_intersection(vec3(0.5, 0.5, 0.5), vec3(0.0, 0.0, 0.5),
@@ -141,16 +142,18 @@ void main() {
   	++num_samples;
   }
 
-  float alpha = 0.0;
-  if(num_samples != 0) {
-  	alpha = 1.0;
-  }
-
+  float alpha = 1.0;
+ 
+ /*
+  if(num_samples > 0 )
+    out_color = vec4(0.0, 1.0, 0.0, 1.0);
+  else
+    out_color = vec4(1.0, 0.0, 0.0, 1.0);
+*/
     //float density = texture(volume_texture, current_pos ).r;
-    out_color = vec4(max_intensity,max_intensity,max_intensity, alpha);	
- 	
-
-
+    out_color = vec4(max_intensity,max_intensity,max_intensity, alpha) ;// + 0.2*vec4(first_pos,1.0) ;	
+ 	//out_color = vec4(num_samples/100.0, 0.0, 0.0, 1.0);
+    //out_color = vec4(ray_origin, 1.0);
   //outColor = current_pos;
   //outColor = vec3(VertexIn.pos_ms);
 }
