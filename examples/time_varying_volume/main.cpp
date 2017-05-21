@@ -90,8 +90,8 @@ int main(int argc, char** argv) {
   gua::TV_3Loader tv_3_loader;
   auto test_volume(tv_3_loader.load_geometry(
       "test_volume",
-       "./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-      //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1326_w432_h432_d432_b32_c1.raw",
+       //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
+       "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw",
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE));
   graph.add_node("/transform", test_volume);
@@ -139,7 +139,6 @@ int main(int argc, char** argv) {
 */
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::TV_3PassDescription>());
   portal_pipe->add_pass(
       std::make_shared<gua::LightVisibilityPassDescription>());
 
@@ -149,6 +148,7 @@ int main(int argc, char** argv) {
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
+  portal_pipe->add_pass(std::make_shared<gua::TV_3PassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   //portal_camera->set_pipeline_description(portal_pipe);
