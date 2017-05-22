@@ -12,7 +12,7 @@ out Data {
 } VertexOut;
 
 void main() {
-  VertexOut.pos_ms = (in_position + 1) / 2.0;
+  VertexOut.pos_ms = in_position;
 
   gl_Position = gua_model_view_projection_matrix *  vec4(in_position.xyz, 1.0);
 }
