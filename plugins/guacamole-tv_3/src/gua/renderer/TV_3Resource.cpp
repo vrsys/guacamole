@@ -54,6 +54,10 @@
 
 namespace gua {
 
+std::map<std::size_t, std::map<std::string, uint64_t>>     TV_3Resource::volume_descriptor_tokens_;
+std::map<std::size_t, std::vector<std::ifstream>>         TV_3Resource::per_resource_file_streams_;
+std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3Resource::per_resource_cpu_cache_;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens) {
@@ -105,6 +109,10 @@ void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std:
     }
 
   }
+
+  tokens["num_voxels"] = tokens["w"] * tokens["h"] * tokens["d"];
+  tokens["num_bytes_per_voxel"] = tokens["b"] / 8;
+  tokens["total_num_bytes"] = tokens["num_voxels"] * tokens["num_bytes_per_voxel"]; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +125,28 @@ TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pick
   bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
   bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
 
-  //volume_proxy_.reset();
+  std::vector<std::string> volumes_to_load;
+  if(resource_file_name_.find(".v_rsc") != std::string::npos) {
+    std::string line_buffer;
+    std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
+    while(std::getline(volume_resource_file, line_buffer)) {
+      if(line_buffer.find(".raw") != std::string::npos) {
+        volumes_to_load.push_back(line_buffer);
+      }
+    }
+  } else {
+    volumes_to_load.push_back(resource_file_name_);
+  }
+
+  uint8_t num_parsed_volumes = 0;
+  for( auto const& vol_path : volumes_to_load ) {
+    if( 0 == num_parsed_volumes++ ) {
+      tokenize_volume_name(vol_path, volume_descriptor_tokens_[uuid_]);  
+    }
+    
+    per_resource_file_streams_[uuid_].push_back(std::ifstream(vol_path.c_str(), std::ios::in | std::ios::binary));
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,52 +164,21 @@ void TV_3Resource::draw(
 
 void TV_3Resource::upload_to(RenderContext const& ctx) const {
   
-  std::vector<std::string> volumes_to_load;
-  if(resource_file_name_.find(".v_rsc") != std::string::npos) {
-    std::string line_buffer;
-    std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
-    while(std::getline(volume_resource_file, line_buffer)) {
-      if(line_buffer.find(".raw") != std::string::npos) {
-        volumes_to_load.push_back(line_buffer);
-      }
-    }
-  } else {
-    volumes_to_load.push_back(resource_file_name_);
-  }
-
   int64_t loaded_volumes_count = 0;
-  for( auto const& vol_path : volumes_to_load ) { 
 
-    std::map<std::string, uint64_t> out_tokens;
+  auto& current_tokens = volume_descriptor_tokens_[uuid_];
 
-    tokenize_volume_name(vol_path, out_tokens);  
+  for( auto& vol_path : per_resource_file_streams_[uuid_] ) { 
+    scm:math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
 
+    int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
 
+    int64_t num_voxels = current_tokens["total_num_bytes"];
+    //std::vector<unsigned char> read_buffer(num_voxels);
 
-    scm::math::vec3ui vol_dims = scm::math::vec3ui(out_tokens["w"], out_tokens["h"], out_tokens["d"]);
+    per_resource_cpu_cache_[uuid_].push_back(std::vector<uint8_t>(num_voxels, 0));
+    vol_path.read( (char*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0], num_voxels);
 
-    //volume_texture_ = ctx.render_device->create_texture_3d(scm::math::vec3ui(256,256,225), scm::gl::data_format::FORMAT_R_8);
-    /*
-    ctx.render_context->update_sub_texture(volume_texture_, scm::gl::texture_region(scm::math::vec3ui(0,0,0), scm::math::vec3ui(256,256,225)),
-                                           scm::gl::data_format::FORMAT_R_8, (void* const) &cpu_data[0]);
-    
-  */
-
-    
-    //volume_texture_ = vl.load_texture_3d(*ctx.render_device, raw_vol_path, false, false);
-    //volume_texture_ = ctx.render_device->create_texture_3d(vol_dims, scm::gl::data_format::FORMAT_R_16);
-
-    std::ifstream in_vol_file(vol_path.c_str(), std::ios::in | std::ios::binary);
-    std::vector<void*> mip_data;
-
-    int64_t num_bytes_per_voxel = out_tokens["b"] / 8;
-
-    int64_t num_voxels = vol_dims[0] * vol_dims[1] * vol_dims[2] * num_bytes_per_voxel;
-    std::vector<unsigned char> read_buffer(num_voxels);
-
-    in_vol_file.read( (char*) &read_buffer[0], num_voxels);
-    in_vol_file.close();
-    mip_data.push_back( (void*) &read_buffer[0] );
 
     scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
 
@@ -193,7 +191,9 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
     }
 
 
-    volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, mip_data) );
+    volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 
+                                                                    {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );
+    ++loaded_volumes_count;
   }
 
   /*

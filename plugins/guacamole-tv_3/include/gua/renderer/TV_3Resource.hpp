@@ -107,8 +107,12 @@ class TV_3Resource : public GeometryResource {
   math::mat4                                   local_transform_;
   mutable std::vector<scm::gl::texture_3d_ptr> volume_textures_;
   float                                        time_cursor_pos_ = 0.0f;
-  std::string                                  resource_file_name_;
-  mutable uint64_t                                     frame_counter_ = 0;
+  std::string                                  resource_file_name_ = "";
+  mutable uint64_t                             frame_counter_ = 0;
+  
+  static std::map<std::size_t, std::map<std::string, uint64_t>> volume_descriptor_tokens_;
+  static std::map<std::size_t, std::vector<std::ifstream>> per_resource_file_streams_;
+  static std::map<std::size_t, std::vector<std::vector<uint8_t >>> per_resource_cpu_cache_;
 };
 
 }
