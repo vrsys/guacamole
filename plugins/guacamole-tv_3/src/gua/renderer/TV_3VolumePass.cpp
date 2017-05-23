@@ -19,11 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 // class header
-#include <gua/renderer/TV_3Pass.hpp>
+#include <gua/renderer/TV_3VolumePass.hpp>
 
 // guacamole headers
 #include <gua/renderer/TV_3Resource.hpp>
-#include <gua/renderer/TV_3Renderer.hpp>
+#include <gua/renderer/TV_3VolumeRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases.hpp>
 #include <gua/utils/Logger.hpp>
@@ -42,7 +42,7 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3PassDescription::TV_3PassDescription(VolumeRenderMode const mode)
+TV_3VolumePassDescription::TV_3VolumePassDescription(VolumeRenderMode const mode)
   : PipelinePassDescription(),
     volume_render_mode_(mode)
 {
@@ -53,28 +53,28 @@ TV_3PassDescription::TV_3PassDescription(VolumeRenderMode const mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TV_3PassDescription& TV_3PassDescription::mode(VolumeRenderMode const mode) {
+TV_3VolumePassDescription& TV_3VolumePassDescription::mode(VolumeRenderMode const mode) {
   volume_render_mode_ = mode;
   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TV_3PassDescription::VolumeRenderMode TV_3PassDescription::mode() const {
+TV_3VolumePassDescription::VolumeRenderMode TV_3VolumePassDescription::mode() const {
   return volume_render_mode_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> TV_3PassDescription::make_copy() const {
-  return std::make_shared<TV_3PassDescription>(*this);
+std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() const {
+  return std::make_shared<TV_3VolumePassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass TV_3PassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
+PipelinePass TV_3VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   PipelinePass pass{ *this, ctx, substitution_map };
 
-  auto renderer = std::make_shared<TV_3Renderer>();
+  auto renderer = std::make_shared<TV_3VolumeRenderer>();
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](

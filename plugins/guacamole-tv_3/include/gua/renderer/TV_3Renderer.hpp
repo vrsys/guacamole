@@ -54,18 +54,23 @@ namespace gua {
   
     void reload_programs();
 
- private:  //shader related auxiliary methods
+ protected:  //shader related auxiliary methods
   
   void          _load_shaders();
   void          _initialize_volume_raycasting_programs();
   void          _initialize_volume_compositing_programs();
 
-
+  virtual void  _create_fbo_resources(gua::RenderContext const& ctx,
+                                      scm::math::vec2ui const& render_target_dims) = 0;
   void          _create_gpu_resources(gua::RenderContext const& ctx,
-                                      scm::math::vec2ui const& render_target_dims); 
+                                      scm::math::vec2ui const& render_target_dims);
 
   void          _check_for_resource_updates(gua::Pipeline const& pipe, RenderContext const& ctx);
 
+  virtual void          _clear_fbo_attachments(gua::RenderContext const& ctx) = 0;
+
+  virtual void          _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) = 0;
+  virtual void          _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) = 0;
  private: //misc auxiliary methods
  /*
   bool _intersects(scm::gl::boxf const& bbox,
@@ -73,7 +78,7 @@ namespace gua {
  */
 
   
- private:  //member variables
+ protected:  //member variables
 
     //FBOs:
     //////////////////////////////////////////////////////////////////////////////////////

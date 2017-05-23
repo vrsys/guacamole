@@ -47,6 +47,18 @@ namespace node {
 class GUA_TV_3_DLL TV_3Node : public GeometryNode
 {
 public:
+  enum NodeRenderMode  {
+    //compatible with TV_3VolumePassDescription
+    VOL_ISOSURFACE = 0,
+    VOL_MAX_INTENSITY = 1,
+    VOL_COMPOSITING = 2,
+    VOL_AVG_INTENSITY = 3,
+    //compatible with TV_3SurfacePassDescription
+    SUR_PBR = 4,
+
+    MODE_COUNT
+  };
+
   friend class ::gua::TV_3Loader;
 
   // c'tor
@@ -70,7 +82,10 @@ public:  // methods
   std::string const& get_geometry_file_path() const;
 
   std::shared_ptr<Material> const& get_material() const;
-  void               set_material(std::shared_ptr<Material> const& material);
+  void                 set_material(std::shared_ptr<Material> const& material);
+
+  NodeRenderMode const mode() const {return render_mode_;} ;
+  void                 mode(NodeRenderMode const render_mode) {render_mode_ = render_mode;}
 
 public:
   /**
@@ -90,6 +105,7 @@ public:
   int64_t const num_timesteps() const { return geometry_->get_num_volume_time_steps(); }
   void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
 
+  void set_node_rendering_mode();
 protected:
 
   std::shared_ptr<Node> copy() const override;
@@ -103,6 +119,7 @@ private:  // attributes e.g. special attributes for drawing
 
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
+  NodeRenderMode                render_mode_;
 };
 
 }  // namespace node {

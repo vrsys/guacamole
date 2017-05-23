@@ -18,42 +18,60 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_TV_3_PASS_HPP
-#define GUA_TV_3_PASS_HPP
 
+#ifndef GUA_TV_3_VOLUME_RENDERER_HPP
+#define GUA_TV_3_VOLUME_RENDERER_HPP
+
+#include <string>
+#include <map>
+#include <unordered_map>
+
+
+#include <gua/renderer/TV_3Renderer.hpp>
 // guacamole headers
-#include <gua/renderer/TV_3.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+/*
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/View.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+#include <gua/renderer/ResourceFactory.hpp>
+*/
+//external headers
 
 namespace gua {
 
-  class GUA_TV_3_DLL TV_3PassDescription : public PipelinePassDescription {
+  //using 
 
-  public : // typedefs, enums
+  class MaterialShader;
+  class ShaderProgram;
 
-  enum VolumeRenderMode {
-    ISOSURFACE = 0,
-    MAX_INTENSITY = 1,
-    COMPOSITING = 2,
-    AVG_INTENSITY = 3
-  };
+  class TV_3VolumeRenderer : public TV_3Renderer {
+ 
+  public:
 
-   friend class Pipeline;
+    TV_3VolumeRenderer();
 
-  public :
+ private:  //shader related auxiliary methods
+  
+  void  _create_fbo_resources(gua::RenderContext const& ctx,
+                                      scm::math::vec2ui const& render_target_dims) override;
 
-    TV_3PassDescription(VolumeRenderMode volume_render_mode_ = VolumeRenderMode::ISOSURFACE);
-    std::shared_ptr<PipelinePassDescription> make_copy() const override;
-    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  void  _clear_fbo_attachments(gua::RenderContext const& ctx) override;
 
-	TV_3PassDescription& mode(VolumeRenderMode const mode);
-	VolumeRenderMode mode() const;
+  void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
+  void  _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
+  
+ private:  //member variables
 
-  private :
-    VolumeRenderMode volume_render_mode_;
+    //FBOs:
+    //////////////////////////////////////////////////////////////////////////////////////
+    scm::gl::frame_buffer_ptr                    volume_raycasting_fbo_;
+
+    //accumulation pass FBO & attachments
+    scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
+    scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
 
 };
 
 }
 
-#endif  // GUA_TV_3_PASS_HPP
+#endif  // GUA_TV_3_VOLUME_RENDERER_HPP
