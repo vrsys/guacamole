@@ -110,10 +110,46 @@ namespace gua {
       ->set_frame_buffer(volume_raycasting_fbo_);
   }
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+  void TV_3SurfaceRenderer::_load_shaders() {
+
+  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
+  #endif
+    ResourceFactory factory;
+    forward_cube_shader_stages_.clear();
+    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
+    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
+
+    {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(forward_cube_shader_stages_);
+      forward_cube_shader_program_ = new_program;
+    }
+
+    compositing_shader_stages_.clear();
+    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.vert")));
+    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.frag")));
+    
+    {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(compositing_shader_stages_);
+      compositing_shader_program_ = new_program;
+    }
+
+    shaders_loaded_ = true;
+  }
+
   /////////////////////////////////////////////////////////////////////////////////////////////
   void TV_3SurfaceRenderer::_raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) {
 
     RenderContext const& ctx(pipe.get_context());
+
+    auto& target = *pipe.current_viewstate().target;
+    bool write_depth = true;
+    target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
+
     auto& scene = *pipe.current_viewstate().scene;
 
     auto view_matrix       = scene.rendering_frustum.get_view(); 
@@ -134,7 +170,11 @@ namespace gua {
 
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
       
+      auto normal_matrix = scm::math::transpose(scm::math::inverse(model_matrix));
+
       forward_cube_shader_program_->use(ctx);
+      forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+      forward_cube_shader_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
       forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
       forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
@@ -154,8 +194,14 @@ namespace gua {
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, 36*6);
 
     }
+
+    target.unbind(ctx);
 }
 
+  void TV_3SurfaceRenderer::_postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
+  }
+
+/*
   /////////////////////////////////////////////////////////////////////////////////////////////
   void TV_3SurfaceRenderer::_postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
     RenderContext const& ctx(pipe.get_context());
@@ -177,5 +223,6 @@ namespace gua {
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
   }
+*/
 
 }
