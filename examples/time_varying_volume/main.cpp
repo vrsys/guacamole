@@ -109,9 +109,13 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE));
   graph.add_node("/transform", test_volume);
-  test_volume->set_draw_bounding_box(true);
+  //test_volume->set_draw_bounding_box(true);
+  //test_volume->rotate(90, 1.0, 0.0, 0.0);
+  //test_volume->rotate(180, 0.0, 1.0, 0.0);
 
-
+  auto head_rotation = scm::math::make_rotation(180.0, 0.0, 1.0, 0.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
+  auto head_translation = scm::math::make_translation(0.0, 0.0, 2.0);
+  //test_volume->translate(0.0, 0.0, 2.0);
 //  reinterpret_cast<gua::node::TV_3Node*>(test_volume.get())->register_clipping_geometry(std::shared_ptr<gua::node::TriMeshNode>(reinterpret_cast<gua::node::TriMeshNode*>(teapot.get()) ) );
 
 /*
@@ -129,10 +133,10 @@ int main(int argc, char** argv) {
   light2->translate(0.0f, 0.0f, 5.0f);
 
   light2->data.set_enable_shadows(true);                                                         
-  light2->data.set_shadow_map_size(4096);
+  light2->data.set_shadow_map_size(4096*2);
 
-  light2->data.set_shadow_near_clipping_in_sun_direction(0.1f);
-  light2->data.set_shadow_far_clipping_in_sun_direction(100.f);
+  light2->data.set_shadow_near_clipping_in_sun_direction(0.001f);
+  light2->data.set_shadow_far_clipping_in_sun_direction(1000.f);
 
 
 
@@ -222,10 +226,10 @@ int main(int argc, char** argv) {
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
-    gua::math::mat4 modelmatrix =
+    gua::math::mat4 modelmatrix = head_translation *
         scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
                                     trackball.distance()) *
-        gua::math::mat4(trackball.rotation());
+        gua::math::mat4(trackball.rotation()) * head_rotation;
 
     transform->set_transform(modelmatrix);
 
