@@ -301,34 +301,7 @@ static const float g_vertex_buffer_data[] = {
       ->set_frame_buffer(volume_raycasting_fbo_);
   }
 
-  void TV_3Renderer::_load_shaders() {
 
-  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
-  #endif
-    ResourceFactory factory;
-    forward_cube_shader_stages_.clear();
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.frag")));
-
-    {
-      auto new_program = std::make_shared<ShaderProgram>();
-      new_program->set_shaders(forward_cube_shader_stages_);
-      forward_cube_shader_program_ = new_program;
-    }
-
-    compositing_shader_stages_.clear();
-    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.vert")));
-    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.frag")));
-    
-    {
-      auto new_program = std::make_shared<ShaderProgram>();
-      new_program->set_shaders(compositing_shader_stages_);
-      compositing_shader_program_ = new_program;
-    }
-
-    shaders_loaded_ = true;
-}
 
 /*
   /////////////////////////////////////////////////////////////////////////////////////////////

@@ -57,6 +57,8 @@ namespace gua {
 
   void  _clear_fbo_attachments(gua::RenderContext const& ctx) override;
 
+  void  _load_shaders();
+
   void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
   void  _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
   

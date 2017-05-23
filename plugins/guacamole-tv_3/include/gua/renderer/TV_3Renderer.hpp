@@ -56,7 +56,7 @@ namespace gua {
 
  protected:  //shader related auxiliary methods
   
-  void          _load_shaders();
+  virtual void  _load_shaders() = 0;
   void          _initialize_volume_raycasting_programs();
   void          _initialize_volume_compositing_programs();
 

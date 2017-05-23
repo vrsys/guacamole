@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
 
   std::string in_vol_resource_path = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
-
+  std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -76,15 +76,18 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-
+  auto plane_transform = graph.add_node<gua::node::TransformNode>("/", "plane_transform");
   gua::TriMeshLoader loader;
 
 
-  auto teapot(loader.create_geometry_from_file(
-      "teapot", "data/objects/teapot.obj",
+  auto plane(loader.create_geometry_from_file(
+      "plane", "data/objects/plane.obj",
       gua::TriMeshLoader::NORMALIZE_POSITION |
           gua::TriMeshLoader::NORMALIZE_SCALE));
-  //graph.add_node("/transform", teapot);
+  graph.add_node("/plane_transform", plane);
+  plane->scale(10.0f, 10.0, 10.0);
+  plane->rotate(20.0f, 1.0, 0.0, 0.0);
+  plane->translate(0.0, 0.0, -10.0);
 /*
   teapot->set_draw_bounding_box(true);
 */
@@ -97,7 +100,7 @@ int main(int argc, char** argv) {
   auto test_volume(tv_3_loader.load_geometry(
       "test_volume",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-       in_vol_resource_path,
+       in_vol_resource_path2,
        //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
       //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
@@ -107,6 +110,7 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_SCALE));
   graph.add_node("/transform", test_volume);
   test_volume->set_draw_bounding_box(true);
+
 
 //  reinterpret_cast<gua::node::TV_3Node*>(test_volume.get())->register_clipping_geometry(std::shared_ptr<gua::node::TriMeshNode>(reinterpret_cast<gua::node::TriMeshNode*>(teapot.get()) ) );
 
@@ -118,10 +122,19 @@ int main(int argc, char** argv) {
   portal->rotate(-30, 0.f, 1.f, 0.f);
 */
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 150.0f;
-  light2->scale(12.f);
-  light2->translate(-3.f, 5.f, 5.f);
+  light2->data.set_type(gua::node::LightNode::Type::SPOT);
+  light2->data.brightness = 100.0f;
+  light2->scale(25.f);
+  //light2->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+  light2->translate(0.0f, 0.0f, 5.0f);
+
+  light2->data.set_enable_shadows(true);                                                         
+  light2->data.set_shadow_map_size(4096);
+
+  light2->data.set_shadow_near_clipping_in_sun_direction(0.1f);
+  light2->data.set_shadow_far_clipping_in_sun_direction(100.f);
+
+
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -150,6 +163,7 @@ int main(int argc, char** argv) {
 */
   auto portal_pipe = std::make_shared<gua::PipelineDescription>();
   portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(
       std::make_shared<gua::LightVisibilityPassDescription>());
 
@@ -159,7 +173,7 @@ int main(int argc, char** argv) {
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
+  //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   //portal_camera->set_pipeline_description(portal_pipe);
