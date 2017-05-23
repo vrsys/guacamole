@@ -23,7 +23,8 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TV_3Loader.hpp>
-#include <gua/renderer/TV_3Pass.hpp>
+#include <gua/renderer/TV_3VolumePass.hpp>
+#include <gua/renderer/TV_3SurfacePass.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/node/TV_3Node.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
@@ -158,7 +159,7 @@ int main(int argc, char** argv) {
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::TV_3PassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   //portal_camera->set_pipeline_description(portal_pipe);
