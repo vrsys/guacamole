@@ -228,7 +228,7 @@ void main() {
        projected_pos /= projected_pos.w;
 
 
-  gl_FragDepth = projected_pos.z;
+  gl_FragDepth = projected_pos.z * 0.5 + 0.5;
   gua_color      = vec3(1.0, 0.0, 1.0);
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(current_pos),1.0) ).xyz );// * 0.5 + 0.5;//normalize((gua_normal_matrix * vec4(get_gradient(current_pos), 0.0) ).xyz) ;
   gua_alpha = 1.0;
