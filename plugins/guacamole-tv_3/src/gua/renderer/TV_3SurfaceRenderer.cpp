@@ -160,7 +160,7 @@ namespace gua {
    for (auto const& object : sorted_nodes) {
       auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
 
-      auto model_matrix = tv_3_volume_node->get_world_transform();
+      auto model_matrix = tv_3_volume_node->get_cached_world_transform();
       auto mvp_matrix = projection_matrix * view_matrix * model_matrix;
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
 

@@ -54,22 +54,6 @@ std::shared_ptr<TV_3Resource> const& TV_3Node::get_geometry() const {
   return geometry_;
 }
 
-/*
-////////////////////////////////////////////////////////////////////////////////
-math::mat4 TV_3Node::get_world_transform() const {
-  if (!geometry_) {
-    return Node::get_world_transform();
-  }
-  else {
-    if (get_parent()) {
-      return get_parent()->get_world_transform() * get_transform() * geometry_->local_transform();
-    }
-    else {
-      return get_transform() * geometry_->local_transform();
-    }
-  }
-}
-*/
 ////////////////////////////////////////////////////////////////////////////////
 std::string const& TV_3Node::get_geometry_file_path() const {
   return geometry_file_path_;
@@ -138,6 +122,7 @@ void TV_3Node::ray_test_impl(Ray const& ray,
 void TV_3Node::update_bounding_box() const {
   if (geometry_) {
     auto geometry_bbox(geometry_->get_bounding_box());
+
     bounding_box_ = transform(geometry_bbox, world_transform_);
 
     for (auto child : get_children()) {
@@ -212,6 +197,28 @@ void TV_3Node::update_cache() {
   visitor.visit(this);
 }
 
+/*
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<TV_3Node> TV_3Node::deep_copy_TV3() const {
+  std::shared_ptr<TV_3Node> copied_node = copy_TV3();
+  copied_node->tags_ = tags_;
+  copied_node->draw_bounding_box_ = draw_bounding_box_;
+  copied_node->scenegraph_ = scenegraph_;
+  copied_node->bounding_box_ = bounding_box_;
+  copied_node->user_data_ = user_data_;
+  copied_node->world_transform_ = world_transform_;
+  copied_node->uuid_ = uuid_;
+
+  for (int i(0); i<children_.size(); ++i) {
+    copied_node->children_[i] = children_[i]->deep_copy_TV3();
+    copied_node->children_[i]->parent_ = copied_node.get();
+  }
+
+
+  return copied_node;
+}
+*/
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> TV_3Node::copy() const {
   std::shared_ptr<TV_3Node> result = std::make_shared<TV_3Node>(*this);
@@ -222,5 +229,6 @@ std::shared_ptr<Node> TV_3Node::copy() const {
 
   return result;
 }
+
 }
 }

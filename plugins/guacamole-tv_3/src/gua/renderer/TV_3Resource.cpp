@@ -120,7 +120,7 @@ void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std:
 TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable)
   : resource_file_name_(resource_file_string),
     is_pickable_(is_pickable),
-    local_transform_(),
+    local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)),
     volume_textures_() {
   bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
   bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
@@ -169,7 +169,7 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
   auto& current_tokens = volume_descriptor_tokens_[uuid_];
 
   for( auto& vol_path : per_resource_file_streams_[uuid_] ) { 
-    scm:math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
+    scm::math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
 
     int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
 
@@ -189,7 +189,6 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
     } else if( 4 == num_bytes_per_voxel ) {
       read_format = scm::gl::data_format::FORMAT_R_32F;   
     }
-
 
     volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 
                                                                     {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );

@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+  auto transform2 = graph.add_node<gua::node::TransformNode>("/transform", "transform2");
   auto plane_transform = graph.add_node<gua::node::TransformNode>("/", "plane_transform");
   gua::TriMeshLoader loader;
 
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
       "plane", "data/objects/plane.obj",
       gua::TriMeshLoader::NORMALIZE_POSITION |
           gua::TriMeshLoader::NORMALIZE_SCALE));
-  graph.add_node("/plane_transform", plane);
+  //graph.add_node("/plane_transform", plane);
   plane->scale(10.0f, 10.0, 10.0);
   plane->rotate(90.0f, 1.0, 0.0, 0.0);
   plane->translate(0.0, 0.0, 3.0);
@@ -94,28 +95,74 @@ int main(int argc, char** argv) {
 */
 
 
+  gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
+  gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
+  gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
+  gua::math::vec4 gold(1.000, 0.766, 0.336, 1);
+  gua::math::vec4 copper(0.955, 0.637, 0.538, 1);
+  gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
+  gua::math::vec4 nickel(0.660, 0.609, 0.526, 1);
+  gua::math::vec4 titanium(0.542, 0.497, 0.449, 1);
+  gua::math::vec4 cobalt(0.662, 0.655, 0.634, 1);
+  gua::math::vec4 platinum(0.672, 0.637, 0.585, 1);
 
 
+  auto plod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/SimpleMaterial.gmd");
+  auto plod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", plod_keep_input_desc));
+  gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader);
+
+  //create material for pointcloud
+  auto plod_rough = plod_keep_color_shader->make_new_material();
+  plod_rough->set_uniform("metalness", 0.0f);
+  plod_rough->set_uniform("roughness", 0.8f);
+  plod_rough->set_uniform("emissivity", 0.0f);
+/*
+  auto pbrMat(gua::Material
+                  ->make_new_material());
+  pbrMat->set_uniform("Color", chromium);
+  pbrMat->set_uniform("Roughness", 0.2f);
+  pbrMat->set_uniform("Metalness", 1.0f);
+*/
 
   gua::TV_3Loader tv_3_loader;
-  auto test_volume(tv_3_loader.load_geometry(
+  auto test_volume( tv_3_loader.create_geometry_from_file(
       "test_volume",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-      // in_vol_resource_path2,
+      in_vol_resource_path2,
+      //"/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw",
        //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
       //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
-      "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
+      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
       gua::TV_3Loader::NORMALIZE_POSITION |
-      gua::TV_3Loader::NORMALIZE_SCALE));
+      gua::TV_3Loader::NORMALIZE_SCALE
+      /*pbrMat*/));
   graph.add_node("/transform", test_volume);
 
-  test_volume->iso_value(0.5);
+  auto test_volume2( tv_3_loader.create_geometry_from_file(
+      "test_volume2",
+       //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
+      in_vol_resource_path2,
+      //"/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw",
+       //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
+      //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
+      //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
+      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
+      //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
+      
+      gua::TV_3Loader::NORMALIZE_SCALE));
+  graph.add_node("/transform/transform2", test_volume2);
+  test_volume2->translate(-1.5, -1.5, -0.5);
+
+
+
+  auto test_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume);
+  test_tv_3_node->iso_value(0.5);
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);
-
+  auto head_scale    = scm::math::make_scale(1.0, 1.0, 1.0);
   auto head_rotation = scm::math::make_rotation(180.0, 0.0, 1.0, 0.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
   auto head_translation = scm::math::make_translation(0.0, 0.0, 5.0);
 
@@ -140,8 +187,8 @@ int main(int argc, char** argv) {
   light2->data.set_enable_shadows(true);                                                         
   light2->data.set_shadow_map_size(4096*2);
 
-  light2->data.set_shadow_near_clipping_in_sun_direction(0.001f);
-  light2->data.set_shadow_far_clipping_in_sun_direction(1000.f);
+  light2->data.set_shadow_near_clipping_in_sun_direction(0.01f);
+  light2->data.set_shadow_far_clipping_in_sun_direction(100.f);
 
 
 
@@ -242,7 +289,7 @@ int main(int argc, char** argv) {
         default: break;
         };
 
-        test_volume->iso_value(iso_value);
+        test_tv_3_node->iso_value(iso_value);
     });
 
 
@@ -258,7 +305,7 @@ int main(int argc, char** argv) {
     gua::math::mat4 modelmatrix = head_translation *
         scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
                                     trackball.distance()) *
-        gua::math::mat4(trackball.rotation()) * head_rotation;
+        gua::math::mat4(trackball.rotation()) * head_rotation * head_scale;
 
     transform->set_transform(modelmatrix);
 

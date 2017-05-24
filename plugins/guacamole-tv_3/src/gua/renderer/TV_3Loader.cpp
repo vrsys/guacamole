@@ -35,6 +35,14 @@
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
+// static variables
+/////////////////////////////////////////////////////////////////////////////
+std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >
+    TV_3Loader::loaded_files_ =
+        std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >();
+
+
+/////////////////////////////////////////////////////////////////////////////
 TV_3Loader::TV_3Loader() : _supported_file_extensions() {
   _supported_file_extensions.insert("v_rsc");
   _supported_file_extensions.insert("raw");
@@ -99,59 +107,114 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& nodename,
-                                                      std::string const& filename,
+std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_name,
                                                       unsigned flags,
                                                       int64_t const cpu_budget,
-                                                      int64_t const gpu_budget)
-{
+                                                      int64_t const gpu_budget) {
 
-  
-  try {
-    if(!is_supported(filename)){
-      throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
-    }
-    else {
-      
-      GeometryDescription desc("TV_3", filename, 0, flags);
+  std::shared_ptr<node::Node> cached_node = nullptr;
+  std::string key(file_name + "_" + string_utils::to_string(flags));
+  auto searched(loaded_files_.find(key));
 
-      auto resource = std::make_shared<TV_3Resource>(filename, flags & TV_3Loader::MAKE_PICKABLE);
+  if (searched != loaded_files_.end()) {
+
+    cached_node = searched->second;
+
+  } else {
+    bool fileload_succeed = false;
+
+    if (is_supported(file_name)) {
+      //cached_node = load(file_name, flags);
+      GeometryDescription desc("TV_3", file_name, 0, flags);
+
+      auto resource = std::make_shared<TV_3Resource>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-      auto node = std::make_shared<node::TV_3Node>(nodename, desc.unique_key(), filename);
+      cached_node = std::make_shared<node::TV_3Node>("", desc.unique_key(), file_name);
+      cached_node->update_cache();
+
+      loaded_files_.insert(std::make_pair(key, cached_node));
+
+    
+      // normalize mesh position and rotation
+      if (flags & TV_3Loader::NORMALIZE_POSITION ||
+          flags & TV_3Loader::NORMALIZE_SCALE) {
+        auto bbox = cached_node->get_bounding_box();
+
+        if (flags & TV_3Loader::NORMALIZE_POSITION) {
+          auto center((bbox.min + bbox.max) * 0.5f);
+          cached_node->translate(-center);
+        }
+
+        if (flags & TV_3Loader::NORMALIZE_SCALE) {
+          auto size(bbox.max - bbox.min);
+          auto max_size(std::max(std::max(size.x, size.y), size.z));
+          cached_node->scale(1.f / max_size);
+        }
+
+      }
       
-      node->update_cache();
-     
-      auto bbox = resource->get_bounding_box();
-
-      //normalize position?
-      auto normalize_position = flags & TV_3Loader::NORMALIZE_POSITION;
-      if (normalize_position) {
-        auto bbox_center_object_space = math::vec4(bbox.center().x, bbox.center().y, bbox.center().z, 1.0);
-        node->translate(-bbox_center_object_space.x, -bbox_center_object_space.y, -bbox_center_object_space.z);
-      }
-
-      //normalize scale?
-      auto normalize_scale = flags & TV_3Loader::NORMALIZE_SCALE;
-      if (normalize_scale) {
-        auto scale = 1.0f / scm::math::length(bbox.max - bbox.min);
-        node->scale(scale, scale, scale);
-      }
-
-      return node;
+      fileload_succeed = true;
     }
-  } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load (time-varying) volume object \"" << filename << "\": " << e.what() << std::endl;
-    return nullptr;
+
+    if (!fileload_succeed) {
+
+      Logger::LOG_WARNING << "Unable to load " << file_name
+                          << ": Type is not supported!" << std::endl;
+    }
+    return cached_node;
   }
+
+
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
 
+std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name,
+                                                          std::string const& file_name,
+                                                          unsigned flags,
+                                                          int64_t const cpu_budget,
+                                                          int64_t const gpu_budget) {
+  auto cached_node(load_geometry(file_name, flags));
 
+  if (cached_node) {
+    auto copy( std::dynamic_pointer_cast<node::Node>( cached_node->deep_copy()) );
 
+    auto shader(gua::MaterialShaderDatabase::instance()->lookup(
+        "gua_default_material"));
+    apply_fallback_material(
+        copy, shader->make_new_material(), flags /*& NO_SHARED_MATERIALS*/);
+
+    copy->set_name(node_name);
+    return copy;
+  }
+
+  return cached_node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TV_3Loader::apply_fallback_material(
+    std::shared_ptr<node::Node> const& root,
+    std::shared_ptr<Material> const& fallback_material,
+    bool no_shared_materials) {
+  auto g_node(std::dynamic_pointer_cast<node::TV_3Node>(root));
+
+  if (g_node && !g_node->get_material()) {
+    g_node->set_material(fallback_material);
+    g_node->update_cache();
+  } else if (g_node && no_shared_materials) {
+    g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
+  }
+
+  for (auto& child : root->get_children()) {
+    apply_fallback_material(child, fallback_material, no_shared_materials);
+  }
+}
 /////////////////////////////////////////////////////////////////////////////
 
+/*
 std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& filename, unsigned flags,
                                                       int64_t const cpu_budget,
                                                       int64_t const gpu_budget) {
@@ -170,7 +233,7 @@ std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& fil
   return std::shared_ptr<node::TV_3Node>(new node::TV_3Node(filename));
 
 }
-
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
