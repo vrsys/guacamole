@@ -68,6 +68,13 @@ public:
                                             int64_t const gpu_budget_in_mb = 1024);
 
   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
+                                                        std::string const& file_name,
+                                                        std::shared_ptr<Material> const& fallback_material,
+                                                        unsigned flags = DEFAULTS,
+                                                        int64_t const cpu_budget = 1024,
+                                                        int64_t const gpu_budget = 1024);
+
+  std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                             std::string const& file_name,
                                             unsigned flags =  DEFAULTS,
                                             int64_t const cpu_budget = 1024,

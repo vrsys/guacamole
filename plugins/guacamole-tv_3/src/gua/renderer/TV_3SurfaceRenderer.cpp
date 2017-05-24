@@ -62,7 +62,7 @@
 namespace gua {
 
   //////////////////////////////////////////////////////////////////////////////
-  TV_3SurfaceRenderer::TV_3SurfaceRenderer() : TV_3Renderer() {
+  TV_3SurfaceRenderer::TV_3SurfaceRenderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& smap) : TV_3Renderer(ctx, smap) {
   }
 
 
@@ -110,6 +110,54 @@ namespace gua {
       ->set_frame_buffer(volume_raycasting_fbo_);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material) {
+    if (!surface_ray_casting_programs_.count(material))
+    {
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+        //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
+      }
+
+      program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
+      surface_ray_casting_programs_[material] = program;
+    }
+    assert(surface_ray_casting_programs_.count(material));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<ShaderProgram> TV_3SurfaceRenderer::_get_material_program(MaterialShader* material,
+                                                                            std::shared_ptr<ShaderProgram> const& current_program,
+                                                                            bool& program_changed) {
+    auto shader_iterator = surface_ray_casting_programs_.find(material);
+    if (shader_iterator == surface_ray_casting_programs_.end()) {
+      try {
+        _initialize_surface_mode_isosurface_program(material);
+        program_changed = true;
+        return surface_ray_casting_programs_.at(material);
+      }
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
+        return std::shared_ptr<ShaderProgram>();
+      }
+    } else {
+      if (current_program == shader_iterator->second)
+      {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
+  }
+
 /////////////////////////////////////////////////////////////////////////////////////////////
   void TV_3SurfaceRenderer::_load_shaders() {
 
@@ -117,26 +165,10 @@ namespace gua {
   #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
   #endif
     ResourceFactory factory;
-    forward_cube_shader_stages_.clear();
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
-
-    {
-      auto new_program = std::make_shared<ShaderProgram>();
-      new_program->set_shaders(forward_cube_shader_stages_);
-      forward_cube_shader_program_ = new_program;
-    }
-
-    compositing_shader_stages_.clear();
-    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.vert")));
-    compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.frag")));
+    surface_ray_casting_program_stages_.clear();
+    surface_ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
+    surface_ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
     
-    {
-      auto new_program = std::make_shared<ShaderProgram>();
-      new_program->set_shaders(compositing_shader_stages_);
-      compositing_shader_program_ = new_program;
-    }
-
     shaders_loaded_ = true;
   }
 
@@ -157,41 +189,57 @@ namespace gua {
 
     auto eye_position = math::vec4(scene.rendering_frustum.get_camera_position(),1.0);
 
-   for (auto const& object : sorted_nodes) {
+    MaterialShader* current_material(nullptr);
+    std::shared_ptr<ShaderProgram> current_material_program;
+    bool program_changed = false;
+
+    auto const& camera = pipe.current_viewstate().camera;
+    int view_id(camera.config.get_view_id());
+
+    for (auto const& object : sorted_nodes) {
       auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
+
+      current_material = tv_3_volume_node->get_material()->get_shader();
+
+      current_material_program = _get_material_program(current_material, 
+                                                       current_material_program, 
+                                                       program_changed);
+
 
       auto model_matrix = tv_3_volume_node->get_cached_world_transform();
       auto mvp_matrix = projection_matrix * view_matrix * model_matrix;
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-
       auto inv_model_mat = scm::math::inverse(model_matrix);
 
       math::vec4 model_space_eye_pos = inv_model_mat * eye_position;
 
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
-      
+        
       auto normal_matrix = scm::math::transpose(scm::math::inverse(model_matrix));
 
-      forward_cube_shader_program_->use(ctx);
-      forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
-      forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
-      forward_cube_shader_program_->apply_uniform(ctx, "iso_value", tv_3_volume_node->iso_value());
+      current_material_program->use(ctx);
+      current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+      current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
+      current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
+      current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
+      current_material_program->apply_uniform(ctx, "volume_texture", 0);
+      current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->iso_value());
+      if(program_changed) {
+        tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+      }
 
       ctx.render_context->bind_vertex_array(box_vertex_array_ );
       //ctx.render_context->bind_index_buffer(box_element_buffer_, scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
- 
+   
 
       ctx.render_context->set_rasterizer_state(frontface_culling_rasterizer_state_);
 
 
-     // ctx.render_context->uniform_sampler3D("volume_texture", 0);
+      // ctx.render_context->uniform_sampler3D("volume_texture", 0);
       tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
       ctx.render_context->apply();
 
-  
+    
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, 36*6);
 
     }

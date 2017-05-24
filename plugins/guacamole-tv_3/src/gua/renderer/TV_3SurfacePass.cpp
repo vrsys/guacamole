@@ -44,6 +44,7 @@ namespace gua {
 
 TV_3SurfacePassDescription::TV_3SurfacePassDescription()
   : PipelinePassDescription()
+
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
@@ -62,8 +63,8 @@ std::shared_ptr<PipelinePassDescription> TV_3SurfacePassDescription::make_copy()
 PipelinePass TV_3SurfacePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   PipelinePass pass{ *this, ctx, substitution_map };
 
-  auto renderer = std::make_shared<TV_3SurfaceRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
+  auto renderer = std::make_shared<TV_3SurfaceRenderer>(ctx, substitution_map);
+  //renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
