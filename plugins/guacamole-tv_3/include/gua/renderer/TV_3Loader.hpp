@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_PLOD_LOADER_HPP
-#define GUA_PLOD_LOADER_HPP
+#ifndef GUA_TV_3_LOADER_HPP
+#define GUA_TV_3_LOADER_HPP
 
 // guacamole headers
 #include <gua/renderer/TV_3.hpp>
@@ -28,6 +28,7 @@
 // external headers
 #include <set>
 #include <unordered_set>
+#include <unordered_map>
 #include <memory>
 #include <atomic>
 
@@ -61,18 +62,20 @@ class GUA_TV_3_DLL TV_3Loader {
 
 public:
 
-  std::shared_ptr<node::TV_3Node> load_geometry(std::string const& file_name,
+  std::shared_ptr<node::Node> load_geometry(std::string const& file_name,
                                             unsigned flags = DEFAULTS,
                                             int64_t const cpu_budget_in_mb = 1024,
                                             int64_t const gpu_budget_in_mb = 1024);
 
-  std::shared_ptr<node::TV_3Node> load_geometry(std::string const& node_name,
+  std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                             std::string const& file_name,
                                             unsigned flags =  DEFAULTS,
                                             int64_t const cpu_budget = 1024,
                                             int64_t const gpu_budget = 1024);
 
  
+ void apply_fallback_material(std::shared_ptr<node::Node> const& root, 
+                              std::shared_ptr<Material> const& fallback_material, bool no_shared_materials);
 
 /*
   std::pair<std::string, math::vec3> pick_plod_bvh(math::vec3 const& ray_origin,
@@ -111,8 +114,9 @@ private: // member
 
   std::unordered_set<std::string> _supported_file_extensions;
 
+  static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
 };
 
 }
 
-#endif  // GUA_PLOD_LOADER_HPP
+#endif  // GUA_TV_3_LOADER_HPP

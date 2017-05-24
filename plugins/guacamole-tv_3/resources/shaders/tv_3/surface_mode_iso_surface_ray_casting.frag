@@ -203,7 +203,7 @@ void main() {
         vec3 mid;
         int iterations = 0;
 
-        for(int i = 0; i < 20; ++i) {
+        for(int i = 0; i < 7; ++i) {
         //while (length(max - min) > 0.0000001 && ++iterations < 20) {
           if(length(max-min) <= 0.0000001 ) {
             break;
@@ -254,11 +254,11 @@ void main() {
 
 
   gl_FragDepth = projected_pos.z * 0.5 + 0.5;
-  gua_color      = 0.5 * vec3(0.0, 0.68235294, 0.3372549019) + 0.5 * noise(current_pos*100.0) * vec3(0.0, 0.68235294, 0.3372549019);
+  gua_color      = vec3(0.8,0.8, 0.8);//0.5 * vec3(0.0, 0.68235294, 0.3372549019) + 0.5 * noise(current_pos*100.0) * vec3(0.0, 0.68235294, 0.3372549019);
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(current_pos),1.0) ).xyz );// * 0.5 + 0.5;//normalize((gua_normal_matrix * vec4(get_gradient(current_pos), 0.0) ).xyz) ;
   gua_alpha = 1.0;
   gua_metalness  = 0.0;
-  gua_roughness  = 0.5;
+  gua_roughness  = 0.9;
   gua_emissivity = 0.0; // pass through if unshaded
 
   gua_world_position = (gua_model_matrix * vec4(current_pos, 1.0)).xyz;
