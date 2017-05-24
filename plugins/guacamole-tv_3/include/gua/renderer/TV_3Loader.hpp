@@ -61,12 +61,12 @@ class GUA_TV_3_DLL TV_3Loader {
 
 public:
 
-  std::shared_ptr<node::Node> load_geometry(std::string const& file_name,
+  std::shared_ptr<node::TV_3Node> load_geometry(std::string const& file_name,
                                             unsigned flags = DEFAULTS,
                                             int64_t const cpu_budget_in_mb = 1024,
                                             int64_t const gpu_budget_in_mb = 1024);
 
-  std::shared_ptr<node::Node> load_geometry(std::string const& node_name,
+  std::shared_ptr<node::TV_3Node> load_geometry(std::string const& node_name,
                                             std::string const& file_name,
                                             unsigned flags =  DEFAULTS,
                                             int64_t const cpu_budget = 1024,

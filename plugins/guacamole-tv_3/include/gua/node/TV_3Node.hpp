@@ -84,9 +84,6 @@ public:  // methods
   std::shared_ptr<Material> const& get_material() const;
   void                 set_material(std::shared_ptr<Material> const& material);
 
-  NodeRenderMode const mode() const {return render_mode_;} ;
-  void                 mode(NodeRenderMode const render_mode) {render_mode_ = render_mode;}
-
 public:
   /**
   * Implements ray picking for a point cloud
@@ -106,6 +103,12 @@ public:
   void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
 
   void set_node_rendering_mode();
+
+  NodeRenderMode const mode() const {return render_mode_;} ;
+  void                 mode(NodeRenderMode const render_mode) {render_mode_ = render_mode;}
+  float                iso_value() const {return iso_value_;}
+  void                 iso_value(float iso_value) {iso_value_ = iso_value;}
+
 protected:
 
   std::shared_ptr<Node> copy() const override;
@@ -120,6 +123,7 @@ private:  // attributes e.g. special attributes for drawing
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
   NodeRenderMode                render_mode_;
+  float                         iso_value_ = 0.5;
 };
 
 }  // namespace node {

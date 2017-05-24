@@ -99,7 +99,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& nodename,
+std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& nodename,
                                                       std::string const& filename,
                                                       unsigned flags,
                                                       int64_t const cpu_budget,
@@ -152,7 +152,7 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& nodenam
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& filename, unsigned flags,
+std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& filename, unsigned flags,
                                                       int64_t const cpu_budget,
                                                       int64_t const gpu_budget) {
 
@@ -167,7 +167,7 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& filenam
   }
 
   Logger::LOG_WARNING << "TV_3Loader::load_tv_3() : unable to create Lod Node" << std::endl;
-  return std::shared_ptr<node::Node>(new node::TV_3Node(filename));
+  return std::shared_ptr<node::TV_3Node>(new node::TV_3Node(filename));
 
 }
 
