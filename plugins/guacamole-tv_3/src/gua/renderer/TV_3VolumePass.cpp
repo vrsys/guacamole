@@ -74,9 +74,8 @@ std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() 
 PipelinePass TV_3VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
   PipelinePass pass{ *this, ctx, substitution_map };
 
-  auto renderer = std::make_shared<TV_3VolumeRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-
+  auto renderer = std::make_shared<TV_3VolumeRenderer>(ctx, substitution_map);
+  
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
     renderer->render(pipe, desc);

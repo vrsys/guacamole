@@ -48,7 +48,7 @@ namespace gua {
  
   public:
 
-    TV_3VolumeRenderer();
+    TV_3VolumeRenderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map);
 
  private:  //shader related auxiliary methods
   

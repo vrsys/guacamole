@@ -47,10 +47,9 @@ namespace gua {
  
   public:
 
-    TV_3Renderer();
+    TV_3Renderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map);
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
-    void set_global_substitution_map(SubstitutionMap const& smap);
   
     void reload_programs();
 

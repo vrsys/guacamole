@@ -63,11 +63,12 @@
 namespace gua {
 
   //////////////////////////////////////////////////////////////////////////////
-  TV_3Renderer::TV_3Renderer() : shaders_loaded_(false),
+  TV_3Renderer::TV_3Renderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map) : shaders_loaded_(false),
                                  forward_cube_shader_program_(nullptr),
                                  compositing_shader_program_(nullptr),
                                  no_backface_culling_rasterizer_state_(nullptr),
-                                 frontface_culling_rasterizer_state_(nullptr) {
+                                 frontface_culling_rasterizer_state_(nullptr),
+                                 global_substitution_map_(substitution_map) {
   }
 
 
@@ -372,11 +373,6 @@ static const float g_vertex_buffer_data[] = {
     fullscreen_quad_->draw(ctx.render_context);
   }
 */
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  void TV_3Renderer::set_global_substitution_map(SubstitutionMap const& smap) {
-    global_substitution_map_ = smap;
-  }
 
   ///////////////////////////////////////////////////////////////////////////////
   void TV_3Renderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {

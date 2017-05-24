@@ -62,7 +62,7 @@
 namespace gua {
 
   //////////////////////////////////////////////////////////////////////////////
-  TV_3VolumeRenderer::TV_3VolumeRenderer() : TV_3Renderer() {
+  TV_3VolumeRenderer::TV_3VolumeRenderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& smap) : TV_3Renderer(ctx, smap) {
   }
 
 

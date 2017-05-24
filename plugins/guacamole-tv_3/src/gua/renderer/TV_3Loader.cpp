@@ -162,12 +162,33 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_na
       Logger::LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
-    return cached_node;
   }
-
-
+  return cached_node;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name,
+                                                                  std::string const& file_name,
+                                                                  std::shared_ptr<Material> const& fallback_material,
+                                                                  unsigned flags,
+                                                                  int64_t const cpu_budget,
+                                                                  int64_t const gpu_budget) {
+  auto cached_node(load_geometry(file_name, flags));
+
+  if (cached_node) {
+    auto copy(cached_node->deep_copy());
+
+    apply_fallback_material(
+        copy, fallback_material, flags); //& NO_SHARED_MATERIALS
+
+    copy->set_name(node_name);
+    return copy;
+  }
+
+  return cached_node;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

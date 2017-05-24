@@ -68,7 +68,9 @@ int main(int argc, char** argv) {
 
 
   std::string in_vol_resource_path = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
-  std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
+  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
+  std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
+  //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -95,6 +97,9 @@ int main(int argc, char** argv) {
 */
 
 
+  gua::math::vec4 transparent_platinum(0.672, 0.637, 0.585, 0.8);
+  gua::math::vec4 transparent_light_green(0.572549, 1.0, 0.286274, 0.8);
+
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
   gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
@@ -113,9 +118,22 @@ int main(int argc, char** argv) {
 
   //create material for pointcloud
   auto plod_rough = plod_keep_color_shader->make_new_material();
-  plod_rough->set_uniform("metalness", 0.0f);
-  plod_rough->set_uniform("roughness", 0.8f);
+  plod_rough->set_uniform("color", transparent_light_green);
+  plod_rough->set_uniform("metalness", 1.0f);
+  plod_rough->set_uniform("roughness", 0.2f);
   plod_rough->set_uniform("emissivity", 0.0f);
+
+
+
+  auto plod_keep_color_shader2(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color2", plod_keep_input_desc));
+  gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader2);
+  auto plod_rough2 = plod_keep_color_shader2->make_new_material();
+  plod_rough2->set_uniform("color", silver);
+  plod_rough2->set_uniform("metalness", 0.0f);
+  plod_rough2->set_uniform("roughness", 0.9f);
+  plod_rough2->set_uniform("emissivity", 0.0f);
+/*
+
 /*
   auto pbrMat(gua::Material
                   ->make_new_material());
@@ -135,9 +153,10 @@ int main(int argc, char** argv) {
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
       //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
+      plod_rough,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
-      /*pbrMat*/));
+      ));
   graph.add_node("/transform", test_volume);
 
   auto test_volume2( tv_3_loader.create_geometry_from_file(
@@ -150,10 +169,12 @@ int main(int argc, char** argv) {
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
       //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
-      
-      gua::TV_3Loader::NORMALIZE_SCALE));
+      plod_rough2,
+      gua::TV_3Loader::NORMALIZE_POSITION |
+      gua::TV_3Loader::NORMALIZE_SCALE
+      ));
   graph.add_node("/transform/transform2", test_volume2);
-  test_volume2->translate(-1.5, -1.5, -0.5);
+ // test_volume2->translate(-1.5, -1.5, -0.5);
 
 
 
@@ -231,7 +252,7 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(resolve_pass);
   //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
+  portal_pipe->set_enable_abuffer(false);
   //portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -246,8 +267,8 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
     1.0f);
-  camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
+  //camera->get_pipeline_description()->add_pass(
+  //  std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);

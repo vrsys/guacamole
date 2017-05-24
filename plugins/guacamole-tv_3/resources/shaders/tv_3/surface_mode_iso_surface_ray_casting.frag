@@ -1,7 +1,9 @@
 @include "common/header.glsl"
 
 @include "common/gua_camera_uniforms.glsl"
-
+@include "common/gua_fragment_shader_output.glsl"
+@include "common/gua_global_variable_declaration.glsl"
+@include "common/gua_abuffer_collect.glsl"
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,7 +14,6 @@ in Data {
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-@include "common/gua_global_variable_declaration.glsl"
 
 layout(binding=0) uniform sampler3D volume_texture;
 
@@ -22,7 +23,15 @@ uniform float gua_texel_width;
 uniform float gua_texel_height;
 
 uniform float iso_value = 0.5;
-@include "common/gua_fragment_shader_output.glsl"
+
+uniform float roughness = 0.0;
+uniform float metalness = 0.0;
+uniform float emissivity = 0.0;
+uniform vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+
+
+
+
 
 //layout(location = 0) out vec4 out_color;
 
@@ -151,7 +160,6 @@ vec3 get_gradient(vec3 in_sampling_pos) {
 
 
 void main() {
-
   vec3 ray_origin    = FragmentIn.pos_ms;
   //vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
   vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
@@ -203,7 +211,7 @@ void main() {
         vec3 mid;
         int iterations = 0;
 
-        for(int i = 0; i < 7; ++i) {
+        for(int i = 0; i < 10; ++i) {
         //while (length(max - min) > 0.0000001 && ++iterations < 20) {
           if(length(max-min) <= 0.0000001 ) {
             break;
@@ -253,17 +261,19 @@ void main() {
        projected_pos /= projected_pos.w;
 
 
-  gl_FragDepth = projected_pos.z * 0.5 + 0.5;
-  gua_color      = vec3(0.8,0.8, 0.8);//0.5 * vec3(0.0, 0.68235294, 0.3372549019) + 0.5 * noise(current_pos*100.0) * vec3(0.0, 0.68235294, 0.3372549019);
+  float gbuffer_depth = projected_pos.z * 0.5 + 0.5;
+  gl_FragDepth = gbuffer_depth;
+  gua_color      = color.rgb;
+
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(current_pos),1.0) ).xyz );// * 0.5 + 0.5;//normalize((gua_normal_matrix * vec4(get_gradient(current_pos), 0.0) ).xyz) ;
-  gua_alpha = 1.0;
-  gua_metalness  = 0.0;
-  gua_roughness  = 0.9;
-  gua_emissivity = 0.0; // pass through if unshaded
+  gua_alpha = color.a;
+  gua_metalness  = metalness;
+  gua_roughness  = roughness;
+  gua_emissivity = emissivity; // pass through if unshaded
 
   gua_world_position = (gua_model_matrix * vec4(current_pos, 1.0)).xyz;
+  
 
-
-  @include "common/gua_write_gbuffer.glsl"
+  submit_fragment(gbuffer_depth);
 
 }
