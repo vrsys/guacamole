@@ -31,6 +31,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
+float iso_value = 0.5;
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
                   int mousebutton,
@@ -86,8 +87,8 @@ int main(int argc, char** argv) {
           gua::TriMeshLoader::NORMALIZE_SCALE));
   graph.add_node("/plane_transform", plane);
   plane->scale(10.0f, 10.0, 10.0);
-  plane->rotate(20.0f, 1.0, 0.0, 0.0);
-  plane->translate(0.0, 0.0, -10.0);
+  plane->rotate(90.0f, 1.0, 0.0, 0.0);
+  plane->translate(0.0, 0.0, 3.0);
 /*
   teapot->set_draw_bounding_box(true);
 */
@@ -100,21 +101,25 @@ int main(int argc, char** argv) {
   auto test_volume(tv_3_loader.load_geometry(
       "test_volume",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
-       in_vol_resource_path2,
+      // in_vol_resource_path2,
        //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
       //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
-      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
+      "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE));
   graph.add_node("/transform", test_volume);
+
+  test_volume->iso_value(0.5);
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);
 
   auto head_rotation = scm::math::make_rotation(180.0, 0.0, 1.0, 0.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
-  auto head_translation = scm::math::make_translation(0.0, 0.0, 2.0);
+  auto head_translation = scm::math::make_translation(0.0, 0.0, 5.0);
+
+  //reinterpret_cast<gua::node::TV_3Node*>(test_volume)->iso_value(0.2);
   //test_volume->translate(0.0, 0.0, 2.0);
 //  reinterpret_cast<gua::node::TV_3Node*>(test_volume.get())->register_clipping_geometry(std::shared_ptr<gua::node::TriMeshNode>(reinterpret_cast<gua::node::TriMeshNode*>(teapot.get()) ) );
 
@@ -127,11 +132,11 @@ int main(int argc, char** argv) {
 */
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SPOT);
-  light2->data.brightness = 100.0f;
-  light2->scale(25.f);
+  light2->data.brightness = 3.0f;
+  light2->scale(100.f);
   //light2->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-  light2->translate(0.0f, 0.0f, 5.0f);
-
+  light2->translate(2.0f, 0.0f, 12.0f);
+  light2->rotate(10.0f, 0.0f, 1.0f, 0.0f);
   light2->data.set_enable_shadows(true);                                                         
   light2->data.set_shadow_map_size(4096*2);
 
@@ -216,6 +221,30 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
+
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    // key press events
+    //////////////////////////////////////////////////////////////////////////////////////
+    window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+
+        if (key == 340) { // SHIFT
+
+        }
+
+        if (action == 0) return; // only press events
+
+        switch (key) {
+        case 'W': iso_value=std::min(1.0f, iso_value+0.01f); break;
+        //case 'A': nav->translate(-speed, 0.0, 0.0); break;
+        case 'S': iso_value=std::max(0.0f, iso_value-0.01f); break;
+ 
+        default: break;
+        };
+
+        test_volume->iso_value(iso_value);
+    });
+
 
   gua::Renderer renderer;
 

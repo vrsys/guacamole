@@ -178,6 +178,7 @@ namespace gua {
       forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
       forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
+      forward_cube_shader_program_->apply_uniform(ctx, "iso_value", tv_3_volume_node->iso_value());
 
       ctx.render_context->bind_vertex_array(box_vertex_array_ );
       //ctx.render_context->bind_index_buffer(box_element_buffer_, scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);

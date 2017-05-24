@@ -21,7 +21,7 @@ uniform vec4 ms_eye_pos;
 uniform float gua_texel_width;
 uniform float gua_texel_height;
 
-
+uniform float iso_value = 0.5;
 @include "common/gua_fragment_shader_output.glsl"
 
 //layout(location = 0) out vec4 out_color;
@@ -29,6 +29,33 @@ uniform float gua_texel_height;
 //returns model space t (where t=0.0 old starting point & t= 1.0)
 //front and back orientation need to be distinguished
 
+
+
+float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+
+float noise(vec3 p){
+    vec3 a = floor(p);
+    vec3 d = p - a;
+    d = d * d * (3.0 - 2.0 * d);
+
+    vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 k1 = perm(b.xyxy);
+    vec4 k2 = perm(k1.xyxy + b.zzww);
+
+    vec4 c = k2 + a.zzzz;
+    vec4 k3 = perm(c);
+    vec4 k4 = perm(c + 1.0);
+
+    vec4 o1 = fract(k3 * (1.0 / 41.0));
+    vec4 o2 = fract(k4 * (1.0 / 41.0));
+
+    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+
+    return o4.y * d.y + o4.x * (1.0 - d.y);
+}
 
 void compute_ray_plane_intersection(in vec3 ms_plane_pos, in vec3 ms_plane_normal,
 	                                in vec3 ms_ray_pos, in vec3 in_ms_ray_direction,
@@ -103,8 +130,6 @@ vec2 intersect_ray_with_unit_box(in vec3 origin, in vec3 direction ) {
 }
 
 float step_size = 0.001;
-
-float iso_value = 0.53;
 
 float get_mode_independent_sample(vec3 current_pos) {
   return texture(volume_texture, current_pos ).r;
@@ -229,11 +254,11 @@ void main() {
 
 
   gl_FragDepth = projected_pos.z * 0.5 + 0.5;
-  gua_color      = vec3(1.0, 0.0, 1.0);
+  gua_color      = 0.5 * vec3(0.0, 0.68235294, 0.3372549019) + 0.5 * noise(current_pos*100.0) * vec3(0.0, 0.68235294, 0.3372549019);
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(current_pos),1.0) ).xyz );// * 0.5 + 0.5;//normalize((gua_normal_matrix * vec4(get_gradient(current_pos), 0.0) ).xyz) ;
   gua_alpha = 1.0;
   gua_metalness  = 0.0;
-  gua_roughness  = 0.7;
+  gua_roughness  = 0.5;
   gua_emissivity = 0.0; // pass through if unshaded
 
   gua_world_position = (gua_model_matrix * vec4(current_pos, 1.0)).xyz;
