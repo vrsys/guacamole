@@ -122,6 +122,8 @@ TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pick
     is_pickable_(is_pickable),
     local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)),
     volume_textures_() {
+
+      std::cout << "Loading once\n";
   bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
   bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
 

@@ -24,23 +24,14 @@ uniform float gua_texel_height;
 
 uniform float iso_value = 0.5;
 
-uniform float roughness = 0.0;
-uniform float metalness = 0.0;
-uniform float emissivity = 0.0;
-uniform vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+vec3 ms_shading_pos = vec3(0.0, 0.0, 0.0);
+
+@material_uniforms@
+@material_method_declarations_frag@
 
 
-
-
-
-//layout(location = 0) out vec4 out_color;
-
-//returns model space t (where t=0.0 old starting point & t= 1.0)
-//front and back orientation need to be distinguished
-
-
-
-float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+//float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+/*
 vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
 vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
 
@@ -65,7 +56,7 @@ float noise(vec3 p){
 
     return o4.y * d.y + o4.x * (1.0 - d.y);
 }
-
+*/
 void compute_ray_plane_intersection(in vec3 ms_plane_pos, in vec3 ms_plane_normal,
 	                                in vec3 ms_ray_pos, in vec3 in_ms_ray_direction,
 	                                in out float min_t, in out float max_t) {
@@ -158,8 +149,7 @@ vec3 get_gradient(vec3 in_sampling_pos) {
   return -normalize(gradient);
 }
 
-
-void main() {
+vec3 raycast_iso_surface() {
   vec3 ray_origin    = FragmentIn.pos_ms;
   //vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
   vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
@@ -174,10 +164,10 @@ void main() {
   vec3 red = vec3(0.0, 0.0, 0.0);
   /*
   if(t_min_max[0] < 0) {
-	current_pos = ms_eye_pos.xyz;
+  current_pos = ms_eye_pos.xyz;
     red = vec3(1.0,0.0,0.0);
   } else {
-	current_pos = ray_origin + t_min_max[0] * ray_direction;
+  current_pos = ray_origin + t_min_max[0] * ray_direction;
 
   }*/
 
@@ -185,8 +175,8 @@ void main() {
 /*
   //plane intersection
   compute_ray_plane_intersection(vec3(0.5, 0.5, 0.5), vec3(0.0, 0.0, 0.5),
-  	                             current_pos, cam_to_box_end_vec,
-  	                             t_min_max[0], t_min_max[1]);
+                                 current_pos, cam_to_box_end_vec,
+                                 t_min_max[0], t_min_max[1]);
 */
   //current_pos = current_pos + t_min_max[0] * cam_to_box_end_vec;
 
@@ -244,36 +234,37 @@ void main() {
 
   }
 
-
-  
   if(false == found_iso_value) {
     discard;
-    //get_gradient(current_pos);
-    //out_color = vec4(1.0, 1.0, 1.0, 1.0);
-    //out_color = vec4( (get_gradient(current_pos) + 1.0) / 2.0, 1.0 );
-
-    //gua_color = vec3((get_gradient(current_pos) + 1.0) / 2.0);
   }
- 
-  //the final pos is now stored in current pos
 
-  vec4 projected_pos = gua_model_view_projection_matrix * vec4(current_pos, 1);
-       projected_pos /= projected_pos.w;
+  return current_pos;
+};
 
+void main() {
+
+  ms_shading_pos = raycast_iso_surface();
+
+  //these two variables should not be altered by any material programs
+  gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(ms_shading_pos),1.0) ).xyz );
+  gua_world_position = (gua_model_matrix * vec4(ms_shading_pos, 1.0)).xyz;
+
+  //these variables can freely be altered by material programs
+  gua_color      = vec3(1.0, 1.0, 1.0);
+  gua_alpha      = 1.0;
+  gua_metalness  = 0.0;
+  gua_roughness  = 1.0;
+  gua_emissivity = 0.0;
+
+  @material_input@
+  if (gua_rendering_mode != 1) {
+    @material_method_calls_frag@
+  }
+
+  vec4 projected_pos = gua_model_view_projection_matrix * vec4(ms_shading_pos, 1);
+  projected_pos /= projected_pos.w;
 
   float gbuffer_depth = projected_pos.z * 0.5 + 0.5;
   gl_FragDepth = gbuffer_depth;
-  gua_color      = color.rgb;
-
-  gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(current_pos),1.0) ).xyz );// * 0.5 + 0.5;//normalize((gua_normal_matrix * vec4(get_gradient(current_pos), 0.0) ).xyz) ;
-  gua_alpha = color.a;
-  gua_metalness  = metalness;
-  gua_roughness  = roughness;
-  gua_emissivity = emissivity; // pass through if unshaded
-
-  gua_world_position = (gua_model_matrix * vec4(current_pos, 1.0)).xyz;
-  
-
   submit_fragment(gbuffer_depth);
-
 }
