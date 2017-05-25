@@ -31,7 +31,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-float iso_value = 0.5;
+float iso_value = 0.3;
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
                   int mousebutton,
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
       "plane", "data/objects/plane.obj",
       gua::TriMeshLoader::NORMALIZE_POSITION |
           gua::TriMeshLoader::NORMALIZE_SCALE));
-  //graph.add_node("/plane_transform", plane);
+  graph.add_node("/plane_transform", plane);
   plane->scale(10.0f, 10.0, 10.0);
   plane->rotate(90.0f, 1.0, 0.0, 0.0);
   plane->translate(0.0, 0.0, 3.0);
@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
 
   gua::math::vec4 transparent_platinum(0.672, 0.637, 0.585, 0.8);
   gua::math::vec4 transparent_light_green(0.572549, 1.0, 0.286274, 0.8);
+  gua::math::vec4 transparent_nickel(0.660, 0.609, 0.526, 0.8);
 
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
@@ -124,14 +125,23 @@ int main(int argc, char** argv) {
   plod_rough->set_uniform("emissivity", 0.0f);
 
 
-
   auto plod_keep_color_shader2(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color2", plod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader2);
   auto plod_rough2 = plod_keep_color_shader2->make_new_material();
-  plod_rough2->set_uniform("color", silver);
+  plod_rough2->set_uniform("color", transparent_nickel);
   plod_rough2->set_uniform("metalness", 0.0f);
   plod_rough2->set_uniform("roughness", 0.9f);
   plod_rough2->set_uniform("emissivity", 0.0f);
+
+
+
+  auto plod_keep_color_shader3(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color3", plod_keep_input_desc));
+  gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader3);
+  auto plod_rough3 = plod_keep_color_shader3->make_new_material();
+  plod_rough3->set_uniform("color", silver);
+  plod_rough3->set_uniform("metalness", 0.0f);
+  plod_rough3->set_uniform("roughness", 0.9f);
+  plod_rough3->set_uniform("emissivity", 0.0f);
 /*
 
 /*
@@ -157,7 +167,9 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
+
   graph.add_node("/transform", test_volume);
+
 
   auto test_volume2( tv_3_loader.create_geometry_from_file(
       "test_volume2",
@@ -169,17 +181,18 @@ int main(int argc, char** argv) {
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
       //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
-      plod_rough2,
+      plod_rough3,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
   graph.add_node("/transform/transform2", test_volume2);
  // test_volume2->translate(-1.5, -1.5, -0.5);
-
+  auto test_tv_3_node2 = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume2);
+  test_tv_3_node2->iso_value(0.5);
 
 
   auto test_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume);
-  test_tv_3_node->iso_value(0.5);
+  test_tv_3_node->iso_value(iso_value);
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);
@@ -205,8 +218,8 @@ int main(int argc, char** argv) {
   //light2->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
   light2->translate(2.0f, 0.0f, 12.0f);
   light2->rotate(10.0f, 0.0f, 1.0f, 0.0f);
-  light2->data.set_enable_shadows(true);                                                         
-  light2->data.set_shadow_map_size(4096*2);
+  light2->data.set_enable_shadows(false);                                                         
+  light2->data.set_shadow_map_size(4096);
 
   light2->data.set_shadow_near_clipping_in_sun_direction(0.01f);
   light2->data.set_shadow_far_clipping_in_sun_direction(100.f);
@@ -252,7 +265,8 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(resolve_pass);
   //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  portal_pipe->set_enable_abuffer(false);
+  portal_pipe->set_enable_abuffer(true);
+  portal_pipe->set_abuffer_size(2000);
   //portal_camera->set_pipeline_description(portal_pipe);
 
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
