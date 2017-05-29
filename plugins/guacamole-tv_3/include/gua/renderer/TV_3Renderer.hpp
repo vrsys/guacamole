@@ -45,6 +45,33 @@ namespace gua {
 
   class TV_3Renderer {
  
+
+  public:
+    enum CompressionMode  {
+      //compatible with TV_3VolumePassDescription
+      UNCOMPRESSED = 0,
+      SW_VQ   = 1,
+      SW_HVQ = 2,
+
+      COMPRESSION_MODE_COUNT
+    };
+
+    enum SpatialFilteringMode  {
+      //compatible with TV_3VolumePassDescription
+      S_NEAREST = 0,
+      S_LINEAR   = 1,
+
+      S_FILTERING_MODE_COUNT
+    };
+
+    enum TemporalFilteringMode  {
+      //compatible with TV_3VolumePassDescription
+      T_NEAREST = 0,
+      T_LINEAR   = 1,
+
+      T_FILTERING_MODE_COUNT
+    };
+
   public:
 
     TV_3Renderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map);
@@ -120,7 +147,8 @@ namespace gua {
     std::vector<ShaderProgramStage>                                      compositing_shader_stages_;
     std::shared_ptr<ShaderProgram>                                       compositing_shader_program_;
 
-    SubstitutionMap                                                      global_substitution_map_;
+    SubstitutionMap                                                      global_substitution_map_uncompressed_;
+    SubstitutionMap                                                      global_substitution_map_compressed_;
     ResourceFactory                                                      factory_;
   };
 

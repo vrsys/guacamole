@@ -67,9 +67,13 @@ void mouse_button(gua::utils::Trackball& trackball,
 int main(int argc, char** argv) {
 
 
+  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_SW_VQ_parts.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
   //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
-  std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
+  //std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
+  std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/CLEAN_START_MEASUREMENTS/SW_VQ__AND__HW_VQ/HEAD/SW_VQ/BS2/16_clusters/head_SW_VQ.v_rsc";
+  
+  
   //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
   // initialize guacamole
   gua::init(argc, argv);

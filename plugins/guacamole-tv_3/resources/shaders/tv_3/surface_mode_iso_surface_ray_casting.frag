@@ -15,7 +15,8 @@ in Data {
 // input
 ///////////////////////////////////////////////////////////////////////////////
 
-layout(binding=0) uniform sampler3D volume_texture;
+layout(binding=0) uniform @gua_tv_3_sampler_3d_type@ volume_texture;
+layout(binding=1) uniform sampler2D codebook_texture;
 
 uniform vec4 ms_eye_pos;
 
@@ -23,6 +24,12 @@ uniform float gua_texel_width;
 uniform float gua_texel_height;
 
 uniform float iso_value = 0.5;
+
+uniform int num_codewords_per_row = 0;
+
+uniform ivec3 block_offset_vector = ivec3(0, 0, 0);
+uniform int total_block_size = 0;
+uniform ivec3 volume_dimensions = ivec3(0, 0, 0);
 
 vec3 ms_shading_pos = vec3(0.0, 0.0, 0.0);
 
@@ -129,10 +136,76 @@ vec2 intersect_ray_with_unit_box(in vec3 origin, in vec3 direction ) {
     return t_min_max;
 }
 
-float step_size = 0.001;
+float step_size = 0.0004372;
+
+
+
+float get_uninterpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index_texture, sampler2D in_codebook) {
+
+  uint one_d_idx = texture(volume_texture, in_pos ).r;
+
+
+
+  ivec3 col_additions = ivec3( in_pos * volume_dimensions ) %  block_offset_vector.y;
+  float col = dot(col_additions, block_offset_vector);
+
+  uint col_offset = (one_d_idx % num_codewords_per_row) * total_block_size;
+  uint row = one_d_idx / num_codewords_per_row;
+
+  float density = texelFetch( codebook_texture, ivec2(col_offset + uint(col), row), 0 ).r;
+
+  return density;
+}
+
+
+float get_trilinearly_interpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index_texture, sampler2D in_codebook) {
+
+  const vec3 volume_voxel_distance = (1.0/ (volume_dimensions ) );
+  const vec3 half_volume_voxel_distance = volume_voxel_distance / 2.0;
+  const vec3 lower_bound = vec3( half_volume_voxel_distance );
+  const vec3 upper_bound = vec3(1.0 - half_volume_voxel_distance);
+
+
+  vec3 pos_to_use = in_pos;
+
+  vec3 normalized_pos = ( pos_to_use / ( volume_voxel_distance ) ) / (volume_dimensions);
+
+  vec3 floor_positions =    ( normalized_pos  - half_volume_voxel_distance) ; 
+  vec3 ceil_positions  =  ( normalized_pos  + half_volume_voxel_distance) ;
+
+  float blf = get_uninterpolated_sample_SW_VQ(floor_positions, in_index_texture, in_codebook);
+  float brf = get_uninterpolated_sample_SW_VQ(vec3(ceil_positions.x, floor_positions.yz), in_index_texture, in_codebook);
+  float tlf = get_uninterpolated_sample_SW_VQ(vec3(floor_positions.x, ceil_positions.y, floor_positions.z), in_index_texture, in_codebook);
+  float trf = get_uninterpolated_sample_SW_VQ(vec3(ceil_positions.xy, floor_positions.z), in_index_texture, in_codebook);
+
+  float blb = get_uninterpolated_sample_SW_VQ(vec3(floor_positions.xy, ceil_positions.z), in_index_texture, in_codebook);
+  float brb = get_uninterpolated_sample_SW_VQ(vec3(ceil_positions.x, floor_positions.y, ceil_positions.z), in_index_texture, in_codebook);
+  float tlb = get_uninterpolated_sample_SW_VQ(vec3(floor_positions.x, ceil_positions.yz), in_index_texture, in_codebook);
+  float trb = get_uninterpolated_sample_SW_VQ(ceil_positions, in_index_texture, in_codebook);
+  
+  vec3 interpolation_weights = mod( (pos_to_use + half_volume_voxel_distance) / (volume_voxel_distance), 1.0);
+
+  vec4 left_samples  = vec4(blf, blb, tlf, tlb);
+  vec4 right_samples = vec4(brf, brb, trf, trb);
+
+  vec4 x_interpolated = mix(left_samples, right_samples, interpolation_weights.x);
+  
+  vec2 bottom_samples = x_interpolated.xy;
+  vec2 top_samples    = x_interpolated.zw;
+
+  vec2 y_interpolated = mix(bottom_samples, top_samples, interpolation_weights.y);
+
+  return mix(y_interpolated.x, y_interpolated.y, interpolation_weights.z);
+}
+
 
 float get_mode_independent_sample(vec3 current_pos) {
-  return texture(volume_texture, current_pos ).r;
+  //return texture(volume_texture, current_pos ).r;
+
+
+  return get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
+  return get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
+
 }
 
 
@@ -249,12 +322,37 @@ void main() {
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(ms_shading_pos),1.0) ).xyz );
   gua_world_position = (gua_model_matrix * vec4(ms_shading_pos, 1.0)).xyz;
 
+  
+
+ /// if( 0 != one_d_idx % 2) {
+   gua_color      = vec3(1.0, 1.0, 1.0);
+   gua_alpha      = 1.0;
+   gua_metalness  = 0.0;
+   gua_roughness  = 1.0;
+   gua_emissivity = 0.0;   
+  //} else {
+    /*
+    gua_color      = vec3(1.0, 0.0, 0.0);
+    gua_alpha      = 1.0;
+    gua_metalness  = 0.0;
+    gua_roughness  = 1.0;
+    gua_emissivity = 0.0;  
+  }
+*/
+
+
+  //float density = texture(codebook_texture,);
+
+
+//  gua_color = vec3(density, density, density);
+
   //these variables can freely be altered by material programs
   gua_color      = vec3(1.0, 1.0, 1.0);
   gua_alpha      = 1.0;
   gua_metalness  = 0.0;
   gua_roughness  = 1.0;
   gua_emissivity = 0.0;
+
 
   @material_input@
   if (gua_rendering_mode != 1) {

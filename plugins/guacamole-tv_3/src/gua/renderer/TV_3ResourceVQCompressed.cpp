@@ -22,6 +22,7 @@
 // class header
 #include <gua/renderer/TV_3ResourceVQCompressed.hpp>
 
+#include <fstream>
 /*
 #include <gua/utils/Singleton.hpp>
 #include <gua/node/TV_3Node.hpp>
@@ -55,17 +56,17 @@
 */
 namespace gua {
 
-//std::map<std::size_t, std::vector<std::ifstream>>         TV_3ResourceVQCompressed::per_resource_codebook_file_streams_;
-//std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3ResourceVQCompressed::per_resource_codebook_cpu_cache_;
+std::map<std::size_t, std::vector<std::ifstream>>         TV_3ResourceVQCompressed::per_resource_codebook_file_streams_;
+std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3ResourceVQCompressed::per_resource_codebook_cpu_cache_;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TV_3ResourceVQCompressed::TV_3ResourceVQCompressed(std::string const& resource_file_string, bool is_pickable)
-  : TV_3Resource(resource_file_string, is_pickable) {
-/*
-      std::cout << "Loading once\n";
-  bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
-  bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
+  : TV_3Resource(resource_file_string, is_pickable, true),
+    codebook_textures_() {
+
+    std::cout << "Created Compressed Volume Resource\n";
+
 
   std::vector<std::string> volumes_to_load;
   if(resource_file_name_.find(".v_rsc") != std::string::npos) {
@@ -73,7 +74,8 @@ TV_3ResourceVQCompressed::TV_3ResourceVQCompressed(std::string const& resource_f
     std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
     while(std::getline(volume_resource_file, line_buffer)) {
       if(line_buffer.find(".raw") != std::string::npos) {
-        volumes_to_load.push_back(line_buffer);
+        volumes_to_load.push_back(line_buffer + ".cb" );
+        std::cout << "Pushing back: " + line_buffer + ".cb\n\n";
       }
     }
   } else {
@@ -86,10 +88,10 @@ TV_3ResourceVQCompressed::TV_3ResourceVQCompressed(std::string const& resource_f
       tokenize_volume_name(vol_path, volume_descriptor_tokens_[uuid_]);  
     }
     
-    per_resource_file_streams_[uuid_].push_back(std::ifstream(vol_path.c_str(), std::ios::in | std::ios::binary));
+    per_resource_codebook_file_streams_[uuid_].push_back(std::ifstream(vol_path.c_str(), std::ios::in | std::ios::binary | std::ios::ate ));
 
   }
-    */
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,12 +103,78 @@ TV_3ResourceVQCompressed::~TV_3ResourceVQCompressed() {
 
 void TV_3ResourceVQCompressed::upload_to(RenderContext const& ctx) const {
   TV_3Resource::upload_to(ctx);
-  /*
+  
   int64_t loaded_volumes_count = 0;
 
   auto& current_tokens = volume_descriptor_tokens_[uuid_];
+  int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
 
-  for( auto& vol_path : per_resource_file_streams_[uuid_] ) { 
+  int64_t total_block_size   = std::pow(current_tokens["bs"], 3);
+  int64_t size_per_codeword = (num_bytes_per_voxel) * total_block_size;
+
+  int64_t const MAX_CODEBOOK_WIDTH = 16384;
+
+  current_tokens["num_codewords_per_row"] = std::floor(MAX_CODEBOOK_WIDTH / total_block_size);
+  int64_t codebook_width = current_tokens["num_codewords_per_row"] * total_block_size;
+
+
+
+  size_t size_of_data_type = current_tokens["b"];
+
+
+  for( auto& codebook_stream : per_resource_codebook_file_streams_[uuid_] ) {
+    int64_t actual_num_index_bit_power = current_tokens["a"];
+    int64_t num_codewords    = std::pow(2, actual_num_index_bit_power);
+    int64_t codebook_height = int64_t(std::ceil(num_codewords / (float)current_tokens["num_codewords_per_row"]) );
+
+    int64_t codebook_texture_num_bytes = codebook_height * codebook_width * num_bytes_per_voxel;
+    int64_t num_bytes_in_codebook_file = codebook_stream.tellg();
+    codebook_stream.seekg(0);
+    std::cout << "Reading num bytes: " << num_bytes_in_codebook_file << "\n";
+
+    per_resource_codebook_cpu_cache_[uuid_].push_back(std::vector<uint8_t>(codebook_texture_num_bytes, 0));
+    codebook_stream.read( (char*) &(per_resource_codebook_cpu_cache_[uuid_][0][0]), num_bytes_in_codebook_file);
+
+    current_tokens["codebook_width"] = codebook_width;
+    current_tokens["codebook_height"] = codebook_height;
+
+    scm::math::vec2ui codebook_dims = scm::math::vec2ui(current_tokens["codebook_width"], current_tokens["codebook_height"]);
+
+    scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
+
+    if( 1 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_8;
+    } else if( 2 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_16;   
+    } else if( 4 == num_bytes_per_voxel ) {
+      read_format = scm::gl::data_format::FORMAT_R_32F;
+      std::cout << "Reading 32 bit codewords\n";
+    }
+
+
+    std::cout << "CONTENT: \n";
+/*
+    for( auto& element : per_resource_codebook_cpu_cache_[uuid_][loaded_volumes_count] ) {
+      std::cout << element << "\n";
+    }*/
+
+    codebook_textures_.push_back(ctx.render_device->create_texture_2d(scm::gl::texture_2d_desc(codebook_dims, read_format), read_format, 
+                                                                    {(void*) &(per_resource_codebook_cpu_cache_[uuid_][0][0])} ) );
+
+    ++loaded_volumes_count;
+  }
+
+
+/*
+  for( auto& vol_path : per_resource_codebook_file_streams_[uuid_] ) {
+    int64_t actual_num_index_bit_power = current_tokens["a"];
+    int64_t num_codewords    = std::pow(2, actual_num_index_bit_power);
+    int64_t codebook_height = int64_t(std::ceil(num_codewords / (float)current_tokens["num_codewords_per_row"]) );
+
+
+    current_tokens["codebook_width"] = codebook_width;
+    current_tokens["codebook_height"] = codebook_height;
+
     scm::math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
 
     int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
@@ -128,38 +196,46 @@ void TV_3ResourceVQCompressed::upload_to(RenderContext const& ctx) const {
       read_format = scm::gl::data_format::FORMAT_R_32F;   
     }
 
-    volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 
+    codebook_textures_.push_back(ctx.render_device->create_texture_2d(scm::gl::texture_2d_desc(vol_dims, read_format), read_format, 
                                                                     {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );
     ++loaded_volumes_count;
   }
 
-
-  std::make_shared<scm::gl::texture_3d>(
-                                                          new scm::gl::texture_3d(*ctx.render_device, 
-                                                              scm::gl::texture_3d_desc(scm::math::vec3ui(256,256,225),
-                                                                                  scm::gl::data_format::FORMAT_R_8)  );
 */
+
 }
+
+void TV_3ResourceVQCompressed::apply_resource_dependent_uniforms(RenderContext const& ctx, std::shared_ptr<ShaderProgram> const& current_program) const {
+  TV_3Resource::apply_resource_dependent_uniforms(ctx, current_program);
+
+  auto& current_tokens = volume_descriptor_tokens_[uuid_];
+  current_program->apply_uniform(ctx, "num_codewords_per_row", int32_t(current_tokens["num_codewords_per_row"]) );
+  current_program->apply_uniform(ctx, "block_offset_vector", math::vec3i(1, current_tokens["bs"], current_tokens["bs"]*current_tokens["bs"]) );
+  current_program->apply_uniform(ctx, "total_block_size", int32_t(current_tokens["bs"]*current_tokens["bs"]*current_tokens["bs"]) );
+  current_program->apply_uniform(ctx, "volume_dimensions", math::vec3i(current_tokens["w"], current_tokens["h"], current_tokens["d"]));
+  //current_program->apply_uniform(ctx, "total_block_size", )
+/*
+  uniform ivec3 block_offset_vector = ivec3(0, 0, 0);
+uniform int total_block_size = 0;
+uniform ivec3 volume_dimensions = ivec3(0, 0, 0);*/
+};
 
 void TV_3ResourceVQCompressed::bind_volume_texture(
   RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const {
 
-  //TV_3Resource::bind_volume_texture(ctx, sampler_state);
-
-  if( volume_textures_.empty() ) {
-    upload_to(ctx);
-  }
-
-  ctx.render_context->bind_texture(volume_textures_[ ((frame_counter_++) / 10) % volume_textures_.size()], sampler_state, 0);
+  TV_3Resource::bind_volume_texture(ctx, sampler_state);
 
 /*
-  std::cout << "In drawing branch\n";
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-  ctx.render_context->apply();
-  std::cout << "Before drawing\n";
-  volume_proxy_.draw(ctx.render_context);
+  if( volume_textures_.empty() && codebook_textures_.empty() ) {
+    upload_to(ctx);
+  }
 */
+    auto nearest_sampler_state_ = 
+      ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+  ctx.render_context->bind_texture(codebook_textures_[ ((frame_counter_-1) / 10) % codebook_textures_.size()], nearest_sampler_state_, 1);
+
+  //the minus 1 hack currently only applies because the base class increments the counter. The hack is removed during on of the next iterations
+
 }
 
 
