@@ -29,7 +29,7 @@
 #include <gua/node/TV_3Node.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/renderer/TV_3Resource.hpp>
+#include <gua/renderer/TV_3ResourceVQCompressed.hpp>
 
 
 namespace gua {
@@ -127,7 +127,14 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_na
       //cached_node = load(file_name, flags);
       GeometryDescription desc("TV_3", file_name, 0, flags);
 
-      auto resource = std::make_shared<TV_3Resource>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
+ 
+      std::shared_ptr<TV_3Resource> resource = nullptr;
+      if(file_name.find("SW_VQ") != std::string::npos) {
+        resource = std::make_shared<TV_3ResourceVQCompressed>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
+      } else {
+        resource = std::make_shared<TV_3Resource>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
+      }
+      
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
       cached_node = std::make_shared<node::TV_3Node>("", desc.unique_key(), file_name);
