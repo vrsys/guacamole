@@ -117,12 +117,13 @@ void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable)
+TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable, bool is_compressed)
   : resource_file_name_(resource_file_string),
     is_pickable_(is_pickable),
+    is_compressed_(is_compressed),
     local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)),
     volume_textures_() {
-
+    std::cout << "Created Uncompressed Volume Resource\n";
       std::cout << "Loading once\n";
   bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
   bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
@@ -164,6 +165,10 @@ void TV_3Resource::draw(
   //dummy
 }
 
+void TV_3Resource::apply_resource_dependent_uniforms(RenderContext const& ctx, std::shared_ptr<ShaderProgram> const& current_program) const {
+
+};
+
 void TV_3Resource::upload_to(RenderContext const& ctx) const {
   
   int64_t loaded_volumes_count = 0;
@@ -176,6 +181,8 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
     int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
 
     int64_t num_voxels = current_tokens["total_num_bytes"];
+
+
     //std::vector<unsigned char> read_buffer(num_voxels);
 
     per_resource_cpu_cache_[uuid_].push_back(std::vector<uint8_t>(num_voxels, 0));
@@ -184,12 +191,31 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
 
     scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
 
-    if( 1 == num_bytes_per_voxel ) {
-      read_format = scm::gl::data_format::FORMAT_R_8;
-    } else if( 2 == num_bytes_per_voxel ) {
-      read_format = scm::gl::data_format::FORMAT_R_16;   
-    } else if( 4 == num_bytes_per_voxel ) {
-      read_format = scm::gl::data_format::FORMAT_R_32F;   
+    if( is_compressed_ ) { 
+      int64_t const num_index_bytes = current_tokens["i"] / 8;
+      int64_t const block_size =  current_tokens["bs"];
+      for(int dim_idx = 0; dim_idx < 3; ++dim_idx ) {
+        vol_dims[dim_idx] /= block_size;
+      }
+
+      if( 1 == num_index_bytes ) {
+        read_format = scm::gl::data_format::FORMAT_R_8UI;
+      } else if( 2 == num_index_bytes ) {
+        read_format = scm::gl::data_format::FORMAT_R_16UI;
+      } else if( 3 == num_index_bytes ) {
+        read_format = scm::gl::data_format::FORMAT_RGB_8UI;
+      } else if( 4 == num_index_bytes ) {
+        read_format = scm::gl::data_format::FORMAT_R_32UI;   
+      }
+
+    } else {
+      if( 1 == num_bytes_per_voxel ) {
+        read_format = scm::gl::data_format::FORMAT_R_8;
+      } else if( 2 == num_bytes_per_voxel ) {
+        read_format = scm::gl::data_format::FORMAT_R_16;   
+      } else if( 4 == num_bytes_per_voxel ) {
+        read_format = scm::gl::data_format::FORMAT_R_32F;   
+      }
     }
 
     volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 

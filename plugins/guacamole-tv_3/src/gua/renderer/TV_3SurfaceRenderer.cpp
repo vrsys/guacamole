@@ -113,20 +113,36 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material) {
-    if (!surface_ray_casting_programs_.count(material))
+    if (!surface_ray_casting_programs_uncompressed_.count(material))
     {
       auto program = std::make_shared<ShaderProgram>();
 
-      auto smap = global_substitution_map_;
+      auto smap = global_substitution_map_uncompressed_;
       for (const auto& i : material->generate_substitution_map()) {
         smap[i.first] = i.second;
         //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
       }
 
       program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
-      surface_ray_casting_programs_[material] = program;
+      surface_ray_casting_programs_uncompressed_[material] = program;
     }
-    assert(surface_ray_casting_programs_.count(material));
+    assert(surface_ray_casting_programs_uncompressed_.count(material));
+
+
+    if (!surface_ray_casting_programs_compressed_.count(material))
+    {
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_compressed_;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+        //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
+      }
+
+      program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
+      surface_ray_casting_programs_compressed_[material] = program;
+    }
+    assert(surface_ray_casting_programs_compressed_.count(material));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -134,12 +150,12 @@ namespace gua {
   std::shared_ptr<ShaderProgram> TV_3SurfaceRenderer::_get_material_program(MaterialShader* material,
                                                                             std::shared_ptr<ShaderProgram> const& current_program,
                                                                             bool& program_changed) {
-    auto shader_iterator = surface_ray_casting_programs_.find(material);
-    if (shader_iterator == surface_ray_casting_programs_.end()) {
+    auto shader_iterator = surface_ray_casting_programs_compressed_.find(material);
+    if (shader_iterator == surface_ray_casting_programs_compressed_.end()) {
       try {
         _initialize_surface_mode_isosurface_program(material);
         program_changed = true;
-        return surface_ray_casting_programs_.at(material);
+        return surface_ray_casting_programs_compressed_.at(material);
       }
       catch (std::exception& e) {
         Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
@@ -223,6 +239,7 @@ namespace gua {
       current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
       current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       current_material_program->apply_uniform(ctx, "volume_texture", 0);
+      current_material_program->apply_uniform(ctx, "codebook_texture", 1);
       current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->iso_value());
       if(program_changed) {
         tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
@@ -237,6 +254,7 @@ namespace gua {
 
       // ctx.render_context->uniform_sampler3D("volume_texture", 0);
       tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
+      tv_3_volume_node->get_geometry()->apply_resource_dependent_uniforms(ctx, current_material_program);
       ctx.render_context->apply();
 
     

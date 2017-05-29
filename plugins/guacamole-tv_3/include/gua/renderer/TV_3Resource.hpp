@@ -26,6 +26,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/GeometryResource.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -68,7 +69,7 @@ class TV_3Resource : public GeometryResource {
 
     static void tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens);
 
-    TV_3Resource(std::string const& resource_file_string, bool is_pickable);
+    TV_3Resource(std::string const& resource_file_string, bool is_pickable, bool is_compressed = false);
 
     ~TV_3Resource();
 
@@ -89,12 +90,17 @@ class TV_3Resource : public GeometryResource {
     void draw(RenderContext const& ctx,
               scm::gl::vertex_array_ptr const& vertex_array) const;
 
+    virtual void apply_resource_dependent_uniforms(RenderContext const& ctx,
+                                                   std::shared_ptr<ShaderProgram> const& current_program) const;
+
     virtual void bind_volume_texture(RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const;
     math::mat4 const& local_transform() const;
 
     int64_t const get_num_volume_time_steps() const {return volume_textures_.size();}
     void set_time_cursor_pos(float const time_cursor_pos ) { time_cursor_pos_ = std::min(float(volume_textures_.size()-1)-(10e-6f), time_cursor_pos); }
     virtual void upload_to(RenderContext const& context) const;
+
+
 
     void ray_test(Ray const& ray,
                   int options,
@@ -103,6 +109,7 @@ class TV_3Resource : public GeometryResource {
 
  protected:
   //std::shared_ptr<*/scm::gl::box_volume_geometry> volume_proxy_;
+  bool                                         is_compressed_;
   bool                                         is_pickable_;
   math::mat4                                   local_transform_;
   mutable std::vector<scm::gl::texture_3d_ptr> volume_textures_;

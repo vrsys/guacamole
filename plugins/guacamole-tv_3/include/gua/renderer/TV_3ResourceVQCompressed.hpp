@@ -87,6 +87,9 @@ class TV_3ResourceVQCompressed : public TV_3Resource {
     void draw(RenderContext const& ctx,
               scm::gl::vertex_array_ptr const& vertex_array) const;
 
+    void apply_resource_dependent_uniforms(RenderContext const& ctx,
+                                           std::shared_ptr<ShaderProgram> const& current_program) const override;
+
     void bind_volume_texture(RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const override;
     //math::mat4 const& local_transform() const;
 

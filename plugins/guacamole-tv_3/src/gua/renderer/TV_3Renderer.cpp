@@ -68,7 +68,11 @@ namespace gua {
                                  compositing_shader_program_(nullptr),
                                  no_backface_culling_rasterizer_state_(nullptr),
                                  frontface_culling_rasterizer_state_(nullptr),
-                                 global_substitution_map_(substitution_map) {
+                                 global_substitution_map_compressed_(substitution_map),
+                                 global_substitution_map_uncompressed_(substitution_map) {
+
+                                 global_substitution_map_uncompressed_["gua_tv_3_sampler_3d_type"] = "sampler3D";
+                                 global_substitution_map_compressed_["gua_tv_3_sampler_3d_type"] = "usampler3D";
   }
 
 
