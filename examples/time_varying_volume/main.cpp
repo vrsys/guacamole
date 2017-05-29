@@ -67,7 +67,7 @@ void mouse_button(gua::utils::Trackball& trackball,
 int main(int argc, char** argv) {
 
 
-  std::string in_vol_resource_path = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
+  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
   //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
   std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
   //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
@@ -193,6 +193,7 @@ int main(int argc, char** argv) {
 
   auto test_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume);
   test_tv_3_node->iso_value(iso_value);
+  test_tv_3_node->iso_value(iso_value);
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);
@@ -265,7 +266,7 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(resolve_pass);
   //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  portal_pipe->set_enable_abuffer(true);
+  portal_pipe->set_enable_abuffer(false);
   portal_pipe->set_abuffer_size(2000);
   //portal_camera->set_pipeline_description(portal_pipe);
 
