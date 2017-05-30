@@ -67,12 +67,78 @@ namespace gua {
                                  forward_cube_shader_program_(nullptr),
                                  compositing_shader_program_(nullptr),
                                  no_backface_culling_rasterizer_state_(nullptr),
-                                 frontface_culling_rasterizer_state_(nullptr),
-                                 global_substitution_map_compressed_(substitution_map),
-                                 global_substitution_map_uncompressed_(substitution_map) {
+                                 frontface_culling_rasterizer_state_(nullptr) {
 
+/*
                                  global_substitution_map_uncompressed_["gua_tv_3_sampler_3d_type"] = "sampler3D";
                                  global_substitution_map_compressed_["gua_tv_3_sampler_3d_type"] = "usampler3D";
+*/
+
+
+    //global_substitution_maps_
+    std::vector<TV_3Resource::CompressionMode> compression_modes = {TV_3Resource::CompressionMode::UNCOMPRESSED, TV_3Resource::CompressionMode::SW_VQ, TV_3Resource::CompressionMode::SW_HVQ};
+    std::vector<TV_3Resource::SpatialFilteringMode> s_filtering_modes = {TV_3Resource::SpatialFilteringMode::S_NEAREST, TV_3Resource::SpatialFilteringMode::S_LINEAR};
+    std::vector<TV_3Resource::TemporalFilteringMode> t_filtering_modes = {TV_3Resource::TemporalFilteringMode::T_NEAREST};//, TemporalFilteringMode::T_LINEAR};
+    
+
+    //set shader compilation flags according to compiled shader
+    for( auto const c_mode : compression_modes ) {
+      for( auto const sf_mode : s_filtering_modes ) {
+        for( auto const tf_mode : t_filtering_modes ) {
+
+          std::string gua_tv_3_uncompressed_string = "0";
+          std::string gua_tv_3_vq_compressed_string = "0";
+          if( TV_3Resource::CompressionMode::UNCOMPRESSED == c_mode) {
+            gua_tv_3_uncompressed_string = "1";
+          } else {
+            gua_tv_3_vq_compressed_string = "1";
+          }
+
+          std::string gua_tv_3_spatially_nearest_filtering_string = "0";
+          std::string gua_tv_3_spatially_linear_filtering_string = "0";
+          if( TV_3Resource::SpatialFilteringMode::S_NEAREST == sf_mode) {
+            gua_tv_3_spatially_nearest_filtering_string = "1";
+          } else {
+            gua_tv_3_spatially_linear_filtering_string = "1";
+          }
+
+
+
+/*
+          std::string sampling_function = "";
+          if( TV_3Resource::CompressionMode::UNCOMPRESSED == c_mode ) {
+            sampling_function = "get_uncompressed_sample(vec3 current_pos)";
+          } else {
+            if( TV_3Resource::SpatialFilteringMode::S_NEAREST == sf_mode) {
+              sampling_function = "get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture)";
+            } else {
+              sampling_function = "get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture)";
+            }
+          }
+*/
+          //copy substitution map from other passes
+          global_substitution_maps_[c_mode][sf_mode][tf_mode] = substitution_map;
+
+          //add volume rendering specific variables
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_uncompressed"] = gua_tv_3_uncompressed_string;
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_vq_compressed"] = gua_tv_3_vq_compressed_string;
+          
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_nearest_filtering"] = gua_tv_3_spatially_nearest_filtering_string;
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_linear_filtering"] = gua_tv_3_spatially_linear_filtering_string;
+
+          /*
+
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_sampler_3d_type"] = sampler_type;
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_sampling_function"] = sampling_function;
+          
+
+
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_uncompressed_mode"] = "0";*/
+          //global_substitution_maps_[compression_mode]
+        }
+      }
+    }
+
   }
 
 

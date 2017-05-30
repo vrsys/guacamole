@@ -31,7 +31,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-float iso_value = 0.3;
+float iso_value = 0.02;
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
                   int mousebutton,
@@ -67,11 +67,11 @@ void mouse_button(gua::utils::Trackball& trackball,
 int main(int argc, char** argv) {
 
 
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_SW_VQ_parts.v_rsc";
+  std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/compressed_time_series_SW_VQ_MCM.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
   //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
   //std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
-  std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/CLEAN_START_MEASUREMENTS/SW_VQ__AND__HW_VQ/HEAD/SW_VQ/BS2/16_clusters/head_SW_VQ.v_rsc";
+  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
   
   
   //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   graph.add_node("/plane_transform", plane);
   plane->scale(10.0f, 10.0, 10.0);
   plane->rotate(90.0f, 1.0, 0.0, 0.0);
-  plane->translate(0.0, 0.0, 3.0);
+  plane->translate(0.0, 0.0, -10.0);
 /*
   teapot->set_draw_bounding_box(true);
 */
@@ -147,8 +147,6 @@ int main(int argc, char** argv) {
   plod_rough3->set_uniform("roughness", 0.9f);
   plod_rough3->set_uniform("emissivity", 0.0f);
 /*
-
-/*
   auto pbrMat(gua::Material
                   ->make_new_material());
   pbrMat->set_uniform("Color", chromium);
@@ -167,7 +165,7 @@ int main(int argc, char** argv) {
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
       //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
-      plod_rough,
+      plod_rough3,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
@@ -189,7 +187,7 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
-  graph.add_node("/transform/transform2", test_volume2);
+  //graph.add_node("/transform/transform2", test_volume2);
  // test_volume2->translate(-1.5, -1.5, -0.5);
   auto test_tv_3_node2 = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume2);
   test_tv_3_node2->iso_value(0.5);
@@ -261,15 +259,15 @@ int main(int argc, char** argv) {
   portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   portal_pipe->add_pass(
       std::make_shared<gua::LightVisibilityPassDescription>());
-
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   resolve_pass->background_mode(
       gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
 
   portal_pipe->add_pass(resolve_pass);
+  //portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
   //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  //portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_pipe->set_enable_abuffer(false);
   portal_pipe->set_abuffer_size(2000);
   //portal_camera->set_pipeline_description(portal_pipe);
@@ -339,7 +337,14 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
+  size_t ctr{};
+
   ticker.on_tick.connect([&]() {
+
+    if (++ctr % 150 == 0)
+      std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
+                << window->get_rendering_fps() << ", app fps: "
+                << renderer.get_application_fps() << "\n";
 
     // apply trackball matrix to object
     gua::math::mat4 modelmatrix = head_translation *

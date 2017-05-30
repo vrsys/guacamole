@@ -112,28 +112,14 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material) {
-    if (!surface_ray_casting_programs_uncompressed_.count(material))
-    {
-      auto program = std::make_shared<ShaderProgram>();
-
-      auto smap = global_substitution_map_uncompressed_;
-      for (const auto& i : material->generate_substitution_map()) {
-        smap[i.first] = i.second;
-        //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
-      }
-
-      program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
-      surface_ray_casting_programs_uncompressed_[material] = program;
-    }
-    assert(surface_ray_casting_programs_uncompressed_.count(material));
-
-
+  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material, TV_3Resource::CompressionMode const c_mode, 
+                                                                        TV_3Resource::SpatialFilteringMode const sf_mode, TV_3Resource::TemporalFilteringMode const tf_mode) {
     if (!surface_ray_casting_programs_compressed_.count(material))
     {
       auto program = std::make_shared<ShaderProgram>();
 
-      auto smap = global_substitution_map_compressed_;
+      auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode];
+      //auto smap = global_substitution_map_uncompressed_;
       for (const auto& i : material->generate_substitution_map()) {
         smap[i.first] = i.second;
         //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
@@ -143,6 +129,8 @@ namespace gua {
       surface_ray_casting_programs_compressed_[material] = program;
     }
     assert(surface_ray_casting_programs_compressed_.count(material));
+
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +141,7 @@ namespace gua {
     auto shader_iterator = surface_ray_casting_programs_compressed_.find(material);
     if (shader_iterator == surface_ray_casting_programs_compressed_.end()) {
       try {
-        _initialize_surface_mode_isosurface_program(material);
+        _initialize_surface_mode_isosurface_program(material, TV_3Resource::CompressionMode::SW_VQ, TV_3Resource::SpatialFilteringMode::S_LINEAR);
         program_changed = true;
         return surface_ray_casting_programs_compressed_.at(material);
       }

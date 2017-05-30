@@ -58,7 +58,9 @@ namespace gua {
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
                                                        bool& program_changed);
-  void _initialize_surface_mode_isosurface_program(MaterialShader* material);
+  void _initialize_surface_mode_isosurface_program(MaterialShader* material, TV_3Resource::CompressionMode const c_mode = TV_3Resource::CompressionMode::UNCOMPRESSED, 
+                                                   TV_3Resource::SpatialFilteringMode const sf_mode = TV_3Resource::SpatialFilteringMode::S_NEAREST, 
+                                                   TV_3Resource::TemporalFilteringMode const tf_mode = TV_3Resource::TemporalFilteringMode::T_NEAREST);
 
   void  _load_shaders() override;
   void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;

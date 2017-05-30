@@ -39,6 +39,7 @@ namespace node {
 TV_3Node::TV_3Node(std::string const& name,
                    std::string const& geometry_description,
                    std::string const& geometry_file_path,
+                   TV_3Resource::CompressionMode const compression_mode,
                    std::shared_ptr<Material> const& material,
                    math::mat4 const& transform)
     : GeometryNode(name, transform),
@@ -46,6 +47,7 @@ TV_3Node::TV_3Node(std::string const& name,
       geometry_changed_(true),
       geometry_description_(geometry_description),
       geometry_file_path_(geometry_file_path),
+      compression_mode_(compression_mode),
       material_(material) {
 }
 
