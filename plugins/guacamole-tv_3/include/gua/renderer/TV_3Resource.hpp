@@ -65,6 +65,29 @@ namespace gua {
  */
 class TV_3Resource : public GeometryResource {
  
+  public:
+    enum CompressionMode  {
+      UNCOMPRESSED = 0,
+      SW_VQ   = 1,
+      SW_HVQ = 2,
+
+      COMPRESSION_MODE_COUNT
+    };
+
+    enum SpatialFilteringMode  {
+      S_NEAREST = 0,
+      S_LINEAR   = 1,
+
+      S_FILTERING_MODE_COUNT
+    };
+
+    enum TemporalFilteringMode  {
+      T_NEAREST = 0,
+      T_LINEAR   = 1,
+
+      T_FILTERING_MODE_COUNT
+    };
+
   public: // c'tor /d'tor
 
     static void tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens);

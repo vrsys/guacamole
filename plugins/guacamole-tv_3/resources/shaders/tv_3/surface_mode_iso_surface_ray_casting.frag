@@ -15,8 +15,15 @@ in Data {
 // input
 ///////////////////////////////////////////////////////////////////////////////
 
-layout(binding=0) uniform @gua_tv_3_sampler_3d_type@ volume_texture;
+#if @gua_tv_3_uncompressed@
+layout(binding=0) uniform sampler3D volume_texture;
+#endif
+#if @gua_tv_3_vq_compressed@
+layout(binding=0) uniform usampler3D volume_texture;
 layout(binding=1) uniform sampler2D codebook_texture;
+#endif
+
+
 
 uniform vec4 ms_eye_pos;
 
@@ -136,15 +143,13 @@ vec2 intersect_ray_with_unit_box(in vec3 origin, in vec3 direction ) {
     return t_min_max;
 }
 
-float step_size = 0.0004372;
+float step_size = 0.001372;
 
 
-
+#if @gua_tv_3_vq_compressed@
 float get_uninterpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index_texture, sampler2D in_codebook) {
 
   uint one_d_idx = texture(volume_texture, in_pos ).r;
-
-
 
   ivec3 col_additions = ivec3( in_pos * volume_dimensions ) %  block_offset_vector.y;
   float col = dot(col_additions, block_offset_vector);
@@ -156,7 +161,6 @@ float get_uninterpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index_texture, 
 
   return density;
 }
-
 
 float get_trilinearly_interpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index_texture, sampler2D in_codebook) {
 
@@ -197,14 +201,30 @@ float get_trilinearly_interpolated_sample_SW_VQ(vec3 in_pos, usampler3D in_index
 
   return mix(y_interpolated.x, y_interpolated.y, interpolation_weights.z);
 }
+#endif
 
+#if @gua_tv_3_uncompressed@
+float get_uncompressed_sample(vec3 current_pos) {
+  return texture(volume_texture, current_pos ).r;
+}
+#endif
 
 float get_mode_independent_sample(vec3 current_pos) {
   //return texture(volume_texture, current_pos ).r;
 
+  #if @gua_tv_3_uncompressed@
+    return get_uncompressed_sample(current_pos);
+  #endif
 
-  return get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
-  return get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
+  #if @gua_tv_3_vq_compressed@
+    #if @gua_tv_3_spatially_nearest_filtering@
+      return get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
+    #endif
+    #if @gua_tv_3_spatially_linear_filtering@
+      return get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
+    #endif
+  #endif
+  //return get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
 
 }
 

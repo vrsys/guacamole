@@ -67,15 +67,24 @@ TV_3ResourceVQCompressed::TV_3ResourceVQCompressed(std::string const& resource_f
 
     std::cout << "Created Compressed Volume Resource\n";
 
+  bool is_multi_codebook_mode = false;
 
   std::vector<std::string> volumes_to_load;
   if(resource_file_name_.find(".v_rsc") != std::string::npos) {
+    if(resource_file_name_.find("MCM") != std::string::npos) {
+      is_multi_codebook_mode = true;
+    }
+
     std::string line_buffer;
     std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
     while(std::getline(volume_resource_file, line_buffer)) {
       if(line_buffer.find(".raw") != std::string::npos) {
         volumes_to_load.push_back(line_buffer + ".cb" );
         std::cout << "Pushing back: " + line_buffer + ".cb\n\n";
+
+        if(!is_multi_codebook_mode) {
+          break;
+        }
       }
     }
   } else {
