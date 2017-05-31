@@ -11,11 +11,12 @@ include_directories( ${INCLUDE_PATHS}
                      ${PROJECT_SOURCE_DIR}/include
                      ${GUACAMOLE_NURBS_INCLUDE_DIR}
                      ${GUACAMOLE_PLOD_INCLUDE_DIR}
+                     ${GUACAMOLE_TV_3_INCLUDE_DIR}
                     )
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-add_dependencies(${_EXE_NAME} guacamole guacamole-PLOD)
+add_dependencies(${_EXE_NAME} guacamole guacamole-PLOD guacamole-tv_3)
 # add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs guacamole-PLOD)
 
 list(APPEND LIBS guacamole)
@@ -23,12 +24,12 @@ list(APPEND LIBS guacamole)
 IF (MSVC)
   target_link_libraries( ${_EXE_NAME} 
                          debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE} 
-                         general guacamole guacamole-PLOD)
+                         general guacamole guacamole-PLOD guacamole-tv_3)
                          # general guacamole-nurbs)
 ELSEIF (UNIX)
   target_link_libraries( ${_EXE_NAME} 
                          general ${ASSIMP_LIBRARIES} 
-                         general guacamole guacamole-PLOD)
+                         general guacamole guacamole-PLOD guacamole-tv_3)
                          # general guacamole-nurbs )
 ENDIF (MSVC)
 

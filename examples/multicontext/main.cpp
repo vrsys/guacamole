@@ -32,6 +32,9 @@
 #include <gua/renderer/PLODPass.hpp>
 #include <gua/renderer/PLODLoader.hpp>
 #include <gua/node/PLODNode.hpp>
+#include <gua/renderer/TV_3SurfacePass.hpp>
+#include <gua/renderer/TV_3Loader.hpp>
+#include <gua/node/TV_3Node.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 
 #include <thread>
@@ -69,11 +72,18 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader trimeshloader;
   gua::PLODLoader plodloader;
+  gua::TV_3Loader tv_3loader;
   // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", mat, gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", mat, gua::TriMeshLoader::DEFAULTS));
+
+  auto head_node(tv_3loader.create_geometry_from_file("head_geode","/mnt/pitoti/MA_Adrian/Supernova/VQ_222/a_few_compressed_time_series_SW_VQ_MCM.v_rsc"));
+
+  auto head_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(head_node);
+  head_tv_3_node->set_iso_value(0.03);
+  head_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
   //auto pig_geode(plodloader.load_geometry("plate_geode", "data/objects/pig.kdn", mat, gua::PLODLoader::DEFAULTS));
   // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
   // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
@@ -81,12 +91,15 @@ int main(int argc, char** argv) {
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   auto plate = graph.add_node<gua::node::TransformNode>("/", "plate");
   auto pig = graph.add_node<gua::node::TransformNode>("/", "pig");
+
+  auto head = graph.add_node<gua::node::TransformNode>("/","head");
   pig->scale(0.4);
   // auto video = graph.add_node<gua::node::TransformNode>("/", "video");
   // auto nurbs = graph.add_node<gua::node::TransformNode>("/", "nurbs");
 
   graph.add_node("/teapot", teapot_geode);
   graph.add_node("/plate", plate_geode);
+  graph.add_node("/head", head_tv_3_node);
   //graph.add_node("/pig", pig_geode);
   // graph.add_node("/video", video_geode);
   // graph.add_node("/nurbs", nurbs_geode);
@@ -105,6 +118,7 @@ int main(int argc, char** argv) {
   auto pipe = std::make_shared<gua::PipelineDescription>();
 
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
   pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
@@ -214,19 +228,22 @@ int main(int argc, char** argv) {
 
     // time_value += 0.01f;
 
+    if(head_tv_3_node->get_num_time_steps()) {
+      head_tv_3_node->set_time_cursor_pos( (cnt/5) % head_tv_3_node->get_num_time_steps());
+    }
     teapot_geode->rotate(0.3, 0, 1, 0);
     //video_geode->rotate(0.1, 0, 1, 0);
     //nurbs_geode->rotate(0.3, 0, 0, 1);
 
     ++cnt;
 
-    if (cnt == 10) {
+    if (cnt == 100) {
       add_window("window2", cam2);
     }
-    if (cnt == 20) {
+    if (cnt == 200) {
       add_window("window3", cam3);
     }
-    if (cnt == 30) {
+    if (cnt == 300) {
       add_window("window4", cam4);
     }
 
