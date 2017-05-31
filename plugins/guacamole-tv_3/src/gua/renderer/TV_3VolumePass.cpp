@@ -42,16 +42,15 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3VolumePassDescription::TV_3VolumePassDescription(VolumeRenderMode const mode)
-  : PipelinePassDescription(),
-    volume_render_mode_(mode)
+TV_3VolumePassDescription::TV_3VolumePassDescription()
+  : PipelinePassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
   enable_for_shadows_ = true;
   rendermode_ = RenderMode::Custom;
 }
-
+/*
 ////////////////////////////////////////////////////////////////////////////////
 TV_3VolumePassDescription& TV_3VolumePassDescription::mode(VolumeRenderMode const mode) {
   volume_render_mode_ = mode;
@@ -62,7 +61,7 @@ TV_3VolumePassDescription& TV_3VolumePassDescription::mode(VolumeRenderMode cons
 TV_3VolumePassDescription::VolumeRenderMode TV_3VolumePassDescription::mode() const {
   return volume_render_mode_;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() const {

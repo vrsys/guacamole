@@ -151,27 +151,28 @@ namespace gua {
     auto eye_position = math::vec4(scene.rendering_frustum.get_camera_position(),1.0);
 
 
-   TV_3VolumePassDescription const& vol_rend_desc = static_cast<TV_3VolumePassDescription const&>(desc);
-
-   auto const volume_render_mode = vol_rend_desc.mode();
-
    for (auto const& object : sorted_nodes) {
 
       auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
 
       //skip nodes which do not fit our pass description
-      if( ( ( node::TV_3Node::NodeRenderMode::VOL_MAX_INTENSITY == tv_3_volume_node->mode() ) 
+
+      if( node::TV_3Node::RenderMode::SUR_PBR == tv_3_volume_node->get_render_mode() ) {
+        continue;
+      }
+      /*
+      if( ( ( node::TV_3Node::NodeRenderMode::VOL_MAX_INTENSITY == tv_3_volume_node->get_render_mode() ) 
             && (TV_3VolumePassDescription::VolumeRenderMode::MAX_INTENSITY == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_AVG_INTENSITY == tv_3_volume_node->mode() ) 
+          ( ( node::TV_3Node::NodeRenderMode::VOL_AVG_INTENSITY == tv_3_volume_node->get_render_mode() ) 
                       && (TV_3VolumePassDescription::VolumeRenderMode::AVG_INTENSITY == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_COMPOSITING == tv_3_volume_node->mode() ) 
+          ( ( node::TV_3Node::NodeRenderMode::VOL_COMPOSITING == tv_3_volume_node->get_render_mode() ) 
                       && (TV_3VolumePassDescription::VolumeRenderMode::COMPOSITING == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_ISOSURFACE == tv_3_volume_node->mode() ) 
+          ( ( node::TV_3Node::NodeRenderMode::VOL_ISOSURFACE == tv_3_volume_node->get_render_mode() ) 
                       && (TV_3VolumePassDescription::VolumeRenderMode::ISOSURFACE == volume_render_mode) ) 
 
             ) {
         continue; 
-    }
+    }*/
 
       auto model_matrix = tv_3_volume_node->get_world_transform();
       auto mvp_matrix = projection_matrix * view_matrix * model_matrix;

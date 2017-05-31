@@ -57,10 +57,15 @@ namespace gua {
 
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
-                                                       bool& program_changed);
-  void _initialize_surface_mode_isosurface_program(MaterialShader* material, TV_3Resource::CompressionMode const c_mode = TV_3Resource::CompressionMode::UNCOMPRESSED, 
-                                                   TV_3Resource::SpatialFilteringMode const sf_mode = TV_3Resource::SpatialFilteringMode::S_NEAREST, 
-                                                   TV_3Resource::TemporalFilteringMode const tf_mode = TV_3Resource::TemporalFilteringMode::T_NEAREST);
+                                                       bool& program_changed,
+                                                       CompressionMode const c_mode = CompressionMode::UNCOMPRESSED, 
+                                                       SpatialFilterMode const sf_mode = SpatialFilterMode::S_NEAREST, 
+                                                       TemporalFilterMode const tf_mode = TemporalFilterMode::T_NEAREST);
+
+  void _initialize_surface_mode_isosurface_program(MaterialShader* material, 
+                                                   CompressionMode const c_mode = CompressionMode::UNCOMPRESSED, 
+                                                   SpatialFilterMode const sf_mode = SpatialFilterMode::S_NEAREST, 
+                                                   TemporalFilterMode const tf_mode = TemporalFilterMode::T_NEAREST);
 
   void  _load_shaders() override;
   void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
@@ -76,9 +81,14 @@ namespace gua {
     scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
     scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
 
-    std::vector<ShaderProgramStage>                                     surface_ray_casting_program_stages_;
-    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> surface_ray_casting_programs_uncompressed_;
-    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> surface_ray_casting_programs_compressed_;
+    std::vector<ShaderProgramStage>              surface_ray_casting_program_stages_;
+    std::unordered_map<MaterialShader*, 
+      std::shared_ptr<ShaderProgram>>            surface_ray_casting_programs_uncompressed_;
+    std::unordered_map<MaterialShader*, 
+      std::shared_ptr<ShaderProgram>>            surface_ray_casting_programs_compressed_;
+
+    ModeDependentMaterialPrograms                surface_ray_casting_programs_;
+    //std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>  
 
 };
 

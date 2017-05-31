@@ -64,21 +64,21 @@ public:
 
   std::shared_ptr<node::Node> load_geometry(std::string const& file_name,
                                             unsigned flags = DEFAULTS,
-                                            int64_t const cpu_budget_in_mb = 1024,
-                                            int64_t const gpu_budget_in_mb = 1024);
+                                            int const cpu_budget_in_mb = 1024,
+                                            int const gpu_budget_in_mb = 1024);
 
   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                                         std::string const& file_name,
                                                         std::shared_ptr<Material> const& fallback_material,
                                                         unsigned flags = DEFAULTS,
-                                                        int64_t const cpu_budget = 1024,
-                                                        int64_t const gpu_budget = 1024);
+                                                        int const cpu_budget = 1024,
+                                                        int const gpu_budget = 1024);
 
   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
                                             std::string const& file_name,
                                             unsigned flags =  DEFAULTS,
-                                            int64_t const cpu_budget = 1024,
-                                            int64_t const gpu_budget = 1024);
+                                            int const cpu_budget = 1024,
+                                            int const gpu_budget = 1024);
 
  
  void apply_fallback_material(std::shared_ptr<node::Node> const& root, 
@@ -105,12 +105,13 @@ public:
    * TV_3-lib specific configuration methods. Might be moved into a separate object later.
    *
    */
-  size_t get_cpu_budget_in_mp() const;
-  size_t get_gpu_budget_in_mp() const;
+ /*
+  size_t get_cpu_budget_in_mb() const;
+  size_t get_gpu_budget_in_mb() const;
 
   void   set_cpu_budget_in_mb(size_t const cpu_budget);
   void   set_gpu_budget_in_mb(size_t const gpu_budget);
-
+*/
   bool is_supported(std::string const& file_name) const;
 
 private: // methods

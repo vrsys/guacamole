@@ -77,8 +77,8 @@ namespace gua {
 
     //global_substitution_maps_
     std::vector<TV_3Resource::CompressionMode> compression_modes = {TV_3Resource::CompressionMode::UNCOMPRESSED, TV_3Resource::CompressionMode::SW_VQ, TV_3Resource::CompressionMode::SW_HVQ};
-    std::vector<TV_3Resource::SpatialFilteringMode> s_filtering_modes = {TV_3Resource::SpatialFilteringMode::S_NEAREST, TV_3Resource::SpatialFilteringMode::S_LINEAR};
-    std::vector<TV_3Resource::TemporalFilteringMode> t_filtering_modes = {TV_3Resource::TemporalFilteringMode::T_NEAREST};//, TemporalFilteringMode::T_LINEAR};
+    std::vector<node::TV_3Node::SpatialFilterMode> s_filtering_modes = {node::TV_3Node::SpatialFilterMode::S_NEAREST, node::TV_3Node::SpatialFilterMode::S_LINEAR};
+    std::vector<node::TV_3Node::TemporalFilterMode> t_filtering_modes = {node::TV_3Node::TemporalFilterMode::T_NEAREST};//, TemporalFilterMode::T_LINEAR};
     
 
     //set shader compilation flags according to compiled shader
@@ -94,28 +94,15 @@ namespace gua {
             gua_tv_3_vq_compressed_string = "1";
           }
 
-          std::string gua_tv_3_spatially_nearest_filtering_string = "0";
-          std::string gua_tv_3_spatially_linear_filtering_string = "0";
-          if( TV_3Resource::SpatialFilteringMode::S_NEAREST == sf_mode) {
-            gua_tv_3_spatially_nearest_filtering_string = "1";
+          std::string gua_tv_3_spatially_nearest_filter_string = "0";
+          std::string gua_tv_3_spatially_linear_filter_string = "0";
+          if( node::TV_3Node::SpatialFilterMode::S_NEAREST == sf_mode) {
+            gua_tv_3_spatially_nearest_filter_string = "1";
           } else {
-            gua_tv_3_spatially_linear_filtering_string = "1";
+            gua_tv_3_spatially_linear_filter_string = "1";
           }
 
 
-
-/*
-          std::string sampling_function = "";
-          if( TV_3Resource::CompressionMode::UNCOMPRESSED == c_mode ) {
-            sampling_function = "get_uncompressed_sample(vec3 current_pos)";
-          } else {
-            if( TV_3Resource::SpatialFilteringMode::S_NEAREST == sf_mode) {
-              sampling_function = "get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture)";
-            } else {
-              sampling_function = "get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture)";
-            }
-          }
-*/
           //copy substitution map from other passes
           global_substitution_maps_[c_mode][sf_mode][tf_mode] = substitution_map;
 
@@ -123,18 +110,8 @@ namespace gua {
           global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_uncompressed"] = gua_tv_3_uncompressed_string;
           global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_vq_compressed"] = gua_tv_3_vq_compressed_string;
           
-          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_nearest_filtering"] = gua_tv_3_spatially_nearest_filtering_string;
-          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_linear_filtering"] = gua_tv_3_spatially_linear_filtering_string;
-
-          /*
-
-          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_sampler_3d_type"] = sampler_type;
-          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_sampling_function"] = sampling_function;
-          
-
-
-          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_uncompressed_mode"] = "0";*/
-          //global_substitution_maps_[compression_mode]
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_nearest_filter"] = gua_tv_3_spatially_nearest_filter_string;
+          global_substitution_maps_[c_mode][sf_mode][tf_mode]["gua_tv_3_spatially_linear_filter"] = gua_tv_3_spatially_linear_filter_string;
         }
       }
     }
@@ -346,104 +323,6 @@ static const float g_vertex_buffer_data[] = {
     }
   }
 
-  void TV_3Renderer::_clear_fbo_attachments(gua::RenderContext const& ctx) {
-    if (!volume_raycasting_fbo_) {
-      volume_raycasting_fbo_ = ctx.render_device->create_frame_buffer();
-      volume_raycasting_fbo_->clear_attachments();
-      volume_raycasting_fbo_
-        ->attach_color_buffer(0, volume_raycasting_color_result_);
-      volume_raycasting_fbo_
-        ->attach_depth_stencil_buffer(volume_raycasting_depth_result_);
-
-    ctx.render_context
-    ->set_frame_buffer( volume_raycasting_fbo_ );
-    }
-
-    ctx.render_context
-      ->clear_color_buffer(volume_raycasting_fbo_,
-      0,
-      scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-
-    ctx.render_context
-      ->clear_depth_stencil_buffer(volume_raycasting_fbo_);
-
-    ctx.render_context
-      ->set_frame_buffer(volume_raycasting_fbo_);
-  }
-
-
-
-/*
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  void TV_3Renderer::_raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) {
-
-    RenderContext const& ctx(pipe.get_context());
-    auto& scene = *pipe.current_viewstate().scene;
-
-    auto view_matrix       = scene.rendering_frustum.get_view(); 
-    auto projection_matrix = scene.rendering_frustum.get_projection();
-
-    auto eye_position = math::vec4(scene.rendering_frustum.get_camera_position(),1.0);
-
-   for (auto const& object : sorted_nodes) {
-      auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
-
-      auto model_matrix = tv_3_volume_node->get_world_transform();
-      auto mvp_matrix = projection_matrix * view_matrix * model_matrix;
-      //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-
-      auto inv_model_mat = scm::math::inverse(model_matrix);
-
-      math::vec4 model_space_eye_pos = inv_model_mat * eye_position;
-
-      //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
-      
-      forward_cube_shader_program_->use(ctx);
-      forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
-      forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
-
-      ctx.render_context->bind_vertex_array(box_vertex_array_ );
-      //ctx.render_context->bind_index_buffer(box_element_buffer_, scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
- 
-
-      ctx.render_context->set_rasterizer_state(frontface_culling_rasterizer_state_);
-
-
-     // ctx.render_context->uniform_sampler3D("volume_texture", 0);
-      tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
-      ctx.render_context->apply();
-
-  
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, 36*6);
-
-    }
-}
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  void TV_3Renderer::_postprocessing_pass(gua::Pipeline& pipe) {
-    RenderContext const& ctx(pipe.get_context());
-
-    auto& target = *pipe.current_viewstate().target;
-    bool write_depth = true;
-    target.bind(ctx, write_depth);
-    target.set_viewport(ctx);
-
-    if(compositing_shader_program_ != nullptr) {
-      compositing_shader_program_->use(ctx);
-    }
-    ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 0);
-
-    compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
-
-    auto const& glapi = ctx.render_context->opengl_api();
-    ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-    ctx.render_context->apply();
-    fullscreen_quad_->draw(ctx.render_context);
-  }
-*/
-
   ///////////////////////////////////////////////////////////////////////////////
   void TV_3Renderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
@@ -455,7 +334,6 @@ static const float g_vertex_buffer_data[] = {
     auto& scene = *pipe.current_viewstate().scene;
     auto const& camera = pipe.current_viewstate().camera;
     auto const& frustum = pipe.current_viewstate().frustum;
-    auto& target = *pipe.current_viewstate().target;
 
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
@@ -477,41 +355,14 @@ static const float g_vertex_buffer_data[] = {
     ///////////////////////////////////////////////////////////////////////////
     // resource initialization
     ///////////////////////////////////////////////////////////////////////////
-    scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
     _check_for_resource_updates(pipe, ctx);
 
     _clear_fbo_attachments(ctx);
-    //target.bind(ctx, write_depth);
-    //target.set_viewport(ctx);
 
-    int view_id(camera.config.get_view_id());
 
     if(!shaders_loaded_) {
       _load_shaders();
     }
-
-    MaterialShader*                current_material(nullptr);
-    std::shared_ptr<ShaderProgram> current_shader;
-    //auto current_rasterizer_state = rs_cull_back_;
-
-
-
-    ctx.render_context->reset_state_objects();
-
-
-
-
-    if(forward_cube_shader_program_ != nullptr) {
-      forward_cube_shader_program_->use(ctx);
-    }
-
-    auto view_matrix       = scene.rendering_frustum.get_view(); 
-    auto projection_matrix = scene.rendering_frustum.get_projection();
-
-    auto vp_matrix = projection_matrix * view_matrix;
-    // loop through all objects, sorted by material ----------------------------
-
-    auto eye_position = math::vec4(frustum.get_camera_position(),1.0);
 
 
     ///////////////////////////////////////////////////////////////////////////

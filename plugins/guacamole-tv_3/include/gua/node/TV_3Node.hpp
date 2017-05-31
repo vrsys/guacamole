@@ -47,7 +47,7 @@ namespace node {
 class GUA_TV_3_DLL TV_3Node : public GeometryNode
 {
 public:
-  enum NodeRenderMode  {
+  enum RenderMode  {
     //compatible with TV_3VolumePassDescription
     VOL_ISOSURFACE = 0,
     VOL_MAX_INTENSITY = 1,
@@ -59,13 +59,26 @@ public:
     MODE_COUNT
   };
 
+  enum SpatialFilterMode  {
+    S_NEAREST = 0,
+    S_LINEAR   = 1,
+
+    S_FILTERING_MODE_COUNT
+  };
+
+  enum TemporalFilterMode  {
+    T_NEAREST = 0,
+    T_LINEAR   = 1,
+
+    T_FILTERING_MODE_COUNT
+  };
+
   friend class ::gua::TV_3Loader;
 
   // c'tor
   TV_3Node(std::string const& node_name,
            std::string const& geometry_description = "gua_default_geometry",
            std::string const& geometry_file_path = "gua_no_path_specified",
-           TV_3Resource::CompressionMode const compression_mode = TV_3Resource::CompressionMode::UNCOMPRESSED,
            std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
            math::mat4 const& transform = math::mat4::identity());
 
@@ -100,15 +113,31 @@ public:
 
   void accept(NodeVisitor& visitor) override;
 
-  int64_t const num_timesteps() const { return geometry_->get_num_volume_time_steps(); }
+  int const num_timesteps() const { return geometry_->get_num_volume_time_steps(); }
   void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
 
-  void set_node_rendering_mode();
+  RenderMode                 get_render_mode() const {return render_mode_;}
+  void                       set_render_mode(RenderMode const render_mode) {render_mode_ = render_mode;}
 
-  NodeRenderMode const mode() const {return render_mode_;} ;
-  void                 mode(NodeRenderMode const render_mode) {render_mode_ = render_mode;}
-  float                iso_value() const {return iso_value_;}
-  void                 iso_value(float iso_value) {iso_value_ = iso_value;}
+  float                      get_iso_value() const {return iso_value_;}
+  void                       set_iso_value(float iso_value) {iso_value_ = iso_value;}
+
+  TV_3Resource::
+  CompressionMode            get_compression_mode() const {return geometry_->get_compression_mode();}
+
+  SpatialFilterMode          get_spatial_filter_mode() const {return spatial_filter_mode_;}
+
+  void                       enable_spatial_linear_filter(bool enable_s_linear_filter) { 
+                                  spatial_filter_mode_ 
+                                    = (enable_s_linear_filter ? SpatialFilterMode::S_LINEAR : SpatialFilterMode::S_NEAREST);
+                                }
+
+  TemporalFilterMode         get_temporal_filter_mode() const {return temporal_filter_mode_;}
+
+  void                       enable_temporal_linear_filter(bool enable_t_linear_filter) {
+                                  temporal_filter_mode_ 
+                                    = (enable_t_linear_filter ? TemporalFilterMode::T_LINEAR : TemporalFilterMode::T_NEAREST);
+                                }
 
 protected:
 
@@ -123,10 +152,12 @@ private:  // attributes e.g. special attributes for drawing
 
   std::shared_ptr<Material>     material_;
   bool                          material_changed_;
-  NodeRenderMode                render_mode_;
+  RenderMode                    render_mode_;
 
-  float                         iso_value_    = 0.5;
-  TV_3Resource::CompressionMode compression_mode_; 
+  float                         iso_value_ {0.0};
+
+  SpatialFilterMode             spatial_filter_mode_ {SpatialFilterMode::S_NEAREST};
+  TemporalFilterMode            temporal_filter_mode_ {TemporalFilterMode::T_NEAREST};
 };
 
 }  // namespace node {

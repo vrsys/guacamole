@@ -62,7 +62,7 @@ std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3ResourceVQCompress
 ////////////////////////////////////////////////////////////////////////////////
 
 TV_3ResourceVQCompressed::TV_3ResourceVQCompressed(std::string const& resource_file_string, bool is_pickable)
-  : TV_3Resource(resource_file_string, is_pickable, true),
+  : TV_3Resource(resource_file_string, is_pickable, CompressionMode::SW_VQ),
     codebook_textures_() {
 
     std::cout << "Created Compressed Volume Resource\n";

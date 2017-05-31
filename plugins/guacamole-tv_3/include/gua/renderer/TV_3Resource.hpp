@@ -66,6 +66,15 @@ namespace gua {
 class TV_3Resource : public GeometryResource {
  
   public:
+    //https://stackoverflow.com/questions/18837857/cant-use-enum-class-as-unordered-map-key
+    struct EnumClassHash {
+      template <typename T>
+      std::size_t operator()(T t) const
+      {
+          return static_cast<std::size_t>(t);
+      }
+    };
+
     enum CompressionMode  {
       UNCOMPRESSED = 0,
       SW_VQ   = 1,
@@ -74,25 +83,12 @@ class TV_3Resource : public GeometryResource {
       COMPRESSION_MODE_COUNT
     };
 
-    enum SpatialFilteringMode  {
-      S_NEAREST = 0,
-      S_LINEAR   = 1,
-
-      S_FILTERING_MODE_COUNT
-    };
-
-    enum TemporalFilteringMode  {
-      T_NEAREST = 0,
-      T_LINEAR   = 1,
-
-      T_FILTERING_MODE_COUNT
-    };
 
   public: // c'tor /d'tor
 
     static void tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens);
 
-    TV_3Resource(std::string const& resource_file_string, bool is_pickable, bool is_compressed = false);
+    TV_3Resource(std::string const& resource_file_string, bool is_pickable, CompressionMode compression_mode = CompressionMode::UNCOMPRESSED);
 
     ~TV_3Resource();
 
@@ -118,6 +114,8 @@ class TV_3Resource : public GeometryResource {
 
     virtual void bind_volume_texture(RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const;
     math::mat4 const& local_transform() const;
+    
+    CompressionMode get_compression_mode() const {return compression_mode_;}
 
     int64_t const get_num_volume_time_steps() const {return volume_textures_.size();}
     void set_time_cursor_pos(float const time_cursor_pos ) { time_cursor_pos_ = std::min(float(volume_textures_.size()-1)-(10e-6f), time_cursor_pos); }
@@ -132,7 +130,6 @@ class TV_3Resource : public GeometryResource {
 
  protected:
   //std::shared_ptr<*/scm::gl::box_volume_geometry> volume_proxy_;
-  bool                                         is_compressed_;
   bool                                         is_pickable_;
   math::mat4                                   local_transform_;
   mutable std::vector<scm::gl::texture_3d_ptr> volume_textures_;
@@ -140,6 +137,8 @@ class TV_3Resource : public GeometryResource {
   std::string                                  resource_file_name_ = "";
   mutable uint64_t                             frame_counter_ = 0;
   
+  CompressionMode                              compression_mode_;
+
   static std::map<std::size_t, std::map<std::string, uint64_t>> volume_descriptor_tokens_;
   static std::map<std::size_t, std::vector<std::ifstream>> per_resource_file_streams_;
   static std::map<std::size_t, std::vector<std::vector<uint8_t >>> per_resource_cpu_cache_;

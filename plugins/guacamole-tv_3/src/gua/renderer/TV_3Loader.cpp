@@ -109,8 +109,8 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_name,
                                                       unsigned flags,
-                                                      int64_t const cpu_budget,
-                                                      int64_t const gpu_budget) {
+                                                      int const cpu_budget,
+                                                      int const gpu_budget) {
 
   std::shared_ptr<node::Node> cached_node = nullptr;
   std::string key(file_name + "_" + string_utils::to_string(flags));
@@ -180,8 +180,8 @@ std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string co
                                                                   std::string const& file_name,
                                                                   std::shared_ptr<Material> const& fallback_material,
                                                                   unsigned flags,
-                                                                  int64_t const cpu_budget,
-                                                                  int64_t const gpu_budget) {
+                                                                  int const cpu_budget,
+                                                                  int const gpu_budget) {
   auto cached_node(load_geometry(file_name, flags));
 
   if (cached_node) {
@@ -202,8 +202,8 @@ std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string co
 std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name,
                                                           std::string const& file_name,
                                                           unsigned flags,
-                                                          int64_t const cpu_budget,
-                                                          int64_t const gpu_budget) {
+                                                          int const cpu_budget,
+                                                          int const gpu_budget) {
   auto cached_node(load_geometry(file_name, flags));
 
   if (cached_node) {
