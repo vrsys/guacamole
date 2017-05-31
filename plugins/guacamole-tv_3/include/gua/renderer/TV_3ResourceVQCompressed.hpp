@@ -104,7 +104,9 @@ class TV_3ResourceVQCompressed : public TV_3Resource {
 */
 
  protected:
-  mutable std::vector<scm::gl::texture_2d_ptr> codebook_textures_;
+  mutable int32_t num_codebooks_ = 0;
+  static std::mutex cpu_codebook_loading_mutex_;
+  static std::map<std::size_t, bool> are_cpu_codebooks_loaded_;
   static std::map<std::size_t, std::vector<std::ifstream>> per_resource_codebook_file_streams_;
   static std::map<std::size_t, std::vector<std::vector<uint8_t >>> per_resource_codebook_cpu_cache_;
 };
