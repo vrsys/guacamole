@@ -31,7 +31,8 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-float iso_value = 0.02;
+bool enable_spatial_linear_filtering = false;
+float iso_value = 0.3;//0.02;
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
                   int mousebutton,
@@ -122,11 +123,11 @@ int main(int argc, char** argv) {
   gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader);
 
   //create material for pointcloud
-  auto plod_rough = plod_keep_color_shader->make_new_material();
-  plod_rough->set_uniform("color", transparent_light_green);
-  plod_rough->set_uniform("metalness", 1.0f);
-  plod_rough->set_uniform("roughness", 0.2f);
-  plod_rough->set_uniform("emissivity", 0.0f);
+  auto shiny_green_mat = plod_keep_color_shader->make_new_material();
+  shiny_green_mat->set_uniform("color", transparent_light_green);
+  shiny_green_mat->set_uniform("metalness", 1.0f);
+  shiny_green_mat->set_uniform("roughness", 0.2f);
+  shiny_green_mat->set_uniform("emissivity", 0.0f);
 
 
   auto plod_keep_color_shader2(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color2", plod_keep_input_desc));
@@ -165,7 +166,7 @@ int main(int argc, char** argv) {
       //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
       //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
       //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
-      plod_rough3,
+      shiny_green_mat,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
@@ -187,15 +188,16 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
-  //graph.add_node("/transform/transform2", test_volume2);
+  graph.add_node("/transform/transform2", test_volume2);
  // test_volume2->translate(-1.5, -1.5, -0.5);
   auto test_tv_3_node2 = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume2);
-  test_tv_3_node2->iso_value(0.5);
+  test_tv_3_node2->set_iso_value(0.5);
+  test_tv_3_node2->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
 
 
   auto test_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume);
-  test_tv_3_node->iso_value(iso_value);
-  test_tv_3_node->iso_value(iso_value);
+  test_tv_3_node->set_iso_value(iso_value);
+  test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);
@@ -266,7 +268,6 @@ int main(int argc, char** argv) {
 
   portal_pipe->add_pass(resolve_pass);
   //portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
-  //portal_pipe->add_pass(std::make_shared<gua::TV_3SurfacePassDescription>());
   //portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_pipe->set_enable_abuffer(false);
   portal_pipe->set_abuffer_size(2000);
@@ -324,10 +325,13 @@ int main(int argc, char** argv) {
         //case 'A': nav->translate(-speed, 0.0, 0.0); break;
         case 'S': iso_value=std::max(0.0f, iso_value-0.01f); break;
  
+        case 'K': enable_spatial_linear_filtering = !enable_spatial_linear_filtering;
+        test_tv_3_node->enable_spatial_linear_filter(enable_spatial_linear_filtering);
+        break;
         default: break;
         };
 
-        test_tv_3_node->iso_value(iso_value);
+        test_tv_3_node->set_iso_value(iso_value);
     });
 
 

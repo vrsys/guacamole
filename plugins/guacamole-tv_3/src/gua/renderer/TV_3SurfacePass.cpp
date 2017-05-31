@@ -64,7 +64,6 @@ PipelinePass TV_3SurfacePassDescription::make_pass(RenderContext const& ctx, Sub
   PipelinePass pass{ *this, ctx, substitution_map };
 
   auto renderer = std::make_shared<TV_3SurfaceRenderer>(ctx, substitution_map);
-  //renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {

@@ -217,10 +217,10 @@ float get_mode_independent_sample(vec3 current_pos) {
   #endif
 
   #if @gua_tv_3_vq_compressed@
-    #if @gua_tv_3_spatially_nearest_filtering@
+    #if @gua_tv_3_spatially_nearest_filter@
       return get_uninterpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
     #endif
-    #if @gua_tv_3_spatially_linear_filtering@
+    #if @gua_tv_3_spatially_linear_filter@
       return get_trilinearly_interpolated_sample_SW_VQ(current_pos, volume_texture, codebook_texture);
     #endif
   #endif

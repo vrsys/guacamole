@@ -30,27 +30,30 @@ namespace gua {
   class GUA_TV_3_DLL TV_3VolumePassDescription : public PipelinePassDescription {
 
   public : // typedefs, enums
-
+/*
   enum VolumeRenderMode {
+    
     ISOSURFACE = 0,
     MAX_INTENSITY = 1,
     COMPOSITING = 2,
     AVG_INTENSITY = 3
-  };
 
+  };
+*/
    friend class Pipeline;
 
   public :
 
-    TV_3VolumePassDescription(VolumeRenderMode const volume_render_mode_ = VolumeRenderMode::MAX_INTENSITY);
+    TV_3VolumePassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
+/*
     TV_3VolumePassDescription& mode(VolumeRenderMode const mode);
     VolumeRenderMode mode() const;
-
+*/
   private :
-    VolumeRenderMode volume_render_mode_;
+    //VolumeRenderMode volume_render_mode_;
 };
 
 }

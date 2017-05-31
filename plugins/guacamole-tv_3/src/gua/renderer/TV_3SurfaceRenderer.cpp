@@ -67,6 +67,7 @@ namespace gua {
 
 
   ///////////////////////////////////////////////////////////////////////////////
+
   void TV_3SurfaceRenderer::_create_fbo_resources(gua::RenderContext const& ctx,
                                            scm::math::vec2ui const& render_target_dims) {
     // initialize FBO lazy during runtime
@@ -83,6 +84,8 @@ namespace gua {
                           scm::gl::FORMAT_D32F,
                           1, 1, 1);
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
 
   void TV_3SurfaceRenderer::_clear_fbo_attachments(gua::RenderContext const& ctx) {
     if (!volume_raycasting_fbo_) {
@@ -112,23 +115,24 @@ namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material, TV_3Resource::CompressionMode const c_mode, 
-                                                                        TV_3Resource::SpatialFilteringMode const sf_mode, TV_3Resource::TemporalFilteringMode const tf_mode) {
-    if (!surface_ray_casting_programs_compressed_.count(material))
+  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material, CompressionMode const c_mode, 
+                                                                        SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode) {
+    
+    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode];
+    if (!current_map_by_mode.count(material))
     {
       auto program = std::make_shared<ShaderProgram>();
 
       auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode];
-      //auto smap = global_substitution_map_uncompressed_;
+
       for (const auto& i : material->generate_substitution_map()) {
         smap[i.first] = i.second;
-        //std::cout << "i.first: " << i.first << "\n" << i.second << "\n\n";
       }
 
       program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
-      surface_ray_casting_programs_compressed_[material] = program;
+      current_map_by_mode[material] = program;
     }
-    assert(surface_ray_casting_programs_compressed_.count(material));
+    assert(current_map_by_mode.count(material));
 
 
   }
@@ -137,13 +141,15 @@ namespace gua {
 
   std::shared_ptr<ShaderProgram> TV_3SurfaceRenderer::_get_material_program(MaterialShader* material,
                                                                             std::shared_ptr<ShaderProgram> const& current_program,
-                                                                            bool& program_changed) {
-    auto shader_iterator = surface_ray_casting_programs_compressed_.find(material);
-    if (shader_iterator == surface_ray_casting_programs_compressed_.end()) {
+                                                                            bool& program_changed, CompressionMode const c_mode, 
+                                                                            SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode) {
+    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode];
+    auto shader_iterator = current_map_by_mode.find(material);
+    if (shader_iterator == current_map_by_mode.end()) {
       try {
-        _initialize_surface_mode_isosurface_program(material, TV_3Resource::CompressionMode::SW_VQ, TV_3Resource::SpatialFilteringMode::S_LINEAR);
+        _initialize_surface_mode_isosurface_program(material, c_mode, sf_mode, tf_mode);
         program_changed = true;
-        return surface_ray_casting_programs_compressed_.at(material);
+        return current_map_by_mode.at(material);
       }
       catch (std::exception& e) {
         Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
@@ -180,7 +186,6 @@ namespace gua {
   void TV_3SurfaceRenderer::_raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) {
 
     RenderContext const& ctx(pipe.get_context());
-
     auto& target = *pipe.current_viewstate().target;
     bool write_depth = true;
     target.bind(ctx, write_depth);
@@ -203,12 +208,22 @@ namespace gua {
     for (auto const& object : sorted_nodes) {
       auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
 
+      if( node::TV_3Node::RenderMode::SUR_PBR != tv_3_volume_node->get_render_mode() ) {
+        continue;
+      }
+
+      if (current_material != tv_3_volume_node->get_material()->get_shader()) {
       current_material = tv_3_volume_node->get_material()->get_shader();
 
+      auto compression_mode = tv_3_volume_node->get_compression_mode();
+      auto spatial_filter_mode = tv_3_volume_node->get_spatial_filter_mode();
+      auto temporal_filter_mode = tv_3_volume_node->get_temporal_filter_mode();
       current_material_program = _get_material_program(current_material, 
                                                        current_material_program, 
-                                                       program_changed);
+                                                       program_changed,
+                                                       compression_mode, spatial_filter_mode, temporal_filter_mode );
 
+      }
 
       auto model_matrix = tv_3_volume_node->get_cached_world_transform();
       auto mvp_matrix = projection_matrix * view_matrix * model_matrix;
@@ -228,7 +243,7 @@ namespace gua {
       current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       current_material_program->apply_uniform(ctx, "volume_texture", 0);
       current_material_program->apply_uniform(ctx, "codebook_texture", 1);
-      current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->iso_value());
+      current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->get_iso_value());
       if(program_changed) {
         tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
       }
@@ -251,33 +266,10 @@ namespace gua {
     }
 
     target.unbind(ctx);
-}
-
-  void TV_3SurfaceRenderer::_postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
   }
 
-/*
   /////////////////////////////////////////////////////////////////////////////////////////////
   void TV_3SurfaceRenderer::_postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
-    RenderContext const& ctx(pipe.get_context());
-
-    auto& target = *pipe.current_viewstate().target;
-    bool write_depth = true;
-    target.bind(ctx, write_depth);
-    target.set_viewport(ctx);
-
-    if(compositing_shader_program_ != nullptr) {
-      compositing_shader_program_->use(ctx);
-    }
-    ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 0);
-
-    compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
-
-    auto const& glapi = ctx.render_context->opengl_api();
-    ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-    ctx.render_context->apply();
-    fullscreen_quad_->draw(ctx.render_context);
   }
-*/
 
 }

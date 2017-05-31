@@ -32,4 +32,4 @@
 #define GUA_TV_3_DLL
 #endif // #if defined(_MSC_VER)
 
-#endif  // GUA_PLOD_HPP
+#endif  // GUA_TV_3_HPP

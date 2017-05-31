@@ -54,7 +54,7 @@
 
 namespace gua {
 
-std::map<std::size_t, std::map<std::string, uint64_t>>     TV_3Resource::volume_descriptor_tokens_;
+std::map<std::size_t, std::map<std::string, uint64_t>>    TV_3Resource::volume_descriptor_tokens_;
 std::map<std::size_t, std::vector<std::ifstream>>         TV_3Resource::per_resource_file_streams_;
 std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3Resource::per_resource_cpu_cache_;
 
@@ -117,10 +117,10 @@ void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable, bool is_compressed)
+TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable, CompressionMode compression_mode)
   : resource_file_name_(resource_file_string),
     is_pickable_(is_pickable),
-    is_compressed_(is_compressed),
+    compression_mode_(compression_mode),
     local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)),
     volume_textures_() {
     std::cout << "Created Uncompressed Volume Resource\n";
@@ -191,7 +191,7 @@ void TV_3Resource::upload_to(RenderContext const& ctx) const {
 
     scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
 
-    if( is_compressed_ ) { 
+    if( CompressionMode::UNCOMPRESSED != compression_mode_ ) { 
       int64_t const num_index_bytes = current_tokens["i"] / 8;
       int64_t const block_size =  current_tokens["bs"];
       for(int dim_idx = 0; dim_idx < 3; ++dim_idx ) {

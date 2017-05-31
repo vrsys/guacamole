@@ -26,24 +26,42 @@
 #include <map>
 #include <unordered_map>
 
-#include <scm/gl_core/render_device/opengl/gl_core.h>
-
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/View.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-#include <gua/renderer/TV_3Resource.hpp>
+#include <gua/node/TV_3Node.hpp>
+//#include <gua/renderer/TV_3Resource.hpp>
 
 //external headers
 
 namespace gua {
-
-  //using 
-
+  //forward declarations
   class MaterialShader;
   class ShaderProgram;
+  
+  //using 
+  using CompressionMode = TV_3Resource::CompressionMode;
+  using SpatialFilterMode = node::TV_3Node::SpatialFilterMode;
+  using TemporalFilterMode = node::TV_3Node::TemporalFilterMode;
+  using EnumClassHash = TV_3Resource::EnumClassHash;
+  template <class T>
+  using HashMapCompressionModeTo = std::unordered_map<CompressionMode, T, EnumClassHash>;
+  template <class T>
+  using HashMapSpatialFilterModeTo = std::unordered_map<SpatialFilterMode, T, EnumClassHash>;
+  template <class T>
+  using HashMapTemporalFilterModeTo = std::unordered_map<TemporalFilterMode, T, EnumClassHash>;
+  template <class T>
+  using HashMapVolumeModesTo 
+    = HashMapCompressionModeTo<HashMapSpatialFilterModeTo<HashMapTemporalFilterModeTo<T>>>;
+  using MaterialProgramsMap = std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>;
+
+  using ModeDependentSubstitutionMap 
+    = HashMapVolumeModesTo<SubstitutionMap>;
+  using ModeDependentMaterialPrograms
+    = HashMapVolumeModesTo<MaterialProgramsMap>;
 
   class TV_3Renderer {
  
@@ -113,21 +131,17 @@ namespace gua {
     ////////////////////////////////////////////////////////////////////////////////////
     bool                                         shaders_loaded_;
 
-    math::vec2ui                                                         current_rendertarget_dims_;
+    math::vec2ui                                  current_rendertarget_dims_;
     //additional GPU resources 
-    std::vector<ShaderProgramStage>                                      forward_cube_shader_stages_;
+    std::vector<ShaderProgramStage>               forward_cube_shader_stages_;
 
-    std::shared_ptr<ShaderProgram>                                       forward_cube_shader_program_;
+    std::shared_ptr<ShaderProgram>                forward_cube_shader_program_;
 
-    std::vector<ShaderProgramStage>                                      compositing_shader_stages_;
-    std::shared_ptr<ShaderProgram>                                       compositing_shader_program_;
+    std::vector<ShaderProgramStage>               compositing_shader_stages_;
+    std::shared_ptr<ShaderProgram>                compositing_shader_program_;
 
-    std::map<TV_3Resource::CompressionMode, 
-      std::map<TV_3Resource::SpatialFilteringMode, 
-        std::map<TV_3Resource::TemporalFilteringMode, SubstitutionMap> > >             global_substitution_maps_;
-    //SubstitutionMap                                                      global_substitution_map_uncompressed_;
-    //SubstitutionMap                                                      global_substitution_map_compressed_;
-    ResourceFactory                                                      factory_;
+    ModeDependentSubstitutionMap                  global_substitution_maps_;
+    ResourceFactory                               factory_;
   };
 
 }
