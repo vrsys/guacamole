@@ -112,6 +112,8 @@ namespace gua {
 
   void TV_3VolumeRenderer::_load_shaders() {
 
+    TV_3Renderer::_load_shaders();
+
   #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
   #endif
@@ -150,6 +152,13 @@ namespace gua {
 
     auto eye_position = math::vec4(scene.rendering_frustum.get_camera_position(),1.0);
 
+   MaterialShader* current_material(nullptr);
+   std::shared_ptr<ShaderProgram> current_material_program;
+   bool program_changed = false;
+
+    auto const& camera = pipe.current_viewstate().camera;
+    int view_id(camera.config.get_view_id());
+
 
    for (auto const& object : sorted_nodes) {
 
@@ -161,37 +170,44 @@ namespace gua {
         continue;
       }
 
+      if (current_material != tv_3_volume_node->get_material()->get_shader()) {
+      current_material = tv_3_volume_node->get_material()->get_shader();
 
-    std::cout << "Rendering the volume pass\n";
-      /*
-      if( ( ( node::TV_3Node::NodeRenderMode::VOL_MAX_INTENSITY == tv_3_volume_node->get_render_mode() ) 
-            && (TV_3VolumePassDescription::VolumeRenderMode::MAX_INTENSITY == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_AVG_INTENSITY == tv_3_volume_node->get_render_mode() ) 
-                      && (TV_3VolumePassDescription::VolumeRenderMode::AVG_INTENSITY == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_COMPOSITING == tv_3_volume_node->get_render_mode() ) 
-                      && (TV_3VolumePassDescription::VolumeRenderMode::COMPOSITING == volume_render_mode) ) ||
-          ( ( node::TV_3Node::NodeRenderMode::VOL_ISOSURFACE == tv_3_volume_node->get_render_mode() ) 
-                      && (TV_3VolumePassDescription::VolumeRenderMode::ISOSURFACE == volume_render_mode) ) 
+      auto compression_mode = tv_3_volume_node->get_compression_mode();
+      auto spatial_filter_mode = tv_3_volume_node->get_spatial_filter_mode();
+      auto temporal_filter_mode = tv_3_volume_node->get_temporal_filter_mode();
+      auto node_render_mode = tv_3_volume_node->get_render_mode();
+      current_material_program = _get_material_program(current_material, 
+                                                       current_material_program, 
+                                                       program_changed,
+                                                       compression_mode, spatial_filter_mode, temporal_filter_mode, node_render_mode);
 
-            ) {
-        continue; 
-    }*/
+      }
 
-      auto model_matrix = tv_3_volume_node->get_world_transform();
+      auto model_matrix = tv_3_volume_node->get_cached_world_transform();
       auto mvp_matrix = projection_matrix * view_matrix * model_matrix;
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-
       auto inv_model_mat = scm::math::inverse(model_matrix);
 
       math::vec4 model_space_eye_pos = inv_model_mat * eye_position;
 
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
+        
+      auto normal_matrix = scm::math::transpose(scm::math::inverse(model_matrix));
+
+      current_material_program->use(ctx);
+      current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+      current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
+      current_material_program->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
+      current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
+      current_material_program->apply_uniform(ctx, "volume_texture", 0);
+      current_material_program->apply_uniform(ctx, "codebook_texture", 1);
+      current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->get_iso_value());
       
-      ctx.render_context->set_frame_buffer(volume_raycasting_fbo_);
-      forward_cube_shader_program_->use(ctx);
-      forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
-      forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
-      forward_cube_shader_program_->apply_uniform(ctx, "volume_texture", 0);
+
+      if(program_changed) {
+        tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+      }
 
       ctx.render_context->bind_vertex_array(box_vertex_array_ );
       //ctx.render_context->bind_index_buffer(box_element_buffer_, scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);

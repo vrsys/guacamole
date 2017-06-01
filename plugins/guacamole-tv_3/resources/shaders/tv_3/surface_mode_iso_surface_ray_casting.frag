@@ -23,6 +23,9 @@ layout(binding=0) uniform usampler3D volume_texture;
 layout(binding=1) uniform sampler2D codebook_texture;
 #endif
 
+#if @gua_tv_3_volume_behaviour@
+layout(location = 0) out vec4 out_color;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // common ray casting uniforms
@@ -218,12 +221,25 @@ vec3 get_gradient(vec3 in_sampling_pos) {
   return -normalize(gradient);
 }
 
-
+#if @gua_tv_3_surface_pbr_behaviour@
 @include "_mode__iso_surface_ray_casting.frag"
+#endif
+
+#if @gua_tv_3_volume_behaviour@
+@include "_mode__max_intensity_ray_casting.frag"
+#endif
+
 
 void main() {
 
+#if @gua_tv_3_surface_pbr_behaviour@
   ms_shading_pos = raycast_iso_surface();
+#endif
+
+#if @gua_tv_3_volume_behaviour@
+  vec3 max_intensity_color = vec3(0.0, 0.0, 0.0);
+  ms_shading_pos = raycast_max_intensity(max_intensity_color);
+#endif
 
   //these two variables should not be altered by any material programs
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(ms_shading_pos),1.0) ).xyz );
@@ -271,5 +287,12 @@ void main() {
 
   float gbuffer_depth = projected_pos.z * 0.5 + 0.5;
   gl_FragDepth = gbuffer_depth;
+
+  #if @gua_tv_3_surface_pbr_behaviour@
   submit_fragment(gbuffer_depth);
+  #endif
+
+  #if @gua_tv_3_volume_behaviour@
+  out_color = vec4(max_intensity_color, 1.0);
+  #endif
 }

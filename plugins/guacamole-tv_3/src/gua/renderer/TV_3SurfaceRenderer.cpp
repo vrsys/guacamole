@@ -113,74 +113,9 @@ namespace gua {
       ->set_frame_buffer(volume_raycasting_fbo_);
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material, CompressionMode const c_mode, 
-                                                                        SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
-    
-    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
-    if (!current_map_by_mode.count(material))
-    {
-      auto program = std::make_shared<ShaderProgram>();
-
-      auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode];
-
-      for (const auto& i : material->generate_substitution_map()) {
-        smap[i.first] = i.second;
-      }
-
-      program->set_shaders(surface_ray_casting_program_stages_, std::list<std::string>(), false, smap);
-      current_map_by_mode[material] = program;
-    }
-    assert(current_map_by_mode.count(material));
 
 
-  }
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  std::shared_ptr<ShaderProgram> TV_3SurfaceRenderer::_get_material_program(MaterialShader* material,
-                                                                            std::shared_ptr<ShaderProgram> const& current_program,
-                                                                            bool& program_changed, CompressionMode const c_mode, 
-                                                                            SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
-    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
-    auto shader_iterator = current_map_by_mode.find(material);
-    if (shader_iterator == current_map_by_mode.end()) {
-      try {
-        _initialize_surface_mode_isosurface_program(material, c_mode, sf_mode, tf_mode, r_mode);
-        program_changed = true;
-        return current_map_by_mode.at(material);
-      }
-      catch (std::exception& e) {
-        Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
-        return std::shared_ptr<ShaderProgram>();
-      }
-    } else {
-      if (current_program == shader_iterator->second)
-      {
-        program_changed = false;
-        return current_program;
-      }
-      else {
-        program_changed = true;
-        return shader_iterator->second;
-      }
-    }
-  }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-  void TV_3SurfaceRenderer::_load_shaders() {
-
-  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
-  #endif
-    ResourceFactory factory;
-    surface_ray_casting_program_stages_.clear();
-    surface_ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    surface_ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
-    
-    shaders_loaded_ = true;
-  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   void TV_3SurfaceRenderer::_raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) {

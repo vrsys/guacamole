@@ -105,6 +105,30 @@ namespace gua {
               gua_tv_3_spatially_linear_filter_string = "1";
             }
 
+            std::string gua_tv_3_surface_pbr_behaviour_string = "0";
+            std::string gua_tv_3_volume_behaviour_string = "0";
+
+              std::string gua_tv_3_mode_vol_isosurface_string = "0";
+              std::string gua_tv_3_mode_vol_max_intensity_string = "0";
+              std::string gua_tv_3_mode_vol_compositing_string = "0";
+              std::string gua_tv_3_mode_vol_avg_intensity_string = "0";
+
+            if( node::TV_3Node::RenderMode::SUR_PBR == r_mode) {
+              gua_tv_3_surface_pbr_behaviour_string = "1";
+            } else {
+              gua_tv_3_volume_behaviour_string = "1";
+              if( node::TV_3Node::RenderMode::VOL_ISOSURFACE == r_mode) {
+                gua_tv_3_mode_vol_isosurface_string = "1";
+              } else if( node::TV_3Node::RenderMode::VOL_MAX_INTENSITY == r_mode) {
+                gua_tv_3_mode_vol_max_intensity_string = "1";
+              } else if( node::TV_3Node::RenderMode::VOL_COMPOSITING == r_mode) {
+                gua_tv_3_mode_vol_compositing_string = "1";
+              } else if( node::TV_3Node::RenderMode::VOL_AVG_INTENSITY == r_mode) {
+                gua_tv_3_mode_vol_avg_intensity_string = "1";
+              }
+            
+            }
+
 
             //copy substitution map from other passes
             global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode] = substitution_map;
@@ -115,11 +139,89 @@ namespace gua {
             
             global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_spatially_nearest_filter"] = gua_tv_3_spatially_nearest_filter_string;
             global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_spatially_linear_filter"] = gua_tv_3_spatially_linear_filter_string;
+
+            global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_surface_pbr_behaviour"] = gua_tv_3_surface_pbr_behaviour_string;
+            global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_volume_behaviour"] = gua_tv_3_volume_behaviour_string;
+
+              global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_mode_vol_isosurface"] = gua_tv_3_mode_vol_isosurface_string;
+              global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_mode_vol_max_intensity"] = gua_tv_3_mode_vol_max_intensity_string;
+              global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_mode_vol_compositing"] = gua_tv_3_mode_vol_compositing_string;
+              global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode]["gua_tv_3_mode_vol_avg_intensity"] = gua_tv_3_mode_vol_avg_intensity_string;
           }
         }
       }
     }
 
+  }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+  void TV_3Renderer::_load_shaders() {
+
+  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
+  #endif
+    ResourceFactory factory;
+    ray_casting_program_stages_.clear();
+    ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
+    ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
+    
+    shaders_loaded_ = true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void TV_3Renderer::_initialize_ray_casting_program(MaterialShader* material, CompressionMode const c_mode, 
+                                                                        SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
+    
+    auto& current_map_by_mode = ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
+    if (!current_map_by_mode.count(material))
+    {
+      auto program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode];
+
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(ray_casting_program_stages_, std::list<std::string>(), false, smap);
+      current_map_by_mode[material] = program;
+    }
+    assert(current_map_by_mode.count(material));
+
+
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::shared_ptr<ShaderProgram> TV_3Renderer::_get_material_program(MaterialShader* material,
+                                                                            std::shared_ptr<ShaderProgram> const& current_program,
+                                                                            bool& program_changed, CompressionMode const c_mode, 
+                                                                            SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
+    auto& current_map_by_mode = ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
+    auto shader_iterator = current_map_by_mode.find(material);
+    if (shader_iterator == current_map_by_mode.end()) {
+      try {
+        _initialize_ray_casting_program(material, c_mode, sf_mode, tf_mode, r_mode);
+        program_changed = true;
+        return current_map_by_mode.at(material);
+      }
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
+        return std::shared_ptr<ShaderProgram>();
+      }
+    } else {
+      if (current_program == shader_iterator->second)
+      {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
   }
 
 
