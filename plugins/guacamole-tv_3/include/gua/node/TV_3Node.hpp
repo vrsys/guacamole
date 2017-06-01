@@ -73,6 +73,14 @@ public:
     T_FILTERING_MODE_COUNT
   };
 
+  enum PlaybackMode {
+    NONE = TV_3Resource::NONE,
+    FORWARD = TV_3Resource::FORWARD,
+    BACKWARD = TV_3Resource::BACKWARD,
+
+    PLAYBACK_MODE_COUNT
+  };
+
   friend class ::gua::TV_3Loader;
 
   // c'tor
@@ -113,7 +121,14 @@ public:
 
   void accept(NodeVisitor& visitor) override;
 
-  int const get_num_time_steps() const { return geometry_->get_num_volume_time_steps(); }
+  int get_num_time_steps() const { return geometry_->get_num_volume_time_steps(); }
+
+  void set_playback_mode(PlaybackMode playback_mode) { geometry_->set_playback_mode(static_cast<TV_3Resource::PlaybackMode>(playback_mode) );}
+  PlaybackMode get_playback_mode() const { return static_cast<TV_3Node::PlaybackMode>(geometry_->get_playback_mode());}
+
+  void set_playback_fps(float playback_fps) { geometry_->set_playback_fps(playback_fps);}
+  bool get_playback_fps() const { return geometry_->get_playback_fps();}
+
   void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
   float get_time_cursor_pos() const { return geometry_->get_time_cursor_pos(); }
 
@@ -122,6 +137,7 @@ public:
 
   float                      get_iso_value() const {return iso_value_;}
   void                       set_iso_value(float iso_value) {iso_value_ = iso_value;}
+
 
   TV_3Resource::
   CompressionMode            get_compression_mode() const {return geometry_->get_compression_mode();}

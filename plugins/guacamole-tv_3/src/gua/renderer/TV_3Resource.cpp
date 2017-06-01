@@ -253,7 +253,27 @@ void TV_3Resource::bind_volume_texture(
     upload_to(ctx);
     iter = ctx.texture_3d_arrays.find(uuid());
   }
+  using namespace std::chrono;
 
+  high_resolution_clock::time_point current_time_point = high_resolution_clock::now();
+
+  double elapsed_seconds = duration_cast<duration<double>>(current_time_point - last_time_point_).count();
+
+  int playback_multiplier = 1;
+
+  if(PlaybackMode::BACKWARD == playback_mode_) {
+    playback_multiplier = -1;
+  }
+
+  if(PlaybackMode::NONE != playback_mode_) {
+    time_cursor_pos_ += elapsed_seconds * playback_fps_ * playback_multiplier;
+  }
+
+  last_time_point_ = current_time_point;
+
+  while(time_cursor_pos_ < 0.0) {
+    time_cursor_pos_ += num_time_steps_;
+  }
 
   int32_t volume_id = int32_t(time_cursor_pos_) % num_time_steps_;
 

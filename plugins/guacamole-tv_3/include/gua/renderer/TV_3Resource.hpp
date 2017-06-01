@@ -45,7 +45,7 @@
 #include <scm/core/platform/platform.h>
 #include <scm/core/utilities/platform_warning_disable.h>
 
-
+#include <chrono>
 //#include <pbr/types.h>
 //#include <pbr/ren/model_database.h>
 //#include <pbr/ren/cut_database.h>
@@ -83,6 +83,14 @@ class TV_3Resource : public GeometryResource {
       COMPRESSION_MODE_COUNT
     };
 
+    enum PlaybackMode {
+      NONE = 0,
+      FORWARD = 1,
+      BACKWARD = 2,
+
+      PLAYBACK_MODE_COUNT
+    };
+
 
   public: // c'tor /d'tor
 
@@ -118,8 +126,19 @@ class TV_3Resource : public GeometryResource {
     CompressionMode get_compression_mode() const {return compression_mode_;}
 
     int64_t const get_num_volume_time_steps() const {return num_time_steps_;}
+    
+    //void enable_playback(bool enable_playback) {is_playback_enabled_ = enable_playback;}
+    void set_playback_mode(PlaybackMode playback_mode) { playback_mode_ = playback_mode;}
+    PlaybackMode get_playback_mode() const { return playback_mode_;}
+    //bool get_playback_enabled() const {return is_playback_enabled_;}
+
+    void set_playback_fps(float playback_fps) {
+      playback_fps_ = std::min(10000.0f, std::max(-10000.0f, playback_fps));
+    }
+    float get_playback_fps() const {return playback_fps_;}
+
     void set_time_cursor_pos(float const time_cursor_pos) { time_cursor_pos_ = std::min(float(num_time_steps_-1), time_cursor_pos); }
-    float get_time_cursor_pos() { return time_cursor_pos_; }
+    float get_time_cursor_pos() const { return time_cursor_pos_; }
     virtual void upload_to(RenderContext const& context) const;
 
 
@@ -133,12 +152,19 @@ class TV_3Resource : public GeometryResource {
   //std::shared_ptr<*/scm::gl::box_volume_geometry> volume_proxy_;
   bool                                         is_pickable_;
   math::mat4                                   local_transform_;
-  float                                        time_cursor_pos_ = 0.0f;
+  mutable float                                time_cursor_pos_ = 0.0f;
   std::string                                  resource_file_name_ = "";
   mutable uint64_t                             frame_counter_ = 0;
   mutable int32_t                              num_time_steps_ = 1;
   
   CompressionMode                              compression_mode_;
+  //bool                                         is_playback_enabled_ = false;
+  PlaybackMode                                 playback_mode_ = PlaybackMode::NONE;
+  float                                        playback_fps_  = 24.0;
+
+  mutable std::chrono::
+   high_resolution_clock::time_point           last_time_point_ = std::chrono::high_resolution_clock::now();
+
   static std::mutex cpu_volume_loading_mutex_;
   static std::map<std::size_t, bool> are_cpu_time_steps_loaded_;
   static std::map<std::size_t, std::map<std::string, uint64_t>> volume_descriptor_tokens_;

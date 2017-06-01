@@ -116,14 +116,14 @@ namespace gua {
   ////////////////////////////////////////////////////////////////////////////////
 
   void TV_3SurfaceRenderer::_initialize_surface_mode_isosurface_program(MaterialShader* material, CompressionMode const c_mode, 
-                                                                        SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode) {
+                                                                        SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
     
-    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode];
+    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
     if (!current_map_by_mode.count(material))
     {
       auto program = std::make_shared<ShaderProgram>();
 
-      auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode];
+      auto smap = global_substitution_maps_[c_mode][sf_mode][tf_mode][r_mode];
 
       for (const auto& i : material->generate_substitution_map()) {
         smap[i.first] = i.second;
@@ -142,12 +142,12 @@ namespace gua {
   std::shared_ptr<ShaderProgram> TV_3SurfaceRenderer::_get_material_program(MaterialShader* material,
                                                                             std::shared_ptr<ShaderProgram> const& current_program,
                                                                             bool& program_changed, CompressionMode const c_mode, 
-                                                                            SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode) {
-    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode];
+                                                                            SpatialFilterMode const sf_mode, TemporalFilterMode const tf_mode, NodeRenderMode const r_mode) {
+    auto& current_map_by_mode = surface_ray_casting_programs_[c_mode][sf_mode][tf_mode][r_mode];
     auto shader_iterator = current_map_by_mode.find(material);
     if (shader_iterator == current_map_by_mode.end()) {
       try {
-        _initialize_surface_mode_isosurface_program(material, c_mode, sf_mode, tf_mode);
+        _initialize_surface_mode_isosurface_program(material, c_mode, sf_mode, tf_mode, r_mode);
         program_changed = true;
         return current_map_by_mode.at(material);
       }
@@ -218,10 +218,11 @@ namespace gua {
       auto compression_mode = tv_3_volume_node->get_compression_mode();
       auto spatial_filter_mode = tv_3_volume_node->get_spatial_filter_mode();
       auto temporal_filter_mode = tv_3_volume_node->get_temporal_filter_mode();
+      auto node_render_mode = tv_3_volume_node->get_render_mode();
       current_material_program = _get_material_program(current_material, 
                                                        current_material_program, 
                                                        program_changed,
-                                                       compression_mode, spatial_filter_mode, temporal_filter_mode );
+                                                       compression_mode, spatial_filter_mode, temporal_filter_mode, node_render_mode);
 
       }
 

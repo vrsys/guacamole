@@ -55,7 +55,8 @@ class GUA_TV_3_DLL TV_3Loader {
     DEFAULTS = 0,
     MAKE_PICKABLE = 1 << 0,
     NORMALIZE_POSITION = 1 << 1,
-    NORMALIZE_SCALE = 1 << 2
+    NORMALIZE_SCALE = 1 << 2,
+    USE_SURFACE_MODE    = 1 << 3
   };
 
   TV_3Loader();

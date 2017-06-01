@@ -158,9 +158,15 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_na
           auto max_size(std::max(std::max(size.x, size.y), size.z));
           cached_node->scale(1.f / max_size);
         }
-
       }
-      
+  
+      auto tv_3_cached_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(cached_node);    
+      if (flags & TV_3Loader::USE_SURFACE_MODE) {
+        tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::SUR_PBR);
+      } else {
+        tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::VOL_COMPOSITING);
+      }
+
       fileload_succeed = true;
     }
 

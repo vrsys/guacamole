@@ -215,6 +215,9 @@ int main(int argc, char** argv) {
 
   // application loop
   std::size_t cnt = 0;
+
+  //head_tv_3_node->enable_playback(true);
+  head_tv_3_node->set_playback_mode(gua::node::TV_3Node::PlaybackMode::BACKWARD);
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -229,7 +232,7 @@ int main(int argc, char** argv) {
     // time_value += 0.01f;
 
     if(head_tv_3_node->get_num_time_steps()) {
-      head_tv_3_node->set_time_cursor_pos( (cnt/5) % head_tv_3_node->get_num_time_steps());
+      //head_tv_3_node->set_time_cursor_pos( (cnt/5) % head_tv_3_node->get_num_time_steps());
     }
     teapot_geode->rotate(0.3, 0, 1, 0);
     //video_geode->rotate(0.1, 0, 1, 0);
