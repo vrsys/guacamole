@@ -115,6 +115,7 @@ public:
 
   int const get_num_time_steps() const { return geometry_->get_num_volume_time_steps(); }
   void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
+  float get_time_cursor_pos() const { return geometry_->get_time_cursor_pos(); }
 
   RenderMode                 get_render_mode() const {return render_mode_;}
   void                       set_render_mode(RenderMode const render_mode) {render_mode_ = render_mode;}

@@ -118,7 +118,8 @@ class TV_3Resource : public GeometryResource {
     CompressionMode get_compression_mode() const {return compression_mode_;}
 
     int64_t const get_num_volume_time_steps() const {return num_time_steps_;}
-    void set_time_cursor_pos(float const time_cursor_pos ) { time_cursor_pos_ = std::min(float(num_time_steps_-1)-(10e-6f), time_cursor_pos); }
+    void set_time_cursor_pos(float const time_cursor_pos) { time_cursor_pos_ = std::min(float(num_time_steps_-1), time_cursor_pos); }
+    float get_time_cursor_pos() { return time_cursor_pos_; }
     virtual void upload_to(RenderContext const& context) const;
 
 
@@ -135,7 +136,7 @@ class TV_3Resource : public GeometryResource {
   float                                        time_cursor_pos_ = 0.0f;
   std::string                                  resource_file_name_ = "";
   mutable uint64_t                             frame_counter_ = 0;
-  mutable int32_t                              num_time_steps_ = 0;
+  mutable int32_t                              num_time_steps_ = 1;
   
   CompressionMode                              compression_mode_;
   static std::mutex cpu_volume_loading_mutex_;
