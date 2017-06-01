@@ -33,6 +33,8 @@
 
 bool enable_spatial_linear_filtering = false;
 float iso_value = 0.3;//0.02;
+
+bool render_in_surface_mode = true;
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
                   int mousebutton,
@@ -280,7 +282,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
   camera->set_pipeline_description(portal_pipe);
   //camera->set_pre_render_cameras({portal_camera});
 
@@ -295,7 +297,7 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
@@ -329,6 +331,13 @@ int main(int argc, char** argv) {
         case 'K': enable_spatial_linear_filtering = !enable_spatial_linear_filtering;
         test_tv_3_node->enable_spatial_linear_filter(enable_spatial_linear_filtering);
         break;
+
+        case 'V': render_in_surface_mode = !render_in_surface_mode;
+        if(render_in_surface_mode) {
+          test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+        } else {
+          test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);          
+        }break;
         default: break;
         };
 

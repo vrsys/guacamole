@@ -55,22 +55,6 @@ namespace gua {
 
   void  _clear_fbo_attachments(gua::RenderContext const& ctx) override;
 
-  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
-                                                       std::shared_ptr<ShaderProgram> const& current_program,
-                                                       bool& program_changed,
-                                                       CompressionMode const c_mode,
-                                                       SpatialFilterMode const sf_mode, 
-                                                       TemporalFilterMode const tf_mode,
-                                                       NodeRenderMode const r_mode);
-
-  void _initialize_surface_mode_isosurface_program(MaterialShader* material, 
-                                                   CompressionMode const c_mode, 
-                                                   SpatialFilterMode const sf_mode,
-                                                   TemporalFilterMode const tf_mode,
-                                                   NodeRenderMode const r_mode
-                                                   );
-
-  void  _load_shaders() override;
   void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
   void  _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
   
@@ -84,13 +68,7 @@ namespace gua {
     scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
     scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
 
-    std::vector<ShaderProgramStage>              surface_ray_casting_program_stages_;
-    std::unordered_map<MaterialShader*, 
-      std::shared_ptr<ShaderProgram>>            surface_ray_casting_programs_uncompressed_;
-    std::unordered_map<MaterialShader*, 
-      std::shared_ptr<ShaderProgram>>            surface_ray_casting_programs_compressed_;
 
-    ModeDependentMaterialPrograms                surface_ray_casting_programs_;
     //std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>  
 
 };

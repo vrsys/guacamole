@@ -78,9 +78,26 @@ namespace gua {
 
  protected:  //shader related auxiliary methods
   
-  virtual void  _load_shaders() = 0;
+  virtual void  _load_shaders();
   void          _initialize_volume_raycasting_programs();
   void          _initialize_volume_compositing_programs();
+
+
+  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
+                                                       std::shared_ptr<ShaderProgram> const& current_program,
+                                                       bool& program_changed,
+                                                       CompressionMode const c_mode,
+                                                       SpatialFilterMode const sf_mode, 
+                                                       TemporalFilterMode const tf_mode,
+                                                       NodeRenderMode const r_mode);
+
+  void _initialize_ray_casting_program(MaterialShader* material, 
+                                       CompressionMode const c_mode, 
+                                       SpatialFilterMode const sf_mode,
+                                       TemporalFilterMode const tf_mode,
+                                       NodeRenderMode const r_mode);
+
+
 
   virtual void  _create_fbo_resources(gua::RenderContext const& ctx,
                                       scm::math::vec2ui const& render_target_dims) = 0;
@@ -145,6 +162,21 @@ namespace gua {
 
     ModeDependentSubstitutionMap                  global_substitution_maps_;
     ResourceFactory                               factory_;
+
+
+
+
+    std::vector<ShaderProgramStage>              ray_casting_program_stages_;
+    std::unordered_map<MaterialShader*, 
+      std::shared_ptr<ShaderProgram>>            ray_casting_programs_uncompressed_;
+    std::unordered_map<MaterialShader*, 
+      std::shared_ptr<ShaderProgram>>            ray_casting_programs_compressed_;
+
+    ModeDependentMaterialPrograms                ray_casting_programs_;
+
+
+
+
   };
 
 }
