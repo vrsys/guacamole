@@ -24,19 +24,21 @@ layout(binding=1) uniform sampler2D codebook_texture;
 #endif
 
 
+///////////////////////////////////////////////////////////////////////////////
+// common ray casting uniforms
+///////////////////////////////////////////////////////////////////////////////
 
 uniform vec4 ms_eye_pos;
-
 uniform float gua_texel_width;
 uniform float gua_texel_height;
-
-uniform float iso_value = 0.5;
-
 uniform int num_codewords_per_row = 0;
-
 uniform ivec3 block_offset_vector = ivec3(0, 0, 0);
 uniform int total_block_size = 0;
 uniform ivec3 volume_dimensions = ivec3(0, 0, 0);
+
+
+uniform float iso_value = 0.5;
+
 
 vec3 ms_shading_pos = vec3(0.0, 0.0, 0.0);
 
@@ -44,33 +46,7 @@ vec3 ms_shading_pos = vec3(0.0, 0.0, 0.0);
 @material_method_declarations_frag@
 
 
-//float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
-/*
-vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
-vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
 
-float noise(vec3 p){
-    vec3 a = floor(p);
-    vec3 d = p - a;
-    d = d * d * (3.0 - 2.0 * d);
-
-    vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
-    vec4 k1 = perm(b.xyxy);
-    vec4 k2 = perm(k1.xyxy + b.zzww);
-
-    vec4 c = k2 + a.zzzz;
-    vec4 k3 = perm(c);
-    vec4 k4 = perm(c + 1.0);
-
-    vec4 o1 = fract(k3 * (1.0 / 41.0));
-    vec4 o2 = fract(k4 * (1.0 / 41.0));
-
-    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
-    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
-
-    return o4.y * d.y + o4.x * (1.0 - d.y);
-}
-*/
 void compute_ray_plane_intersection(in vec3 ms_plane_pos, in vec3 ms_plane_normal,
 	                                in vec3 ms_ray_pos, in vec3 in_ms_ray_direction,
 	                                in out float min_t, in out float max_t) {
@@ -242,97 +218,8 @@ vec3 get_gradient(vec3 in_sampling_pos) {
   return -normalize(gradient);
 }
 
-vec3 raycast_iso_surface() {
-  vec3 ray_origin    = FragmentIn.pos_ms;
-  //vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
-  vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
 
-  //vec2 t_min_max = intersect_ray_with_unit_box(ray_origin, ray_direction);
-
-  vec3 ray_increment = ray_direction * step_size;
-
-  vec3 current_pos = ray_origin;
-
-  vec3 first_pos = vec3(0.0, 0.0, 0.0);
-  vec3 red = vec3(0.0, 0.0, 0.0);
-  /*
-  if(t_min_max[0] < 0) {
-  current_pos = ms_eye_pos.xyz;
-    red = vec3(1.0,0.0,0.0);
-  } else {
-  current_pos = ray_origin + t_min_max[0] * ray_direction;
-
-  }*/
-
-  current_pos += ray_increment;
-/*
-  //plane intersection
-  compute_ray_plane_intersection(vec3(0.5, 0.5, 0.5), vec3(0.0, 0.0, 0.5),
-                                 current_pos, cam_to_box_end_vec,
-                                 t_min_max[0], t_min_max[1]);
-*/
-  //current_pos = current_pos + t_min_max[0] * cam_to_box_end_vec;
-
- // current_pos += ray_increment;
-
-  vec3 previous_pos = current_pos;
-  float previous_sample = 0;
-
-  float num_samples_taken = 0;
-
-  bool found_iso_value = false;
-  bool is_smaller_than_iso = true;
-  bool was_smaller_than_iso = is_smaller_than_iso;
-
-  while(is_inside_vol(current_pos) ) {
-
-    float density = get_mode_independent_sample(current_pos);
-    
-      if( sign(density - iso_value) != sign(previous_sample - iso_value) ) {
-        vec3 min = previous_pos;
-        vec3 max = current_pos;
-        vec3 mid;
-        int iterations = 0;
-
-        for(int i = 0; i < 10; ++i) {
-        //while (length(max - min) > 0.0000001 && ++iterations < 20) {
-          if(length(max-min) <= 0.0000001 ) {
-            break;
-          }
-          mid = (min + max) * 0.5;
-          float s_mid = get_mode_independent_sample(current_pos);
-          if (s_mid == iso_value) {
-            break;
-          }
-          if (s_mid > iso_value) {
-            max = mid;
-          }
-          else{
-            min = mid;
-          }
-
-        }
-        current_pos = mid;
-        density = get_mode_independent_sample(current_pos);
-
-        found_iso_value = true;
-        break;
-      }
-
-
-    previous_sample = density;
-    previous_pos = current_pos;
-    current_pos +=  ray_increment;
-    ++num_samples_taken;
-
-  }
-
-  if(false == found_iso_value) {
-    discard;
-  }
-
-  return current_pos;
-};
+@include "_mode__iso_surface_ray_casting.frag"
 
 void main() {
 

@@ -118,7 +118,7 @@ namespace gua {
     ResourceFactory factory;
     forward_cube_shader_stages_.clear();
     forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.frag")));
+    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/volume_mode_max_intensity_ray_casting.frag")));
 
     {
       auto new_program = std::make_shared<ShaderProgram>();
@@ -160,6 +160,9 @@ namespace gua {
       if( node::TV_3Node::RenderMode::SUR_PBR == tv_3_volume_node->get_render_mode() ) {
         continue;
       }
+
+
+    std::cout << "Rendering the volume pass\n";
       /*
       if( ( ( node::TV_3Node::NodeRenderMode::VOL_MAX_INTENSITY == tv_3_volume_node->get_render_mode() ) 
             && (TV_3VolumePassDescription::VolumeRenderMode::MAX_INTENSITY == volume_render_mode) ) ||
@@ -184,6 +187,7 @@ namespace gua {
 
       //forward_cube_shader_program_->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tv_3_volume_node->get_world_transform()) ) ;
       
+      ctx.render_context->set_frame_buffer(volume_raycasting_fbo_);
       forward_cube_shader_program_->use(ctx);
       forward_cube_shader_program_->apply_uniform(ctx, "gua_model_view_projection_matrix", math::mat4f(mvp_matrix));
       forward_cube_shader_program_->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
@@ -222,7 +226,6 @@ namespace gua {
 
     compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
 
-    auto const& glapi = ctx.render_context->opengl_api();
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);

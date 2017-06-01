@@ -70,8 +70,8 @@ int main(int argc, char** argv) {
 
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/compressed_time_series_SW_VQ_MCM.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
-  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
-  std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
+  std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
+  //std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
   
   
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
-  graph.add_node("/transform/transform2", test_volume2);
+  //graph.add_node("/transform/transform2", test_volume2);
  // test_volume2->translate(-1.5, -1.5, -0.5);
   auto test_tv_3_node2 = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume2);
   test_tv_3_node2->set_iso_value(0.5);
@@ -268,6 +268,7 @@ int main(int argc, char** argv) {
 
   portal_pipe->add_pass(resolve_pass);
   //portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
+  portal_pipe->add_pass(std::make_shared<gua::TV_3VolumePassDescription>());
   //portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   portal_pipe->set_enable_abuffer(false);
   portal_pipe->set_abuffer_size(2000);

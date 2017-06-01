@@ -46,6 +46,7 @@ namespace gua {
   using CompressionMode = TV_3Resource::CompressionMode;
   using SpatialFilterMode = node::TV_3Node::SpatialFilterMode;
   using TemporalFilterMode = node::TV_3Node::TemporalFilterMode;
+  using NodeRenderMode = node::TV_3Node::RenderMode;
   using EnumClassHash = TV_3Resource::EnumClassHash;
   template <class T>
   using HashMapCompressionModeTo = std::unordered_map<CompressionMode, T, EnumClassHash>;
@@ -54,8 +55,10 @@ namespace gua {
   template <class T>
   using HashMapTemporalFilterModeTo = std::unordered_map<TemporalFilterMode, T, EnumClassHash>;
   template <class T>
+  using HashMapRenderModeTo = std::unordered_map<NodeRenderMode, T, EnumClassHash>;
+  template <class T>
   using HashMapVolumeModesTo 
-    = HashMapCompressionModeTo<HashMapSpatialFilterModeTo<HashMapTemporalFilterModeTo<T>>>;
+    = HashMapCompressionModeTo<HashMapSpatialFilterModeTo<HashMapTemporalFilterModeTo<HashMapRenderModeTo<T>>>>;
   using MaterialProgramsMap = std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>;
 
   using ModeDependentSubstitutionMap 
