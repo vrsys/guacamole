@@ -240,13 +240,18 @@ namespace gua {
     if(compositing_shader_program_ != nullptr) {
       compositing_shader_program_->use(ctx);
     }
-    ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 0);
 
-    compositing_shader_program_->apply_uniform(ctx, "blit_texture", 3);
+    pipe.get_gbuffer()->toggle_ping_pong();
+
+    ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 0);
+    ctx.render_context->bind_texture(pipe.get_gbuffer()->get_color_buffer(), trilin_sampler_state_, 1);
+    compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
+    compositing_shader_program_->apply_uniform(ctx, "original_gbuffer_color", 1);
 
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
+    pipe.get_gbuffer()->toggle_ping_pong();
   }
 
 }
