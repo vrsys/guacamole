@@ -307,11 +307,14 @@ void main() {
   #endif
 
   #if @gua_tv_3_mode_vol_compositing@
-
+  vec4 composited_color = vec4(0.0);
+  ms_shading_pos = raycast_compositing(composited_color);
+  out_color = composited_color;
   #endif
 
   #if @gua_tv_3_mode_vol_isosurface@
-
+  ms_shading_pos = raycast_isosurface();
+  out_color = vec4(gua_color, 1.0);
   #endif
 #endif
 
