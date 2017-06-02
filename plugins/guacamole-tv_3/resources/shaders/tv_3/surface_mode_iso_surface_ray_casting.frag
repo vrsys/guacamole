@@ -24,8 +24,29 @@ layout(binding=1) uniform sampler2D codebook_texture;
 #endif
 
 #if @gua_tv_3_volume_behaviour@
-layout(binding=2) uniform sampler2D front_to_back_blending_texture;
+
+@include "shaders/common/gua_gbuffer_input.glsl"
+
+
+// methods ---------------------------------------------------------------------
+float get_depth_z(vec3 world_position) {
+    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
+    float ndc = pos.z/pos.w;
+    return ((gl_DepthRange.diff * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
+
+}
+
+float get_depth_linear(float depth_buffer_d) {
+  float ndc = (depth_buffer_d * 2.0 - gl_DepthRange.near - gl_DepthRange.far)/gl_DepthRange.diff;
+  vec4 enit = vec4(gl_FragCoord.xy * 2.0 - vec2(1.0), ndc, 1.0);
+  vec4 enit_inv = (gua_inverse_projection_view_matrix * enit);
+  enit_inv /= enit_inv.w;
+  return enit_inv.z;
+}
+
 layout(location = 0) out vec4 out_color;
+
+uniform int vol_idx;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,8 +54,6 @@ layout(location = 0) out vec4 out_color;
 ///////////////////////////////////////////////////////////////////////////////
 
 uniform vec4 ms_eye_pos;
-uniform float gua_texel_width;
-uniform float gua_texel_height;
 uniform int num_codewords_per_row = 0;
 uniform ivec3 block_offset_vector = ivec3(0, 0, 0);
 uniform int total_block_size = 0;
@@ -320,28 +339,25 @@ void main() {
   back_blending_color = vec4(gua_color, 1.0);
   #endif
 
-  vec4 color = vec4(texelFetch(front_to_back_blending_texture, ivec2(gl_FragCoord.xy), 0) );
 
-  float omda_sa = (1.0 - color.a) * back_blending_color.a;
 
-  color.rgb += omda_sa * back_blending_color.rgb;
-  color.a   += omda_sa;
+  out_color = back_blending_color + vec4(0.0, 0.0, 0.0, 0.3*vol_idx);
 
-  out_color = color;
-
+  //out_color = vec4(vol_idx, 0.0, 0.0, 1.0);
   //float composited_alpha = (1.0 - fetched_color.a) * back_blending_color.a;
   //out_color = vec4(texelFetch(front_to_back_blending_texture, ivec2(gl_FragCoord.xy), 0).rgb * (1.0-back_blending_color.a) + back_blending_color.rgb * back_blending_color.a, composited_alpha);
 #endif
 
+#if @gua_tv_3_surface_pbr_behaviour@
   vec4 projected_pos = gua_model_view_projection_matrix * vec4(ms_shading_pos, 1);
   projected_pos /= projected_pos.w;
 
   float gbuffer_depth = projected_pos.z * 0.5 + 0.5;
   gl_FragDepth = gbuffer_depth;
 
-  #if @gua_tv_3_surface_pbr_behaviour@
+
   submit_fragment(gbuffer_depth);
-  #endif
+#endif
 
 
 }

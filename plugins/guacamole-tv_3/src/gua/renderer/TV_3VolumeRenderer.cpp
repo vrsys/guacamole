@@ -19,6 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
+
+
 // class header
 #include <gua/renderer/TV_3VolumeRenderer.hpp>
 #include <gua/renderer/TV_3VolumePass.hpp>
@@ -82,6 +84,17 @@ namespace gua {
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_D32F,
                           1, 1, 1);
+
+/*
+    volume_compositing_blend_state_ = ctx.render_device->create_blend_state(true,
+                                                                      scm::gl::FUNC_SRC_ALPHA,
+                                                                      scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                                                      scm::gl::FUNC_SRC_ALPHA,
+                                                                      scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
+                                                                      scm::gl::EQ_FUNC_ADD,
+                                                                      scm::gl::EQ_FUNC_ADD);
+*/
+    no_blending_blend_state_        = ctx.render_device->create_blend_state(false);
   }
 
   void TV_3VolumeRenderer::_clear_fbo_attachments(gua::RenderContext const& ctx) {
@@ -160,16 +173,48 @@ namespace gua {
     auto const& camera = pipe.current_viewstate().camera;
     int view_id(camera.config.get_view_id());
 
+    std::vector<gua::node::TV_3Node*> front_to_back_sorted_volume_nodes;
 
    for (auto const& object : sorted_nodes) {
-
       auto tv_3_volume_node(reinterpret_cast<node::TV_3Node*>(object));
+      if( node::TV_3Node::RenderMode::SUR_PBR == tv_3_volume_node->get_render_mode() ) {
+        continue;
+      }
+
+      front_to_back_sorted_volume_nodes.push_back( const_cast<node::TV_3Node*>(reinterpret_cast<node::TV_3Node* const>(object)) );
+   }
+
+
+    std::sort(front_to_back_sorted_volume_nodes.begin(), front_to_back_sorted_volume_nodes.end(), [&view_matrix](node::TV_3Node* a, node::TV_3Node* b) {
+
+      auto model_matrix_a = a->get_cached_world_transform();
+      auto model_view_matrix_a = view_matrix * model_matrix_a;
+      auto const mv_bb_center_a = model_view_matrix_a * a->get_bounding_box().center();
+      
+      float three_d_squared_distance_bb_center_a = mv_bb_center_a[0]*mv_bb_center_a[0] + mv_bb_center_a[1]*mv_bb_center_a[1] + mv_bb_center_a[2]*mv_bb_center_a[2];
+
+      auto model_matrix_b = b->get_cached_world_transform();
+      auto model_view_matrix_b = view_matrix * model_matrix_b;
+      auto const mv_bb_center_b = model_view_matrix_b * b->get_bounding_box().center();
+
+
+      float three_d_squared_distance_bb_center_b = mv_bb_center_b[0]*mv_bb_center_b[0] + mv_bb_center_b[1]*mv_bb_center_b[1] + mv_bb_center_b[2]*mv_bb_center_b[2];
+
+      return three_d_squared_distance_bb_center_a > three_d_squared_distance_bb_center_b;
+    });
+ 
+
+    int node_counter = 0;
+   for (auto const& tv_3_volume_node : front_to_back_sorted_volume_nodes) {
 
       //skip nodes which do not fit our pass description
 
       if( node::TV_3Node::RenderMode::SUR_PBR == tv_3_volume_node->get_render_mode() ) {
         continue;
       }
+
+      ctx.render_context
+        ->set_frame_buffer(volume_raycasting_fbo_);
 
       if (current_material != tv_3_volume_node->get_material()->get_shader() || current_render_mode != tv_3_volume_node->get_render_mode()) {
       current_material = tv_3_volume_node->get_material()->get_shader();
@@ -204,28 +249,39 @@ namespace gua {
       current_material_program->apply_uniform(ctx, "volume_texture", 0);
       current_material_program->apply_uniform(ctx, "codebook_texture", 1);
       current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->get_iso_value());
+      current_material_program->apply_uniform(ctx, "vol_idx", node_counter);
       
 
-      if(program_changed) {
+
+      //if(program_changed) {
         tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-      }
+      //}
 
       ctx.render_context->bind_vertex_array(box_vertex_array_ );
       //ctx.render_context->bind_index_buffer(box_element_buffer_, scm::gl::PRIMITIVE_TRIANGLE_LIST, scm::gl::TYPE_UINT);
  
 
       ctx.render_context->set_rasterizer_state(frontface_culling_rasterizer_state_);
+      //ctx.render_context->set_blend_state(volume_compositing_blend_state_);
 
-
+      auto& gl_api = ctx.render_context->opengl_api();
+      gl_api.glEnable(GL_BLEND);
+      gl_api.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
      // ctx.render_context->uniform_sampler3D("volume_texture", 0);
       tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
       tv_3_volume_node->get_geometry()->apply_resource_dependent_uniforms(ctx, current_material_program);
+      ctx.render_context->apply_texture_units();
       ctx.render_context->apply();
 
   
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, 36*6);
 
+
+      ++node_counter;
     }
+
+    auto& gl_api = ctx.render_context->opengl_api();
+    gl_api.glDisable(GL_BLEND);
 }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,6 +305,7 @@ namespace gua {
     compositing_shader_program_->apply_uniform(ctx, "original_gbuffer_color", 1);
 
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+    ctx.render_context->set_blend_state(no_blending_blend_state_);
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
     pipe.get_gbuffer()->toggle_ping_pong();
