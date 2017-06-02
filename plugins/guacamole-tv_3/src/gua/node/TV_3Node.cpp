@@ -225,7 +225,11 @@ std::shared_ptr<Node> TV_3Node::copy() const {
 
   result->update_cache();
 
-  result->shadow_mode_ = shadow_mode_;
+  result->shadow_mode_          = shadow_mode_;
+  result->render_mode_          = render_mode_;
+  result->iso_value_            = iso_value_;
+  result->spatial_filter_mode_  = spatial_filter_mode_;
+  result->temporal_filter_mode_ = temporal_filter_mode_;
 
   return result;
 }

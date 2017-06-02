@@ -176,6 +176,14 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", test_volume);
 
 
+  auto yet_another_test_volume = test_volume->copy();
+
+  graph.add_node("/transform", yet_another_test_volume);
+  yet_another_test_volume->translate(1.0, 0.0, 0.0);
+  auto test_tv_3_node3 = std::dynamic_pointer_cast<gua::node::TV_3Node>(yet_another_test_volume);
+  //test_tv_3_node3->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+  test_tv_3_node3->set_iso_value(0.5);
+
   auto test_volume2( tv_3_loader.create_geometry_from_file(
       "test_volume2",
        //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
@@ -282,7 +290,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->set_pipeline_description(portal_pipe);
   //camera->set_pre_render_cameras({portal_camera});
 
@@ -297,7 +305,7 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
