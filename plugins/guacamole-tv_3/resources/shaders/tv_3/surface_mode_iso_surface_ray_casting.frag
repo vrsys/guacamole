@@ -297,13 +297,13 @@ void main() {
   #if @gua_tv_3_mode_vol_max_intensity@
   float max_intensity = 0.0;
   ms_shading_pos = raycast_max_intensity(max_intensity);
-  out_color = max_intensity * vec4(gua_color, 1.0);
+  out_color = max_intensity * vec4(gua_color*gua_alpha, 1.0);
   #endif
 
   #if @gua_tv_3_mode_vol_avg_intensity@
   float avg_intensity = 0.0;
   ms_shading_pos = raycast_avg_intensity(avg_intensity);
-  out_color = avg_intensity * vec4(gua_color, 1.0);
+  out_color = avg_intensity * vec4(gua_color*gua_alpha, 1.0);
   #endif
 
   #if @gua_tv_3_mode_vol_compositing@
