@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
   std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
-  
+  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw";
   
   //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
   // initialize guacamole
@@ -108,7 +108,8 @@ int main(int argc, char** argv) {
   gua::math::vec4 transparent_light_green(0.572549, 1.0, 0.286274, 0.8);
   gua::math::vec4 transparent_nickel(0.660, 0.609, 0.526, 0.8);
 
-  gua::math::vec4 supernova_exaggerated_green(0.572549, 1.0, 0.286274, 1.0);
+  gua::math::vec4 supernova_exaggerated_green(0.572549, 1.0, 0.286274, 2.0);
+  gua::math::vec4 supernova_exaggerated_red(1.0, 0.0 , 0.0, 2.0);
 
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
@@ -132,6 +133,12 @@ int main(int argc, char** argv) {
   shiny_green_mat->set_uniform("metalness", 1.0f);
   shiny_green_mat->set_uniform("roughness", 0.2f);
   shiny_green_mat->set_uniform("emissivity", 0.0f);
+
+  auto shiny_red_mat = plod_keep_color_shader->make_new_material();
+  shiny_red_mat->set_uniform("color", supernova_exaggerated_red);
+  shiny_red_mat->set_uniform("metalness", 1.0f);
+  shiny_red_mat->set_uniform("roughness", 0.2f);
+  shiny_red_mat->set_uniform("emissivity", 0.0f);
 
   auto plod_keep_color_shader2(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color2", plod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader2);
@@ -179,12 +186,13 @@ int main(int argc, char** argv) {
 
   auto yet_another_test_volume = test_volume->copy();
 
+
   graph.add_node("/transform", yet_another_test_volume);
   yet_another_test_volume->translate(1.0, 0.0, 0.0);
   auto test_tv_3_node3 = std::dynamic_pointer_cast<gua::node::TV_3Node>(yet_another_test_volume);
   test_tv_3_node3->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);
   test_tv_3_node3->set_iso_value(0.5);
-
+  test_tv_3_node3->set_material(shiny_red_mat);
 
   auto yet_another_test_volume2 = test_volume->copy();
 
@@ -209,16 +217,15 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
-  //graph.add_node("/transform/transform2", test_volume2);
- // test_volume2->translate(-1.5, -1.5, -0.5);
   auto test_tv_3_node2 = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume2);
   test_tv_3_node2->set_iso_value(0.5);
-  test_tv_3_node2->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+  test_tv_3_node2->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);
 
 
   auto test_tv_3_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(test_volume);
   test_tv_3_node->set_iso_value(iso_value);
   test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+
   //test_volume->set_draw_bounding_box(true);
   //test_volume->rotate(90, 1.0, 0.0, 0.0);
   //test_volume->rotate(180, 0.0, 1.0, 0.0);

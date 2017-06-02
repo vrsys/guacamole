@@ -26,7 +26,7 @@
 #include <map>
 #include <unordered_map>
 
-
+#include <scm/gl_core/render_device/opengl/gl_core.h>
 #include <gua/renderer/TV_3Renderer.hpp>
 // guacamole headers
 /*
@@ -72,6 +72,9 @@ namespace gua {
     scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
     scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
 
+
+    scm::gl::blend_state_ptr volume_compositing_blend_state_;
+    scm::gl::blend_state_ptr no_blending_blend_state_;
 };
 
 }

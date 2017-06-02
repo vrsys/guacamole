@@ -78,7 +78,7 @@ std::shared_ptr<Material> const& TV_3Node::get_material() const {
 ////////////////////////////////////////////////////////////////////////////////
 void TV_3Node::set_material(std::shared_ptr<Material> const& material) {
   material_ = material;
-  material_changed_ = self_dirty_ = true;
+  //material_changed_ = self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
