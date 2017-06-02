@@ -16,8 +16,8 @@ vec3 raycast_max_intensity(out float out_max_intensity) {
 
   while(is_inside_vol(current_pos) ) {
 
-    float intensity = get_mode_independent_sample(current_pos);
-    max_intensity = max(max_intensity, intensity);
+    float density = get_mode_independent_sample(current_pos);
+    max_intensity = max(max_intensity, density);
 
     current_pos +=  ray_increment;
     ++num_samples_taken;
