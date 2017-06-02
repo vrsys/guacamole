@@ -70,9 +70,9 @@ void mouse_button(gua::utils::Trackball& trackball,
 int main(int argc, char** argv) {
 
 
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/compressed_time_series_SW_VQ_MCM.v_rsc";
+  std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/a_few_compressed_time_series_SW_VQ_MCM.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
-  std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
+  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
   //std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
   
@@ -108,6 +108,8 @@ int main(int argc, char** argv) {
   gua::math::vec4 transparent_light_green(0.572549, 1.0, 0.286274, 0.8);
   gua::math::vec4 transparent_nickel(0.660, 0.609, 0.526, 0.8);
 
+  gua::math::vec4 supernova_exaggerated_green(0.572549, 1.0, 0.286274, 5.0);
+
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
   gua::math::vec4 aluminium(0.913, 0.921, 0.925, 1);
@@ -126,11 +128,10 @@ int main(int argc, char** argv) {
 
   //create material for pointcloud
   auto shiny_green_mat = plod_keep_color_shader->make_new_material();
-  shiny_green_mat->set_uniform("color", transparent_light_green);
+  shiny_green_mat->set_uniform("color", supernova_exaggerated_green);
   shiny_green_mat->set_uniform("metalness", 1.0f);
   shiny_green_mat->set_uniform("roughness", 0.2f);
   shiny_green_mat->set_uniform("emissivity", 0.0f);
-
 
   auto plod_keep_color_shader2(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color2", plod_keep_input_desc));
   gua::MaterialShaderDatabase::instance()->add(plod_keep_color_shader2);
@@ -243,7 +244,7 @@ int main(int argc, char** argv) {
   //light2->rotate(-90.0f, 1.0f, 0.0f, 0.0f);
   light2->translate(2.0f, 0.0f, 12.0f);
   light2->rotate(10.0f, 0.0f, 1.0f, 0.0f);
-  light2->data.set_enable_shadows(false);                                                         
+  light2->data.set_enable_shadows(true);                                                         
   light2->data.set_shadow_map_size(4096);
 
   light2->data.set_shadow_near_clipping_in_sun_direction(0.01f);
@@ -359,6 +360,14 @@ int main(int argc, char** argv) {
         case '4': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_COMPOSITING);
         break;
         case '5': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_ISOSURFACE);
+        break;
+
+        case 'P': 
+          if(gua::node::TV_3Node::PlaybackMode::NONE == test_tv_3_node->get_playback_mode()) {
+            test_tv_3_node->set_playback_mode(gua::node::TV_3Node::PlaybackMode::FORWARD);
+          } else {
+            test_tv_3_node->set_playback_mode(gua::node::TV_3Node::PlaybackMode::NONE);            
+          }
         break;
         default: break;
         };

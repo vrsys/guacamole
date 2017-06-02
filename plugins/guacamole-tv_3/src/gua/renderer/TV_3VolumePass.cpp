@@ -47,7 +47,7 @@ TV_3VolumePassDescription::TV_3VolumePassDescription()
 {
   needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
+  enable_for_shadows_ = false;
   rendermode_ = RenderMode::Custom;
 }
 /*

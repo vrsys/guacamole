@@ -24,6 +24,5 @@ vec3 raycast_max_intensity(out float out_max_intensity) {
   }
 
   out_max_intensity = max_intensity;
-
   return current_pos;
 };
