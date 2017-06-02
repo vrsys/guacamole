@@ -86,6 +86,6 @@ vec3 raycast_isosurface() {
   if(false == found_iso_value) {
     discard;
   }
-
+  
   return current_pos;
 };

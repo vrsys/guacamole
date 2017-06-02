@@ -179,6 +179,7 @@ namespace gua {
       current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       current_material_program->apply_uniform(ctx, "volume_texture", 0);
       current_material_program->apply_uniform(ctx, "codebook_texture", 1);
+      current_material_program->apply_uniform(ctx, "front_to_back_blending_texture", 2);
       current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->get_iso_value());
       if(program_changed) {
         tv_3_volume_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
@@ -193,6 +194,8 @@ namespace gua {
 
       // ctx.render_context->uniform_sampler3D("volume_texture", 0);
       tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
+      ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 2);
+
       tv_3_volume_node->get_geometry()->apply_resource_dependent_uniforms(ctx, current_material_program);
       ctx.render_context->apply();
 

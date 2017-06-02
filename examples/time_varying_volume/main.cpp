@@ -69,11 +69,11 @@ void mouse_button(gua::utils::Trackball& trackball,
 
 int main(int argc, char** argv) {
 
-
-  std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/a_few_compressed_time_series_SW_VQ_MCM.v_rsc";
+  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Simulations/blendcache_fire_pillar/raw_smoke/fire_pillar.v_rsc";
+  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/a_few_compressed_time_series_SW_VQ_MCM.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
   //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
-  //std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
+  std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
   
   
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
   gua::math::vec4 transparent_light_green(0.572549, 1.0, 0.286274, 0.8);
   gua::math::vec4 transparent_nickel(0.660, 0.609, 0.526, 0.8);
 
-  gua::math::vec4 supernova_exaggerated_green(0.572549, 1.0, 0.286274, 5.0);
+  gua::math::vec4 supernova_exaggerated_green(0.572549, 1.0, 0.286274, 1.0);
 
   gua::math::vec4 iron(0.560, 0.570, 0.580, 1);
   gua::math::vec4 silver(0.972, 0.960, 0.915, 1);
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
       gua::TV_3Loader::NORMALIZE_SCALE
       ));
 
-  graph.add_node("/transform", test_volume);
+
 
 
   auto yet_another_test_volume = test_volume->copy();
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 
   auto yet_another_test_volume2 = test_volume->copy();
 
-  graph.add_node("/transform", yet_another_test_volume2);
+  //graph.add_node("/transform", yet_another_test_volume2);
   yet_another_test_volume2->translate(-1.0, 0.0, 0.0);
   auto test_tv_3_node4 = std::dynamic_pointer_cast<gua::node::TV_3Node>(yet_another_test_volume2);
   test_tv_3_node4->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_AVG_INTENSITY);
@@ -225,6 +225,8 @@ int main(int argc, char** argv) {
   auto head_scale    = scm::math::make_scale(1.0, 1.0, 1.0);
   auto head_rotation = scm::math::make_rotation(180.0, 0.0, 1.0, 0.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
   auto head_translation = scm::math::make_translation(0.0, 0.0, 5.0);
+
+  graph.add_node("/transform", test_volume);
 
   //reinterpret_cast<gua::node::TV_3Node*>(test_volume)->iso_value(0.2);
   //test_volume->translate(0.0, 0.0, 2.0);

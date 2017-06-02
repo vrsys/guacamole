@@ -24,6 +24,7 @@ layout(binding=1) uniform sampler2D codebook_texture;
 #endif
 
 #if @gua_tv_3_volume_behaviour@
+layout(binding=2) uniform sampler2D front_to_back_blending_texture;
 layout(location = 0) out vec4 out_color;
 #endif
 
@@ -294,28 +295,42 @@ void main() {
   }
 
 #if @gua_tv_3_volume_behaviour@
+
+  vec4 back_blending_color = vec4(0.0);
   #if @gua_tv_3_mode_vol_max_intensity@
   float max_intensity = 0.0;
   ms_shading_pos = raycast_max_intensity(max_intensity);
-  out_color = max_intensity * vec4(gua_color*gua_alpha, 1.0);
+  back_blending_color = max_intensity * vec4(gua_color*gua_alpha, gua_alpha);
   #endif
 
   #if @gua_tv_3_mode_vol_avg_intensity@
   float avg_intensity = 0.0;
   ms_shading_pos = raycast_avg_intensity(avg_intensity);
-  out_color = avg_intensity * vec4(gua_color*gua_alpha, 1.0);
+  back_blending_color = avg_intensity * vec4(gua_color*gua_alpha, gua_alpha);
   #endif
 
   #if @gua_tv_3_mode_vol_compositing@
   vec4 composited_color = vec4(0.0);
   ms_shading_pos = raycast_compositing(composited_color);
-  out_color = composited_color;
+  back_blending_color = composited_color;
   #endif
 
   #if @gua_tv_3_mode_vol_isosurface@
   ms_shading_pos = raycast_isosurface();
-  out_color = vec4(gua_color, 1.0);
+  back_blending_color = vec4(gua_color, 1.0);
   #endif
+
+  vec4 color = vec4(texelFetch(front_to_back_blending_texture, ivec2(gl_FragCoord.xy), 0) );
+
+  float omda_sa = (1.0 - color.a) * back_blending_color.a;
+
+  color.rgb += omda_sa * back_blending_color.rgb;
+  color.a   += omda_sa;
+
+  out_color = color;
+
+  //float composited_alpha = (1.0 - fetched_color.a) * back_blending_color.a;
+  //out_color = vec4(texelFetch(front_to_back_blending_texture, ivec2(gl_FragCoord.xy), 0).rgb * (1.0-back_blending_color.a) + back_blending_color.rgb * back_blending_color.a, composited_alpha);
 #endif
 
   vec4 projected_pos = gua_model_view_projection_matrix * vec4(ms_shading_pos, 1);
