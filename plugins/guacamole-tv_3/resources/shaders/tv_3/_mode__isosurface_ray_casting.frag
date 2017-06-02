@@ -1,4 +1,4 @@
-vec3 raycast_iso_surface() {
+vec3 raycast_isosurface() {
   vec3 ray_origin    = FragmentIn.pos_ms;
   //vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);
   vec3 ray_direction = normalize(FragmentIn.pos_ms - ms_eye_pos.xyz);

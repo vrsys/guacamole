@@ -153,6 +153,7 @@ namespace gua {
     auto eye_position = math::vec4(scene.rendering_frustum.get_camera_position(),1.0);
 
    MaterialShader* current_material(nullptr);
+   node::TV_3Node::RenderMode current_render_mode(node::TV_3Node::RenderMode::SUR_PBR);
    std::shared_ptr<ShaderProgram> current_material_program;
    bool program_changed = false;
 
@@ -170,7 +171,7 @@ namespace gua {
         continue;
       }
 
-      if (current_material != tv_3_volume_node->get_material()->get_shader()) {
+      if (current_material != tv_3_volume_node->get_material()->get_shader() || current_render_mode != tv_3_volume_node->get_render_mode()) {
       current_material = tv_3_volume_node->get_material()->get_shader();
 
       auto compression_mode = tv_3_volume_node->get_compression_mode();

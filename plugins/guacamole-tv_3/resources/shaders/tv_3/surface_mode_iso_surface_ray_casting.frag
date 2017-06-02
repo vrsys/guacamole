@@ -222,24 +222,35 @@ vec3 get_gradient(vec3 in_sampling_pos) {
 }
 
 #if @gua_tv_3_surface_pbr_behaviour@
-@include "_mode__iso_surface_ray_casting.frag"
+@include "_mode__isosurface_ray_casting.frag"
 #endif
 
 #if @gua_tv_3_volume_behaviour@
-@include "_mode__max_intensity_ray_casting.frag"
+  #if @gua_tv_3_mode_vol_max_intensity@
+  @include "_mode__max_intensity_ray_casting.frag"
+  #endif
+
+  #if @gua_tv_3_mode_vol_avg_intensity@
+  @include "_mode__avg_intensity_ray_casting.frag"  
+  #endif
+
+  #if @gua_tv_3_mode_vol_compositing@
+  @include "_mode__compositing_ray_casting.frag"  
+  #endif
+
+  #if @gua_tv_3_mode_vol_isosurface@
+  @include "_mode__isosurface_ray_casting.frag" 
+  #endif
 #endif
 
 
 void main() {
 
 #if @gua_tv_3_surface_pbr_behaviour@
-  ms_shading_pos = raycast_iso_surface();
+  ms_shading_pos = raycast_isosurface();
 #endif
 
-#if @gua_tv_3_volume_behaviour@
-  vec3 max_intensity_color = vec3(0.0, 0.0, 0.0);
-  ms_shading_pos = raycast_max_intensity(max_intensity_color);
-#endif
+
 
   //these two variables should not be altered by any material programs
   gua_normal     = vec3( (gua_normal_matrix * vec4(get_gradient(ms_shading_pos),1.0) ).xyz );
@@ -282,6 +293,28 @@ void main() {
     @material_method_calls_frag@
   }
 
+#if @gua_tv_3_volume_behaviour@
+  #if @gua_tv_3_mode_vol_max_intensity@
+  float max_intensity = 0.0;
+  ms_shading_pos = raycast_max_intensity(max_intensity);
+  out_color = max_intensity * vec4(gua_color, 1.0);
+  #endif
+
+  #if @gua_tv_3_mode_vol_avg_intensity@
+  float avg_intensity = 0.0;
+  ms_shading_pos = raycast_avg_intensity(avg_intensity);
+  out_color = avg_intensity * vec4(gua_color, 1.0);
+  #endif
+
+  #if @gua_tv_3_mode_vol_compositing@
+
+  #endif
+
+  #if @gua_tv_3_mode_vol_isosurface@
+
+  #endif
+#endif
+
   vec4 projected_pos = gua_model_view_projection_matrix * vec4(ms_shading_pos, 1);
   projected_pos /= projected_pos.w;
 
@@ -292,7 +325,5 @@ void main() {
   submit_fragment(gbuffer_depth);
   #endif
 
-  #if @gua_tv_3_volume_behaviour@
-  out_color = vec4(max_intensity_color, 1.0);
-  #endif
+
 }

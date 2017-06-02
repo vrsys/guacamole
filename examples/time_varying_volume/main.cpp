@@ -181,8 +181,18 @@ int main(int argc, char** argv) {
   graph.add_node("/transform", yet_another_test_volume);
   yet_another_test_volume->translate(1.0, 0.0, 0.0);
   auto test_tv_3_node3 = std::dynamic_pointer_cast<gua::node::TV_3Node>(yet_another_test_volume);
-  //test_tv_3_node3->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+  test_tv_3_node3->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);
   test_tv_3_node3->set_iso_value(0.5);
+
+
+  auto yet_another_test_volume2 = test_volume->copy();
+
+  graph.add_node("/transform", yet_another_test_volume2);
+  yet_another_test_volume2->translate(-1.0, 0.0, 0.0);
+  auto test_tv_3_node4 = std::dynamic_pointer_cast<gua::node::TV_3Node>(yet_another_test_volume2);
+  test_tv_3_node4->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_AVG_INTENSITY);
+  test_tv_3_node4->set_iso_value(0.5);
+
 
   auto test_volume2( tv_3_loader.create_geometry_from_file(
       "test_volume2",
@@ -340,12 +350,16 @@ int main(int argc, char** argv) {
         test_tv_3_node->enable_spatial_linear_filter(enable_spatial_linear_filtering);
         break;
 
-        case 'V': render_in_surface_mode = !render_in_surface_mode;
-        if(render_in_surface_mode) {
-          test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
-        } else {
-          test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);          
-        }break;
+        case '1': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::SUR_PBR);
+        break;
+        case '2': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_MAX_INTENSITY);
+        break;
+        case '3': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_AVG_INTENSITY);
+        break;
+        case '4': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_COMPOSITING);
+        break;
+        case '5': test_tv_3_node->set_render_mode(gua::node::TV_3Node::RenderMode::VOL_ISOSURFACE);
+        break;
         default: break;
         };
 
