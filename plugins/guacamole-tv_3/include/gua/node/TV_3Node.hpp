@@ -156,9 +156,8 @@ public:
                                     = (enable_t_linear_filter ? TemporalFilterMode::T_LINEAR : TemporalFilterMode::T_NEAREST);
                                 }
 
-protected:
+std::shared_ptr<Node> copy() const override;
 
-  std::shared_ptr<Node> copy() const override;
 
 private:  // attributes e.g. special attributes for drawing
 
