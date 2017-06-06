@@ -75,12 +75,22 @@ namespace gua {
     volume_raycasting_fbo_.reset();
 
     // attachments
-    volume_raycasting_color_result_ = ctx.render_device
+    volume_raycasting_back_buffer_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGBA_8,
                           1, 1, 1);
 
-    volume_raycasting_depth_result_ = ctx.render_device
+    volume_raycasting_front_buffer_color_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
+                          scm::gl::FORMAT_RGBA_8,
+                          1, 1, 1);
+
+    volume_raycasting_back_buffer_depth_result_ = ctx.render_device
+      ->create_texture_2d(render_target_dims,
+                          scm::gl::FORMAT_D32F,
+                          1, 1, 1);
+
+    volume_raycasting_front_buffer_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_D32F,
                           1, 1, 1);
@@ -97,27 +107,62 @@ namespace gua {
     no_blending_blend_state_        = ctx.render_device->create_blend_state(false);
   }
 
+  //called once per frame. This is the only instance in which the front buffers should be cleared
   void TV_3VolumeRenderer::_clear_fbo_attachments(gua::RenderContext const& ctx) {
     if (!volume_raycasting_fbo_) {
       volume_raycasting_fbo_ = ctx.render_device->create_frame_buffer();
       volume_raycasting_fbo_->clear_attachments();
       volume_raycasting_fbo_
-        ->attach_color_buffer(0, volume_raycasting_color_result_);
+        ->attach_color_buffer(0, volume_raycasting_back_buffer_color_result_);
+
+
       volume_raycasting_fbo_
-        ->attach_depth_stencil_buffer(volume_raycasting_depth_result_);
+        ->attach_depth_stencil_buffer(volume_raycasting_back_buffer_depth_result_);
+
+     ctx.render_context
+      ->set_frame_buffer( volume_raycasting_fbo_ );
+
+      volume_compositing_fbo_ = ctx.render_device->create_frame_buffer();
+    }
+   
+    ////////////////////////////
+    //clear front buffers START
+    volume_compositing_fbo_->clear_attachments();
+    volume_compositing_fbo_
+      ->attach_color_buffer(0, volume_raycasting_front_buffer_color_result_);
+    //volume_compositing_fbo_
+    //  ->attach_depth_stencil_buffer(volume_raycasting_front_buffer_depth_result_);
 
     ctx.render_context
-    ->set_frame_buffer( volume_raycasting_fbo_ );
-    }
+      ->clear_color_buffer(volume_compositing_fbo_,
+      0,
+      scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+    //ctx.render_context
+    //  ->clear_depth_stencil_buffer(volume_compositing_fbo_);
+    //clear front buffers END
+    ////////////////////////////
+
+
+    ////////////////////////////
+    //clear back buffers START
+    volume_raycasting_fbo_->clear_attachments();
+    volume_raycasting_fbo_
+      ->attach_color_buffer(0, volume_raycasting_back_buffer_color_result_);
+    //volume_raycasting_fbo_
+    //  ->attach_depth_stencil_buffer(volume_raycasting_back_buffer_depth_result_);
 
     ctx.render_context
       ->clear_color_buffer(volume_raycasting_fbo_,
       0,
       scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
+    //ctx.render_context
+    //  ->clear_depth_stencil_buffer(volume_raycasting_fbo_);
+    //clear back buffers END
+    ////////////////////////////
 
-    ctx.render_context
-      ->clear_depth_stencil_buffer(volume_raycasting_fbo_);
+    //keep the back buffers attached
 
     ctx.render_context
       ->set_frame_buffer(volume_raycasting_fbo_);
@@ -149,6 +194,16 @@ namespace gua {
       auto new_program = std::make_shared<ShaderProgram>();
       new_program->set_shaders(compositing_shader_stages_);
       compositing_shader_program_ = new_program;
+    }
+
+    volume_compositing_shader_stages_.clear();
+    volume_compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/fullscreen_blit.vert")));
+    volume_compositing_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/volume_fullscreen_compositing.frag")));
+    
+    {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(volume_compositing_shader_stages_);
+      volume_compositing_shader_program_ = new_program;
     }
 
     shaders_loaded_ = true;
@@ -213,6 +268,27 @@ namespace gua {
         continue;
       }
 
+      //after the compositing for this pass is done, swap the buffers
+      //std::swap(volume_raycasting_front_buffer_color_result_, volume_raycasting_back_buffer_color_result_);
+      //std::swap(volume_raycasting_front_buffer_depth_result_, volume_raycasting_back_buffer_depth_result_);
+
+      //and clear the write buffer (because we don't render fullscreen quads & therefore do not overwrite every pixel)
+
+
+      volume_raycasting_fbo_
+        ->attach_color_buffer(0, volume_raycasting_back_buffer_color_result_);
+      //volume_raycasting_fbo_
+      // ->attach_depth_stencil_buffer(volume_raycasting_back_buffer_depth_result_);
+
+      ctx.render_context
+        ->clear_color_buffer(volume_raycasting_fbo_,
+        0,
+        scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+      //ctx.render_context
+      // ->clear_depth_stencil_buffer(volume_raycasting_fbo_);
+
+
       ctx.render_context
         ->set_frame_buffer(volume_raycasting_fbo_);
 
@@ -248,6 +324,8 @@ namespace gua {
       current_material_program->apply_uniform(ctx, "ms_eye_pos", math::vec4f(model_space_eye_pos/model_space_eye_pos[3]));
       current_material_program->apply_uniform(ctx, "volume_texture", 0);
       current_material_program->apply_uniform(ctx, "codebook_texture", 1);
+      current_material_program->apply_uniform(ctx, "compositing_color_texture", 2);
+      current_material_program->apply_uniform(ctx, "compositing_auxiliary_depth_buffer", 3);
       current_material_program->apply_uniform(ctx, "iso_value", tv_3_volume_node->get_iso_value());
       current_material_program->apply_uniform(ctx, "vol_idx", node_counter);
       
@@ -264,11 +342,14 @@ namespace gua {
       ctx.render_context->set_rasterizer_state(frontface_culling_rasterizer_state_);
       //ctx.render_context->set_blend_state(volume_compositing_blend_state_);
 
-      auto& gl_api = ctx.render_context->opengl_api();
-      gl_api.glEnable(GL_BLEND);
-      gl_api.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      //auto& gl_api = ctx.render_context->opengl_api();
+      //gl_api.glEnable(GL_BLEND);
+      //gl_api.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
      // ctx.render_context->uniform_sampler3D("volume_texture", 0);
       tv_3_volume_node->get_geometry()->bind_volume_texture(ctx, trilin_sampler_state_);
+
+      ctx.render_context->bind_texture(volume_raycasting_front_buffer_color_result_, trilin_sampler_state_, 2);
+      ctx.render_context->bind_texture(volume_raycasting_front_buffer_depth_result_, trilin_sampler_state_, 3);
       tv_3_volume_node->get_geometry()->apply_resource_dependent_uniforms(ctx, current_material_program);
       ctx.render_context->apply_texture_units();
       ctx.render_context->apply();
@@ -276,12 +357,31 @@ namespace gua {
   
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, 36*6);
 
-
+      ctx.render_context->reset_texture_units();
+      //volume_raycasting_fbo_->clear_attachments();
       ++node_counter;
+
+
+
+      ctx.render_context
+        ->set_frame_buffer( volume_compositing_fbo_ );
+
+      ctx.render_context->bind_texture(volume_raycasting_back_buffer_color_result_, trilin_sampler_state_, 0);
+      ctx.render_context->bind_texture(volume_raycasting_front_buffer_color_result_, trilin_sampler_state_, 1);
+      ctx.render_context->bind_texture(volume_raycasting_back_buffer_depth_result_, trilin_sampler_state_, 2);
+      ctx.render_context->apply_texture_units();
+      volume_compositing_shader_program_->use(ctx);
+      volume_compositing_shader_program_->apply_uniform(ctx, "in_color_texture_current", 0);
+      volume_compositing_shader_program_->apply_uniform(ctx, "in_color_texture_previous", 1);
+      volume_compositing_shader_program_->apply_uniform(ctx, "in_depth_texture", 2);
+      ctx.render_context->apply();
+      fullscreen_quad_->draw(ctx.render_context);
+
+      ctx.render_context->reset_texture_units();
     }
 
-    auto& gl_api = ctx.render_context->opengl_api();
-    gl_api.glDisable(GL_BLEND);
+    //auto& gl_api = ctx.render_context->opengl_api();
+    //gl_api.glDisable(GL_BLEND);
 }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,10 +396,10 @@ namespace gua {
     if(compositing_shader_program_ != nullptr) {
       compositing_shader_program_->use(ctx);
     }
-
+    std::swap(volume_raycasting_front_buffer_color_result_, volume_raycasting_back_buffer_color_result_);
     pipe.get_gbuffer()->toggle_ping_pong();
 
-    ctx.render_context->bind_texture(volume_raycasting_color_result_, trilin_sampler_state_, 0);
+    ctx.render_context->bind_texture(volume_raycasting_front_buffer_color_result_, trilin_sampler_state_, 0);
     ctx.render_context->bind_texture(pipe.get_gbuffer()->get_color_buffer(), trilin_sampler_state_, 1);
     compositing_shader_program_->apply_uniform(ctx, "blit_texture", 0);
     compositing_shader_program_->apply_uniform(ctx, "original_gbuffer_color", 1);

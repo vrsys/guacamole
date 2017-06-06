@@ -228,19 +228,7 @@ namespace gua {
   ///////////////////////////////////////////////////////////////////////////////
   void TV_3Renderer::_create_fbo_resources(gua::RenderContext const& ctx,
                                            scm::math::vec2ui const& render_target_dims) {
-    // initialize FBO lazy during runtime
-    volume_raycasting_fbo_.reset();
 
-    // attachments
-    volume_raycasting_color_result_ = ctx.render_device
-      ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_RGBA_8,
-                          1, 1, 1);
-
-    volume_raycasting_depth_result_ = ctx.render_device
-      ->create_texture_2d(render_target_dims,
-                          scm::gl::FORMAT_D32F,
-                          1, 1, 1);
   }
 
   ///////////////////////////////////////////////////////////////////////////////

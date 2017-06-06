@@ -124,8 +124,8 @@ namespace gua {
     scm::gl::frame_buffer_ptr                    volume_raycasting_fbo_;
 
     //accumulation pass FBO & attachments
-    scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
+    //scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
+    //scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
 
     //schism-GL states:
     //////////////////////////////////////////////////////////////////////////////////////

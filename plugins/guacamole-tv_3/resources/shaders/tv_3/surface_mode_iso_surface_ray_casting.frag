@@ -25,24 +25,10 @@ layout(binding=1) uniform sampler2D codebook_texture;
 
 #if @gua_tv_3_volume_behaviour@
 
-@include "shaders/common/gua_gbuffer_input.glsl"
+layout(binding=2) uniform sampler2D compositing_color_texture;
+layout(binding=3) uniform sampler2D compositing_auxiliary_depth_buffer;
 
 
-// methods ---------------------------------------------------------------------
-float get_depth_z(vec3 world_position) {
-    vec4 pos = gua_projection_matrix * gua_view_matrix * vec4(world_position, 1.0);
-    float ndc = pos.z/pos.w;
-    return ((gl_DepthRange.diff * ndc) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;
-
-}
-
-float get_depth_linear(float depth_buffer_d) {
-  float ndc = (depth_buffer_d * 2.0 - gl_DepthRange.near - gl_DepthRange.far)/gl_DepthRange.diff;
-  vec4 enit = vec4(gl_FragCoord.xy * 2.0 - vec2(1.0), ndc, 1.0);
-  vec4 enit_inv = (gua_inverse_projection_view_matrix * enit);
-  enit_inv /= enit_inv.w;
-  return enit_inv.z;
-}
 
 layout(location = 0) out vec4 out_color;
 
@@ -315,33 +301,69 @@ void main() {
 
 #if @gua_tv_3_volume_behaviour@
 
-  vec4 back_blending_color = vec4(0.0);
+  vec4 current_pass_color = vec4(0.0);
   #if @gua_tv_3_mode_vol_max_intensity@
   float max_intensity = 0.0;
   ms_shading_pos = raycast_max_intensity(max_intensity);
-  back_blending_color = max_intensity * vec4(gua_color*gua_alpha, gua_alpha);
+  current_pass_color = max_intensity * vec4(gua_color*gua_alpha, gua_alpha);
   #endif
 
   #if @gua_tv_3_mode_vol_avg_intensity@
   float avg_intensity = 0.0;
   ms_shading_pos = raycast_avg_intensity(avg_intensity);
-  back_blending_color = avg_intensity * vec4(gua_color*gua_alpha, gua_alpha);
+  current_pass_color = avg_intensity * vec4(gua_color*gua_alpha, gua_alpha);
   #endif
 
   #if @gua_tv_3_mode_vol_compositing@
   vec4 composited_color = vec4(0.0);
   ms_shading_pos = raycast_compositing(composited_color);
-  back_blending_color = composited_color;
+  current_pass_color = composited_color;
   #endif
 
   #if @gua_tv_3_mode_vol_isosurface@
   ms_shading_pos = raycast_isosurface();
-  back_blending_color = vec4(gua_color, 1.0);
+  current_pass_color = vec4(gua_color, 1.0);
   #endif
 
+  //current_pass_color is the color that is created by the current volume rendering pass.
+  //previous color is the color which is in the front buffer texture
+
+  vec4 screen_space_cube_fragment_pos = gua_model_view_projection_matrix * vec4(FragmentIn.pos_ms, 1);
+  screen_space_cube_fragment_pos /= screen_space_cube_fragment_pos.w;
+
+  float current_pass_depth = screen_space_cube_fragment_pos.z * 0.5 + 0.5;
 
 
-  out_color = back_blending_color + vec4(0.0, 0.0, 0.0, 0.3*vol_idx);
+  vec4 previous_color = texelFetch(compositing_color_texture, ivec2(gl_FragCoord.xy), 0);
+  float previous_depth = texelFetch(compositing_auxiliary_depth_buffer, ivec2(gl_FragCoord.xy), 0).r;
+
+  vec4 src = vec4(0);
+  vec4 dst = vec4(0);
+/*
+  if(previous_depth < current_pass_depth) {
+    src = previous_color;
+    dst = current_pass_color;
+  } else {
+    src = current_pass_color;
+    dst = previous_color;
+
+    //overwrite frontmost depth value
+    gl_FragDepth = current_pass_depth;
+  }
+*/
+  float omda_sa = (1.0 - dst.a) * 1.0; //the 1.0 is the src.a, which we can only assume to be 1
+
+  dst.rgb += omda_sa * src.rgb;
+  dst.a   += omda_sa;
+
+  out_color = dst.rgba;
+
+  out_color = current_pass_color + previous_color;
+
+ //out_color = current_pass_color + vec4(0.0, 0.0, 0.0, 0.3*vol_idx);
+
+
+
 
   //out_color = vec4(vol_idx, 0.0, 0.0, 1.0);
   //float composited_alpha = (1.0 - fetched_color.a) * back_blending_color.a;

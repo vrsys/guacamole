@@ -67,11 +67,17 @@ namespace gua {
     //FBOs:
     //////////////////////////////////////////////////////////////////////////////////////
     scm::gl::frame_buffer_ptr                    volume_raycasting_fbo_;
+    scm::gl::frame_buffer_ptr                    volume_compositing_fbo_;
 
     //accumulation pass FBO & attachments
-    scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
+    scm::gl::texture_2d_ptr                      volume_raycasting_back_buffer_color_result_;
+    scm::gl::texture_2d_ptr                      volume_raycasting_front_buffer_color_result_;
+    scm::gl::texture_2d_ptr                      volume_raycasting_back_buffer_depth_result_;
+    scm::gl::texture_2d_ptr                      volume_raycasting_front_buffer_depth_result_;
 
+
+    std::vector<ShaderProgramStage>              volume_compositing_shader_stages_;
+    std::shared_ptr<ShaderProgram>               volume_compositing_shader_program_;
 
     scm::gl::blend_state_ptr volume_compositing_blend_state_;
     scm::gl::blend_state_ptr no_blending_blend_state_;
