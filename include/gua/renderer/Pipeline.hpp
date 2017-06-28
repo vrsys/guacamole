@@ -103,6 +103,7 @@ class GUA_DLL Pipeline {
 
   RenderContext& get_context();
   RenderContext const& get_context() const;
+  std::unique_ptr<GBuffer> const& get_gbuffer() const;
   LightTable& get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;

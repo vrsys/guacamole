@@ -141,6 +141,12 @@ struct GUA_DLL RenderContext {
   mutable std::unordered_map<std::size_t, Texture> textures;
 
   /**
+  * Texture arrays associated with this contect
+  */
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr> > texture_2d_arrays;
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr> > texture_3d_arrays;
+
+  /**
   * Resources associated with this context
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;

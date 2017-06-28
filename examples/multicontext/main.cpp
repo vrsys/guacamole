@@ -29,9 +29,6 @@
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/PLODPass.hpp>
-#include <gua/renderer/PLODLoader.hpp>
-#include <gua/node/PLODNode.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 
 #include <thread>
@@ -68,20 +65,15 @@ int main(int argc, char** argv) {
   //mat.set_uniform("color", gua::math::vec3(1, 0, 1), 2);
 
   gua::TriMeshLoader trimeshloader;
-  gua::PLODLoader plodloader;
   // gua::NURBSLoader nurbsloader;
   // gua::Video3DLoader videoloader;
 
   auto teapot_geode(trimeshloader.create_geometry_from_file("teapot_geode", "data/objects/teapot.obj", mat, gua::TriMeshLoader::DEFAULTS));
   auto plate_geode(trimeshloader.create_geometry_from_file("plate_geode", "data/objects/plate.obj", mat, gua::TriMeshLoader::DEFAULTS));
-  //auto pig_geode(plodloader.load_geometry("plate_geode", "data/objects/pig.kdn", mat, gua::PLODLoader::DEFAULTS));
-  // auto video_geode(videoloader.create_geometry_from_file("video_geode", argv[1]));
-  // auto nurbs_geode(nurbsloader.create_geometry_from_file("nurbs_geode", "data/objects/teapot.igs", "data/materials/Orange.gmd", gua::NURBSLoader::DEFAULTS));
 
   auto teapot = graph.add_node<gua::node::TransformNode>("/", "teapot");
   auto plate = graph.add_node<gua::node::TransformNode>("/", "plate");
-  auto pig = graph.add_node<gua::node::TransformNode>("/", "pig");
-  pig->scale(0.4);
+
   // auto video = graph.add_node<gua::node::TransformNode>("/", "video");
   // auto nurbs = graph.add_node<gua::node::TransformNode>("/", "nurbs");
 
@@ -107,7 +99,6 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-  pipe->add_pass(std::make_shared<gua::PLODPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
@@ -201,6 +192,7 @@ int main(int argc, char** argv) {
 
   // application loop
   std::size_t cnt = 0;
+
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -220,13 +212,13 @@ int main(int argc, char** argv) {
 
     ++cnt;
 
-    if (cnt == 10) {
+    if (cnt == 100) {
       add_window("window2", cam2);
     }
-    if (cnt == 20) {
+    if (cnt == 200) {
       add_window("window3", cam3);
     }
-    if (cnt == 30) {
+    if (cnt == 300) {
       add_window("window4", cam4);
     }
 
