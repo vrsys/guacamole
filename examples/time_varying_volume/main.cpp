@@ -32,7 +32,7 @@
 #include <gua/utils/Trackball.hpp>
 
 bool enable_spatial_linear_filtering = false;
-float iso_value = 0.3;//0.02;
+float iso_value = 0.02;//0.02;
 
 bool render_in_surface_mode = true;
 // forward mouse interaction to trackball
@@ -69,15 +69,9 @@ void mouse_button(gua::utils::Trackball& trackball,
 
 int main(int argc, char** argv) {
 
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Simulations/blendcache_fire_pillar/raw_smoke/fire_pillar.v_rsc";
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/Supernova/VQ_222/a_few_compressed_time_series_SW_VQ_MCM.v_rsc";
   //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
-  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/head_w256_h256_d225_c1_b8.raw";
-  std::string in_vol_resource_path2 = "/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw";
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/SSD_LANDMARK_444/one_landmark_SW_VQ.v_rsc";
-  //std::string in_vol_resource_path2 = "/home/wabi7015/Programming/tv_3/resources/volume_data/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw";
-  
-  //std::string in_vol_resource_path2 = "/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw";
+  std::string in_vol_resource_path2 = "./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw";
+
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -168,14 +162,8 @@ int main(int argc, char** argv) {
   gua::TV_3Loader tv_3_loader;
   auto test_volume( tv_3_loader.create_geometry_from_file(
       "test_volume",
-       //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
       in_vol_resource_path2,
-      //"/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw",
-       //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
-      //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
-      //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
-      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
-      //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
+
       shiny_green_mat,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
@@ -205,14 +193,7 @@ int main(int argc, char** argv) {
 
   auto test_volume2( tv_3_loader.create_geometry_from_file(
       "test_volume2",
-       //"./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw",
       in_vol_resource_path2,
-      //"/home/wabi7015/Desktop/volumes_steppo/2_Carp_w256_h256_d512_c1_b8.raw",
-       //"/mnt/pitoti/MA_Adrian/Supernova/Supernova_t1317_w432_h432_d432_b32_c1.raw",
-      //"/mnt/pitoti/MA_Adrian/Supernova_w432_h432_d432_c1_b32.raw",
-      //"/mnt/pitoti/MA_Adrian/16_bit_downsampled_adrian/downsampled_16_bit_t24_w716_h695_d283_c1_b16.raw",
-      //"/mnt/data_internal/volume_data/medical/reptile_ct/16bitcoronal_w1024_h1024_d1080_c1_b16.raw",
-      //"/home/wabi7015/Programming/tv_3/resources/volume_data/head.v_rsc",
       plod_rough3,
       gua::TV_3Loader::NORMALIZE_POSITION |
       gua::TV_3Loader::NORMALIZE_SCALE
