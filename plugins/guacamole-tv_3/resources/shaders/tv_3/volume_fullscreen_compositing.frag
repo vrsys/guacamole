@@ -49,6 +49,6 @@ void main() {
   out_color = current_pass_color + previous_color;
 
 */
-  out_color = texelFetch(in_color_texture_current, ivec2(gl_FragCoord.xy), 0) + texelFetch(in_color_texture_previous, ivec2(gl_FragCoord.xy), 0);;
+  out_color = texelFetch(in_color_texture_current, ivec2(gl_FragCoord.xy), 0) + texelFetch(in_color_texture_previous, ivec2(gl_FragCoord.xy), 0);
 
 }
