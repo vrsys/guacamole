@@ -69,7 +69,7 @@ void mouse_button(gua::utils::Trackball& trackball,
 
 int main(int argc, char** argv) {
 
-  //std::string in_vol_resource_path2 = "/mnt/pitoti/MA_Adrian/supernova_parts.v_rsc";
+  //std::string in_vol_resource_path2 = "***supernova_parts.v_rsc";
   std::string in_vol_resource_path2 = "./data/objects/Bucky_uncertainty_data_w32_h32_d32_c1_b8.raw";
 
   // initialize guacamole
