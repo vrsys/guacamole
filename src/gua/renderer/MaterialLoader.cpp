@@ -513,14 +513,14 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   } else {
     // color
     if (uniform_color_map != "") {
-      if(!isnan(uniform_color[0])) {
+      if(!std::isnan(uniform_color[0])) {
         capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
       }
       else {
         capabilities |= PBSMaterialFactory::COLOR_MAP;
       }
     }
-    else if (!isnan(uniform_color[0])) {
+    else if (!std::isnan(uniform_color[0])) {
         capabilities |= PBSMaterialFactory::COLOR_VALUE;
     }
     // normals
@@ -531,21 +531,21 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     if (uniform_roughness_map != "") {
       capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
     } 
-    else if (!isnan(uniform_roughness)) {
+    else if (!std::isnan(uniform_roughness)) {
       capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
     }
     // metalness
     if (uniform_metalness_map != "") {
       capabilities |= PBSMaterialFactory::METALNESS_MAP;
     } 
-    else if (!isnan(uniform_metalness)) {
+    else if (!std::isnan(uniform_metalness)) {
       capabilities |= PBSMaterialFactory::METALNESS_VALUE;
     }
     // emissivity
     if (uniform_emissivity_map != "") {
       capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
     } 
-    else if (!isnan(uniform_emissivity)) {
+    else if (!std::isnan(uniform_emissivity)) {
       capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
     }
   }
@@ -590,7 +590,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("Emissivity", uniform_emissivity);
   }
   // opacity
-  if (!isnan(uniform_opacity)) {
+  if (!std::isnan(uniform_opacity)) {
     new_mat->set_uniform("Opacity", uniform_opacity);
   }
   //culling 
