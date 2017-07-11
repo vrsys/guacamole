@@ -57,4 +57,5 @@ examples/animation/example-animation
 examples/physics/example-physics
 examples/tiledwall/example-tiledwall
 examples/lod_mesh_textured/example-lod_mesh_textured
+examples/time_varying_volume/example-time_varying_volume
 install
