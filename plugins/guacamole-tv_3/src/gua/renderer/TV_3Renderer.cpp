@@ -164,7 +164,7 @@ namespace gua {
     ResourceFactory factory;
     ray_casting_program_stages_.clear();
     ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/surface_mode_iso_surface_ray_casting.frag")));
+    ray_casting_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.frag")));
     
     shaders_loaded_ = true;
   }
