@@ -51,6 +51,7 @@
 #include <stack>
 #include <algorithm>
 #include <regex>
+#include <fstream>
 
 namespace gua {
 
