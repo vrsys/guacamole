@@ -178,7 +178,7 @@ namespace gua {
     ResourceFactory factory;
     forward_cube_shader_stages_.clear();
     forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.vert")));
-    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/volume_mode_max_intensity_ray_casting.frag")));
+    forward_cube_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/tv_3/ray_casting.frag")));
 
     {
       auto new_program = std::make_shared<ShaderProgram>();
