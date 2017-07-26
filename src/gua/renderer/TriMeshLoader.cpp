@@ -356,7 +356,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
   }
 
   // else: there are multiple children and meshes
-  for (unsigned i(0); i < fbx_node.GetChildCount(); ++i) {
+  for (int i = 0; i < fbx_node.GetChildCount(); ++i) {
     group->add_child(get_tree(*fbx_node.GetChild(i), file_name, flags, mesh_count));
   }
 

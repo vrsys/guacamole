@@ -24,13 +24,15 @@
 
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
+#include <gua/platform.hpp>
 
 namespace gua {
 
 class SkinnedMeshResource;
-class Bone;
 class SkeletalAnimation;
+struct Bone;
 
 namespace node {
 
@@ -46,13 +48,14 @@ namespace node {
 
  public:  // c'tor / d'tor
 
+  inline SkeletalAnimationNode(
+      std::string const& node_name = ""){};
+
   SkeletalAnimationNode(
-      std::string const& node_name = "",
-      std::vector<std::string> const& geometry_description = {
-  },
-      std::vector<std::shared_ptr<Material> > const& materials = {
-  },
-      std::shared_ptr<Bone> const& = nullptr,
+      std::string const& node_name,
+      std::vector<std::string> const& geometry_description,
+      std::vector<std::shared_ptr<Material> > const& materials,
+      Skeleton const&,
       math::mat4 const& transform = math::mat4::identity());
 
 
@@ -66,10 +69,13 @@ namespace node {
   std::vector<std::string> const& get_geometry_descriptions() const;
 
   /**
-  * Set the string referring to an entry in guacamole's GeometryDatabase.
+  * Set the path to the model file containing a skeleton.
   */
-  void set_geometry_description(std::string const& geometry_description,
-                                unsigned index);
+  void set_skeleton_description(std::string const& geometry_description);
+  /**
+  * Set the strings referring to entries in guacamole's GeometryDatabase.
+  */
+  void set_geometry_descriptions(std::vector<std::string> const& geometry_descriptions);
 
   /**
   * This is only for the multifield handling in avango
@@ -93,6 +99,8 @@ namespace node {
   bool get_render_to_stencil_buffer() const;
   void set_render_to_stencil_buffer(bool enable);
 
+  void set_bones(std::vector<Bone> const& bones);
+  std::vector<Bone> const& get_bones() const;
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -173,17 +181,11 @@ namespace node {
   bool render_to_stencil_buffer_;
 
   // attributes related to animation
-
-  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
-
-  std::shared_ptr<Bone> root_;
-  std::shared_ptr<Bone> anim_start_node_;
-
+  Skeleton skeleton_;
   std::map<std::string, SkeletalAnimation> animations_;
 
-  bool first_run_;
+  bool new_bones_;
   bool has_anims_;
-  unsigned num_bones_;
 
   const static std::string none_loaded;
 

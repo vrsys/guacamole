@@ -1,9 +1,10 @@
 // class header
-#include <gua/utils/SkinnedMesh.hpp>
+#include <gua/skelanim/utils/SkinnedMesh.hpp>
 
 // guacamole headers
 #include <gua/utils/Mesh.hpp>
 #include <gua/utils/Logger.hpp>
+
 
 //external headers
 #ifdef GUACAMOLE_FBX
@@ -21,8 +22,9 @@ SkinnedMesh::SkinnedMesh() : Mesh {}
 {}
 
 #ifdef GUACAMOLE_FBX
+////////////////////////////////////////////////////////////////////////////////////
 SkinnedMesh::SkinnedMesh(FbxMesh& mesh,
-                         Bone const& root,
+                         Skeleton const& skeleton,
                          unsigned const material_index) {
   //weights are associated to controlpoints and there can be control points with
   //same positions after another
@@ -34,8 +36,8 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh,
   std::vector<bone_influences> ctrlpt_weights {}
   ;
   //get weights of original control points
-  if (root.name != "none") {
-    ctrlpt_weights = get_weights(mesh, root);
+  if (skeleton.num_bones() > 0) {
+    ctrlpt_weights = get_weights(mesh, skeleton);
     has_weights = ctrlpt_weights.size() > 0;
   }
 
@@ -67,9 +69,8 @@ SkinnedMesh::SkinnedMesh(FbxMesh& mesh,
 
 std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
     FbxMesh const& mesh,
-    Bone const& root) {
-  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
-  root.collect_indices(bone_mapping_);
+    Skeleton const& skeleton) {
+  auto const& bone_mapping = skeleton.get_mapping();
 
   //check for skinning
   FbxSkin* skin = nullptr;
@@ -104,8 +105,8 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
     std::string bone_name { bone->GetName() }
     ;
     unsigned bone_index;
-    if (bone_mapping_.find(bone_name) != bone_mapping_.end()) {
-      bone_index = bone_mapping_.at(bone_name);
+    if (bone_mapping.find(bone_name) != bone_mapping.end()) {
+      bone_index = bone_mapping.at(bone_name);
     } else {
       Logger::LOG_ERROR << "Bone with name '" << bone_name
                         << "' does not exist!, ignoring weights" << std::endl;
@@ -124,11 +125,12 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
 }
 
 #endif
+///////////////////////////////////////////////////////////////////////////////
 
-SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) : Mesh { mesh }
+SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Skeleton const& skeleton) : Mesh { mesh }
 {
   //get weights and write them to vectors
-  auto temp_weights = get_weights(mesh, root);
+  auto temp_weights = get_weights(mesh, skeleton);
   for (auto const& w : temp_weights) {
     for (unsigned i(0); i < w.weights.size(); ++i) {
       bone_ids.push_back(w.IDs[i]);
@@ -140,9 +142,8 @@ SkinnedMesh::SkinnedMesh(aiMesh const& mesh, Bone const& root) : Mesh { mesh }
 
 std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
     aiMesh const& mesh,
-    Bone const& root) {
-  std::map<std::string, int> bone_mapping_;  // maps a bone name to its index
-  root.collect_indices(bone_mapping_);
+    Skeleton const& skeleton) {
+  auto const& bone_mapping = skeleton.get_mapping();
 
   std::vector<bone_influences> temp_weights { mesh.mNumVertices }
   ;
@@ -150,7 +151,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
   for (unsigned i = 0; i < mesh.mNumBones; i++) {
     std::string bone_name { mesh.mBones[i]->mName.data }
     ;
-    unsigned bone_index = bone_mapping_.at(bone_name);
+    unsigned bone_index = bone_mapping.at(bone_name);
 
     for (unsigned j = 0; j < mesh.mBones[i]->mNumWeights; j++) {
       unsigned vertex_index = mesh.mBones[i]->mWeights[j].mVertexId;
@@ -162,6 +163,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
   return temp_weights;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 void SkinnedMesh::copy_to_buffer(Vertex* vertex_buffer,
   unsigned resource_offset_bytes) const {
   unsigned bone_offset = resource_offset_bytes / sizeof(unsigned);

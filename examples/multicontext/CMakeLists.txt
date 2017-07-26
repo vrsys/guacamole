@@ -3,23 +3,27 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
+#list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
 
-link_directories(${LIB_PATHS} ${ASSIMP_LIBRARY_DIR})
+#link_directories(${LIB_PATHS} ${ASSIMP_LIBRARY_DIR})
+#
+#include_directories( ${INCLUDE_PATHS} 
+#                     ${PROJECT_SOURCE_DIR}/include
+#                     ${GUACAMOLE_NURBS_INCLUDE_DIR}
+#                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
+#                     ${GUACAMOLE_TV_3_INCLUDE_DIR}
+#                    )
 
-include_directories( ${INCLUDE_PATHS} 
-                     ${PROJECT_SOURCE_DIR}/include
-                     ${GUACAMOLE_NURBS_INCLUDE_DIR}
-                     ${GUACAMOLE_PLOD_INCLUDE_DIR}
-                     ${GUACAMOLE_TV_3_INCLUDE_DIR}
-                    )
+#add_executable( ${_EXE_NAME} main.cpp)
 
-add_executable( ${_EXE_NAME} main.cpp)
-
-add_dependencies(${_EXE_NAME} guacamole)
+#add_dependencies(${_EXE_NAME} guacamole)
 # add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs guacamole-PLOD)
 
-list(APPEND LIBS guacamole)
+#list(APPEND LIBS guacamole)
+
+#link_directories(${LIB_PATHS})
+
+add_executable( ${_EXE_NAME} main.cpp)
 
 IF (MSVC)
   target_link_libraries( ${_EXE_NAME} 
