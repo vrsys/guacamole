@@ -19,35 +19,66 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_FBXFWD_HPP
-#define GUA_FBXFWD_HPP
+#ifndef GUA_SKELETAL_ANIMATION_HPP
+#define GUA_SKELETAL_ANIMATION_HPP
 
-#define FBX_NAMESPACE fbxsdk
+// guacamole headers
+#include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
+#include <gua/skelanim/platform.hpp>
+ 
+// external headers
+#include <vector>
+#include <string>
 
-namespace FBX_NAMESPACE {
-  class FbxMesh;
-  class FbxNode;
-  class FbxManager;
-  class FbxAnimStack;
-  class FbxScene;
-  class FbxTakeInfo;
-  class FbxSurfaceMaterial;
-  class FbxAMatrix;
-  class FbxQuaternion;
+struct aiAnimation;
 
-  template<class T>
-  class FbxLayerElementTemplate;
+namespace gua {
+class SkeletalPose;
+
+/**
+ * @brief holds bone animations for one animation
+ */
+class GUA_SKELANIM_DLL SkeletalAnimation {
+ public:
+  SkeletalAnimation();
+
+  SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
+#ifdef GUACAMOLE_FBX
+  SkeletalAnimation(FbxAnimStack* anim,
+                    std::vector<FbxNode*> const& bones,
+                    std::string const& name = "");
+#endif
+  ~SkeletalAnimation();
+
+  /**
+   * @brief calculates skelpose from this anim
+   * @details calculates the pose at the given time
+   * 
+   * @param time time for which to calculate pose
+   * @return SkeletalPose at given time
+   */
+  SkeletalPose calculate_pose(float time) const;
+
+  /**
+   * @brief returns anim duration
+   * @return duration in seconds
+   */
+  double get_duration() const;
+
+  std::string const& get_name() const;
+
+ private:
+  std::string name;
+  unsigned numFrames;
+  double numFPS;
+  double duration;
+  unsigned numBoneAnims;
+
+  std::vector<BoneAnimation> boneAnims;
+};
+
 }
 
-using FBX_NAMESPACE::FbxAnimStack;
-using FBX_NAMESPACE::FbxTakeInfo;
-using FBX_NAMESPACE::FbxAMatrix;
-using FBX_NAMESPACE::FbxQuaternion;
-using FBX_NAMESPACE::FbxNode;
-using FBX_NAMESPACE::FbxManager;
-using FBX_NAMESPACE::FbxScene;
-using FBX_NAMESPACE::FbxMesh;
-using FBX_NAMESPACE::FbxLayerElementTemplate;
-using FBX_NAMESPACE::FbxSurfaceMaterial;
-
-#endif  // GUA_FBXFWD_HPP
+#endif  //GUA_SKELETAL_ANIMATION_HPP

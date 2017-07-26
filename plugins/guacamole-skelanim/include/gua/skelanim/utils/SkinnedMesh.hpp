@@ -23,11 +23,11 @@
 #define GUA_SKINNED_MESH_HPP
 
 // guacamole headers
+#include <gua/skelanim/platform.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 #include <gua/utils/Mesh.hpp>
-#include <gua/utils/Bone.hpp>
 #include <gua/utils/fbxfwd.hpp>
 #include <gua/config.hpp>
-
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
@@ -36,8 +36,6 @@
 struct aiMesh;
 
 namespace gua {
-  class Bone;
-
 /**
  * @brief mesh with vertex-bone mapping
  */
@@ -46,13 +44,12 @@ namespace gua {
   SkinnedMesh();
 
   SkinnedMesh(aiMesh const& mesh,
-              Bone const& root = Bone {
-  });
+              Skeleton const& skeleton = Skeleton{} 
+  );
 
 #ifdef GUACAMOLE_FBX
   SkinnedMesh(FbxMesh& mesh,
-              Bone const& root = Bone {
-  },
+              Skeleton const& skeleton = Skeleton{},
               unsigned const material_index = 0);
 #endif
 /**
@@ -116,11 +113,11 @@ namespace gua {
    * mapping info from the mesh
    * 
    * @param mesh skinned assimp mesh
-   * @param root root of hierarchy
+   * @param skeleton the bone hierarchy
    * @return the calculated bone influences
    */
   static std::vector<bone_influences> get_weights(aiMesh const& mesh,
-                                                  Bone const& root);
+                                                  Skeleton const& skeleton);
 
   /**
    * @brief create bone influences from fbx mesh and hierarchy
@@ -128,14 +125,14 @@ namespace gua {
    * mapping info from the mesh
    * 
    * @param mesh skinned fbx mesh
-   * @param root root of hierarchy
+   * @param skeleton the bone hierarchy
    * 
    * @return the calculated bone influences
    */
 #ifdef GUACAMOLE_FBX
   static std::vector<bone_influences> get_weights(
       FbxMesh const& mesh,
-      Bone const& root);
+      Skeleton const& skeleton);
 #endif
 };
 

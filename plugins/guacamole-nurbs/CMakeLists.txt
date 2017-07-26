@@ -31,15 +31,7 @@ SOURCE_GROUP("resources" FILES ${GUA_NURBS_SHADERS})
 
 SET(GUACAMOLE_NURBS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-nurbs includes." )
 
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_NURBS_INCLUDE_DIR}
-                     ${GPUCAST_INCLUDE_DIR}
-)
-
-ADD_LIBRARY( guacamole-nurbs SHARED
+add_library( guacamole-nurbs SHARED
     ${GUA_NURBS_NODE_SRC}
     ${GUA_NURBS_NODE_INC}
     ${GUA_NURBS_RENDERER_SRC}
@@ -49,7 +41,10 @@ ADD_LIBRARY( guacamole-nurbs SHARED
     ${GUA_NURBS_SHADERS}
 )
 
-ADD_DEPENDENCIES(guacamole-nurbs guacamole)
+target_include_directories( guacamole-nurbs PUBLIC
+                     ${GUACAMOLE_NURBS_INCLUDE_DIR}
+                     ${GPUCAST_INCLUDE_DIR}
+)
 
 ###############################################################################
 # compiling and linking

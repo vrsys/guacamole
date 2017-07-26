@@ -36,9 +36,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   //if the given materialindex is valid, assume that only the polys with this material should be loaded
   bool split_materials = material_index >= 0;
   FbxGeometryElementMaterial const* material_layer = mesh.GetElementMaterial(0);
-  // Logger::LOG_DEBUG << "num polys " << mesh.GetPolygonCount() << " num matlayer index " << material_layer->GetIndexArray().GetCount() << std::endl;
-  for(unsigned i = 0; i < material_layer->GetIndexArray().GetCount() ; ++i) {
-  }
+  
   std::function<unsigned(unsigned)> get_material;
 
   if (material_layer->GetMappingMode() == FbxGeometryElement::eByPolygon) {
@@ -59,7 +57,6 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   else {
     Logger::LOG_ERROR << "Type of material mapping not supported" << std::endl;
   }
-
 
 //polygons
   if(mesh.GetPolygonCount() < 1) {
@@ -110,7 +107,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   }
 
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
-  std::vector<std::list<temp_vert>> vert_positions{unsigned(mesh.GetControlPointsCount()), std::list<temp_vert>{}};
+  std::vector<std::list<temp_vert>> control_points{unsigned(mesh.GetControlPointsCount()), std::list<temp_vert>{}};
   std::vector<temp_tri> temp_tris{};
   
   //vertex indices of polygons
@@ -126,7 +123,6 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   std::function<unsigned(temp_vert const&)> get_uv;
 
   FbxArray<FbxVector2> poly_uvs{};
-  // FbxLayerElementArrayTemplate<FbxVector2> const& poly_uvs{has_uvs ? mesh.GetElementUV(0)->GetDirectArray() : FbxLayerElementArrayTemplate<FbxVector2>{EFbxType::eFbxDouble2}};
   if(has_uvs) {
     mesh.GetElementUV(0)->GetDirectArray().CopyTo(poly_uvs);
     get_uv = get_access_function(*mesh.GetElementUV(0));
@@ -151,15 +147,13 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   num_triangles = 0; 
   //starting index of the polygon in the index array
   unsigned start_index = 0;
-  //how many tris the last polygon contained
-  unsigned tris_added = 0;
   //iterate over polygons
-  for(unsigned i = 0; i < mesh.GetPolygonCount(); ++i)
+  for(int i = 0; i < mesh.GetPolygonCount(); ++i)
   {
     if(!split_materials || get_material(i) == material_index) {
 
       //triangulate face if necessary
-      for(unsigned j = 2; j < mesh.GetPolygonSize(i); ++j)
+      for(int j = 2; j < mesh.GetPolygonSize(i); ++j)
       {
         //get indices of vertices in attribute arrays
         std::array<unsigned, 3> indices{start_index, start_index + j - 1, start_index + j};
@@ -196,9 +190,9 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
         }
 
         //add new vertices to respective control points
-        vert_positions[tri.verts[0]].push_back(vert1);
-        vert_positions[tri.verts[1]].push_back(vert2);
-        vert_positions[tri.verts[2]].push_back(vert3);
+        control_points[tri.verts[0]].push_back(vert1);
+        control_points[tri.verts[1]].push_back(vert2);
+        control_points[tri.verts[2]].push_back(vert3);
 
         ++num_triangles;
       }
@@ -210,32 +204,49 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   num_vertices = 0;
   unsigned old_num_vertices = 0;
   unsigned dupl_verts = 0;
-  //iterate over control points
-  for(auto& verts : vert_positions) {
-    old_num_vertices += verts.size();
-    //iterate over vertices at that point
-    for(auto iter = verts.begin(); iter != verts.end(); ++iter) {
-      //ierate over vertices behind current vertex
-      for(auto iter2 = std::next(iter); iter2 != verts.end(); ++iter2) {
+  for(auto ctrl_pt_iter = control_points.begin(); ctrl_pt_iter != control_points.end(); ++ctrl_pt_iter) {
+    //skip control points without vertices
+    if(ctrl_pt_iter->empty()) {
+      ++ctrl_pt_iter;
+    }
+    if(ctrl_pt_iter == control_points.end()) break;
+
+    old_num_vertices += ctrl_pt_iter->size();
+
+    for(auto iter = ctrl_pt_iter->begin(); iter != ctrl_pt_iter->end(); ++iter) {
+      //iterate over vertices behind current vertex
+      for(auto iter2 = std::next(iter); iter2 != ctrl_pt_iter->end(); ++iter2) {
         //match by normals and if exisiting, other attributes
-        bool duplicate = !vertex_normals || iter2->normal == iter->normal;
-        if(duplicate && has_uvs) duplicate = iter2->uv == iter->uv; 
-        if(duplicate && has_tangents) duplicate = iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent; 
+        bool duplicate = true;
+        if(vertex_normals) duplicate = duplicate && iter2->normal == iter->normal;
+        if(has_uvs)        duplicate = duplicate && iter2->uv == iter->uv; 
+        if(has_tangents)   duplicate = duplicate && iter2->tangent == iter->tangent && iter2->bitangent == iter->bitangent; 
         //duplicate -> merge vertices
         if(duplicate) {
           //add triangle of duplicate vertex to current vertex
           iter->tris.push_back(iter2->tris[0]);
-
-          verts.erase(iter2);
+          // removing element invalidates iterators
+          // assign result to first iter to continue iterating
+          iter2 = ctrl_pt_iter->erase(iter2);
+          if(iter2 == ctrl_pt_iter->end()) break;
           ++dupl_verts;
-          break;
         }
       }
     }
     //add number of filtered verts at current control point to total vertex number
-    num_vertices += verts.size();
+    num_vertices += ctrl_pt_iter->size();
   }
 
+  bool empty = true;
+  for( auto const& cp : control_points) {
+    if(!cp.empty()) {
+      empty = false;
+      break;
+    }
+  }
+  if (empty) {
+    throw std::runtime_error("vertex list empty");
+  }
   // Reserve space in the vectors for the vertex attributes and indices
   positions.reserve(num_vertices);
   normals.reserve(num_vertices);
@@ -262,18 +273,24 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   scm::math::vec3f curr_position{};
   scm::math::vec3f curr_normal{};
   //iterate over control points
-  for(unsigned i = 0; i < vert_positions.size(); ++i) {
-
+  for(unsigned i = 0; i < control_points.size(); ++i) {
+    // skip control points without vertices
+    if(control_points[i].empty()) continue;
     //get position once per point, all vertices at this control point have this position
     curr_position = to_gua::vec3f(mesh.GetControlPointAt(i));
 
-    //if normal is not unique to vertex all vertices at this point also have the same normal
+    //if normal is not unique to vertex, all vertices at this point also have the same normal
     if(!vertex_normals) {
-      curr_normal = to_gua::vec3f(poly_normals[get_normal(vert_positions[i].front())]);
+      auto const& positions = control_points.at(i);
+      auto const& front = positions.front();
+      auto const& normal_idx = get_normal(front);
+      auto const& normal = poly_normals[normal_idx];
+      curr_normal = to_gua::vec3f(normal);
+      // curr_normal = to_gua::vec3f(poly_normals[get_normal(control_points[i].front())]);
     }
 
     //iterate over vertices at that point
-    for(auto const& vert : vert_positions[i]) {
+    for(auto const& vert : control_points[i]) {
       //update containing triangles with actual index of this vertex in member vectors
       for(auto const& tri : vert.tris) {
         temp_tris[tri.first].verts[tri.second] = curr_vert;
@@ -301,7 +318,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
     }
   }
   //free memory
-  std::vector<std::list<temp_vert>>{}.swap(vert_positions);
+  std::vector<std::list<temp_vert>>{}.swap(control_points);
 
   //load reduced triangles
   indices.reserve(num_triangles * 3);

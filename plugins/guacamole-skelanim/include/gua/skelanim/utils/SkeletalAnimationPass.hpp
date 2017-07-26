@@ -19,35 +19,29 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_FBXFWD_HPP
-#define GUA_FBXFWD_HPP
+#ifndef GUA_SLELETAL_ANIMATION_PASS_HPP
+#define GUA_SLELETAL_ANIMATION_PASS_HPP
 
-#define FBX_NAMESPACE fbxsdk
+// guacamole headers
+#include <gua/skelanim/platform.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
-namespace FBX_NAMESPACE {
-  class FbxMesh;
-  class FbxNode;
-  class FbxManager;
-  class FbxAnimStack;
-  class FbxScene;
-  class FbxTakeInfo;
-  class FbxSurfaceMaterial;
-  class FbxAMatrix;
-  class FbxQuaternion;
+// external headers
+#include <scm/gl_core/buffer_objects.h>
 
-  template<class T>
-  class FbxLayerElementTemplate;
+namespace gua {
+
+  class GUA_SKELANIM_DLL SkeletalAnimationPassDescription
+    : public PipelinePassDescription {
+ public:
+  SkeletalAnimationPassDescription();
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
+
+ protected:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+};
+
 }
 
-using FBX_NAMESPACE::FbxAnimStack;
-using FBX_NAMESPACE::FbxTakeInfo;
-using FBX_NAMESPACE::FbxAMatrix;
-using FBX_NAMESPACE::FbxQuaternion;
-using FBX_NAMESPACE::FbxNode;
-using FBX_NAMESPACE::FbxManager;
-using FBX_NAMESPACE::FbxScene;
-using FBX_NAMESPACE::FbxMesh;
-using FBX_NAMESPACE::FbxLayerElementTemplate;
-using FBX_NAMESPACE::FbxSurfaceMaterial;
-
-#endif  // GUA_FBXFWD_HPP
+#endif  // GUA_SLELETAL_ANIMATION_PASS_HPP

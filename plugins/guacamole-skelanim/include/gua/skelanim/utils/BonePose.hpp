@@ -19,35 +19,47 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_FBXFWD_HPP
-#define GUA_FBXFWD_HPP
+#ifndef GUA_BONEPOSE_HPP
+#define GUA_BONEPOSE_HPP
 
-#define FBX_NAMESPACE fbxsdk
+#include <gua/skelanim/platform.hpp>
 
-namespace FBX_NAMESPACE {
-  class FbxMesh;
-  class FbxNode;
-  class FbxManager;
-  class FbxAnimStack;
-  class FbxScene;
-  class FbxTakeInfo;
-  class FbxSurfaceMaterial;
-  class FbxAMatrix;
-  class FbxQuaternion;
+// external headers
+#include <scm/gl_core.h>
+#include <scm/core/math/quat.h>
 
-  template<class T>
-  class FbxLayerElementTemplate;
+namespace gua {
+
+/**
+ * @brief holds transformation of bone
+ * @details can be blended with another bone pose
+ */
+struct GUA_SKELANIM_DLL BonePose {
+ public:
+  BonePose();
+
+  BonePose(scm::math::vec3f const& scale,
+           scm::math::quatf const& rotate,
+           scm::math::vec3f const& translate);
+
+  ~BonePose();
+
+  scm::math::mat4f to_matrix() const;
+
+  BonePose blend(BonePose const& t, float const factor) const;
+
+  BonePose operator+(BonePose const& t) const;
+  BonePose& operator+=(BonePose const& t);
+
+  BonePose operator*(float const factor) const;
+  BonePose& operator*=(float const f);
+
+ private:
+  scm::math::vec3f scaling;
+  scm::math::quatf rotation;
+  scm::math::vec3f translation;
+};
+
 }
 
-using FBX_NAMESPACE::FbxAnimStack;
-using FBX_NAMESPACE::FbxTakeInfo;
-using FBX_NAMESPACE::FbxAMatrix;
-using FBX_NAMESPACE::FbxQuaternion;
-using FBX_NAMESPACE::FbxNode;
-using FBX_NAMESPACE::FbxManager;
-using FBX_NAMESPACE::FbxScene;
-using FBX_NAMESPACE::FbxMesh;
-using FBX_NAMESPACE::FbxLayerElementTemplate;
-using FBX_NAMESPACE::FbxSurfaceMaterial;
-
-#endif  // GUA_FBXFWD_HPP
+#endif  //GUA_BONEPOSE_HPP

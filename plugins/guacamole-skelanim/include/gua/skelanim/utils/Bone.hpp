@@ -19,43 +19,47 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
-#define GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
+#ifndef GUA_BONE_HPP
+#define GUA_BONE_HPP
 
 // guacamole headers
-#include <gua/platform.hpp>
-#include <gua/Skelanim.hpp>
-#include <gua/math/math.hpp>
+#include <gua/config.hpp>
+#include <gua/utils/fbxfwd.hpp>
+#include <gua/skelanim/platform.hpp>
 
 // external headers
-#include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
+#include <scm/gl_core.h>
+
+struct aiNode;
 
 namespace gua {
 
 /**
- * @brief holds the transformations of all bones
- * of skeletalanimationnodes
+ * @brief represents one node in skeletal hierarchy
+ * @details has methods to traverse skeleton hierarchy
  */
-class GUA_SKELANIM_DLL BoneTransformUniformBlock
-{
-public:
-  struct BoneTransformBlock {
-    math::mat4f transforms[100];
-  };
+struct GUA_SKELANIM_DLL Bone {
+ public:
+  Bone();
+  Bone(std::string const& name, 
+    scm::math::mat4f const& idle,
+    scm::math::mat4f const& offset = scm::math::mat4f::identity(),
+    std::vector<unsigned> childs = std::vector<unsigned>{}
+  );
+  Bone(aiNode const& node);
 
-  using block_type = scm::gl::uniform_block<BoneTransformBlock>;
+#ifdef GUACAMOLE_FBX
+  Bone(FbxNode& node);
+#endif
 
-  BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
-  ~BoneTransformUniformBlock();
-
-  void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4f> const& new_transforms);
-
-  inline const block_type&   block() const { return uniform_block_; }
-
-private:
-  block_type          uniform_block_;
+  std::string name;
+  std::vector<unsigned> children;
+  // idle/reference pose matrix
+  scm::math::mat4f idle_matrix;
+  //transforms to bone space
+  scm::math::mat4f offset_matrix;
 };
 
-} // namespace gua {
+}
 
-#endif // #ifndef GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
+#endif  //GUA_BONE_HPP
