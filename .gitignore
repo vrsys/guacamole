@@ -58,8 +58,7 @@ examples/physics/example-physics
 examples/tiledwall/example-tiledwall
 examples/lod_mesh_textured/example-lod_mesh_textured
 examples/depth_cube_map/example-depth_cube_map
+examples/time_varying_volume/example-time_varying_volume
 examples/lod_simple/example-lod_simple
-examples/plod_shadows/example-plod_shadows
-examples/plod_simple/example-plod_simple
-
 install
+examples/picking/example-picking

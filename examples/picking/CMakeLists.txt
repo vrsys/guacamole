@@ -1,22 +1,23 @@
+# determine source and header files
+
 get_filename_component(_EXAMPLE_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
+list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
+
+link_directories(${LIB_PATHS})
+
+include_directories( ${INCLUDE_PATHS} ${PROJECT_SOURCE_DIR}/include)
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-IF (MSVC)
-  target_link_libraries( ${_EXE_NAME} 
-                         debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE} 
-                         general guacamole)
-                         # general guacamole-nurbs)
-ELSEIF (UNIX)
-  target_link_libraries( ${_EXE_NAME} 
-                         general ${ASSIMP_LIBRARIES} 
-                         general guacamole)
-                         # general guacamole-nurbs )
-ENDIF (MSVC)
+add_dependencies(${_EXE_NAME} guacamole)
+
+list(APPEND LIBS guacamole)
+
+target_link_libraries( ${_EXE_NAME} guacamole )
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

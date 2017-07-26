@@ -4,7 +4,11 @@ IF (GUACAMOLE_EXAMPLES)
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(input)
+    IF (${PLUGIN_guacamole-gui} AND ${PLUGIN_guacamole-plod})
+      add_subdirectory(depth_cube_map)
+    ENDIF()
     add_subdirectory(projective_texturing)
+    add_subdirectory(picking)
     add_subdirectory(nice_and_shiny)
     add_subdirectory(smooth_lighting)
     add_subdirectory(stress_test)
@@ -42,8 +46,6 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-plod})
     add_subdirectory(plod_simple)
     add_subdirectory(plod_shadows)
-    # multicontext example requires plod-plugin
-    add_subdirectory(multicontext)
     IF (${PLUGIN_guacamole-gui})
       add_subdirectory(depth_cube_map)
     ENDIF()
@@ -55,6 +57,11 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(lod_mesh_textured)
   ENDIF (${PLUGIN_guacamole-lod})
 
+  # time-varying volume example requires tv_3-plugin
+  IF (${PLUGIN_guacamole-tv_3})
+    add_subdirectory(time_varying_volume)
+  ENDIF (${PLUGIN_guacamole-tv_3})
+
   # gui example requires gui-plugin
   IF (${PLUGIN_guacamole-gui})
    add_subdirectory(gui)
@@ -64,6 +71,7 @@ IF (GUACAMOLE_EXAMPLES)
    ENDIF (${PLUGIN_guacamole-volume})
   ENDIF (${PLUGIN_guacamole-gui})
 
+  add_subdirectory(multicontext)
   add_subdirectory(tiledwall)
 
   # video3d example requires glfw and video3d-plugin

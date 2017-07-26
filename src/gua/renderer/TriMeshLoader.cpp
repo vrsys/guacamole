@@ -211,7 +211,6 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
 
       if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
         ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality |
-                            aiProcess_OptimizeGraph |
                             aiProcess_PreTransformVertices;
       }
 

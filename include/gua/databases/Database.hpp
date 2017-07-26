@@ -65,6 +65,23 @@ template <typename T, typename K = std::string> class Database {
   }
 
   /**
+   * Adds a new entry to the data base.
+   *
+   * It can be accessed later with the lookup() method.
+   *
+   * \param k    The unique key of this entry.
+   * \param date The newly added entry.
+   */
+  void add_if_not_element(key_type const& k, mapped_type const& date) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto result = data_.find(k);
+    if (result == data_.end()) {
+      data_[k] = date;
+      keys_.insert(k);
+    }
+  }
+
+  /**
   * Remove entry to the data base.
   */
   void remove(key_type const& k) {
