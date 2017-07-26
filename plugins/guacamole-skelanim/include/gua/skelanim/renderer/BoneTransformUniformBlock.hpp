@@ -19,66 +19,43 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_SKELETAL_ANIMATION_HPP
-#define GUA_SKELETAL_ANIMATION_HPP
+#ifndef GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
+#define GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP
 
 // guacamole headers
-#include <gua/config.hpp>
-#include <gua/utils/fbxfwd.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-#include <gua/Skelanim.hpp>
- 
-// external headers
-#include <vector>
-#include <string>
+#include <gua/skelanim/platform.hpp>
+#include <gua/math/math.hpp>
 
-struct aiAnimation;
+// external headers
+#include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
 
 namespace gua {
-class SkeletalPose;
 
+  const std::size_t NUM_MAX_BONES = 100;
 /**
- * @brief holds bone animations for one animation
+ * @brief holds the transformations of all bones
+ * of skeletalanimationnodes
  */
-class GUA_SKELANIM_DLL SkeletalAnimation {
- public:
-  SkeletalAnimation();
+class GUA_SKELANIM_DLL BoneTransformUniformBlock
+{
+public:
+  struct BoneTransformBlock {
+    math::mat4f transforms[NUM_MAX_BONES];
+  };
 
-  SkeletalAnimation(aiAnimation const& anim, std::string const& name = "");
-#ifdef GUACAMOLE_FBX
-  SkeletalAnimation(FbxAnimStack* anim,
-                    std::vector<FbxNode*> const& bones,
-                    std::string const& name = "");
-#endif
-  ~SkeletalAnimation();
+  using block_type = scm::gl::uniform_block<BoneTransformBlock>;
 
-  /**
-   * @brief calculates skelpose from this anim
-   * @details calculates the pose at the given time
-   * 
-   * @param time time for which to calculate pose
-   * @return SkeletalPose at given time
-   */
-  SkeletalPose calculate_pose(float time) const;
+  BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
+  ~BoneTransformUniformBlock();
 
-  /**
-   * @brief returns anim duration
-   * @return duration in seconds
-   */
-  double get_duration() const;
+  void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4f> const& new_transforms);
 
-  std::string const& get_name() const;
+  inline const block_type&   block() const { return uniform_block_; }
 
- private:
-  std::string name;
-  unsigned numFrames;
-  double numFPS;
-  double duration;
-  unsigned numBoneAnims;
-
-  std::vector<BoneAnimation> boneAnims;
+private:
+  block_type          uniform_block_;
 };
 
-}
+} // namespace gua {
 
-#endif  //GUA_SKELETAL_ANIMATION_HPP
+#endif // #ifndef GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP

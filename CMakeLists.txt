@@ -22,8 +22,11 @@ option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
-option (GUACAMOLE_FBX "Set to enable FBX support." ON)
 option (GUACAMOLE_TESTS "Enable testing." OFF)
+# fbx import crashes on nodetype-cast on windows
+if (NOT WIN32)
+  option (GUACAMOLE_FBX "Set to enable FBX support." ON)
+endif(NOT WIN32)
 
 # We require at least version 3.0.2
 cmake_minimum_required(VERSION 3.0.2)
@@ -170,12 +173,15 @@ set(LIB_PATHS
     ${ZMQ_LIBRARY_DIRS}
     ${X11_LIBRARY_DIRS}
 )
+LINK_DIRECTORIES(${LIB_PATHS})
 
 set(INCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/externals
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/plugins/guacamole-gui/include
+)
+
+set(INCLUDE_PATHS_EXTERNAL
     ${SCHISM_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ASSIMP_INCLUDE_DIR}
@@ -199,8 +205,8 @@ endif()
 
 if (UNIX)
   set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11 -Wall")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11")
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall --std=c++11 -Wall")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11 -Wall")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g --std=c++11 -Wall")
 elseif(MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "-D NDEBUG -D WIN32_LEAN_AND_MEAN -D _USE_MATH_DEFINES -D NOMINMAX -D _SECURE_SCL=0 -D _SCL_SECURE_NO_WARNINGS -D _CRT_SECURE_NO_DEPRECATE /MD /MP")
   set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -D WIN32_LEAN_AND_MEAN -D _USE_MATH_DEFINES -D NOMINMAX /MDd /Zi /MP")
@@ -264,20 +270,17 @@ IF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
 ENDIF (NOT ${GUACAMOLE_RUNTIME_PROGRAM_COMPILATION})
 
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 ################################################################
 # Build external sources
 ################################################################
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(externals)
 
 ################################################################
 # Create libraries
 ################################################################
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(src)
 
 ################################################################

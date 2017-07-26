@@ -1,36 +1,33 @@
 # dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+
 # determine source and header files
-file(GLOB_RECURSE GUACAMOLE_SKELANIM_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+file(GLOB_RECURSE GUA_SKELANIM_SRC
     src/*.cpp
-    include/*.h
-    include/*.hpp
 )
 
-SET(GUACAMOLE_SKELANIM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-skelanim includes.")
-
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_SKELANIM_INCLUDE_DIR}
+set(GUA_SKELANIM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-skelanim includes.")
+file(GLOB_RECURSE GUA_SKELANIM_INC
+    ${GUA_SKELANIM_INCLUDE_DIR}/*.h
+    ${GUA_SKELANIM_INCLUDE_DIR}/*.hpp
 )
 
-ADD_LIBRARY( guacamole-skelanim SHARED
-    ${GUACAMOLE_SKELANIM_SRC}
-)
+add_library(guacamole-skelanim SHARED
+             ${GUA_SKELANIM_SRC}
+             ${GUA_SKELANIM_INC}
+            )
 
-TARGET_LINK_LIBRARIES( guacamole-skelanim
-                       guacamole
-                       general ${GL_LIBRARIES})
+target_include_directories(guacamole-skelanim PUBLIC ${GUA_SKELANIM_INCLUDE_DIR})
 
-ADD_DEPENDENCIES(guacamole-skelanim guacamole)
+target_link_libraries(guacamole-skelanim guacamole)
 
 IF (MSVC)
   set_target_properties(guacamole-skelanim PROPERTIES COMPILE_FLAGS "-D GUA_SKELANIM_LIBRARY")
 ENDIF (MSVC)
 
+SOURCE_GROUP("skelanim" FILES ${GUA_SKELANIM_SRC})
+SOURCE_GROUP("skelanim" FILES ${GUA_SKELANIM_INC})
 ###############################################################################
 # install
 ###############################################################################

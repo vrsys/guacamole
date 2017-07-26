@@ -22,14 +22,14 @@
 #ifndef GUA_POSE_HPP
 #define GUA_POSE_HPP
 
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim/platform.hpp>
 
 //external headers
 #include <map>
 #include <memory>
 
 namespace gua {
-class Bone;
+class Skeleton;
 struct BonePose;
 
 /**
@@ -39,8 +39,6 @@ struct BonePose;
 class GUA_SKELANIM_DLL SkeletalPose {
  public:
   SkeletalPose();
-
-  ~SkeletalPose();
 
   /**
    * @brief returns if pose contains bonepose
@@ -100,7 +98,8 @@ class GUA_SKELANIM_DLL SkeletalPose {
    * replacing  
    */
   void partial_replace(SkeletalPose const& pose2,
-                       std::shared_ptr<Bone> const& pNode);
+                       Skeleton const& skeleton,
+                       unsigned bone);
 
  private:
   std::map<std::string, BonePose> transforms;

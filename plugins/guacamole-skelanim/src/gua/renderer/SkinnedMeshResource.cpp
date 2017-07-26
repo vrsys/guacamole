@@ -20,13 +20,13 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 
 // guacamole headers
 #include <gua/utils/Logger.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 
 // external headers
 #include <scm/gl_core/buffer_objects/scoped_buffer_map.h>

@@ -8,9 +8,10 @@ find_path(FBX_INCLUDE_DIR fbxsdk.h
             ${GLOBAL_EXT_DIR}/fbx2016/include
             ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
             PATHS
-             /usr/include/fbx20151
-             /opt/project_animation/fbx20151/include
+             /opt/fbx/fbx20160/include
              /opt/fbx20151/include
+             /opt/project_animation/fbx20151/include
+             /usr/include/fbx20151
             PATH_SUFFIXES FBX fbx fbxdsk FBXSDK
             )
 
@@ -23,22 +24,24 @@ ENDIF(MSVC)
 find_library(FBX_LIBRARY
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
-             ${GLOBAL_EXT_DIR}/fbx2016/lib
+             ${GLOBAL_EXT_DIR}/fbx2016/lib/gcc4/x64/release
             PATHS
+             /opt/fbx/fbx20160/lib/gcc4/x64
+             /opt/fbx20151/lib/gcc4/x64
+             /opt/project_animation/fbx20151/lib/gcc4/x64
              /usr/lib
-             /opt/project_animation/fbx20151/lib/gcc4/x64/release
-             /opt/fbx20151/lib/gcc4/x64/release
              PATH_SUFFIXES release
             )
 
 find_library(FBX_LIBRARY_DEBUG
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
-            ${GLOBAL_EXT_DIR}/fbx2016/lib
+            ${GLOBAL_EXT_DIR}/fbx2016/lib/gcc4/x64/debug
             PATHS 
+             /opt/fbx/fbx20160/lib/gcc4/x64
+             /opt/fbx20151/lib/gcc4/x64
+             /opt/project_animation/fbx20151/lib/gcc4/x64
              /usr/lib
-             /opt/project_animation/fbx20151/lib/gcc4/x64/debug
-             /opt/fbx20151/lib/gcc4/x64/debug
              PATH_SUFFIXES debug
             )
 
@@ -55,6 +58,10 @@ endif()
 
 # output if search was successfull
 if (FBX_FOUND)
+  # set variables that are used on cmakelist calling this script
+  set(FBX_LIBRARIES ${FBX_LIBRARY} CACHE FILE "Paths to FBX libaries")
+  set(FBX_LIBRARIES_DEBUG ${FBX_LIBRARY_DEBUG} CACHE FILE "Paths to FBX debug libaries")
+  set(FBX_INCLUDE_DIRS ${FBX_INCLUDE_DIR} CACHE PATH "Paths to FBX headers")
   MESSAGE(STATUS "-- Found FBX SDK ${FBX_LIBRARIES}")
 endif()
 if (!FBX_FOUND)
@@ -73,4 +80,4 @@ find_package_handle_standard_args(FBX DEFAULT_MSG
 
 # Mark the named cached variables as advanced. An advanced variable will not be
 # displayed in any of the cmake GUIs unless the show advanced option is on.
-mark_as_advanced(FBX_INCLUDE_DIR FBX_LIBRARY )
+mark_as_advanced(FBX_INCLUDE_DIR FBX_LIBRARY FBX_LIBRARY_DEBUG)

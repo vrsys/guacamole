@@ -20,15 +20,15 @@
  ******************************************************************************/
 
 // class header
-#include "gua/node/SkeletalAnimationNode.hpp"
+#include "gua/skelanim/node/SkeletalAnimationNode.hpp"
  
 // guacamole headers
-#include <gua/utils/Bone.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-#include <gua/utils/SkeletalTransformation.hpp>
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/utils/Bone.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
+#include <gua/skelanim/utils/SkeletalTransformation.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 // #include <gua/node/RayNode.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -41,7 +41,7 @@ SkeletalAnimationNode::SkeletalAnimationNode(
     std::string const& name,
     std::vector<std::string> const& geometry_descriptions,
     std::vector<std::shared_ptr<Material> > const& materials,
-    std::shared_ptr<Bone> const& root,
+    Skeleton const& skeleton,
     math::mat4 const& transform)
     : GeometryNode(name, transform),
       geometries_(),
@@ -50,16 +50,13 @@ SkeletalAnimationNode::SkeletalAnimationNode(
       materials_(materials),
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
-      root_(root),
-      first_run_ { true }, 
+      skeleton_(skeleton),
+      new_bones_ { true }, 
       has_anims_ { false }, 
       blend_factor_ { 1.0 },
-      anim_1_ ( "none" ),  // { } not allowed on msvc because of implicit conversion to initializer list
-      anim_2_ ( "none" ) 
+      anim_1_ (SkeletalAnimationNode::none_loaded),  // { } not allowed on msvc because of implicit conversion to initializer list
+      anim_2_ (SkeletalAnimationNode::none_loaded) 
 {
-  root_->collect_indices(bone_mapping_);
-  num_bones_ = bone_mapping_.size();
-
   geometries_.resize(geometry_descriptions_.size());
 }
 
@@ -74,29 +71,28 @@ std::vector<std::string> const&
 SkeletalAnimationNode::get_geometry_descriptions() const {
   return geometry_descriptions_;
 }
+////////////////////////////////////////////////////////////////////////////////
+void SkeletalAnimationNode::set_geometry_descriptions(std::vector<std::string> const& v) {
+  geometry_descriptions_ = v;
+  geometry_changed_ = self_dirty_ = true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SkeletalAnimationNode::set_geometry_description(std::string const& v,
-                                                     unsigned index) {
-  if (index < geometry_descriptions_.size()) {
-    geometry_descriptions_[index] = v;
-    geometry_changed_ = self_dirty_ = true;
-  } else {
-    Logger::LOG_WARNING
-        << "Can't 'set_geometry_description()'! Index out of bounds! "
-        << std::endl;
-  }
+void SkeletalAnimationNode::set_skeleton_description(std::string const& description) {
+  gua::SkeletalAnimationLoader loader;
+  skeleton_ = loader.load_skeleton(description);
+  new_bones_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::add_material(
     std::shared_ptr<Material> const& material) {
-  if (geometries_.size() > materials_.size()) {
+  // if (geometries_.size() > materials_.size()) {
     materials_.push_back(material);
-  } else {
-    Logger::LOG_ERROR << "Cant have more materials than geometries"
-                      << std::endl;
-  }
+  // } else {
+  //   Logger::LOG_WARNING << "Cant have more materials than geometries"
+  //                     << std::endl;
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,12 +118,11 @@ void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,
   if (index < materials_.size()) {
     materials_[index] = material;
   } else {
-    Logger::LOG_WARNING << "Cant set material of invalid index!" << std::endl;
+    Logger::LOG_ERROR << "Cant set material of invalid index!" << std::endl;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 void SkeletalAnimationNode::add_animations(std::string const& file_name,
                                            std::string const& name) {
 
@@ -146,47 +141,41 @@ void SkeletalAnimationNode::add_animations(std::string const& file_name,
 
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::update_bone_transforms() {
-  if (!has_anims_ && !first_run_)
+  if (!has_anims_ && !new_bones_)
     return;
-  if (!has_anims_)
-    first_run_ = false;
-
-  //reserve vector for transforms
-  bone_transforms_ = std::vector<scm::math::mat4f> {
-    num_bones_, scm::math::mat4f::identity()
-  }
-  ;
-
+  // no animation and new bones -> generate transforms once
   if (!has_anims_) {
-    SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
+    new_bones_ = false;
+    bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
   }
-
-  // TODO better checking for unset anims
-  if (blend_factor_ <= 0) {
-    if (anim_1_ != "none") {
-      SkeletalTransformation::from_anim(
-          root_, anim_time_1_, animations_.at(anim_1_), bone_transforms_);
+  // use first anim
+  else if (blend_factor_ <= 0.0) {
+    if (anim_1_ != SkeletalAnimationNode::none_loaded) {
+      bone_transforms_ = SkeletalTransformation::from_anim(
+          skeleton_, 0, anim_time_1_, animations_.at(anim_1_));
     } else {
-      SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
+      bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
     }
-  } else if (blend_factor_ >= 1) {
-    if (anim_2_ != "none") {
+  } 
+  // use second anim
+  else if (blend_factor_ >= 1.0) {
+    if (anim_2_ != SkeletalAnimationNode::none_loaded) {
       SkeletalTransformation::from_anim(
-          root_, anim_time_2_, animations_.at(anim_2_), bone_transforms_);
+          skeleton_, 0, anim_time_2_, animations_.at(anim_2_));
     } else {
-      SkeletalTransformation::from_hierarchy(root_, bone_transforms_);
+      bone_transforms_ = SkeletalTransformation::from_hierarchy(skeleton_, 0);
     }
-  } else {
-    SkeletalTransformation::blend_anims(root_,
+  } 
+  // use both anims
+  else {
+    bone_transforms_ = SkeletalTransformation::blend_anims(skeleton_, 0,
                                         blend_factor_,
                                         anim_time_1_,
                                         anim_time_2_,
                                         animations_.at(anim_1_),
-                                        animations_.at(anim_2_),
-                                        bone_transforms_);
+                                        animations_.at(anim_2_));
   }
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 bool SkeletalAnimationNode::get_render_to_gbuffer() const {
   return render_to_gbuffer_;
@@ -205,6 +194,17 @@ bool SkeletalAnimationNode::get_render_to_stencil_buffer() const {
 ////////////////////////////////////////////////////////////////////////////////
 void SkeletalAnimationNode::set_render_to_stencil_buffer(bool enable) {
   render_to_stencil_buffer_ = enable;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void SkeletalAnimationNode::set_bones(std::vector<Bone> const& bones) {
+  skeleton_.set_bones(bones);
+  new_bones_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::vector<gua::Bone> const& SkeletalAnimationNode::get_bones() const {
+  return skeleton_.get_bones();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,6 +358,8 @@ void SkeletalAnimationNode::update_cache() {
   // the GeometryDatabase. Name is generated by GeometryDescription
 
   if (geometry_changed_) {
+    geometries_.resize(geometry_descriptions_.size());
+
     for (unsigned i(0); i < geometry_descriptions_.size(); ++i) {
 
       if (geometry_descriptions_[i] != "") {
@@ -370,7 +372,7 @@ void SkeletalAnimationNode::update_cache() {
                 get_name(), desc.filepath(), materials_[i], desc.flags());
           }
           catch (std::exception & e) {
-            Logger::LOG_WARNING
+            Logger::LOG_ERROR
                 << "SkeletalAnimationNode::update_cache(): Loading failed from "
                 << desc.filepath() << " : " << e.what() << std::endl;
           }
@@ -380,7 +382,7 @@ void SkeletalAnimationNode::update_cache() {
             GeometryDatabase::instance()->lookup(geometry_descriptions_[i]));
 
         if (!geometries_[i]) {
-          Logger::LOG_WARNING << "Failed to get SkinnedMeshResource for "
+          Logger::LOG_ERROR << "Failed to get SkinnedMeshResource for "
                               << geometry_descriptions_[i]
                               << ": The data base entry is of wrong type!"
                               << std::endl;
@@ -467,7 +469,25 @@ void SkeletalAnimationNode::update_bounding_box() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Node> SkeletalAnimationNode::copy() const {
-  return std::make_shared<SkeletalAnimationNode>(*this);
+  auto result = std::make_shared<SkeletalAnimationNode>(*this);
+
+  result->update_cache();
+
+  result->geometries_ = geometries_;
+  result->geometry_descriptions_ = geometry_descriptions_;
+  result->geometry_changed_ = geometry_changed_;
+  result->skeleton_ = skeleton_;
+  result->animations_ = animations_;
+  result->new_bones_ = new_bones_;
+  result->has_anims_ = has_anims_;
+  result->anim_1_ = anim_1_;
+  result->anim_2_ = anim_2_;
+  result->blend_factor_ = blend_factor_;
+  result->anim_time_1_ = anim_time_1_;
+  result->anim_time_2_ = anim_time_2_;
+  result->bone_transforms_ = bone_transforms_;
+
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,12 +500,13 @@ std::string const& SkeletalAnimationNode::get_animation_1() const {
 }
 
 void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
-  if (animations_.find(animation_name) != animations_.end()) {
+  // if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // }
     anim_1_ = animation_name;
-  } else {
-    gua::Logger::LOG_WARNING << "No matching animation with name: '"
-                             << animation_name << "' found!" << std::endl;
-  }
+  //  else {
+  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //                            << animation_name << "' found!" << std::endl;
+  // }
 }
 std::string const& SkeletalAnimationNode::get_animation_2() const {
   if (has_anims_ && animations_.find(anim_2_) != animations_.end()) {
@@ -496,12 +517,13 @@ std::string const& SkeletalAnimationNode::get_animation_2() const {
 }
 
 void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
-  if (animations_.find(animation_name) != animations_.end()) {
+  // if (animation_name == none_loaded || animations_.find(animation_name) != animations_.end()) {
+  // }
     anim_2_ = animation_name;
-  } else {
-    gua::Logger::LOG_WARNING << "No matching animation with name: '"
-                             << animation_name << "' found!" << std::endl;
-  }
+  //  else {
+  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //                            << animation_name << "' found!" << std::endl;
+  // }
 }
 
 float SkeletalAnimationNode::get_duration(
@@ -509,7 +531,7 @@ float SkeletalAnimationNode::get_duration(
   if (animations_.find(animation_name) != animations_.end()) {
     return animations_.at(animation_name).get_duration();
   } else {
-    gua::Logger::LOG_WARNING << "No matching animation with name: '"
+    gua::Logger::LOG_ERROR << "No matching animation with name: '"
                              << animation_name << "' found!" << std::endl;
     return 0;
   }
@@ -534,7 +556,7 @@ SkeletalAnimationNode::get_bone_transforms() const {
   return bone_transforms_;
 }
 
-const std::string SkeletalAnimationNode::none_loaded = std::string("none loaded");
+const std::string SkeletalAnimationNode::none_loaded = std::string("none");
 ;
 }
 }

@@ -23,7 +23,8 @@
 #define GUA_SKINNED_MESH_RESSOURCE_HPP
 
 // guacamole headers
-#include <gua/utils/SkinnedMesh.hpp>
+#include <gua/skelanim/platform.hpp>
+#include <gua/skelanim/utils/SkinnedMesh.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 // #include <gua/utils/KDTree.hpp>
 

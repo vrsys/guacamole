@@ -1,9 +1,9 @@
 // class header
-#include <gua/utils/BoneAnimation.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
 
 // guacamole headers
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/BonePose.hpp>
+#include <gua/skelanim/utils/BonePose.hpp>
 #include <gua/utils/ToGua.hpp>
 
 //external headers

@@ -19,47 +19,11 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_BONEPOSE_HPP
-#define GUA_BONEPOSE_HPP
+#ifndef GUA_INCLUDE_SKELANIM_HPP
+#define GUA_INCLUDE_SKELANIM_HPP
 
-#include <gua/Skelanim.hpp>
+#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
 
-// external headers
-#include <scm/gl_core.h>
-#include <scm/core/math/quat.h>
-
-namespace gua {
-
-/**
- * @brief holds transformation of bone
- * @details can be blended with another bone pose
- */
-struct GUA_SKELANIM_DLL BonePose {
- public:
-  BonePose();
-
-  BonePose(scm::math::vec3f const& scale,
-           scm::math::quatf const& rotate,
-           scm::math::vec3f const& translate);
-
-  ~BonePose();
-
-  scm::math::mat4f to_matrix() const;
-
-  BonePose blend(BonePose const& t, float const factor) const;
-
-  BonePose operator+(BonePose const& t) const;
-  BonePose& operator+=(BonePose const& t);
-
-  BonePose operator*(float const factor) const;
-  BonePose& operator*=(float const f);
-
- private:
-  scm::math::vec3f scaling;
-  scm::math::quatf rotation;
-  scm::math::vec3f translation;
-};
-
-}
-
-#endif  //GUA_BONEPOSE_HPP
+#endif  // GUA_INCLUDE_SKELANIM_HPP

@@ -20,11 +20,11 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 
 // guacamole headers
-#include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/databases/Resources.hpp>
@@ -225,7 +225,6 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
           }
 
           ctx.render_context->apply_program();
-
           if (ctx.framecount > last_frame_) {
             skel_anim_node->update_bone_transforms();
           }
