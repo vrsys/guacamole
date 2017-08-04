@@ -48,6 +48,8 @@ class TriMeshRenderer {
 
   scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
   scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_back_;
+  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_none_;
 
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;

@@ -53,6 +53,8 @@ namespace gua {
 TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
   : rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK))
   , rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE))
+  , rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK))
+  , rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE))
   , program_stages_()
   , programs_()
   , global_substitution_map_(smap)
@@ -172,7 +174,22 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
         }
 
-        current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+        bool show_backfaces   = tri_mesh_node->get_material()->get_show_back_faces();
+        bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
+
+        if (show_backfaces) {
+          if (render_wireframe) {
+            current_rasterizer_state = rs_wireframe_cull_none_;
+          } else {
+            current_rasterizer_state = rs_cull_none_;
+          }
+        } else {
+          if (render_wireframe) {
+            current_rasterizer_state = rs_wireframe_cull_back_;
+          } else {
+            current_rasterizer_state = rs_cull_back_;
+          }
+        }
 
         if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
           ctx.render_context->set_rasterizer_state(current_rasterizer_state);

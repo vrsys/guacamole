@@ -80,6 +80,15 @@ class GUA_DLL Material {
       return show_back_faces_;
     }
 
+    Material& set_render_wireframe(bool value) {
+      render_wireframe_ = value;
+      return *this;
+    }
+
+    bool get_render_wireframe() const {
+      return render_wireframe_;
+    }
+
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
     std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
@@ -134,6 +143,7 @@ class GUA_DLL Material {
     mutable MaterialShader* shader_cache_;
     std::map<std::string, ViewDependentUniform> uniforms_;
     bool show_back_faces_;
+    bool render_wireframe_;
 
     mutable std::mutex mutex_;
 };
