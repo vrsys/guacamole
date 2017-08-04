@@ -597,6 +597,10 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
     new_mat->set_show_back_faces(!properties["backface_culling"].asBool());
   }
+  //wireframe rendering
+  if (properties["wireframe_rendering"] != Json::Value::null && properties["wireframe_rendering"].isBool()) {
+    new_mat->set_render_wireframe(!properties["wireframe_rendering"].asBool());
+  }
 
   return new_mat;
 }
