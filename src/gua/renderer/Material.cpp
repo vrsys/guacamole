@@ -31,7 +31,8 @@ namespace gua {
 Material::Material(std::string const& shader_name):
   shader_name_(shader_name),
   shader_cache_(nullptr),
-  show_back_faces_(false)
+  show_back_faces_(false),
+  render_wireframe_(false)
   {
     set_shader_name(shader_name_);
   }
