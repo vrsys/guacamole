@@ -599,7 +599,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   }
   //wireframe rendering
   if (properties["wireframe_rendering"] != Json::Value::null && properties["wireframe_rendering"].isBool()) {
-    new_mat->set_render_wireframe(!properties["wireframe_rendering"].asBool());
+    new_mat->set_render_wireframe(properties["wireframe_rendering"].asBool());
   }
 
   return new_mat;

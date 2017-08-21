@@ -43,7 +43,8 @@ Material::Material(Material const& copy):
   shader_name_(copy.shader_name_),
   shader_cache_(copy.shader_cache_),
   uniforms_(copy.uniforms_),
-  show_back_faces_(copy.show_back_faces_)
+  show_back_faces_(copy.show_back_faces_),
+  render_wireframe_(copy.render_wireframe_)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
