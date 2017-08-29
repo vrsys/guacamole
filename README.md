@@ -33,7 +33,7 @@ The following guide serves as a step-by-step tutorial on how to build the depend
 
 _Bullet_
   * clone https://github.com/bulletphysics/bullet3
-  * configure with cmake and enable flag `INSTALL_EXTRA_LIBS`
+  * configure with CMake and enable flag `INSTALL_EXTRA_LIBS`
   * `make install`
   * the Bullet include directory will be `/usr/local/include`
  
@@ -66,6 +66,7 @@ _Schism_
   * `apt-get install libfreetype6-dev libfreeimageplus-dev opencl-headers`
   * clone https://github.com/chrislu/schism
   * adapt find script `build/cmake/custom_scripts/schism_boost.cmake` such that `SCM_BOOST_INCLUDE_SEARCH_DIRS` is `/usr/include` and `SCM_BOOST_LIBRARY_SEARCH_DIRS` is `/usr/lib/x86_64-linux-gnu`
+  * configure with CMake
   * `make install`
   * when Schism is located in `SCHISM_PATH`, the Schism inlcude directories will be `SCHISM_PATH/scm_cl_core/src;SCHISM_PATH/scm_core/src;SCHISM_PATH/scm_gl_core/src;SCHISM_PATH/scm_gl_util/src;SCHISM_PATH/scm_input/src`
   * when Schism is located in `SCHISM_PATH`, the Schism library directory will be `SCHISM_PATH/lib/linux_x86`
@@ -74,6 +75,7 @@ _Lamure_
   * `apt-get install freeglut3-dev libcgal-dev libglm-dev libxmu-dev`
   * clone https://github.com/vrsys/lamure
   * adapt find script `cmake/modules/find_schism.cmake` such that `SCHISM_INCLUDE_SEARCH_DIRS` and `SCHISM_LIBRARY_SEARCH_DIRS` contain the paths mentioned above
+  * configure with CMake
   * `make install`
   * when Lamure is located in `LAMURE_PATH`, the Lamure include directory will be `LAMURE_PATH/install/include`
   * when Lamure is located in `LAMURE_PATH`, the Lamure library directory will be `LAMURE_PATH/install/lib`
@@ -81,7 +83,7 @@ _Lamure_
 _guacamole_
   * `apt-get install libassimp-dev`
   * clone https://github.com/vrsys/guacamole (this repository)
-  * set paths to dependencies as mentioned above if not found automatically
+  * configure with CMake and set paths to dependencies as mentioned above if not found automatically
   * CMake flags that were set to ON during writing this tutorial: `GUACAMOLE_ENABLE_PHYSICS`, `GUACAMOLE_EXAMPLES`, `GUACAMOLE_FBX`, `GUACAMOLE_GLFW3`, `GUACAMOLE_RUNTIME_PROGRAM_COMP`, `PLUGIN_guacamole-lod`, `PLUGIN_guacamole-skelanim`, `PLUGIN_guacamole-tv_3`, `PLUGIN_guacamole-video3d`, `PLUGIN_guacamole-volume`
   * `make install`
 
