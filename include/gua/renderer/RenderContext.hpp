@@ -123,6 +123,23 @@ struct GUA_DLL RenderContext {
 
   mutable std::unordered_map<std::size_t, Mesh> meshes;
 
+  class LineStrip
+  {
+    public:
+      LineStrip() = default;
+      LineStrip( scm::gl::buffer_ptr const& v
+               , scm::gl::buffer_ptr const& i)
+               : vertices(v)
+               , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP)
+               , vertices_count(0)
+      {}
+      scm::gl::buffer_ptr         vertices;
+      scm::gl::primitive_topology vertex_topology;
+      int                         vertices_count;
+  };
+
+  mutable std::unordered_map<std::size_t, LineStrip> line_strips;
+
   class Texture
   {
     public:
