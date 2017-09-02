@@ -118,7 +118,6 @@ public:
   *
   */
   bool is_supported(std::string const& file_name) const;
-
  private: // methods
 
   static std::shared_ptr<node::Node> get_tree(std::shared_ptr<Assimp::Importer> const& importer,

@@ -31,8 +31,6 @@
 #include <scm/core/math/quat.h>
 #include <vector>
 
-struct aiMesh;
-
 namespace gua {
 
 /**
@@ -52,7 +50,7 @@ struct GUA_DLL LineStrip {
     float            thick;
   };
 
-  void push_vertex();
+  void push_vertex(Vertex const& v_to_push);
   void pop_vertex();
 
   /**
@@ -72,11 +70,11 @@ struct GUA_DLL LineStrip {
   std::vector<scm::math::vec4f> colors;
   std::vector<float> thicknesses;
 
-  unsigned int vertex_reservoir_size;
-  unsigned int num_occupied_vertex_slots;
+  int vertex_reservoir_size;
+  int num_occupied_vertex_slots;
 
 protected:
-  void enlarge_reservoirs(unsigned int new_reservoir_size);
+  void enlarge_reservoirs();
 /*
  protected:
 

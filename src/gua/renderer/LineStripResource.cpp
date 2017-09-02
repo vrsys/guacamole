@@ -57,46 +57,42 @@ LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_
 ////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::upload_to(RenderContext& ctx) const {
-  RenderContext::Mesh cmesh{};
-  cmesh.indices_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
-  cmesh.indices_type = scm::gl::TYPE_UINT;
-  cmesh.indices_count = mesh_.num_triangles * 3;
+  RenderContext::LineStrip clinestrip{};
+  clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
+  clinestrip.vertex_reservoir_size = line_strip_.vertex_reservoir_size;
+  clinestrip.num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
 
-  if (!mesh_.num_vertices > 0) {
-    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
+
+  if (!line_strip_.vertex_reservoir_size > 0) {
+    Logger::LOG_WARNING << "Unable to load LineStrip! Has no vertex data." << std::endl;
     return;
   }
 
-  cmesh.vertices =
+ 
+  clinestrip.vertices =
       ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_.num_vertices * sizeof(Mesh::Vertex),
+                                       scm::gl::USAGE_DYNAMIC_DRAW,
+                                       line_strip_.vertex_reservoir_size * sizeof(LineStrip::Vertex),
                                        0);
 
-  Mesh::Vertex* data(static_cast<Mesh::Vertex*>(ctx.render_context->map_buffer(
-      cmesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
+      clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-  mesh_.copy_to_buffer(data);
+  line_strip_.copy_to_buffer(data);
 
-  ctx.render_context->unmap_buffer(cmesh.vertices);
+  ctx.render_context->unmap_buffer(clinestrip.vertices);
 
-  cmesh.indices =
-      ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_.num_triangles * 3 * sizeof(unsigned),
-                                       mesh_.indices.data());
-
-  cmesh.vertex_array = ctx.render_device->create_vertex_array(
-      mesh_.get_vertex_format(),
-      {cmesh.vertices});
-  ctx.meshes[uuid()] = cmesh;
+  clinestrip.vertex_array = ctx.render_device->create_vertex_array(
+      line_strip_.get_vertex_format(),
+      {clinestrip.vertices});
+  ctx.line_strips[uuid()] = clinestrip;
 
   ctx.render_context->apply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::draw(RenderContext& ctx) const {
+void LineStripResource::draw(RenderContext& ctx) const {
   auto iter = ctx.meshes.find(uuid());
   if (iter == ctx.meshes.end()) {
     // upload to GPU if neccessary
@@ -111,26 +107,18 @@ void TriMeshRessource::draw(RenderContext& ctx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::ray_test(Ray const& ray, int options,
+
+void LineStripResource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
-  kd_tree_.ray_test(ray, mesh_, options, owner, hits);
+
+  //kd_tree_.ray_test(ray, line_strip_, options, owner, hits);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
+math::vec3 LineStripResource::get_vertex(unsigned int i) const {
   return math::vec3(
-      mesh_.positions[i].x, mesh_.positions[i].y, mesh_.positions[i].z);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
-  std::vector<unsigned int> face;
-  face.push_back(mesh_.indices[3*i]);
-  face.push_back(mesh_.indices[3*i+1]);
-  face.push_back(mesh_.indices[3*i+2]);
-  return face;
+      line_strip_.positions[i].x, line_strip_.positions[i].y, line_strip_.positions[i].z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

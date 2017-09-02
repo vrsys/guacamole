@@ -157,6 +157,8 @@ std::shared_ptr<node::Node> LineStripLoader::load(
 
   if (file.is_valid()) {
     {
+
+      /*
       auto importer = std::make_shared<Assimp::Importer>();
 
       unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality |
@@ -200,8 +202,11 @@ std::shared_ptr<node::Node> LineStripLoader::load(
       } else {
         Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
       }
-
+      
       return new_node;
+      */
+
+      return std::shared_ptr<node::Node>();
     }
   }
 
@@ -218,6 +223,7 @@ std::vector<LineStripResource*> const LineStripLoader::load_from_buffer(
     unsigned buffer_size,
     bool build_kd_tree) {
 
+/*
   auto importer = std::make_shared<Assimp::Importer>();
 
   aiScene const* scene(importer->ReadFileFromMemory(
@@ -233,31 +239,33 @@ std::vector<LineStripResource*> const LineStripLoader::load_from_buffer(
   }
 
   return meshes;
+*/
+  return std::vector<LineStripResource*>();
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool LineStripResource::is_supported(std::string const& file_name) const {
+bool LineStripLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
-  Assimp::Importer importer;
+  //Assimp::Importer importer;
 
-  if (file_name.substr(point_pos + 1) == "raw") {
+  if (file_name.substr(point_pos + 1) == "lob") {
     return false;
   }
 
-  return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
+  return true;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> LineStripResource::get_tree(
+std::shared_ptr<node::Node> LineStripLoader::get_tree(
     std::shared_ptr<Assimp::Importer> const& importer,
     aiScene const* ai_scene,
     aiNode* ai_root,
     std::string const& file_name,
     unsigned flags,
     unsigned& mesh_count) {
-
+/*
   // creates a geometry node and returns it
   auto load_geometry = [&](int i) {
     GeometryDescription desc("LineStrip", file_name, mesh_count++, flags);
@@ -265,18 +273,18 @@ std::shared_ptr<node::Node> LineStripResource::get_tree(
         desc.unique_key(),
         std::make_shared<LineStripResource>(
             Mesh {*ai_scene->mMeshes[ai_root->mMeshes[i]]},
-            flags & LineStripResource::MAKE_PICKABLE));
+            flags & LineStripLoader::MAKE_PICKABLE));
 
     // load material
     std::shared_ptr<Material> material;
     unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]
                                 ->mMaterialIndex);
 
-    if (flags & LineStripResource::LOAD_MATERIALS) {
+    if (flags & LineStripLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
       material = material_loader.load_material(ai_material, file_name,
-                                               flags & LineStripResource::OPTIMIZE_MATERIALS);
+                                               flags & LineStripLoader::OPTIMIZE_MATERIALS);
     }
 
     return std::shared_ptr<node::LineStripNode>(
@@ -313,6 +321,9 @@ std::shared_ptr<node::Node> LineStripResource::get_tree(
                               flags,
                               mesh_count));
   }
+
+*/
+  auto group(std::make_shared<node::TransformNode>());
 
   return group;
 }
