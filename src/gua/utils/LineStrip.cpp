@@ -1,5 +1,5 @@
 // class header
-#include <gua/utils/Mesh.hpp>
+#include <gua/utils/LineStrip.hpp>
 
 // guacamole headers
 #include <gua/utils/Logger.hpp>
@@ -37,8 +37,8 @@ void LineStrip::push_vertex(Vertex const& v_to_push) {
   }
 
   positions[num_occupied_vertex_slots] = v_to_push.pos;
-  positions[num_occupied_vertex_slots] = v_to_push.col;
-  positions[num_occupied_vertex_slots] = v_to_push.thick;
+  colors[num_occupied_vertex_slots] = v_to_push.col;
+  thicknesses[num_occupied_vertex_slots] = v_to_push.thick;
 
   ++num_occupied_vertex_slots;
 }
@@ -53,13 +53,13 @@ void LineStrip::pop_vertex() {
 
 
 void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
-  for (unsigned v(0); v < num_vertices; ++v) {
+  for (int vertex_id(0); vertex_id < num_occupied_vertex_slots; ++vertex_id) {
 
-    vertex_buffer[v].pos = positions[v];
+    vertex_buffer[vertex_id].pos = positions[vertex_id];
 
-    vertex_buffer[v].col = colors[v];
+    vertex_buffer[vertex_id].col = colors[vertex_id];
 
-    vertex_buffer[v].thick = thicknesses[v];
+    vertex_buffer[vertex_id].thick = thicknesses[vertex_id];
 
 
   }

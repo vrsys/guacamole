@@ -127,15 +127,20 @@ struct GUA_DLL RenderContext {
   {
     public:
       LineStrip() = default;
-      LineStrip( scm::gl::buffer_ptr const& v
+      LineStrip( scm::gl::vertex_array_ptr const& a,
+                 scm::gl::buffer_ptr const& v
                , scm::gl::buffer_ptr const& i)
-               : vertices(v)
-               , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP)
-               , vertices_count(0)
+               : vertex_array(a)
+               , vertices(v)
+               , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY)
+               , vertex_reservoir_size(0)
+               ,num_occupied_vertex_slots(0)
       {}
+      scm::gl::vertex_array_ptr   vertex_array;
       scm::gl::buffer_ptr         vertices;
       scm::gl::primitive_topology vertex_topology;
-      int                         vertices_count;
+      int                         vertex_reservoir_size;
+      int                         num_occupied_vertex_slots;
   };
 
   mutable std::unordered_map<std::size_t, LineStrip> line_strips;

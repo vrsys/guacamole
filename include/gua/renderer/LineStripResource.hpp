@@ -76,6 +76,7 @@ class LineStripResource : public GeometryResource {
    */
   void draw(RenderContext& context) const;
 
+
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) override;
 
@@ -83,7 +84,6 @@ class LineStripResource : public GeometryResource {
   inline unsigned int vertex_reservoir_size() const { return line_strip_.vertex_reservoir_size; }
   
   math::vec3 get_vertex(unsigned int i) const;
-  std::vector<unsigned int> get_face(unsigned int i) const;
 
  private:
 

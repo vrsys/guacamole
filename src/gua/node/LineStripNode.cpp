@@ -254,7 +254,7 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<TriMeshRessource> const& LineStripNode::get_geometry() const {
+  std::shared_ptr<LineStripResource> const& LineStripNode::get_geometry() const {
     return geometry_;
   }
 
