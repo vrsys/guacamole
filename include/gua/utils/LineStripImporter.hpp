@@ -19,15 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LINE_STRIP_HPP
-#define GUA_LINE_STRIP_HPP
+#ifndef GUA_LINE_STRIP_IMPORTER_HPP
+#define GUA_LINE_STRIP_IMPORTER_HPP
 
 // guacamole headers
 #include <gua/config.hpp>
 #include <gua/platform.hpp>
-
-#include <gua/utils/LineStripImporter.hpp>
-
 
 // external headers
 #include <scm/gl_core.h>
@@ -35,68 +32,49 @@
 
 #include <vector>
 
+
 namespace gua {
 
+
+class TransformNode;
 /**
  * @brief holds vertex information of one mesh
  */
-struct GUA_DLL LineStrip {
- public:
+class GUA_DLL LineStripImporter {
 
-  //create empty line strip for dynamic usage
-  LineStrip(unsigned int initial_line_buffer_size = 0);
+  friend class LineStrip;
+  
+  public:
 
-  //convert representation of LineStripImporter to LineStrip object
-  LineStrip(LineStripImporter::LineObject const& line_object);
+    bool parsing_successful() const;	
+    
+    void read_file(std::string const& file_name);
 
-  /**
-   * @brief holds information of a vertex
-   */
-  struct Vertex {
-    scm::math::vec3f pos;
-    scm::math::vec4f col;
-    float            thick;
-  };
+  private:
 
-  void push_vertex(Vertex const& v_to_push);
-  void pop_vertex();
+  	bool parsing_successful_ = false;
 
-  /**
-   * @brief writes vertex info to given buffer
-   *
-   * @param vertex_buffer buffer to write to
-   */
-  void copy_to_buffer(Vertex* vertex_buffer) const;
+	using IndexTriplet = std::tuple<int,int,int>;
 
-  /**
-   * @brief returns vertex layout for mesh vertex
-   * @return schism vertex format
-   */
-  virtual scm::gl::vertex_format get_vertex_format() const;
+  	struct LineObject {
+  	  std::vector<scm::math::vec3f> vertex_position_database;
+  	  std::vector<scm::math::vec4f> vertex_color_database;
+  	  std::vector<float> vertex_thickness_database;
 
-  std::vector<scm::math::vec3f> positions;
-  std::vector<scm::math::vec4f> colors;
-  std::vector<float> thicknesses;
-
-  int vertex_reservoir_size;
-  int num_occupied_vertex_slots;
-
-protected:
-  void enlarge_reservoirs();
-/*
- protected:
+  	  //not used in the first version of the importer
+  	  std::vector<IndexTriplet> vertex_attribute_ids;
+  	};
 
 
-  std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
+
+	using NamedLineObject = std::pair<std::string, LineObject>;
+  	std::vector<NamedLineObject> parsed_line_objects_;
 
 
-  template<typename T>
-  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
-*/
 
 };
 
 
 }
 
-#endif //GUA_LINE_STRIP_HPP
+#endif //GUA_MESH_HPP
