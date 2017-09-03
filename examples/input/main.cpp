@@ -23,6 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/LineStripLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -67,6 +68,7 @@ int main(int argc, char** argv) {
   gua::SceneGraph graph("main_scenegraph");
 
   gua::TriMeshLoader loader;
+  gua::LineStripLoader line_strip_loader;
 
   auto teapot_mat(gua::MaterialShaderDatabase::instance()
                   ->lookup("gua_default_material")
@@ -84,6 +86,16 @@ int main(int argc, char** argv) {
 
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
+
+
+  auto line_model(line_strip_loader.create_geometry_from_file(
+    "line_object", "data/objects/line_object.lob",
+    teapot_mat,
+    gua::LineStripLoader::NORMALIZE_POSITION | 
+    gua::LineStripLoader::NORMALIZE_SCALE ) );
+
+  graph.add_node("/transform", line_model);
+
 
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));

@@ -24,6 +24,7 @@
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
+#include <gua/utils/LineStripImporter.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/utils/ToGua.hpp>
@@ -158,32 +159,18 @@ std::shared_ptr<node::Node> LineStripLoader::load(
   if (file.is_valid()) {
     {
 
-      /*
-      auto importer = std::make_shared<Assimp::Importer>();
+      
+      auto importer = std::make_shared<LineStripImporter>();
+      
+      importer->read_file(file_name);
 
-      unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality |
-                            aiProcess_RemoveComponent;
-
-      if(flags & LineStripLoader::OPTIMIZE_GEOMETRY) {
-        ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality |
-                            aiProcess_PreTransformVertices;
+      if(importer->parsing_successful()) {
+        std::cout << "Successfully parsed lob object\n";
+      } else {
+        std::cout << "Did not parse lob object successfully\n";
       }
 
-      unsigned ai_ignore_flags = aiComponent_COLORS |
-                            aiComponent_ANIMATIONS |
-                            aiComponent_LIGHTS |
-                            aiComponent_CAMERAS |
-                            aiComponent_BONEWEIGHTS;
-
-      if(!(flags & LineStripLoader::LOAD_MATERIALS)) {
-        ai_ignore_flags |= aiComponent_MATERIALS;
-      } 
-
-      importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-      importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
-
-      importer->ReadFile(file_name, ai_process_flags);
-
+      /*
       aiScene const* scene(importer->GetScene());
 
       std::shared_ptr<node::Node> new_node;
@@ -205,7 +192,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(
       
       return new_node;
       */
-
+      std::cout << "RETURNING EMPTY NODE\n";
       return std::shared_ptr<node::Node>();
     }
   }
@@ -251,10 +238,10 @@ bool LineStripLoader::is_supported(std::string const& file_name) const {
   //Assimp::Importer importer;
 
   if (file_name.substr(point_pos + 1) == "lob") {
-    return false;
+    return true;
   }
 
-  return true;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
+  return false;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

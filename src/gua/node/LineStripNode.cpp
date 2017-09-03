@@ -44,7 +44,8 @@ namespace node {
       geometry_changed_(true),
       material_(material),
       render_to_gbuffer_(true),
-      render_to_stencil_buffer_(false)
+      render_to_stencil_buffer_(false),
+      render_volumetric_(false)
   {}
 
 
@@ -232,23 +233,6 @@ namespace node {
       geometry_changed_ = false;
     }
 
-    // The code below auto-loads a material if it's not already supported by
-    // the MaterialShaderDatabase. It expects a material name like
-    //
-    // data/materials/Stones.gmd
-
-    // if (material_changed_)
-    // {
-    //   if (material_ && material_->get_shader_name() != "")
-    //   {
-        // if (!MaterialShaderDatabase::instance()->contains(material_))
-        // {
-        //   MaterialShaderDatabase::instance()->load_material(material_);
-        // }
-      // }
-
-      // material_changed_ = false;
-    // }
 
     GeometryNode::update_cache();
   }

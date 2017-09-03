@@ -22,6 +22,24 @@ LineStrip(unsigned int intitial_line_buffer_size) :
   thicknesses.resize(vertex_reservoir_size);
 }
 
+
+LineStrip::
+LineStrip(LineStripImporter::LineObject const& line_object) {
+  //create line strip vbos from parsed line object
+
+  if(line_object.vertex_attribute_ids.empty()){
+    //consider all vertex attributes in order of their appearance
+    if(    (line_object.vertex_position_database.size() != line_object.vertex_color_database.size()) 
+        || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) ) {
+      Logger::LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
+    } else {
+      vertex_reservoir_size = num_occupied_vertex_slots = line_object.vertex_position_database.size();
+    }
+  } else {
+    //indexed construction not implemented yet
+  }
+}
+
 void LineStrip::
 enlarge_reservoirs() {
   vertex_reservoir_size *= 2;
@@ -45,7 +63,8 @@ void LineStrip::push_vertex(Vertex const& v_to_push) {
 
 void LineStrip::pop_vertex() {
   if(!num_occupied_vertex_slots == 0) {
-    std::cout << "No Vertex left to pop!\n";
+    Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
+
     return;
   }
   --num_occupied_vertex_slots;

@@ -79,6 +79,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
   auto& scene = *pipe.current_viewstate().scene;
   auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::LineStripNode))));
 
+  std::cout << "RENDERING LINE PASS\n";
 
   if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
 
