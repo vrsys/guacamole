@@ -69,9 +69,15 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   ResourceFactory factory;
   std::string v_shader = factory.read_shader_file("resources/shaders/line_strip_shader.vert");
   std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader.frag");
+
+  std::string vertex_vis_v_shader = factory.read_shader_file("resources/shaders/vertex_vis_shader.vert");
+  std::string vertex_vis_f_shader = factory.read_shader_file("resources/shaders/vertex_vis_shader.frag");
 #endif
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
+
+  vertex_visualization_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, vertex_vis_v_shader) );
+  vertex_visualization_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, vertex_vis_f_shader) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
