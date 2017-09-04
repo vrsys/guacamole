@@ -157,45 +157,50 @@ std::shared_ptr<node::Node> LineStripLoader::load(
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
   if (file.is_valid()) {
-    {
 
       
-      auto importer = std::make_shared<LineStripImporter>();
-      
-      importer->read_file(file_name);
+    auto importer = std::make_shared<LineStripImporter>();
+    
+    importer->read_file(file_name);
 
-      if(importer->parsing_successful()) {
-        std::cout << "Successfully parsed lob object\n";
-      } else {
-        std::cout << "Did not parse lob object successfully\n";
-      }
-
-      /*
-      aiScene const* scene(importer->GetScene());
-
-      std::shared_ptr<node::Node> new_node;
-
-      std::string error = importer->GetErrorString();
-      if (!error.empty())
-      {
-        Logger::LOG_WARNING << "LineStripLoader::load(): Importing failed, " << error << std::endl;
-      }
-
-      if (scene->mRootNode) {
-        unsigned count = 0;
-        new_node = get_tree(
-            importer, scene, scene->mRootNode, file_name, flags, count);
-
-      } else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
-      }
-      
-      return new_node;
-      */
-      std::cout << "RETURNING EMPTY NODE\n";
-      return std::shared_ptr<node::Node>();
+    if(importer->parsing_successful()) {
+      std::cout << "Successfully parsed lob object\n";
+    } else {
+      std::cout << "Did not parse lob object successfully\n";
     }
+
+    uint32_t line_strip_count = 0;
+    // creates a geometry node and returns it
+    auto load_geometry = [&](int obj_idx) {
+      GeometryDescription desc("LineStrip", file_name, line_strip_count++, flags);
+      GeometryDatabase::instance()->add(
+          desc.unique_key(),
+          std::make_shared<LineStripResource>(
+              LineStrip {importer->parsed_line_object_at(obj_idx).second},
+              flags & LineStripLoader::MAKE_PICKABLE));
+
+    return std::shared_ptr<node::LineStripNode>(
+        new node::LineStripNode("", desc.unique_key()));
+
+    };
+
+
+    // there is only one geometry --- return it!
+    if (importer->num_parsed_line_strips() == 1) {
+      return load_geometry(0);
+    }
+
+    // else: there are multiple children and meshes
+    auto group(std::make_shared<node::TransformNode>());
+
+    for (int line_obj_idx(0); line_obj_idx < importer->num_parsed_line_strips(); ++line_obj_idx) {
+      group->add_child(load_geometry(line_obj_idx));
+    }
+
+
+    return group;
   }
+  
 
   Logger::LOG_WARNING << "Failed to load object \"" << file_name
                       << "\": File does not exist!" << std::endl;
@@ -244,76 +249,6 @@ bool LineStripLoader::is_supported(std::string const& file_name) const {
   return false;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> LineStripLoader::get_tree(
-    std::shared_ptr<Assimp::Importer> const& importer,
-    aiScene const* ai_scene,
-    aiNode* ai_root,
-    std::string const& file_name,
-    unsigned flags,
-    unsigned& mesh_count) {
-/*
-  // creates a geometry node and returns it
-  auto load_geometry = [&](int i) {
-    GeometryDescription desc("LineStrip", file_name, mesh_count++, flags);
-    GeometryDatabase::instance()->add(
-        desc.unique_key(),
-        std::make_shared<LineStripResource>(
-            Mesh {*ai_scene->mMeshes[ai_root->mMeshes[i]]},
-            flags & LineStripLoader::MAKE_PICKABLE));
-
-    // load material
-    std::shared_ptr<Material> material;
-    unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]
-                                ->mMaterialIndex);
-
-    if (flags & LineStripLoader::LOAD_MATERIALS) {
-      MaterialLoader material_loader;
-      aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-      material = material_loader.load_material(ai_material, file_name,
-                                               flags & LineStripLoader::OPTIMIZE_MATERIALS);
-    }
-
-    return std::shared_ptr<node::LineStripNode>(
-        new node::LineStripNode("", desc.unique_key(), material));
-  };
-
-  // there is only one child -- skip it!
-  if (ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0) {
-    return get_tree(importer,
-                    ai_scene,
-                    ai_root->mChildren[0],
-                    file_name,
-                    flags,
-                    mesh_count);
-  }
-
-  // there is only one geometry --- return it!
-  if (ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1) {
-    return load_geometry(0);
-  }
-
-  // else: there are multiple children and meshes
-  auto group(std::make_shared<node::TransformNode>());
-
-  for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
-    group->add_child(load_geometry(i));
-  }
-
-  for (unsigned i(0); i < ai_root->mNumChildren; ++i) {
-    group->add_child(get_tree(importer,
-                              ai_scene,
-                              ai_root->mChildren[i],
-                              file_name,
-                              flags,
-                              mesh_count));
-  }
-
-*/
-  auto group(std::make_shared<node::TransformNode>());
-
-  return group;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -24,7 +24,7 @@ LineStrip(unsigned int intitial_line_buffer_size) :
 
 
 LineStrip::
-LineStrip(LineStripImporter::LineObject const& line_object) {
+LineStrip(LineObject const& line_object) {
   //create line strip vbos from parsed line object
 
   if(line_object.vertex_attribute_ids.empty()){
@@ -32,8 +32,15 @@ LineStrip(LineStripImporter::LineObject const& line_object) {
     if(    (line_object.vertex_position_database.size() != line_object.vertex_color_database.size()) 
         || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) ) {
       Logger::LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
+      Logger::LOG_WARNING << line_object.vertex_position_database.size() << ", "
+                          << line_object.vertex_color_database.size() << ", "
+                          << line_object.vertex_thickness_database.size() << "\n";
     } else {
       vertex_reservoir_size = num_occupied_vertex_slots = line_object.vertex_position_database.size();
+      positions   = line_object.vertex_position_database;
+      colors      = line_object.vertex_color_database;
+      thicknesses = line_object.vertex_thickness_database;
+
     }
   } else {
     //indexed construction not implemented yet
@@ -72,16 +79,20 @@ void LineStrip::pop_vertex() {
 
 
 void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
+
+  vertex_buffer[0].pos = positions[0];
+  vertex_buffer[0].col = colors[0];
+  vertex_buffer[0].thick = thicknesses[0];
+
   for (int vertex_id(0); vertex_id < num_occupied_vertex_slots; ++vertex_id) {
-
-    vertex_buffer[vertex_id].pos = positions[vertex_id];
-
-    vertex_buffer[vertex_id].col = colors[vertex_id];
-
-    vertex_buffer[vertex_id].thick = thicknesses[vertex_id];
-
-
+    vertex_buffer[vertex_id+1].pos = positions[vertex_id];
+    vertex_buffer[vertex_id+1].col = colors[vertex_id];
+    vertex_buffer[vertex_id+1].thick = thicknesses[vertex_id];
   }
+
+  vertex_buffer[num_occupied_vertex_slots + 1].pos = positions[num_occupied_vertex_slots-1];
+  vertex_buffer[num_occupied_vertex_slots + 1].col = colors[num_occupied_vertex_slots-1];
+  vertex_buffer[num_occupied_vertex_slots + 1].thick = thicknesses[num_occupied_vertex_slots-1];
 }
 
 scm::gl::vertex_format LineStrip::get_vertex_format() const {
