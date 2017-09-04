@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE) );
 
-  graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  //graph.add_node("/transform", teapot);
+  //teapot->set_draw_bounding_box(true);
 
 
   auto line_model(line_strip_loader.create_geometry_from_file(
@@ -156,13 +156,14 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
+
   camera->set_pre_render_cameras({portal_camera});
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
     1.0f);
   camera->get_pipeline_description()->add_pass(
     std::make_shared<gua::DebugViewPassDescription>());
-
+  camera->get_pipeline_description()->set_enable_abuffer(true);
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
 

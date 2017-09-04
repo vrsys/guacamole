@@ -1,6 +1,5 @@
 // class header
 #include <gua/utils/LineStripImporter.hpp>
-
 // guacamole headers
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/ToGua.hpp>
@@ -55,6 +54,8 @@ read_file(std::string const& file_name) {
       parsed_line_objects_.push_back( std::make_pair(new_object_name, LineObject()) );
 
       current_line_object = &(parsed_line_objects_).back();
+
+      ++num_parsed_line_strips_;
     } else {
       float* float_attributes_to_parse = nullptr;
       switch(line_prefix) {
@@ -88,7 +89,7 @@ read_file(std::string const& file_name) {
           in_sstream >> float_attributes_to_parse[0];
           
           current_line_object
-            ->second.vertex_color_database.emplace_back( float_attributes_to_parse[0]);
+            ->second.vertex_thickness_database.emplace_back( float_attributes_to_parse[0]);
           delete float_attributes_to_parse;
           break;
 
@@ -110,6 +111,16 @@ read_file(std::string const& file_name) {
 bool LineStripImporter::
 parsing_successful() const {
   return parsing_successful_;
+}
+
+int LineStripImporter::
+num_parsed_line_strips() const {
+  return num_parsed_line_strips_;
+}
+
+NamedLineObject LineStripImporter::
+parsed_line_object_at(int line_object_index) const {
+  return parsed_line_objects_[line_object_index];
 }
 
 } // namespace gua

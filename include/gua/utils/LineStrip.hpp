@@ -47,7 +47,7 @@ struct GUA_DLL LineStrip {
   LineStrip(unsigned int initial_line_buffer_size = 0);
 
   //convert representation of LineStripImporter to LineStrip object
-  LineStrip(LineStripImporter::LineObject const& line_object);
+  LineStrip(LineObject const& line_object);
 
   /**
    * @brief holds information of a vertex

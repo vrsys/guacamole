@@ -37,8 +37,22 @@ namespace gua {
 
 
 class TransformNode;
+
+using IndexTriplet = std::tuple<int,int,int>;
+
+struct LineObject {
+  std::vector<scm::math::vec3f> vertex_position_database;
+  std::vector<scm::math::vec4f> vertex_color_database;
+  std::vector<float> 			vertex_thickness_database;
+
+  //not used in the first version of the importer
+  std::vector<IndexTriplet> vertex_attribute_ids;
+};
+
+using NamedLineObject = std::pair<std::string, LineObject>;
+
 /**
- * @brief holds vertex information of one mesh
+ * @brief holds vertex information of one line strip
  */
 class GUA_DLL LineStripImporter {
 
@@ -50,24 +64,16 @@ class GUA_DLL LineStripImporter {
     
     void read_file(std::string const& file_name);
 
+    int num_parsed_line_strips() const;
+
+	NamedLineObject parsed_line_object_at(int line_object_index) const;
+
   private:
 
   	bool parsing_successful_ = false;
 
-	using IndexTriplet = std::tuple<int,int,int>;
+  	int num_parsed_line_strips_ = 0;
 
-  	struct LineObject {
-  	  std::vector<scm::math::vec3f> vertex_position_database;
-  	  std::vector<scm::math::vec4f> vertex_color_database;
-  	  std::vector<float> vertex_thickness_database;
-
-  	  //not used in the first version of the importer
-  	  std::vector<IndexTriplet> vertex_attribute_ids;
-  	};
-
-
-
-	using NamedLineObject = std::pair<std::string, LineObject>;
   	std::vector<NamedLineObject> parsed_line_objects_;
 
 

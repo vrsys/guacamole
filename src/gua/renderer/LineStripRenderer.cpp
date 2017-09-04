@@ -59,15 +59,17 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   , programs_()
   , global_substitution_map_(smap)
 {
-#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ResourceFactory factory;
-  std::string v_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-  std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
-#else
-  std::string v_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-  std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+
+
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+#error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
 #endif
 
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  std::string v_shader = factory.read_shader_file("resources/shaders/line_strip_shader.vert");
+  std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader.frag");
+#endif
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
 }
@@ -82,7 +84,6 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
   std::cout << "RENDERING LINE PASS\n";
 
   if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
-
     auto& target = *pipe.current_viewstate().target;
     auto const& camera = pipe.current_viewstate().camera;
 
@@ -92,6 +93,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
                      < reinterpret_cast<node::LineStripNode*>(b)->get_material()->get_shader();
               });
 
+    std::cout << "Got Line Object!\n";
     RenderContext const& ctx(pipe.get_context());
 
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -113,7 +115,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
     // loop through all objects, sorted by material ----------------------------
     for (auto const& object : sorted_objects->second) {
-
+      std::cout << "LOOPING THROUGH LINE OBJECT\n";
       auto line_strip_node(reinterpret_cast<node::LineStripNode*>(object));
       if (pipe.current_viewstate().shadow_mode && line_strip_node->get_shadow_mode() == ShadowMode::OFF) {
         continue;
@@ -200,7 +202,10 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         ctx.render_context->apply_program();
 
+        std::cout << "BEFORE RENDER CALL\n";
+
         line_strip_node->get_geometry()->draw(pipe.get_context());
+        std::cout << "AFTER RENDER CALL\n";
       }
     }
 
