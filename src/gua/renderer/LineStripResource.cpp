@@ -99,6 +99,13 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::draw(RenderContext& ctx) const {
+  //DUMMY
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
   auto iter = ctx.line_strips.find(uuid());
   if (iter == ctx.line_strips.end()) {
     // upload to GPU if neccessary
@@ -112,13 +119,16 @@ void LineStripResource::draw(RenderContext& ctx) const {
   //ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
   ctx.render_context->apply_vertex_input();
   
-  ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+2);
-
-
+  if(!render_vertices_as_points) {
+    ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+2);
+  } else {
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 1, iter->second.num_occupied_vertex_slots);
+  }
   //ctx.render_context->draw_elements(iter->second.indices_count);
   std::cout << "DREW THE LINES\n";
   
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

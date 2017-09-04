@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 
 
   auto line_model(line_strip_loader.create_geometry_from_file(
-    "line_object", "data/objects/line_object.lob",
+    "line_object", "data/objects/point_object.pob",
     teapot_mat,
     gua::LineStripLoader::NORMALIZE_POSITION | 
     gua::LineStripLoader::NORMALIZE_SCALE ) );
