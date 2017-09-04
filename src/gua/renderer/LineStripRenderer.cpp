@@ -204,7 +204,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         std::cout << "BEFORE RENDER CALL\n";
 
-        line_strip_node->get_geometry()->draw(pipe.get_context());
+        line_strip_node->get_geometry()->draw(pipe.get_context(), line_strip_node->get_render_vertices_as_points());
         std::cout << "AFTER RENDER CALL\n";
       }
     }

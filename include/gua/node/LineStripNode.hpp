@@ -69,6 +69,12 @@ public : // methods
   inline bool get_render_to_stencil_buffer() const { return render_to_stencil_buffer_; }
   inline void set_render_to_stencil_buffer(bool enable) { render_to_stencil_buffer_ = enable; }
 
+  inline bool get_render_volumetric() const { return render_volumetric_; }
+  inline void set_render_volumetric(bool enable) { render_volumetric_ = enable; }
+
+  inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
+  inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
+
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -110,6 +116,7 @@ public : // methods
   bool                              render_to_stencil_buffer_;
 
   bool                              render_volumetric_;
+  bool                              render_vertices_as_points_;
 };
 
 } // namespace node {

@@ -75,6 +75,7 @@ class LineStripResource : public GeometryResource {
    * \param context          The RenderContext to draw onto.
    */
   void draw(RenderContext& context) const;
+  void draw(RenderContext& context, bool render_vertices_as_points) const;
 
 
   void ray_test(Ray const& ray, int options,

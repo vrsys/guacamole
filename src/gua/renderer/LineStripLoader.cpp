@@ -65,8 +65,11 @@ std::shared_ptr<node::Node> LineStripLoader::load_geometry(
 
     bool fileload_succeed = false;
 
-    if (is_supported(file_name)) {
-      cached_node = load(file_name, flags);
+    int topology_type = is_supported(file_name);
+
+    if (topology_type) {
+      bool create_lines = (topology_type == 1);
+      cached_node = load(file_name, flags, create_lines);
       cached_node->update_cache();
 
       loaded_files_.insert(std::make_pair(key, cached_node));
@@ -151,7 +154,8 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(
 
 std::shared_ptr<node::Node> LineStripLoader::load(
     std::string const& file_name,
-    unsigned flags) {
+    unsigned flags,
+    bool create_lines) {
   TextFile file(file_name);
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
@@ -179,8 +183,15 @@ std::shared_ptr<node::Node> LineStripLoader::load(
               LineStrip {importer->parsed_line_object_at(obj_idx).second},
               flags & LineStripLoader::MAKE_PICKABLE));
 
-    return std::shared_ptr<node::LineStripNode>(
-        new node::LineStripNode("", desc.unique_key()));
+    std::shared_ptr<node::LineStripNode> node_to_return = 
+        std::make_shared<node::LineStripNode>(node::LineStripNode("", desc.unique_key()) );
+
+    if(create_lines) {
+      node_to_return->set_render_vertices_as_points(false);
+    } else {
+      node_to_return->set_render_vertices_as_points(true);
+    }
+    return node_to_return;
 
     };
 
@@ -238,15 +249,19 @@ std::vector<LineStripResource*> const LineStripLoader::load_from_buffer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool LineStripLoader::is_supported(std::string const& file_name) const {
+int LineStripLoader::is_supported(std::string const& file_name) const {
   auto point_pos(file_name.find_last_of("."));
   //Assimp::Importer importer;
 
   if (file_name.substr(point_pos + 1) == "lob") {
-    return true;
+    return 1;
   }
 
-  return false;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
+  if (file_name.substr(point_pos + 1) == "pob") {
+    return 2;
+  }
+
+  return 0;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
 }
 
 

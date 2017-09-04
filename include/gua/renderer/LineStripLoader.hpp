@@ -45,10 +45,10 @@ class GeometryNode;
 }
 
 /**
- * Loads and draws meshes.
+ * Loads and draws line strips and points.
  *
- * This class can load mesh data from files and display them in multiple
- * contexts. A MeshLoader object is made of several Mesh objects.
+ * This class can load line strip and point data from files and display them in multiple
+ * contexts. A LineStripLoader object is made of several LineStrip objects.
  */
 class GUA_DLL LineStripLoader {
 
@@ -56,13 +56,10 @@ class GUA_DLL LineStripLoader {
 
    enum Flags {
      DEFAULTS = 0,
-     LOAD_MATERIALS = 1 << 0,
-     OPTIMIZE_GEOMETRY = 1 << 1,
      MAKE_PICKABLE = 1 << 2,
      NORMALIZE_POSITION = 1 << 3,
      NORMALIZE_SCALE = 1 << 4,
-     NO_SHARED_MATERIALS = 1 << 5,
-     OPTIMIZE_MATERIALS = 1 << 6
+     NO_SHARED_MATERIALS = 1 << 5
    };
 
 public:
@@ -95,18 +92,19 @@ public:
   /**
    * Constructor from a file.
    *
-   * Creates a new MeshLoader from a given file.
+   * Creates a new LineStripLoader from a given file.
    *
    * \param file_name        The file to load the meshs data from.
    * \param material_name    The material name that was set to the parent node
  */
   std::shared_ptr<node::Node> load(std::string const& file_name,
-                             unsigned flags);
+                                  unsigned flags,
+                                  bool create_lines);
 
   /**
    * Constructor from memory buffer.
    *
-   * Creates a new MeshLoader from a existing memory buffer.
+   * Creates a new LineStripLoader from a existing memory buffer.
    *
    * \param buffer_name      The buffer to load the meh's data from.
    * \param buffer_size      The buffer's size.
@@ -117,7 +115,7 @@ public:
   /**
   *
   */
-  bool is_supported(std::string const& file_name) const;
+  int is_supported(std::string const& file_name) const;
  private: // methods
 
   static void apply_fallback_material(std::shared_ptr<node::Node> const& root,

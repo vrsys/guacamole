@@ -45,7 +45,8 @@ namespace node {
       material_(material),
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
-      render_volumetric_(false)
+      render_volumetric_(false),
+      render_vertices_as_points_(false)
   {}
 
 
