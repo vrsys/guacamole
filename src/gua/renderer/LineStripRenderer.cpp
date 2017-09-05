@@ -68,19 +68,28 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   ResourceFactory factory;
-  std::string v_shader = factory.read_shader_file("resources/shaders/line_strip_shader_non_volumetric.vert");
-  std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader_non_volumetric.frag");
+  std::string v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_non_volumetric.vert");
+  std::string f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_non_volumetric.frag");
 
-  std::string volumetric_point_v_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.vert");
+  std::string volumetric_point_line_v_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.vert");
   std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.geom");
-  std::string volumetric_point_f_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.frag");
+  std::string volumetric_line_g_shader = factory.read_shader_file("resources/shaders/line_shader_volumetric.geom");
+  std::string volumetric_point_line_f_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.frag");
+
+  //std::string volumetric__v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.vert");
+  //std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/line_strip_shader_volumetric.geom");
+  //std::string volumetric_point_f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.frag");
 #endif
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
 
-  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, volumetric_point_v_shader) );
+  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, volumetric_point_line_v_shader) );
   volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_point_g_shader) );
-  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_f_shader) );
+  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
+
+  volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   volumetric_point_line_v_shader) );
+  volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_line_g_shader) );
+  volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,9 +151,13 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
           current_material_shader_map = &programs_;
           current_shader_stages = &program_stages_;
         } else {
+          //volumetric point rendering
           if(line_strip_node->get_render_vertices_as_points()) {
             current_material_shader_map = &volumetric_point_programs_;
             current_shader_stages = &volumetric_point_program_stages_;
+          } else { //volumetric 
+            current_material_shader_map = &volumetric_line_programs_;
+            current_shader_stages = &volumetric_line_program_stages_;
           }
         }
 
