@@ -87,9 +87,14 @@ int main(int argc, char** argv) {
   //graph.add_node("/transform", teapot);
   //teapot->set_draw_bounding_box(true);
 
+  auto pob_mat(gua::MaterialShaderDatabase::instance()
+                  ->lookup("gua_default_material")
+                  ->make_new_material());
+
+  pob_mat->set_uniform("Emissivity", 1.0f);
 
   auto line_model(line_strip_loader.create_geometry_from_file(
-    "line_object", "data/objects/point_object.pob",
+    "line_object", "/home/wabi7015/Desktop/pig_cluster_projected.pob",
     teapot_mat,
     gua::LineStripLoader::NORMALIZE_POSITION | 
     gua::LineStripLoader::NORMALIZE_SCALE ) );
@@ -157,12 +162,12 @@ int main(int argc, char** argv) {
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
 
-  camera->set_pre_render_cameras({portal_camera});
+  //camera->set_pre_render_cameras({portal_camera});
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
     1.0f);
-  camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
+  //camera->get_pipeline_description()->add_pass(
+  //  std::make_shared<gua::DebugViewPassDescription>());
   //camera->get_pipeline_description()->set_enable_abuffer(true);
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
