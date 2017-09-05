@@ -42,7 +42,6 @@ LineStripResource::LineStripResource()
 
 LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_tree)
     : kd_tree_(), line_strip_(line_strip) {
-  std::cout << "Started creating lsResource\n";
   if (line_strip_.num_occupied_vertex_slots > 0) {
     bounding_box_ = math::BoundingBox<math::vec3>();
 
@@ -55,8 +54,6 @@ LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_
       //kd_tree_.generate(line_strip);
     }
   }
-
-  std::cout << "DONE LOADING RESOURCE\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,8 +121,7 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
   } else {
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 1, iter->second.num_occupied_vertex_slots);
   }
-  //ctx.render_context->draw_elements(iter->second.indices_count);
-  std::cout << "DREW THE LINES\n";
+
   
 }
 

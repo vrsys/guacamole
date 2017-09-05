@@ -55,8 +55,8 @@ class LineStripRenderer {
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 
 
-  std::vector<ShaderProgramStage>                                     vertex_visualization_program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> vertex_visualization_programs_;
+  std::vector<ShaderProgramStage>                                     volumetric_point_program_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_point_programs_;
 
   SubstitutionMap                                                     global_substitution_map_;
 };

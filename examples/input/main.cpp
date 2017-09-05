@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     1.0f);
   camera->get_pipeline_description()->add_pass(
     std::make_shared<gua::DebugViewPassDescription>());
-  camera->get_pipeline_description()->set_enable_abuffer(true);
+  //camera->get_pipeline_description()->set_enable_abuffer(true);
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
 

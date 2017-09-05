@@ -57,6 +57,7 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   , rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE))
   , program_stages_()
   , programs_()
+  , volumetric_point_programs_()
   , global_substitution_map_(smap)
 {
 
@@ -67,17 +68,17 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
   ResourceFactory factory;
-  std::string v_shader = factory.read_shader_file("resources/shaders/line_strip_shader.vert");
-  std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader.frag");
+  std::string v_shader = factory.read_shader_file("resources/shaders/line_strip_shader_non_volumetric.vert");
+  std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader_non_volumetric.frag");
 
-  std::string vertex_vis_v_shader = factory.read_shader_file("resources/shaders/vertex_vis_shader.vert");
-  std::string vertex_vis_f_shader = factory.read_shader_file("resources/shaders/vertex_vis_shader.frag");
+  std::string volumetric_point_v_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.vert");
+  std::string volumetric_point_f_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.frag");
 #endif
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
 
-  vertex_visualization_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, vertex_vis_v_shader) );
-  vertex_visualization_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, vertex_vis_f_shader) );
+  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, volumetric_point_v_shader) );
+  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_f_shader) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,8 +87,6 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 {
   auto& scene = *pipe.current_viewstate().scene;
   auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::LineStripNode))));
-
-  std::cout << "RENDERING LINE PASS\n";
 
   if (sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) {
     auto& target = *pipe.current_viewstate().target;
@@ -99,7 +98,6 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
                      < reinterpret_cast<node::LineStripNode*>(b)->get_material()->get_shader();
               });
 
-    std::cout << "Got Line Object!\n";
     RenderContext const& ctx(pipe.get_context());
 
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -114,14 +112,13 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
     int view_id(camera.config.get_view_id());
 
-    MaterialShader*                current_material(nullptr);
-    std::shared_ptr<ShaderProgram> current_shader;
+    MaterialShader*                current_material_shader(nullptr);
+    std::shared_ptr<ShaderProgram> current_shader_program;
     auto current_rasterizer_state = rs_cull_back_;
     ctx.render_context->apply();
 
     // loop through all objects, sorted by material ----------------------------
     for (auto const& object : sorted_objects->second) {
-      std::cout << "LOOPING THROUGH LINE OBJECT\n";
       auto line_strip_node(reinterpret_cast<node::LineStripNode*>(object));
       if (pipe.current_viewstate().shadow_mode && line_strip_node->get_shadow_mode() == ShadowMode::OFF) {
         continue;
@@ -131,57 +128,77 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
         continue;
       }
 
-      if (current_material != line_strip_node->get_material()->get_shader()) {
-        current_material = line_strip_node->get_material()->get_shader();
-        if (current_material) {
 
-          auto shader_iterator = programs_.find(current_material);
-          if (shader_iterator != programs_.end())
-          {
-            current_shader = shader_iterator->second;
+      std::unordered_map<MaterialShader*, 
+                        std::shared_ptr<ShaderProgram>> * current_material_shader_map = nullptr;
+
+      std::vector<ShaderProgramStage> * current_shader_stages = nullptr;
+
+      //select the material shader maps belonging to the current visualization mode:
+        //non volumetric line strips and points share the same shader
+        if( false /*!line_strip_node->get_render_volumetric()*/) {
+          current_material_shader_map = &programs_;
+          current_shader_stages = &program_stages_;
+        } else {
+          if(line_strip_node->get_render_vertices_as_points()) {
+            current_material_shader_map = &volumetric_point_programs_;
+            current_shader_stages = &volumetric_point_program_stages_;
+          }
+        }
+
+        if (current_material_shader != line_strip_node->get_material()->get_shader()) {
+          current_material_shader = line_strip_node->get_material()->get_shader();
+          if (current_material_shader) {
+
+            auto shader_iterator = current_material_shader_map->find(current_material_shader);
+            if (shader_iterator != current_material_shader_map->end())
+            {
+              current_shader_program = shader_iterator->second;
+            }
+            else {
+              auto smap = global_substitution_map_;
+              for (const auto& i: current_material_shader->generate_substitution_map())
+                smap[i.first] = i.second;
+
+              current_shader_program = std::make_shared<ShaderProgram>();
+              current_shader_program->set_shaders(*current_shader_stages, std::list<std::string>(), false, smap);
+              (*current_material_shader_map)[current_material_shader] = current_shader_program;
+            }
           }
           else {
-            auto smap = global_substitution_map_;
-            for (const auto& i: current_material->generate_substitution_map())
-              smap[i.first] = i.second;
-
-            current_shader = std::make_shared<ShaderProgram>();
-            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
-            programs_[current_material] = current_shader;
+            Logger::LOG_WARNING << "LineStripPass::process(): Cannot find material: "
+                                << line_strip_node->get_material()->get_shader_name() << std::endl;
           }
-        }
-        else {
-          Logger::LOG_WARNING << "LineStripPass::process(): Cannot find material: "
-                              << line_strip_node->get_material()->get_shader_name() << std::endl;
-        }
-        if (current_shader) {
-          current_shader->use(ctx);
-          current_shader->set_uniform(ctx, math::vec2ui(target.get_width(),
+        //}
+
+        if (current_shader_program) {
+          current_shader_program->use(ctx);
+          current_shader_program->set_uniform(ctx, math::vec2ui(target.get_width(),
                                                        target.get_height()),
                                       "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
-          current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
-          current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+          current_shader_program->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+          current_shader_program->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
           // hack
-          current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
+          current_shader_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
                                         "gua_gbuffer_depth");
         }
       }
 
-      if (current_shader && line_strip_node->get_geometry())
+      if (current_shader_program && line_strip_node->get_geometry())
       {
         auto model_view_mat = scene.rendering_frustum.get_view() * line_strip_node->get_cached_world_transform();
         UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(line_strip_node->get_cached_world_transform()))));
 
         int rendering_mode = pipe.current_viewstate().shadow_mode ? (line_strip_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-        current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(line_strip_node->get_cached_world_transform()));
-        current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
-        current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-        current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+        current_shader_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(line_strip_node->get_cached_world_transform()));
+        current_shader_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
+        current_shader_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+        current_shader_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
         // lowfi shadows dont need material input
         if (rendering_mode != 1) {
-          line_strip_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+          line_strip_node->get_material()->apply_uniforms(ctx, current_shader_program.get(), view_id);
         }
 
         bool show_backfaces   = line_strip_node->get_material()->get_show_back_faces();
@@ -208,10 +225,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         ctx.render_context->apply_program();
 
-        std::cout << "BEFORE RENDER CALL\n";
-
         line_strip_node->get_geometry()->draw(pipe.get_context(), line_strip_node->get_render_vertices_as_points());
-        std::cout << "AFTER RENDER CALL\n";
       }
     }
 
