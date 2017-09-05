@@ -71,10 +71,10 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   std::string v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_non_volumetric.vert");
   std::string f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_non_volumetric.frag");
 
-  std::string volumetric_point_line_v_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.vert");
+  std::string volumetric_point_line_v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.vert");
   std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.geom");
   std::string volumetric_line_g_shader = factory.read_shader_file("resources/shaders/line_shader_volumetric.geom");
-  std::string volumetric_point_line_f_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.frag");
+  std::string volumetric_point_line_f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.frag");
 
   //std::string volumetric__v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.vert");
   //std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/line_strip_shader_volumetric.geom");
