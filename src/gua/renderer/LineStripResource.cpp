@@ -46,7 +46,6 @@ LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_
     bounding_box_ = math::BoundingBox<math::vec3>();
 
     for (int v(0); v < line_strip_.num_occupied_vertex_slots; ++v) {
-        std::cout << "accessing index: " << v << "\n";
       bounding_box_.expandBy(math::vec3{line_strip_.positions[v]});
     }
 
