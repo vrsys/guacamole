@@ -72,12 +72,14 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   std::string f_shader = factory.read_shader_file("resources/shaders/line_strip_shader_non_volumetric.frag");
 
   std::string volumetric_point_v_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.vert");
+  std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.geom");
   std::string volumetric_point_f_shader = factory.read_shader_file("resources/shaders/point_shader_volumetric.frag");
 #endif
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader));
   program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader));
 
   volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, volumetric_point_v_shader) );
+  volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_point_g_shader) );
   volumetric_point_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_f_shader) );
 }
 
@@ -136,7 +138,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
       //select the material shader maps belonging to the current visualization mode:
         //non volumetric line strips and points share the same shader
-        if( false /*!line_strip_node->get_render_volumetric()*/) {
+        if( !line_strip_node->get_render_volumetric() ) {
           current_material_shader_map = &programs_;
           current_shader_stages = &program_stages_;
         } else {

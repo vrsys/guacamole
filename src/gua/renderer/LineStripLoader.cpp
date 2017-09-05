@@ -188,8 +188,10 @@ std::shared_ptr<node::Node> LineStripLoader::load(
 
     if(create_lines) {
       node_to_return->set_render_vertices_as_points(false);
+      node_to_return->set_render_volumetric(false);
     } else {
       node_to_return->set_render_vertices_as_points(true);
+      node_to_return->set_render_volumetric(true);
     }
     return node_to_return;
 

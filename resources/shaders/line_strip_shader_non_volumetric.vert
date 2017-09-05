@@ -27,11 +27,12 @@ void main() {
   gua_metalness      = 0.01;
   gua_roughness      = 0.1;
   gua_emissivity     = 1.0;
+
+  @material_method_calls_vert@
   gua_color          = gua_in_color.xyz;
   gua_alpha          = gua_in_color.a;
-  @material_method_calls_vert@
-
   @include "common/gua_varyings_assignment.glsl"
+
 
   gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);
 }
