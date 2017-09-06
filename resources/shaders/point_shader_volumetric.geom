@@ -13,7 +13,7 @@ in VertexData {
   vec4  gua_varying_color_rgba;
   float gua_varying_thickness;
   vec3  gua_varying_rme;
-} VertexIn[];
+} VertexIn[1];
 
 out VertexData {
   vec3 gua_varying_world_position;
@@ -29,18 +29,6 @@ void main() {
 
   vec3 cube_object_space_center = VertexIn[0].gua_varying_object_position;
   float cube_half_side_length = VertexIn[0].gua_varying_thickness;
-/*
-  vec4 cube_vertex_object_space_positions[8] = {
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3(-1.0, -1.0, -1.0) ), 1.0), //vertex 0
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0, -1.0, -1.0) ), 1.0), //vertex 1
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3(-1.0,  1.0, -1.0) ), 1.0), //vertex 2
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0,  1.0, -1.0) ), 1.0), //vertex 3
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3(-1.0, -1.0,  1.0) ), 1.0), //vertex 4
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0, -1.0,  1.0) ), 1.0), //vertex 5
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3(-1.0,  1.0,  1.0) ), 1.0), //vertex 6
-    vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0,  1.0,  1.0) ), 1.0), //vertex 7
-  };
-*/
 
   vec4 cube_vertex_object_space_positions[8] = {
     vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0, 1.0, -1.0) ), 1.0), //vertex 0
