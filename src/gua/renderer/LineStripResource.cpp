@@ -73,7 +73,7 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
   clinestrip.vertices =
       ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                        scm::gl::USAGE_DYNAMIC_DRAW,
-                                       (line_strip_.vertex_reservoir_size+2) * sizeof(LineStrip::Vertex),
+                                       (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
                                        0);
 
   LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
@@ -116,7 +116,8 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
   ctx.render_context->apply_vertex_input();
   
   if(!render_vertices_as_points) {
-    ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+2);
+    //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
+    ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
   } else {
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 1, iter->second.num_occupied_vertex_slots);
   }

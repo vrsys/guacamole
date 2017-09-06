@@ -93,6 +93,8 @@ void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
   vertex_buffer[num_occupied_vertex_slots + 1].pos = positions[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].col = colors[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].thick = thicknesses[num_occupied_vertex_slots-1];
+
+
 }
 
 scm::gl::vertex_format LineStrip::get_vertex_format() const {
