@@ -3,16 +3,18 @@ IF (GUACAMOLE_EXAMPLES)
 
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
+    add_subdirectory(clipping)
     add_subdirectory(input)
-    add_subdirectory(projective_texturing)
-    add_subdirectory(picking)
+    add_subdirectory(multicontext)
     add_subdirectory(nice_and_shiny)
+    add_subdirectory(oit_demo)
+    add_subdirectory(picking)
+    add_subdirectory(projective_texturing)
     add_subdirectory(smooth_lighting)
     add_subdirectory(stress_test)
     add_subdirectory(transparency)
-    add_subdirectory(oit_demo)
     add_subdirectory(tiled_shading_test)
-    add_subdirectory(clipping)
+    add_subdirectory(volumetric_point_and_line_rendering)
   ENDIF (${GUACAMOLE_GLFW3})
 
   # skelanim example requires skelanim-plugin and the fbx sdk
@@ -41,10 +43,8 @@ IF (GUACAMOLE_EXAMPLES)
 
   # plod example requires plod-plugin
   IF (${PLUGIN_guacamole-plod})
-    add_subdirectory(plod_simple)
     add_subdirectory(plod_shadows)
-    # multicontext example requires plod-plugin
-    add_subdirectory(multicontext)
+    add_subdirectory(plod_simple)
     IF (${PLUGIN_guacamole-gui})
       add_subdirectory(depth_cube_map)
     ENDIF()
@@ -52,8 +52,8 @@ IF (GUACAMOLE_EXAMPLES)
 
   # lod example requires lod-plugin
   IF (${PLUGIN_guacamole-lod})
-    add_subdirectory(lod_simple)
     add_subdirectory(lod_mesh_textured)
+    add_subdirectory(lod_simple)
   ENDIF (${PLUGIN_guacamole-lod})
 
   # time-varying volume example requires tv_3-plugin

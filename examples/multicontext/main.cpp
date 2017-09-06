@@ -212,13 +212,13 @@ int main(int argc, char** argv) {
 
     ++cnt;
 
-    if (cnt == 100) {
+    if (cnt == 1) {
       add_window("window2", cam2);
     }
-    if (cnt == 200) {
+    if (cnt == 2) {
       add_window("window3", cam3);
     }
-    if (cnt == 300) {
+    if (cnt == 3) {
       add_window("window4", cam4);
     }
 
