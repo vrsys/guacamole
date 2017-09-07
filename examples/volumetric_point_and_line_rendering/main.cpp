@@ -22,11 +22,13 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/node/LineStripNode.hpp>
 #include <gua/renderer/LineStripLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
+
+#include <boost/program_options.hpp>
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball,
@@ -62,7 +64,41 @@ void mouse_button(gua::utils::Trackball& trackball,
 
 int main(int argc, char** argv) {
   // initialize guacamole
-  gua::init(argc, argv);
+  gua::init(1, argv);
+
+
+  namespace po = boost::program_options;
+  po::options_description desc("options: ");
+  desc.add_options()
+    ("input,f", po::value<std::string>(), "specify input file with *.lob or *.pob model to use in the example");
+
+  po::variables_map vm;
+
+  std::string example_model_name = "data/objects/pig_ALPHA_SHAPES.lob";
+
+  try {    
+      auto parsed_options = po::command_line_parser(argc, argv).options(desc).run();
+      po::store(parsed_options, vm);
+      po::notify(vm);
+
+      if (vm.count("help"))
+      {
+        std::cout << desc;
+        return 0;
+      }
+
+
+      //single scene decription file is provided
+      if (vm.count("input")){
+         example_model_name = vm["input"].as<std::string>();
+      }
+
+    } catch (std::exception& e) {
+      std::cout << "Warning: No input file specified. \n" << desc;
+      return 0;
+    }
+
+
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -73,11 +109,14 @@ int main(int argc, char** argv) {
 
   auto line_strip_example_node(line_strip_loader
                                 .create_geometry_from_file("ls_example_node", 
-                                                           "data/objects/pig_ALPHA_SHAPES.lob",
-                                                            gua::LineStripLoader::NORMALIZE_POSITION |
-                                                            gua::LineStripLoader::NORMALIZE_SCALE) );
+                                                           example_model_name,
+                                                           gua::LineStripLoader::NORMALIZE_POSITION |
+                                                           gua::LineStripLoader::NORMALIZE_SCALE) );
+
+  //actual_line_strip_node->set_render_vertices_as_points(true);
+
   graph.add_node("/transform", line_strip_example_node);
-  line_strip_example_node->set_draw_bounding_box(true);
+  //line_strip_example_node->set_draw_bounding_box(true);
 
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
@@ -108,8 +147,8 @@ int main(int argc, char** argv) {
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
     1.0f);
-  camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
+  //camera->get_pipeline_description()->add_pass(
+  //  std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -130,6 +169,53 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
+
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    // key press events
+    //////////////////////////////////////////////////////////////////////////////////////
+    window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+
+
+        if (action == 0) return; // only press events
+        
+
+
+        switch (key) {
+        case 'A': {
+          if(line_strip_example_node->has_children()) { //work on grouped line strips
+            for( auto& child : line_strip_example_node->get_children() ) {
+              auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
+              bool render_as_points = line_strip_child->get_render_vertices_as_points();
+              line_strip_child->set_render_vertices_as_points(!render_as_points);
+            }            
+          } else { //work on parent node
+            auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
+            bool render_as_points = line_strip_parent->get_render_vertices_as_points();
+            line_strip_parent->set_render_vertices_as_points(!render_as_points);
+          }
+        }
+        break;
+
+        case 'S': 
+          if(line_strip_example_node->has_children()) { //work on grouped line strips
+            for( auto& child : line_strip_example_node->get_children() ) {
+              auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
+              bool render_volumetric = line_strip_child->get_render_volumetric();
+              line_strip_child->set_render_volumetric(!render_volumetric);
+            }            
+          } else { //work on parent node
+            auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
+            bool render_volumetric = line_strip_parent->get_render_volumetric();
+            line_strip_parent->set_render_volumetric(!render_volumetric);
+          }
+        break;
+
+        break;
+        default: break;
+        };
+
+    });
 
   gua::Renderer renderer;
 

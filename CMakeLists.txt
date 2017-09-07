@@ -111,6 +111,7 @@ mark_as_advanced(Boost_DIR)
 find_package( Boost 1.54.0 COMPONENTS
   chrono
   filesystem
+  program_options
   regex
   system
   REQUIRED
