@@ -93,8 +93,6 @@ void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
   vertex_buffer[num_occupied_vertex_slots + 1].pos = positions[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].col = colors[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].thick = thicknesses[num_occupied_vertex_slots-1];
-
-
 }
 
 scm::gl::vertex_format LineStrip::get_vertex_format() const {
@@ -102,6 +100,14 @@ scm::gl::vertex_format LineStrip::get_vertex_format() const {
     0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
     0, 1, scm::gl::TYPE_VEC4F, sizeof(Vertex))(
     0, 2, scm::gl::TYPE_FLOAT, sizeof(Vertex));
+}
+
+scm::gl::vertex_format LineStrip::get_streaming_vertex_format() const {
+  return scm::gl::vertex_format(
+    0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 1, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE)(
+    0, 2, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE)(
+    0, 3, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE);
 }
 
 } // namespace gua

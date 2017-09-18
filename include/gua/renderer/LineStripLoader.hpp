@@ -89,6 +89,15 @@ public:
                                                    unsigned flags = DEFAULTS);
 
 
+   std::shared_ptr<node::Node> create_net_node_at_port(std::string const& node_name,
+                                                       uint16_t recv_socket_port);
+
+
+   /*
+    create_net_node_at_port(std::string const& node_name,
+                            uint16_t recv_socket_port,
+                            unsigned flags);*/
+
   /**
    * Constructor from a file.
    *

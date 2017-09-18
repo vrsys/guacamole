@@ -37,9 +37,14 @@
 
 namespace gua {
 
+using vec3us = scm::math::vec<unsigned short, 3>;
+using vec4us = scm::math::vec<unsigned short, 4>;
 /**
  * @brief holds vertex information of one mesh
  */
+
+
+
 struct GUA_DLL LineStrip {
  public:
 
@@ -74,9 +79,14 @@ struct GUA_DLL LineStrip {
    */
   virtual scm::gl::vertex_format get_vertex_format() const;
 
+  virtual scm::gl::vertex_format get_streaming_vertex_format() const;
+
   std::vector<scm::math::vec3f> positions;
   std::vector<scm::math::vec4f> colors;
   std::vector<float> thicknesses;
+
+  std::vector<vec3us> quantized_positions;
+ // std::vector<vec4us> 
 
   int vertex_reservoir_size;
   int num_occupied_vertex_slots;

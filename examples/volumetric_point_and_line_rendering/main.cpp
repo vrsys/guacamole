@@ -107,11 +107,20 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
+/*
   auto line_strip_example_node(line_strip_loader
                                 .create_geometry_from_file("ls_example_node", 
                                                            example_model_name,
                                                            gua::LineStripLoader::NORMALIZE_POSITION |
                                                            gua::LineStripLoader::NORMALIZE_SCALE) );
+*/
+
+
+
+  auto line_strip_example_node(
+    line_strip_loader.create_net_node_at_port( std::string("ls_example_node"), 
+                                               7002 ) );
+
 
   //actual_line_strip_node->set_render_vertices_as_points(true);
 
