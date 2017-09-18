@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
   //actual_line_strip_node->set_render_vertices_as_points(true);
 
   graph.add_node("/transform", line_strip_example_node);
-  //line_strip_example_node->set_draw_bounding_box(true);
+  line_strip_example_node->set_draw_bounding_box(true);
 
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");

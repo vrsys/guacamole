@@ -212,8 +212,8 @@ void LineStripResource::receive_streaming_update() {
 
         bounding_box_ = math::BoundingBox<math::vec3>();
 
-        bounding_box_.expandBy(bbx_min);
-        bounding_box_.expandBy(bbx_max);
+        bounding_box_.expandBy(math::vec3{bb_min[0], bb_min[1], bb_min[2]});
+        bounding_box_.expandBy(math::vec3{bb_max[0], bb_max[1], bb_max[2]});
 
         if(packet_number == 0){
           number_of_packets = (unsigned) std::ceil( (1.0f * voxel_count) / max_voxels_per_packet);
@@ -414,7 +414,7 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
       //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
       ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
     } else {*/
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
+      //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
     //}
 
     std::cout << "Swap.\n";
