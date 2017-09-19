@@ -232,6 +232,7 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
+  size_t frame_counter = 0;
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
@@ -241,6 +242,9 @@ int main(int argc, char** argv) {
         gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
+
+    if (frame_counter++ % 500 == 0)
+     std::cout << "REN FPS: " << window->get_rendering_fps() << std::endl;
 
     if (window->should_close()) {
       renderer.stop();

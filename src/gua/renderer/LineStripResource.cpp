@@ -181,6 +181,7 @@ void LineStripResource::receive_streaming_update() {
 
         //std::cout << "bytes_received: " << bytes_received << std::endl;
       if(bytes_received > num_byte_of_header) {
+        std::cout << "RECEIVED SOMETHING\n";
         size_t buff_index = 0;
         memcpy(&voxelsize_sent, &temp_streambuff[currently_written_voxels_back + buff_index], sizeof(voxelsize_sent));
         voxelsize_sent = 0.008;
@@ -352,6 +353,7 @@ void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
                                        num_vertices_to_upload * sizeof(streaming_voxel),
                                        &cpu_to_gpu_buffer[0]);
 
+  clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
   clinestrip.num_occupied_vertex_slots = num_vertices_to_upload;
 
 //  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
@@ -411,23 +413,23 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
     issue_buffer_swap();
 
     auto iter = ctx.line_strips.find(uuid());
-    if (iter == ctx.line_strips.end()) {
+    //if (iter == ctx.line_strips.end()) {
       // upload to GPU if neccessary
       upload_front_buffer_to(ctx);
       iter = ctx.line_strips.find(uuid());
-    }
+    //}
 
 
     ctx.render_context->bind_vertex_array(iter->second.vertex_array);
     //ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
     ctx.render_context->apply_vertex_input();
-  /*
+  
     if(!render_vertices_as_points) {
       //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
       ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
-    } else {*/
+    } else {
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
-    //}
+    }
 
     std::cout << "Swap.\n";
     std::cout << "After swap: " << "Front size: " << socket_to_cpu_buffer.size() << "    Back Size: " << cpu_to_gpu_buffer.size() << "\n";

@@ -61,8 +61,11 @@ class LineStripRenderer {
   std::vector<ShaderProgramStage>                                     volumetric_line_program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_line_programs_;
 
-  std::vector<ShaderProgramStage>                                     quantized_voxel_renderer_shader_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> quantized_voxel_renderer_programs_;
+  std::vector<ShaderProgramStage>                                     quantized_volumetric_voxel_renderer_shader_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> quantized_volumetric_voxel_renderer_programs_;
+
+    std::vector<ShaderProgramStage>                                   quantized_non_volumetric_point_line_renderer_shader_stages_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> quantized_non_volumetric_point_line_renderer_programs_;
 
   SubstitutionMap                                                     global_substitution_map_;
 };
