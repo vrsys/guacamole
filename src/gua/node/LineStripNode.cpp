@@ -79,6 +79,10 @@ namespace node {
     return geometry_->get_is_net_node();
   }
 
+  float LineStripNode::get_voxel_thickness() const {
+    return geometry_->get_voxel_thickness();
+  }
+
   void LineStripNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
     /*

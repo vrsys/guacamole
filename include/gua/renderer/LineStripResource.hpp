@@ -103,6 +103,7 @@ class LineStripResource : public GeometryResource {
   math::vec3 get_vertex(unsigned int i) const;
 
   bool get_is_net_node() const;
+  float get_voxel_thickness() const;
 
  private:
 
@@ -116,6 +117,7 @@ class LineStripResource : public GeometryResource {
   //point and line geometry
   bool thread_needs_to_be_joined = false;
   bool is_net_node = false;
+  bool is_feedback_port_open = false;
   std::shared_ptr<std::thread>   socket_receiving_thread_ptr;
   std::shared_ptr<zmq::context_t> zmq_context_ptr;
   std::shared_ptr<zmq::socket_t>  zmq_receive_socket_ptr;
@@ -129,6 +131,7 @@ class LineStripResource : public GeometryResource {
   uint64_t currently_available_voxels_front = 0;
   mutable boost::mutex buffer_swap_mutex;
 
+  float voxel_thickness = 0.0;
 
 
   unsigned const max_voxels_per_packet = 6000;

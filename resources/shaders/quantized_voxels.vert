@@ -11,8 +11,7 @@ layout(location=7) in float in_char_padding_0;
 
 
 uniform vec3 bounding_box_min = vec3(0.0, 0.0, 0.0);
-uniform vec3 bounding_box_max = vec3(0.0, 0.0, 0.0);
-uniform float voxelsize_sent  = 0.008;
+uniform float voxel_thickness  = 0.0;
 
 @include "common/gua_camera_uniforms.glsl"
 
@@ -51,9 +50,9 @@ void main() {
                             in_quantized_pos_z);
 
   vec3 dequantized_object_space_position 
-    = voxelsize_sent * quantized_pos + bounding_box_min;
+    = voxel_thickness * quantized_pos + bounding_box_min;
 
-  gua_thickness  = voxelsize_sent / 2.0;
+  gua_thickness  = voxel_thickness / 2.0;
 
   VertexOut.gua_varying_object_position = dequantized_object_space_position;
   VertexOut.gua_varying_color_rgba      = vec4(gua_color, gua_alpha);

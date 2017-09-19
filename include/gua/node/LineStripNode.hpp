@@ -76,7 +76,7 @@ public : // methods
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
 
   bool is_net_node() const;
-
+  float get_voxel_thickness() const;
   /**
   * Implements ray picking for a triangular mesh
   */

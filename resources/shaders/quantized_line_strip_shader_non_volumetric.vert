@@ -7,12 +7,10 @@ layout(location=3) in int in_short_padding_0;
 layout(location=4) in float in_col_r;
 layout(location=5) in float in_col_g;
 layout(location=6) in float in_col_b;
-layout(location=7) in float in_char_padding_0;
 
 
-uniform vec3 bounding_box_min = vec3(-1.0, 0.03, -1.0);
-uniform vec3 bounding_box_max = vec3(0.0, 0.0, 0.0);
-uniform float voxelsize_sent  = 0.008;
+uniform vec3 bounding_box_min = vec3(0.0, 0.0, 0.0);
+uniform float voxel_thickness  = 0.0;
 
 
 @include "common/gua_camera_uniforms.glsl"
@@ -36,7 +34,7 @@ void main() {
   vec3 in_color = vec3(in_col_r, in_col_g, in_col_b);
 
   vec3 dequantized_object_space_position 
-    = voxelsize_sent * quantized_pos + bounding_box_min;
+    = voxel_thickness * quantized_pos + bounding_box_min;
 
 
   gua_world_position = (gua_model_matrix * vec4(dequantized_object_space_position, 1.0)).xyz;

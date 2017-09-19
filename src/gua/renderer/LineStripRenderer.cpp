@@ -280,8 +280,11 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
                                                        geometry_bounding_box.min[1],
                                                        geometry_bounding_box.min[2]
                                                        };
+
+
+        float voxel_thickness = line_strip_node->get_geometry()->get_voxel_thickness();
         current_shader_program->apply_uniform(ctx, "bounding_box_min", uniform_ready_bb_min);
-        
+        current_shader_program->apply_uniform(ctx, "voxel_thickness", voxel_thickness);
 
         ctx.render_context->apply_program();
 

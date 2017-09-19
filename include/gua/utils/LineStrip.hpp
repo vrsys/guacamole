@@ -45,7 +45,7 @@ using vec4us = scm::math::vec<unsigned short, 4>;
 
 struct streaming_voxel {
   unsigned short qz_pos[4];
-  unsigned char  color[4];
+  unsigned char  color[3];
 };
 
 struct GUA_DLL LineStrip {

@@ -72,6 +72,7 @@ LineStripResource::LineStripResource(uint16_t recv_socket_port, std::string cons
 
     zmq_feedback_sender_socket_ptr->connect(feedback_sender_socket_string);
     std::cout << "OPENED FEEDBACK_PORT\n";
+    is_feedback_port_open = true;
   }
   //int sndhwm = 0;
   //zmq_feedback_sender_socket_ptr->setsockopt(ZMQ_SNDHWM, &sndhwm, sizeof (sndhwm));
@@ -198,9 +199,9 @@ void LineStripResource::receive_streaming_update() {
         size_t buff_index = 0;
         memcpy(&voxelsize_sent, &temp_streambuff[currently_written_voxels_back + buff_index], sizeof(voxelsize_sent));
         std::cout << "THE VOXELSIZE IS: " << voxelsize_sent << "\n";
-
-        voxelsize_sent = 0.008;
         buff_index += sizeof(voxelsize_sent);
+
+        voxel_thickness = voxelsize_sent;
 
         size_t timestamp = 0.0;
         memcpy(&timestamp, &temp_streambuff[buff_index], sizeof(timestamp));
@@ -351,19 +352,6 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
 
 void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
 
- /*
-  cpu_to_gpu_buffer.clear();
-  for(int i = 0; i < 100; ++i) {
-    streaming_voxel new_streaming_voxel;
-    new_streaming_voxel.qz_pos[0] = i;
-    new_streaming_voxel.qz_pos[1] = i;
-    new_streaming_voxel.qz_pos[2] = i;
-    new_streaming_voxel.color[0] = 255;
-    new_streaming_voxel.color[1] = 0;
-    new_streaming_voxel.color[2] = 0;
-    cpu_to_gpu_buffer.emplace_back( new_streaming_voxel );
-  }
-*/
   uint32_t num_vertices_to_upload = cpu_to_gpu_buffer.size();
 
   RenderContext::LineStrip clinestrip{};
@@ -376,14 +364,6 @@ void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
 
   clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
   clinestrip.num_occupied_vertex_slots = num_vertices_to_upload;
-
-//  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
-//      clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-//  line_strip_.copy_to_buffer(data);
-
-  //std::cout << buffer_content << ""
-//  ctx.render_context->unmap_buffer(clinestrip.vertices);
 
   clinestrip.vertex_array = ctx.render_device->create_vertex_array(
       line_strip_.get_streaming_vertex_format(),
@@ -459,13 +439,17 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
 
     std::cout << "ESTABLISHED BOUNDING BOX: " << bounding_box_.min << "\n";
 
-/*
 
-      zmq::message_t zmqm(max_bufflen);
+    if( is_feedback_port_open ) {
+      double voxel_size_needed = 5.1234;
+      size_t package_to_send_size = sizeof(voxel_size_needed);
+      zmq::message_t feedback_message(package_to_send_size);
 
-      memcpy( (void* ) zmqm.data(), (const void*) &buff[0], buff_index);
-      zmq_sender_ptr->send(zmqm);
-*/
+      memcpy( feedback_message.data(), (const void*) &voxel_size_needed, package_to_send_size);
+
+      zmq_feedback_sender_socket_ptr->send(feedback_message);
+      std::cout << "SENT FEEDBACK: " << voxel_size_needed << "\n";
+    }
 
   }
 }
@@ -474,7 +458,11 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
 
 bool LineStripResource::get_is_net_node() const { return is_net_node; }
 
-/////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+float LineStripResource::get_voxel_thickness() const { return voxel_thickness; };
+
+////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::issue_buffer_swap() const {
   if(needs_double_buffer_swap.load()){
