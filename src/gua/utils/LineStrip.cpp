@@ -104,10 +104,15 @@ scm::gl::vertex_format LineStrip::get_vertex_format() const {
 
 scm::gl::vertex_format LineStrip::get_streaming_vertex_format() const {
   return scm::gl::vertex_format(
-    0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
-    0, 1, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE)(
-    0, 2, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE)(
-    0, 3, scm::gl::TYPE_UBYTE, sizeof(Vertex), scm::gl::INT_FLOAT_NORMALIZE);
+    //0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    0, 0, scm::gl::TYPE_USHORT, sizeof(streaming_voxel))(//, scm::gl::INT_PURE)(
+    0, 1, scm::gl::TYPE_USHORT, sizeof(streaming_voxel))(//, scm::gl::INT_PURE)(
+    0, 2, scm::gl::TYPE_USHORT, sizeof(streaming_voxel))(//, scm::gl::INT_PURE)(
+    0, 3, scm::gl::TYPE_USHORT, sizeof(streaming_voxel))(//, scm::gl::INT_PURE)(
+    0, 4, scm::gl::TYPE_UBYTE, sizeof(streaming_voxel), scm::gl::INT_FLOAT_NORMALIZE)(
+    0, 5, scm::gl::TYPE_UBYTE, sizeof(streaming_voxel), scm::gl::INT_FLOAT_NORMALIZE)(
+    0, 6, scm::gl::TYPE_UBYTE, sizeof(streaming_voxel), scm::gl::INT_FLOAT_NORMALIZE)(
+    0, 7, scm::gl::TYPE_UBYTE, sizeof(streaming_voxel), scm::gl::INT_FLOAT_NORMALIZE);
 }
 
 } // namespace gua

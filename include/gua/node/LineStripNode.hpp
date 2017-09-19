@@ -75,6 +75,8 @@ public : // methods
   inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
 
+  bool is_net_node() const;
+
   /**
   * Implements ray picking for a triangular mesh
   */

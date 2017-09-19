@@ -43,7 +43,10 @@ using vec4us = scm::math::vec<unsigned short, 4>;
  * @brief holds vertex information of one mesh
  */
 
-
+struct streaming_voxel {
+  unsigned short qz_pos[4];
+  unsigned char  color[4];
+};
 
 struct GUA_DLL LineStrip {
  public:

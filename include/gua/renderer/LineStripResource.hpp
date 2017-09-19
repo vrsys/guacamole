@@ -52,10 +52,7 @@ struct RenderContext;
  */
 
 
-struct streaming_voxel {
-  unsigned short qz_pos[3];
-  unsigned char  color[3];
-};
+
 
 
 class LineStripResource : public GeometryResource {
@@ -105,12 +102,13 @@ class LineStripResource : public GeometryResource {
   
   math::vec3 get_vertex(unsigned int i) const;
 
+  bool get_is_net_node() const;
 
  private:
 
   void upload_to(RenderContext& context) const;
   void upload_front_buffer_to(RenderContext& ctx) const;
-  
+
   KDTree kd_tree_;
   LineStrip line_strip_;
 

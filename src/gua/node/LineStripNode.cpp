@@ -74,6 +74,11 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
 
+
+  bool LineStripNode::is_net_node() const {
+    return geometry_->get_is_net_node();
+  }
+
   void LineStripNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
     /*

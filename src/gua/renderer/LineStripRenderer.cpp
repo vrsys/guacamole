@@ -77,6 +77,9 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   std::string volumetric_line_g_shader = factory.read_shader_file("resources/shaders/line_strip_shader_volumetric.geom");
   std::string volumetric_point_line_f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.frag");
 
+  std::string quantized_voxels_v_shader = factory.read_shader_file("resources/shaders/quantized_voxels.vert");
+  std::string quantized_voxels_g_shader = factory.read_shader_file("resources/shaders/quantized_voxels.geom");
+
   //std::string volumetric__v_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.vert");
   //std::string volumetric_point_g_shader = factory.read_shader_file("resources/shaders/line_strip_shader_volumetric.geom");
   //std::string volumetric_point_f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.frag");
@@ -91,6 +94,12 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   volumetric_point_line_v_shader) );
   volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_line_g_shader) );
   volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
+
+  quantized_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   quantized_voxels_v_shader) );
+  quantized_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, quantized_voxels_g_shader) );
+  quantized_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,17 +157,23 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
       //select the material shader maps belonging to the current visualization mode:
         //non volumetric line strips and points share the same shader
-        if( !line_strip_node->get_render_volumetric() ) {
-          current_material_shader_map = &programs_;
-          current_shader_stages = &program_stages_;
+
+        if(line_strip_node->is_net_node()) {
+            current_material_shader_map = &quantized_voxel_renderer_programs_;
+            current_shader_stages = &quantized_voxel_renderer_shader_stages_;
         } else {
-          //volumetric point rendering
-          if(line_strip_node->get_render_vertices_as_points()) {
-            current_material_shader_map = &volumetric_point_programs_;
-            current_shader_stages = &volumetric_point_program_stages_;
-          } else { //volumetric 
-            current_material_shader_map = &volumetric_line_programs_;
-            current_shader_stages = &volumetric_line_program_stages_;
+          if( !line_strip_node->get_render_volumetric() ) {
+            current_material_shader_map = &programs_;
+            current_shader_stages = &program_stages_;
+          } else {
+            //volumetric point rendering
+            if(line_strip_node->get_render_vertices_as_points()) {
+              current_material_shader_map = &volumetric_point_programs_;
+              current_shader_stages = &volumetric_point_program_stages_;
+            } else { //volumetric 
+              current_material_shader_map = &volumetric_line_programs_;
+              current_shader_stages = &volumetric_line_program_stages_;
+            }
           }
         }
 

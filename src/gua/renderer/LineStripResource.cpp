@@ -91,9 +91,9 @@ void LineStripResource::convert_per_thread(unsigned const voxel_recv, unsigned c
     size_t buff_index = v * 10 + byte_of_header;
     memcpy(&new_voxel_to_create.qz_pos[0], &buff[buff_index], size_of_unsigned_short);
     buff_index += size_of_unsigned_short;
-    memcpy(&new_voxel_to_create.qz_pos[0], &buff[buff_index], size_of_unsigned_short);
+    memcpy(&new_voxel_to_create.qz_pos[1], &buff[buff_index], size_of_unsigned_short);
     buff_index += size_of_unsigned_short;
-    memcpy(&new_voxel_to_create.qz_pos[0], &buff[buff_index], size_of_unsigned_short);
+    memcpy(&new_voxel_to_create.qz_pos[2], &buff[buff_index], size_of_unsigned_short);
     buff_index += size_of_unsigned_short;
     
     memcpy(&new_voxel_to_create.color[0], &buff[buff_index], size_of_unsigned_char);
@@ -329,7 +329,19 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
 
 void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
 
- 
+ /*
+  cpu_to_gpu_buffer.clear();
+  for(int i = 0; i < 100; ++i) {
+    streaming_voxel new_streaming_voxel;
+    new_streaming_voxel.qz_pos[0] = i;
+    new_streaming_voxel.qz_pos[1] = i;
+    new_streaming_voxel.qz_pos[2] = i;
+    new_streaming_voxel.color[0] = 255;
+    new_streaming_voxel.color[1] = 0;
+    new_streaming_voxel.color[2] = 0;
+    cpu_to_gpu_buffer.emplace_back( new_streaming_voxel );
+  }
+*/
   uint32_t num_vertices_to_upload = cpu_to_gpu_buffer.size();
 
   RenderContext::LineStrip clinestrip{};
@@ -414,7 +426,7 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
       //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
       ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
     } else {*/
-      //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
+      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
     //}
 
     std::cout << "Swap.\n";
@@ -426,6 +438,9 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool LineStripResource::get_is_net_node() const { return is_net_node; }
 
 /////////////////////////////////////////////////
 
