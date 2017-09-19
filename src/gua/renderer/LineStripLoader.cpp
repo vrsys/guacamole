@@ -153,12 +153,14 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(
 /////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> LineStripLoader::create_net_node_at_port(std::string const& node_name,
-                                                                     uint16_t recv_socket_port) {
+                                                                     uint16_t recv_socket_port,
+                                                                     std::string const& feedback_ip, 
+                                                                     uint16_t feedback_port ) {
 
   GeometryDescription desc("LineStrip", node_name, 0, 0);
   GeometryDatabase::instance()->add(
     desc.unique_key(),
-    std::make_shared<LineStripResource>(recv_socket_port) );
+    std::make_shared<LineStripResource>(recv_socket_port, feedback_ip, feedback_port) );
 
   std::shared_ptr<node::LineStripNode> node_to_return = 
       std::make_shared<node::LineStripNode>(node::LineStripNode("", desc.unique_key()) );

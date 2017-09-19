@@ -8,7 +8,6 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 14) out;
 
-uniform float voxelsize_sent  = 0.008;
 
 in VertexData {
   vec3  gua_varying_object_position;

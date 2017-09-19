@@ -67,7 +67,7 @@ class LineStripResource : public GeometryResource {
    ~LineStripResource();
 
    //creates a linestrip resource which can be updated over the network
-   LineStripResource(uint16_t recv_socket_port);
+   LineStripResource(uint16_t recv_socket_port, std::string const& feedback_ip = "", uint16_t feedback_port = 0);
 
 
   /**
@@ -119,6 +119,7 @@ class LineStripResource : public GeometryResource {
   std::shared_ptr<std::thread>   socket_receiving_thread_ptr;
   std::shared_ptr<zmq::context_t> zmq_context_ptr;
   std::shared_ptr<zmq::socket_t>  zmq_receive_socket_ptr;
+  std::shared_ptr<zmq::socket_t>  zmq_feedback_sender_socket_ptr;
   mutable std::vector<streaming_voxel> socket_to_cpu_buffer; //back buffer
   mutable std::vector<streaming_voxel> cpu_to_gpu_buffer; //front buffer
   bool is_resource_alive = false;
@@ -128,9 +129,11 @@ class LineStripResource : public GeometryResource {
   uint64_t currently_available_voxels_front = 0;
   mutable boost::mutex buffer_swap_mutex;
 
+
+
   unsigned const max_voxels_per_packet = 6000;
   unsigned const byte_per_voxel = 10;
-  unsigned const byte_of_header = 40;
+  unsigned const byte_of_header = 48;
   unsigned const max_bufflen = max_voxels_per_packet * byte_per_voxel + byte_of_header;
   unsigned const max_num_packets = 16;
 };

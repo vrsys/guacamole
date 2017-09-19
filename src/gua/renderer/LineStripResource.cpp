@@ -53,7 +53,7 @@ LineStripResource::~LineStripResource() {
 ////////////////////////////////////////////////////////////////////////////////
 
    //creates a linestrip resource which can be updated over the network
-LineStripResource::LineStripResource(uint16_t recv_socket_port) {
+LineStripResource::LineStripResource(uint16_t recv_socket_port, std::string const& feedback_ip, uint16_t feedback_port) {
   zmq_context_ptr = std::make_shared<zmq::context_t>(1);
   std::string specified_receiver_port = std::to_string(recv_socket_port);
   std::string receiver_socket_string = "tcp://127.0.0.1:" + specified_receiver_port;
@@ -63,6 +63,19 @@ LineStripResource::LineStripResource(uint16_t recv_socket_port) {
   const char* filter = "";
   zmq_receive_socket_ptr->setsockopt(ZMQ_SUBSCRIBE, filter, strlen(filter));
 
+
+  if("" != feedback_ip) {
+    zmq_feedback_sender_socket_ptr = std::make_shared<zmq::socket_t>( *zmq_context_ptr, ZMQ_PUB );
+    std::string specified_feedback_port = std::to_string(feedback_port);
+    std::string feedback_sender_socket_string 
+      = "tcp://" + feedback_ip + ":" + specified_feedback_port;
+
+    zmq_feedback_sender_socket_ptr->connect(feedback_sender_socket_string);
+    std::cout << "OPENED FEEDBACK_PORT\n";
+  }
+  //int sndhwm = 0;
+  //zmq_feedback_sender_socket_ptr->setsockopt(ZMQ_SNDHWM, &sndhwm, sizeof (sndhwm));
+  
   thread_needs_to_be_joined = true;
   is_net_node = true;
   is_resource_alive = true;
@@ -153,7 +166,7 @@ void LineStripResource::receive_streaming_update() {
     unsigned number_of_packets_processed = 0;
     size_t current_timestamp = 0;
 
-    size_t num_byte_of_header = 40;
+    //size_t num_byte_of_header = 40;
 
     double voxelsize_sent = 0.008;
 
@@ -171,7 +184,7 @@ void LineStripResource::receive_streaming_update() {
       zmq_receive_socket_ptr->recv(&request);
 
       size_t bytes_received = request.size();
-      size_t received_voxel_bytes = bytes_received - num_byte_of_header;
+      size_t received_voxel_bytes = bytes_received - byte_of_header;
 
       memcpy((void*) &temp_streambuff[0], (const void*) request.data(), received_voxel_bytes);
     
@@ -180,14 +193,22 @@ void LineStripResource::receive_streaming_update() {
     //std::cout << "MESSAGE OF SIZE " << bytes_received << " received\n";
 
         //std::cout << "bytes_received: " << bytes_received << std::endl;
-      if(bytes_received > num_byte_of_header) {
+      if(bytes_received > byte_of_header) {
         std::cout << "RECEIVED SOMETHING\n";
         size_t buff_index = 0;
         memcpy(&voxelsize_sent, &temp_streambuff[currently_written_voxels_back + buff_index], sizeof(voxelsize_sent));
+        std::cout << "THE VOXELSIZE IS: " << voxelsize_sent << "\n";
+
         voxelsize_sent = 0.008;
         buff_index += sizeof(voxelsize_sent);
+
+        size_t timestamp = 0.0;
+        memcpy(&timestamp, &temp_streambuff[buff_index], sizeof(timestamp));
+        buff_index += sizeof(timestamp);
+
         memcpy(&packet_number, &temp_streambuff[buff_index], sizeof(packet_number));
         buff_index += sizeof(packet_number);
+
         memcpy(&voxel_count, &temp_streambuff[buff_index], sizeof(voxel_count));
         buff_index += sizeof(voxel_count);
 
@@ -437,6 +458,15 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
 
 
     std::cout << "ESTABLISHED BOUNDING BOX: " << bounding_box_.min << "\n";
+
+/*
+
+      zmq::message_t zmqm(max_bufflen);
+
+      memcpy( (void* ) zmqm.data(), (const void*) &buff[0], buff_index);
+      zmq_sender_ptr->send(zmqm);
+*/
+
   }
 }
 

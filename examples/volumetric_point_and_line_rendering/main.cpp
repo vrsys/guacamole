@@ -119,7 +119,9 @@ int main(int argc, char** argv) {
 
   auto line_strip_example_node(
     line_strip_loader.create_net_node_at_port( std::string("ls_example_node"), 
-                                               7002 ) );
+                                               7002,
+                                               "127.0.0.1",
+                                               7003 ) );
 
 
   //actual_line_strip_node->set_render_vertices_as_points(true);

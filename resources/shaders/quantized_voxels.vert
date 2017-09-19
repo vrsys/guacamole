@@ -10,7 +10,7 @@ layout(location=6) in float in_col_b;
 layout(location=7) in float in_char_padding_0;
 
 
-uniform vec3 bounding_box_min = vec3(-1.0, 0.03, -1.0);
+uniform vec3 bounding_box_min = vec3(0.0, 0.0, 0.0);
 uniform vec3 bounding_box_max = vec3(0.0, 0.0, 0.0);
 uniform float voxelsize_sent  = 0.008;
 
@@ -21,6 +21,7 @@ uniform float voxelsize_sent  = 0.008;
 out VertexData {
   vec3  gua_varying_object_position;
   vec4  gua_varying_color_rgba;
+  float gua_varying_thickness;
   vec3  gua_varying_rme;
 } VertexOut;
 
@@ -52,9 +53,11 @@ void main() {
   vec3 dequantized_object_space_position 
     = voxelsize_sent * quantized_pos + bounding_box_min;
 
+  gua_thickness  = voxelsize_sent / 2.0;
+
   VertexOut.gua_varying_object_position = dequantized_object_space_position;
   VertexOut.gua_varying_color_rgba      = vec4(gua_color, gua_alpha);
   VertexOut.gua_varying_rme             = vec3(gua_metalness, gua_roughness, gua_emissivity);
-
+  VertexOut.gua_varying_thickness       = gua_thickness;
   //gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);
 }

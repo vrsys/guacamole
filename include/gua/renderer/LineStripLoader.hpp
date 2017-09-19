@@ -90,7 +90,9 @@ public:
 
 
    std::shared_ptr<node::Node> create_net_node_at_port(std::string const& node_name,
-                                                       uint16_t recv_socket_port);
+                                                       uint16_t recv_socket_port,
+                                                       std::string const& feedback_ip = "", 
+                                                       uint16_t feedback_port = 0);
 
 
    /*

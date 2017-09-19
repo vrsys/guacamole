@@ -78,7 +78,6 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   std::string volumetric_point_line_f_shader = factory.read_shader_file("resources/shaders/point_line_strip_shader_volumetric.frag");
 
   std::string quantized_voxels_v_shader = factory.read_shader_file("resources/shaders/quantized_voxels.vert");
-  std::string quantized_voxels_g_shader = factory.read_shader_file("resources/shaders/quantized_voxels.geom");
 
   std::string quantized_non_volumetric_v_shader = factory.read_shader_file("resources/shaders/quantized_line_strip_shader_non_volumetric.vert");
 
@@ -98,8 +97,12 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
   volumetric_line_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
 
   quantized_volumetric_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   quantized_voxels_v_shader) );
-  quantized_volumetric_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, quantized_voxels_g_shader) );
+  quantized_volumetric_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_point_g_shader) );
   quantized_volumetric_voxel_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
+
+  quantized_volumetric_line_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   quantized_voxels_v_shader) );
+  quantized_volumetric_line_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, volumetric_line_g_shader) );
+  quantized_volumetric_line_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, volumetric_point_line_f_shader) );
 
   quantized_non_volumetric_point_line_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   quantized_non_volumetric_v_shader) );
   quantized_non_volumetric_point_line_renderer_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader) );
@@ -163,17 +166,19 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
         //non volumetric line strips and points share the same shader
 
         if(line_strip_node->is_net_node()) {
-
           if( !line_strip_node->get_render_volumetric() ) {
             current_material_shader_map = &quantized_non_volumetric_point_line_renderer_programs_;
             current_shader_stages = &quantized_non_volumetric_point_line_renderer_shader_stages_;
           } else {
-            current_material_shader_map = &quantized_volumetric_voxel_renderer_programs_;
-            current_shader_stages = &quantized_volumetric_voxel_renderer_shader_stages_;
+            if(line_strip_node->get_render_vertices_as_points()) {
+              current_material_shader_map = &quantized_volumetric_voxel_renderer_programs_;
+              current_shader_stages = &quantized_volumetric_voxel_renderer_shader_stages_;
+            } else {
+              current_material_shader_map = &quantized_volumetric_line_renderer_programs_;              
+              current_shader_stages = &quantized_volumetric_line_renderer_shader_stages_;
+            }
+
           }
-
-
-
         } else {
           if( !line_strip_node->get_render_volumetric() ) {
             current_material_shader_map = &programs_;
@@ -266,6 +271,17 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
           ctx.render_context->set_rasterizer_state(current_rasterizer_state);
           ctx.render_context->apply_state_objects();
         }
+
+        auto const& geometry_bounding_box = line_strip_node->get_geometry()->get_bounding_box();
+        
+        
+        scm::math::vec<float, 3u> uniform_ready_bb_min{
+                                                       geometry_bounding_box.min[0],
+                                                       geometry_bounding_box.min[1],
+                                                       geometry_bounding_box.min[2]
+                                                       };
+        current_shader_program->apply_uniform(ctx, "bounding_box_min", uniform_ready_bb_min);
+        
 
         ctx.render_context->apply_program();
 
