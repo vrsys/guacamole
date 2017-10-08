@@ -11,6 +11,7 @@ layout(location=7) in float in_char_padding_0;
 
 
 uniform vec3 bounding_box_min = vec3(0.0, 0.0, 0.0);
+uniform vec3 bounding_box_max = vec3(0.0, 0.0, 0.0);
 uniform float voxel_thickness  = 0.0;
 
 @include "common/gua_camera_uniforms.glsl"
@@ -52,6 +53,12 @@ void main() {
   vec3 dequantized_object_space_position 
     = voxel_thickness * quantized_pos + bounding_box_min;
 
+  vec3 min_voxel_comparison = dequantized_object_space_position - voxel_thickness / 2.0; 
+
+
+  //vec3 min_voxel_comparison = dequantized_object_space_position - voxel_thickness / 2.0; 
+
+
   gua_thickness  = voxel_thickness / 2.0;
 
   VertexOut.gua_varying_object_position = dequantized_object_space_position;
@@ -59,4 +66,13 @@ void main() {
   VertexOut.gua_varying_rme             = vec3(gua_metalness, gua_roughness, gua_emissivity);
   VertexOut.gua_varying_thickness       = gua_thickness;
   //gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);
+
+/*
+    if(   min_voxel_comparison.x < bounding_box_min.x
+       || min_voxel_comparison.y < bounding_box_min.y
+       || min_voxel_comparison.z < bounding_box_min.z
+      ) {
+  VertexOut.gua_varying_object_position = vec4(1.0, 1.0, 1.0, 0.0);
+    }
+*/
 }

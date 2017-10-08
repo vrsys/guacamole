@@ -61,12 +61,19 @@ struct GUA_DLL LineStrip {
    * @brief holds information of a vertex
    */
   struct Vertex {
+    Vertex() {}
+    Vertex(scm::math::vec3f const& in_pos,
+           scm::math::vec4f const& in_col,
+           float                   in_thick) 
+    : pos(in_pos), col(in_col), thick(in_thick)
+    {}
+
     scm::math::vec3f pos;
     scm::math::vec4f col;
     float            thick;
   };
 
-  void push_vertex(Vertex const& v_to_push);
+  bool push_vertex(Vertex const& v_to_push);
   void pop_vertex();
 
   /**

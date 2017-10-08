@@ -74,9 +74,19 @@ public : // methods
 
   inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
-
+/*
+  void push_vertex(float in_x, float in_y, float in_z,
+                          float in_r, float in_g, float in_b, float in_a,
+                          float thick) {
+                            geometry_->push_vertex(in_x, in_y, in_z,
+                                                   in_r, in_g, in_b, in_a,
+                                                   thick);
+                          }
+*/
   bool is_net_node() const;
   float get_voxel_thickness() const;
+  float get_desired_voxel_thickness() const;
+  void  set_desired_voxel_thickness(float des_vox_thick);
   /**
   * Implements ray picking for a triangular mesh
   */

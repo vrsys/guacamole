@@ -19,13 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LINE_STRIP_LOADER_HPP
-#define GUA_LINE_STRIP_LOADER_HPP
+#ifndef GUA_STREAMING_VOXELS_LOADER_HPP
+#define GUA_STREAMING_VOXELS_LOADER_HPP
 
 // guacamole headers
-#include <gua/renderer/LineStripResource.hpp>
+#include <gua/renderer/LineStripLoader.hpp>
+#include <gua/renderer/StreamingVoxelsResource.hpp>
 #include <gua/renderer/Material.hpp>
-#include <gua/utils/Mesh.hpp>
 
 // external headers
 #include <string>
@@ -47,10 +47,10 @@ class GeometryNode;
 /**
  * Loads and draws line strips and points.
  *
- * This class can load line strip and point data from files and display them in multiple
- * contexts. A LineStripLoader object is made of several LineStrip objects.
+ * This class can load streaming voxels as point or line data from sockets and display them in multiple
+ * contexts. A StreamingVoxelsLoader object is made of several LineStrip objects.
  */
-class GUA_DLL LineStripLoader {
+class GUA_DLL StreamingVoxelsLoader : public LineStripLoader {
 
  public: // typedefs, enums
 
@@ -69,7 +69,7 @@ public:
    *
    * Constructs a new and empty MeshLoader.
    */
-   LineStripLoader();
+   StreamingVoxelsLoader();
 
    /**
    *
@@ -79,15 +79,6 @@ public:
    /**
    *
    */
-   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
-                                                   std::string const& file_name,
-                                                   std::shared_ptr<Material> const& fallback_material,
-                                                   unsigned flags = DEFAULTS);
-
-   std::shared_ptr<node::Node> create_geometry_from_file(std::string const& node_name,
-                                                   std::string const& file_name,
-                                                   unsigned flags = DEFAULTS);
-
 
    std::shared_ptr<node::Node> create_net_node_at_port(std::string const& node_name,
                                                        uint16_t recv_socket_port,
@@ -141,4 +132,4 @@ private: // attributes
 
 }
 
-#endif  // GUA_LINE_STRIP_LOADER_HPP
+#endif  // GUA_STREAMING_VOXELS_LOADER_HPP

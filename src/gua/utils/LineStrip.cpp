@@ -56,9 +56,11 @@ enlarge_reservoirs() {
   thicknesses.resize(padded_reservoir_size);
 }
 
-void LineStrip::push_vertex(Vertex const& v_to_push) {
+bool LineStrip::push_vertex(Vertex const& v_to_push) {
+  bool resize_gpu_resources = false;
   if(num_occupied_vertex_slots == vertex_reservoir_size) {
     enlarge_reservoirs();
+    resize_gpu_resources = true;
   }
 
   positions[num_occupied_vertex_slots] = v_to_push.pos;
@@ -66,6 +68,8 @@ void LineStrip::push_vertex(Vertex const& v_to_push) {
   thicknesses[num_occupied_vertex_slots] = v_to_push.thick;
 
   ++num_occupied_vertex_slots;
+
+  return resize_gpu_resources;
 }
 
 void LineStrip::pop_vertex() {

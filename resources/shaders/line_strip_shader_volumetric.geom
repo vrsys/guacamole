@@ -20,6 +20,8 @@ out VertexData {
   vec3 gua_varying_normal;
   vec4 gua_varying_color_rgba;
   vec3 gua_varying_rme;
+  vec3 gua_start_point_ws_pos;
+  vec3 gua_end_point_ws_pos;
 } VertexOut;
 
 const int ordered_line_strip_indices[14] = {3, 2, 6, 7, 4, 2, 0, 3, 1, 6,   5, 4, 1, 0};
@@ -49,7 +51,7 @@ void main() {
 
   vec3 normal_1_2[2];
 
-  float r = cube_half_side_length;
+  float r = cube_half_side_length * 2;
 
     // Compute face 1 of 2:
     j = u; 
@@ -133,6 +135,8 @@ void main() {
   VertexOut.gua_varying_color_rgba     = VertexIn[0].gua_varying_color_rgba;
   VertexOut.gua_varying_rme            = VertexIn[0].gua_varying_rme;
 
+
+  mat4 gua_view_projection_matrix = gua_projection_matrix * gua_view_matrix;
   for(int v_idx = 0; v_idx < 14; ++v_idx) {
 
     uint prismoid_vertex_index = ordered_line_strip_indices[v_idx];
@@ -145,9 +149,12 @@ void main() {
         VertexOut.gua_varying_normal = (gua_normal_matrix * vec4(normal_1_2[1], 0.0)).xyz ;
     }
 
-    vec4 model_view_transformed_vertex = gua_model_view_matrix * prismoid[prismoid_vertex_index];
-    VertexOut.gua_varying_world_position = model_view_transformed_vertex.xyz;
-    gl_Position = gua_projection_matrix * model_view_transformed_vertex;
+    vec4 model_transformed_vertex = gua_model_matrix * prismoid[prismoid_vertex_index];
+    VertexOut.gua_varying_world_position = model_transformed_vertex.xyz;
+    gl_Position = gua_view_projection_matrix * model_transformed_vertex;
+
+    vec3 gua_start_point_ws_pos = (gua_model_matrix * vec4(VertexIn[1].gua_varying_object_position, 1.0) ).xyz;
+    vec3 gua_end_point_ws_pos = (gua_model_matrix * vec4(VertexIn[1].gua_varying_object_position, 1.0) ).xyz;
 
     EmitVertex();
   }

@@ -24,6 +24,7 @@
 #include <gua/guacamole.hpp>
 #include <gua/node/LineStripNode.hpp>
 #include <gua/renderer/LineStripLoader.hpp>
+//#include <gua/renderer/StreamingVoxelsLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -62,6 +63,24 @@ void mouse_button(gua::utils::Trackball& trackball,
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+float const min_desired_voxel_size = 0.008;
+float const max_desired_voxel_size = 1.0;
+float desired_voxel_size = min_desired_voxel_size;
+
+
+float change_voxel_size(std::shared_ptr<gua::node::Node> net_line_node) {
+  if(net_line_node->has_children()) { //work on grouped line strips
+    for( auto& child : net_line_node->get_children() ) {
+      auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
+      bool render_as_points = line_strip_child->get_render_vertices_as_points();
+      line_strip_child->set_desired_voxel_thickness(desired_voxel_size);
+    }            
+  } else { //work on parent node
+    auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(net_line_node);
+    bool render_as_points = line_strip_parent->get_render_vertices_as_points();
+    line_strip_parent->set_desired_voxel_thickness(desired_voxel_size);
+  }
+}
 
 int main(int argc, char** argv) {
   // initialize guacamole
@@ -109,12 +128,11 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
 
-  auto line_strip_example_node(line_strip_loader
-                                .create_geometry_from_file("ls_example_node", 
-                                                           example_model_name,
-                                                           gua::LineStripLoader::NORMALIZE_POSITION |
-                                                           gua::LineStripLoader::NORMALIZE_SCALE) );
-
+  auto line_strip_example_node(
+    line_strip_loader.create_net_node_at_port( std::string("ls_example_node"), 
+                                               7002,
+                                               "127.0.0.1",
+                                               7003 ) );
 
 
   //actual_line_strip_node->set_render_vertices_as_points(true);
@@ -215,6 +233,18 @@ int main(int argc, char** argv) {
           }
         break;
 
+        case 'U': {
+          desired_voxel_size*=2.0; 
+          desired_voxel_size = std::min(desired_voxel_size, max_desired_voxel_size);
+          change_voxel_size(line_strip_example_node);
+        }
+        break;
+        case 'J': {
+          desired_voxel_size/=2.0; 
+          desired_voxel_size = std::max(desired_voxel_size, min_desired_voxel_size);
+          change_voxel_size(line_strip_example_node);
+        }
+        break;
         break;
         default: break;
         };

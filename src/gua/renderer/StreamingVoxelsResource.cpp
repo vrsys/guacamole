@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/LineStripResource.hpp>
+#include <gua/renderer/StreamingVoxelsResource.hpp>
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -35,12 +35,12 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LineStripResource::LineStripResource()
+StreamingVoxelsResource::StreamingVoxelsResource()
     : kd_tree_(), line_strip_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LineStripResource::~LineStripResource() {
+StreamingVoxelsResource::~StreamingVoxelsResource() {
   is_resource_alive_ = false;
 
   if(thread_needs_to_be_joined_) {
@@ -51,7 +51,7 @@ LineStripResource::~LineStripResource() {
 ////////////////////////////////////////////////////////////////////////////////
 
    //creates a linestrip resource which can be updated over the network
-LineStripResource::LineStripResource(uint16_t recv_socket_port, std::string const& feedback_ip, uint16_t feedback_port) {
+StreamingVoxelsResource::StreamingVoxelsResource(uint16_t recv_socket_port, std::string const& feedback_ip, uint16_t feedback_port) {
   zmq_context_ptr_ = std::make_shared<zmq::context_t>(1);
   std::string specified_receiver_port = std::to_string(recv_socket_port);
   std::string receiver_socket_string = "tcp://127.0.0.1:" + specified_receiver_port;
@@ -82,7 +82,7 @@ LineStripResource::LineStripResource(uint16_t recv_socket_port, std::string cons
 
 }
 
-void LineStripResource::convert_per_thread(unsigned const voxel_recv, unsigned char const* buff, unsigned const tid = 0) {
+void StreamingVoxelsResource::convert_per_thread(unsigned const voxel_recv, unsigned char const* buff, unsigned const tid = 0) {
   
   std::cout << "CONVERT PER THREAD CALL\n";
   for(unsigned v = 0; v < voxel_recv; ++v){
@@ -142,7 +142,7 @@ void LineStripResource::convert_per_thread(unsigned const voxel_recv, unsigned c
   
 }
 
-void LineStripResource::receive_streaming_update() {
+void StreamingVoxelsResource::receive_streaming_update() {
 
   while(is_resource_alive_) {
   size_t counter = 0;
@@ -276,90 +276,9 @@ void LineStripResource::receive_streaming_update() {
   
 }
 
-//LineStripResource::update_from_stream() {
-//}
 ////////////////////////////////////////////////////////////////////////////////
 
-
-LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_tree)
-    : kd_tree_(), line_strip_(line_strip) {
-  if (line_strip_.num_occupied_vertex_slots > 0) {
-    bounding_box_ = math::BoundingBox<math::vec3>();
-
-    for (int v(0); v < line_strip_.num_occupied_vertex_slots; ++v) {
-      bounding_box_.expandBy(math::vec3{line_strip_.positions[v]});
-    }
-
-    if (build_kd_tree) {
-      //kd_tree_.generate(line_strip);
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::push_vertex(float pos_x, float pos_y, float pos_z,
-                                    float col_r, float col_g, float col_b, float col_a,
-                                    float thickness) {
-  gpu_resource_rewrite_needed_ 
-    = line_strip_.push_vertex(LineStrip::Vertex( scm::math::vec3f(pos_x, pos_y, pos_z),
-                                                 scm::math::vec4f(col_r, col_g, col_b, col_a),
-                                                 thickness
-                                                )
-                              );
-
-    gpu_resource_resize_needed_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::pop_vertex() {
-  line_strip_.pop_vertex();
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::upload_to(RenderContext& ctx) const {
-  RenderContext::LineStrip clinestrip{};
-  clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
-  clinestrip.vertex_reservoir_size = line_strip_.vertex_reservoir_size;
-  clinestrip.num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
-
-
-  if (line_strip_.vertex_reservoir_size == 0) {
-    Logger::LOG_WARNING << "Unable to load LineStrip! Has no vertex data." << std::endl;
-    return;
-  }
-
- 
-  clinestrip.vertices =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_DYNAMIC_DRAW,
-                                       (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
-                                       0);
-
-  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
-      clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-  line_strip_.copy_to_buffer(data);
-
-  //std::cout << buffer_content << ""
-  ctx.render_context->unmap_buffer(clinestrip.vertices);
-
-  clinestrip.vertex_array = ctx.render_device->create_vertex_array(
-      line_strip_.get_vertex_format(),
-      {clinestrip.vertices});
-  ctx.line_strips[uuid()] = clinestrip;
-
-  ctx.render_context->apply();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
+void StreamingVoxelsResource::upload_front_buffer_to(RenderContext& ctx) const {
 
   uint32_t num_vertices_to_upload = cpu_to_gpu_buffer_.size();
 
@@ -384,104 +303,62 @@ void LineStripResource::upload_front_buffer_to(RenderContext& ctx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::draw(RenderContext& ctx) const {
-  //DUMMY
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
+void StreamingVoxelsResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
   
-  if(!is_net_node_) {
+  std::cout << "Before swap: " << "Front size: " << socket_to_cpu_buffer_.size() << "    Back Size: " << cpu_to_gpu_buffer_.size() << "\n";
+  issue_buffer_swap();
 
-    auto iter = ctx.line_strips.find(uuid());
-    if (iter == ctx.line_strips.end() || gpu_resource_rewrite_needed_ ) {
-      // upload to GPU if neccessary
-      upload_to(ctx);
-      iter = ctx.line_strips.find(uuid());
-    }
-  
+  auto iter = ctx.line_strips.find(uuid());
+  //if (iter == ctx.line_strips.end()) {
+    // upload to GPU if neccessary
+    upload_front_buffer_to(ctx);
+    iter = ctx.line_strips.find(uuid());
+  //}
 
 
-    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
-    //ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
-    ctx.render_context->apply_vertex_input();
-  
-    if(!render_vertices_as_points) {
-      //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
-      ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
-    } else {
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 1, iter->second.num_occupied_vertex_slots);
-    }
+  ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+  //ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+  ctx.render_context->apply_vertex_input();
+
+  if(!render_vertices_as_points) {
+    //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
+    ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
   } else {
-    //std::cout << "WOULD RENDER NET NODE RESOURCE\n";
-
-    //std::cout << "Same.\n";
-
-    std::cout << "Before swap: " << "Front size: " << socket_to_cpu_buffer_.size() << "    Back Size: " << cpu_to_gpu_buffer_.size() << "\n";
-    issue_buffer_swap();
-
-    auto iter = ctx.line_strips.find(uuid());
-    //if (iter == ctx.line_strips.end()) {
-      // upload to GPU if neccessary
-      upload_front_buffer_to(ctx);
-      iter = ctx.line_strips.find(uuid());
-    //}
-
-
-    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
-    //ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
-    ctx.render_context->apply_vertex_input();
-  
-    if(!render_vertices_as_points) {
-      //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
-      ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
-    } else {
-      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
-    }
-
-    std::cout << "Swap.\n";
-    std::cout << "After swap: " << "Front size: " << socket_to_cpu_buffer_.size() << "    Back Size: " << cpu_to_gpu_buffer_.size() << "\n";
-
-
-
-    std::cout << "ESTABLISHED BOUNDING BOX: " << bounding_box_.min << "\n";
-
-
-    if( is_feedback_port_open_ ) {
-      double voxel_size_needed = desired_voxel_thickness_;
-      size_t package_to_send_size = sizeof(voxel_size_needed);
-      zmq::message_t feedback_message(package_to_send_size);
-
-      memcpy( feedback_message.data(), (const void*) &voxel_size_needed, package_to_send_size);
-
-      zmq_feedback_sender_socket_ptr_->send(feedback_message);
-      std::cout << "SENT FEEDBACK: " << voxel_size_needed << "\n";
-    }
-
+    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, iter->second.num_occupied_vertex_slots);
   }
+
+  std::cout << "Swap.\n";
+  std::cout << "After swap: " << "Front size: " << socket_to_cpu_buffer_.size() << "    Back Size: " << cpu_to_gpu_buffer_.size() << "\n";
+
+
+
+  std::cout << "ESTABLISHED BOUNDING BOX: " << bounding_box_.min << "\n";
+
+
+  if( is_feedback_port_open_ ) {
+    double voxel_size_needed = desired_voxel_thickness_;
+    size_t package_to_send_size = sizeof(voxel_size_needed);
+    zmq::message_t feedback_message(package_to_send_size);
+
+    memcpy( feedback_message.data(), (const void*) &voxel_size_needed, package_to_send_size);
+
+    zmq_feedback_sender_socket_ptr_->send(feedback_message);
+    std::cout << "SENT FEEDBACK: " << voxel_size_needed << "\n";
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool LineStripResource::get_is_net_node() const { return is_net_node_; }
+float StreamingVoxelsResource::get_desired_voxel_thickness() const { return desired_voxel_thickness_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float LineStripResource::get_voxel_thickness() const { return voxel_thickness_; }
+void StreamingVoxelsResource::set_desired_voxel_thickness(float des_vox_thick) { desired_voxel_thickness_ = des_vox_thick; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float LineStripResource::get_desired_voxel_thickness() const { return desired_voxel_thickness_; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::set_desired_voxel_thickness(float des_vox_thick) { desired_voxel_thickness_ = des_vox_thick; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-void LineStripResource::issue_buffer_swap() const {
+void StreamingVoxelsResource::issue_buffer_swap() const {
   if(needs_double_buffer_swap_.load()){
     std::swap(socket_to_cpu_buffer_, cpu_to_gpu_buffer_);
     needs_double_buffer_swap_.store(false);
@@ -490,22 +367,6 @@ void LineStripResource::issue_buffer_swap() const {
     //voxelsize_want = voxelsize;
   }
   
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-void LineStripResource::ray_test(Ray const& ray, int options,
-                    node::Node* owner, std::set<PickResult>& hits) {
-
-  //kd_tree_.ray_test(ray, line_strip_, options, owner, hits);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec3 LineStripResource::get_vertex(unsigned int i) const {
-  return math::vec3(
-      line_strip_.positions[i].x, line_strip_.positions[i].y, line_strip_.positions[i].z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -75,6 +75,7 @@ IF (GUACAMOLE_EXAMPLES)
   # video3d example requires glfw and video3d-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
     add_subdirectory(video3d)
+    add_subdirectory(streaming_geometry)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
   IF (GUACAMOLE_ENABLE_PHYSICS)

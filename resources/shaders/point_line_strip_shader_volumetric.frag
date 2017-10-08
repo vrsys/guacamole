@@ -13,6 +13,8 @@ in VertexData {
   vec3 gua_varying_normal;
   vec4 gua_varying_color_rgba;
   vec3 gua_varying_rme;
+  vec3 gua_start_point_ws_pos;
+  vec3 gua_end_point_ws_pos;
 } VertexIn;
 
 
@@ -29,6 +31,7 @@ vec2 gua_get_quad_coords() {
 @include "common/gua_abuffer_collect.glsl"
 
 @material_method_declarations_frag@
+
 
 void main() {
 
@@ -53,7 +56,10 @@ void main() {
   if (gua_rendering_mode != 1) {
     @material_method_calls_frag@
   }
-  gua_color = gua_varying_color;
+
+  float distance = distance(VertexIn.gua_varying_world_position, VertexIn.gua_start_point_ws_pos);
+
+  gua_color = gua_varying_color / (2000*distance);
   gua_emissivity = 1.0;
   //gua_color = vec3(1.0, 0.0, 0.0);
   //gua_alpha = 0.2;

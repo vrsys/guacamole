@@ -83,6 +83,14 @@ namespace node {
     return geometry_->get_voxel_thickness();
   }
 
+  float LineStripNode::get_desired_voxel_thickness() const {
+    return geometry_->get_desired_voxel_thickness();
+  }
+
+  void  LineStripNode::set_desired_voxel_thickness(float des_vox_thick) {
+    geometry_->set_desired_voxel_thickness(des_vox_thick);
+  }
+
   void LineStripNode::ray_test_impl(Ray const& ray, int options,
     Mask const& mask, std::set<PickResult>& hits) {
     /*

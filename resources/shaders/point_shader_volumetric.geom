@@ -20,6 +20,8 @@ out VertexData {
   vec3 gua_varying_normal;
   vec4 gua_varying_color_rgba;
   vec3 gua_varying_rme;
+  vec3 gua_start_point_ws_pos;
+  vec3 gua_end_point_ws_pos;
 } VertexOut;
 
 const int ordered_line_strip_indices[14] = {3, 2, 6, 7, 4, 2, 0, 3, 1, 6,   5, 4, 1, 0};
@@ -45,10 +47,15 @@ void main() {
   VertexOut.gua_varying_color_rgba     = VertexIn[0].gua_varying_color_rgba;
   VertexOut.gua_varying_rme            = VertexIn[0].gua_varying_rme;
 
+  mat4 gua_view_projection_matrix = gua_projection_matrix * gua_view_matrix;
   for(int v_idx = 0; v_idx < 14; ++v_idx) {
-    vec4 model_view_transformed_vertex = gua_model_view_matrix * cube_vertex_object_space_positions[ordered_line_strip_indices[v_idx]];
-    VertexOut.gua_varying_world_position = model_view_transformed_vertex.xyz;
-    gl_Position = gua_projection_matrix * model_view_transformed_vertex;
+    vec4 model_transformed_vertex = gua_model_matrix * cube_vertex_object_space_positions[ordered_line_strip_indices[v_idx]];
+    VertexOut.gua_varying_world_position = model_transformed_vertex.xyz;
+    gl_Position = gua_view_projection_matrix * model_transformed_vertex;
+
+    vec4 model_space_center_position = gua_model_matrix * vec4(cube_object_space_center, 1.0);
+  
+    VertexOut.gua_start_point_ws_pos = model_space_center_position.xyz;
 
     EmitVertex();
   }

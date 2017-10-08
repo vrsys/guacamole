@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LINE_STRIP_RESOURCE_HPP
-#define GUA_LINE_STRIP_RESOURCE_HPP
+#ifndef GUA_STREAMING_VOXELS_RESOURCE_HPP
+#define GUA_STREAMING_VOXELS_RESOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
@@ -55,7 +55,7 @@ struct RenderContext;
 
 
 
-class LineStripResource : public GeometryResource {
+class StreamingVoxelsResource : public LineStripResource {
  public:
 
   /**
@@ -63,21 +63,13 @@ class LineStripResource : public GeometryResource {
    *
    * Creates a new and empty Line Strip.
    */
-   LineStripResource();
-   ~LineStripResource();
+   StreamingVoxelsResource();
+   ~StreamingVoxelsResource();
 
    //creates a linestrip resource which can be updated over the network
-   LineStripResource(uint16_t recv_socket_port, std::string const& feedback_ip = "", uint16_t feedback_port = 0);
+   StreamingVoxelsResource(uint16_t recv_socket_port, std::string const& feedback_ip = "", uint16_t feedback_port = 0);
 
 
-  /**
-   * Constructor from an *.lob strip.
-   *
-   * Initializes the strip from a given *.lob strip.
-   *
-   * \param mesh             The line strip to load the data from.
-   */
-   LineStripResource(LineStrip const& line_strip, bool build_kd_tree);
 
   /**
    * Draws the line strip.
@@ -86,43 +78,41 @@ class LineStripResource : public GeometryResource {
    *
    * \param context          The RenderContext to draw onto.
    */
-  void draw(RenderContext& context) const;
-  void draw(RenderContext& context, bool render_vertices_as_points) const;
+  //void draw(RenderContext& context) const;
+  void draw(RenderContext& context, bool render_vertices_as_points) const override;
 
   void issue_buffer_swap() const;
-
+/*
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) override;
-
+*/
   void convert_per_thread(unsigned const voxel_recv, unsigned char const* buff, unsigned const tid);
   void receive_streaming_update();
 
-  inline unsigned int num_occupied_vertex_slots() const { return line_strip_.num_occupied_vertex_slots; }
-  inline unsigned int vertex_reservoir_size() const { return line_strip_.vertex_reservoir_size; }
   
-  math::vec3 get_vertex(unsigned int i) const;
+  //math::vec3 get_vertex(unsigned int i) const;
 
   bool get_is_net_node() const;
-  float get_voxel_thickness() const;
+  //float get_voxel_thickness() const;
 
   void set_desired_voxel_thickness(float des_vox_thick);
   float  get_desired_voxel_thickness() const;
-
+/*
   void push_vertex(float pos_x, float pos_y, float pos_z,
                    float col_r, float col_g, float col_b, float col_a,
                    float thickness);
   void pop_vertex();
-
+*/
  private:
 
-  void upload_to(RenderContext& context) const;
+  //void upload_to(RenderContext& context) const;
   void upload_front_buffer_to(RenderContext& ctx) const;
-
+/*
   KDTree kd_tree_;
   LineStrip line_strip_;
   bool gpu_resource_rewrite_needed_ = true;
   bool gpu_resource_resize_needed_ = true;
-
+*/
 
   //the following variables are associated with the streaming version of the
   //point and line geometry
@@ -158,4 +148,4 @@ class LineStripResource : public GeometryResource {
 
 }
 
-#endif  // GUA_LINE_STRIP_RESOURCE_HPP
+#endif  // GUA_STREAMING_VOXELS_RESOURCE_HPP

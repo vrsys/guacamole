@@ -33,6 +33,12 @@ void main() {
 
   vec3 in_color = vec3(in_col_r, in_col_g, in_col_b);
 
+  if(voxel_thickness < 0.5) {
+    in_color = vec3(1.0, 0.0, 0.0);
+  } else {
+    in_color = vec3(0.0, 1.0, 0.0);
+  }
+
   vec3 dequantized_object_space_position 
     = voxel_thickness * quantized_pos + bounding_box_min;
 
