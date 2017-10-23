@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
+    <generated>
+      <config projectName="GUACAMOLE" targetName="nice_and_shiny" />
+      <config projectName="GUACAMOLE" targetName="example-gazebo_scene" />
+      <config projectName="GUACAMOLE" targetName="clipping" />
+      <config projectName="GUACAMOLE" targetName="example-multicontext" />
+      <config projectName="GUACAMOLE" targetName="example-volumetric_point_and_line_rendering" />
+      <config projectName="GUACAMOLE" targetName="example-smooth_lighting" />
+      <config projectName="GUACAMOLE" targetName="example-tiledwall" />
+      <config projectName="GUACAMOLE" targetName="stress_test" />
+      <config projectName="GUACAMOLE" targetName="example-oit_demo" />
+      <config projectName="GUACAMOLE" targetName="example-transparency" />
+      <config projectName="GUACAMOLE" targetName="tiled_shading_test" />
+      <config projectName="GUACAMOLE" targetName="example-projective_texturing" />
+      <config projectName="GUACAMOLE" targetName="guacamole" />
+      <config projectName="GUACAMOLE" targetName="example-input" />
+      <config projectName="GUACAMOLE" targetName="example-picking" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration CONFIG_NAME="Debug" GENERATION_DIR="build" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9d6319db-c2a1-43f6-a62a-4e4bba893831" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/example-gazebo_scene" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/example-input" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/volumetric_point_and_line_rendering/example-volumetric_point_and_line_rendering" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/.name" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/guacamole.iml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/CMakeLists.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/materials/FragmentColor.gpd" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/materials/PortalMaterial.gmd" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/materials/SimpleMaterial.gmd" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/objects/line_object.lob" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/objects/plane.obj" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/objects/point_object.pob" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/data/objects/teapot.obj" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/examples/gazebo_scene/main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake/modules/FindSchism.cmake" afterPath="$PROJECT_DIR$/cmake/modules/FindSchism.cmake" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/examples/CMakeLists.txt" afterPath="$PROJECT_DIR$/examples/CMakeLists.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/examples/input/main.cpp" afterPath="$PROJECT_DIR$/examples/input/main.cpp" />
+    </list>
+    <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
+    <ignored path="$PROJECT_DIR$/build/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/examples/CMakeLists.txt" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="-2561" />
+    <option name="y" value="-11" />
+    <option name="width" value="2562" />
+    <option name="height" value="1452" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="GUACAMOLE" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="guacamole" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="GUACAMOLE" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="guacamole" type="462c0819:PsiDirectoryNode" />
+              <item name="examples" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/build" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/examples" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Application.example-input">
+    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+      <envs />
+    </configuration>
+    <configuration name="clipping" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="clipping" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="clipping">
+      <envs />
+    </configuration>
+    <configuration name="example-gazebo_scene" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-gazebo_scene" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-gazebo_scene">
+      <envs />
+    </configuration>
+    <configuration name="example-input" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-input" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-input">
+      <envs />
+    </configuration>
+    <configuration name="example-multicontext" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-multicontext" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-multicontext">
+      <envs />
+    </configuration>
+    <configuration name="example-oit_demo" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-oit_demo" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-oit_demo">
+      <envs />
+    </configuration>
+    <configuration name="example-picking" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-picking" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-picking">
+      <envs />
+    </configuration>
+    <configuration name="example-projective_texturing" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-projective_texturing" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-projective_texturing">
+      <envs />
+    </configuration>
+    <configuration name="example-smooth_lighting" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-smooth_lighting" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-smooth_lighting">
+      <envs />
+    </configuration>
+    <configuration name="example-tiledwall" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-tiledwall" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-tiledwall">
+      <envs />
+    </configuration>
+    <configuration name="example-transparency" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-transparency" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-transparency">
+      <envs />
+    </configuration>
+    <configuration name="example-volumetric_point_and_line_rendering" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="example-volumetric_point_and_line_rendering" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="example-volumetric_point_and_line_rendering">
+      <envs />
+    </configuration>
+    <configuration name="guacamole" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="guacamole" CONFIG_NAME="Debug">
+      <envs />
+    </configuration>
+    <configuration name="nice_and_shiny" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="nice_and_shiny" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="nice_and_shiny">
+      <envs />
+    </configuration>
+    <configuration name="stress_test" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="stress_test" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="stress_test">
+      <envs />
+    </configuration>
+    <configuration name="tiled_shading_test" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="GUACAMOLE" TARGET_NAME="tiled_shading_test" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="GUACAMOLE" RUN_TARGET_NAME="tiled_shading_test">
+      <envs />
+    </configuration>
+    <list size="16">
+      <item index="0" class="java.lang.String" itemvalue="Application.Build All" />
+      <item index="1" class="java.lang.String" itemvalue="Application.clipping" />
+      <item index="2" class="java.lang.String" itemvalue="Application.example-gazebo_scene" />
+      <item index="3" class="java.lang.String" itemvalue="Application.example-input" />
+      <item index="4" class="java.lang.String" itemvalue="Application.example-multicontext" />
+      <item index="5" class="java.lang.String" itemvalue="Application.nice_and_shiny" />
+      <item index="6" class="java.lang.String" itemvalue="Application.example-oit_demo" />
+      <item index="7" class="java.lang.String" itemvalue="Application.example-picking" />
+      <item index="8" class="java.lang.String" itemvalue="Application.example-projective_texturing" />
+      <item index="9" class="java.lang.String" itemvalue="Application.example-smooth_lighting" />
+      <item index="10" class="java.lang.String" itemvalue="Application.stress_test" />
+      <item index="11" class="java.lang.String" itemvalue="Application.tiled_shading_test" />
+      <item index="12" class="java.lang.String" itemvalue="Application.example-tiledwall" />
+      <item index="13" class="java.lang.String" itemvalue="Application.example-transparency" />
+      <item index="14" class="java.lang.String" itemvalue="Application.example-volumetric_point_and_line_rendering" />
+      <item index="15" class="java.lang.String" itemvalue="Application.guacamole" />
+    </list>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9d6319db-c2a1-43f6-a62a-4e4bba893831" name="Default" comment="" />
+      <created>1508750342235</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1508750342235</updated>
+      <workItem from="1508750343331" duration="1101000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="1101000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-2561" y="-11" width="2562" height="1452" extended-state="6" />
+    <layout>
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2545744" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32927758" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3353612" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32927758" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.61673003" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/examples/gazebo_scene/data/objects/plane.obj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="17" column="33" lean-forward="false" selection-start-line="17" selection-start-column="33" selection-end-line="17" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/examples/gazebo_scene/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="21" column="12" lean-forward="false" selection-start-line="21" selection-start-column="12" selection-end-line="21" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
