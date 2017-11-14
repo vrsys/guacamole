@@ -1,6 +1,8 @@
 # dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(find_awesomium)
+include(FindCEF)
+
 
 # determine source and header files
 file(GLOB_RECURSE GUACAMOLE_GUI_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -17,6 +19,7 @@ add_library( guacamole-gui SHARED
 
 target_include_directories(guacamole-gui PUBLIC
                      ${AWESOMIUM_INCLUDE_DIR}
+                     ${CEF_INCLUDE_PATH}
                      ${GUACAMOLE_GUI_INCLUDE_DIR}
 )
 
@@ -24,7 +27,7 @@ IF (MSVC)
 	set_target_properties(guacamole-gui PROPERTIES COMPILE_FLAGS "-D GUA_GUI_LIBRARY")
 ENDIF (MSVC)
 
-LIST(APPEND LIBS guacamole ${AWESOMIUM_LIBRARY})
+LIST(APPEND LIBS guacamole ${AWESOMIUM_LIBRARY} ${CEF_LIBCEF_DLL_WRAPPER} ${CEF_LIB_RELEASE}   )
 
 target_link_libraries( guacamole-gui debug ${LIBS} optimized ${LIBS})
 
