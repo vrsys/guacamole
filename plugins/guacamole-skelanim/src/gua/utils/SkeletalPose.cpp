@@ -22,7 +22,7 @@ BonePose const& SkeletalPose::get_transform(std::string const& name) const {
     return transforms.at(name);
   }
   else {
-    Logger::LOG_ERROR << "bone '" << name << "' not contained in pose"
+    Logger::GUA_LOG_ERROR << "bone '" << name << "' not contained in pose"
                       << std::endl;
     return blank_pose;
   }

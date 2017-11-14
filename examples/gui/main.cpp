@@ -23,7 +23,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/utils/Trackball.hpp>
-//#include <gua/gui.hpp>
+#include <gua/gui.hpp>
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)

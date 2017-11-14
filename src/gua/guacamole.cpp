@@ -38,10 +38,10 @@ void init(int argc, char** argv) {
 
 #ifdef GUACAMOLE_GLFW3
   if (!glfwInit()) {
-    Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
+    Logger::GUA_LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
   }
   else {
-    Logger::LOG_DEBUG << "Succeed to initialize GLFW!" << std::endl;
+    Logger::GUA_LOG_DEBUG << "Succeed to initialize GLFW!" << std::endl;
   }
 #endif
 
@@ -94,7 +94,7 @@ void init(int argc, char** argv) {
 
   PBSMaterialFactory::create_material(PBSMaterialFactory::ALL);
 
-  Logger::LOG_DEBUG << "Guacamole initialization finished." << std::endl;
+  Logger::GUA_LOG_DEBUG << "Guacamole initialization finished." << std::endl;
 }
 
 

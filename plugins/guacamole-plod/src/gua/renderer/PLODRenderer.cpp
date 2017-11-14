@@ -331,7 +331,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
         return accumulation_pass_programs_.at(material);
       } 
       catch (std::exception& e) {
-        Logger::LOG_WARNING << "PLODPass::_get_material_program(): Cannot create material for accumulation pass program: " << e.what() << std::endl;
+        Logger::GUA_LOG_WARNING << "PLODPass::_get_material_program(): Cannot create material for accumulation pass program: " << e.what() << std::endl;
         return std::shared_ptr<ShaderProgram>();
       }
     }
@@ -440,7 +440,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
       assert(log_to_lin_conversion_pass_program_ && depth_pass_program_ && normalization_pass_program_);
     }
     catch (std::exception& e) {
-      gua::Logger::LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
+      gua::Logger::GUA_LOG_ERROR << "Error: PLODRenderer::render() : Failed to create programs. " << e.what() << std::endl;
     }
 
     target.set_viewport(ctx);
@@ -671,7 +671,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
           }
           else {
-            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::GUA_LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 
@@ -758,7 +758,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
             program_changed = false;
           }
           else {
-            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::GUA_LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 
@@ -865,7 +865,7 @@ bool PLODRenderer::_intersects(scm::gl::boxf const& bbox,
 
           }
           else {
-            Logger::LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::GUA_LOG_WARNING << "PLODRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
           }
         }
 

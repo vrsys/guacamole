@@ -42,7 +42,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& fi
     if (file.is_valid()) {
       load_from_json(file.get_content());
     } else {
-      Logger::LOG_WARNING << "Failed to load material method \""
+      Logger::GUA_LOG_WARNING << "Failed to load material method \""
                           << file_name << "\": "
                           "File does not exist!" << std::endl;
     }
@@ -56,7 +56,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
   Json::Value value;
   Json::Reader reader;
   if (!reader.parse(json_string, value)) {
-    Logger::LOG_WARNING << "Failed to parse material method description: "
+    Logger::GUA_LOG_WARNING << "Failed to parse material method description: "
                            "Invalid json String!" << std::endl;
     return *this;
   }
@@ -82,7 +82,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
           set_uniform(uniform_string["name"].asString(), ViewDependentUniform(uniform));
 
         } else {
-          Logger::LOG_WARNING << "Failed to load uniform: "
+          Logger::GUA_LOG_WARNING << "Failed to load uniform: "
                                  "Please provide name, type and value in the description!"
                               << std::endl;
         }
@@ -90,7 +90,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
 
     }
   } else {
-    Logger::LOG_WARNING << "Failed to load material method: "
+    Logger::GUA_LOG_WARNING << "Failed to load material method: "
                            "Please provide name and source in the description!"
                         << std::endl;
   }

@@ -66,7 +66,7 @@ void PathParser::parse(std::string const& path) {
     }
 
   } else {
-    Logger::LOG_ERROR << "Path names must have at least one character!" << std::endl;
+    Logger::GUA_LOG_ERROR << "Path names must have at least one character!" << std::endl;
   }
 }
 

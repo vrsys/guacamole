@@ -57,7 +57,7 @@ class AweDataSource : public Awesomium::DataSource {
     if (file.is_valid()) {
       html_str = file.get_content();
     } else {
-      Logger::LOG_WARNING << "Failed to load resource \"" << path << "\": File not found!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Failed to load resource \"" << path << "\": File not found!" << std::endl;
     }
 
     SendResponse(request_id, html_str.size(), (unsigned char*)html_str.c_str(),

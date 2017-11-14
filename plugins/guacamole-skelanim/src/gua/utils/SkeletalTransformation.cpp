@@ -45,7 +45,7 @@ std::vector<scm::math::mat4f> partial_blend(Skeleton const& skeleton, unsigned s
   if (split_index >= 0) {
     full_body.partial_replace(upper_body, skeleton, split_index);
   } else {
-    Logger::LOG_ERROR << "Bone '" << split_node_name << "' not found"
+    Logger::GUA_LOG_ERROR << "Bone '" << split_node_name << "' not found"
                       << std::endl;
   }
 

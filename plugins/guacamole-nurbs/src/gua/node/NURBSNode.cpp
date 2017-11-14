@@ -129,7 +129,7 @@ void NURBSNode::ray_test_impl(Ray const& ray,
                               int options,
                               Mask const& mask,
                               std::set<PickResult>& hits) {
-  Logger::LOG_WARNING
+  Logger::GUA_LOG_WARNING
       << "NURBSNode::ray_test_impl() : Ray test not implemented yet for NURBS"
       << std::endl;
 }
@@ -161,7 +161,7 @@ void NURBSNode::update_cache() {
           gua::NURBSLoader loader;
           loader.load_geometry(desc.filepath(), desc.flags());
         } catch (std::exception& e) {
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
               << "TriMeshNode::update_cache(): Loading failed from "
               << desc.filepath() << " : " << e.what() << std::endl;
         }
@@ -171,7 +171,7 @@ void NURBSNode::update_cache() {
           GeometryDatabase::instance()->lookup(geometry_description_));
 
       if (!geometry_) {
-        Logger::LOG_WARNING
+        Logger::GUA_LOG_WARNING
             << "Failed to get NURBSResource for " << geometry_description_
             << ": The data base entry is of wrong type!" << std::endl;
       }

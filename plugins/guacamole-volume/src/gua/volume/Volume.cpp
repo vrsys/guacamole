@@ -215,7 +215,7 @@ bool Volume::update_color_map(RenderContext const& ctx,
 
   if (!scm::data::build_lookup_table(color_lut, in_color, in_size)
     || !scm::data::build_lookup_table(alpha_lut, in_alpha, in_size)) {
-    Logger::LOG_WARNING << "volume_data::update_color_alpha_map(): error during lookuptable generation" << std::endl;
+    Logger::GUA_LOG_WARNING << "volume_data::update_color_alpha_map(): error during lookuptable generation" << std::endl;
     return false;
   }
   scm::scoped_array<float> combined_lut;
@@ -239,7 +239,7 @@ bool Volume::update_color_map(RenderContext const& ctx,
   //MESSAGE("uploading texture data done.");
 
   if (!res) {
-    Logger::LOG_WARNING << "Volume::update_color_alpha_map(): error during color map texture generation." << std::endl;
+    Logger::GUA_LOG_WARNING << "Volume::update_color_alpha_map(): error during color map texture generation." << std::endl;
     return false;
   }
 

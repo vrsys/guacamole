@@ -118,7 +118,7 @@ namespace gua {
           scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
       }
       else {
-        Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+        Logger::GUA_LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
       }
 
     }

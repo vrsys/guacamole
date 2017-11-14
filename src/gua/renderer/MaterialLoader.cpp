@@ -138,18 +138,18 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   #if 0
     if (uniform_opacity_map != "") {
-      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support opacity maps. Please use the alpha channel of your diffuse map!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support opacity maps. Please use the alpha channel of your diffuse map!" << std::endl;
     }
 
     if (uniform_reflection_map != "") {
-      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support reflection maps." << std::endl;
+      Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support reflection maps." << std::endl;
     }
   #endif
 
     if (ambient_map != "") {
-      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+      Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
     } else if (ambient_color != "") {
-      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
+      Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
     }
   }
 
@@ -225,7 +225,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     unsigned texture_count = property.GetSrcObjectCount<FbxTexture>();
     if(texture_count > 0) {
       if(texture_count > 1) {
-        Logger::LOG_WARNING << property.GetNameAsCStr() << " has more than one texture, only first one." << std::endl;
+        Logger::GUA_LOG_WARNING << property.GetNameAsCStr() << " has more than one texture, only first one." << std::endl;
       }
       //texture could also be layered or procedural texture
       FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>(0);
@@ -233,7 +233,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
         return get_file_name(texture->GetFileName());
       }
       else {
-        Logger::LOG_WARNING << "Texturetype of "<< property.GetNameAsCStr() << " not supported." << std::endl;
+        Logger::GUA_LOG_WARNING << "Texturetype of "<< property.GetNameAsCStr() << " not supported." << std::endl;
       }
     }
     return "";
@@ -243,12 +243,12 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   std::string shading{fbx_material.ShadingModel.Get().Buffer()};
   bool shading_supported = shading == "Phong" || shading == "Lambert" ||shading == "phong" || shading == "lambert";
   if(!shading_supported) {
-    Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
+    Logger::GUA_LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
   }
   //cast to phong not necessary, only diffuse and emissive values needed
   FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
   if(!lambert) {
-    Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
+    Logger::GUA_LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
     assert(0);
   }
 
@@ -289,10 +289,10 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     }
 
     if (uniform_ambient_map != "") {
-      Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
+      Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
     }
     // else if (ambient_color != "") {
-    //   Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
+    //   Logger::GUA_LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
     // }
   }
 
@@ -439,7 +439,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   TextFile file{file_name};
   if (!file.is_valid()) {
-    Logger::LOG_WARNING << "Failed to load material description\""
+    Logger::GUA_LOG_WARNING << "Failed to load material description\""
                         << file_name << "\": "
                         "File does not exist!" << std::endl;
     return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
@@ -448,7 +448,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   Json::Value properties;
   Json::Reader reader;
   if (!reader.parse(file.get_content(), properties)) {
-    Logger::LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to parse json material description: " << file_name << std::endl;
     return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
   }
 
@@ -489,7 +489,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
         return scm::math::vec4f{ float(properties[name][0U].asDouble()), float(properties[name][1U].asDouble()), float(properties[name][2U].asDouble()), 1.0f };
       }
       else {
-        Logger::LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;
+        Logger::GUA_LOG_WARNING << "Color property '" << name << "' has unsupported value number of " << num_values << std::endl;
       }
     }
     return scm::math::vec4f{NAN, NAN, NAN};

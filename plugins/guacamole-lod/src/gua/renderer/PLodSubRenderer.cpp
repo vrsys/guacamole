@@ -62,7 +62,7 @@ namespace gua {
         return material_dependent_shader_programs_.at(material);
       } 
       catch (std::exception& e) {
-        Logger::LOG_WARNING << "LodPass::_get_material_program(): Cannot create material for accumulation pass program: " << e.what() << std::endl;
+        Logger::GUA_LOG_WARNING << "LodPass::_get_material_program(): Cannot create material for accumulation pass program: " << e.what() << std::endl;
         return std::shared_ptr<ShaderProgram>();
       }
     }

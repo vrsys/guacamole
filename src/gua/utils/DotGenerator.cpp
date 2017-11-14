@@ -262,7 +262,7 @@ void DotGenerator::save(std::string const& path_to_file) const {
     file.write(parse_data_.c_str(), parse_data_.size());
     file.close();
   } else {
-    Logger::LOG_WARNING << "Failed to save dot graph: Failed to open file \"" << path_to_file << "\"." << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to save dot graph: Failed to open file \"" << path_to_file << "\"." << std::endl;
   }
 }
 

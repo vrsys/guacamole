@@ -70,7 +70,7 @@ std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string co
 
     if (!f.good()) {
       f.close();
-      Logger::LOG_WARNING << "Unable to load " << file_name << ": File does not exist!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name << ": File does not exist!" << std::endl;
       return std::make_shared<node::TransformNode>(node_name);
     }
 
@@ -100,7 +100,7 @@ std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string co
     }
 
     if (!cached_node) {
-      Logger::LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name << ": Volume Type is not supported!" << std::endl;
     }
   }
 
@@ -129,7 +129,7 @@ std::shared_ptr<node::Node> VolumeLoader::load(std::string const& file_name,
     return result;
 
   } catch (std::exception &e) {
-    Logger::LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to load Volume object \"" << file_name << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }

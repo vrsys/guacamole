@@ -182,7 +182,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
             }
           }
           else {
-            Logger::LOG_WARNING << "LineStripPass::process(): Cannot find material: "
+            Logger::GUA_LOG_WARNING << "LineStripPass::process(): Cannot find material: "
                                 << line_strip_node->get_material()->get_shader_name() << std::endl;
           }
         //}

@@ -74,7 +74,7 @@ void Profiler::print() {
 
     if (profile_host_->enabled() && ++frame_count_ > interval_) {
 
-        Logger::LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
+        Logger::GUA_LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
 
         for (auto& name : timer_names_) {
             std::cout << name << ": "
@@ -95,7 +95,7 @@ void Profiler::print(std::vector<std::string> const & names) {
 
     if (profile_host_->enabled() && ++frame_count_ > interval_) {
 
-        Logger::LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
+        Logger::GUA_LOG_MESSAGE << "#### start of profiling information ####" << std::endl;
 
         for (auto& name : names) {
             std::cout << name << ": "

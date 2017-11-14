@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
     transform->set_transform(modelmatrix);
 
     if (ctr++ % 150 == 0)
-      gua::Logger::LOG_WARNING
+      gua::Logger::GUA_LOG_WARNING
           << "Frame time: " << 1000.f / window->get_rendering_fps()
           << " ms, fps: " << window->get_rendering_fps() << std::endl;
 

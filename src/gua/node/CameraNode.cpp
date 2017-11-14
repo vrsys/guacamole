@@ -97,7 +97,7 @@ Frustum CameraNode::make_frustum(SceneGraph const& graph, math::mat4 const& came
     auto screen_it(graph[screen_name]);
     auto screen(std::dynamic_pointer_cast<node::ScreenNode>(screen_it));
     if (!screen) {
-        Logger::LOG_WARNING << "Cannot make Frustum: No valid screen specified" << std::endl;
+        Logger::GUA_LOG_WARNING << "Cannot make Frustum: No valid screen specified" << std::endl;
         return Frustum();
     }
 

@@ -71,7 +71,7 @@ void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription cons
 
   if (!sky_map_) {
     if (output_texture_name == "") {
-      gua::Logger::LOG_WARNING << "Unable to render skymap: No output texture name specified!"<< std::endl;
+      gua::Logger::GUA_LOG_WARNING << "Unable to render skymap: No output texture name specified!"<< std::endl;
       return;
     }
 

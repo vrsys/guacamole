@@ -65,7 +65,7 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
 
 
   if (line_strip_.vertex_reservoir_size == 0) {
-    Logger::LOG_WARNING << "Unable to load LineStrip! Has no vertex data." << std::endl;
+    Logger::GUA_LOG_WARNING << "Unable to load LineStrip! Has no vertex data." << std::endl;
     return;
   }
 

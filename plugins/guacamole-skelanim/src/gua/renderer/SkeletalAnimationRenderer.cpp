@@ -162,7 +162,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
               programs_[current_material] = current_shader;
             }
           } else {
-            Logger::LOG_WARNING
+            Logger::GUA_LOG_WARNING
                 << "SkeletalAnimationPass::process(): Cannot find material: "
                 << materials[i]->get_shader_name() << std::endl;
           }

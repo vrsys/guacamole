@@ -220,14 +220,14 @@ namespace node {
             loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
           }
           catch ( std::exception& e ) {
-            Logger::LOG_WARNING << "LineStripNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+            Logger::GUA_LOG_WARNING << "LineStripNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
           }
         }
 
         geometry_ = std::dynamic_pointer_cast<LineStripResource>(GeometryDatabase::instance()->lookup(geometry_description_));
 
         if (!geometry_) {
-          Logger::LOG_WARNING << "Failed to get LineStripResource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
+          Logger::GUA_LOG_WARNING << "Failed to get LineStripResource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
         }
       }
 

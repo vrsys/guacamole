@@ -161,7 +161,7 @@ bool ShaderProgram::upload_to(RenderContext const & context) const {
     dirty_ = false;
 
     if (!program_) {
-      Logger::LOG_WARNING << "Failed to create shaders!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Failed to create shaders!" << std::endl;
       return false;
     }
   }
@@ -200,7 +200,7 @@ void save_to_file(ShaderProgram const& p, std::string const& directory,
         file_extension = ".tctrl";
         break;
       default:
-        Logger::LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
+        Logger::GUA_LOG_WARNING << "Shader stage undefined or unsupported" << std::endl;
     };
 
     save(string_utils::format_code(s.source), directory + "/" + name + file_extension);

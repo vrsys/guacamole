@@ -141,7 +141,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           }
         }
         else {
-          Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: "
+          Logger::GUA_LOG_WARNING << "TriMeshPass::process(): Cannot find material: "
                               << tri_mesh_node->get_material()->get_shader_name() << std::endl;
         }
         if (current_shader) {

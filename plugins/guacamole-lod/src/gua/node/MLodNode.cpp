@@ -172,7 +172,7 @@ void MLodNode::update_cache() {
           gua::LodLoader loader;
           loader.load_lod_trimesh(desc.filepath(), desc.flags());
         } catch (std::exception& e) {
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
               << "MLodNode::update_cache(): Loading failed from "
               << desc.filepath() << " : " << e.what() << std::endl;
         }
@@ -181,7 +181,7 @@ void MLodNode::update_cache() {
           GeometryDatabase::instance()->lookup(geometry_description_));
 
       if (!geometry_) {
-        Logger::LOG_WARNING
+        Logger::GUA_LOG_WARNING
             << "Failed to get LodResource for " << geometry_description_
             << ": The data base entry is of wrong type!" << std::endl;
       }

@@ -19,7 +19,7 @@ read_file(std::string const& file_name) {
   std::ifstream in_lob_file(file_name, std::ios::in );
 
   if(!in_lob_file.is_open()) {
-    Logger::LOG_WARNING << "Could not open *.lob file for reading!" << std::endl;
+    Logger::GUA_LOG_WARNING << "Could not open *.lob file for reading!" << std::endl;
   }
 
   std::string line_buffer("");
@@ -94,11 +94,11 @@ read_file(std::string const& file_name) {
           break;
 
         case 's':
-          Logger::LOG_WARNING << "*.lob-parser option 's' is not implemented yet" << std::endl;
+          Logger::GUA_LOG_WARNING << "*.lob-parser option 's' is not implemented yet" << std::endl;
           break;
 
         default:
-          Logger::LOG_WARNING << "Unknown *.lob-parser option " << line_prefix << std::endl;
+          Logger::GUA_LOG_WARNING << "Unknown *.lob-parser option " << line_prefix << std::endl;
       }
     }
   }

@@ -53,7 +53,7 @@ WarpMatrix::WarpMatrix(std::string const& file_name)
 
     file.close();
   } else {
-    Logger::LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
+    Logger::GUA_LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
   }
 }
 

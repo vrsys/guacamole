@@ -31,8 +31,8 @@ LineStrip(LineObject const& line_object) {
     //consider all vertex attributes in order of their appearance
     if(    (line_object.vertex_position_database.size() != line_object.vertex_color_database.size()) 
         || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) ) {
-      Logger::LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
-      Logger::LOG_WARNING << line_object.vertex_position_database.size() << ", "
+      Logger::GUA_LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
+      Logger::GUA_LOG_WARNING << line_object.vertex_position_database.size() << ", "
                           << line_object.vertex_color_database.size() << ", "
                           << line_object.vertex_thickness_database.size() << "\n";
     } else {
@@ -70,7 +70,7 @@ void LineStrip::push_vertex(Vertex const& v_to_push) {
 
 void LineStrip::pop_vertex() {
   if(!num_occupied_vertex_slots == 0) {
-    Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
+    Logger::GUA_LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
 
     return;
   }

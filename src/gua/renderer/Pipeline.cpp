@@ -432,7 +432,7 @@ void Pipeline::generate_shadow_map_sunlight(
   auto splits(light.data.get_shadow_cascaded_splits());
 
   if (light.data.get_shadow_cascaded_splits().size() < 2) {
-    Logger::LOG_WARNING
+    Logger::GUA_LOG_WARNING
         << "At least 2 splits have to be defined for cascaded shadow maps!"
         << std::endl;
   }
@@ -440,7 +440,7 @@ void Pipeline::generate_shadow_map_sunlight(
   if (current_viewstate_.camera.config.near_clip() > splits.front() ||
       current_viewstate_.camera.config.far_clip() < splits.back()) {
 
-    Logger::LOG_WARNING
+    Logger::GUA_LOG_WARNING
         << "Splits of cascaded shadow maps are not inside "
         << "clipping range! Fallback to equidistant splits used." << std::endl;
 

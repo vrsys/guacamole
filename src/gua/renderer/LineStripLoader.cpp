@@ -97,7 +97,7 @@ std::shared_ptr<node::Node> LineStripLoader::load_geometry(
 
     if (!fileload_succeed) {
 
-      Logger::LOG_WARNING << "Unable to load " << file_name
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
   }
@@ -215,7 +215,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(
   }
   
 
-  Logger::LOG_WARNING << "Failed to load object \"" << file_name
+  Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                       << "\": File does not exist!" << std::endl;
 
   return nullptr;

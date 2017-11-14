@@ -152,7 +152,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
               if (img) window->display(img, false);
             }
             #else
-            Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+            Logger::GUA_LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
             #endif
           } else if (window->config.get_stereo_mode() == StereoMode::SEPARATE_WINDOWS) {
             bool is_left = cmd.serialized_cam->config.get_left_output_window() == window_name;
@@ -297,7 +297,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
                 if (img) window->display(img, false);
               }
               #else
-              Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
+              Logger::GUA_LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
               #endif
             } else {
               auto img(pipe->render_scene(CameraMode::LEFT, serialized_cam, *sgs));

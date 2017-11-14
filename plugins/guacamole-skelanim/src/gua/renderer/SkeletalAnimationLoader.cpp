@@ -95,7 +95,7 @@ SkeletalAnimationLoader::load_geometry(std::string const& file_name,
 
   if (!fileload_succeed) {
 
-    Logger::LOG_WARNING << "Unable to load " << file_name
+    Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                         << ": Type is not supported!" << std::endl;
   }
 
@@ -109,7 +109,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
   ;
 
   if (!is_supported(file_name)) {
-    Logger::LOG_WARNING << "Unable to load " << file_name
+    Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                         << ": Type is not supported!" << std::endl;
     return animations;
   }
@@ -117,7 +117,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
   TextFile file(file_name);
 
   if (!file.is_valid()) {
-    Logger::LOG_WARNING << "Failed to load object \"" << file_name
+    Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                         << "\": File does not exist!" << std::endl;
     return animations;
   }
@@ -129,7 +129,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
     //allocator for almost all the classes in the SDK
     FbxManager* sdk_manager = FbxManager::Create();
     if (!sdk_manager) {
-      Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+      Logger::GUA_LOG_ERROR << "Error: Unable to create FBX Manager!\n";
       assert(0);
     }
 
@@ -152,7 +152,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
     // do actual importing
     unsigned num_anims = scene->GetSrcObjectCount<FbxAnimStack>();
     if (num_anims <= 0)
-      Logger::LOG_WARNING << "Object \"" << file_name
+      Logger::GUA_LOG_WARNING << "Object \"" << file_name
                           << "\" contains no animations!" << std::endl;
 
     std::vector<FbxNode*> nodes {}
@@ -171,7 +171,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
         ;
         if (skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector &&
             curr_node->GetChild(i)->GetChildCount() == 0) {
-          Logger::LOG_DEBUG << curr_node->GetChild(i)->GetName()
+          Logger::GUA_LOG_DEBUG << curr_node->GetChild(i)->GetName()
                             << " is effector, ignoring it" << std::endl;
         } else {
           node_stack.push(curr_node->GetChild(i));
@@ -208,7 +208,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
 
     std::string error = importer->GetErrorString();
     if (!error.empty()) {
-      Logger::LOG_WARNING
+      Logger::GUA_LOG_WARNING
           << "SkeletalAnimationLoader::load_animation(): Importing failed, "
           << error << std::endl;
     }
@@ -224,7 +224,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
         });
       }
     } else {
-      Logger::LOG_WARNING << "Object \"" << file_name
+      Logger::GUA_LOG_WARNING << "Object \"" << file_name
                           << "\" contains no animations!" << std::endl;
     }
   }
@@ -288,7 +288,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
       //Create manager to hold resources
       FbxManager* sdk_manager = FbxManager::Create();
       if (!sdk_manager) {
-        Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+        Logger::GUA_LOG_ERROR << "Error: Unable to create FBX Manager!\n";
         assert(0);
       }
 
@@ -363,7 +363,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
 
       std::string error = importer->GetErrorString();
       if (!error.empty()) {
-        Logger::LOG_WARNING
+        Logger::GUA_LOG_WARNING
             << "SkeletalAnimationLoader::load(): Importing failed, " << error
             << std::endl;
       }
@@ -373,7 +373,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
         new_node = get_node(scene, file_name, node_name, flags);
 
       } else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name
+        Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                             << "\": No valid root node contained!" << std::endl;
       }
 
@@ -381,7 +381,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
     }
   } else {
 
-    Logger::LOG_WARNING << "Failed to load object \"" << file_name
+    Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                         << "\": File does not exist!" << std::endl;
 
     return nullptr;
@@ -395,7 +395,7 @@ Skeleton SkeletalAnimationLoader::load_skeleton(
   Skeleton skeleton{};
 
   if (!is_supported(file_name)) {
-    Logger::LOG_WARNING << "Unable to load " << file_name
+    Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                         << ": Type is not supported!" << std::endl;
     return skeleton;
   }
@@ -403,7 +403,7 @@ Skeleton SkeletalAnimationLoader::load_skeleton(
   TextFile file(file_name);
 
   if (!file.is_valid()) {
-    Logger::LOG_WARNING << "Failed to load object \"" << file_name
+    Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                         << "\": File does not exist!" << std::endl;
     return skeleton;
   }
@@ -415,7 +415,7 @@ Skeleton SkeletalAnimationLoader::load_skeleton(
     //allocator for almost all the classes in the SDK
     FbxManager* sdk_manager = FbxManager::Create();
     if (!sdk_manager) {
-      Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+      Logger::GUA_LOG_ERROR << "Error: Unable to create FBX Manager!\n";
       assert(0);
     }
 
@@ -456,7 +456,7 @@ Skeleton SkeletalAnimationLoader::load_skeleton(
 
     std::string error = importer->GetErrorString();
     if (!error.empty()) {
-      Logger::LOG_WARNING
+      Logger::GUA_LOG_WARNING
           << "SkeletalAnimationLoader::load_animation(): Importing failed, "
           << error << std::endl;
     }
@@ -647,15 +647,15 @@ FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager,
       lImporter->Initialize(file_name.c_str(), -1, manager->GetIOSettings());
   if (!lImportStatus) {
     FbxString error = lImporter->GetStatus().GetErrorString();
-    Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed."
+    Logger::GUA_LOG_ERROR << "Call to FbxImporter::Initialize() failed."
                       << std::endl;
-    Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
+    Logger::GUA_LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
 
     if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion) {
-      Logger::LOG_ERROR << "FBX file format version for this FBX SDK is "
+      Logger::GUA_LOG_ERROR << "FBX file format version for this FBX SDK is "
                         << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision
                         << std::endl;
-      Logger::LOG_ERROR << "FBX file format version for file '" << file_name
+      Logger::GUA_LOG_ERROR << "FBX file format version for file '" << file_name
                         << "' is " << lFileMajor << "." << lFileMinor << "."
                         << lFileRevision << " does not match" << std::endl;
     }
@@ -663,7 +663,7 @@ FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager,
   }
 
   if (!lImporter->IsFBX()) {
-    Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
+    Logger::GUA_LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
     assert(0);
   }
 
@@ -671,13 +671,13 @@ FbxScene* SkeletalAnimationLoader::load_fbx_file(FbxManager* manager,
   //from/to files.
   FbxScene* scene = FbxScene::Create(manager, "My Scene");
   if (!scene) {
-    Logger::LOG_ERROR << "Error: Unable to create FBX scene!\n";
+    Logger::GUA_LOG_ERROR << "Error: Unable to create FBX scene!\n";
     assert(0);
   }
 
   bool result = lImporter->Import(scene);
   if (!result) {
-    Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\""
+    Logger::GUA_LOG_ERROR << "Failed to load object \"" << file_name << "\""
                       << std::endl;
     assert(0);
   }

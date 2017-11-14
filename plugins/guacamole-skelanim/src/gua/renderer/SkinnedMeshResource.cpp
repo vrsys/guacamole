@@ -74,7 +74,7 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx, SharedSkinningResource& 
   cmesh.indices_type = scm::gl::TYPE_UINT;
   cmesh.indices_count = mesh_.num_triangles * 3;
   if (mesh_.num_vertices <= 0) {
-    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data."
+    Logger::GUA_LOG_WARNING << "Unable to load Mesh! Has no vertex data."
                         << std::endl;
     return;
   }
@@ -253,7 +253,7 @@ void SkinnedMeshResource::ray_test(Ray const& ray,
                                    node::Node* owner,
                                    std::set<PickResult>& hits) {
   //TODO raycasting
-  Logger::LOG_ERROR << "get_vertex() dynamic ray testing not supported "
+  Logger::GUA_LOG_ERROR << "get_vertex() dynamic ray testing not supported "
                     << std::endl;
   //kd_tree_.ray_test(ray, mesh_, options, owner, hits);
 }
@@ -275,7 +275,7 @@ unsigned int SkinnedMeshResource::num_faces() const {
 scm::math::vec3 SkinnedMeshResource::get_vertex(unsigned int i) const {
 
   //TODO physics handling
-  Logger::LOG_ERROR << "get_vertex() dynamic vertex positions not supported "
+  Logger::GUA_LOG_ERROR << "get_vertex() dynamic vertex positions not supported "
                     << std::endl;
   return scm::math::vec3();
 }
@@ -285,7 +285,7 @@ scm::math::vec3 SkinnedMeshResource::get_vertex(unsigned int i) const {
 std::vector<unsigned int> SkinnedMeshResource::get_face(unsigned int i) const {
 
   //TODO cpu representation of mesh
-  Logger::LOG_ERROR << "get_face() of merged neshes not supported "
+  Logger::GUA_LOG_ERROR << "get_face() of merged neshes not supported "
                     << std::endl;
   /*std::vector<unsigned int> face(mesh_->mFaces[i].mNumIndices);
   for (unsigned int j = 0; j < mesh_->mFaces[i].mNumIndices; ++j)

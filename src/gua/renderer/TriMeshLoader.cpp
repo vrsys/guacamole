@@ -101,7 +101,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 
     if (!fileload_succeed) {
 
-      Logger::LOG_WARNING << "Unable to load " << file_name
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
   }
@@ -171,7 +171,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
       //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
       FbxManager* sdk_manager = FbxManager::Create();
       if(!sdk_manager) {
-          Logger::LOG_ERROR <<"Error: Unable to create FBX Manager!\n";
+          Logger::GUA_LOG_ERROR <<"Error: Unable to create FBX Manager!\n";
           assert(0);
       }
 
@@ -236,7 +236,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
       std::string error = importer->GetErrorString();
       if (!error.empty())
       {
-        Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+        Logger::GUA_LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
       }
 
       if (scene->mRootNode) {
@@ -245,14 +245,14 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
             importer, scene, scene->mRootNode, file_name, flags, count);
 
       } else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
+        Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
       }
 
       return new_node;
     }
   }
 
-  Logger::LOG_WARNING << "Failed to load object \"" << file_name
+  Logger::GUA_LOG_WARNING << "Failed to load object \"" << file_name
                       << "\": File does not exist!" << std::endl;
 
   return nullptr;
@@ -320,7 +320,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     if(fbx_node.GetMaterialCount() > 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       if(fbx_node.GetMaterialCount() > 1) {
-        Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
+        Logger::GUA_LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
       }
       FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
       material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
@@ -472,33 +472,33 @@ FbxScene* TriMeshLoader::load_fbx_file(
   if(!lImportStatus)
   {
     FbxString error = lImporter->GetStatus().GetErrorString();
-    Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
-    Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
+    Logger::GUA_LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
+    Logger::GUA_LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
 
     if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
     {
-        Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
-        Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
+        Logger::GUA_LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
+        Logger::GUA_LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
     }
     assert(0);
   }
 
   if(!lImporter->IsFBX())
   {
-    Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
+    Logger::GUA_LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
     assert(0);
   }
 
   //Create an FBX scene. This object holds most objects imported/exported from/to files.
   FbxScene* scene = FbxScene::Create(manager, "My Scene");
   if(!scene) {
-      Logger::LOG_ERROR <<"Error: Unable to create FBX scene!\n";
+      Logger::GUA_LOG_ERROR <<"Error: Unable to create FBX scene!\n";
       assert(0);
   }
 
   bool result = lImporter->Import(scene);
   if(!result) {
-    Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
+    Logger::GUA_LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
     assert(0);
   } 
 

@@ -88,7 +88,7 @@ void OculusWindow::init_context() {
   {
     ovrErrorInfo info;
     ovr_GetLastErrorInfo(&info);
-    gua::Logger::LOG_WARNING << "Failed to create swap textures for Oculus Rift.\n" << "Error Code: " << info.ErrorString << std::endl;
+    gua::Logger::GUA_LOG_WARNING << "Failed to create swap textures for Oculus Rift.\n" << "Error Code: " << info.ErrorString << std::endl;
   }
 
   color_layer_.ColorTexture[0] = texture_swap_chain_;
@@ -115,7 +115,7 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
 
     GLenum status = glapi.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-      gua::Logger::LOG_WARNING << "Incomplete.\n";
+      gua::Logger::GUA_LOG_WARNING << "Incomplete.\n";
     }
 
     // setup read buffer
@@ -126,7 +126,7 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
 
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-      gua::Logger::LOG_WARNING << "Incomplete.\n";
+      gua::Logger::GUA_LOG_WARNING << "Incomplete.\n";
     }
 
     if (is_left) {
@@ -234,7 +234,7 @@ void OculusWindow::finish_frame() {
     ovrResult       result = ovr_SubmitFrame(hmd_session_, framecount_, nullptr, &layers, 1);
 
     if (!OVR_SUCCESS(result)) {
-        gua::Logger::LOG_WARNING << "Failed to submit frame to the oculus rift.\n";
+        gua::Logger::GUA_LOG_WARNING << "Failed to submit frame to the oculus rift.\n";
     }
 
     GlfwWindow::finish_frame();
@@ -248,7 +248,7 @@ void OculusWindow::initialize_hmd_environment()
     auto result = ovr_Initialize(nullptr);
 
     if (!OVR_SUCCESS(result)) {
-      Logger::LOG_WARNING << "Failed to initialize oculus environment!" << "Errorcode:" << (int)result << std::endl;
+      Logger::GUA_LOG_WARNING << "Failed to initialize oculus environment!" << "Errorcode:" << (int)result << std::endl;
     }
 
     ovrGraphicsLuid luid;
@@ -304,7 +304,7 @@ void OculusWindow::initialize_hmd_environment()
 
   }
   catch (std::exception& e) {
-    gua::Logger::LOG_WARNING << "Failed to initialize oculus rift.\n" << e.what() << std::endl;
+    gua::Logger::GUA_LOG_WARNING << "Failed to initialize oculus rift.\n" << e.what() << std::endl;
   }
 }
 

@@ -118,13 +118,13 @@ void GlfwWindow::open() {
   auto monitors(glfwGetMonitors(&monitor_count));
 
   if (monitor_count == 0) {
-    Logger::LOG_WARNING << "Failed to open GlfwWindow: No monitor found!" << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to open GlfwWindow: No monitor found!" << std::endl;
     glfwTerminate();
     return;
   }
 
   if (config.monitor() >= monitor_count) {
-    Logger::LOG_WARNING << "Failed to open GlfwWindow: There is no monitor with the number " << config.monitor() << "!" << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to open GlfwWindow: There is no monitor with the number " << config.monitor() << "!" << std::endl;
     glfwTerminate();
     return;
   }
@@ -170,7 +170,7 @@ void GlfwWindow::open() {
   }
 
   if (!glfw_window_) {
-    Logger::LOG_WARNING << "Failed to open GlfwWindow: Could not create glfw3 window!" << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to open GlfwWindow: Could not create glfw3 window!" << std::endl;
     glfwTerminate();
     return;
   }
@@ -223,7 +223,7 @@ void GlfwWindow::cursor_mode(CursorMode mode) {
       cursor_mode_ = mode;
     break;
     default:
-      Logger::LOG_WARNING << "Cursor mode undefined or unsupported" << std::endl; break;
+      Logger::GUA_LOG_WARNING << "Cursor mode undefined or unsupported" << std::endl; break;
   }
 }
 

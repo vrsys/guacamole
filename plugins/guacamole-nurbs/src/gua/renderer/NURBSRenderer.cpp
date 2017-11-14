@@ -161,7 +161,7 @@ namespace gua {
           return raycasting_programs_.at(material);
         }
         catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
+          Logger::GUA_LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
           return std::shared_ptr<ShaderProgram>();
         }
       }
@@ -186,7 +186,7 @@ namespace gua {
           return tesselation_programs_.at(material);
         }
         catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for tesselation program: " << e.what() << std::endl;
+          Logger::GUA_LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for tesselation program: " << e.what() << std::endl;
           return std::shared_ptr<ShaderProgram>();
         }
       } else {
@@ -343,7 +343,7 @@ namespace gua {
         }
       }
       else {
-        Logger::LOG_WARNING << "NURBSPass::render(): Cannot find ressources for node: " << nurbs_node->get_name() << std::endl;
+        Logger::GUA_LOG_WARNING << "NURBSPass::render(): Cannot find ressources for node: " << nurbs_node->get_name() << std::endl;
       }
       
     }

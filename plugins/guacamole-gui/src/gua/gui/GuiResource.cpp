@@ -34,6 +34,8 @@
 #include <Awesomium/BitmapSurface.h>
 #include <Awesomium/STLHelpers.h>
 
+#include <include/cef_app.h>
+
 namespace gua {
 
 namespace {
@@ -68,7 +70,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
     );
 
     if (!js_window_->IsObject()) {
-      Logger::LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
+      Logger::GUA_LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
     }
   });
 
