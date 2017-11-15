@@ -51,12 +51,13 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Interface::update() const {
-  web_core_->Update();
+  //web_core_->Update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Interface::Interface() {
+  /*
   web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
   web_core_->set_surface_factory(new GLSurfaceFactory());
 
@@ -66,23 +67,27 @@ Interface::Interface() {
 
   Awesomium::DataSource* data_source = new AweDataSource();
   web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
+  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Interface::~Interface() {
+  /*
   auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
   Awesomium::WebCore::Shutdown();
   delete factory;
   web_session_->Release();
+  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Awesomium::WebView* Interface::create_webview(int width, int height) const {
+/*Awesomium::WebView* Interface::create_webview(int width, int height) const {
   return web_core_->CreateWebView(width, height, web_session_,
                                   Awesomium::kWebViewType_Offscreen);
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
