@@ -28,7 +28,7 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button(gua::utils::Trackball& trackball,
+void mouse_button(gua::utils::Trackball &trackball,
                   int mousebutton,
                   int action,
                   int mods) {
@@ -36,30 +36,25 @@ void mouse_button(gua::utils::Trackball& trackball,
   gua::utils::Trackball::state_type state;
 
   switch (mousebutton) {
-    case 0:
-      button = gua::utils::Trackball::left;
-      break;
-    case 2:
-      button = gua::utils::Trackball::middle;
-      break;
-    case 1:
-      button = gua::utils::Trackball::right;
-      break;
+  case 0:button = gua::utils::Trackball::left;
+    break;
+  case 2:button = gua::utils::Trackball::middle;
+    break;
+  case 1:button = gua::utils::Trackball::right;
+    break;
   };
 
   switch (action) {
-    case 0:
-      state = gua::utils::Trackball::released;
-      break;
-    case 1:
-      state = gua::utils::Trackball::pressed;
-      break;
+  case 0:state = gua::utils::Trackball::released;
+    break;
+  case 1:state = gua::utils::Trackball::pressed;
+    break;
   };
 
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -69,8 +64,8 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto teapot_mat(gua::MaterialShaderDatabase::instance()
-                  ->lookup("gua_default_material")
-                  ->make_new_material());
+                      ->lookup("gua_default_material")
+                      ->make_new_material());
 
   teapot_mat->set_render_wireframe(false);
   teapot_mat->set_show_back_faces(false);
@@ -80,7 +75,7 @@ int main(int argc, char** argv) {
       "teapot", "data/objects/teapot.obj",
       teapot_mat,
       gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE) );
+          gua::TriMeshLoader::NORMALIZE_SCALE));
 
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
@@ -113,8 +108,7 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto portal_camera =
-      graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
+  auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
   portal_camera->translate(0, 0, 2.0);
   portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
   portal_camera->config.set_screen_path("/portal_screen");
@@ -144,12 +138,12 @@ int main(int argc, char** argv) {
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
   camera->config.set_enable_stereo(false);
-  //camera->set_pre_render_cameras({portal_camera});
+  camera->set_pre_render_cameras({portal_camera});
 
   camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-    1.0f);
+      1.0f);
   camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
+      std::make_shared<gua::DebugViewPassDescription>());
 
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("main_window", window);
@@ -159,14 +153,14 @@ int main(int argc, char** argv) {
   window->config.set_resolution(resolution);
   window->config.set_stereo_mode(gua::StereoMode::MONO);
 
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+  window->on_resize.connect([&](gua::math::vec2ui const &new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
     screen->data.set_size(
         gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect(
-      [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+      [&](gua::math::vec2 const &pos) { trackball.motion(pos.x, pos.y); });
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
@@ -183,7 +177,7 @@ int main(int argc, char** argv) {
     gua::math::mat4 modelmatrix =
         scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
                                     trackball.distance()) *
-        gua::math::mat4(trackball.rotation());
+            gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
 

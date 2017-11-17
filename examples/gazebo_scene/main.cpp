@@ -19,184 +19,135 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <functional>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/gazebo_client.hh>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-// forward mouse interaction to trackball
-void mouse_button(gua::utils::Trackball& trackball,
+#include "pagoda.cpp"
+
+void mouse_button(gua::utils::Trackball &trackball,
                   int mousebutton,
                   int action,
                   int mods) {
-  gua::utils::Trackball::button_type button;
-  gua::utils::Trackball::state_type state;
+    gua::utils::Trackball::button_type button;
+    gua::utils::Trackball::state_type state;
 
-  switch (mousebutton) {
-    case 0:
-      button = gua::utils::Trackball::left;
-      break;
-    case 2:
-      button = gua::utils::Trackball::middle;
-      break;
-    case 1:
-      button = gua::utils::Trackball::right;
-      break;
-  };
+    switch (mousebutton)
+    {
+    case 0:button = gua::utils::Trackball::left;
+        break;
+    case 2:button = gua::utils::Trackball::middle;
+        break;
+    case 1:button = gua::utils::Trackball::right;
+        break;
+    };
 
-  switch (action) {
-    case 0:
-      state = gua::utils::Trackball::released;
-      break;
-    case 1:
-      state = gua::utils::Trackball::pressed;
-      break;
-  };
+    switch (action)
+    {
+    case 0:state = gua::utils::Trackball::released;
+        break;
+    case 1:state = gua::utils::Trackball::pressed;
+        break;
+    };
 
-  trackball.mouse(button, state, trackball.posx(), trackball.posy());
+    trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-int main(int argc, char** argv) {
-  // initialize guacamole
-  gua::init(argc, argv);
+int main(int argc, char **argv) {
+    gua::init(argc, argv);
+    gua::SceneGraph graph("main_scenegraph");
+    gua::TriMeshLoader loader;
 
-  // setup scene
-  gua::SceneGraph graph("main_scenegraph");
+    // TODO: REMOVE START
 
-  gua::TriMeshLoader loader;
+    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  auto teapot_mat(gua::MaterialShaderDatabase::instance()
-                  ->lookup("gua_default_material")
-                  ->make_new_material());
+    auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+    light2->data.set_type(gua::node::LightNode::Type::SUN);
+    light2->data.set_brightness(2.f);
+    light2->data.set_shadow_cascaded_splits({0.1f, 1.f, 2.f, 5.f});
+    light2->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+    light2->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+    light2->data.set_max_shadow_dist(10.0f);
+    light2->data.set_enable_shadows(true);
+    light2->data.set_shadow_map_size(1024);
+    light2->rotate(-45, 1, 1, 0);
+//    light2->data.set_type(gua::node::LightNode::Type::SUN);
+//    light2->data.brightness = 150.0f;
+//    light2->scale(12.f);
+//    light2->translate(-3.f, 5.f, 5.f);
 
-  teapot_mat->set_render_wireframe(false);
-  teapot_mat->set_show_back_faces(false);
+    auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+    screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+    screen->translate(0, 0, 1.0);
 
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file(
-      "teapot", "data/objects/teapot.obj",
-      teapot_mat,
-      gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE) );
+    gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-  graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+    auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->translate(0.5f, 0.f, -0.2f);
-  portal->rotate(-30, 0.f, 1.f, 0.f);
+    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+    camera->translate(0, 0, 2.0);
+    camera->config.set_resolution(resolution);
+    camera->config.set_screen_path("/screen");
+    camera->config.set_scene_graph_name("main_scenegraph");
+    camera->config.set_output_window_name("main_window");
+    camera->config.set_enable_stereo(false);
 
-  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 150.0f;
-  light2->scale(12.f);
-  light2->translate(-3.f, 5.f, 5.f);
+    // TODO: REMOVE END
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add("main_window", window);
 
-  auto portal_screen =
-      graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->translate(0.0, 0.0, 5.0);
-  portal_screen->rotate(90, 0.0, 1.0, 0.0);
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
+    window->config.set_enable_vsync(true);
+    window->config.set_size(resolution);
+    window->config.set_resolution(resolution);
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
 
-  // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+    window->on_resize.connect([&](gua::math::vec2ui const &new_size)
+                              {
+                                window->config.set_resolution(new_size);
+                                camera->config.set_resolution(new_size);
+                                screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+                              });
+    window->on_move_cursor.connect([&](gua::math::vec2 const &pos)
+                                   { trackball.motion(pos.x, pos.y); });
+    window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-  // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+    Pagoda pagoda;
+    pagoda.bind_scene_graph(&graph);
+    pagoda.bind_transport_layer(argc, argv);
 
-  auto portal_camera =
-      graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
+    gua::Renderer renderer;
 
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(
-      std::make_shared<gua::LightVisibilityPassDescription>());
+    gua::events::MainLoop loop;
+    gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(
-      gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
+    ticker.on_tick.connect(
+        [&]()
+        {
+          gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
 
-  portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+          transform->set_transform(modelmatrix);
 
-  portal_camera->set_pipeline_description(portal_pipe);
+          if (window->should_close())
+          {
+              renderer.stop();
+              window->close();
+              loop.stop();
+              pagoda.halt_transport_layer();
+          }
+          else
+          {
+              pagoda.lock();
+              renderer.queue_draw({&graph});
+              pagoda.unlock();
+          }
+        });
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
-  camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
-  //camera->set_pre_render_cameras({portal_camera});
+    loop.start();
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-    1.0f);
-  camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
-
-  auto window = std::make_shared<gua::GlfwWindow>();
-  gua::WindowDatabase::instance()->add("main_window", window);
-
-  window->config.set_enable_vsync(false);
-  window->config.set_size(resolution);
-  window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
-
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_resolution(new_size);
-    camera->config.set_resolution(new_size);
-    screen->data.set_size(
-        gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-  });
-  window->on_move_cursor.connect(
-      [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
-  window->on_button_press.connect(
-      std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
-                std::placeholders::_2, std::placeholders::_3));
-
-  gua::Renderer renderer;
-
-  // application loop
-  gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0 / 500.0);
-
-  ticker.on_tick.connect([&]() {
-
-    // apply trackball matrix to object
-    gua::math::mat4 modelmatrix =
-        scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
-                                    trackball.distance()) *
-        gua::math::mat4(trackball.rotation());
-
-    transform->set_transform(modelmatrix);
-
-    if (window->should_close()) {
-      renderer.stop();
-      window->close();
-      loop.stop();
-    } else {
-      renderer.queue_draw({&graph});
-    }
-  });
-
-  loop.start();
-
-  return 0;
+    return 0;
 }
