@@ -15,7 +15,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(transparency)
     add_subdirectory(tiled_shading_test)
     add_subdirectory(volumetric_point_and_line_rendering)
-    add_subdirectory(gazebo_scene)
   ENDIF (${GUACAMOLE_GLFW3})
 
   # skelanim example requires skelanim-plugin and the fbx sdk
@@ -81,5 +80,9 @@ IF (GUACAMOLE_EXAMPLES)
   IF (GUACAMOLE_ENABLE_PHYSICS)
     add_subdirectory(physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
+
+  IF (${PLUGIN_guacamole-gazebo})
+    add_subdirectory(gazebo_scene)
+  ENDIF (${PLUGIN_guacamole-gazebo})
 
 ENDIF (GUACAMOLE_EXAMPLES)
