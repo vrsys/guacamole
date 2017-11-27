@@ -23,7 +23,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/spoints.hpp>
-#include <gua/video3d.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -69,13 +68,7 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto steppo(vloader.create_geometry_from_file("steppo", socket_string.c_str()));
   graph.add_node("/transform", steppo);
-/*
-  gua::Video3DLoader v3Dloader;
-  auto offset = graph.add_node<gua::node::TransformNode>("/", "offset");
-  offset->translate(0.0, 0.0, 0.0);
-  auto steppo_v3d(v3Dloader.create_geometry_from_file("steppo2", ks_file_string.c_str()));
-  graph.add_node("/offset", steppo_v3d);
-*/
+  
   gua::TriMeshLoader mloader;
   auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
   plane->scale(10);
@@ -108,7 +101,6 @@ int main(int argc, char** argv) {
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
-  pipe->add_pass(std::make_shared<gua::Video3DPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
