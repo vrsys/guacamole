@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
   camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -126,8 +126,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  //window->config.set_stereo_mode(gua::StereoMode::MONO);
-  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
 
 /*
 
