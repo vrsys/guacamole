@@ -170,6 +170,7 @@ void NetKinectArray::readloop() {
 
 
 void NetKinectArray::sendfeedbackloop() {
+  /*
   // open multicast listening connection to server and port
   zmq::context_t ctx(1); // means single threaded
   zmq::socket_t  socket(ctx, ZMQ_PUB); // means a subscriber
@@ -177,7 +178,7 @@ void NetKinectArray::sendfeedbackloop() {
   int hwm = 1;
   socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
-  std::string endpoint(std::string("tcp://") + "141.54.147.52:7051");
+  std::string endpoint(std::string("tcp://") + "141.54.147.108:7051");
   socket.bind(endpoint.c_str());
 
   while (m_feedback_running) {
@@ -203,7 +204,7 @@ void NetKinectArray::sendfeedbackloop() {
     }
     
   }
-
+*/
 }
 
 
