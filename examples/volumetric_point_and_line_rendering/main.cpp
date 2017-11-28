@@ -22,8 +22,6 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
-#include <gua/node/LineStripNode.hpp>
-#include <gua/renderer/LineStripLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
