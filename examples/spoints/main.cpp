@@ -50,7 +50,7 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 int main(int argc, char** argv) {
 
   if(argc < 2){
-    std::cout << "ERROR: please specify the socket_string to listen_to" << std::endl;
+    std::cout << "ERROR: please a *.sr file containing at least a 'serverport' attribute!" << std::endl;
   }
   std::string socket_string(argv[1]);
 

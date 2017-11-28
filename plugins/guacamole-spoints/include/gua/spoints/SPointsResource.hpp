@@ -69,7 +69,9 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
    * Creates a new Video3D from a given spoints string.
    * \param spoints      Holds information about kinect streams.
   */
-   SPointsResource(std::string const& spoints, unsigned flags);
+   SPointsResource(std::string const& server_endpoint, 
+                   std::string const& feedback_endpoint, 
+                   unsigned flags);
 
   /**
    * destructor.
@@ -97,6 +99,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   void init();
 
   std::string                     server_endpoint() const {return server_endpoint_; }
+  std::string                     feedback_endpoint() const {return feedback_endpoint_; }
   bool                            is_pickable() const { return is_pickable_; }
 
  private:
@@ -106,6 +109,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   std::shared_ptr<SPointsData>    spointsdata_;
 
   std::string                     server_endpoint_;
+  std::string                     feedback_endpoint_;
 
   bool is_pickable_;
 };

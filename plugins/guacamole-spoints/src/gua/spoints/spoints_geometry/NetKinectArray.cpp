@@ -10,12 +10,13 @@
 
 namespace spoints {
 
-NetKinectArray::NetKinectArray(
-                               const std::string& server_endpoint)
+NetKinectArray::NetKinectArray(const std::string& server_endpoint,
+                               const std::string& feedback_endpoint)
   : m_mutex(),
     m_running(true),
     m_feedback_running(true),
     m_server_endpoint(server_endpoint),
+    m_feedback_endpoint(feedback_endpoint),
     m_buffer( /*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
     m_buffer_back( /*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
     m_need_swap{false},
@@ -170,7 +171,7 @@ void NetKinectArray::readloop() {
 
 
 void NetKinectArray::sendfeedbackloop() {
-  /*
+  
   // open multicast listening connection to server and port
   zmq::context_t ctx(1); // means single threaded
   zmq::socket_t  socket(ctx, ZMQ_PUB); // means a subscriber
@@ -178,7 +179,7 @@ void NetKinectArray::sendfeedbackloop() {
   int hwm = 1;
   socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
-  std::string endpoint(std::string("tcp://") + "141.54.147.108:7051");
+  std::string endpoint(std::string("tcp://") + m_feedback_endpoint);
   socket.bind(endpoint.c_str());
 
   while (m_feedback_running) {
@@ -204,7 +205,7 @@ void NetKinectArray::sendfeedbackloop() {
     }
     
   }
-*/
+
 }
 
 
