@@ -98,21 +98,21 @@ namespace gua {
       GeometryDescription desc("SPoints", spoints_resource_filepath, 0, flags);
 
 
-      std::string serverport("");
-      std::string feedbackport("");
+      std::string serversocket_string("");
+      std::string feedbacksocket_string("");
 
 
       {
         std::string line_buffer;
         std::ifstream in_spoints_resource_file(spoints_resource_filepath, std::ios::in);
 
-        std::string const serverport_identifier("serverport");
-        std::string const feedbackport_identifier("feedbackport");
+        std::string const serversocket_identifier("serversocket");
+        std::string const feedbacksocket_identifier("feedbacksocket");
 
 
 
 
-        std::vector<std::string> registered_resource_file_tokens = {serverport_identifier, feedbackport_identifier};
+        std::vector<std::string> registered_resource_file_tokens = {serversocket_identifier, feedbacksocket_identifier};
 
         while(std::getline(in_spoints_resource_file, line_buffer)) {
 
@@ -122,22 +122,22 @@ namespace gua {
 
           auto map_iterator = parsed_line_tokens.end();
 
-          map_iterator = parsed_line_tokens.find(serverport_identifier);
+          map_iterator = parsed_line_tokens.find(serversocket_identifier);
           if(map_iterator != parsed_line_tokens.end()) {
-            serverport = map_iterator->second;
+            serversocket_string = map_iterator->second;
           }
 
-          map_iterator = parsed_line_tokens.find(feedbackport_identifier);
-          if(parsed_line_tokens.find(feedbackport_identifier) != parsed_line_tokens.end()) {
-            feedbackport = map_iterator->second;
+          map_iterator = parsed_line_tokens.find(feedbacksocket_identifier);
+          if(map_iterator != parsed_line_tokens.end()) {
+            feedbacksocket_string = map_iterator->second;
           }
         }
       }
 
-      std::cout << "Used receive socket:" << serverport << "\n";
-      std::cout << "Used feedback socket:" << feedbackport << "\n";
+      std::cout << "Used receive socket:" << serversocket_string << "\n";
+      std::cout << "Used feedback socket:" << feedbacksocket_string << "\n";
 
-      auto resource = std::make_shared<SPointsResource>(serverport, feedbackport, flags);
+      auto resource = std::make_shared<SPointsResource>(serversocket_string, feedbacksocket_string, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
       auto result = std::shared_ptr<node::SPointsNode>(new node::SPointsNode(node_name, desc.unique_key()));
