@@ -50,15 +50,18 @@ SPointsResource::SPointsData::SPointsData(
   rstate_solid_ = ctx.render_device->create_rasterizer_state(
                   scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, true);
 
-  nka_ = std::make_shared<spoints::NetKinectArray>(spoints_resource.server_endpoint());
+  nka_ = std::make_shared<spoints::NetKinectArray>(spoints_resource.server_endpoint(), spoints_resource.feedback_endpoint());
 
   frame_counter_ = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SPointsResource::SPointsResource(std::string const& spoints, unsigned flags)
-    : server_endpoint_(spoints),
+SPointsResource::SPointsResource(std::string const& server_endpoint, 
+                                 std::string const& feedback_endpoint, 
+                                 unsigned flags)
+    : server_endpoint_(server_endpoint),
+      feedback_endpoint_(feedback_endpoint),
       is_pickable_(flags & SPointsLoader::MAKE_PICKABLE) {
   init();
 }

@@ -30,7 +30,7 @@
 #include <string>
 #include <list>
 #include <memory>
-
+#include <unordered_set>
 
 namespace gua {
 
@@ -62,11 +62,24 @@ class GUA_SPOINTS_DLL SPointsLoader {
   ~SPointsLoader() = default;
 
   std::shared_ptr<node::SPointsNode> create_geometry_from_file(std::string const& nodename,
-                                                               std::string const& socket_string,
+                                                               std::string const& spoints_resource_filepath,
 															                                 std::shared_ptr<Material> material = nullptr,
 															                                 unsigned flags = DEFAULTS);
 
+
+  bool is_supported(std::string const& file_name) const;
+
  private:
+
+  std::string _strip_whitespace(std::string const& in_string) const;
+  
+  void _split_filename(std::string const& in_line_buffer, 
+                      std::vector<std::string> const& registered_tokens,
+                      std::map<std::string, std::string>& tokens) const;
+
+   std::unordered_set<std::string> _supported_file_extensions;
+
+
 
 };
 

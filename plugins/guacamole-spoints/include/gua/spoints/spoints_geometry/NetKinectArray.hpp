@@ -23,8 +23,8 @@ struct matrix_package{
 class NetKinectArray{
 
 public:
-  NetKinectArray(
-                 const std::string& server_endpoint);
+  NetKinectArray(const std::string& server_endpoint,
+                 const std::string& feedback_endpoint = "");
   ~NetKinectArray();
 
   void draw(gua::RenderContext const& ctx);
@@ -43,6 +43,7 @@ private:
   std::mutex m_mutex;
   bool           m_running;
   const std::string m_server_endpoint;
+  const std::string m_feedback_endpoint;
   std::vector<uint8_t> m_buffer;
   std::vector<uint8_t> m_buffer_back;
 

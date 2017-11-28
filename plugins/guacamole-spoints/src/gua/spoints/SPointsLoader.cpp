@@ -29,25 +29,115 @@
 #include <gua/spoints/SPointsResource.hpp>
 #include <gua/spoints/SPointsRenderer.hpp>
 
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <regex>
+
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  SPointsLoader::SPointsLoader()
-  {}
+  SPointsLoader::SPointsLoader() : _supported_file_extensions() {
+    _supported_file_extensions.insert("sr");
+  }
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  std::string SPointsLoader::_strip_whitespace(std::string const& in_string) const {
+    return std::regex_replace(in_string, std::regex("^ +| +$|( ) +"), "$1");
+  }
+  
+  void SPointsLoader::_split_filename(std::string const& in_line_buffer, 
+                      std::vector<std::string> const& registered_tokens,
+                      std::map<std::string, std::string>& tokens) const {
+
+    std::string whitespace_removed_line_buffer = _strip_whitespace(in_line_buffer);
+
+    std::regex non_negative_number_regex("[[:digit:]]+");
+
+    for( auto const& potentially_matching_token : registered_tokens ) {
+      if( whitespace_removed_line_buffer.find(potentially_matching_token) == 0 ) {
+        uint64_t length_of_token = potentially_matching_token.size();
+        std::string remaining_string = whitespace_removed_line_buffer.substr(length_of_token+1);
+
+        tokens[potentially_matching_token] = remaining_string.c_str();
+        break;
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  bool SPointsLoader::is_supported(std::string const& file_name) const {
+
+    std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty()
+               ? false
+               : _supported_file_extensions.count(filename_decomposition.back()) >
+                     0;
+  }
 
 
   ////////////////////////////////////////////////////////////////////////////////
 
   std::shared_ptr<node::SPointsNode> SPointsLoader::create_geometry_from_file (std::string const& node_name,
-																			   std::string const& socket_string,
+																			   std::string const& spoints_resource_filepath,
 																			   std::shared_ptr<Material> material,
 																			   unsigned flags)
   {
-	  try {
-      GeometryDescription desc("SPoints", socket_string, 0, flags);
+	    if (!is_supported(spoints_resource_filepath)) {
 
-      auto resource = std::make_shared<SPointsResource>(socket_string, flags);
+        Logger::LOG_WARNING << "Unable to load " << spoints_resource_filepath
+                            << ": Type is not supported!" << std::endl;
+      }
+
+    try {
+      GeometryDescription desc("SPoints", spoints_resource_filepath, 0, flags);
+
+
+      std::string serverport("");
+      std::string feedbackport("");
+
+
+      {
+        std::string line_buffer;
+        std::ifstream in_spoints_resource_file(spoints_resource_filepath, std::ios::in);
+
+        std::string const serverport_identifier("serverport");
+        std::string const feedbackport_identifier("feedbackport");
+
+
+
+
+        std::vector<std::string> registered_resource_file_tokens = {serverport_identifier, feedbackport_identifier};
+
+        while(std::getline(in_spoints_resource_file, line_buffer)) {
+
+          std::map<std::string, std::string> parsed_line_tokens;
+          _split_filename(line_buffer, registered_resource_file_tokens, parsed_line_tokens);
+
+
+          auto map_iterator = parsed_line_tokens.end();
+
+          map_iterator = parsed_line_tokens.find(serverport_identifier);
+          if(map_iterator != parsed_line_tokens.end()) {
+            serverport = map_iterator->second;
+          }
+
+          map_iterator = parsed_line_tokens.find(feedbackport_identifier);
+          if(parsed_line_tokens.find(feedbackport_identifier) != parsed_line_tokens.end()) {
+            feedbackport = map_iterator->second;
+          }
+        }
+      }
+
+      std::cout << "Used receive socket:" << serverport << "\n";
+      std::cout << "Used feedback socket:" << feedbackport << "\n";
+
+      auto resource = std::make_shared<SPointsResource>(serverport, feedbackport, flags);
       GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
       auto result = std::shared_ptr<node::SPointsNode>(new node::SPointsNode(node_name, desc.unique_key()));
@@ -89,7 +179,7 @@ namespace gua {
       return result;
     }
     catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load SPoints object " << socket_string.c_str() << std::endl;
+      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load SPoints object " << spoints_resource_filepath.c_str() << std::endl;
       return nullptr;
     }
   }
