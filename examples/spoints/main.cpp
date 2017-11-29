@@ -52,8 +52,7 @@ int main(int argc, char** argv) {
   if(argc < 2){
     std::cout << "ERROR: please a *.sr file containing at least a 'serverport' attribute!" << std::endl;
   }
-  std::string socket_string(argv[1]);
-
+  std::string spoinst_resource_file_string(argv[1]);
 
   char* argv_tmp[] = {"./example-spoints", NULL};
   int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;;
@@ -66,7 +65,7 @@ int main(int argc, char** argv) {
 
   gua::SPointsLoader vloader;
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto steppo(vloader.create_geometry_from_file("steppo", socket_string.c_str()));
+  auto steppo(vloader.create_geometry_from_file("steppo", spoinst_resource_file_string.c_str()));
   graph.add_node("/transform", steppo);
   
   gua::TriMeshLoader mloader;
