@@ -19,32 +19,32 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_SPOINTS_PASS_HPP
+#define GUA_SPOINTS_PASS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/LineStripLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/LineStripPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/spoints/platform.hpp>
+#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+// external headers
+#include <scm/gl_core/buffer_objects.h>
+
+#include <typeindex>
+#include <memory>
+#include <unordered_map>
+
+namespace gua {
+
+class GUA_SPOINTS_DLL SPointsPassDescription : public PipelinePassDescription {
+ public:
+  SPointsPassDescription();
+
+  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
+
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
+};
+
+}
+
+#endif  // GUA_VIDEO3D_PASS_HPP

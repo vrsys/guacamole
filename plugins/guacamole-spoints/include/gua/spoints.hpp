@@ -19,32 +19,21 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_INCLUDE_SPOINTS_HPP
+#define GUA_INCLUDE_SPOINTS_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/LineStripLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/LineStripPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
+#include <gua/spoints/SPointsNode.hpp>
+#include <gua/spoints/SPointsPass.hpp>
+#include <gua/spoints/SPointsLoader.hpp>
+
+#if defined (_MSC_VER)
+#if defined (GUA_SPOINTS_LIBRARY)
+#define GUA_SPOINTS_DLL __declspec( dllexport )
+#else
+#define GUA_SPOINTS_DLL __declspec( dllimport )
 #endif
+#else
+#define GUA_SPOINTS_DLL
+#endif // #if defined(_MSC_VER)
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#endif  // GUA_INCLUDE_SPOINTS_HPP

@@ -19,32 +19,70 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_SPOINTS_LOADER_HPP
+#define GUA_SPOINTS_LOADER_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/LineStripLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/LineStripPass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
-#include <gua/renderer/Material.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+// guacamole headers
+#include <gua/spoints/platform.hpp>
+#include <gua/databases/Database.hpp>
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+// external headers
+#include <string>
+#include <list>
+#include <memory>
+#include <unordered_set>
+
+namespace gua {
+
+  class Material;
+
+namespace node {
+class Node;
+class InnerNode;
+class SPointsNode;
+}
+
+/**
+ * Loads and draws Video3D.
+ *
+ * This class can load Video3D data from files and display them in multiple
+ * contexts. A MeshLoader object is made of several Video3D objects.
+ */
+class GUA_SPOINTS_DLL SPointsLoader {
+ public:
+
+  enum Flags {
+  	DEFAULTS = 0,
+  	MAKE_PICKABLE = 1 << 0,
+  	NORMALIZE_POSITION = 1 << 1,
+  	NORMALIZE_SCALE = 1 << 2
+  };
+
+  SPointsLoader();
+  ~SPointsLoader() = default;
+
+  std::shared_ptr<node::SPointsNode> create_geometry_from_file(std::string const& nodename,
+                                                               std::string const& spoints_resource_filepath,
+															                                 std::shared_ptr<Material> material = nullptr,
+															                                 unsigned flags = DEFAULTS);
+
+
+  bool is_supported(std::string const& file_name) const;
+
+ private:
+
+  std::string _strip_whitespace(std::string const& in_string) const;
+  
+  void _split_filename(std::string const& in_line_buffer, 
+                      std::vector<std::string> const& registered_tokens,
+                      std::map<std::string, std::string>& tokens) const;
+
+   std::unordered_set<std::string> _supported_file_extensions;
+
+
+
+};
+
+}
+
+#endif  // GUA_VIDEO3D_LOADER_HPP
