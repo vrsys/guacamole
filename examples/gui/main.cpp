@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
       CefShutdown();
     } else {
 
-      CefBrowserHost::Invalidate(cef_paint_element_type_t::PET_VIEW);
+      //CefBrowserHost::Invalidate(cef_paint_element_type_t::PET_VIEW);
       CefDoMessageLoopWork();
       renderer.queue_draw({&graph});
     }

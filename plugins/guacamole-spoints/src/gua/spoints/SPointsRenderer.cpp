@@ -186,7 +186,7 @@ void SPointsRenderer::render(Pipeline& pipe,
       auto spoints_desc(spoints_node->get_spoints_description());
 
       if (!GeometryDatabase::instance()->contains(spoints_desc)) {
-        gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+        gua::Logger::GUA_LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
                                  << spoints_desc << ", " << std::endl;
         continue;
       }
@@ -194,7 +194,7 @@ void SPointsRenderer::render(Pipeline& pipe,
       auto spoints_resource = std::static_pointer_cast<SPointsResource>(
           GeometryDatabase::instance()->lookup(spoints_desc));
       if (!spoints_resource) {
-        gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+        gua::Logger::GUA_LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
                                  << std::endl;
         continue;
       }
@@ -248,7 +248,7 @@ void SPointsRenderer::render(Pipeline& pipe,
           programs_[current_material] = current_shader;
         }
       } else {
-        Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+        Logger::GUA_LOG_WARNING << "SPointsPass::render(): Cannot find material: "
                             << spoints_node->get_material()->get_shader_name()
                             << std::endl;
       }
