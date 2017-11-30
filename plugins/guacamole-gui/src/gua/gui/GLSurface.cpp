@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#include "GLSurface.inl"
+#include <gua/gui/GLSurface.inl>
 
 #include <gua/gui/GuiTexture.hpp>
 
@@ -33,7 +33,9 @@ namespace gua {
     : buffer_(width * height * 4)
     , width_(width)
     , height_(height)
-    , needs_update_() {}
+    , needs_update_() {
+      std::cout << "Its-a-me-Surface!" << std::endl;
+    }
 
 
   // ------------------------------------------------------------ public methods
@@ -41,12 +43,21 @@ namespace gua {
   //////////////////////////////////////////////////////////////////////////////
 
   bool GLSurface::bind(RenderContext const& ctx, const GuiTexture* gui_texture) {
+    std::cout << "call bind" << std::endl;
 
     while (needs_update_.size() <= ctx.id) {
       needs_update_.push_back(true);
     }
 
+
+    gui_texture->update_sub_data(
+      ctx,
+      scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
+      0u, scm::gl::FORMAT_BGRA_8, &buffer_.front());
+
+    
     if (needs_update_[ctx.id]) {
+      std::cout << "Update for render context: " << ctx.id << "\n";
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_[ctx.id] = false;
       gui_texture->update_sub_data(
@@ -54,13 +65,16 @@ namespace gua {
         scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width_, height_, 1)),
         0u, scm::gl::FORMAT_BGRA_8, &buffer_.front()
       );
+      
     }
+
+    
 
     return true;
   }
 
   //////////////////////////////////////////////////////////////////////////////
-
+  /*
   void GLSurface::Paint(unsigned char* src_buffer, int src_row_span,
                         Awesomium::Rect const& src_rect,
                         Awesomium::Rect const& dest_rect) {
@@ -78,10 +92,31 @@ namespace gua {
       needs_update_[i] = true;
     }
   }
+  */
 
+  void GLSurface::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList &dirtyRects, const void *buffer, int width, int height)
+  {
+    std::cout << "call paint" << std::endl;
+    std::unique_lock<std::mutex> lock(mutex_);
+    std::cout << "One Frame Update\n";
+    memcpy(&buffer_.front(), buffer, width*height*4);
+
+    for (uint32_t i(0); i < needs_update_.size(); ++i) {
+      needs_update_[i] = true;
+    }
+  }
+  
+
+  bool GLSurface::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
+  {
+      std::cout << "getRect" << std::endl;
+      rect = CefRect(0, 0, width_, height_);
+      return true;
+  }
   //////////////////////////////////////////////////////////////////////////////
 
-  void GLSurface::Scroll(int dx, int dy, Awesomium::Rect const& clip_rect) {
+    /*
+  void GLSurface::Scroll(int dx, int dy) {
     if (abs(dx) >= clip_rect.width || abs(dy) >= clip_rect.height) {
       return;
     }
@@ -134,5 +169,6 @@ namespace gua {
       needs_update_[i] = true;
     }
   }
+    */
 
 }

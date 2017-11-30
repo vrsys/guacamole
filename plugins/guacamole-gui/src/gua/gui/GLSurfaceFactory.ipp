@@ -5,7 +5,7 @@
 // Copyright: (c) 2011-2014 Simon Schneegans & Felix Lauer                    //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 class GLSurfaceFactory : public Awesomium::SurfaceFactory {
 
  ///////////////////////////////////////////////////////////////////////////////
@@ -23,3 +23,4 @@ class GLSurfaceFactory : public Awesomium::SurfaceFactory {
   }
 
 };
+*/

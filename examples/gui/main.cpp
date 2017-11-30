@@ -47,6 +47,35 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 
 int main(int argc, char** argv) {
 
+  //parses CEF command line arguments (if there are any)
+  CefMainArgs args(argc, argv);
+
+    {
+        int result = CefExecuteProcess(args, nullptr, nullptr);
+        // checkout CefApp, derive it and set it as second parameter, for more control on
+        // command args and resources.
+        if (result >= 0) // child proccess has endend, so exit.
+        {
+            return result;
+        }
+        if (result == -1)
+        {
+            // we are here in the father proccess.
+        }
+    }
+    {
+        CefSettings settings;
+
+        bool result = CefInitialize(args, settings, nullptr, nullptr);
+        // CefInitialize creates a sub-proccess and executes the same executeable, as calling CefInitialize, if not set different in settings.browser_subprocess_path
+        // if you create an extra program just for the childproccess you only have to call CefExecuteProcess(...) in it.
+        if (!result)
+        {
+            // handle error(g_fullscreen_textures[0]
+            return -1;
+        }
+    }
+    
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -76,6 +105,27 @@ int main(int argc, char** argv) {
   auto gui = std::make_shared<gua::GuiResource>();
   gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
+/*
+  CefWindowInfo window_info_;
+  CefBrowserSettings browserSettings_;
+  std::string name = "google";
+
+  CefRefPtr<gua::GLSurface> surface = new gua::GLSurface(gui_size.x, gui_size.y);
+  CefRefPtr<gua::GuiBrowserClient> browserClient_ = new gua::GuiBrowserClient(surface);
+
+  window_info_.SetAsWindowless(0);
+
+  CefRefPtr<CefBrowser> browser_ = CefBrowserHost::CreateBrowserSync(window_info_, browserClient_.get(), "https://www.google.com" , browserSettings_, nullptr);
+  std::cout << "Browser setup" << std::endl;
+  std::shared_ptr<gua::GuiTexture> gui_texture_ = std::make_shared<gua::GuiTexture>(gui_size.x, gui_size.y, browserClient_);
+
+  gua::TextureDatabase::instance()->add(name, gui_texture_);
+  std::cout << "texture setup" << std::endl;
+*/
+
+
+    //CefBrowserHost::WasResized();
+/*
   gua::math::vec2 fps_size(170.f, 55.f);
 
   auto fps = std::make_shared<gua::GuiResource>();
@@ -116,6 +166,7 @@ int main(int argc, char** argv) {
       gui->go_forward();
     }
   });
+  */
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
@@ -178,13 +229,13 @@ int main(int argc, char** argv) {
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-
+    
     gua::math::vec2 hit_pos;
 
-    if (address_bar_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+    /*if (address_bar_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
       address_bar->inject_mouse_position_relative(hit_pos);
       focused_element = address_bar;
-    } else {
+    } else {*/
       auto screen_space_pos(pos/resolution-0.5);
 
       gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
@@ -195,20 +246,23 @@ int main(int argc, char** argv) {
       auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
       if (result.size() > 0) {
         for (auto const& r : result) {
-          focused_element = gui;
+          //focused_element = gui;
           focused_element->inject_mouse_position_relative(r.texture_coords);
         }
       } else {
         focused_element = nullptr;
         trackball.motion(pos.x, pos.y);
       }
-    }
+    //}
+
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
   window->open();
 
   gua::Renderer renderer;
+
+  //cef_paint_element_type_t t;
 
   // application loop
   gua::events::MainLoop loop;
@@ -218,12 +272,13 @@ int main(int argc, char** argv) {
     std::stringstream sstr;
     sstr.precision(1);
     sstr.setf(std::ios::fixed, std::ios::floatfield);
-    sstr << "FPS: " << renderer.get_application_fps()
-         << " / " << window->get_rendering_fps();
-    fps->call_javascript("set_fps_text", sstr.str());
- 
+    //sstr << "FPS: " << renderer.get_application_fps()
+    //     << " / " << window->get_rendering_fps();
+    //fps->call_javascript("set_fps_text", sstr.str());
+
+    //CefBrowserHost::Invalidate(t.View);
     // ray->rotate(1, 0, 1, 0);
-    gua::Interface::instance()->update();
+    //gua::Interface::instance()->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
@@ -233,7 +288,11 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
+      CefShutdown();
     } else {
+
+      CefBrowserHost::Invalidate(cef_paint_element_type_t::PET_VIEW);
+      CefDoMessageLoopWork();
       renderer.queue_draw({&graph});
     }
   });

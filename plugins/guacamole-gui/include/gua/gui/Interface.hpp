@@ -63,10 +63,12 @@ class GUA_DLL Interface : public Singleton<Interface> {
   Interface();
   ~Interface();
 
+  /*
   Awesomium::WebView* create_webview(int width, int height) const;
 
   Awesomium::WebCore* web_core_;
   Awesomium::WebSession* web_session_;
+  */
 };
 
 // -----------------------------------------------------------------------------

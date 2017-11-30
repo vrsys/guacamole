@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/GuiTexture.hpp>
+#include <gua/gui/GLSurface.inl>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
@@ -54,8 +55,12 @@ GuiResource::GuiResource()
   : name_("")
   , url_("")
   , gui_texture_(nullptr)
-  , view_(nullptr)
-  , js_window_(nullptr)
+  //, view_(nullptr)
+  //, js_window_(nullptr)
+  , browser_()
+  , browserClient_()
+  , window_info_()
+  , browserSettings_()
   , interactive_(true)
 {}
 
@@ -63,7 +68,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
                        math::vec2 const& size) {
 
   name_ = name;
-  on_loaded.connect([this]() {
+  /*on_loaded.connect([this]() {
     js_window_ = new Awesomium::JSValue();
     *js_window_ = view_->ExecuteJavascriptWithResult(
       Awesomium::WSLit("window"), Awesomium::WSLit("")
@@ -73,8 +78,9 @@ void GuiResource::init(std::string const& name, std::string const& url,
       Logger::GUA_LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
     }
   });
+  */
 
-  view_ = Interface::instance()->create_webview(size.x, size.y);
+  //view_ = Interface::instance()->create_webview(size.x, size.y);
   //view_->SetTransparent(true);
   //view_->Focus();
   //view_->set_view_listener(new AweViewListener());
@@ -84,14 +90,23 @@ void GuiResource::init(std::string const& name, std::string const& url,
 
   set_url(url);
 
-  gui_texture_ = std::make_shared<GuiTexture>(size.x, size.y, view_);
+  CefRefPtr<GLSurface> surface = new GLSurface(size.x, size.y);
+  browserClient_ = new GuiBrowserClient(surface);
+
+  window_info_.SetAsWindowless(0);
+
+  browser_ = CefBrowserHost::CreateBrowserSync(window_info_, browserClient_.get(), url_ , browserSettings_, nullptr);
+  std::cout << "Browser setup" << std::endl;
+  gui_texture_ = std::make_shared<GuiTexture>(size.x, size.y, browserClient_);
 
   gua::TextureDatabase::instance()->add(name, gui_texture_);
+  std::cout << "texture setup" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 GuiResource::~GuiResource() {
+  /*
   delete static_cast<AweViewListener*>(view_->view_listener());
   delete static_cast<AweLoadListener*>(view_->load_listener());
   delete static_cast<AweProcessListener*>(view_->process_listener());
@@ -101,16 +116,19 @@ GuiResource::~GuiResource() {
   if (js_window_) {
     delete js_window_;
   }
+  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::set_url(std::string const& url) {
   url_ = url;
+  /*
   if (view_) {
     Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
     view_->LoadURL(u);
   }
+  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
