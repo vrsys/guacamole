@@ -90,7 +90,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
 
   set_url(url);
 
-  CefRefPtr<GLSurface> surface = new GLSurface(size.x, size.y);
+  GLSurface* surface = new GLSurface(size.x, size.y);
   browserClient_ = new GuiBrowserClient(surface);
 
   window_info_.SetAsWindowless(0);

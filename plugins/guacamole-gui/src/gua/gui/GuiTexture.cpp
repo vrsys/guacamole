@@ -42,7 +42,7 @@ math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
     return math::vec2ui(0, 0);
   }
 
-  auto surface = (browserClient_->getRenderHandler());
+  auto surface = static_cast<GLSurface*>(browserClient_->GetRenderHandler().get());
 
   if (surface == nullptr) {
     return math::vec2ui(0, 0);
