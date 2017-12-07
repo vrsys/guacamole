@@ -1,67 +1,42 @@
-/******************************************************************************
- * guacamole - delicious VR                                                   *
- *                                                                            *
- * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
- * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
- *                                                                            *
- * This program is free software: you can redistribute it and/or modify it    *
- * under the terms of the GNU General Public License as published by the Free *
- * Software Foundation, either version 3 of the License, or (at your option)  *
- * any later version.                                                         *
- *                                                                            *
- * This program is distributed in the hope that it will be useful, but        *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
- * for more details.                                                          *
- *                                                                            *
- * You should have received a copy of the GNU General Public License along    *
- * with this program. If not, see <http://www.gnu.org/licenses/>.             *
- *                                                                            *
- ******************************************************************************/
-
-#include <gazebo/transport/transport.hh>
-#include <gazebo/gazebo_client.hh>
-
-#include <gua/guacamole.hpp>
-#include <gua/renderer/DebugViewPass.hpp>
-#include <gua/utils/Trackball.hpp>
-
+#include "common.h"
 #include "pagoda.cpp"
 
-void mouse_button(gua::utils::Trackball &trackball,
-                  int mousebutton,
-                  int action,
-                  int mods) {
+void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
+{
     gua::utils::Trackball::button_type button;
     gua::utils::Trackball::state_type state;
 
-    switch (mousebutton)
+    switch(mousebutton)
     {
-    case 0:button = gua::utils::Trackball::left;
+    case 0:
+        button = gua::utils::Trackball::left;
         break;
-    case 2:button = gua::utils::Trackball::middle;
+    case 2:
+        button = gua::utils::Trackball::middle;
         break;
-    case 1:button = gua::utils::Trackball::right;
+    case 1:
+        button = gua::utils::Trackball::right;
         break;
     };
 
-    switch (action)
+    switch(action)
     {
-    case 0:state = gua::utils::Trackball::released;
+    case 0:
+        state = gua::utils::Trackball::released;
         break;
-    case 1:state = gua::utils::Trackball::pressed;
+    case 1:
+        state = gua::utils::Trackball::pressed;
         break;
     };
 
     trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     gua::init(argc, argv);
     gua::SceneGraph graph("main_scenegraph");
     gua::TriMeshLoader loader;
-
-    // TODO: REMOVE START
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
@@ -75,10 +50,6 @@ int main(int argc, char **argv) {
     light2->data.set_enable_shadows(true);
     light2->data.set_shadow_map_size(1024);
     light2->rotate(-45, 1, 1, 0);
-//    light2->data.set_type(gua::node::LightNode::Type::SUN);
-//    light2->data.brightness = 150.0f;
-//    light2->scale(12.f);
-//    light2->translate(-3.f, 5.f, 5.f);
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -96,8 +67,6 @@ int main(int argc, char **argv) {
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
 
-    // TODO: REMOVE END
-
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
 
@@ -106,14 +75,12 @@ int main(int argc, char **argv) {
     window->config.set_resolution(resolution);
     window->config.set_stereo_mode(gua::StereoMode::MONO);
 
-    window->on_resize.connect([&](gua::math::vec2ui const &new_size)
-                              {
-                                window->config.set_resolution(new_size);
-                                camera->config.set_resolution(new_size);
-                                screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-                              });
-    window->on_move_cursor.connect([&](gua::math::vec2 const &pos)
-                                   { trackball.motion(pos.x, pos.y); });
+    window->on_resize.connect([&](gua::math::vec2ui const &new_size) {
+        window->config.set_resolution(new_size);
+        camera->config.set_resolution(new_size);
+        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    });
+    window->on_move_cursor.connect([&](gua::math::vec2 const &pos) { trackball.motion(static_cast<int>(pos.x), static_cast<int>(pos.y)); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     Pagoda pagoda;
@@ -125,27 +92,25 @@ int main(int argc, char **argv) {
     gua::events::MainLoop loop;
     gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
-    ticker.on_tick.connect(
-        [&]()
+    ticker.on_tick.connect([&]() {
+        gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
+
+        transform->set_transform(modelmatrix);
+
+        if(window->should_close())
         {
-          gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
-
-          transform->set_transform(modelmatrix);
-
-          if (window->should_close())
-          {
-              renderer.stop();
-              window->close();
-              loop.stop();
-              pagoda.halt_transport_layer();
-          }
-          else
-          {
-              pagoda.lock();
-              renderer.queue_draw({&graph});
-              pagoda.unlock();
-          }
-        });
+            renderer.stop();
+            window->close();
+            loop.stop();
+            pagoda.halt_transport_layer();
+        }
+        else
+        {
+            pagoda.lock();
+            renderer.queue_draw({&graph});
+            pagoda.unlock();
+        }
+    });
 
     loop.start();
 
