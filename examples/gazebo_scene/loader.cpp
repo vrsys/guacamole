@@ -6,7 +6,7 @@
 class Loader
 {
   public:
-    Loader() {}
+    Loader() = default;
 
     enum Flags
     {
@@ -216,7 +216,7 @@ class Loader
 
             // return std::make_shared<node::TriMeshNode>("", desc.unique_key(),
             // material); // not allowed -> private c'tor
-            return std::shared_ptr<gua::node::TriMeshNode>(new gua::node::TriMeshNode("", desc.unique_key(), material));
+            return std::make_shared<gua::node::TriMeshNode>("", desc.unique_key(), material);
         };
 
         // there is only one child -- skip it!
