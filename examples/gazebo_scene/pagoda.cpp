@@ -1,6 +1,7 @@
 #include "common.h"
 #include "loader.cpp"
 #include "log.cpp"
+#include "transport_processor.cpp"
 
 typedef std::map<uint32_t, std::shared_ptr<gua::node::TransformNode>> map_id_node;
 typedef std::pair<uint32_t, std::shared_ptr<gua::node::TransformNode>> pair_id_node;
@@ -10,20 +11,16 @@ class Pagoda
   public:
     Pagoda()
     {
-        _log = new Log();
-        _nodemap = new std::map<uint32_t, std::shared_ptr<gua::node::TransformNode>>();
-    }
-
-    Pagoda(const char *log_file, Log::LOG_LEVEL log_level)
-    {
-        _log = new Log(log_file, log_level);
-        _nodemap = new std::map<uint32_t, std::shared_ptr<gua::node::TransformNode>>();
+        _log = new Log("transport");
+        _nodemap = new map_id_node();
+        _tproc = boost::shared_ptr<gazebo::rendering::TransportProcessor>(new gazebo::rendering::TransportProcessor());
     }
 
     ~Pagoda()
     {
         halt_transport_layer();
-        _gazebo_client_worker.join();
+        _worker.join();
+        _tproc.reset();
     }
 
     void bind_scene_graph(gua::SceneGraph *sceneGraph)
@@ -34,84 +31,114 @@ class Pagoda
 
     void bind_transport_layer(int argc, char **argv)
     {
-        _gazebo_client_worker = std::thread(
-            [](Pagoda *pagoda, int _argc, char **_argv) {
-                pagoda->_log->d("Gazebo client: setup");
-
-                gazebo::client::setup(_argc, _argv);
-
-                pagoda->_log->d("Gazebo client: init transport node");
-
-                gazebo::transport::NodePtr node(new gazebo::transport::Node());
-                node->Init();
-
-                pagoda->_log->d("Gazebo client: subscription");
-
-                gazebo::transport::SubscriberPtr sub_world = node->Subscribe("~/world_stats", &Pagoda::callback_world, pagoda);
-                gazebo::transport::SubscriberPtr sub_model = node->Subscribe("~/model/info", &Pagoda::callback_model_info, pagoda);
-                gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("~/pose/info", &Pagoda::callback_pose_info, pagoda);
-
-                gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("~/request");
-
-                gazebo::transport::SubscriberPtr sub_request = node->Subscribe("~/request", &Pagoda::callback_request, pagoda);
-                gazebo::transport::SubscriberPtr sub_response = node->Subscribe("~/response", &Pagoda::callback_response, pagoda);
-                gazebo::transport::SubscriberPtr sub_scene = node->Subscribe("~/scene", &Pagoda::callback_scene, pagoda);
-
-                gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("~/skeleton_pose/info", &Pagoda::callback_skeleton_pose_info, pagoda);
-                gazebo::transport::SubscriberPtr sub_material = node->Subscribe("~/material", &Pagoda::callback_material, pagoda);
-                gazebo::transport::SubscriberPtr sub_physics = node->Subscribe("~/physics", &Pagoda::callback_physics, pagoda);
-
-                pub_request->WaitForConnection();
-                pub_request->Publish(*(gazebo::msgs::CreateRequest("scene_info")), false);
-
-                pagoda->_log->d("Gazebo client: ready");
-
-                while(!pagoda->_should_gazebo_halt)
-                    gazebo::common::Time::MSleep(10);
-
-                gazebo::client::shutdown();
-            },
-            this, argc, argv);
+        _worker = std::thread([&] { this->_connect_to_transport_layer(argc, argv); });
     }
 
-    void halt_transport_layer() { _should_gazebo_halt = true; }
+    const boost::shared_ptr<gazebo::rendering::TransportProcessor> &get_tproc() const { return _tproc; }
 
-    void lock() { _mutex.lock(); }
-
-    void unlock() { _mutex.unlock(); }
+    void halt_transport_layer() { _worker_cv.notify_all(); }
+    void lock_scenegraph() { _scenegraph_mutex.lock(); }
+    void unlock_scenegraph() { _scenegraph_mutex.unlock(); }
 
   private:
-    Log *_log = nullptr;
     Loader _tml;
+    gua::MaterialLoader _material_loader;
+    Log *_log;
 
-    gua::SceneGraph *_scene_graph = nullptr;
     map_id_node *_nodemap;
-    std::mutex _mutex;
 
-    bool _should_gazebo_halt = false;
-    std::thread _gazebo_client_worker;
+    std::mutex _scenegraph_mutex;
+    gua::SceneGraph *_scene_graph = nullptr;
 
-    void callback_world(ConstWorldStatisticsPtr &_msg) { _log->i("callback_world"); }
+    std::thread _worker;
+    std::mutex _worker_mutex;
+    std::condition_variable _worker_cv;
 
-    void callback_material(ConstMaterialPtr &_msg) { _log->i("callback_material"); }
+    boost::shared_ptr<gazebo::rendering::TransportProcessor> _tproc;
 
-    void callback_physics(ConstPhysicsPtr &_msg) { _log->i("callback_physics"); }
+    void _connect_to_transport_layer(int argc, char **argv)
+    {
+        Log log("worker");
+
+        log.d("Gazebo client: setup");
+
+        gazebo::client::setup(argc, argv);
+
+        log.d("Gazebo client: init transport node");
+
+        gazebo::transport::NodePtr node(new gazebo::transport::Node());
+        node->Init();
+
+        log.d("Gazebo client: subscription");
+
+        gazebo::transport::SubscriberPtr sub_world = node->Subscribe("~/world_stats", &Pagoda::callback_world, this);
+        gazebo::transport::SubscriberPtr sub_model = node->Subscribe("~/model/info", &Pagoda::callback_model_info, this);
+        gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("~/pose/info", &Pagoda::callback_pose_info, this);
+        gazebo::transport::SubscriberPtr sub_material = node->Subscribe("~/material", &Pagoda::callback_material, this);
+
+        gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("~/request");
+
+        gazebo::transport::SubscriberPtr sub_request = node->Subscribe("~/request", &Pagoda::callback_request, this);
+        gazebo::transport::SubscriberPtr sub_response = node->Subscribe("~/response", &Pagoda::callback_response, this);
+        gazebo::transport::SubscriberPtr sub_scene = node->Subscribe("~/scene", &Pagoda::callback_scene, this);
+        gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("~/skeleton_pose/info", &Pagoda::callback_skeleton_pose_info, this);
+
+        if(!pub_request->WaitForConnection(gazebo::common::Time(5, 0)))
+        {
+            log.e("Gazebo client: connection not established");
+        }
+        else
+        {
+            pub_request->Publish(*(gazebo::msgs::CreateRequest("scene_info")), false);
+            log.d("Gazebo client: connection established");
+
+            std::unique_lock<std::mutex> lk(this->_worker_mutex);
+            this->_worker_cv.wait(lk);
+        }
+
+        pub_request->Fini();
+        node->Fini();
+
+        gazebo::client::shutdown();
+
+        log.d("Gazebo client: over");
+    }
+
+    void callback_world(ConstWorldStatisticsPtr &_msg)
+    {
+        _log->d("callback_world");
+        _log->d(_msg->DebugString().c_str());
+
+        // TODO
+    }
+
+    void callback_material(ConstMaterialPtr &_msg)
+    {
+        _log->d("callback_material");
+        _log->d(_msg->DebugString().c_str());
+
+        // TODO
+    }
 
     void callback_skeleton_pose_info(ConstPoseAnimationPtr &ptr)
     {
         _log->d("callback_skeleton_pose_info");
         _log->d(ptr->DebugString().c_str());
+
+        _tproc->OnSkeletonPoseMsg(ptr);
     }
 
     // "~/model/info"
     void callback_model_info(ConstModelPtr &ptr)
     {
-        _mutex.lock();
-
         _log->d("callback_model_info");
         _log->d(ptr->DebugString().c_str());
 
+        _tproc->OnModelMsg(ptr);
+
         // _log->d("Add transform node");
+
+        _scenegraph_mutex.lock();
 
         auto transform = _scene_graph->add_node<gua::node::TransformNode>("/transform", ptr->name());
 
@@ -188,7 +215,9 @@ class Pagoda
                         s_y = v_it.geometry().box().size().y();
                         s_z = v_it.geometry().box().size().z();
 
-                        geometry_node = _tml.create_geometry_from_file("box", "data/objects/box.obj",
+                        std::shared_ptr<gua::Material> material_ptr = _material_loader.load_material("data/materials/box.mtl", "data/materials/box.mtl", false);
+
+                        geometry_node = _tml.create_geometry_from_file("box", "data/objects/box.obj", material_ptr,
                                                                        gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS);
 
                         geometry_node->scale(s_x, s_y, s_z);
@@ -338,7 +367,7 @@ class Pagoda
 
         // _log->d(print_scenegraph(_scene_graph->get_root(), 10).c_str());
 
-        _mutex.unlock();
+        _scenegraph_mutex.unlock();
     }
 
     // "~/pose/info"
@@ -346,6 +375,8 @@ class Pagoda
     {
         _log->d("callback_pose_info");
         _log->d(ptr->DebugString().c_str());
+
+        _tproc->OnPoseMsg(ptr);
 
         for(const auto &it : ptr->pose())
         {
@@ -391,11 +422,15 @@ class Pagoda
         sceneMsg.ParseFromString(ptr->serialized_data());
 
         _log->d(sceneMsg.DebugString().c_str());
+
+        _tproc->OnResponse(ptr);
     }
 
     void callback_scene(ConstScenePtr &ptr)
     {
         _log->d("callback_scene");
         _log->d(ptr->DebugString().c_str());
+
+        _tproc->ProcessSceneMsg(ptr);
     }
 };

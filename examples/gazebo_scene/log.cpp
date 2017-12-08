@@ -15,7 +15,7 @@ class Log
 
     Log()
     {
-        char *rand_name = new char[8];
+        auto *rand_name = new char[8];
 
         gen_random(rand_name, 8);
 
@@ -108,7 +108,7 @@ class Log
 
         for(int i = 0; i < len; ++i)
         {
-            s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+            s[i] = alphanum[std::rand() % (sizeof(alphanum) - 1)];
         }
 
         s[len] = 0;

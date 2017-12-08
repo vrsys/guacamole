@@ -6,7 +6,7 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(${_EXE_NAME} main.cpp pagoda.cpp log.cpp common.h loader.cpp)
+add_executable(${_EXE_NAME} main.cpp pagoda.cpp log.cpp common.h loader.cpp transport_processor.cpp)
 
 list(APPEND GAZEBO_INCLUDE_DIRS "/usr/include/gazebo-7")
 
