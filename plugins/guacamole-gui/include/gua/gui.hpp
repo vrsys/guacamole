@@ -26,5 +26,6 @@
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/GLSurface.inl>
 #include <gua/gui/GuiTexture.hpp>
+#include <gua/gui/Paths.hpp>
 
 #endif  // GUA_INCLUDE_GUI_HPP

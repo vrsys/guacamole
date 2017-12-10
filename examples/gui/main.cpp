@@ -48,12 +48,16 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 int main(int argc, char** argv) {
 
   //initialize CEF
-  int result = gua::Interface::instance()->init(argc, argv);
+  auto CEFInterface = gua::Interface::instance();
+  int result = CEFInterface->init(argc, argv);
   if(result != 0){
     return result;
   }
   // initialize guacamole
   gua::init(argc, argv);
+
+  auto Paths = gua::Paths::instance();
+  Paths->init(argc, argv);
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -81,11 +85,13 @@ int main(int argc, char** argv) {
   auto gui = std::make_shared<gua::GuiResource>();
   gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
-/*
+
   gua::math::vec2 fps_size(170.f, 55.f);
 
+  std::string fps_path = "file://" + Paths->make_absolute("data/html/fps.html");
+  std::cout << fps_path << std::endl;
   auto fps = std::make_shared<gua::GuiResource>();
-  fps->init("fps", "asset://gua/data/html/fps.html", fps_size);
+  fps->init("fps", fps_path, fps_size);
 
   auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
   fps_quad->data.texture() = "fps";
@@ -93,11 +99,14 @@ int main(int argc, char** argv) {
   fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   graph.add_node("/", fps_quad);
-*/
+
   gua::math::vec2 address_bar_size(340.f, 55.f);
 
+  std::string address_bar_path = "file://" + Paths->make_absolute("data/html/address_bar.html");
+  std::cout << address_bar_path << std::endl;
+
   auto address_bar = std::make_shared<gua::GuiResource>();
-  address_bar->init("address_bar", "file://data/html/address_bar.html", address_bar_size);
+  address_bar->init("address_bar", address_bar_path, address_bar_size);
 
   auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
   address_bar_quad->data.texture() = "address_bar";
