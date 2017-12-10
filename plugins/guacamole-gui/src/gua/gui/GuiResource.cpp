@@ -93,9 +93,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
   GLSurface* surface = new GLSurface(size.x, size.y);
   browserClient_ = new GuiBrowserClient(surface);
 
-  window_info_.SetAsWindowless(0);
-
-  browser_ = CefBrowserHost::CreateBrowserSync(window_info_, browserClient_.get(), url_ , browserSettings_, nullptr);
+  browser_ = Interface::instance()->create_browser(window_info_, browserClient_, url_, browserSettings_);
   std::cout << "Browser setup" << std::endl;
   gui_texture_ = std::make_shared<GuiTexture>(size.x, size.y, browserClient_);
 

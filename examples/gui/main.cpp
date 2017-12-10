@@ -47,35 +47,11 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 
 int main(int argc, char** argv) {
 
-  //parses CEF command line arguments (if there are any)
-  CefMainArgs args(argc, argv);
-
-    {
-        int result = CefExecuteProcess(args, nullptr, nullptr);
-        // checkout CefApp, derive it and set it as second parameter, for more control on
-        // command args and resources.
-        if (result >= 0) // child proccess has endend, so exit.
-        {
-            return result;
-        }
-        if (result == -1)
-        {
-            // we are here in the father proccess.
-        }
-    }
-    {
-        CefSettings settings;
-
-        bool result = CefInitialize(args, settings, nullptr, nullptr);
-        // CefInitialize creates a sub-proccess and executes the same executeable, as calling CefInitialize, if not set different in settings.browser_subprocess_path
-        // if you create an extra program just for the childproccess you only have to call CefExecuteProcess(...) in it.
-        if (!result)
-        {
-            // handle error(g_fullscreen_textures[0]
-            return -1;
-        }
-    }
-    
+  //initialize CEF
+  int result = gua::Interface::instance()->init(argc, argv);
+  if(result != 0){
+    return result;
+  }
   // initialize guacamole
   gua::init(argc, argv);
 
@@ -106,26 +82,6 @@ int main(int argc, char** argv) {
   gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
 /*
-  CefWindowInfo window_info_;
-  CefBrowserSettings browserSettings_;
-  std::string name = "google";
-
-  CefRefPtr<gua::GLSurface> surface = new gua::GLSurface(gui_size.x, gui_size.y);
-  CefRefPtr<gua::GuiBrowserClient> browserClient_ = new gua::GuiBrowserClient(surface);
-
-  window_info_.SetAsWindowless(0);
-
-  CefRefPtr<CefBrowser> browser_ = CefBrowserHost::CreateBrowserSync(window_info_, browserClient_.get(), "https://www.google.com" , browserSettings_, nullptr);
-  std::cout << "Browser setup" << std::endl;
-  std::shared_ptr<gua::GuiTexture> gui_texture_ = std::make_shared<gua::GuiTexture>(gui_size.x, gui_size.y, browserClient_);
-
-  gua::TextureDatabase::instance()->add(name, gui_texture_);
-  std::cout << "texture setup" << std::endl;
-*/
-
-
-    //CefBrowserHost::WasResized();
-/*
   gua::math::vec2 fps_size(170.f, 55.f);
 
   auto fps = std::make_shared<gua::GuiResource>();
@@ -137,11 +93,11 @@ int main(int argc, char** argv) {
   fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
   graph.add_node("/", fps_quad);
-
+*/
   gua::math::vec2 address_bar_size(340.f, 55.f);
 
   auto address_bar = std::make_shared<gua::GuiResource>();
-  address_bar->init("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
+  address_bar->init("address_bar", "file://data/html/address_bar.html", address_bar_size);
 
   auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
   address_bar_quad->data.texture() = "address_bar";
@@ -166,7 +122,7 @@ int main(int argc, char** argv) {
       gui->go_forward();
     }
   });
-  */
+  
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
@@ -262,8 +218,6 @@ int main(int argc, char** argv) {
 
   gua::Renderer renderer;
 
-  //cef_paint_element_type_t t;
-
   // application loop
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0/500.0);
@@ -275,10 +229,8 @@ int main(int argc, char** argv) {
     //sstr << "FPS: " << renderer.get_application_fps()
     //     << " / " << window->get_rendering_fps();
     //fps->call_javascript("set_fps_text", sstr.str());
-
-    //CefBrowserHost::Invalidate(t.View);
     // ray->rotate(1, 0, 1, 0);
-    //gua::Interface::instance()->update();
+    gua::Interface::instance()->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
@@ -287,12 +239,9 @@ int main(int argc, char** argv) {
     if (window->should_close()) {
       renderer.stop();
       window->close();
-      loop.stop();
-      CefShutdown();
+      loop.stop();      
     } else {
-
-      //CefBrowserHost::Invalidate(cef_paint_element_type_t::PET_VIEW);
-      CefDoMessageLoopWork();
+      
       renderer.queue_draw({&graph});
     }
   });

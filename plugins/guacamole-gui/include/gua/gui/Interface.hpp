@@ -28,6 +28,9 @@
 #include <gua/events/Signal.hpp>
 #include <gua/gui/mouse_enums.hpp>
 
+#include <include/cef_app.h>
+#include <gua/gui/GuiBrowserClient.hpp>
+
 // forward declares ------------------------------------------------------------
 namespace Awesomium {
   class WebCore;
@@ -52,6 +55,7 @@ class GUA_DLL Interface : public Singleton<Interface> {
   events::Signal<Cursor> on_cursor_change;
 
   void update() const;
+  int init(int argc, char** argv) const;
 
   friend class GuiResource;
   friend class Singleton<Interface>;
@@ -62,6 +66,10 @@ class GUA_DLL Interface : public Singleton<Interface> {
   // this class is a Singleton --- private c'tor and d'tor
   Interface();
   ~Interface();
+
+  CefSettings settings_;
+  CefRefPtr<CefBrowser> create_browser(CefWindowInfo& info, CefRefPtr<GuiBrowserClient> client,
+                                       std::string url, CefBrowserSettings settings) const;
 
   /*
   Awesomium::WebView* create_webview(int width, int height) const;

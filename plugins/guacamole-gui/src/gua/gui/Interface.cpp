@@ -51,7 +51,40 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Interface::update() const {
-  //web_core_->Update();
+  CefDoMessageLoopWork();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int Interface::init(int argc, char** argv) const{
+  //parses CEF command line arguments (if there are any)
+  CefMainArgs args(argc, argv);
+
+    {
+        int result = CefExecuteProcess(args, nullptr, nullptr);
+        // checkout CefApp, derive it and set it as second parameter, for more control on
+        // command args and resources.
+        if (result >= 0) // child proccess has endend, so exit.
+        {
+            return result;
+        }
+        if (result == -1)
+        {
+            // we are here in the father proccess.
+        }
+    }
+    {
+        bool result = CefInitialize(args, settings_, nullptr, nullptr);
+        // CefInitialize creates a sub-proccess and executes the same executeable, as calling CefInitialize, if not set different in settings.browser_subprocess_path
+        // if you create an extra program just for the childproccess you only have to call CefExecuteProcess(...) in it.
+        if (!result)
+        {
+            // handle error(g_fullscreen_textures[0]
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +112,7 @@ Interface::~Interface() {
   delete factory;
   web_session_->Release();
   */
+  CefShutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +124,12 @@ Interface::~Interface() {
 */
 
 ////////////////////////////////////////////////////////////////////////////////
+
+CefRefPtr<CefBrowser> Interface::create_browser(CefWindowInfo& info, CefRefPtr<GuiBrowserClient> client,
+                                       std::string url, CefBrowserSettings settings) const{
+  info.SetAsWindowless(0);
+  return CefBrowserHost::CreateBrowserSync(info, client.get(), url, settings, nullptr);
+}
 
 }
 

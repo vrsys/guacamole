@@ -99,7 +99,12 @@ namespace gua {
     std::cout << "call paint" << std::endl;
     std::unique_lock<std::mutex> lock(mutex_);
     std::cout << "One Frame Update\n";
-    memcpy(&buffer_.front(), buffer, width*height*4);
+
+    for (int r = 0; r < height_; r++) {
+      auto row(height_ - r  - 1);
+      memcpy(&buffer_.front() + row * width_*4, buffer + r * width_ * 4, width_ * 4);
+    }
+    //memcpy(&buffer_.front(), buffer, width*height*4);
 
     for (uint32_t i(0); i < needs_update_.size(); ++i) {
       needs_update_[i] = true;
