@@ -11,13 +11,16 @@ namespace spoints{
 
 
 struct matrix_package{
-  std::array<float,16> modelview_matrix;
-  std::array<float,16> projection_matrix;
+  float modelview_matrix[16];
+  float projection_matrix[16];
+  uint32_t res_xy[2];
 
+/*
   void swap(matrix_package& rhs) {
     modelview_matrix.swap(rhs.modelview_matrix);
     projection_matrix.swap(rhs.projection_matrix);
   }
+*/
 };
 
 class NetKinectArray{
@@ -33,7 +36,7 @@ public:
 
   inline unsigned char* getBuffer() { return m_buffer.data(); }
 
-  void push_matrix_package(matrix_package mp);
+  void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
 
 private:
   void readloop();
@@ -56,6 +59,15 @@ private:
   const std::string m_server_feedback_endpoint;
   matrix_package m_matrix_package;
   matrix_package m_matrix_package_back;
+
+  bool        current_feedback_is_camera_status = true;
+  std::size_t current_feedback_view_uuid = {0};
+  bool current_feedback_is_stereo_mode;
+
+  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > > 
+  camera_group_to_uuid_to_matrix_package_list;
+  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > > 
+  camera_group_to_uuid_to_matrix_package_list_back;
 
   std::atomic<bool> m_feedback_need_swap;
   std::thread m_send_feedback;
