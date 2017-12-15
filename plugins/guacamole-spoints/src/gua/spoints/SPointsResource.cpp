@@ -67,9 +67,11 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
 }
 
 void 
-SPointsResource::push_matrix_package(spoints::matrix_package mp) {
+SPointsResource::push_matrix_package(bool is_camera, std::size_t view_uuid, bool stereo_mode, spoints::matrix_package mp) {
   if (nullptr != spointsdata_) {
-    spointsdata_->nka_->push_matrix_package(mp);
+
+    std::cout << "SpointsResource PushMatrixPackage: " << is_camera << "\n";
+    spointsdata_->nka_->push_matrix_package(is_camera, view_uuid, stereo_mode, mp);
   }
 }
 
@@ -85,14 +87,17 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
   
 
 
+  // synchronize feedback
+  spointsdata_->nka_->update_feedback(ctx);
+
   if (spointsdata_->frame_counter_ != ctx.framecount) {
     spointsdata_->frame_counter_ = ctx.framecount;
   } else {
+  
     return;
   }
 
-  // synchronize feedback
-  spointsdata_->nka_->update_feedback(ctx);
+
 
   // synchronize vertex data
   spointsdata_->nka_->update(ctx);
