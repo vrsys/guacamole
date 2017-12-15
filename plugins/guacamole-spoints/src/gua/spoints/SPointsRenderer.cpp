@@ -178,6 +178,7 @@ void SPointsRenderer::render(Pipeline& pipe,
   auto objects(scene.nodes.find(std::type_index(typeid(node::SPointsNode))));
   int view_id(camera.config.get_view_id());
 
+
   if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
     for (auto& o : objects->second) {
@@ -219,10 +220,54 @@ void SPointsRenderer::render(Pipeline& pipe,
       memcpy((char*) &current_package, (char*) mv_matrix.data_array, 16 * sizeof(float) );
       memcpy( ((char*) &current_package) +  16 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
       
-      spoints_resource->push_matrix_package(current_package);
-      // update stream data
-      spoints_resource->update_buffers(pipe.get_context(), pipe);
-      //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
+      scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+
+
+
+      current_package.res_xy[0] = render_target_dims.x;
+      current_package.res_xy[1] = render_target_dims.y;
+
+      std::cout << "PUTTING RESSES: " << current_package.res_xy[0] << "; " << current_package.res_xy[1] << "\n";
+      /*
+      std::cout << "mv: " << "\n";
+      for(int i = 0; i < 16; ++i) {
+        std::cout << current_package.modelview_matrix[i] << " ";
+
+        if(i%4 == 3) {
+          std::cout << "\n";
+        }
+      }
+      std::cout << "\n\n";
+
+
+      std::cout << "proj: " << "\n";
+      for(int i = 0; i < 16; ++i) {
+        std::cout << current_package.projection_matrix[i] << " ";
+
+        if(i%4 == 3) {
+          std::cout << "\n";
+        }
+      }
+      std::cout << "\n\n";
+
+*/
+
+    auto camera_id = pipe.current_viewstate().viewpoint_uuid;
+    //auto view_direction = pipe.current_viewstate().view_direction;
+    //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
+
+
+    bool is_camera = (!pipe.current_viewstate().shadow_mode);
+
+    bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
+
+    std::cout << "is camera: " << is_camera << "\n";
+    std::size_t view_uuid = camera_id;
+
+    spoints_resource->push_matrix_package(is_camera, view_uuid, stereo_mode, current_package);
+    // update stream data
+    spoints_resource->update_buffers(pipe.get_context(), pipe);
+    //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
 
 
 
