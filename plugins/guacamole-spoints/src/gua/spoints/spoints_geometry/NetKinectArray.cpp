@@ -37,7 +37,7 @@ NetKinectArray::~NetKinectArray()
 }
 
 void 
-NetKinectArray:: draw(gua::RenderContext const& ctx) {
+NetKinectArray::draw(gua::RenderContext const& ctx) {
 
   if( point_layout_ != nullptr ) {
     scm::gl::context_vertex_input_guard vig(ctx.render_context);
@@ -55,8 +55,13 @@ NetKinectArray:: draw(gua::RenderContext const& ctx) {
 }
 
 void 
-NetKinectArray::push_matrix_package(matrix_package mp) {
-  m_matrix_package.swap(mp);
+NetKinectArray::push_matrix_package(bool is_camera, std::size_t view_uuid, bool stereo_mode, matrix_package mp) {
+  std::swap(m_matrix_package, mp);
+  current_feedback_is_camera_status = is_camera;
+  current_feedback_view_uuid = view_uuid;
+  current_feedback_is_stereo_mode = stereo_mode;
+
+  std::cout << "NetKinectArray: " << current_feedback_is_camera_status << "\n";
 }
 
 bool
@@ -103,10 +108,75 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
 void
 NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
   {
-    std::lock_guard<std::mutex> lock(m_feedback_mutex);
-    m_matrix_package.swap(m_matrix_package_back);
 
-    m_feedback_need_swap.store(true);
+    std::cout << !m_feedback_need_swap.load() << "\n";
+
+    if(!m_feedback_need_swap.load()) {
+      std::lock_guard<std::mutex> lock(m_feedback_mutex);
+      std::swap(m_matrix_package, m_matrix_package_back);
+
+
+      std::cout << "while updating feedback: " << current_feedback_is_camera_status << "\n";
+
+      std::cout << "MONO MODE: " << int(current_feedback_is_stereo_mode) << "\n";
+
+      if( camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid].end() != camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid].find(current_feedback_is_stereo_mode) ) {
+        
+        std::cout << "detected identity and was actual camera\n";
+        std::swap(camera_group_to_uuid_to_matrix_package_list_back, camera_group_to_uuid_to_matrix_package_list);
+        camera_group_to_uuid_to_matrix_package_list.clear();
+        camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid][current_feedback_is_stereo_mode].push_back(m_matrix_package_back);
+        m_feedback_need_swap.store(true);
+
+      } else {
+
+        auto& known_feedback_statii
+          = camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid][current_feedback_is_stereo_mode];
+
+        bool detected_matrix_identity = false;
+
+
+        for(auto const& curr_matrix_package : known_feedback_statii) {
+          if( !memcmp ( &curr_matrix_package, &m_matrix_package_back, sizeof(matrix_package) ) ) {
+            detected_matrix_identity = true;
+            break;
+          }
+        }
+
+        if( camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid].end() != camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid].find(current_feedback_is_stereo_mode) ) {
+          std::cout << "detected identity and was actual camera\n";
+          std::swap(camera_group_to_uuid_to_matrix_package_list_back, camera_group_to_uuid_to_matrix_package_list);
+          camera_group_to_uuid_to_matrix_package_list.clear();
+          camera_group_to_uuid_to_matrix_package_list[current_feedback_is_camera_status][current_feedback_view_uuid][current_feedback_is_stereo_mode].push_back(m_matrix_package_back);
+          m_feedback_need_swap.store(true);            
+        } else {
+
+          if(!detected_matrix_identity) {
+            std::cout << "did not detect identity\n";
+            known_feedback_statii.push_back(m_matrix_package_back);
+          } else {
+            if(current_feedback_is_camera_status) {
+
+
+
+
+
+
+            } else {
+              std::cout << "Not an actual camera. Adding more matrix packages.\n\n";
+            }
+
+          }
+        }
+
+      }
+
+
+      
+
+
+    }
+
   }
 }
 
@@ -149,10 +219,9 @@ void NetKinectArray::readloop() {
     memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[0], sizeof(size_t) );
 
     size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
-    if(m_buffer_back.size() < data_points_byte_size) {
+    //if(m_buffer_back.size() < data_points_byte_size) {
       m_buffer_back.resize(data_points_byte_size);
-    }
-
+   // }
 
     //memcpy((unsigned char*) m_buffer_back.data(), (unsigned char*) zmqm.data(), message_size);
     memcpy((unsigned char*) &m_buffer_back[0], ((unsigned char*) zmqm.data()) + header_byte_size, data_points_byte_size);
@@ -188,13 +257,61 @@ void NetKinectArray::sendfeedbackloop() {
     if(m_feedback_need_swap.load()) { // swap
       std::lock_guard<std::mutex> lock(m_feedback_mutex);
 
-      zmq::message_t zmqm(32*sizeof(float));
+      size_t feedback_header_byte = 100;
+
+
+
+      uint32_t num_recorded_matrix_packages = 0;
+
+      std::vector<matrix_package> flattened_matrix_packages;
+
+      for ( auto const& camera_status_list : camera_group_to_uuid_to_matrix_package_list_back) {
+        for ( auto const& view_ids : camera_status_list.second ) {
+            for ( auto const& camera_modes : view_ids.second ) {
+              //for( auto const& matrix_vector : view_ids.second) {
+              std::cout << "cam status: " << camera_status_list.first << " with " << camera_modes.second.size() << " elements\n";
+              num_recorded_matrix_packages += camera_modes.second.size();
+
+              for(auto const& matrix : camera_modes.second) {
+                flattened_matrix_packages.push_back(matrix);
+              }
+              ////}
+            }
+        }
+      }
+
+      //HEADER DATA SO FAR:
+
+      /* 00000000 uint32_t num_matrices
+
+      */
+
+      zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(matrix_package) );
+
+
+      std::cout << "GOING TO SEND " << num_recorded_matrix_packages <<  " MATRICES\n";
+
+      //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
 
       // fill two matrices (current feedback to TSDF-reconstruction)
       // 1. matrix: modelview matrix of avatar 
       // 2. matrix: projection matrix
-      memcpy((char*)zmqm.data(), (char*)&m_matrix_package_back, 32*sizeof(float));
+      //memcpy((char*)zmqm.data(), (char*)&m_matrix_package_back, 32*sizeof(float));
 
+      memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
+      memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(flattened_matrix_packages[0]), (num_recorded_matrix_packages) *  sizeof(matrix_package) );
+
+
+
+      for ( auto const& camera_status_list : camera_group_to_uuid_to_matrix_package_list_back) {
+        for ( auto const& view_ids : camera_status_list.second ) {
+          //for( auto const& matrix_vector : view_ids.second) {
+            std::cout << "cam status: " << camera_status_list.first << " with " << view_ids.second.size() << " elements\n";
+            num_recorded_matrix_packages += view_ids.second.size();
+          ////}
+        }
+      }
+      std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
 
       // send feedback
       socket.send(zmqm); // blocking
