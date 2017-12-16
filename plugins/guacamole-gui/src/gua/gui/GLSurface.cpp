@@ -74,26 +74,7 @@ namespace gua {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  /*
-  void GLSurface::Paint(unsigned char* src_buffer, int src_row_span,
-                        Awesomium::Rect const& src_rect,
-                        Awesomium::Rect const& dest_rect) {
-
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    for (int r = 0; r < dest_rect.height; r++) {
-      auto row(height_ - r - dest_rect.y - 1);
-      memcpy(&buffer_.front() + row * width_*4 + (dest_rect.x * 4),
-             src_buffer + (r + src_rect.y) * src_row_span + (src_rect.x * 4),
-             dest_rect.width * 4);
-    }
-
-    for (int i(0); i < needs_update_.size(); ++i) {
-      needs_update_[i] = true;
-    }
-  }
-  */
-
+  
   void GLSurface::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList &dirtyRects, const void *buffer, int width, int height)
   {
     std::cout << "call paint" << std::endl;

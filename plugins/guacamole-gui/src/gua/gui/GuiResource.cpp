@@ -29,6 +29,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/gui/Paths.hpp>
 
 // external headers
 #include <Awesomium/WebCore.h>
@@ -39,6 +40,7 @@
 
 namespace gua {
 
+/*
 namespace {
 
 #include "AweKeyEvent.ipp"
@@ -48,6 +50,7 @@ namespace {
 #include "AweJSMethodHandler.ipp"
 
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,9 +83,6 @@ void GuiResource::init(std::string const& name, std::string const& url,
   });
   */
 
-  //view_ = Interface::instance()->create_webview(size.x, size.y);
-  //view_->SetTransparent(true);
-  //view_->Focus();
   //view_->set_view_listener(new AweViewListener());
   //view_->set_load_listener(new AweLoadListener(this));
   //view_->set_process_listener(new AweProcessListener());
@@ -104,6 +104,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
 ////////////////////////////////////////////////////////////////////////////////
 
 GuiResource::~GuiResource() {
+  std::cout << name_ << " destroyed" << std::endl;
   /*
   delete static_cast<AweViewListener*>(view_->view_listener());
   delete static_cast<AweLoadListener*>(view_->load_listener());
@@ -115,12 +116,22 @@ GuiResource::~GuiResource() {
     delete js_window_;
   }
   */
+  
+  //delete static_cast<GLSurface*>(browserClient_->GetRenderHandler().get());
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::set_url(std::string const& url) {
   url_ = url;
+  
+  if(url_.find("asset://gua/") == 0) {
+    url_.erase(0, 12);
+    std::cout << url_ << std::endl;
+    url_ = "file://" + gua::Paths::instance()->make_absolute(url_);
+  }
+  
   /*
   if (view_) {
     Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
@@ -296,5 +307,11 @@ void GuiResource::add_javascript_callback(std::string const& callback, bool with
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void GuiResource::myTest() const{
+  CefRefPtr<CefFrame> frame = browser_->GetMainFrame();
+  frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');",
+  frame->GetURL(), 0);
+}
+
 
 }

@@ -116,6 +116,9 @@ class GuiResource {
       return result_callbacks_;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    void myTest() const;
+
   private:
 
     void add_javascript_callback(std::string const& callback, bool with_result);
@@ -126,8 +129,6 @@ class GuiResource {
     std::shared_ptr<GuiTexture> gui_texture_ = nullptr;
 
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
-    //Awesomium::WebView* view_ = nullptr;
-    //Awesomium::JSValue* js_window_ = nullptr;
     CefRefPtr<CefBrowser> browser_;
     CefRefPtr<GuiBrowserClient> browserClient_;
     CefWindowInfo window_info_;

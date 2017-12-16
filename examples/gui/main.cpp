@@ -83,12 +83,12 @@ int main(int argc, char** argv) {
   gua::math::vec2 gui_size(1024.f, 1024.f);
 
   auto gui = std::make_shared<gua::GuiResource>();
-  gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
+  gui->init("google", "https://corgiorgy.com/", gua::math::vec2(1024.f, 1024.f));
 
 
   gua::math::vec2 fps_size(170.f, 55.f);
 
-  std::string fps_path = "file://" + Paths->make_absolute("data/html/fps.html");
+  std::string fps_path = "asset://gua/data/html/fps.html";
   std::cout << fps_path << std::endl;
   auto fps = std::make_shared<gua::GuiResource>();
   fps->init("fps", fps_path, fps_size);
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
   gua::math::vec2 address_bar_size(340.f, 55.f);
 
-  std::string address_bar_path = "file://" + Paths->make_absolute("data/html/address_bar.html");
+  std::string address_bar_path = "asset://gua/data/html/test.html";
   std::cout << address_bar_path << std::endl;
 
   auto address_bar = std::make_shared<gua::GuiResource>();
@@ -239,7 +239,8 @@ int main(int argc, char** argv) {
     //     << " / " << window->get_rendering_fps();
     //fps->call_javascript("set_fps_text", sstr.str());
     // ray->rotate(1, 0, 1, 0);
-    gua::Interface::instance()->update();
+    //gui->myTest();
+    CEFInterface->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
@@ -250,7 +251,6 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();      
     } else {
-      
       renderer.queue_draw({&graph});
     }
   });

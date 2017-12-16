@@ -106,6 +106,7 @@ Interface::Interface() {
 ////////////////////////////////////////////////////////////////////////////////
 
 Interface::~Interface() {
+  std::cout << "Interface destroyed" << std::endl;
   /*
   auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
   Awesomium::WebCore::Shutdown();
@@ -114,14 +115,6 @@ Interface::~Interface() {
   */
   CefShutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*Awesomium::WebView* Interface::create_webview(int width, int height) const {
-  return web_core_->CreateWebView(width, height, web_session_,
-                                  Awesomium::kWebViewType_Offscreen);
-}
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 

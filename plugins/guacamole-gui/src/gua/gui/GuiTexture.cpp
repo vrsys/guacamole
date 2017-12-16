@@ -32,7 +32,6 @@ namespace gua {
 
 GuiTexture::GuiTexture(unsigned width, unsigned height, CefRefPtr<GuiBrowserClient> browserClient)
     : Texture2D(width, height, scm::gl::FORMAT_RGBA_8)
-    //, view_(view)
     , browserClient_(browserClient)
   {}
 
