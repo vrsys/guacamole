@@ -29,7 +29,13 @@
 #include <gua/gui/mouse_enums.hpp>
 
 #include <include/cef_app.h>
+#include <include/cef_command_line.h>
 #include <gua/gui/GuiBrowserClient.hpp>
+/*
+#if defined(OS_WIN)
+#include <windows.h>
+#endif
+*/
 
 // forward declares ------------------------------------------------------------
 namespace Awesomium {
@@ -60,6 +66,13 @@ class GUA_DLL Interface : public Singleton<Interface> {
   friend class GuiResource;
   friend class Singleton<Interface>;
 
+  // Process types that may have different CefApp instances.
+  enum ProcessType {
+    PROCESS_TYPE_BROWSER,
+    PROCESS_TYPE_RENDERER,
+    PROCESS_TYPE_OTHER,
+  };
+
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
  private:
@@ -67,9 +80,32 @@ class GUA_DLL Interface : public Singleton<Interface> {
   Interface();
   ~Interface();
 
-  CefSettings settings_;
   CefRefPtr<CefBrowser> create_browser(CefWindowInfo& info, CefRefPtr<GuiBrowserClient> client,
                                        std::string url, CefBrowserSettings settings) const;
+  // Called in the main browser process to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateBrowserProcessApp();
+
+  // Called in the renderer sub-process to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateRendererProcessApp();
+
+  // Called in other sub-processes to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateOtherProcessApp();
+
+  // Create a new CommandLine object for use before CEF initialization.
+  CefRefPtr<CefCommandLine> CreateCommandLine(const CefMainArgs& main_args);
+  // Determine the process type based on command-line arguments.
+  ProcessType GetProcessType(const CefRefPtr<CefCommandLine>& command_line);
+
+ ///////////////////////////////////////////////////////////////////////////////
+ // ---------------------------------------------------------- private member
+
+  CefSettings settings_;
+  //process flags
+  const std::string kProcessType = "type";
+  const std::string kRendererProcess = "renderer";
+  #if defined(OS_LINUX)
+  const std::string kZygoteProcess = "zygote";
+  #endif
 };
 
 // -----------------------------------------------------------------------------
