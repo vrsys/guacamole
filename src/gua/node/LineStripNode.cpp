@@ -267,5 +267,27 @@ namespace node {
   std::shared_ptr<Node> LineStripNode::copy() const {
     return std::make_shared<LineStripNode>(*this);
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  void LineStripNode::push_vertex(float x, float y, float z, 
+                   float col_r, float col_g, float col_b, float col_a,
+                   float thickness) {
+    LineStrip::Vertex vertex_to_push(x, y, z, col_r, col_g, col_b, col_a, thickness);
+    geometry_->push_vertex(vertex_to_push);
+  };
+
+  void LineStripNode::pop_front_vertex() {
+    geometry_->pop_front_vertex();
+  };
+
+  void LineStripNode::pop_back_vertex() {
+    geometry_->pop_back_vertex();
+  };
+
+  void LineStripNode::clear_vertices() {
+    geometry_->clear_vertices();
+  }
+
 }
 }

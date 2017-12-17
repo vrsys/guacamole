@@ -9,7 +9,6 @@
 //external headers
 #include <iostream>
 
-
 namespace gua {
 
 
@@ -17,9 +16,12 @@ LineStrip::
 LineStrip(unsigned int intitial_line_buffer_size) : 
   vertex_reservoir_size(intitial_line_buffer_size),
   num_occupied_vertex_slots(0) {
+
+  std::cout << "INITIAL LINE BUFFER SIZE: " << intitial_line_buffer_size << "\n";
   positions.resize(vertex_reservoir_size);
   colors.resize(vertex_reservoir_size);
   thicknesses.resize(vertex_reservoir_size);
+
 }
 
 
@@ -49,15 +51,19 @@ LineStrip(LineObject const& line_object) {
 
 void LineStrip::
 enlarge_reservoirs() {
-  vertex_reservoir_size *= 2;
+  if(vertex_reservoir_size > 0) {
+    vertex_reservoir_size *= 2;
+  } else {
+    vertex_reservoir_size = 2;
+  }
   unsigned int padded_reservoir_size = vertex_reservoir_size + 2;
   positions.resize(padded_reservoir_size);
   colors.resize(padded_reservoir_size);
   thicknesses.resize(padded_reservoir_size);
 }
 
-void LineStrip::push_vertex(Vertex const& v_to_push) {
-  if(num_occupied_vertex_slots == vertex_reservoir_size) {
+bool LineStrip::push_vertex(Vertex const& v_to_push) {
+  if(num_occupied_vertex_slots >= vertex_reservoir_size) {
     enlarge_reservoirs();
   }
 
@@ -66,19 +72,53 @@ void LineStrip::push_vertex(Vertex const& v_to_push) {
   thicknesses[num_occupied_vertex_slots] = v_to_push.thick;
 
   ++num_occupied_vertex_slots;
+ return true;
 }
 
-void LineStrip::pop_vertex() {
-  if(!num_occupied_vertex_slots == 0) {
+bool LineStrip::pop_front_vertex() {
+  if(num_occupied_vertex_slots < 2) {
+    Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
+    return false;
+  }
+  positions.erase(positions.begin());
+  colors.erase(colors.begin());
+  thicknesses.erase(thicknesses.begin());
+
+  --num_occupied_vertex_slots;
+  return true;
+}
+
+bool LineStrip::pop_back_vertex() {
+  if(num_occupied_vertex_slots < 2) {
     Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
 
-    return;
+    return false;
   }
+  positions.pop_back();
+  colors.pop_back();
+  thicknesses.pop_back();
+
   --num_occupied_vertex_slots;
+
+  return true;
 }
 
+bool LineStrip::clear_vertices() {
+  if(!num_occupied_vertex_slots == 0) {
+    positions.clear();
+    colors.clear();
+    thicknesses.clear();
+
+    num_occupied_vertex_slots = 0;
+
+    return true;
+  }
+  return false;
+}
 
 void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
+ 
+  std::cout << "NUM OCCUPIED VERTEX SLOTS: " << num_occupied_vertex_slots << "\n";
 
   vertex_buffer[0].pos = positions[0];
   vertex_buffer[0].col = colors[0];

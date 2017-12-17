@@ -53,13 +53,22 @@ struct GUA_DLL LineStrip {
    * @brief holds information of a vertex
    */
   struct Vertex {
+
+    Vertex(float x = 0.0f, float y = 0.0f, float z = 0.0f,
+           float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
+           float thickness = 1.0f) : pos(x, y, z),
+                                     col(col_r, col_g, col_b, col_a),
+                                     thick(thickness) {}
+
     scm::math::vec3f pos;
     scm::math::vec4f col;
     float            thick;
   };
 
-  void push_vertex(Vertex const& v_to_push);
-  void pop_vertex();
+  bool push_vertex(Vertex const& v_to_push);
+  bool pop_back_vertex();
+  bool pop_front_vertex();
+  bool clear_vertices();
 
   /**
    * @brief writes vertex info to given buffer
@@ -80,6 +89,8 @@ struct GUA_DLL LineStrip {
 
   int vertex_reservoir_size;
   int num_occupied_vertex_slots;
+
+  std::map<unsigned, bool> gpu_dirty_flags_per_context_;
 
 protected:
   void enlarge_reservoirs();

@@ -75,6 +75,15 @@ public : // methods
   inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
 
+  void push_vertex(float x, float y, float z,
+                   float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
+                   float thickness = 1.0f);
+
+  void pop_back_vertex();
+  void pop_front_vertex();
+
+  void clear_vertices();
+
   /**
   * Implements ray picking for a triangular mesh
   */
