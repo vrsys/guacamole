@@ -14,6 +14,14 @@ namespace gua {
 
 
 void LineStripImporter::
+create_empty_line(std::string const& empty_line_name) {
+  parsing_successful_ = true;
+  num_parsed_line_strips_ = 1;
+  
+  parsed_line_objects_.push_back( std::make_pair(empty_line_name, LineObject()) );
+}
+
+void LineStripImporter::
 read_file(std::string const& file_name) {
   parsing_successful_ = false;
   std::ifstream in_lob_file(file_name, std::ios::in );
@@ -104,8 +112,6 @@ read_file(std::string const& file_name) {
   }
 
   parsing_successful_ = true;
-  
-
 }
 
 bool LineStripImporter::

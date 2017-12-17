@@ -39,6 +39,7 @@
 namespace gua {
 
 struct RenderContext;
+class LineStripResource;
 
 /**
  * Stores geometry data.
@@ -48,6 +49,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
+
 class LineStripResource : public GeometryResource {
  public:
 
@@ -81,9 +83,22 @@ class LineStripResource : public GeometryResource {
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) override;
 
+  //void resolve_vertex_updates(RenderContext& ctx);
+
+  void make_clean_flags_dirty();
+
+  void compute_bounding_box();
+
   inline unsigned int num_occupied_vertex_slots() const { return line_strip_.num_occupied_vertex_slots; }
   inline unsigned int vertex_reservoir_size() const { return line_strip_.vertex_reservoir_size; }
   
+  void push_vertex(LineStrip::Vertex const& in_vertex);
+  void pop_front_vertex();
+  void pop_back_vertex();
+
+
+  void clear_vertices();
+
   math::vec3 get_vertex(unsigned int i) const;
 
  private:
@@ -92,6 +107,13 @@ class LineStripResource : public GeometryResource {
 
   KDTree kd_tree_;
   LineStrip line_strip_;
+
+
+  mutable std::mutex line_strip_update_mutex_;
+  mutable std::map<unsigned, bool> clean_flags_per_context_;
+
+  //std::vector<line_strip_update_job*> line_strip_update_queue_;
+
 };
 
 }

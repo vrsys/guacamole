@@ -41,6 +41,13 @@ class TransformNode;
 using IndexTriplet = std::tuple<int,int,int>;
 
 struct LineObject {
+
+  LineObject(unsigned int max_line_vertices = 10000) {
+    vertex_position_database.reserve(max_line_vertices);
+    vertex_color_database.reserve(max_line_vertices);
+    vertex_thickness_database.reserve(max_line_vertices);
+
+  }
   std::vector<scm::math::vec3f> vertex_position_database;
   std::vector<scm::math::vec4f> vertex_color_database;
   std::vector<float> 			vertex_thickness_database;
@@ -59,6 +66,8 @@ class GUA_DLL LineStripImporter {
   friend class LineStrip;
   
   public:
+
+    void create_empty_line(std::string const& empty_line_name);
 
     bool parsing_successful() const;	
     
