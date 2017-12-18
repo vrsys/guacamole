@@ -110,6 +110,9 @@ void SkinnedMeshResource::upload_to(RenderContext& ctx, SharedSkinningResource& 
   // init/reinit if necessary
   if (resource.offset_bytes == 0) {
 
+    std::cout << "bone_ids" << mesh_.get_bone_ids().size() << std::endl;
+    std::cout << "bone_weigths" << mesh_.get_bone_weights().size() << std::endl;
+
     //new storage buffer
     resource.bone_ids_ = ctx.render_device
         ->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
