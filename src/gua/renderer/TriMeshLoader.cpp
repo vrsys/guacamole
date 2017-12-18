@@ -1,59 +1,59 @@
 /******************************************************************************
-* guacamole - delicious VR                                                   *
-*                                                                            *
-* Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
-* Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
-*                                                                            *
-* This program is free software: you can redistribute it and/or modify it    *
-* under the terms of the GNU General Public License as published by the Free *
-* Software Foundation, either version 3 of the License, or (at your option)  *
-* any later version.                                                         *
-*                                                                            *
-* This program is distributed in the hope that it will be useful, but        *
-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
-* or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
-* for more details.                                                          *
-*                                                                            *
-* You should have received a copy of the GNU General Public License along    *
-* with this program. If not, see <http://www.gnu.org/licenses/>.             *
-*                                                                            *
-******************************************************************************/
+ * guacamole - delicious VR                                                   *
+ *                                                                            *
+ * Copyright: (c) 2011-2013 Bauhaus-Universität Weimar                        *
+ * Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de      *
+ *                                                                            *
+ * This program is free software: you can redistribute it and/or modify it    *
+ * under the terms of the GNU General Public License as published by the Free *
+ * Software Foundation, either version 3 of the License, or (at your option)  *
+ * any later version.                                                         *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful, but        *
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY *
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License   *
+ * for more details.                                                          *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License along    *
+ * with this program. If not, see <http://www.gnu.org/licenses/>.             *
+ *                                                                            *
+ ******************************************************************************/
 
 // class header
 #include <gua/renderer/TriMeshLoader.hpp>
 
 // guacamole headers
-#include <gua/utils/TextFile.hpp>
-#include <gua/utils/Logger.hpp>
-#include <gua/utils/string_utils.hpp>
-#include <gua/utils/ToGua.hpp>
-#include <gua/node/TriMeshNode.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/node/TransformNode.hpp>
+#include <gua/node/TriMeshNode.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/utils/Logger.hpp>
+#include <gua/utils/TextFile.hpp>
+#include <gua/utils/ToGua.hpp>
+#include <gua/utils/string_utils.hpp>
 
 // external headers
-#include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/Importer.hpp>
 #ifdef GUACAMOLE_FBX
-  #include <fbxsdk.h>
-#endif // GUACAMOLE_FBX
+#include <fbxsdk.h>
+#endif  // GUACAMOLE_FBX
 
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
 // static variables
 /////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >
+std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>
     TriMeshLoader::loaded_files_ =
-        std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >();
+        std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
 /////////////////////////////////////////////////////////////////////////////
 
-TriMeshLoader::TriMeshLoader(){}
+TriMeshLoader::TriMeshLoader() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,11 +65,9 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
   auto searched(loaded_files_.find(key));
 
   if (searched != loaded_files_.end()) {
-
     cached_node = searched->second;
 
   } else {
-
     bool fileload_succeed = false;
 
     if (is_supported(file_name)) {
@@ -93,14 +91,12 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
           auto max_size(std::max(std::max(size.x, size.y), size.z));
           cached_node->scale(1.f / max_size);
         }
-
       }
 
       fileload_succeed = true;
     }
 
     if (!fileload_succeed) {
-
       Logger::LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
@@ -121,8 +117,8 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(
   if (cached_node) {
     auto copy(cached_node->deep_copy());
 
-    apply_fallback_material(
-        copy, fallback_material, flags & NO_SHARED_MATERIALS);
+    apply_fallback_material(copy, fallback_material,
+                            flags & NO_SHARED_MATERIALS);
 
     copy->set_name(node_name);
     return copy;
@@ -144,8 +140,8 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(
 
     auto shader(gua::MaterialShaderDatabase::instance()->lookup(
         "gua_default_material"));
-    apply_fallback_material(
-        copy, shader->make_new_material(), flags & NO_SHARED_MATERIALS);
+    apply_fallback_material(copy, shader->make_new_material(),
+                            flags & NO_SHARED_MATERIALS);
 
     copy->set_name(node_name);
     return copy;
@@ -156,9 +152,8 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::load(
-    std::string const& file_name,
-    unsigned flags) {
+std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name,
+                                                unsigned flags) {
   TextFile file(file_name);
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
@@ -166,38 +161,40 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
   if (file.is_valid()) {
 #ifdef GUACAMOLE_FBX
     auto point_pos(file_name.find_last_of("."));
-    if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX" ) {
-
-      //The first thing to do is to create the FBX Manager which is the object allocator for almost all the classes in the SDK
+    if (file_name.substr(point_pos + 1) == "fbx" ||
+        file_name.substr(point_pos + 1) == "FBX") {
+      // The first thing to do is to create the FBX Manager which is the object
+      // allocator for almost all the classes in the SDK
       FbxManager* sdk_manager = FbxManager::Create();
-      if(!sdk_manager) {
-          Logger::LOG_ERROR <<"Error: Unable to create FBX Manager!\n";
-          assert(0);
+      if (!sdk_manager) {
+        Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+        assert(0);
       }
 
-      //Create an IOSettings object. This object holds all import/export settings.
+      // Create an IOSettings object. This object holds all import/export
+      // settings.
       FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
-      if(flags & TriMeshLoader::LOAD_MATERIALS){
-        ios->SetBoolProp(IMP_FBX_MATERIAL,        true);
-        ios->SetBoolProp(IMP_FBX_TEXTURE,         true);
-      } 
-      else {
-        ios->SetBoolProp(IMP_FBX_MATERIAL,        false);
-        ios->SetBoolProp(IMP_FBX_TEXTURE,         false);        
+      if (flags & TriMeshLoader::LOAD_MATERIALS) {
+        ios->SetBoolProp(IMP_FBX_MATERIAL, true);
+        ios->SetBoolProp(IMP_FBX_TEXTURE, true);
+      } else {
+        ios->SetBoolProp(IMP_FBX_MATERIAL, false);
+        ios->SetBoolProp(IMP_FBX_TEXTURE, false);
       }
-      ios->SetBoolProp(IMP_FBX_CHARACTER,        false);
-      ios->SetBoolProp(IMP_FBX_CONSTRAINT,       false);
-      ios->SetBoolProp(IMP_FBX_LINK,            false);
-      ios->SetBoolProp(IMP_FBX_SHAPE,           false);
-      ios->SetBoolProp(IMP_FBX_MODEL,           true);
-      ios->SetBoolProp(IMP_FBX_GOBO,            false);
-      ios->SetBoolProp(IMP_FBX_ANIMATION,       false);
+      ios->SetBoolProp(IMP_FBX_CHARACTER, false);
+      ios->SetBoolProp(IMP_FBX_CONSTRAINT, false);
+      ios->SetBoolProp(IMP_FBX_LINK, false);
+      ios->SetBoolProp(IMP_FBX_SHAPE, false);
+      ios->SetBoolProp(IMP_FBX_MODEL, true);
+      ios->SetBoolProp(IMP_FBX_GOBO, false);
+      ios->SetBoolProp(IMP_FBX_ANIMATION, false);
       ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
       sdk_manager->SetIOSettings(ios);
       FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
       unsigned count(0);
-      std::shared_ptr<node::Node> tree{get_tree(*scene->GetRootNode(), file_name, flags, count)};
+      std::shared_ptr<node::Node> tree{
+          get_tree(*scene->GetRootNode(), file_name, flags, count)};
       sdk_manager->Destroy();
 
       return tree;
@@ -206,25 +203,25 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
     {
       auto importer = std::make_shared<Assimp::Importer>();
 
-      unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality |
-                            aiProcess_RemoveComponent;
+      unsigned ai_process_flags =
+          aiProcessPreset_TargetRealtime_Quality | aiProcess_RemoveComponent;
 
-      if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
+      if (flags & TriMeshLoader::OPTIMIZE_GEOMETRY) {
         ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality |
                             aiProcess_PreTransformVertices;
       }
 
-      unsigned ai_ignore_flags = aiComponent_COLORS |
-                            aiComponent_ANIMATIONS |
-                            aiComponent_LIGHTS |
-                            aiComponent_CAMERAS |
-                            aiComponent_BONEWEIGHTS;
+      unsigned ai_ignore_flags = aiComponent_COLORS | aiComponent_ANIMATIONS |
+                                 aiComponent_LIGHTS | aiComponent_CAMERAS |
+                                 aiComponent_BONEWEIGHTS;
 
-      if(!(flags & TriMeshLoader::LOAD_MATERIALS)) {
+      if (!(flags & TriMeshLoader::LOAD_MATERIALS)) {
         ai_ignore_flags |= aiComponent_MATERIALS;
-      } 
+      }
 
-      importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+      importer->SetPropertyInteger(
+          AI_CONFIG_PP_SBP_REMOVE,
+          aiPrimitiveType_POINT | aiPrimitiveType_LINE);
       importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
 
       importer->ReadFile(file_name, ai_process_flags);
@@ -234,18 +231,19 @@ std::shared_ptr<node::Node> TriMeshLoader::load(
       std::shared_ptr<node::Node> new_node;
 
       std::string error = importer->GetErrorString();
-      if (!error.empty())
-      {
-        Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+      if (!error.empty()) {
+        Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, "
+                            << error << std::endl;
       }
 
       if (scene->mRootNode) {
         unsigned count = 0;
-        new_node = get_tree(
-            importer, scene, scene->mRootNode, file_name, flags, count);
+        new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags,
+                            count);
 
       } else {
-        Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": No valid root node contained!" << std::endl;
+        Logger::LOG_WARNING << "Failed to load object \"" << file_name
+                            << "\": No valid root node contained!" << std::endl;
       }
 
       return new_node;
@@ -264,12 +262,10 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(
     char const* buffer_name,
     unsigned buffer_size,
     bool build_kd_tree) {
-
   auto importer = std::make_shared<Assimp::Importer>();
 
   aiScene const* scene(importer->ReadFileFromMemory(
-      buffer_name,
-      buffer_size,
+      buffer_name, buffer_size,
       aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace));
 
   std::vector<TriMeshRessource*> meshes;
@@ -280,7 +276,6 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(
   }
 
   return meshes;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +288,8 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
     return false;
   }
 #ifdef GUACAMOLE_FBX
-  else if (file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX"){
+  else if (file_name.substr(point_pos + 1) == "fbx" ||
+           file_name.substr(point_pos + 1) == "FBX") {
     return true;
   }
 #endif
@@ -305,25 +301,32 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const {
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     FbxNode& fbx_node,
     std::string const& file_name,
-    unsigned flags, unsigned& mesh_count) {
+    unsigned flags,
+    unsigned& mesh_count) {
   // creates a geometry node and returns it
-  auto load_geometry = [&](FbxNode& fbx_node) 
-  {
+  auto load_geometry = [&](FbxNode& fbx_node) {
     FbxMesh* fbx_mesh = fbx_node.GetMesh();
 
-    GeometryDescription desc ("TriMesh", file_name, mesh_count++, flags);
-    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh}, flags & TriMeshLoader::MAKE_PICKABLE));
+    GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
+    GeometryDatabase::instance()->add(
+        desc.unique_key(),
+        std::make_shared<TriMeshRessource>(
+            Mesh{*fbx_mesh}, flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
     std::shared_ptr<Material> material;
 
-    if(fbx_node.GetMaterialCount() > 0 && flags & TriMeshLoader::LOAD_MATERIALS) {
+    if (fbx_node.GetMaterialCount() > 0 &&
+        flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
-      if(fbx_node.GetMaterialCount() > 1) {
-        Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
+      if (fbx_node.GetMaterialCount() > 1) {
+        Logger::LOG_WARNING
+            << "Trimesh has more than one material, using only first one"
+            << std::endl;
       }
       FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
-      material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
+      material = material_loader.load_material(
+          *mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
     }
 
     auto node = std::shared_ptr<node::TriMeshNode>(
@@ -335,10 +338,8 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
   auto group(std::make_shared<node::TransformNode>());
 
-  if(fbx_node.GetGeometry() != nullptr) {
-    
-    if(fbx_node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
-
+  if (fbx_node.GetGeometry() != nullptr) {
+    if (fbx_node.GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
       // no children ->just return this
       if (fbx_node.GetChildCount() == 0) {
         return load_geometry(fbx_node);
@@ -349,15 +350,18 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
   }
 
   // there is only one child -- skip it!
-  if (fbx_node.GetChildCount() == 1 && fbx_node.GetChild(0)->GetGeometry() != nullptr) {
-    if(fbx_node.GetChild(0)->GetGeometry()->GetAttributeType() == FbxNodeAttribute::eMesh) {
+  if (fbx_node.GetChildCount() == 1 &&
+      fbx_node.GetChild(0)->GetGeometry() != nullptr) {
+    if (fbx_node.GetChild(0)->GetGeometry()->GetAttributeType() ==
+        FbxNodeAttribute::eMesh) {
       return get_tree(*fbx_node.GetChild(0), file_name, flags, mesh_count);
     }
   }
 
   // else: there are multiple children and meshes
   for (int i = 0; i < fbx_node.GetChildCount(); ++i) {
-    group->add_child(get_tree(*fbx_node.GetChild(i), file_name, flags, mesh_count));
+    group->add_child(
+        get_tree(*fbx_node.GetChild(i), file_name, flags, mesh_count));
   }
 
   return group;
@@ -371,63 +375,62 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
     std::string const& file_name,
     unsigned flags,
     unsigned& mesh_count) {
-
   // creates a geometry node and returns it
   auto load_geometry = [&](int i) {
     GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
     GeometryDatabase::instance()->add(
-        desc.unique_key(),
-        std::make_shared<TriMeshRessource>(
-            Mesh {*ai_scene->mMeshes[ai_root->mMeshes[i]]},
-            flags & TriMeshLoader::MAKE_PICKABLE));
+        desc.unique_key(), std::make_shared<TriMeshRessource>(
+                               Mesh{*ai_scene->mMeshes[ai_root->mMeshes[i]]},
+                               flags & TriMeshLoader::MAKE_PICKABLE));
 
     // load material
     std::shared_ptr<Material> material;
-    unsigned material_index(ai_scene->mMeshes[ai_root->mMeshes[i]]
-                                ->mMaterialIndex);
+    unsigned material_index(
+        ai_scene->mMeshes[ai_root->mMeshes[i]]->mMaterialIndex);
 
     if (flags & TriMeshLoader::LOAD_MATERIALS) {
       MaterialLoader material_loader;
       aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
-      material = material_loader.load_material(ai_material, file_name,
-                                               flags & TriMeshLoader::OPTIMIZE_MATERIALS);
+      material = material_loader.load_material(
+          ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
     }
 
-    //return std::make_shared<node::TriMeshNode>("", desc.unique_key(),
-    //material); // not allowed -> private c'tor
+    // return std::make_shared<node::TriMeshNode>("", desc.unique_key(),
+    // material); // not allowed -> private c'tor
     return std::shared_ptr<node::TriMeshNode>(
         new node::TriMeshNode("", desc.unique_key(), material));
   };
 
   // there is only one child -- skip it!
   if (ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0) {
-    return get_tree(importer,
-                    ai_scene,
-                    ai_root->mChildren[0],
-                    file_name,
-                    flags,
+    auto node =  get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags,
                     mesh_count);
+    auto child_transform_ai = ai_root->mChildren[0]->mTransformation;
+    apply_transformation(node, child_transform_ai);
+    return node;
   }
 
   // there is only one geometry --- return it!
   if (ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1) {
-    return load_geometry(0);
+    auto node = load_geometry(0);
+    return node;
   }
 
   // else: there are multiple children and meshes
   auto group(std::make_shared<node::TransformNode>());
+
+  apply_transformation(group, ai_root->mTransformation);
 
   for (unsigned i(0); i < ai_root->mNumMeshes; ++i) {
     group->add_child(load_geometry(i));
   }
 
   for (unsigned i(0); i < ai_root->mNumChildren; ++i) {
-    group->add_child(get_tree(importer,
-                              ai_scene,
-                              ai_root->mChildren[i],
-                              file_name,
-                              flags,
-                              mesh_count));
+    auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name,
+                          flags, mesh_count);
+    auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
+    apply_transformation(child, child_transform_ai);
+    group->add_child(child);
   }
 
   return group;
@@ -452,57 +455,86 @@ void TriMeshLoader::apply_fallback_material(
     apply_fallback_material(child, fallback_material, no_shared_materials);
   }
 }
+void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node,
+                                         aiMatrix4x4t<float> transform_ai) {
+  auto transform_scm = gua::math::mat4::identity();
+
+  transform_scm.m00 = transform_ai.a1;
+  transform_scm.m01 = transform_ai.a2;
+  transform_scm.m02 = transform_ai.a3;
+  transform_scm.m03 = transform_ai.a4;
+  transform_scm.m04 = transform_ai.b1;
+  transform_scm.m05 = transform_ai.b2;
+  transform_scm.m06 = transform_ai.b3;
+  transform_scm.m07 = transform_ai.b4;
+  transform_scm.m08 = transform_ai.c1;
+  transform_scm.m09 = transform_ai.c2;
+  transform_scm.m10 = transform_ai.c3;
+  transform_scm.m11 = transform_ai.c4;
+  transform_scm.m12 = transform_ai.d1;
+  transform_scm.m13 = transform_ai.d2;
+  transform_scm.m14 = transform_ai.d3;
+  transform_scm.m15 = transform_ai.d4;
+
+  transform_scm = scm::math::transpose(transform_scm);
+
+  node->set_transform(transform_scm);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-FbxScene* TriMeshLoader::load_fbx_file(
-    FbxManager* manager,
-    std::string const& file_name) {
+FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager,
+                                       std::string const& file_name) {
   // Create an importer.
-  FbxImporter* lImporter = FbxImporter::Create(manager,"");
+  FbxImporter* lImporter = FbxImporter::Create(manager, "");
 
   int lFileMajor, lFileMinor, lFileRevision;
-  int lSDKMajor,  lSDKMinor,  lSDKRevision;
+  int lSDKMajor, lSDKMinor, lSDKRevision;
   // Get the file version number generate by the FBX SDK.
   FbxManager::GetFileFormatVersion(lSDKMajor, lSDKMinor, lSDKRevision);
   lImporter->GetFileVersion(lFileMajor, lFileMinor, lFileRevision);
 
   // Initialize the importer by providing a filename.
-  const bool lImportStatus = lImporter->Initialize(file_name.c_str(), -1, manager->GetIOSettings());
-  if(!lImportStatus)
-  {
+  const bool lImportStatus =
+      lImporter->Initialize(file_name.c_str(), -1, manager->GetIOSettings());
+  if (!lImportStatus) {
     FbxString error = lImporter->GetStatus().GetErrorString();
-    Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed." << std::endl;
+    Logger::LOG_ERROR << "Call to FbxImporter::Initialize() failed."
+                      << std::endl;
     Logger::LOG_ERROR << "Error returned: " << error.Buffer() << std::endl;
 
-    if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion)
-    {
-        Logger::LOG_ERROR <<"FBX file format version for this FBX SDK is " << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision << std::endl;
-        Logger::LOG_ERROR <<"FBX file format version for file '" << file_name << "' is " << lFileMajor << "." << lFileMinor << "." << lFileRevision << " does not match" << std::endl;
+    if (lImporter->GetStatus().GetCode() == FbxStatus::eInvalidFileVersion) {
+      Logger::LOG_ERROR << "FBX file format version for this FBX SDK is "
+                        << lSDKMajor << "." << lSDKMinor << "." << lSDKRevision
+                        << std::endl;
+      Logger::LOG_ERROR << "FBX file format version for file '" << file_name
+                        << "' is " << lFileMajor << "." << lFileMinor << "."
+                        << lFileRevision << " does not match" << std::endl;
     }
     assert(0);
   }
 
-  if(!lImporter->IsFBX())
-  {
+  if (!lImporter->IsFBX()) {
     Logger::LOG_ERROR << "File \"" << file_name << "\" is no fbx" << std::endl;
     assert(0);
   }
 
-  //Create an FBX scene. This object holds most objects imported/exported from/to files.
+  // Create an FBX scene. This object holds most objects imported/exported
+  // from/to files.
   FbxScene* scene = FbxScene::Create(manager, "My Scene");
-  if(!scene) {
-      Logger::LOG_ERROR <<"Error: Unable to create FBX scene!\n";
-      assert(0);
+  if (!scene) {
+    Logger::LOG_ERROR << "Error: Unable to create FBX scene!\n";
+    assert(0);
   }
 
   bool result = lImporter->Import(scene);
-  if(!result) {
-    Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\"" << std::endl;
+  if (!result) {
+    Logger::LOG_ERROR << "Failed to load object \"" << file_name << "\""
+                      << std::endl;
     assert(0);
-  } 
+  }
 
   return scene;
 }
 #endif
-}
+}  // namespace gua

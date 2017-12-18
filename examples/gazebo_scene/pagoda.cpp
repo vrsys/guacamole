@@ -41,7 +41,7 @@ class Pagoda
     void unlock_scenegraph() { _scenegraph_mutex.unlock(); }
 
   private:
-    Loader _tml;
+    gua::TriMeshLoader _tml;
     gua::MaterialLoader _material_loader;
     Log *_log;
 
