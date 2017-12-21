@@ -10,7 +10,14 @@
 namespace spoints{
 
 
-struct matrix_package{
+struct key_package {
+  bool is_camera;
+  std::size_t view_uuid;
+  bool stereo_mode;
+  std::size_t framecount;
+};
+
+struct matrix_package {
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
@@ -22,6 +29,40 @@ struct matrix_package{
   }
 */
 };
+
+
+//is_camera, view_uuid, stereo_mode, current_package);
+
+struct camera_matrix_package {
+  key_package k_package;
+  matrix_package mat_package;
+
+  bool operator<(camera_matrix_package const& rhs) {
+    if(k_package.is_camera < rhs.k_package.is_camera) {
+      return true;
+    } else if (rhs.k_package.is_camera < k_package.is_camera) {
+      return false;
+    } else {
+      if(k_package.view_uuid < rhs.k_package.view_uuid) {
+        return true;
+      } else if(rhs.k_package.view_uuid < k_package.view_uuid) {
+        return false;
+      } else {
+        if(k_package.stereo_mode < rhs.k_package.stereo_mode) {
+          return true;
+        } else if(rhs.k_package.stereo_mode < k_package.stereo_mode) {
+          if(k_package.framecount < rhs.k_package.framecount) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+    }
+  }
+};
+
+
 
 class NetKinectArray{
 
@@ -36,7 +77,8 @@ public:
 
   inline unsigned char* getBuffer() { return m_buffer.data(); }
 
-  void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
+  //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
+  void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
 private:
   void readloop();
@@ -60,14 +102,26 @@ private:
   matrix_package m_matrix_package;
   matrix_package m_matrix_package_back;
 
+  spoints::camera_matrix_package submitted_camera_matrix_package;
+  spoints::camera_matrix_package submitted_camera_matrix_package_back;
+
   bool        current_feedback_is_camera_status = true;
   std::size_t current_feedback_view_uuid = {0};
   bool current_feedback_is_stereo_mode;
 
-  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > > 
+
+  //std::map<key_package, matrix_package> cam_matrix_packages;
+  std::vector<matrix_package> matrix_packages_to_submit_;
+  std::vector<matrix_package> matrix_packages_to_collect_;
+
+
+  std::size_t last_frame_count_ = std::numeric_limits<std::size_t>::max();
+/*
+  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
   camera_group_to_uuid_to_matrix_package_list;
   std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > > 
   camera_group_to_uuid_to_matrix_package_list_back;
+*/
 
   std::atomic<bool> m_feedback_need_swap;
   std::thread m_send_feedback;

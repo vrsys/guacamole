@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 
   transform->translate(0.0f, 0.0f, -10.0f);
 
-
+/*
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
   light->data.set_type(gua::node::LightNode::Type::SPOT);
   light->data.set_brightness(8.f);
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   light->data.set_enable_shadows(true);
   light->data.set_shadow_map_size(512);
   light->rotate(-65, 1, 0, 0);
-
+*/
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.218f, 1.218f));
