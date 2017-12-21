@@ -1,7 +1,6 @@
 # dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-
 # determine source and header files
 file(GLOB_RECURSE GUA_SKELANIM_SRC
     src/*.cpp
