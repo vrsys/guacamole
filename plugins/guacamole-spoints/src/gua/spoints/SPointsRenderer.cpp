@@ -227,30 +227,6 @@ void SPointsRenderer::render(Pipeline& pipe,
       current_package.res_xy[0] = render_target_dims.x;
       current_package.res_xy[1] = render_target_dims.y;
 
-      std::cout << "PUTTING RESSES: " << current_package.res_xy[0] << "; " << current_package.res_xy[1] << "\n";
-      /*
-      std::cout << "mv: " << "\n";
-      for(int i = 0; i < 16; ++i) {
-        std::cout << current_package.modelview_matrix[i] << " ";
-
-        if(i%4 == 3) {
-          std::cout << "\n";
-        }
-      }
-      std::cout << "\n\n";
-
-
-      std::cout << "proj: " << "\n";
-      for(int i = 0; i < 16; ++i) {
-        std::cout << current_package.projection_matrix[i] << " ";
-
-        if(i%4 == 3) {
-          std::cout << "\n";
-        }
-      }
-      std::cout << "\n\n";
-
-*/
 
     auto camera_id = pipe.current_viewstate().viewpoint_uuid;
     //auto view_direction = pipe.current_viewstate().view_direction;
@@ -261,11 +237,19 @@ void SPointsRenderer::render(Pipeline& pipe,
 
     bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
 
-    std::cout << "is camera: " << is_camera << "\n";
     std::size_t view_uuid = camera_id;
 
-    spoints_resource->push_matrix_package(is_camera, view_uuid, stereo_mode, current_package);
-    // update stream data
+
+    spoints::camera_matrix_package cm_package;
+    cm_package.k_package.is_camera = is_camera;
+    cm_package.k_package.view_uuid = view_uuid;
+    cm_package.k_package.stereo_mode = stereo_mode;
+    cm_package.k_package.framecount = pipe.get_context().framecount;
+    cm_package.mat_package = current_package;
+
+
+    spoints_resource->push_matrix_package(cm_package);
+
     spoints_resource->update_buffers(pipe.get_context(), pipe);
     //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
 
