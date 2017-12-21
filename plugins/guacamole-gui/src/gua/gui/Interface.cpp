@@ -29,6 +29,8 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/TextFile.hpp>
 
+#include <include/wrapper/cef_message_router.h>
+
 #include <Awesomium/WebCore.h>
 #include <Awesomium/STLHelpers.h>
 
