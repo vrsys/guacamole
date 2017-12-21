@@ -66,6 +66,7 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
   init();
 }
 
+/*
 void 
 SPointsResource::push_matrix_package(bool is_camera, std::size_t view_uuid, bool stereo_mode, spoints::matrix_package mp) {
   if (nullptr != spointsdata_) {
@@ -73,6 +74,21 @@ SPointsResource::push_matrix_package(bool is_camera, std::size_t view_uuid, bool
     std::cout << "SpointsResource PushMatrixPackage: " << is_camera << "\n";
     spointsdata_->nka_->push_matrix_package(is_camera, view_uuid, stereo_mode, mp);
   }
+}
+*/
+
+void
+SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
+  std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      spointsdata_->nka_->push_matrix_package(cam_mat_package);
+    }
+  }
+
+
+  std::cout << "After second call\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
