@@ -1,8 +1,12 @@
 #ifndef PAGODA_LOG_H
 #define PAGODA_LOG_H
 
-#include "common.h"
-class Log
+#include <fstream>
+#include <ctime>
+#include <cassert>
+#include <gua/node/Node.hpp>
+
+class PagodaLog
 {
   public:
     enum LOG_LEVEL
@@ -13,7 +17,7 @@ class Log
         ERROR = 0
     };
 
-    Log()
+    PagodaLog()
     {
         auto *rand_name = new char[8];
 
@@ -25,7 +29,7 @@ class Log
         assert(_ofstream.is_open());
     }
 
-    explicit Log(const char *log_name)
+    explicit PagodaLog(const char *log_name)
     {
         _ofstream = std::ofstream();
         _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
@@ -33,7 +37,7 @@ class Log
         assert(_ofstream.is_open());
     }
 
-    Log(const char *log_name, LOG_LEVEL log_level)
+    PagodaLog(const char *log_name, LOG_LEVEL log_level)
     {
         _ofstream = std::ofstream();
         _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
@@ -43,7 +47,7 @@ class Log
         assert(_ofstream.is_open());
     }
 
-    ~Log() { _ofstream.close(); }
+    ~PagodaLog() { _ofstream.close(); }
 
     bool i(const char *msg) { return (_log_level >= LOG_LEVEL::INFO) && log(msg); }
 

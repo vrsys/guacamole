@@ -1,5 +1,14 @@
-#include "common.h"
-#include "pagoda.cpp"
+#include <GLFW/glfw3.h>
+
+#include <gua/guacamole.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
+
+#include <gua/utils/Trackball.hpp>
+#include <gua/renderer/MaterialLoader.hpp>
+#include <gua/utils/ToGua.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
+
+#include "../../plugins/guacamole-gazebo/include/gua/pagoda_binder.hpp"
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
 {
@@ -95,9 +104,9 @@ int main(int argc, char **argv)
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window->on_key_press.connect(std::bind(key_press, window, std::ref(should_close), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
-    Pagoda pagoda;
-    pagoda.bind_scene_graph(&graph);
-    pagoda.bind_transport_layer(argc, argv);
+    PagodaBinder pagoda_binder;
+    pagoda_binder.bind_scene_graph(&graph);
+    pagoda_binder.bind_transport_layer(argc, argv);
 
     gua::Renderer renderer;
 
@@ -110,20 +119,14 @@ int main(int argc, char **argv)
             renderer.stop();
             window->close();
             loop.stop();
-            pagoda.halt_transport_layer();
         }
         else
         {
             gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
             transform->set_transform(modelmatrix);
 
-            pagoda.lock_scenegraph();
-
-            // TODO: PreRender fails
-            // pagoda.get_tproc()->PreRender();
-
+            pagoda_binder.pre_render();
             renderer.queue_draw({&graph});
-            pagoda.unlock_scenegraph();
         }
     });
 

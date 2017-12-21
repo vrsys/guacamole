@@ -6,12 +6,12 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(${_EXE_NAME} main.cpp pagoda.cpp log.cpp common.h loader.cpp transport_processor.cpp)
+add_executable(${_EXE_NAME} main.cpp)
 
 list(APPEND GAZEBO_INCLUDE_DIRS "/usr/include/gazebo-7")
 
 target_include_directories(${_EXE_NAME} PUBLIC ${GAZEBO_INCLUDE_DIRS})
-target_link_libraries(${_EXE_NAME} guacamole ${GAZEBO_LIBRARIES})
+target_link_libraries(${_EXE_NAME} ${GAZEBO_LIBRARIES} guacamole-gazebo)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)
