@@ -69,6 +69,8 @@ struct GUA_DLL LineStrip {
     scm::math::vec3f nor;
   };
 
+  void compute_consistent_normals() const;
+
   bool push_vertex(Vertex const& v_to_push);
   bool pop_back_vertex();
   bool pop_front_vertex();
@@ -88,9 +90,9 @@ struct GUA_DLL LineStrip {
   virtual scm::gl::vertex_format get_vertex_format() const;
 
   std::vector<scm::math::vec3f> positions;
-  std::vector<scm::math::vec3f> normals;
   std::vector<scm::math::vec4f> colors;
   std::vector<float> thicknesses;
+  mutable std::vector<scm::math::vec3f> normals;
 
   int vertex_reservoir_size;
   int num_occupied_vertex_slots;

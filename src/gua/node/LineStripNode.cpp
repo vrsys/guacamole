@@ -271,7 +271,9 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  void make_normals_consistent();
+  void LineStripNode::compute_consistent_normals() {
+    geometry_->compute_consistent_normals();
+  };
 
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::push_vertex(float x, float y, float z,
@@ -282,6 +284,7 @@ namespace node {
                                      col_r, col_g, col_b, col_a, 
                                      thickness,
                                      nor_x, nor_y, nor_z);
+
     geometry_->push_vertex(vertex_to_push);
   };
 

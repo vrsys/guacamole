@@ -30,6 +30,7 @@ void main() {
   gua_emissivity     = 1.0;
 
   @material_method_calls_vert@
+
   gua_color          = gua_in_color.xyz;
   gua_alpha          = gua_in_color.a;
   @include "common/gua_varyings_assignment.glsl"

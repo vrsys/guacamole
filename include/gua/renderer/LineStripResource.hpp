@@ -92,6 +92,8 @@ class LineStripResource : public GeometryResource {
   inline unsigned int num_occupied_vertex_slots() const { return line_strip_.num_occupied_vertex_slots; }
   inline unsigned int vertex_reservoir_size() const { return line_strip_.vertex_reservoir_size; }
   
+  void compute_consistent_normals() const;
+
   void push_vertex(LineStrip::Vertex const& in_vertex);
   void pop_front_vertex();
   void pop_back_vertex();

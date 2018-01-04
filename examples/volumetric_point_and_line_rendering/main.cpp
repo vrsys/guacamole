@@ -217,13 +217,11 @@ float line_width = 1.0f;
             for( auto& child : line_strip_example_node->get_children() ) {
               auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
 
-              line_strip_child->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 0.002f, 0.0f, 1.0f, 0.0f);
+              line_strip_child->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 1.0f, 0.2f, 0.0f, 1.0f, 0.0f);
             }            
           } else { //work on parent node
             auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
-            bool render_as_points = line_strip_parent->get_render_vertices_as_points();
-
-            line_strip_parent->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 0.002f, 0.0f, 0.0f, 1.0f);
+            line_strip_parent->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 1.0f, 0.2f, 0.0f, 1.0f, 0.0f);
           }
         }
         break;

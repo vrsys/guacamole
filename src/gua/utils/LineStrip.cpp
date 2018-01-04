@@ -17,7 +17,6 @@ LineStrip(unsigned int intitial_line_buffer_size) :
   vertex_reservoir_size(intitial_line_buffer_size),
   num_occupied_vertex_slots(0) {
 
-  std::cout << "INITIAL LINE BUFFER SIZE: " << intitial_line_buffer_size << "\n";
   positions.resize(vertex_reservoir_size);
   colors.resize(vertex_reservoir_size);
   thicknesses.resize(vertex_reservoir_size);
@@ -66,6 +65,54 @@ enlarge_reservoirs() {
   normals.resize(padded_reservoir_size);
 }
 
+void LineStrip::compute_consistent_normals() const {
+
+  bool last_plane_normal_exists = false;
+  scm::math::vec3f last_plane_normal = scm::math::vec3f(0.0f, 0.0f, 0.0f);
+
+  for(uint32_t normal_idx = 0; normal_idx < num_occupied_vertex_slots; ++normal_idx) {
+    if(0 == normal_idx) {
+      if(positions.size() - 1 == normal_idx) {
+        normals[0] = scm::math::vec3f(0.0, 1.0, 0.0);
+      }
+      else {
+        normals[0] = scm::math::normalize(positions[1] - positions[0]);
+      }
+    } else if(positions.size() - 1 == normal_idx) {
+      if(0 == normal_idx) {
+        normals[positions.size() - 1] = scm::math::vec3f(0.0, 1.0, 0.0);
+      } else {
+        normals[positions.size() - 1] = scm::math::normalize(positions[positions.size() - 1] - positions[positions.size() - 2]);
+      }
+    } else { //actual computation with consistency check
+
+      scm::math::vec3 p0_to_pC = positions[normal_idx] - positions[normal_idx-1];
+      scm::math::vec3 pC_to_p1 = positions[normal_idx+1] - positions[normal_idx];
+
+      scm::math::vec3 plane_normal = scm::math::cross(p0_to_pC, pC_to_p1);
+
+      if(last_plane_normal_exists) {
+        if( scm::math::dot(last_plane_normal, plane_normal) < 0.0f ) {
+          plane_normal *= -1.0f;
+        }
+      }
+
+      last_plane_normal_exists = true;
+      last_plane_normal = plane_normal;
+
+      scm::math::mat4f rot_mat = scm::math::make_rotation(90.0f, plane_normal);
+
+      scm::math::vec4 p0_to_p1 = scm::math::vec3(p0_to_pC + pC_to_p1, 0.0f);
+
+      scm::math::vec3f final_normal = scm::math::normalize(scm::math::vec3f(rot_mat * p0_to_p1));
+      normals[normal_idx] = final_normal;
+
+      last_plane_normal_exists = true;
+    }
+  }
+
+}
+
 bool LineStrip::push_vertex(Vertex const& v_to_push) {
   if(num_occupied_vertex_slots >= vertex_reservoir_size) {
     enlarge_reservoirs();
@@ -75,7 +122,6 @@ bool LineStrip::push_vertex(Vertex const& v_to_push) {
   colors[num_occupied_vertex_slots] = v_to_push.col;
   thicknesses[num_occupied_vertex_slots] = v_to_push.thick;
   normals[num_occupied_vertex_slots] = v_to_push.nor;
-
   ++num_occupied_vertex_slots;
  return true;
 }
@@ -125,8 +171,6 @@ bool LineStrip::clear_vertices() {
 }
 
 void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
- 
-  std::cout << "NUM OCCUPIED VERTEX SLOTS: " << num_occupied_vertex_slots << "\n";
 
   vertex_buffer[0].pos = positions[0];
   vertex_buffer[0].col = colors[0];
