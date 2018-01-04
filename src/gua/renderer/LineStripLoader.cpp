@@ -206,7 +206,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
-  if (file.is_valid()) {
+  if (file.is_valid() || create_empty) {
 
       
     auto importer = std::make_shared<LineStripImporter>();
