@@ -46,7 +46,9 @@ namespace node {
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
       render_volumetric_(false),
-      render_vertices_as_points_(false)
+      render_vertices_as_points_(false),
+      screen_space_line_width_(1.0f),
+      screen_space_point_size_(1.0f)
   {}
 
 
@@ -269,22 +271,31 @@ namespace node {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  void make_normals_consistent();
 
-  void LineStripNode::push_vertex(float x, float y, float z, 
-                   float col_r, float col_g, float col_b, float col_a,
-                   float thickness) {
-    LineStrip::Vertex vertex_to_push(x, y, z, col_r, col_g, col_b, col_a, thickness);
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::push_vertex(float x, float y, float z,
+                                  float col_r, float col_g, float col_b, float col_a,
+                                  float thickness,
+                                  float nor_x, float nor_y, float nor_z) {
+    LineStrip::Vertex vertex_to_push(x, y, z, 
+                                     col_r, col_g, col_b, col_a, 
+                                     thickness,
+                                     nor_x, nor_y, nor_z);
     geometry_->push_vertex(vertex_to_push);
   };
 
+  ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::pop_front_vertex() {
     geometry_->pop_front_vertex();
   };
 
+  ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::pop_back_vertex() {
     geometry_->pop_back_vertex();
   };
 
+  ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::clear_vertices() {
     geometry_->clear_vertices();
   }

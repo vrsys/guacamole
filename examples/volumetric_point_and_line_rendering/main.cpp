@@ -182,6 +182,7 @@ uint32_t pushed_spiral_vertices = 0;
 float b = 0.1;
 float a = 6.28;
 
+float line_width = 1.0f;
     //////////////////////////////////////////////////////////////////////////////////////
     // key press events
     //////////////////////////////////////////////////////////////////////////////////////
@@ -202,9 +203,9 @@ float a = 6.28;
 
               float spiral_float_parameter = pushed_spiral_vertices * 0.1;
 
-              float norm_x = b * spiral_float_parameter * std::cos(spiral_float_parameter + a);
-              float norm_y = spiral_float_parameter * 0.3;
-              float norm_z = b * spiral_float_parameter * std::sin(spiral_float_parameter + a);
+              float norm_pos_x = b * spiral_float_parameter * std::cos(spiral_float_parameter + a);
+              float norm_pos_y = spiral_float_parameter * 0.3;
+              float norm_pos_z = b * spiral_float_parameter * std::sin(spiral_float_parameter + a);
 
               float rand_r = std::rand() / (float) RAND_MAX;
               float rand_g = std::rand() / (float) RAND_MAX;
@@ -216,13 +217,13 @@ float a = 6.28;
             for( auto& child : line_strip_example_node->get_children() ) {
               auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
 
-              line_strip_child->push_vertex(norm_x, norm_y, norm_z, rand_r, rand_g, rand_b, 0.002f);
+              line_strip_child->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 0.002f, 0.0f, 1.0f, 0.0f);
             }            
           } else { //work on parent node
             auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
             bool render_as_points = line_strip_parent->get_render_vertices_as_points();
 
-            line_strip_parent->push_vertex(norm_x, norm_y, norm_z, rand_r, rand_g, rand_b, 0.002f);
+            line_strip_parent->push_vertex(norm_pos_x, norm_pos_y, norm_pos_z, rand_r, rand_g, rand_b, 0.002f, 0.0f, 0.0f, 1.0f);
           }
         }
         break;
@@ -290,7 +291,7 @@ float a = 6.28;
         }
         break;
 
-        case 'S': 
+        case 'S':
           if(line_strip_example_node->has_children()) { //work on grouped line strips
             for( auto& child : line_strip_example_node->get_children() ) {
               auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
@@ -301,6 +302,46 @@ float a = 6.28;
             auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
             bool render_volumetric = line_strip_parent->get_render_volumetric();
             line_strip_parent->set_render_volumetric(!render_volumetric);
+          }
+        break;
+
+        case 'R':
+          if(line_strip_example_node->has_children()) { //work on grouped line strips
+            for( auto& child : line_strip_example_node->get_children() ) {
+              auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
+              bool render_volumetric = line_strip_child->get_render_volumetric();
+
+              line_width += 1.0f;
+              line_width = std::min(10.0f, line_width);
+              line_strip_child->set_screen_space_line_width(line_width);
+            }            
+          } else { //work on parent node
+            auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
+            bool render_volumetric = line_strip_parent->get_render_volumetric();
+
+            line_width += 1.0f;
+            line_width = std::min(10.0f, line_width);
+            line_strip_parent->set_screen_space_line_width(line_width);
+          }
+        break;
+
+        case 'F':
+          if(line_strip_example_node->has_children()) { //work on grouped line strips
+            for( auto& child : line_strip_example_node->get_children() ) {
+              auto line_strip_child = std::dynamic_pointer_cast<gua::node::LineStripNode>(child);
+              bool render_volumetric = line_strip_child->get_render_volumetric();
+
+              line_width -= 1.0f;
+              line_width = std::max(1.0f, line_width);
+              line_strip_child->set_screen_space_line_width(line_width);
+            }            
+          } else { //work on parent node
+            auto line_strip_parent = std::dynamic_pointer_cast<gua::node::LineStripNode>(line_strip_example_node);
+            bool render_volumetric = line_strip_parent->get_render_volumetric();
+
+            line_width -= 1.0f;
+            line_width = std::max(1.0f, line_width);
+            line_strip_parent->set_screen_space_line_width(line_width);
           }
         break;
 
