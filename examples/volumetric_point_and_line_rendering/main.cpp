@@ -179,8 +179,6 @@ int main(int argc, char** argv) {
 
 uint32_t pushed_spiral_vertices = 0;
 
-float b = 0.1;
-float a = 6.28;
 
 float line_width = 1.0f;
     //////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +198,8 @@ float line_width = 1.0f;
 
         case ' ': {
 
-
+              float b = 0.1;
+              float a = 6.28;
               float spiral_float_parameter = pushed_spiral_vertices * 0.1;
 
               float norm_pos_x = b * spiral_float_parameter * std::cos(spiral_float_parameter + a);
