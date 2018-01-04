@@ -93,27 +93,20 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
 */
  
  
-  std::cout << "LINE STRIP VERTEX RESERVOIR SIZE: " << line_strip_.vertex_reservoir_size << "\n";
-
-   std::cout << "BEFORE CREATE BUFFER\n";
   clinestrip.vertices =
       ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
                                        scm::gl::USAGE_DYNAMIC_DRAW,
                                        (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
                                        0);
 
-   std::cout << "AFTER CREATE BUFFER\n";
-
   LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
       clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-   std::cout << "BEFORE COPY TO BUFFER\n";
 
   if(line_strip_.vertex_reservoir_size != 0) {
     line_strip_.copy_to_buffer(data);
   }
 
-   std::cout << "AFTER COPY TO BUFFER\n";
   //std::cout << buffer_content << ""
   ctx.render_context->unmap_buffer(clinestrip.vertices);
 
@@ -121,8 +114,6 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
       line_strip_.get_vertex_format(),
       {clinestrip.vertices});
   ctx.line_strips[uuid()] = clinestrip;
-
-  std::cout << "BEFORE APPLYING RENDERING CONTEXT\n";
 
   ctx.render_context->apply();
 }
@@ -139,20 +130,13 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
   auto iter = ctx.line_strips.find(uuid());
 
 
-  //std::cout << "TRYING TO DRAW SOMETHING\n";
-  //auto ctx_dirty_flag_iter = dirty_flags_per_context_.find(uuid());
-/*
-  bool ctx_dirty_flag = false;
-
-  if(dirty_flags_per_context_.end() != ctx_dirty_flag_iter) {
-    ctx_dirty_flag = ctx_dirty_flag_iter->second;
-  }
-*/
 
   bool& clean_flag_for_context = clean_flags_per_context_[uuid()];
 
   if (iter == ctx.line_strips.end() || (!clean_flag_for_context) /*|| ctx_dirty_flag*/) {
     // upload to GPU if neccessary
+
+    compute_consistent_normals();
     upload_to(ctx);
     iter = ctx.line_strips.find(uuid());
 
@@ -211,6 +195,11 @@ void LineStripResource::make_clean_flags_dirty() {
   for( auto& known_clean_flag : clean_flags_per_context_) {
     known_clean_flag.second = false;
   }
+}
+
+
+void LineStripResource::compute_consistent_normals() const {
+  line_strip_.compute_consistent_normals();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

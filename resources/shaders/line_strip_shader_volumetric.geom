@@ -12,6 +12,7 @@ in VertexData {
   vec3  gua_varying_object_position;
   vec4  gua_varying_color_rgba;
   float gua_varying_thickness;
+  vec3  gua_varying_normal;
   vec3  gua_varying_rme;
 } VertexIn[4];
 
@@ -64,8 +65,9 @@ void main() {
     //vec3 sounding_line_point_on_u = p0 + (dot(n0, u) / dot(u, u)) * u;//  0.5*v;
     //vec3 hw_t_u_to_p1 = normalize(p1 - sounding_line_point_on_u);
 
-    i = normalize(cross(p1_to_mirrored_p1, u));
-
+    
+    //i = normalize(cross(p1_to_mirrored_p1, u));
+    i = VertexIn[1].gua_varying_normal;
 /*
     if( dot(i, vec3(0.0f, 99999.9f, 0.0f )) < 0.0) {
       i *= -1;
@@ -100,8 +102,8 @@ void main() {
     //vec3 sounding_line_point_on_v = p1 + (dot(n1, v) / dot(v, v)) * v;//  0.5*v;
     //vec3 hw_t_v_to_p2 = normalize(p2 - sounding_line_point_on_v);
 
-    i = normalize(cross(p2_to_mirrored_p2, v));
-
+    //i = normalize(cross(p2_to_mirrored_p2, v));
+    i = VertexIn[2].gua_varying_normal;
 /*
     if( dot(i, vec3(0.0f, 0.0f, 0.0f )) < 0.0) {
       i *= -1;

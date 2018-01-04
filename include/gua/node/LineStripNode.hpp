@@ -81,7 +81,7 @@ public : // methods
   inline float get_screen_space_line_width() const { return screen_space_line_width_; }
   inline void set_screen_space_line_width(float line_width) { screen_space_line_width_ = std::max(1.0f, std::min(10.0f, line_width)); }
 
-  void make_normals_consistent();
+  void compute_consistent_normals();
 
   void push_vertex(float x, float y, float z,
                    float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,

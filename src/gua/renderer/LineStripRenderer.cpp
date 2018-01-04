@@ -219,7 +219,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         bool show_backfaces   = line_strip_node->get_material()->get_show_back_faces();
         bool render_wireframe = line_strip_node->get_material()->get_render_wireframe();
-
+        
         if (show_backfaces) {
           if (render_wireframe) {
             current_rasterizer_state = rs_wireframe_cull_none_;
