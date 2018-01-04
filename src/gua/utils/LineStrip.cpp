@@ -21,7 +21,7 @@ LineStrip(unsigned int intitial_line_buffer_size) :
   positions.resize(vertex_reservoir_size);
   colors.resize(vertex_reservoir_size);
   thicknesses.resize(vertex_reservoir_size);
-
+  normals.resize(vertex_reservoir_size);
 }
 
 
@@ -32,17 +32,20 @@ LineStrip(LineObject const& line_object) {
   if(line_object.vertex_attribute_ids.empty()){
     //consider all vertex attributes in order of their appearance
     if(    (line_object.vertex_position_database.size() != line_object.vertex_color_database.size()) 
-        || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) ) {
+        || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) 
+        || (line_object.vertex_position_database.size() != line_object.vertex_normal_database.size()) 
+      ) {
       Logger::LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
       Logger::LOG_WARNING << line_object.vertex_position_database.size() << ", "
                           << line_object.vertex_color_database.size() << ", "
-                          << line_object.vertex_thickness_database.size() << "\n";
+                          << line_object.vertex_thickness_database.size() << ", "
+                          << line_object.vertex_normal_database.size() << "\n";
     } else {
       vertex_reservoir_size = num_occupied_vertex_slots = line_object.vertex_position_database.size();
       positions   = line_object.vertex_position_database;
       colors      = line_object.vertex_color_database;
       thicknesses = line_object.vertex_thickness_database;
-
+      normals     = line_object.vertex_normal_database;
     }
   } else {
     //indexed construction not implemented yet
@@ -60,6 +63,7 @@ enlarge_reservoirs() {
   positions.resize(padded_reservoir_size);
   colors.resize(padded_reservoir_size);
   thicknesses.resize(padded_reservoir_size);
+  normals.resize(padded_reservoir_size);
 }
 
 bool LineStrip::push_vertex(Vertex const& v_to_push) {
@@ -70,6 +74,7 @@ bool LineStrip::push_vertex(Vertex const& v_to_push) {
   positions[num_occupied_vertex_slots] = v_to_push.pos;
   colors[num_occupied_vertex_slots] = v_to_push.col;
   thicknesses[num_occupied_vertex_slots] = v_to_push.thick;
+  normals[num_occupied_vertex_slots] = v_to_push.nor;
 
   ++num_occupied_vertex_slots;
  return true;
@@ -83,6 +88,7 @@ bool LineStrip::pop_front_vertex() {
   positions.erase(positions.begin());
   colors.erase(colors.begin());
   thicknesses.erase(thicknesses.begin());
+  normals.erase(normals.begin());
 
   --num_occupied_vertex_slots;
   return true;
@@ -97,6 +103,7 @@ bool LineStrip::pop_back_vertex() {
   positions.pop_back();
   colors.pop_back();
   thicknesses.pop_back();
+  normals.pop_back();
 
   --num_occupied_vertex_slots;
 
@@ -108,6 +115,7 @@ bool LineStrip::clear_vertices() {
     positions.clear();
     colors.clear();
     thicknesses.clear();
+    normals.clear();
 
     num_occupied_vertex_slots = 0;
 
@@ -123,25 +131,28 @@ void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
   vertex_buffer[0].pos = positions[0];
   vertex_buffer[0].col = colors[0];
   vertex_buffer[0].thick = thicknesses[0];
+  vertex_buffer[0].nor = normals[0];
 
   for (int vertex_id(0); vertex_id < num_occupied_vertex_slots; ++vertex_id) {
     vertex_buffer[vertex_id+1].pos = positions[vertex_id];
     vertex_buffer[vertex_id+1].col = colors[vertex_id];
     vertex_buffer[vertex_id+1].thick = thicknesses[vertex_id];
+    vertex_buffer[vertex_id+1].nor = normals[vertex_id];
   }
 
   vertex_buffer[num_occupied_vertex_slots + 1].pos = positions[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].col = colors[num_occupied_vertex_slots-1];
   vertex_buffer[num_occupied_vertex_slots + 1].thick = thicknesses[num_occupied_vertex_slots-1];
-
-
+  vertex_buffer[num_occupied_vertex_slots + 1].nor = normals[num_occupied_vertex_slots-1];
 }
 
 scm::gl::vertex_format LineStrip::get_vertex_format() const {
   return scm::gl::vertex_format(
     0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
     0, 1, scm::gl::TYPE_VEC4F, sizeof(Vertex))(
-    0, 2, scm::gl::TYPE_FLOAT, sizeof(Vertex));
+    0, 2, scm::gl::TYPE_FLOAT, sizeof(Vertex))(
+    0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+    ;
 }
 
 } // namespace gua

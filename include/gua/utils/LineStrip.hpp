@@ -56,13 +56,17 @@ struct GUA_DLL LineStrip {
 
     Vertex(float x = 0.0f, float y = 0.0f, float z = 0.0f,
            float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
-           float thickness = 1.0f) : pos(x, y, z),
-                                     col(col_r, col_g, col_b, col_a),
-                                     thick(thickness) {}
+           float thickness = 1.0f,
+           float nor_x = 0.0f, float nor_y = 1.0f, float nor_z = 0.0f) 
+                                    : pos(x, y, z),
+                                      col(col_r, col_g, col_b, col_a),
+                                      thick(thickness),
+                                      nor(nor_x, nor_y, nor_z){}
 
     scm::math::vec3f pos;
     scm::math::vec4f col;
     float            thick;
+    scm::math::vec3f nor;
   };
 
   bool push_vertex(Vertex const& v_to_push);
@@ -84,6 +88,7 @@ struct GUA_DLL LineStrip {
   virtual scm::gl::vertex_format get_vertex_format() const;
 
   std::vector<scm::math::vec3f> positions;
+  std::vector<scm::math::vec3f> normals;
   std::vector<scm::math::vec4f> colors;
   std::vector<float> thicknesses;
 

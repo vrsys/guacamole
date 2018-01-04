@@ -101,6 +101,18 @@ read_file(std::string const& file_name) {
           delete float_attributes_to_parse;
           break;
 
+        case 'n':
+          float_attributes_to_parse = new float[3];
+          for(int normal_idx = 0; normal_idx < 3; ++normal_idx) {
+            in_sstream >> float_attributes_to_parse[normal_idx];
+          }
+          current_line_object
+            ->second.vertex_normal_database.emplace_back( float_attributes_to_parse[0], 
+                                                          float_attributes_to_parse[1], 
+                                                          float_attributes_to_parse[2]);
+          delete[] float_attributes_to_parse;
+          break;
+
         case 's':
           Logger::LOG_WARNING << "*.lob-parser option 's' is not implemented yet" << std::endl;
           break;
@@ -108,6 +120,33 @@ read_file(std::string const& file_name) {
         default:
           Logger::LOG_WARNING << "Unknown *.lob-parser option " << line_prefix << std::endl;
       }
+    }
+  }
+
+  for(auto& current_line_object : parsed_line_objects_) {
+
+    if(current_line_object.second.vertex_position_database.size() > 
+       current_line_object.second.vertex_color_database.size()) {
+      current_line_object.second.vertex_color_database.resize(
+         current_line_object.second.vertex_position_database.size(),
+          scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+        );
+    }
+
+    if(current_line_object.second.vertex_position_database.size() > 
+       current_line_object.second.vertex_thickness_database.size()) {
+      current_line_object.second.vertex_thickness_database.resize(
+         current_line_object.second.vertex_position_database.size(),
+          1.0f
+        );
+    }
+
+    if(current_line_object.second.vertex_position_database.size() > 
+       current_line_object.second.vertex_normal_database.size()) {
+      current_line_object.second.vertex_normal_database.resize(
+         current_line_object.second.vertex_position_database.size(),
+          scm::math::vec3(0.0f, 1.0f, 0.0f)
+        );
     }
   }
 

@@ -3,6 +3,7 @@
 layout(location=0) in vec3 gua_in_position;
 layout(location=1) in vec4 gua_in_color;
 layout(location=2) in float gua_in_thickness;
+layout(location=3) in vec3 gua_in_normal;
 
 @include "common/gua_camera_uniforms.glsl"
 

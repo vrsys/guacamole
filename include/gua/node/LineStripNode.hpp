@@ -75,9 +75,18 @@ public : // methods
   inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
 
+  inline float get_screen_space_point_size() const { return screen_space_point_size_; }
+  inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = /*std::max(1.0f, std::min(10.0f, */point_size/*))*/; }
+
+  inline float get_screen_space_line_width() const { return screen_space_line_width_; }
+  inline void set_screen_space_line_width(float line_width) { screen_space_line_width_ = std::max(1.0f, std::min(10.0f, line_width)); }
+
+  void make_normals_consistent();
+
   void push_vertex(float x, float y, float z,
                    float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
-                   float thickness = 1.0f);
+                   float thickness = 1.0f,
+                   float nor_x = 0.0f, float nor_y = 1.0f, float nor_z = 0.0f);
 
   void pop_back_vertex();
   void pop_front_vertex();
@@ -126,6 +135,11 @@ public : // methods
 
   bool                              render_volumetric_;
   bool                              render_vertices_as_points_;
+
+  float                             screen_space_line_width_;
+  float                             screen_space_point_size_;
+
+
 };
 
 } // namespace node {
