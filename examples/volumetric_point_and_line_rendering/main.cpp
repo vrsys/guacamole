@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 
   auto line_strip_example_node(line_strip_loader
                               .create_empty_geometry("ls_example_node", 
-                                                     example_model_name));
+                                                     "empty_node.lob"));
 
   //actual_line_strip_node->set_render_vertices_as_points(true);
 
