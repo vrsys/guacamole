@@ -284,6 +284,15 @@ namespace node {
   };
 
   ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::push_vertex(LineStrip::Vertex const& line_strip_vertex) {
+    push_vertex(line_strip_vertex.pos[0], line_strip_vertex.pos[1], line_strip_vertex.pos[2],
+                line_strip_vertex.col[0], line_strip_vertex.col[1], 
+                line_strip_vertex.col[2], line_strip_vertex.col[3],
+                line_strip_vertex.thick,
+                line_strip_vertex.nor[0], line_strip_vertex.nor[1], line_strip_vertex.nor[2]);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::push_vertex(float x, float y, float z,
                                   float col_r, float col_g, float col_b, float col_a,
                                   float thickness,
