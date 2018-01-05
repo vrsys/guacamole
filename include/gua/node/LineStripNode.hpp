@@ -81,6 +81,9 @@ public : // methods
   inline float get_screen_space_line_width() const { return screen_space_line_width_; }
   inline void set_screen_space_line_width(float line_width) { screen_space_line_width_ = std::max(1.0f, std::min(10.0f, line_width)); }
 
+  inline bool get_was_created_empty() const { return was_created_empty_; }
+  inline void set_was_created_empty(bool was_created_empty) { was_created_empty_ = was_created_empty; }
+
   void set_empty() {was_created_empty_ = true;}
 
   void compute_consistent_normals();
