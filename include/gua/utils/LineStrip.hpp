@@ -53,7 +53,6 @@ struct GUA_DLL LineStrip {
    * @brief holds information of a vertex
    */
   struct Vertex {
-
     Vertex(float x = 0.0f, float y = 0.0f, float z = 0.0f,
            float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
            float thickness = 1.0f,
@@ -62,6 +61,22 @@ struct GUA_DLL LineStrip {
                                       col(col_r, col_g, col_b, col_a),
                                       thick(thickness),
                                       nor(nor_x, nor_y, nor_z){}
+
+    bool operator==(Vertex const& rhs) {
+      if(   pos[0] == rhs.pos[0] && pos[1] == rhs.pos[1] && pos[2] == rhs.pos[2]
+         && col[0] == rhs.col[0] && col[1] == rhs.col[1] 
+         && col[2] == rhs.col[2] && col[3] == rhs.col[3]
+         && thick == rhs.thick
+         && nor[0] == rhs.nor[0] && nor[1] == rhs.nor[1] && nor[2] == rhs.nor[2] ) {
+        return true;
+      }
+
+      return false;
+    }
+
+    bool operator!=(Vertex const& rhs) {
+      return ! ((*this) == rhs);
+    }
 
     scm::math::vec3f pos;
     scm::math::vec4f col;
