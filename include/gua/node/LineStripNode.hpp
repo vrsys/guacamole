@@ -25,6 +25,8 @@
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
 
+#include <gua/utils/LineStrip.hpp>
+
 namespace gua {
 
 class LineStripResource;
@@ -87,6 +89,8 @@ public : // methods
   void set_empty() {was_created_empty_ = true;}
 
   void compute_consistent_normals();
+
+  void push_vertex(LineStrip::Vertex const& line_strip_vertex);
 
   void push_vertex(float x, float y, float z,
                    float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
