@@ -237,6 +237,10 @@ std::shared_ptr<node::Node> LineStripLoader::load(
     std::shared_ptr<node::LineStripNode> node_to_return = 
         std::make_shared<node::LineStripNode>(node::LineStripNode("", desc.unique_key()) );
 
+    if(create_empty) {
+      node_to_return->set_empty();
+    }
+
     if(create_lines) {
       node_to_return->set_render_vertices_as_points(false);
       node_to_return->set_render_volumetric(true);
