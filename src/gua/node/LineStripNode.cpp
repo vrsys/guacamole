@@ -48,7 +48,8 @@ namespace node {
       render_volumetric_(false),
       render_vertices_as_points_(false),
       screen_space_line_width_(1.0f),
-      screen_space_point_size_(1.0f)
+      screen_space_point_size_(1.0f),
+      was_created_empty_(false)
   {}
 
 
@@ -219,7 +220,12 @@ namespace node {
           GeometryDescription desc(geometry_description_);
           try {
             gua::LineStripLoader loader;
-            loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
+
+            if(!was_created_empty_) {
+              loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
+            } else {
+              loader.create_empty_geometry(get_name(), desc.filepath(), get_material(), desc.flags());
+            }
           }
           catch ( std::exception& e ) {
             Logger::LOG_WARNING << "LineStripNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
