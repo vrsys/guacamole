@@ -107,7 +107,6 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
     line_strip_.copy_to_buffer(data);
   }
 
-  //std::cout << buffer_content << ""
   ctx.render_context->unmap_buffer(clinestrip.vertices);
 
   clinestrip.vertex_array = ctx.render_device->create_vertex_array(
@@ -206,6 +205,7 @@ void LineStripResource::compute_consistent_normals() const {
 
 void LineStripResource::push_vertex(LineStrip::Vertex const& in_vertex) {
   std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+
   if(line_strip_.push_vertex(in_vertex)) {
     if (line_strip_.num_occupied_vertex_slots > 0) {
         bounding_box_.expandBy(math::vec3{line_strip_.positions[line_strip_.num_occupied_vertex_slots-1]});

@@ -70,19 +70,21 @@ void LineStrip::compute_consistent_normals() const {
   bool last_plane_normal_exists = false;
   scm::math::vec3f last_plane_normal = scm::math::vec3f(0.0f, 0.0f, 0.0f);
 
-  for(uint32_t normal_idx = 0; normal_idx < num_occupied_vertex_slots; ++normal_idx) {
+  int32_t positions_size_minus_one = int32_t(positions.size()) - 1;
+
+  for(int32_t normal_idx = 0; normal_idx < num_occupied_vertex_slots; ++normal_idx) {
     if(0 == normal_idx) {
-      if(positions.size() - 1 == normal_idx) {
+      if(positions_size_minus_one == normal_idx) {
         normals[0] = scm::math::vec3f(0.0, 1.0, 0.0);
       }
       else {
         normals[0] = scm::math::normalize(positions[1] - positions[0]);
       }
-    } else if(positions.size() - 1 == normal_idx) {
+    } else if(positions_size_minus_one == normal_idx) {
       if(0 == normal_idx) {
-        normals[positions.size() - 1] = scm::math::vec3f(0.0, 1.0, 0.0);
+        normals[positions_size_minus_one] = scm::math::vec3f(0.0, 1.0, 0.0);
       } else {
-        normals[positions.size() - 1] = scm::math::normalize(positions[positions.size() - 1] - positions[positions.size() - 2]);
+        normals[positions_size_minus_one] = scm::math::normalize(positions[positions_size_minus_one] - positions[positions_size_minus_one - 1]);
       }
     } else { //actual computation with consistency check
 
