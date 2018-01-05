@@ -278,7 +278,9 @@ namespace node {
 
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::compute_consistent_normals() {
-    geometry_->compute_consistent_normals();
+    if(nullptr != geometry_) {
+      geometry_->compute_consistent_normals();
+    }
   };
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -286,27 +288,36 @@ namespace node {
                                   float col_r, float col_g, float col_b, float col_a,
                                   float thickness,
                                   float nor_x, float nor_y, float nor_z) {
-    LineStrip::Vertex vertex_to_push(x, y, z, 
-                                     col_r, col_g, col_b, col_a, 
-                                     thickness,
-                                     nor_x, nor_y, nor_z);
+    
+    if(nullptr != geometry_) {
+      LineStrip::Vertex vertex_to_push(x, y, z, 
+                                      col_r, col_g, col_b, col_a, 
+                                      thickness,
+                                      nor_x, nor_y, nor_z);
 
-    geometry_->push_vertex(vertex_to_push);
+      geometry_->push_vertex(vertex_to_push);
+    }
   };
 
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::pop_front_vertex() {
-    geometry_->pop_front_vertex();
+    if(nullptr != geometry_) {
+      geometry_->pop_front_vertex();
+    }
   };
 
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::pop_back_vertex() {
-    geometry_->pop_back_vertex();
+    if(nullptr != geometry_) {
+      geometry_->pop_back_vertex();
+    }
   };
 
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::clear_vertices() {
-    geometry_->clear_vertices();
+    if(nullptr != geometry_) {
+      geometry_->clear_vertices();
+    }
   }
 
 }

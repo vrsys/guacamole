@@ -228,6 +228,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(
     // creates a geometry node and returns it
     auto load_geometry = [&](int obj_idx) {
       GeometryDescription desc("LineStrip", file_name, line_strip_count++, flags);
+
       GeometryDatabase::instance()->add(
           desc.unique_key(),
           std::make_shared<LineStripResource>(
