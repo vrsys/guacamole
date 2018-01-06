@@ -44,7 +44,7 @@ struct GUA_DLL LineStrip {
  public:
 
   //create empty line strip for dynamic usage
-  LineStrip(unsigned int initial_line_buffer_size = 0);
+  LineStrip(unsigned int initial_line_buffer_size = 1000);
 
   //convert representation of LineStripImporter to LineStrip object
   LineStrip(LineObject const& line_object);
@@ -85,6 +85,8 @@ struct GUA_DLL LineStrip {
   };
 
   void compute_consistent_normals() const;
+
+  void compile_buffer_string(std::string& buffer_string);
 
   bool push_vertex(Vertex const& v_to_push);
   bool pop_back_vertex();

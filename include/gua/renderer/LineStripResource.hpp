@@ -94,6 +94,12 @@ class LineStripResource : public GeometryResource {
   
   void compute_consistent_normals() const;
 
+  void compile_buffer_string(std::string& buffer_string) {
+    line_strip_.compile_buffer_string(buffer_string);
+
+    std::cout << "COMPILED BUFFER SIZE 2: " << buffer_string.size() << " bytes\n";
+  };
+
   void push_vertex(LineStrip::Vertex const& in_vertex);
   void pop_front_vertex();
   void pop_back_vertex();

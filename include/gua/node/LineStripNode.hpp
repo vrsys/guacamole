@@ -102,6 +102,8 @@ public : // methods
 
   void clear_vertices();
 
+  void compile_buffer_string(std::string& buffer_string);
+
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -118,6 +120,10 @@ public : // methods
   void update_cache() override;
 
   std::shared_ptr<LineStripResource> const& get_geometry() const;
+
+  bool get_trigger_update() const {return trigger_update_;}
+  void set_trigger_update(bool trigger_update) {trigger_update_ = trigger_update;}
+
 
   /**
    * Accepts a visitor and calls concrete visit method.
@@ -150,6 +156,7 @@ public : // methods
 
   bool                              was_created_empty_;
 
+  bool                              trigger_update_;
 
 };
 
