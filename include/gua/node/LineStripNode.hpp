@@ -90,6 +90,11 @@ public : // methods
 
   void compute_consistent_normals();
 
+  void enqueue_vertex(float x, float y, float z,
+                      float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
+                      float thickness = 1.0f,
+                      float nor_x = 0.0f, float nor_y = 1.0f, float nor_z = 0.0f);
+
   void push_vertex(LineStrip::Vertex const& line_strip_vertex);
 
   void push_vertex(float x, float y, float z,
@@ -102,7 +107,10 @@ public : // methods
 
   void clear_vertices();
 
+  void forward_queued_vertices();
+
   void compile_buffer_string(std::string& buffer_string);
+  void uncompile_buffer_string(std::string const& buffer_string);
 
   /**
   * Implements ray picking for a triangular mesh
@@ -157,6 +165,11 @@ public : // methods
   bool                              was_created_empty_;
 
   bool                              trigger_update_;
+
+  std::vector<scm::math::vec3f> queued_positions_;
+  std::vector<scm::math::vec4f> queued_colors_;
+  std::vector<float> queued_thicknesses_;
+  std::vector<scm::math::vec3f> queued_normals_;
 
 };
 

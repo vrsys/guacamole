@@ -9,14 +9,16 @@
 //external headers
 #include <iostream>
 
+#include <mutex>
+
 namespace gua {
 
 
 LineStrip::
 LineStrip(unsigned int intitial_line_buffer_size) : 
   vertex_reservoir_size(intitial_line_buffer_size),
-  num_occupied_vertex_slots(0) {
-
+  num_occupied_vertex_slots() {
+  
   positions.resize(vertex_reservoir_size);
   colors.resize(vertex_reservoir_size);
   thicknesses.resize(vertex_reservoir_size);
@@ -26,6 +28,7 @@ LineStrip(unsigned int intitial_line_buffer_size) :
 
 LineStrip::
 LineStrip(LineObject const& line_object) {
+
   //create line strip vbos from parsed line object
 
   if(line_object.vertex_attribute_ids.empty()){
@@ -53,6 +56,7 @@ LineStrip(LineObject const& line_object) {
 
 void LineStrip::
 enlarge_reservoirs() {
+
   if(vertex_reservoir_size > 0) {
     vertex_reservoir_size *= 2;
   } else {
@@ -145,13 +149,41 @@ void LineStrip::compile_buffer_string(std::string& buffer_string) {
            write_offset += size_of_thicknesses;
   memcpy(&tmp_string[write_offset], &normals[0], size_of_normals);
 
-  std::cout << "COMPILED BUFFER SIZE: " << tmp_string.size() << " bytes\n";
-
   buffer_string = tmp_string;
+}
 
+void LineStrip::uncompile_buffer_string(std::string const& buffer_string) {
+
+  uint64_t num_vertices_written = 0;
+  uint64_t read_offset = 0;
+  memcpy(&num_vertices_written, &buffer_string[0], sizeof(num_vertices_written) );
+
+  uint64_t currently_occupied_vertex_slots = 0;
+  int64_t newly_occupied_vertex_slots = currently_occupied_vertex_slots + num_vertices_written;
+
+  if(newly_occupied_vertex_slots > vertex_reservoir_size) {
+    positions.resize(newly_occupied_vertex_slots);
+    colors.resize(newly_occupied_vertex_slots);
+    thicknesses.resize(newly_occupied_vertex_slots);
+    normals.resize(newly_occupied_vertex_slots);
+
+    vertex_reservoir_size = newly_occupied_vertex_slots;
+  }
+
+  read_offset += sizeof(num_vertices_written);
+  memcpy(&positions[currently_occupied_vertex_slots], &buffer_string[read_offset], num_vertices_written*sizeof(Vertex::pos));
+  read_offset +=  num_vertices_written*sizeof(Vertex::pos);
+  memcpy(&colors[currently_occupied_vertex_slots], &buffer_string[read_offset], num_vertices_written*sizeof(Vertex::col));
+  read_offset +=  num_vertices_written*sizeof(Vertex::col);
+  memcpy(&thicknesses[currently_occupied_vertex_slots], &buffer_string[read_offset], num_vertices_written*sizeof(Vertex::thick));
+  read_offset +=  num_vertices_written*sizeof(Vertex::nor);
+  memcpy(&normals[currently_occupied_vertex_slots], &buffer_string[read_offset], num_vertices_written*sizeof(Vertex::nor));
+
+  num_occupied_vertex_slots = num_vertices_written;
 }
 
 bool LineStrip::push_vertex(Vertex const& v_to_push) {
+
   if(num_occupied_vertex_slots >= vertex_reservoir_size) {
     enlarge_reservoirs();
   }
@@ -165,6 +197,7 @@ bool LineStrip::push_vertex(Vertex const& v_to_push) {
 }
 
 bool LineStrip::pop_front_vertex() {
+
   if(num_occupied_vertex_slots < 2) {
     Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
     return false;
@@ -179,6 +212,7 @@ bool LineStrip::pop_front_vertex() {
 }
 
 bool LineStrip::pop_back_vertex() {
+
   if(num_occupied_vertex_slots < 2) {
     Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
 
@@ -195,6 +229,7 @@ bool LineStrip::pop_back_vertex() {
 }
 
 bool LineStrip::clear_vertices() {
+
   if(!num_occupied_vertex_slots == 0) {
     positions.clear();
     colors.clear();
@@ -206,6 +241,23 @@ bool LineStrip::clear_vertices() {
     return true;
   }
   return false;
+}
+
+void LineStrip::forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                                        std::vector<scm::math::vec4f> const& queued_colors,
+                                        std::vector<float> const& queued_thicknesses,
+                                        std::vector<scm::math::vec3f> const& queued_normals) {
+  positions      = queued_positions;
+  colors         = queued_colors;
+  thicknesses    = queued_thicknesses;
+  normals        = queued_normals;
+
+  num_occupied_vertex_slots = positions.size();
+
+  if(num_occupied_vertex_slots > vertex_reservoir_size) {
+    vertex_reservoir_size = num_occupied_vertex_slots;
+  }
+
 }
 
 void LineStrip::copy_to_buffer(Vertex* vertex_buffer)  const {
