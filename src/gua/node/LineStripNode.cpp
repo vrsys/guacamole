@@ -49,7 +49,8 @@ namespace node {
       render_vertices_as_points_(false),
       screen_space_line_width_(1.0f),
       screen_space_point_size_(1.0f),
-      was_created_empty_(false)
+      was_created_empty_(false),
+      trigger_update_(false)
   {}
 
 
@@ -328,6 +329,15 @@ namespace node {
       geometry_->clear_vertices();
     }
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::compile_buffer_string(std::string& buffer_string) {
+    if(nullptr != geometry_) {
+      geometry_->compile_buffer_string(buffer_string);
+
+      std::cout << "COMPILED BUFFER SIZE 3: " << buffer_string.size() << " bytes\n";
+    }
+  };
 
 }
 }
