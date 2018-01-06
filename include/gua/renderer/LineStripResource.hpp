@@ -94,18 +94,19 @@ class LineStripResource : public GeometryResource {
   
   void compute_consistent_normals() const;
 
-  void compile_buffer_string(std::string& buffer_string) {
-    line_strip_.compile_buffer_string(buffer_string);
-
-    std::cout << "COMPILED BUFFER SIZE 2: " << buffer_string.size() << " bytes\n";
-  };
+  void compile_buffer_string(std::string& buffer_string);
+  void uncompile_buffer_string(std::string const& buffer_string);
 
   void push_vertex(LineStrip::Vertex const& in_vertex);
   void pop_front_vertex();
   void pop_back_vertex();
 
-
   void clear_vertices();
+
+  void forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                               std::vector<scm::math::vec4f> const& queued_colors,
+                               std::vector<float> const& queued_thicknesses,
+                               std::vector<scm::math::vec3f> const& queued_normals);
 
   math::vec3 get_vertex(unsigned int i) const;
 

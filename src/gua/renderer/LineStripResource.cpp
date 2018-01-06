@@ -126,6 +126,7 @@ void LineStripResource::draw(RenderContext& ctx) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
+
   auto iter = ctx.line_strips.find(uuid());
 
 
@@ -196,10 +197,28 @@ void LineStripResource::make_clean_flags_dirty() {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::compute_consistent_normals() const {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
   line_strip_.compute_consistent_normals();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::compile_buffer_string(std::string& buffer_string) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.compile_buffer_string(buffer_string);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::uncompile_buffer_string(std::string const& buffer_string) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.uncompile_buffer_string(buffer_string);
+  make_clean_flags_dirty();
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -243,6 +262,20 @@ void LineStripResource::clear_vertices() {
     compute_bounding_box();
     make_clean_flags_dirty();
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                                                std::vector<scm::math::vec4f> const& queued_colors,
+                                                std::vector<float> const& queued_thicknesses,
+                                                std::vector<scm::math::vec3f> const& queued_normals) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.forward_queued_vertices(queued_positions,
+                                      queued_colors,
+                                      queued_thicknesses,
+                                      queued_normals);
+  make_clean_flags_dirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -294,11 +294,21 @@ namespace node {
   };
 
   ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::enqueue_vertex(float x, float y, float z,
+                                    float col_r, float col_g, float col_b, float col_a,
+                                    float thickness,
+                                    float nor_x, float nor_y, float nor_z) {
+    queued_positions_.push_back(scm::math::vec3f(x, y, z));
+    queued_colors_.push_back(scm::math::vec4f(col_r, col_g, col_b, col_a));
+    queued_thicknesses_.push_back(thickness);
+    queued_normals_.push_back(scm::math::vec3f(nor_x, nor_y, nor_z));
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::push_vertex(float x, float y, float z,
                                   float col_r, float col_g, float col_b, float col_a,
                                   float thickness,
                                   float nor_x, float nor_y, float nor_z) {
-    
     if(nullptr != geometry_) {
       LineStrip::Vertex vertex_to_push(x, y, z, 
                                       col_r, col_g, col_b, col_a, 
@@ -307,6 +317,7 @@ namespace node {
 
       geometry_->push_vertex(vertex_to_push);
     }
+    
   };
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +337,20 @@ namespace node {
   ////////////////////////////////////////////////////////////////////////////////
   void LineStripNode::clear_vertices() {
     if(nullptr != geometry_) {
-      geometry_->clear_vertices();
+      queued_positions_.clear();
+      queued_colors_.clear();
+      queued_thicknesses_.clear();
+      queued_normals_.clear();
+      //geometry_->clear_vertices();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::forward_queued_vertices() {
+    if(nullptr != geometry_) {
+      geometry_->forward_queued_vertices(queued_positions_, 
+                                         queued_colors_, 
+                                         queued_thicknesses_, queued_normals_);
     }
   }
 
@@ -334,8 +358,13 @@ namespace node {
   void LineStripNode::compile_buffer_string(std::string& buffer_string) {
     if(nullptr != geometry_) {
       geometry_->compile_buffer_string(buffer_string);
+    }
+  };
 
-      std::cout << "COMPILED BUFFER SIZE 3: " << buffer_string.size() << " bytes\n";
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::uncompile_buffer_string(std::string const& buffer_string) {
+    if(nullptr != geometry_) {
+      geometry_->uncompile_buffer_string(buffer_string);
     }
   };
 
