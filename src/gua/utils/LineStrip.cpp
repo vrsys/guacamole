@@ -115,6 +115,42 @@ void LineStrip::compute_consistent_normals() const {
 
 }
 
+
+void LineStrip::compile_buffer_string(std::string& buffer_string) {
+
+  uint64_t num_vertices_to_write = num_occupied_vertex_slots;
+
+  uint64_t size_of_byte_count    = sizeof(uint64_t);
+  uint64_t size_of_positions     = num_vertices_to_write * sizeof(Vertex::pos);
+  uint64_t size_of_colors        = num_vertices_to_write * sizeof(Vertex::col);
+  uint64_t size_of_thicknesses   = num_vertices_to_write * sizeof(Vertex::thick);
+  uint64_t size_of_normals       = num_vertices_to_write * sizeof(Vertex::nor);
+
+  uint64_t num_string_bytes =   size_of_byte_count 
+                              + size_of_positions
+                              + size_of_colors
+                              + size_of_thicknesses
+                              + size_of_normals;
+
+  std::string tmp_string(num_string_bytes, '0');
+
+  uint64_t write_offset = 0;
+  memcpy(&tmp_string[write_offset], &num_vertices_to_write, size_of_byte_count);
+           write_offset += size_of_byte_count;
+  memcpy(&tmp_string[write_offset], &positions[0], size_of_positions);
+           write_offset += size_of_positions;
+  memcpy(&tmp_string[write_offset], &colors[0], size_of_colors);
+           write_offset += size_of_colors;
+  memcpy(&tmp_string[write_offset], &thicknesses[0], size_of_thicknesses);
+           write_offset += size_of_thicknesses;
+  memcpy(&tmp_string[write_offset], &normals[0], size_of_normals);
+
+  std::cout << "COMPILED BUFFER SIZE: " << tmp_string.size() << " bytes\n";
+
+  buffer_string = tmp_string;
+
+}
+
 bool LineStrip::push_vertex(Vertex const& v_to_push) {
   if(num_occupied_vertex_slots >= vertex_reservoir_size) {
     enlarge_reservoirs();
