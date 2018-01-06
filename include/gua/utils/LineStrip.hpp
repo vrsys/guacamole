@@ -33,6 +33,7 @@
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 
+#include <mutex>
 #include <vector>
 
 namespace gua {
@@ -87,11 +88,17 @@ struct GUA_DLL LineStrip {
   void compute_consistent_normals() const;
 
   void compile_buffer_string(std::string& buffer_string);
+  void uncompile_buffer_string(std::string const& buffer_string);
 
   bool push_vertex(Vertex const& v_to_push);
   bool pop_back_vertex();
   bool pop_front_vertex();
   bool clear_vertices();
+
+  void forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                               std::vector<scm::math::vec4f> const& queued_colors,
+                               std::vector<float> const& queued_thicknesses,
+                               std::vector<scm::math::vec3f> const& queued_normals);
 
   /**
    * @brief writes vertex info to given buffer
@@ -118,17 +125,6 @@ struct GUA_DLL LineStrip {
 
 protected:
   void enlarge_reservoirs();
-/*
- protected:
-
-
-  std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
-
-
-  template<typename T>
-  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
-*/
-
 };
 
 
