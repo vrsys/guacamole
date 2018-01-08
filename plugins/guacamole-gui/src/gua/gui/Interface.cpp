@@ -53,38 +53,57 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Interface::update() const {
+void Interface::update() {
   CefDoMessageLoopWork();
 }
 
 
-int Interface::init(int argc, char** argv) const{
-  //parses CEF command line arguments (if there are any)
-  CefMainArgs args(argc, argv);
+int Interface::init(int argc, char** argv) {
+  // Provide CEF with command-line arguments.
+  CefMainArgs main_args(argc, argv);
 
-    {
-        int result = CefExecuteProcess(args, nullptr, nullptr);
-        // checkout CefApp, derive it and set it as second parameter, for more control on
-        // command args and resources.
-        if (result >= 0) // child proccess has endend, so exit.
-        {
-            return result;
-        }
-        if (result == -1)
-        {
-            // we are here in the father proccess.
-        }
-    }
-    {
-        bool result = CefInitialize(args, settings_, nullptr, nullptr);
-        // CefInitialize creates a sub-proccess and executes the same executeable, as calling CefInitialize, if not set different in settings.browser_subprocess_path
-        // if you create an extra program just for the childproccess you only have to call CefExecuteProcess(...) in it.
-        if (!result)
-        {
-            // handle error(g_fullscreen_textures[0]
-            return -1;
-        }
-    }
+  // Create a temporary CommandLine object.
+  CefRefPtr<CefCommandLine> command_line = CreateCommandLine(main_args);
+
+  // Create a CefApp of the correct process type.
+  CefRefPtr<CefApp> app;
+  switch (GetProcessType(command_line)) {
+    case PROCESS_TYPE_BROWSER:
+      app = CreateBrowserProcessApp();
+      break;
+    case PROCESS_TYPE_RENDERER:
+      app = CreateRendererProcessApp();
+      break;
+    case PROCESS_TYPE_OTHER:
+      app = CreateOtherProcessApp();
+      break;
+  }
+
+  // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+  // that share the same executable. This function checks the command-line and,
+  // if this is a sub-process, executes the appropriate logic.
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
+  if (exit_code >= 0) {
+    // The sub-process has completed so return here.
+    return exit_code;
+  }
+
+  // Install xlib error handlers so that the application won't be terminated
+  // on non-fatal errors.
+  //XSetErrorHandler(XErrorHandlerImpl);
+  //XSetIOErrorHandler(XIOErrorHandlerImpl);
+
+  // Create the singleton manager instance.
+  //ClientManager manager;
+
+  // Specify CEF global settings here.
+  CefSettings settings;
+
+  // Initialize CEF for the browser process. The first browser instance will be
+  // created in CefBrowserProcessHandler::OnContextInitialized() after CEF has
+  // been initialized.
+  CefInitialize(main_args, settings, app, NULL);
+
 
     return 0;
 }
@@ -127,17 +146,19 @@ CefRefPtr<CefBrowser> Interface::create_browser(CefWindowInfo& info, CefRefPtr<G
 
 // No CefApp for other subprocesses.
 CefRefPtr<CefApp> Interface::CreateOtherProcessApp() {
+  std::cout << "it's a me, OTHER!" << std::endl;
   return NULL;
 }
 
 //TODO: building fails when returning RendererApp
 CefRefPtr<CefApp> Interface::CreateRendererProcessApp() {
-  //return NULL;
+  std::cout << "it's a me, RENDERER!" << std::endl;
   return new gua::GuiRendererApp();
 }
 
 
 CefRefPtr<CefApp> Interface::CreateBrowserProcessApp() {
+  std::cout << "it's a me, BOWSER!" << std::endl;
   return new gua::GuiBrowserApp();
 }
 

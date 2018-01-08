@@ -60,8 +60,8 @@ class GUA_DLL Interface : public Singleton<Interface> {
 
   events::Signal<Cursor> on_cursor_change;
 
-  void update() const;
-  int init(int argc, char** argv) const;
+  void update();
+  int init(int argc, char** argv);
 
   friend class GuiResource;
   friend class Singleton<Interface>;
