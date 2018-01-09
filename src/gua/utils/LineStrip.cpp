@@ -82,13 +82,25 @@ void LineStrip::compute_consistent_normals() const {
         normals[0] = scm::math::vec3f(0.0, 1.0, 0.0);
       }
       else {
-        normals[0] = scm::math::normalize(positions[1] - positions[0]);
+        scm::math::vec3 to_normalize = positions[1] - positions[0];
+        if(scm::math::length(to_normalize) > 1e-6f) {
+          normals[0] = scm::math::normalize(to_normalize);
+        } else {
+          normals[0] = scm::math::vec3f(1.0f, 0.0f, 0.0);
+        }
+
       }
     } else if(positions_size_minus_one == normal_idx) {
       if(0 == normal_idx) {
         normals[positions_size_minus_one] = scm::math::vec3f(0.0, 1.0, 0.0);
       } else {
-        normals[positions_size_minus_one] = scm::math::normalize(positions[positions_size_minus_one] - positions[positions_size_minus_one - 1]);
+
+        scm::math::vec3 to_normalize = positions[positions_size_minus_one] - positions[positions_size_minus_one - 1];
+        if(scm::math::length(to_normalize) > 1e-6f) {
+          normals[positions_size_minus_one] = scm::math::normalize(to_normalize);
+        } else {
+          normals[positions_size_minus_one] = scm::math::vec3f(0.0, 1.0, 0.0);
+        }
       }
     } else { //actual computation with consistency check
 
@@ -110,10 +122,15 @@ void LineStrip::compute_consistent_normals() const {
 
       scm::math::vec4 p0_to_p1 = scm::math::vec3(p0_to_pC + pC_to_p1, 0.0f);
 
-      scm::math::vec3f final_normal = scm::math::normalize(scm::math::vec3f(rot_mat * p0_to_p1));
-      normals[normal_idx] = final_normal;
 
-      last_plane_normal_exists = true;
+      scm::math::vec3 to_normalize = scm::math::vec3f(rot_mat * p0_to_p1);
+      if(scm::math::length(to_normalize) > 1e-6f) {
+        scm::math::vec3f final_normal = scm::math::normalize(to_normalize);
+        normals[normal_idx] = final_normal;
+      } else {
+        normals[positions_size_minus_one] = scm::math::vec3f(0.0, 0.0, 1.0);
+      }
+
     }
   }
 
