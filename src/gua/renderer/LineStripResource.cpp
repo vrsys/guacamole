@@ -80,10 +80,7 @@ LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_
 
 void LineStripResource::upload_to(RenderContext& ctx) const {
   std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
-  RenderContext::LineStrip clinestrip{};
-  clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
-  clinestrip.vertex_reservoir_size = line_strip_.vertex_reservoir_size;
-  clinestrip.num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
+
 
 /*
   if (line_strip_.vertex_reservoir_size == 0) {
@@ -92,28 +89,56 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
   }
 */
  
- 
-  clinestrip.vertices =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_DYNAMIC_DRAW,
-                                       (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
-                                       0);
 
-  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
-      clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+
+
+  auto line_strip_iterator = ctx.line_strips.find(uuid());
+
+  bool update_cached_linestrip{false};
+
+  if((ctx.line_strips.end() == line_strip_iterator)) {
+    ctx.line_strips[uuid()] = RenderContext::LineStrip();
+  }
+
+  RenderContext::LineStrip* line_strip_to_update_ptr = &ctx.line_strips[uuid()];
+
+  if(update_cached_linestrip) {
+    line_strip_to_update_ptr = &(line_strip_iterator->second);
+  }
+
+  line_strip_to_update_ptr->vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
+  line_strip_to_update_ptr->vertex_reservoir_size = line_strip_.vertex_reservoir_size;
+  line_strip_to_update_ptr->num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
+
+  if(line_strip_to_update_ptr->current_buffer_size_in_vertices < line_strip_.vertex_reservoir_size+3) {
+    line_strip_to_update_ptr->vertices =
+        ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                         scm::gl::USAGE_DYNAMIC_DRAW,
+                                         (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
+                                         0);
+
+    line_strip_to_update_ptr->current_buffer_size_in_vertices = line_strip_.vertex_reservoir_size+3;
+  } else {
+    update_cached_linestrip = true;
+  }
+
+
 
 
   if(line_strip_.vertex_reservoir_size != 0) {
+    LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
+      line_strip_to_update_ptr->vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
     line_strip_.copy_to_buffer(data);
+    ctx.render_context->unmap_buffer(line_strip_to_update_ptr->vertices);
+  
+    line_strip_to_update_ptr->vertex_array = ctx.render_device->create_vertex_array(
+         line_strip_.get_vertex_format(),
+          {line_strip_to_update_ptr->vertices});
+
   }
-
-  ctx.render_context->unmap_buffer(clinestrip.vertices);
-
-  clinestrip.vertex_array = ctx.render_device->create_vertex_array(
-      line_strip_.get_vertex_format(),
-      {clinestrip.vertices});
-  ctx.line_strips[uuid()] = clinestrip;
-
+  
   ctx.render_context->apply();
 }
 
