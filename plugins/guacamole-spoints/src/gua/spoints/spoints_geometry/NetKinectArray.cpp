@@ -12,7 +12,9 @@ namespace spoints {
 
 NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
-  : m_mutex(),
+  : m_encoder(),
+    m_voxels(),
+    m_mutex(),
     m_running(true),
     m_feedback_running(true),
     m_server_endpoint(server_endpoint),
@@ -23,6 +25,7 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
     m_feedback_need_swap{false},
     m_recv()
 {
+  PointCloudGridEncoder encoder;
  
   m_recv = std::thread([this]() { readloop(); });
 
@@ -126,37 +129,23 @@ void NetKinectArray::readloop() {
   std::string endpoint("tcp://" + m_server_endpoint);
   socket.connect(endpoint.c_str());
 
-  //const unsigned message_size = (m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
-
-  const unsigned message_size = sizeof(size_t);//(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
-
-  size_t header_byte_size = 100;
-  std::vector<uint8_t> header_data(header_byte_size, 0);
-
   while (m_running) {
     
-    zmq::message_t zmqm(message_size);
+    zmq::message_t zmqm;
     socket.recv(&zmqm); // blocking
-    
+    m_encoder.decode(zmqm, &m_voxels);
+
     while (m_need_swap) {
       ;
     }
 
-    memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
-
-    size_t num_voxels_received{0};
-
-    memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[0], sizeof(size_t) );
-
-    size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
+    std::cout << "VOXELS received " << m_voxels.size() << std::endl;
+    size_t data_points_byte_size = m_voxels.size() * sizeof(gua::point_types::XYZ32_RGB8);
     if(m_buffer_back.size() < data_points_byte_size) {
       m_buffer_back.resize(data_points_byte_size);
     }
 
-
-    //memcpy((unsigned char*) m_buffer_back.data(), (unsigned char*) zmqm.data(), message_size);
-    memcpy((unsigned char*) &m_buffer_back[0], ((unsigned char*) zmqm.data()) + header_byte_size, data_points_byte_size);
-
+    memcpy((unsigned char*) &m_buffer_back[0], (unsigned char*) m_voxels.data(), data_points_byte_size);
   
     { // swap
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -166,9 +155,6 @@ void NetKinectArray::readloop() {
   }
 
 }
-
-
-
 
 void NetKinectArray::sendfeedbackloop() {
   

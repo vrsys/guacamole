@@ -1,6 +1,11 @@
 # dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+################################
+# libpcc
+include(FindPCC)
+################################
+
 # determine source and header files
 file(GLOB GUA_SPOINTS_INC RELATIVE                ${CMAKE_CURRENT_SOURCE_DIR} include/gua/spoints/*.hpp)
 file(GLOB GUA_SPOINTS_SRC RELATIVE                ${CMAKE_CURRENT_SOURCE_DIR} src/gua/spoints/*.cpp)
@@ -24,9 +29,9 @@ add_library( guacamole-spoints SHARED
     ${GUA_SPOINTS_SHADERS}
 )
 
-target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR})
+target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR} ${PCC_INCLUDE_DIRS})
 
-target_link_libraries( guacamole-spoints guacamole)
+target_link_libraries( guacamole-spoints guacamole ${PCC_LIBRARY})
 
 IF (MSVC)
 	set_target_properties(guacamole-spoints PROPERTIES COMPILE_FLAGS "-D GUA_SPOINTS_LIBRARY")

@@ -6,6 +6,7 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include "PointCloudGridEncoder.hpp"
 
 namespace spoints{
 
@@ -40,6 +41,9 @@ private:
   void sendfeedbackloop();
 
   //receiving geometry
+  PointCloudGridEncoder m_encoder;
+  std::vector<UncompressedVoxel> m_voxels;
+
   std::mutex m_mutex;
   bool           m_running;
   const std::string m_server_endpoint;
@@ -60,10 +64,9 @@ private:
   std::atomic<bool> m_feedback_need_swap;
   std::thread m_send_feedback;
 
-
-
   scm::gl::vertex_array_ptr point_layout_{nullptr};
   scm::gl::buffer_ptr net_data_vbo_{nullptr};
+
 
   size_t num_points_to_draw;
 
