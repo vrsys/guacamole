@@ -134,13 +134,15 @@ struct GUA_DLL RenderContext {
                , vertices(v)
                , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY)
                , vertex_reservoir_size(0)
-               ,num_occupied_vertex_slots(0)
+               , num_occupied_vertex_slots(0)
+               , current_buffer_size_in_vertices(0)
       {}
       scm::gl::vertex_array_ptr   vertex_array;
       scm::gl::buffer_ptr         vertices;
       scm::gl::primitive_topology vertex_topology;
       int                         vertex_reservoir_size;
       int                         num_occupied_vertex_slots;
+      int                         current_buffer_size_in_vertices;
   };
 
   mutable std::unordered_map<std::size_t, LineStrip> line_strips;
