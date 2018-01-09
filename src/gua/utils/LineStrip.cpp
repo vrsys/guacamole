@@ -156,7 +156,15 @@ void LineStrip::uncompile_buffer_string(std::string const& buffer_string) {
 
   uint64_t num_vertices_written = 0;
   uint64_t read_offset = 0;
-  memcpy(&num_vertices_written, &buffer_string[0], sizeof(num_vertices_written) );
+
+  if(buffer_string.size() >= sizeof(uint64_t)) {
+    memcpy(&num_vertices_written, &buffer_string[0], sizeof(num_vertices_written) );
+  }
+
+  if(buffer_string.size() != num_vertices_written*sizeof(Vertex) + sizeof(uint64_t) ) {
+    Logger::LOG_WARNING << "Buffer String size and expected size are not consistent! Ignoring line strip update." << std::endl;
+    return;
+  }
 
   uint64_t currently_occupied_vertex_slots = 0;
   int64_t newly_occupied_vertex_slots = currently_occupied_vertex_slots + num_vertices_written;
