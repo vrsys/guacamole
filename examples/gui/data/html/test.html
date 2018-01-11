@@ -1,13 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<script language="JavaScript">
+
+	// Send a query to the browser process.
+	function sendMessage() {
+	  // Results in a call to the OnQuery method in client_impl.cc.
+	  window.cefQuery({
+	    request: 'MessageRouterTest:' + document.getElementById("message").value,
+	    onSuccess: function(response) {
+	      document.getElementById('result').value = 'Response: '+response;
+	    },
+	    onFailure: function(error_code, error_message) {}
+	  });
+	}
+	</script>
 
 </head>
 <script type="text/javascript">
   console.log("huhu");
 
 </script>
-<body style="background : rgba(255, 255, 0, 0.6)">
-TEST!
+<body bgcolor="white">
+<form>
+Message: <input type="text" id="message" value="My Message">
+<br/><input type="button" onclick="sendMessage();" value="Send Message">
+<br/>You should see the reverse of your message below:
+<br/><textarea rows="10" cols="40" id="result"></textarea>
+</form>
 </body>
 </html>

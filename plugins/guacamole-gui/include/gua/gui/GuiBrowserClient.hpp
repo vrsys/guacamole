@@ -26,6 +26,8 @@
 
 #include <include/cef_client.h>
 #include <include/cef_render_handler.h>
+#include <include/cef_life_span_handler.h>
+#include <include/cef_request_handler.h>
 #include <gua/gui/GLSurface.inl>
 #include <include/wrapper/cef_message_router.h>
 
@@ -33,47 +35,44 @@
 namespace gua{
 
 class GuiBrowserClient :	public CefClient,
- 							public CefDisplayHandler,
+							//public CefDisplayHandler,
 			               	public CefLifeSpanHandler,
 			              	public CefRequestHandler
 {
 public:
-    GuiBrowserClient(GLSurface *renderHandler)
-        : m_renderHandler(renderHandler)
+    GuiBrowserClient(GLSurface *renderHandler, CefString url)
+        : startup_url_(url)
+        , m_renderHandler(renderHandler)
     {std::cout << "Its-a-me-Client!" << std::endl;}
 
-    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() {
+    CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE {
         return m_renderHandler;
     }
 
     // CefClient methods:
-	CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
 	CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
 	CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
+
+	
 	bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 	                            CefProcessId source_process,
 	                            CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
-	// CefDisplayHandler methods:
-	void OnTitleChange(CefRefPtr<CefBrowser> browser,
-	                 const CefString& title) OVERRIDE;
-
 	// CefLifeSpanHandler methods:
 	void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
-	bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
 	void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
 	// CefRequestHandler methods:
+	
 	bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
 	                  CefRefPtr<CefFrame> frame,
 	                  CefRefPtr<CefRequest> request,
 	                  bool is_redirect) OVERRIDE;
-	CefRefPtr<CefResourceHandler> GetResourceHandler(
-	  CefRefPtr<CefBrowser> browser,
-	  CefRefPtr<CefFrame> frame,
-	  CefRefPtr<CefRequest> request) OVERRIDE;
 	void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
 	                             TerminationStatus status) OVERRIDE;
+
+	
+	const CefString startup_url_;
 
     CefRefPtr<CefRenderHandler> m_renderHandler;
      // Handles the browser side of query routing.
