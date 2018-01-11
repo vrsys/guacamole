@@ -47,16 +47,9 @@ class MessageHandler : public CefMessageRouterBrowserSide::Handler {
     if (url.find(startup_url_) != 0)
       return false;
 
-    const std::string& message_name = request;
-    if (message_name.find(kTestMessageName) == 0) {
-      // Reverse the string and return.
-      std::string result = message_name.substr(sizeof(kTestMessageName));
-      std::reverse(result.begin(), result.end());
-      callback->Success(result);
-      return true;
-    }
-
-    return false;
+    std::string  result = "Swampert";
+    callback->Success(result);
+    return true;
   }
 
  private:

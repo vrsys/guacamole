@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 
   graph.add_node("/", fps_quad);
 
-  gua::math::vec2 address_bar_size(340.f, 55.f);
+  gua::math::vec2 address_bar_size(500.f, 500.f);
 
   std::string address_bar_path = "asset://gua/data/html/test.html";
   std::cout << address_bar_path << std::endl;
