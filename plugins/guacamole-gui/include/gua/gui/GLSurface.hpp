@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_GUI_GL_SURFACE_INL
-#define GUA_GUI_GL_SURFACE_INL
+#ifndef GUA_GUI_GL_SURFACE_
+#define GUA_GUI_GL_SURFACE_
 
 #include <gua/renderer/RenderContext.hpp>
 
@@ -92,4 +92,4 @@ class GLSurface : public CefRenderHandler {
 };
 
 }
-#endif  // GUA_GUI_GL_SURFACE_INL
+#endif  // GUA_GUI_GL_SURFACE_

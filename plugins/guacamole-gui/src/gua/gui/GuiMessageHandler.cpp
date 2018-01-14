@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * guacamole - delicious VR                                                   *
  *                                                                            *
@@ -18,39 +19,33 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
-// class header
-#include <gua/gui/GuiTexture.hpp>
-
-#include <gua/gui/GLSurface.hpp>
-
-#include <Awesomium/WebCore.h>
-
-#include <include/cef_client.h>
+#include <gua/gui/GuiMessageHandler.hpp>
 
 namespace gua {
 
-GuiTexture::GuiTexture(unsigned width, unsigned height, CefRefPtr<GuiBrowserClient> browserClient)
-    : Texture2D(width, height, scm::gl::FORMAT_RGBA_8)
-    , browserClient_(browserClient)
-  {}
+GuiMessageHandler::GuiMessageHandler(const CefString& startup_url)
+    : startup_url_(startup_url) {}
 
-math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
-  
-  if (browserClient_ == nullptr) {
-    return math::vec2ui(0, 0);
-  }
-
-  auto surface = static_cast<GLSurface*>(browserClient_->GetRenderHandler().get());
-
-  if (surface == nullptr) {
-    return math::vec2ui(0, 0);
-  }
-
-  surface->bind(context, this);
-  
-  return Texture2D::get_handle(context);
-  
+void GuiMessageHandler::send(CefString message){
+  message_ = message;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Called due to cefQuery execution in message_router.html.
+bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
+             CefRefPtr<CefFrame> frame,
+             int64 query_id,
+             const CefString& request,
+             bool persistent,
+             CefRefPtr<Callback> callback) {
+  // Only handle messages from the startup URL.
+  const std::string& url = frame->GetURL();
+  if (url.find(startup_url_) != 0)
+    return false;
+
+  std::string  result = message_;
+  callback->Success(result);
+  return true;
 }
+
+} //namespace gua

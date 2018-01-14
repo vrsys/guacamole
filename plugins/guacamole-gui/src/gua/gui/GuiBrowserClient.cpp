@@ -25,42 +25,20 @@
 
 namespace gua {
 
-//MessageHandler
-//////////////////////////////////////////////////////////////////////////
-const char kTestMessageName[] = "MessageRouterTest";
-
-// Handle messages in the browser process.
-class MessageHandler : public CefMessageRouterBrowserSide::Handler {
- public:
-  explicit MessageHandler(const CefString& startup_url)
-      : startup_url_(startup_url) {}
-
-  // Called due to cefQuery execution in message_router.html.
-  bool OnQuery(CefRefPtr<CefBrowser> browser,
-               CefRefPtr<CefFrame> frame,
-               int64 query_id,
-               const CefString& request,
-               bool persistent,
-               CefRefPtr<Callback> callback) OVERRIDE {
-    // Only handle messages from the startup URL.
-    const std::string& url = frame->GetURL();
-    if (url.find(startup_url_) != 0)
-      return false;
-
-    std::string  result = "Swampert";
-    callback->Success(result);
-    return true;
-  }
-
- private:
-  const CefString startup_url_;
-
-  DISALLOW_COPY_AND_ASSIGN(MessageHandler);
-};
-
-
 //GuiBrowserClient
 //////////////////////////////////////////////////////////////////////////
+GuiBrowserClient::GuiBrowserClient(GLSurface *renderHandler, CefString url)
+        : startup_url_(url)
+        , m_renderHandler(renderHandler)
+    {std::cout << "Its-a-me-Client!" << std::endl;}
+
+void GuiBrowserClient::set_message(CefString message){
+  message_ = message;
+}
+
+void GuiBrowserClient::send_message(){
+  message_handler_->send(message_); 
+}
 
 bool GuiBrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                       CefProcessId source_process,
@@ -84,7 +62,7 @@ void GuiBrowserClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     message_router_ = CefMessageRouterBrowserSide::Create(config);
 
     // Register handlers with the router.
-    message_handler_.reset(new MessageHandler(startup_url_));
+    message_handler_.reset(new GuiMessageHandler(startup_url_));
     message_router_->AddHandler(message_handler_.get(), false);
   }
 }

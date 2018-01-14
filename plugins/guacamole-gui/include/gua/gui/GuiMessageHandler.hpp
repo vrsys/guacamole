@@ -18,39 +18,37 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
+#ifndef GUA_GUI_MESSAGE_HANDLER_
+#define GUA_GUI_MESSAGE_HANDLER_
 
-// class header
-#include <gua/gui/GuiTexture.hpp>
-
-#include <gua/gui/GLSurface.hpp>
-
-#include <Awesomium/WebCore.h>
-
-#include <include/cef_client.h>
+#include <include/wrapper/cef_message_router.h>
+#include <include/wrapper/cef_helpers.h>
 
 namespace gua {
 
-GuiTexture::GuiTexture(unsigned width, unsigned height, CefRefPtr<GuiBrowserClient> browserClient)
-    : Texture2D(width, height, scm::gl::FORMAT_RGBA_8)
-    , browserClient_(browserClient)
-  {}
+// Handle messages in the browser process.
+class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
+ public:
+  GuiMessageHandler(const CefString& startup_url);
 
-math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
-  
-  if (browserClient_ == nullptr) {
-    return math::vec2ui(0, 0);
-  }
+  void send(CefString message);
 
-  auto surface = static_cast<GLSurface*>(browserClient_->GetRenderHandler().get());
+  ///////////////////////////////////////////////////////////////////////////
+  // Called due to cefQuery execution in message_router.html.
+  bool OnQuery(CefRefPtr<CefBrowser> browser,
+               CefRefPtr<CefFrame> frame,
+               int64 query_id,
+               const CefString& request,
+               bool persistent,
+               CefRefPtr<Callback> callback) OVERRIDE;
 
-  if (surface == nullptr) {
-    return math::vec2ui(0, 0);
-  }
+ private:
+  const CefString startup_url_;
+  CefString message_;
 
-  surface->bind(context, this);
-  
-  return Texture2D::get_handle(context);
-  
-}
+  DISALLOW_COPY_AND_ASSIGN(GuiMessageHandler);
+};
 
-}
+} //namespace gua
+
+#endif

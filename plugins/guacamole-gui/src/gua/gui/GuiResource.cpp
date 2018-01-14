@@ -25,7 +25,7 @@
 // guacamole headers
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/GuiTexture.hpp>
-#include <gua/gui/GLSurface.inl>
+#include <gua/gui/GLSurface.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Logger.hpp>
@@ -91,7 +91,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
   set_url(url);
 
   GLSurface* surface = new GLSurface(size.x, size.y);
-  browserClient_ = new GuiBrowserClient(surface);
+  browserClient_ = new GuiBrowserClient(surface, url_);
 
   browser_ = Interface::instance()->create_browser(window_info_, browserClient_, url_, browserSettings_);
   std::cout << "Browser setup" << std::endl;
@@ -131,13 +131,7 @@ void GuiResource::set_url(std::string const& url) {
     std::cout << url_ << std::endl;
     url_ = "file://" + gua::Paths::instance()->make_absolute(url_);
   }
-  
-  /*
-  if (view_) {
-    Awesomium::WebURL u(Awesomium::WSLit(url_.c_str()));
-    view_->LoadURL(u);
-  }
-  */
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,6 +237,16 @@ void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
     view_->InjectMouseWheel(direction.y*20, direction.x*20);
   }
   */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GuiResource::set_js_message(std::string message){
+  browserClient_->set_message(message);
+}
+
+void GuiResource::send_js_message(){
+  browserClient_->send_message();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@
 #include <Awesomium/WebCore.h>
 #include <Awesomium/STLHelpers.h>
 
-#include <gua/gui/GLSurface.inl>
+#include <gua/gui/GLSurface.hpp>
 
 // Awesomium bug in linux
 #ifndef _WIN32

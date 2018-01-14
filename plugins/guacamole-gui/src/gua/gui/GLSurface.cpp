@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-#include <gua/gui/GLSurface.inl>
+#include <gua/gui/GLSurface.hpp>
 
 #include <gua/gui/GuiTexture.hpp>
 

@@ -28,28 +28,28 @@
 #include <include/cef_render_handler.h>
 #include <include/cef_life_span_handler.h>
 #include <include/cef_request_handler.h>
-#include <gua/gui/GLSurface.inl>
 #include <include/wrapper/cef_message_router.h>
+#include <gua/gui/GLSurface.hpp>
+#include <gua/gui/GuiMessageHandler.hpp>
+
 
 
 namespace gua{
 
 class GuiBrowserClient :	public CefClient,
-							//public CefDisplayHandler,
 			               	public CefLifeSpanHandler,
 			              	public CefRequestHandler
 {
 public:
-    GuiBrowserClient(GLSurface *renderHandler, CefString url)
-        : startup_url_(url)
-        , m_renderHandler(renderHandler)
-    {std::cout << "Its-a-me-Client!" << std::endl;}
+    GuiBrowserClient(GLSurface *renderHandler, CefString url);
 
-    CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE {
-        return m_renderHandler;
-    }
+    //JS communication
+    void set_message(CefString message);
+    void send_message();
 
-    // CefClient methods:
+	///////////////////////////////////////////////////////////////////////////
+	// CefClient methods:
+    CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return m_renderHandler; }
 	CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
 	CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
 
@@ -57,27 +57,26 @@ public:
 	bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 	                            CefProcessId source_process,
 	                            CefRefPtr<CefProcessMessage> message) OVERRIDE;
-
+	///////////////////////////////////////////////////////////////////////////
 	// CefLifeSpanHandler methods:
 	void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
 	void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
-
-	// CefRequestHandler methods:
-	
+	///////////////////////////////////////////////////////////////////////////
+	// CefRequestHandler methods:	
 	bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
 	                  CefRefPtr<CefFrame> frame,
 	                  CefRefPtr<CefRequest> request,
 	                  bool is_redirect) OVERRIDE;
 	void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
 	                             TerminationStatus status) OVERRIDE;
-
-	
+	///////////////////////////////////////////////////////////////////////////
+	private:
 	const CefString startup_url_;
-
+	CefString message_;
     CefRefPtr<CefRenderHandler> m_renderHandler;
      // Handles the browser side of query routing.
 	CefRefPtr<CefMessageRouterBrowserSide> message_router_;
-	scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
+	scoped_ptr<gua::GuiMessageHandler> message_handler_;
 
     IMPLEMENT_REFCOUNTING(GuiBrowserClient);
     DISALLOW_COPY_AND_ASSIGN(GuiBrowserClient);

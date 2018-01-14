@@ -85,7 +85,37 @@ int main(int argc, char** argv) {
   auto gui = std::make_shared<gua::GuiResource>();
   gui->init("google", "https://corgiorgy.com/", gua::math::vec2(1024.f, 1024.f));
 
+  //tests guis
+  gua::math::vec2 test_size(500.f, 500.f);
 
+  std::string test_path = "asset://gua/data/html/test.html";
+  //Test1
+  auto test_1 = std::make_shared<gua::GuiResource>();
+  test_1->init("test_1", test_path, test_size);
+  auto test_1_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_1_quad");
+  test_1_quad->data.texture() = "test_1";
+  test_1_quad->data.size() = test_size;
+  test_1_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
+
+  //Test2
+  auto test_2 = std::make_shared<gua::GuiResource>();
+  test_2->init("test_2", test_path, test_size);
+  auto test_2_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_2_quad");
+  test_2_quad->data.texture() = "test_2";
+  test_2_quad->data.size() = test_size;
+  test_2_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
+
+  graph.add_node("/", test_1_quad);
+  graph.add_node("/", test_2_quad);
+
+  test_1->set_js_message("It's-a-me! Test1!");
+  test_1->send_js_message();
+
+  test_2->set_js_message("It's-a-me! Test2!");
+  test_2->send_js_message();
+//////////////////////////////////////////////////////////////////////////
+/*
+  //fps display
   gua::math::vec2 fps_size(170.f, 55.f);
 
   std::string fps_path = "asset://gua/data/html/fps.html";
@@ -100,9 +130,11 @@ int main(int argc, char** argv) {
 
   graph.add_node("/", fps_quad);
 
-  gua::math::vec2 address_bar_size(500.f, 500.f);
+//////////////////////////////////////////////////////////////////////////
+  //address bar
+  gua::math::vec2 address_bar_size(340.f, 55.f);
 
-  std::string address_bar_path = "asset://gua/data/html/test.html";
+  std::string address_bar_path = "asset://gua/data/html/address_bar.html";
   std::cout << address_bar_path << std::endl;
 
   auto address_bar = std::make_shared<gua::GuiResource>();
@@ -131,8 +163,8 @@ int main(int argc, char** argv) {
       gui->go_forward();
     }
   });
-  
-
+*/  
+//////////////////////////////////////////////////////////////////////////
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
   light2->data.set_brightness(2.f);
