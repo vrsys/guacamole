@@ -3,10 +3,10 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 
-#include <gua/utils/Trackball.hpp>
+#include <gua/renderer/GlfwWindow.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/utils/ToGua.hpp>
-#include <gua/renderer/GlfwWindow.hpp>
+#include <gua/utils/Trackball.hpp>
 
 #include "../../plugins/guacamole-gazebo/include/gua/pagoda_binder.hpp"
 
@@ -59,6 +59,10 @@ int main(int argc, char **argv)
     gua::TriMeshLoader loader;
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+    auto box(loader.create_geometry_from_file("box", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_box.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+
+    graph.add_node("/transform", box);
+    box->set_draw_bounding_box(true);
 
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::SUN);

@@ -11,7 +11,17 @@ void PagodaBinder::bind_transport_layer(int argc, char **argv)
 {
     _worker = std::thread([&] { _connect_to_transport_layer(argc, argv); });
 }
-void PagodaBinder::pre_render() { _scene.pre_render(); }
+void PagodaBinder::pre_render()
+{
+    _scene.pre_render();
+
+    // TODO: get the actual scene graph to print
+
+    auto root = _scene.get_scene_graph()->get_root();
+    auto hierarchy = _log.print_scenegraph(root, 1);
+
+    std::cout << hierarchy;
+}
 
 void PagodaBinder::_connect_to_transport_layer(int argc, char **argv)
 {

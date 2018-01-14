@@ -1,5 +1,4 @@
 #include "../../../include/gua/pagoda/pagoda_scene.hpp"
-#include "../../../include/gua/pagoda/pagoda_joint_visual.hpp"
 
 PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs() {}
 PagodaScene::~PagodaScene()
@@ -12,9 +11,16 @@ PagodaScene::~PagodaScene()
     _msgs_link.clear();
 
     _visuals.clear();
+    _world_visual.reset();
 }
-void PagodaScene::set_scene_graph(gua::SceneGraph *scene_graph) { _scene_graph = scene_graph; }
-void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &_msg)
+void PagodaScene::set_scene_graph(gua::SceneGraph *scene_graph)
+{
+    _scene_graph = scene_graph;
+    _mutex_scenegraph.lock();
+    _world_visual.reset(new PagodaVisual("world_visual", _scene_graph));
+    _mutex_scenegraph.unlock();
+}
+void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
     skeleton_msgs_list::iterator iter;
@@ -22,40 +28,40 @@ void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &_msg)
     // Find an old model message, and remove them
     for(iter = _msgs_skeleton_pose.begin(); iter != _msgs_skeleton_pose.end(); ++iter)
     {
-        if((*iter)->model_name() == _msg->model_name())
+        if((*iter)->model_name() == msg->model_name())
         {
             _msgs_skeleton_pose.erase(iter);
             break;
         }
     }
 
-    _msgs_skeleton_pose.push_back(_msg);
+    _msgs_skeleton_pose.push_back(msg);
 }
-void PagodaScene::on_model_msg(ConstModelPtr &_msg)
+void PagodaScene::on_model_msg(ConstModelPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
-    _msgs_model.push_back(_msg);
+    _msgs_model.push_back(msg);
 }
-void PagodaScene::on_response_msg(ConstResponsePtr &_msg)
+void PagodaScene::on_response_msg(ConstResponsePtr &msg)
 {
     gazebo::msgs::Scene sceneMsg;
-    sceneMsg.ParseFromString(_msg->serialized_data());
+    sceneMsg.ParseFromString(msg->serialized_data());
     boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
 
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_scene.emplace_back(sm);
 }
-void PagodaScene::on_pose_msg(ConstPosesStampedPtr &_msg)
+void PagodaScene::on_pose_msg(ConstPosesStampedPtr &msg)
 {
     std::lock_guard<std::recursive_mutex> lock(_mutex_pose_msgs);
 
-    for(int i = 0; i < _msg->pose_size(); ++i)
+    for(int i = 0; i < msg->pose_size(); ++i)
     {
-        auto iter = _msgs_pose.find(_msg->pose(i).id());
+        auto iter = _msgs_pose.find(msg->pose(i).id());
         if(iter != _msgs_pose.end())
-            iter->second.CopyFrom(_msg->pose(i));
+            iter->second.CopyFrom(msg->pose(i));
         else
-            _msgs_pose.insert(std::make_pair(_msg->pose(i).id(), _msg->pose(i)));
+            _msgs_pose.insert(std::make_pair(msg->pose(i).id(), msg->pose(i)));
     }
 }
 bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualType type)
@@ -182,18 +188,18 @@ ptr_visual PagodaScene::get_visual(const std::string &name) const
     return result;
 }
 
-bool PagodaScene::process_link_msg(ConstLinkPtr &_msg)
+bool PagodaScene::process_link_msg(ConstLinkPtr &msg)
 {
     ptr_visual linkVis;
 
-    if(_msg->has_id())
-        linkVis = this->get_visual(_msg->id());
+    if(msg->has_id())
+        linkVis = this->get_visual(msg->id());
     else
-        linkVis = this->get_visual(_msg->name());
+        linkVis = this->get_visual(msg->name());
 
     if(!linkVis)
     {
-        gzerr << "No link visual with id[" << _msg->id() << "] and name[" << _msg->name() << "]\n";
+        gzerr << "No link visual with id[" << msg->id() << "] and name[" << msg->name() << "]\n";
         return false;
     }
 
@@ -506,9 +512,9 @@ void PagodaScene::pre_render()
             auto iter = _visuals.find(pose_msgs_iter->first);
             if(iter != _visuals.end() && iter->second)
             {
-                // TODO: set pose
-                // ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msgs_iter->second);
-                // iter->second->SetPose(pose);
+                ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msgs_iter->second);
+                iter->second->set_pose(pose);
+
                 auto prev = pose_msgs_iter++;
                 _msgs_pose.erase(prev);
             }
@@ -528,17 +534,16 @@ void PagodaScene::pre_render()
                     auto iter2 = _visuals.find(pose_msg.id());
                     if(iter2 != _visuals.end())
                     {
-                        // TODO: set pose
-                        // ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msg);
-                        // iter2->second->SetPose(pose);
+                        ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msg);
+                        iter2->second->set_pose(pose);
                     }
                 }
             }
 
             if(iter != _visuals.end())
             {
-                // TODO: process skeleton pose messages
-                // iter->second->SetSkeletonPose(**skeleton_pose_iter);
+                // TODO: review the necessity of the method
+                // iter->second->set_sceleton_pose(**skeleton_pose_iter);
                 auto prev = skeleton_pose_iter++;
                 _msgs_skeleton_pose.erase(prev);
             }
@@ -550,3 +555,6 @@ void PagodaScene::pre_render()
     }
 }
 const ptr_visual &PagodaScene::get_world_visual() const { return _world_visual; }
+gua::SceneGraph *PagodaScene::get_scene_graph() const {
+    return _scene_graph;
+}
