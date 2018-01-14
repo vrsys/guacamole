@@ -1,9 +1,9 @@
 #ifndef PAGODA_LOG_H
 #define PAGODA_LOG_H
 
-#include <fstream>
-#include <ctime>
 #include <cassert>
+#include <ctime>
+#include <fstream>
 #include <gua/node/Node.hpp>
 
 class PagodaLog
@@ -57,28 +57,6 @@ class PagodaLog
 
     bool e(const char *msg) { return (_log_level >= LOG_LEVEL::ERROR) && log(msg); }
 
-  private:
-    std::ofstream _ofstream;
-    LOG_LEVEL _log_level = DEBUG;
-
-    bool log(const char *msg)
-    {
-        if(!_ofstream.is_open())
-            return false;
-
-        _ofstream << std::endl;
-
-        std::time_t timestamp = std::time(nullptr);
-        _ofstream << std::asctime(std::localtime(&timestamp));
-        _ofstream << std::endl;
-
-        _ofstream << msg;
-
-        _ofstream << std::endl;
-
-        return !_ofstream.bad();
-    }
-
     std::string print_scenegraph(std::shared_ptr<gua::node::Node> const &subtree_root, int tree_depth = 0)
     {
         std::stringstream out;
@@ -104,6 +82,28 @@ class PagodaLog
         }
 
         return out.str();
+    }
+
+  private:
+    std::ofstream _ofstream;
+    LOG_LEVEL _log_level = DEBUG;
+
+    bool log(const char *msg)
+    {
+        if(!_ofstream.is_open())
+            return false;
+
+        _ofstream << std::endl;
+
+        std::time_t timestamp = std::time(nullptr);
+        _ofstream << std::asctime(std::localtime(&timestamp));
+        _ofstream << std::endl;
+
+        _ofstream << msg;
+
+        _ofstream << std::endl;
+
+        return !_ofstream.bad();
     }
 
     void gen_random(char *s, const int len)

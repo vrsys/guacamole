@@ -26,6 +26,7 @@ class PagodaVisual
         VT_VISUAL
     };
 
+    PagodaVisual(const std::string &name, gua::SceneGraph *scene_graph);
     PagodaVisual(const std::string &name, ptr_visual parent);
     ~PagodaVisual();
 
@@ -38,12 +39,15 @@ class PagodaVisual
     VisualType get_type() const;
     const gazebo::math::Vector3 &get_scale() const;
     ignition::math::Vector3d get_derived_scale() const;
-    const ptr_visual &get_parent() const;
+    const ptr_visual get_parent() const;
+    const std::shared_ptr<gua::node::TransformNode> get_node() const;
 
     void update_from_msg(const boost::shared_ptr<const gazebo::msgs::Visual> &msg);
 
+    void set_scale(const gazebo::math::Vector3 &scale);
+    void set_pose(const gazebo::math::Pose &pose);
+
   protected:
-    PagodaScene *_scene;
     gua::TriMeshLoader _tml;
 
     uint32_t _id;
@@ -57,14 +61,11 @@ class PagodaVisual
     std::string _mesh_name;
     std::string _sub_mesh_name;
 
-    gua::node::TransformNode _node;
-
-    void set_scale(const gazebo::math::Vector3 &scale);
-    void set_pose(const gazebo::math::Pose &pose);
+    std::shared_ptr<gua::node::TransformNode> _node;
 
     void update_geom_size(const ignition::math::Vector3d &_scale);
     bool attach_mesh(const std::string &mesh_name, const std::string &sub_mesh = "", bool center_submesh = false, const std::string &obj_name = "");
-    void DetachObjects();
+    void detach_meshes();
 };
 
 #endif // GUACAMOLE_PAGODA_VISUAL_H

@@ -60,16 +60,17 @@ class PagodaScene
     ~PagodaScene();
 
     void set_scene_graph(gua::SceneGraph *scene_graph);
+    gua::SceneGraph *get_scene_graph() const;
 
     const ptr_visual &get_world_visual() const;
 
-    void on_skeleton_pose_msg(ConstPoseAnimationPtr &_msg);
-    void on_model_msg(ConstModelPtr &_msg);
-    void on_response_msg(ConstResponsePtr &_msg);
-    void on_pose_msg(ConstPosesStampedPtr &_msg);
+    void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
+    void on_model_msg(ConstModelPtr &msg);
+    void on_response_msg(ConstResponsePtr &msg);
+    void on_pose_msg(ConstPosesStampedPtr &msg);
 
     bool process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualType type = PagodaVisual::VT_ENTITY);
-    bool process_link_msg(ConstLinkPtr &_msg);
+    bool process_link_msg(ConstLinkPtr &msg);
     bool process_joint_msg(ConstJointPtr &msg);
     bool process_model_msg(const gazebo::msgs::Model &msg);
     bool process_scene_msg(ConstScenePtr &msg);
