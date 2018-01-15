@@ -106,6 +106,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
   // synchronize feedback
   spointsdata_->nka_->update_feedback(ctx);
 
+
   if (spointsdata_->frame_counter_ != ctx.framecount) {
     spointsdata_->frame_counter_ = ctx.framecount;
   } else {
