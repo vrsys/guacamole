@@ -116,6 +116,7 @@ private:
 
 
   std::size_t last_frame_count_ = std::numeric_limits<std::size_t>::max();
+  std::size_t last_omitted_frame_count_ = std::numeric_limits<std::size_t>::max();
 /*
   std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
   camera_group_to_uuid_to_matrix_package_list;
