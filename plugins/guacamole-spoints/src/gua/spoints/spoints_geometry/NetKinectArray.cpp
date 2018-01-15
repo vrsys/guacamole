@@ -107,7 +107,8 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
 
     std::cout << !m_feedback_need_swap.load() << "\n";
 
-    if(!m_feedback_need_swap.load()) {
+    if( (submitted_camera_matrix_package_back.k_package.framecount != last_omitted_frame_count_) /*&&
+        !m_feedback_need_swap.load()*/) {
       std::lock_guard<std::mutex> lock(m_feedback_mutex);
 
       std::swap(submitted_camera_matrix_package_back, submitted_camera_matrix_package);
@@ -118,11 +119,12 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
       unsigned framecount = submitted_camera_matrix_package_back.k_package.framecount;
       unsigned view_uuid = submitted_camera_matrix_package_back.k_package.view_uuid;
 
+
       if(submitted_camera_matrix_package_back.k_package.framecount != last_frame_count_) {
+        m_feedback_need_swap.store(true);
         std::swap(matrix_packages_to_submit_, matrix_packages_to_collect_);
         matrix_packages_to_collect_.clear();
         last_frame_count_ = submitted_camera_matrix_package_back.k_package.framecount;
-        m_feedback_need_swap.store(true);
       }
 
       bool detected_matrix_identity = false;
@@ -138,6 +140,8 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
         matrix_packages_to_collect_.push_back(submitted_camera_matrix_package_back.mat_package);
       }
 
+    } else {
+      last_omitted_frame_count_ = submitted_camera_matrix_package_back.k_package.framecount;
     }
 
   }
