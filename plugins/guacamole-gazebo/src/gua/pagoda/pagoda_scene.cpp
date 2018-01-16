@@ -1,4 +1,5 @@
 #include "../../../include/gua/pagoda/pagoda_scene.hpp"
+#include "../../../include/gua/pagoda/pagoda_joint_visual.hpp"
 
 PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs() {}
 PagodaScene::~PagodaScene()
@@ -212,7 +213,7 @@ bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
     //    ptr_visual child_vis;
     //
     //    if(msg->has_child() && msg->child() == "world")
-    //        child_vis = this->worldVisual;
+    //        child_vis = this->_world_visual;
     //    else if(msg->has_child_id())
     //        child_vis = this->get_visual(msg->child_id());
     //
@@ -220,12 +221,12 @@ bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
     //        return false;
     //
     //    ptr_joint_visual joint_vis(new PagodaJointVisual(msg->name() + "_JOINT_VISUAL__", child_vis));
-    //    joint_vis->Load(msg);
+    //    joint_vis->update_from_joint_msg(msg);
     //
     //    if(msg->has_id())
-    //        joint_vis->SetId(msg->id());
+    //        joint_vis->set_id(msg->id());
     //
-    //    _visuals[joint_vis->GetId()] = joint_vis;
+    //    _visuals[joint_vis->get_id()] = joint_vis;
 
     return true;
 }
@@ -543,7 +544,7 @@ void PagodaScene::pre_render()
             if(iter != _visuals.end())
             {
                 // TODO: review the necessity of the method
-                // iter->second->set_sceleton_pose(**skeleton_pose_iter);
+                // iter->second->set_skeleton_pose(**skeleton_pose_iter);
                 auto prev = skeleton_pose_iter++;
                 _msgs_skeleton_pose.erase(prev);
             }
@@ -555,6 +556,4 @@ void PagodaScene::pre_render()
     }
 }
 const ptr_visual &PagodaScene::get_world_visual() const { return _world_visual; }
-gua::SceneGraph *PagodaScene::get_scene_graph() const {
-    return _scene_graph;
-}
+gua::SceneGraph *PagodaScene::get_scene_graph() const { return _scene_graph; }

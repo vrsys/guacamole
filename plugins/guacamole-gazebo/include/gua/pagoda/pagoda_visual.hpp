@@ -38,7 +38,6 @@ class PagodaVisual
     std::string get_name() const;
     VisualType get_type() const;
     const gazebo::math::Vector3 &get_scale() const;
-    ignition::math::Vector3d get_derived_scale() const;
     const ptr_visual get_parent() const;
     const std::shared_ptr<gua::node::TransformNode> get_node() const;
 
@@ -58,13 +57,10 @@ class PagodaVisual
     std::vector<ptr_visual> _children;
 
     ignition::math::Vector3d _scale;
-    std::string _mesh_name;
-    std::string _sub_mesh_name;
 
     std::shared_ptr<gua::node::TransformNode> _node;
 
-    void update_geom_size(const ignition::math::Vector3d &_scale);
-    bool attach_mesh(const std::string &mesh_name, const std::string &sub_mesh = "", bool center_submesh = false, const std::string &obj_name = "");
+    bool attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale);
     void detach_meshes();
 };
 

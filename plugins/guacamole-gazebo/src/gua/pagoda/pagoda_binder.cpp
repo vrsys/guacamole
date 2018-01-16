@@ -14,13 +14,7 @@ void PagodaBinder::bind_transport_layer(int argc, char **argv)
 void PagodaBinder::pre_render()
 {
     _scene.pre_render();
-
-    // TODO: get the actual scene graph to print
-
-    auto root = _scene.get_scene_graph()->get_root();
-    auto hierarchy = _log.print_scenegraph(root, 1);
-
-    std::cout << hierarchy;
+    // _log.print_scenegraph(_scene.get_scene_graph()->get_root());
 }
 
 void PagodaBinder::_connect_to_transport_layer(int argc, char **argv)

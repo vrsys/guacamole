@@ -57,21 +57,24 @@ class PagodaLog
 
     bool e(const char *msg) { return (_log_level >= LOG_LEVEL::ERROR) && log(msg); }
 
-    std::string print_scenegraph(std::shared_ptr<gua::node::Node> const &subtree_root, int tree_depth = 0)
+    void print_scenegraph(std::shared_ptr<gua::node::Node> const &node, unsigned long tree_depth = 0)
     {
         std::stringstream out;
 
         out << "\n";
-        for(int tab_print_index = 0; tab_print_index < tree_depth; ++tab_print_index)
-        {
-            out << "  ";
-        }
 
-        out << subtree_root->get_name();
+        auto position = gua::math::get_translation(node->get_world_transform());
+        auto rotation = scm::math::quat<scm::math::mat4d::value_type>::from_matrix(node->get_world_transform());
+        auto scale = gua::math::get_scale(node->get_world_transform());
 
-        auto const &all_children_nodes = subtree_root->get_children();
+        out << std::string(tree_depth, ' ') << "Name: " << node->get_name() << std::endl;
+        out << std::string(tree_depth, ' ') << "Depth: " << node->get_depth() << std::endl;
+        out << std::string(tree_depth, ' ') << "Position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
+        out << std::string(tree_depth, ' ') << "Rotation: " << rotation.w << ", " << rotation.x << ", " << rotation.y << ", " << rotation.z << std::endl;
+        out << std::string(tree_depth, ' ') << "Scale: " << scale.x << ", " << scale.y << ", " << scale.z << std::endl;
+        out << std::string(tree_depth, ' ') << "Children: " << node->get_children().size();
 
-        for(auto const &subtree_child : all_children_nodes)
+        for(auto const &subtree_child : node->get_children())
         {
             print_scenegraph(subtree_child, tree_depth + 1);
         }
@@ -81,7 +84,7 @@ class PagodaLog
             out << "\n\n";
         }
 
-        return out.str();
+        std::cout << out.str();
     }
 
   private:
