@@ -247,10 +247,14 @@ void SPointsRenderer::render(Pipeline& pipe,
     cm_package.k_package.view_uuid = view_uuid;
     cm_package.k_package.stereo_mode = stereo_mode;
     cm_package.k_package.framecount = pipe.get_context().framecount;
+    cm_package.k_package.render_context_id = pipe.get_context().id;
     cm_package.mat_package = current_package;
 
 
+
     spoints_resource->push_matrix_package(cm_package);
+
+    std::cout << "UBER_PRECONDITION " << pipe.get_context().id << "\n";
 
     spoints_resource->update_buffers(pipe.get_context(), pipe);
     //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
