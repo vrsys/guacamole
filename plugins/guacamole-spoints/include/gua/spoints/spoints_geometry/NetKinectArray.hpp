@@ -129,12 +129,12 @@ private:
 
 
 
-  scm::gl::vertex_array_ptr point_layout_{nullptr};
-  scm::gl::buffer_ptr net_data_vbo_{nullptr};
+  mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
+  mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
 
-  size_t num_points_to_draw;
+  mutable std::unordered_map<std::size_t, std::size_t> num_points_to_draw_per_context_;
 
-  bool is_vbo_created = false;
+  mutable std::unordered_map<std::size_t, bool> is_vbo_created_per_context_;// = false;
 };
 
 

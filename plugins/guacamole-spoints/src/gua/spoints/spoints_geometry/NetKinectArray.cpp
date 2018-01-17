@@ -28,6 +28,7 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
 
   m_send_feedback = std::thread([this]() {sendfeedbackloop();});
 
+  std::cout << "CREATED A NETKINECTARRAY!\n";
 }
 
 NetKinectArray::~NetKinectArray()
@@ -39,16 +40,18 @@ NetKinectArray::~NetKinectArray()
 void 
 NetKinectArray::draw(gua::RenderContext const& ctx) {
 
-  if( point_layout_ != nullptr ) {
+  auto const& current_point_layout = point_layout_per_context_[ctx.id];
+
+  if( current_point_layout != nullptr ) {
     scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-    ctx.render_context->bind_vertex_array(point_layout_);
+    ctx.render_context->bind_vertex_array(current_point_layout);
     ctx.render_context->apply();
     
-
+    size_t const& current_num_points_to_draw = num_points_to_draw_per_context_[ctx.id];
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
                                     0,
-                                    num_points_to_draw);
+                                    current_num_points_to_draw);
 
     ctx.render_context->reset_vertex_input();
   }
@@ -75,24 +78,28 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
 
       size_t sizeof_point = 4*sizeof(float);
 
-      num_points_to_draw = total_num_bytes_to_copy / sizeof_point;
+      num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
 
-      if(!is_vbo_created) {
-        net_data_vbo_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer[0]);
+      auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
-        is_vbo_created = true;
+      auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
+      if(!current_is_vbo_created) {
+        current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer[0]);
+
+        current_is_vbo_created = true;
 
       } else {
-        ctx.render_device->resize_buffer(net_data_vbo_, total_num_bytes_to_copy);
+        ctx.render_device->resize_buffer(current_net_data_vbo, total_num_bytes_to_copy);
 
-        float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(net_data_vbo_, scm::gl::access_mode::ACCESS_WRITE_ONLY);
+        float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
         memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer[0], total_num_bytes_to_copy);
-        ctx.render_device->main_context()->unmap_buffer(net_data_vbo_);
+        ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
       }
 
-        point_layout_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-          (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
-          boost::assign::list_of(net_data_vbo_));
+      auto& current_point_layout = point_layout_per_context_[ctx.id];
+      current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
+                                                                    (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
+                                                                    boost::assign::list_of(current_net_data_vbo));
 
         m_buffer.clear();
       return true;
