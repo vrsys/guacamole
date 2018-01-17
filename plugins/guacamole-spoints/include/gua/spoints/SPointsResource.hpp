@@ -60,7 +60,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
     scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
     // cpu resources
     std::shared_ptr<spoints::NetKinectArray> nka_ = nullptr;
-    unsigned frame_counter_ = 0;
+    //unsigned frame_counter_ = 0;
   };
 
   /**
@@ -109,7 +109,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
  private:
 
 
-
+  std::mutex                      m_push_matrix_package_mutex;
   std::shared_ptr<SPointsData>    spointsdata_;
 
   std::string                     server_endpoint_;
