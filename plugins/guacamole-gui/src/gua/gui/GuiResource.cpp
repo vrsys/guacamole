@@ -203,14 +203,15 @@ void GuiResource::inject_char_event(unsigned c) const {
 
 void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
   focus();
-  inject_mouse_position(position * math::vec2(gui_texture_->width(), gui_texture_->height()));
+  math::vec2 pos {position.x, (1-position.y)};
+  inject_mouse_position(pos * math::vec2(gui_texture_->width(), gui_texture_->height()));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position(math::vec2 const& position) {
-  std::cout << "Mouse Movement!" << position.x << " " << position.y <<  std::endl;
+  //std::cout << "Mouse Movement!" << position.x << " " << position.y <<  std::endl;
   if (interactive_) {
     mouse_position_ = position;
     CefMouseEvent evt;

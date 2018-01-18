@@ -83,10 +83,10 @@ int main(int argc, char** argv) {
   gua::math::vec2 gui_size(1024.f, 1024.f);
 
   auto gui = std::make_shared<gua::GuiResource>();
-  gui->init("google", "https://www.google.com/", gua::math::vec2(1024.f, 1024.f));
+  gui->init("google", "http://cant-not-tweet-this.com/", gua::math::vec2(1024.f, 1024.f));
 
   //tests guis
-  gua::math::vec2 test_size(500.f, 500.f);
+  gua::math::vec2 test_size(500.f, 200.f);
 
   std::string test_path = "asset://gua/data/html/test.html";
   //Test1
