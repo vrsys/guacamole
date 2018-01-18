@@ -67,7 +67,7 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
 
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
-  std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
+  //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
 
   std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
 
@@ -77,8 +77,6 @@ SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_m
     }
   }
 
-
-  std::cout << "After second call\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +91,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
     }
   
 
-    std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
+    //std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
     // synchronize feedback
     spointsdata_->nka_->update_feedback(ctx);
   }
