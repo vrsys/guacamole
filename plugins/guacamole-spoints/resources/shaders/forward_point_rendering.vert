@@ -16,6 +16,7 @@ layout(location=0) in vec4 gua_in_position_plus_packed_floatified_color;
 
 
 uniform mat4 kinect_model_matrix;
+uniform float point_size = 1.0;
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,6 +45,7 @@ void main() {
 
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
+  gl_PointSize = point_size;
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }
