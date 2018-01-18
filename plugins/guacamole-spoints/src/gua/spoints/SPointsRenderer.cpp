@@ -160,8 +160,6 @@ void SPointsRenderer::render(Pipeline& pipe,
                              PipelinePassDescription const& desc) {
 
 
-  
-  std::cout << "CALLED RENDER FUNCTION!!!!!\n";
 
   ///////////////////////////////////////////////////////////////////////////
   //  retrieve current view state
@@ -177,7 +175,15 @@ void SPointsRenderer::render(Pipeline& pipe,
   if (!initialized_) {
     initialized_ = true;
     points_rasterizer_state_ = ctx.render_device
-        ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);;
+      ->create_rasterizer_state(scm::gl::FILL_SOLID,
+                                scm::gl::CULL_NONE,
+                                scm::gl::ORIENT_CCW,
+                                false,
+                                false,
+                                0.0,
+                                false,
+                                false,
+                                scm::gl::point_raster_state(true));
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::SPointsNode))));
@@ -258,8 +264,6 @@ void SPointsRenderer::render(Pipeline& pipe,
 
     spoints_resource->push_matrix_package(cm_package);
 
-    std::cout << "UBER_PRECONDITION " << pipe.get_context().id << "\n";
-
     spoints_resource->update_buffers(pipe.get_context(), pipe);
     //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
 
@@ -302,18 +306,19 @@ void SPointsRenderer::render(Pipeline& pipe,
         scm::math::mat4f(model_matrix),
         "kinect_model_matrix");
 
+      float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+      current_shader->set_uniform(
+        ctx,
+        screen_space_point_size,
+        "point_size");
 
       bool write_depth = true;
       target.bind(ctx, write_depth);
       target.set_viewport(ctx);
 
-      float const screen_space_point_size = spoints_node->get_screen_space_point_size();
-
-      if (screen_space_point_size != last_known_point_size) {
-          ctx.render_context->set_rasterizer_state(points_rasterizer_state_, 1.0f, screen_space_point_size);
-          ctx.render_context->apply_state_objects();
-          last_known_point_size = screen_space_point_size;
-      }
+      ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+      ctx.render_context->apply();
 
       spoints_resource->draw(ctx);
 
