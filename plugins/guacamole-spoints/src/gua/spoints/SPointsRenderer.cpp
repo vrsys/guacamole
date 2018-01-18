@@ -173,8 +173,11 @@ void SPointsRenderer::render(Pipeline& pipe,
 
   auto const& ctx(pipe.get_context());
 
+
   if (!initialized_) {
     initialized_ = true;
+    points_rasterizer_state_ = ctx.render_device
+        ->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);;
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::SPointsNode))));
@@ -183,6 +186,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
   if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
+    float last_known_point_size = std::numeric_limits<float>::max();
     for (auto& o : objects->second) {
 
       auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
@@ -302,6 +306,14 @@ void SPointsRenderer::render(Pipeline& pipe,
       bool write_depth = true;
       target.bind(ctx, write_depth);
       target.set_viewport(ctx);
+
+      float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+      if (screen_space_point_size != last_known_point_size) {
+          ctx.render_context->set_rasterizer_state(points_rasterizer_state_, 1.0f, screen_space_point_size);
+          ctx.render_context->apply_state_objects();
+          last_known_point_size = screen_space_point_size;
+      }
 
       spoints_resource->draw(ctx);
 
