@@ -28,7 +28,7 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
 
   m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
 
-  std::cout << "CREATED A NETKINECTARRAY!\n";
+  //std::cout << "CREATED A NETKINECTARRAY!\n";
 }
 
 NetKinectArray::~NetKinectArray()
@@ -71,7 +71,7 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
 
     known_context_ids_.insert(ctx.id);
 
-    std::cout << "UPDATING CONTEXT ID: " << ctx.id << "\n"; 
+    //std::cout << "UPDATING CONTEXT ID: " << ctx.id << "\n"; 
     auto& current_encountered_frame_count = encountered_frame_counts_per_context_[ctx.id];
 
     if (current_encountered_frame_count != ctx.framecount) {
@@ -131,7 +131,7 @@ void
 NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
   {
 
-    std::cout << !m_feedback_need_swap_.load() << "\n";
+    //std::cout << !m_feedback_need_swap_.load() << "\n";
 
     if( true/*(submitted_camera_matrix_package_back_.k_package.framecount != last_omitted_frame_count_)*/ /*&&
         !m_feedback_need_swap_.load()*/) {
@@ -145,7 +145,7 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
       unsigned view_uuid = submitted_camera_matrix_package_back_.k_package.view_uuid;
 
 
-      std::cout << "FCT: " << submitted_camera_matrix_package_back_.k_package.framecount << "\n"; 
+      //std::cout << "FCT: " << submitted_camera_matrix_package_back_.k_package.framecount << "\n"; 
 
       if(submitted_camera_matrix_package_back_.k_package.framecount != last_frame_count_) {
         m_feedback_need_swap_.store(true);
@@ -168,7 +168,6 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
       }
 
     } else {
-      std::cout << "SHOULD NOT BE CALLED!\n";
       last_omitted_frame_count_ = submitted_camera_matrix_package_back_.k_package.framecount;
     }
 
@@ -279,7 +278,7 @@ void NetKinectArray::sendfeedbackloop() {
       memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
       memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(matrix_packages_to_submit_[0]), (num_recorded_matrix_packages) *  sizeof(matrix_package) );
 
-      std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
+      //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
 
       // send feedback
       socket.send(zmqm); // blocking
