@@ -248,7 +248,14 @@ void NetKinectArray::sendfeedbackloop() {
   socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
   std::string endpoint(std::string("tcp://") + m_feedback_endpoint_);
-  socket.bind(endpoint.c_str());
+
+  try { 
+    socket.bind(endpoint.c_str()); 
+  } 
+  catch (const std::exception& e) {
+    std::cout << "Failed to bind feedback socket\n";
+    return;
+  }
 
   while (m_feedback_running_) {
     
