@@ -59,6 +59,10 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
 
   void update_cache() override;
 
+
+  inline float get_screen_space_point_size() const { return screen_space_point_size_; }
+  inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
@@ -80,6 +84,7 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
 
  private:
 
+  float                            screen_space_point_size_;
   std::shared_ptr<SPointsResource> spoints_;
   std::string                      spoints_description_;
   bool                             spoints_changed_;
