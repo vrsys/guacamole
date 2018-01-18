@@ -57,6 +57,7 @@ namespace {
 GuiResource::GuiResource()
   : name_("")
   , url_("")
+  , mouse_position_()
   , gui_texture_(nullptr)
   //, view_(nullptr)
   //, js_window_(nullptr)
@@ -128,7 +129,6 @@ void GuiResource::set_url(std::string const& url) {
   
   if(url_.find("asset://gua/") == 0) {
     url_.erase(0, 12);
-    std::cout << url_ << std::endl;
     url_ = "file://" + gua::Paths::instance()->make_absolute(url_);
   }
 
@@ -167,6 +167,7 @@ void GuiResource::reload() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::focus() {
+  browser_->GetHost()->SendFocusEvent(true);
   //view_->Focus();
 }
 
@@ -200,33 +201,39 @@ void GuiResource::inject_char_event(unsigned c) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::inject_mouse_position_relative(math::vec2 const& position) const {
-  //inject_mouse_position(position * math::vec2(gui_texture_->width(), gui_texture_->height()));
+void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
+  focus();
+  inject_mouse_position(position * math::vec2(gui_texture_->width(), gui_texture_->height()));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::inject_mouse_position(math::vec2 const& position) const {
-  /*
-  if (interactive_ && view_) {
-    view_->InjectMouseMove(position.x, gui_texture_->height() - position.y);
+void GuiResource::inject_mouse_position(math::vec2 const& position) {
+  std::cout << "Mouse Movement!" << position.x << " " << position.y <<  std::endl;
+  if (interactive_) {
+    mouse_position_ = position;
+    CefMouseEvent evt;
+    evt.x = position.x;
+    evt.y = position.y;
+
+    browser_->GetHost()->SendMouseMoveEvent(evt, false);
+    //view_->InjectMouseMove(position.x, gui_texture_->height() - position.y);
   }
-  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_button(Button button, int action, int mods) const {
-  /*
-  if (interactive_ && view_) {
-    if (action == 0) {
-      view_->InjectMouseUp(static_cast<Awesomium::MouseButton>(button));
-    } else {
-      view_->InjectMouseDown(static_cast<Awesomium::MouseButton>(button));
-    }
+  std::cout << "click!" << std::endl;
+  bool up = false;
+  if(action == 0) up = true; 
+  CefMouseEvent evt;
+    evt.x = mouse_position_.x;
+    evt.y = mouse_position_.y;
+  if (interactive_) {
+    browser_->GetHost()->SendMouseClickEvent(evt, MBT_LEFT, up, 1);
   }
-  */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

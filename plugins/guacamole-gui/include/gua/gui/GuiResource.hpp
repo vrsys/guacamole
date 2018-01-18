@@ -87,8 +87,8 @@ class GuiResource {
     void inject_keyboard_event(Key key, int scancode, int action, int mods) const;
     void inject_char_event(unsigned c) const;
 
-    void inject_mouse_position_relative(math::vec2 const& position) const;
-    void inject_mouse_position(math::vec2 const& position) const;
+    void inject_mouse_position_relative(math::vec2 const& position);
+    void inject_mouse_position(math::vec2 const& position);
     void inject_mouse_button(Button button, int action, int mods) const;
     void inject_mouse_wheel(math::vec2 const& direction) const;
 
@@ -128,10 +128,13 @@ class GuiResource {
 
     std::string name_;
     std::string url_;
+    math::vec2 mouse_position_;
 
     std::shared_ptr<GuiTexture> gui_texture_ = nullptr;
 
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
+
+
     CefRefPtr<CefBrowser> browser_;
     CefRefPtr<GuiBrowserClient> browserClient_;
     CefWindowInfo window_info_;

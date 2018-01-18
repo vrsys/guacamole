@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
   gua::math::vec2 gui_size(1024.f, 1024.f);
 
   auto gui = std::make_shared<gua::GuiResource>();
-  gui->init("google", "https://corgiorgy.com/", gua::math::vec2(1024.f, 1024.f));
+  gui->init("google", "https://www.google.com/", gua::math::vec2(1024.f, 1024.f));
 
   //tests guis
   gua::math::vec2 test_size(500.f, 500.f);
@@ -229,10 +229,13 @@ int main(int argc, char** argv) {
     
     gua::math::vec2 hit_pos;
 
-    /*if (address_bar_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
-      address_bar->inject_mouse_position_relative(hit_pos);
-      focused_element = address_bar;
-    } else {*/
+    if (test_1_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      test_1->inject_mouse_position_relative(hit_pos);
+      focused_element = test_1;
+    } else if (test_2_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      test_2->inject_mouse_position_relative(hit_pos);
+      focused_element = test_2;
+    } else {
       auto screen_space_pos(pos/resolution-0.5);
 
       gua::math::vec3 origin(screen->get_scaled_world_transform() * gua::math::vec3(screen_space_pos.x, screen_space_pos.y, 0));
@@ -243,14 +246,14 @@ int main(int argc, char** argv) {
       auto result = graph.ray_test(ray, gua::PickResult::PICK_ONLY_FIRST_OBJECT | gua::PickResult::PICK_ONLY_FIRST_FACE | gua::PickResult::GET_TEXTURE_COORDS);
       if (result.size() > 0) {
         for (auto const& r : result) {
-          //focused_element = gui;
+          focused_element = gui;
           focused_element->inject_mouse_position_relative(r.texture_coords);
         }
       } else {
         focused_element = nullptr;
         trackball.motion(pos.x, pos.y);
       }
-    //}
+    }
 
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));

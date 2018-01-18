@@ -43,7 +43,7 @@ namespace gua {
   //////////////////////////////////////////////////////////////////////////////
 
   bool GLSurface::bind(RenderContext const& ctx, const GuiTexture* gui_texture) {
-    std::cout << "call bind" << std::endl;
+    //std::cout << "call bind" << std::endl;
 
     while (needs_update_.size() <= ctx.id) {
       needs_update_.push_back(true);
@@ -57,7 +57,7 @@ namespace gua {
 
     
     if (needs_update_[ctx.id]) {
-      std::cout << "Update for render context: " << ctx.id << "\n";
+      //std::cout << "Update for render context: " << ctx.id << "\n";
       std::unique_lock<std::mutex> lock(mutex_);
       needs_update_[ctx.id] = false;
       gui_texture->update_sub_data(
@@ -77,9 +77,8 @@ namespace gua {
   
   void GLSurface::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList &dirtyRects, const void *buffer, int width, int height)
   {
-    std::cout << "call paint" << std::endl;
     std::unique_lock<std::mutex> lock(mutex_);
-    std::cout << "One Frame Update\n";
+    //std::cout << "One Frame Update\n";
 
     for (int r = 0; r < height_; r++) {
       auto row(height_ - r  - 1);
@@ -95,7 +94,7 @@ namespace gua {
 
   bool GLSurface::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
   {
-      std::cout << "getRect" << std::endl;
+      //std::cout << "getRect" << std::endl;
       rect = CefRect(0, 0, width_, height_);
       return true;
   }
