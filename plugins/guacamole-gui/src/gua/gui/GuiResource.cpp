@@ -202,9 +202,9 @@ void GuiResource::inject_char_event(unsigned c) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
-  focus();
-  math::vec2 pos {position.x, (1-position.y)};
-  inject_mouse_position(pos * math::vec2(gui_texture_->width(), gui_texture_->height()));
+  
+  //math::vec2 pos {position.x, (1-position.y)};
+  inject_mouse_position(math::vec2(gui_texture_->width() * position.x, gui_texture_->height() * (1-position.y)));
 }
 
 

@@ -88,10 +88,11 @@ int main(int argc, char** argv) {
   //tests guis
   gua::math::vec2 test_size(500.f, 200.f);
 
-  std::string test_path = "asset://gua/data/html/test.html";
+  std::string test_1_path = "asset://gua/data/html/test.html";
+  std::string test_2_path = "http://cant-not-tweet-this.com/";
   //Test1
   auto test_1 = std::make_shared<gua::GuiResource>();
-  test_1->init("test_1", test_path, test_size);
+  test_1->init("test_1", test_1_path, test_size);
   auto test_1_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_1_quad");
   test_1_quad->data.texture() = "test_1";
   test_1_quad->data.size() = test_size;
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
 
   //Test2
   auto test_2 = std::make_shared<gua::GuiResource>();
-  test_2->init("test_2", test_path, test_size);
+  test_2->init("test_2", test_2_path, test_size);
   auto test_2_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_2_quad");
   test_2_quad->data.texture() = "test_2";
   test_2_quad->data.size() = test_size;
