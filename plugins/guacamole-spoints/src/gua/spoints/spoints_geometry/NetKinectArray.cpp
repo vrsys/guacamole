@@ -93,34 +93,43 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
     if(m_need_gpu_swap_[ctx.id].load()) {
       size_t total_num_bytes_to_copy = m_buffer_.size();
 
-      size_t sizeof_point = 4*sizeof(float);
+      if(0 != total_num_bytes_to_copy) {
 
-      num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
+        size_t sizeof_point = 4*sizeof(float);
 
-      auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
+        num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
 
-      auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
-      if(!current_is_vbo_created) {
-        current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer_[0]);
+        auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
-        current_is_vbo_created = true;
+        auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
+        if(!current_is_vbo_created) {
+          //std::cout << "CREATED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
+          current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer_[0]);
 
-      } else {
-        ctx.render_device->resize_buffer(current_net_data_vbo, total_num_bytes_to_copy);
 
-        float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
-        memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
-        ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
+        } else {
+          //std::cout << "RESIZED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
+          ctx.render_device->resize_buffer(current_net_data_vbo, total_num_bytes_to_copy);
+
+          float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
+          memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
+          ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
+        }
+
+        if(!current_is_vbo_created) {
+          auto& current_point_layout = point_layout_per_context_[ctx.id];
+          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
+                                                                      (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
+                                                                      boost::assign::list_of(current_net_data_vbo));
+
+          current_is_vbo_created = true;
+
+        }
+
+
       }
-
-      auto& current_point_layout = point_layout_per_context_[ctx.id];
-      current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-                                                                    (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
-                                                                    boost::assign::list_of(current_net_data_vbo));
-
-
-
-      m_need_gpu_swap_[ctx.id].store(true);
+      
+      m_need_gpu_swap_[ctx.id].store(false);
       return true;
     }
   }
