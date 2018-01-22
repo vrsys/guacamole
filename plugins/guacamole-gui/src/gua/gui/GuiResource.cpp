@@ -38,18 +38,19 @@
 
 #include <include/cef_app.h>
 
+namespace {
+#include "GuiCefKeyEvent.ipp"
+}
+
 namespace gua {
 
 /*
-namespace {
 
-#include "AweKeyEvent.ipp"
 #include "AweViewListener.ipp"
 #include "AweLoadListener.ipp"
 #include "AweProcessListener.ipp"
 #include "AweJSMethodHandler.ipp"
 
-}
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +187,10 @@ bool GuiResource::is_interactive() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int mods) const {
+  std::cout << "keyboard event " << (int)key << std::endl;
   if (interactive_) {
+
+    browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(key, scancode, action, mods));
     //view_->InjectKeyboardEvent(AweKeyEvent(key, scancode, action, mods));
   }
 }
@@ -194,7 +198,9 @@ void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int m
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_char_event(unsigned c) const {
+  //std::cout << "char event" << std::endl;
   if (interactive_) {
+    browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(c));
     //view_->InjectKeyboardEvent(AweKeyEvent(c));
   }
 }
@@ -202,7 +208,7 @@ void GuiResource::inject_char_event(unsigned c) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
-  
+  focus();
   //math::vec2 pos {position.x, (1-position.y)};
   inject_mouse_position(math::vec2(gui_texture_->width() * position.x, gui_texture_->height() * (1-position.y)));
 }
@@ -226,25 +232,44 @@ void GuiResource::inject_mouse_position(math::vec2 const& position) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_button(Button button, int action, int mods) const {
-  std::cout << "click!" << std::endl;
-  bool up = false;
-  if(action == 0) up = true; 
-  CefMouseEvent evt;
+  //std::cout << "click! on " << name_ << std::endl;
+  if (interactive_) {
+    bool up = (action == 0); 
+    CefMouseEvent evt;
     evt.x = mouse_position_.x;
     evt.y = mouse_position_.y;
-  if (interactive_) {
+
     browser_->GetHost()->SendMouseClickEvent(evt, MBT_LEFT, up, 1);
+
+    /*
+    CefBrowserHost::MouseButtonType btn;
+    //different mouse buttons disabled until drop-down menu position correct
+    switch(button) {
+      case Button::BUTTON_1:  btn = MBT_LEFT;
+                      break;
+      case Button::BUTTON_2:  btn = MBT_RIGHT;
+                      break;
+      case Button::BUTTON_3:  btn = MBT_MIDDLE;
+                      break;
+      default:        btn = MBT_LEFT;
+    }
+    browser_->GetHost()->SendMouseClickEvent(evt, btn, up, 1);
+    */
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
-  /*
-  if (interactive_ && view_) {
-    view_->InjectMouseWheel(direction.y*20, direction.x*20);
+  std::cout << "wheeeeeel" << std::endl;
+  if (interactive_) {
+    CefMouseEvent evt;
+    evt.x = mouse_position_.x;
+    evt.y = mouse_position_.y;
+
+    browser_->GetHost()->SendMouseWheelEvent(evt, direction.x * 20, direction.y*20);
   }
-  */
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
