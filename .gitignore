@@ -66,3 +66,6 @@ examples/plod_simple/example-plod_simple
 install
 examples/picking/example-picking
 example-gazebo_scene
+
+.idea
+/examples/volumetric_point_and_line_rendering/example-volumetric_point_and_line_rendering
