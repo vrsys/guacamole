@@ -78,6 +78,22 @@ void Material::set_shader_name(std::string const& name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Material::rename_existing_shader(std::string const& name) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
+
+  auto shader_with_old_name(MaterialShaderDatabase::instance()->lookup(shader_name_));
+
+  shader_name_ = name;
+  shader_cache_ = nullptr;
+
+
+  auto shader_with_new_name = std::make_shared<MaterialShader>(shader_name_, shader_with_old_name->get_description());
+  MaterialShaderDatabase::instance()->add(shader_with_new_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MaterialShader* Material::get_shader() const {
   // boost::unique_lock<boost::shared_mutex> lock(mutex_);
   if (!shader_cache_) {
