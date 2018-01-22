@@ -46,6 +46,8 @@ class PagodaVisual
     void set_scale(const gazebo::math::Vector3 &scale);
     void set_pose(const gazebo::math::Pose &pose);
 
+    const scm::math::mat4d flip_transform(const scm::math::mat4d &transform);
+
   protected:
     gua::TriMeshLoader _tml;
 

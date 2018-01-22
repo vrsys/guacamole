@@ -164,8 +164,9 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
 
     _node->add_child(geometry_node);
 
-    geometry_node->set_transform(gua::math::mat4::identity());
     geometry_node->scale(scale.x, scale.y, scale.z);
+
+    geometry_node->set_transform(flip_transform(geometry_node->get_transform()));
 
     return true;
 }
@@ -176,18 +177,46 @@ void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
 
     _scale = scale.Ign();
 
-    _node->scale(_scale.X(), _scale.Y(), _scale.Z());
+    _node->scale(_scale.X(), _scale.Z(), _scale.Y());
 }
 void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
 {
-    // TODO: investigate handedness
-
     std::cout << "set_pose(" << pose.pos.x << "," << pose.pos.y << "," << pose.pos.z << ")" << std::endl;
+    std::cout << "set_rotation(" << pose.rot.w << "," << pose.rot.x << "," << pose.rot.y << "," << pose.rot.z << ")" << std::endl;
 
-    gua::math::mat4d transform_mat = scm::math::make_translation(pose.pos.x, pose.pos.y, pose.pos.z);
-    transform_mat = transform_mat * (scm::math::quatd(pose.rot.w, pose.rot.x, pose.rot.y, pose.rot.z).to_matrix());
+    scm::math::mat4d translation = scm::math::make_translation(pose.pos.x, pose.pos.y, pose.pos.z);
+    scm::math::quatd quaternion = scm::math::quatd(pose.rot.w, pose.rot.x, pose.rot.y, pose.rot.z);
 
-    _node->set_transform(transform_mat);
+    _node->set_transform(flip_transform(translation * quaternion.to_matrix()));
+}
+const scm::math::mat4d PagodaVisual::flip_transform(const scm::math::mat4d &transform)
+{
+    // TODO: devise pre matrix by examining side by side
+
+    scm::math::mat4d transform_flipped = scm::math::mat4d::identity();
+
+    /* PRE-ROTATION AROUND X */
+
+    gua::math::mat4d pre = scm::math::inverse(scm::math::make_rotation(-90., 1., 0., 0.));
+
+    transform_flipped *= pre;
+    transform_flipped *= transform;
+
+    /* FLIPPED QUAT */
+
+    //    gua::math::vec3d translation = gua::math::get_translation(transform);
+    //    gua::math::quatd quaternion = gua::math::quatd::from_matrix(gua::math::get_rotation(transform));
+    //    gua::math::vec3d scaling = gua::math::get_scale(transform);
+
+    //    double angle;
+    //    gua::math::vec3d axis;
+    //    quaternion.retrieve_axis_angle(angle, axis);
+    //
+    //    transform_flipped *= scm::math::make_translation(translation.x, translation.z, translation.y);
+    //    transform_flipped *= quaternion.from_axis(angle, gua::math::vec3d(axis.x, axis.z, axis.y)).to_matrix();
+    //    transform_flipped *= scm::math::make_scale(scaling.x, scaling.z, scaling.y);
+
+    return transform_flipped;
 }
 const gazebo::math::Vector3 &PagodaVisual::get_scale() const { return _scale; }
 const ptr_visual PagodaVisual::get_parent() const { return _parent; }
