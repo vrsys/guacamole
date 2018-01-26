@@ -153,35 +153,32 @@ class GuiCefKeyEvent : public CefKeyEvent {
     native_key_code = 0;
   }
 
+  // action 0 = release, 1 = press, 2 = hold
   GuiCefKeyEvent(gua::Key key, int scancode, int action, int mods) {
     int key_awe = key_to_awe_key(key);
 
-    auto awe_type = cef_key_event_type_t::KEYEVENT_KEYUP;
-    auto awe_mods = mods;
-
-    if (action != 0) {
-      awe_type = cef_key_event_type_t::KEYEVENT_KEYDOWN;
-    }
-
-    /*
-    if (action == 2) {
-      awe_mods |= cef_key_event_type_t::kModIsAutorepeat;
-    }
-    */
-
-    type                = cef_key_event_type_t::KEYEVENT_KEYDOWN;;
-    modifiers           = awe_mods;
-    windows_key_code    = (int)key;
-    native_key_code     = static_cast<int>(key);
+    //type                = cef_key_event_type_t::KEYEVENT_CHAR;;
+    //modifiers           = mods;
+    windows_key_code    = key_awe;
+    native_key_code     = key_awe;
     is_system_key       = false;
-
     character = unmodified_character = key_awe;
-  
     focus_on_editable_field = true;
 
-    char* buf = new char[20];
-    delete[] buf;
+    if (action != 0) {
+      type = cef_key_event_type_t::KEYEVENT_CHAR;
+    } else {
+      type = cef_key_event_type_t::KEYEVENT_KEYUP;
+    }
 
-    std::cout << "Its a me, keytest " << key_awe << " " << native_key_code << std::endl;
+    if (mods == 1 || key_awe == 160){
+      modifiers = cef_event_flags_t::EVENTFLAG_SHIFT_DOWN;
+      is_system_key = true;
+    } else {
+      modifiers = cef_event_flags_t::EVENTFLAG_NONE;
+
+    }
+    
+    //std::cout << "Its a me, keytest " << key_awe << " " << native_key_code << std::endl;
   }
 };
