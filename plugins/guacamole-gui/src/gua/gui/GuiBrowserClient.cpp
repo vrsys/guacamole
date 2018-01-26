@@ -49,7 +49,6 @@ bool GuiBrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
 
   return message_router_->OnProcessMessageReceived(browser, source_process,
                                                    message);
-
 }
 
 
@@ -90,6 +89,15 @@ void GuiBrowserClient::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
   CEF_REQUIRE_UI_THREAD();
 
   message_router_->OnRenderProcessTerminated(browser);
+}
+
+bool GuiBrowserClient::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                             const CefKeyEvent& event,
+                             CefEventHandle os_event,
+                             bool* is_keyboard_shortcut){
+  std::cout << "Event handled " << event.native_key_code << std::endl;
+  return true;
+
 }
 
 

@@ -169,13 +169,19 @@ class GuiCefKeyEvent : public CefKeyEvent {
     }
     */
 
-    type                = awe_type;
+    type                = cef_key_event_type_t::KEYEVENT_KEYDOWN;;
     modifiers           = awe_mods;
-    windows_key_code    = key_awe;
+    windows_key_code    = (int)key;
     native_key_code     = static_cast<int>(key);
     is_system_key       = false;
 
+    character = unmodified_character = key_awe;
+  
+    focus_on_editable_field = true;
+
     char* buf = new char[20];
     delete[] buf;
+
+    std::cout << "Its a me, keytest " << key_awe << " " << native_key_code << std::endl;
   }
 };

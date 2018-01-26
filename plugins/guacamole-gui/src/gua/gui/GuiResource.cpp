@@ -187,10 +187,15 @@ bool GuiResource::is_interactive() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int mods) const {
-  std::cout << "keyboard event " << (int)key << std::endl;
+  //::cout << "keyboard event " << (int)key << std::endl;
   if (interactive_) {
-
-    browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(key, scancode, action, mods));
+    auto evt = static_cast<CefKeyEvent>(GuiCefKeyEvent(key, scancode, action, mods));
+    evt.type = KEYEVENT_RAWKEYDOWN;
+    browser_->GetHost()->SendKeyEvent(evt);
+    evt.type = KEYEVENT_CHAR;
+    browser_->GetHost()->SendKeyEvent(evt);
+    evt.type = KEYEVENT_KEYUP;
+    browser_->GetHost()->SendKeyEvent(evt);
     //view_->InjectKeyboardEvent(AweKeyEvent(key, scancode, action, mods));
   }
 }
@@ -198,7 +203,7 @@ void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int m
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_char_event(unsigned c) const {
-  //std::cout << "char event" << std::endl;
+  std::cout << "char event" << std::endl;
   if (interactive_) {
     browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(c));
     //view_->InjectKeyboardEvent(AweKeyEvent(c));

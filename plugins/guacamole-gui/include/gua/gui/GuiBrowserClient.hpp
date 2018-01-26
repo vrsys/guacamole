@@ -38,7 +38,8 @@ namespace gua{
 
 class GuiBrowserClient :	public CefClient,
 			               	public CefLifeSpanHandler,
-			              	public CefRequestHandler
+			              	public CefRequestHandler,
+			              	public CefKeyboardHandler
 {
 public:
     GuiBrowserClient(GLSurface *renderHandler, CefString url);
@@ -70,6 +71,13 @@ public:
 	void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
 	                             TerminationStatus status) OVERRIDE;
 	///////////////////////////////////////////////////////////////////////////
+	//CefKeyboardHandler methods:
+	bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                             const CefKeyEvent& event,
+                             CefEventHandle os_event,
+                             bool* is_keyboard_shortcut) OVERRIDE;
+	///////////////////////////////////////////////////////////////////////////
+
 	private:
 	const CefString startup_url_;
 	CefString message_;
