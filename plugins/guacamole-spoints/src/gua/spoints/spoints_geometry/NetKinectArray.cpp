@@ -189,17 +189,12 @@ void NetKinectArray::readloop() {
   zmq::socket_t  socket(ctx, ZMQ_SUB); // means a subscriber
 
   socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-#if ZMQ_VERSION_MAJOR < 3
-  int64_t hwm = 1;
-  socket.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
-#else
-  int hwm = 1;
-  socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
-#endif
+
+  int conflate_messages = 1;
+  socket.setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
+
   std::string endpoint("tcp://" + m_server_endpoint_);
   socket.connect(endpoint.c_str());
-
-  //const unsigned message_size = (m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
 
   const unsigned message_size = sizeof(size_t);//(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
 
@@ -253,8 +248,8 @@ void NetKinectArray::sendfeedbackloop() {
   zmq::context_t ctx(1); // means single threaded
   zmq::socket_t  socket(ctx, ZMQ_PUB); // means a subscriber
 
-  int hwm = 1;
-  socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+  int conflate_messages  = 1;
+  socket.setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
 
   std::string endpoint(std::string("tcp://") + m_feedback_endpoint_);
 
