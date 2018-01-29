@@ -124,12 +124,12 @@ int main(int argc, char** argv) {
 
     gua::TriMeshLoader loader;
 
-    auto room_geometry(loader.create_geometry_from_file(
-        "room",
-        "data/objects/re_room/RE2 Briefing room.obj", gua::TriMeshLoader::LOAD_MATERIALS
+    auto monkey_geometry(loader.create_geometry_from_file(
+        "monkey",
+        "data/objects/monkey.obj", gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION
         ));
 
-    auto root = graph.add_node("/", room_geometry);
+    auto root = graph.add_node("/", monkey_geometry);
 
     auto lights = add_lights(graph);
 
