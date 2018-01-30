@@ -41,6 +41,8 @@ class GUA_DLL Material {
     std::string const& get_shader_name() const;
     void set_shader_name(std::string const&);
 
+    void rename_existing_shader(std::string const& name);
+
     MaterialShader* get_shader() const;
 
     template <typename T>

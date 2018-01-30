@@ -36,10 +36,9 @@
 #include <gua/renderer/GlfwWindow.hpp>
 
 //for the OpenVR members
-#if defined (_WIN32)
-    #include <openvr.h>
-    #include <openvr_capi.h>
-#endif
+#include <openvr.h>
+#include <openvr_capi.h>
+
 
 namespace gua {
 

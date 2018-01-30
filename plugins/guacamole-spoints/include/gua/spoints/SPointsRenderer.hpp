@@ -77,11 +77,7 @@ class GUA_SPOINTS_DLL SPointsRenderer {
 
 
 
-  scm::gl::rasterizer_state_ptr no_bfc_rasterizer_state_;
-  scm::gl::sampler_state_ptr nearest_sampler_state_;
-  scm::gl::sampler_state_ptr linear_sampler_state_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+  scm::gl::rasterizer_state_ptr points_rasterizer_state_;
 
 };
 

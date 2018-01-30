@@ -42,6 +42,7 @@ SPointsNode::SPointsNode(std::string const& name,
                          std::shared_ptr<Material> const& material,
                          math::mat4 const& transform)
     : GeometryNode(name, transform),
+    screen_space_point_size_(1.0f),
 	  spoints_(nullptr),
 	  spoints_description_(spoints_description),
 	  spoints_changed_(true),

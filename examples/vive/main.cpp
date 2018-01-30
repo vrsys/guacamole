@@ -76,7 +76,6 @@ int main(int argc, char** argv) {
     casted->get_material()->set_uniform("Emissivity", 0.2f);
     casted->get_material()->set_uniform("Color", gua::math::vec4(1.0, 1.0, 1.0, 1));
 
-
     monkey->scale(0.2);
     monkey->translate(0.0, 1.75, 0.0);
 
