@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
     auto monkey(loader.create_geometry_from_file(
         "monkey",
-        "../data/objects/monkey.obj", gua::TriMeshLoader::LOAD_MATERIALS
+        "./data/objects/monkey.obj", gua::TriMeshLoader::LOAD_MATERIALS
     ));
 
     auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(monkey));
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     auto window = std::make_shared<gua::ViveWindow>(":0.0");
     gua::WindowDatabase::instance()->add("main_window", window);
     window->config.set_enable_vsync(false);
-    window->config.set_fullscreen_mode(true);
+    window->config.set_fullscreen_mode(false);
     window->config.set_size(window->get_window_resolution());
     window->config.set_resolution(window->get_window_resolution());
     window->open();
