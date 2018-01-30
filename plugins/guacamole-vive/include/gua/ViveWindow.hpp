@@ -50,7 +50,7 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
     float const get_IPD() const;
     math::vec2ui get_window_resolution() const;
-    math::mat4 const& get_hmd_sensor_orientation() const;
+    math::mat4 const get_hmd_sensor_orientation() const;
 
     math::vec2 const& get_left_screen_size() const;
     math::vec2 const& get_right_screen_size() const;
@@ -71,7 +71,6 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
     std::string display_name_;
     vr::IVRSystem *pVRSystem = nullptr;
-    math::mat4 hmd_sensor_orientation_;
 
     math::vec2 screen_size_[2];
     math::vec3 screen_translation_[2];
