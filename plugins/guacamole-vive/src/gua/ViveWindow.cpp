@@ -87,7 +87,7 @@ void ViveWindow::calculate_viewing_setup() {
         vr::EVREye eEye = eye_num == 0 ? vr::EVREye::Eye_Left : vr::EVREye::Eye_Right;
         //retreive the correct projection matrix from OpenVR
         auto const& hmd_eye_projection = pVRSystem->GetProjectionMatrix(
-            eEye, near_distance, far_distance, vr::EGraphicsAPIConvention::API_OpenGL
+            eEye, near_distance, far_distance
         );
 
         //convert the matrix to a gua compatible one
@@ -261,14 +261,49 @@ math::vec3 const& ViveWindow::get_right_screen_translation() const {
 
 void ViveWindow::start_frame() {
     GlfwWindow::start_frame();
+<<<<<<< HEAD
+=======
+
+    float fSecondsSinceLastVsync;
+    pVRSystem->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
+
+    float fDisplayFrequency = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
+    float fFrameDuration = 1.0f / fDisplayFrequency;
+    float fVsyncToPhotons = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
+
+    float ftiming = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
+
+    vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
+
+    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, ftiming);
+    for (unsigned int device_idx = 0; device_idx < vr::k_unMaxTrackedDeviceCount; ++device_idx) {
+        if (devices[device_idx].bPoseIsValid) {
+            if (pVRSystem->GetTrackedDeviceClass(device_idx) == vr::TrackedDeviceClass_HMD) {
+
+                vr::HmdMatrix34_t pose = devices[device_idx].mDeviceToAbsoluteTracking;
+
+                math::mat4 orientation(
+                    pose.m[0][0], pose.m[1][0], pose.m[2][0], 0.0,
+                    pose.m[0][1], pose.m[1][1], pose.m[2][1], 0.0,
+                    pose.m[0][2], pose.m[1][2], pose.m[2][2], 0.0,
+                    pose.m[0][3], pose.m[1][3], pose.m[2][3], 1.0
+                );
+                
+                hmd_sensor_orientation_ = orientation;
+                break;
+            }
+        }
+    }
+
+>>>>>>> f8ab7f5a839e40ba0a976751d929991eed57f18d
 }
 
 void ViveWindow::finish_frame() {
     if (left_tex_id_ && right_tex_id_) {
-        vr::Texture_t leftEyeTexture{ (void*)left_tex_id_, vr::API_OpenGL, vr::ColorSpace_Gamma };
+        vr::Texture_t leftEyeTexture{ (void*)left_tex_id_, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
         vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 
-        vr::Texture_t rightEyeTexture{ (void*)right_tex_id_, vr::API_OpenGL, vr::ColorSpace_Gamma };
+        vr::Texture_t rightEyeTexture{ (void*)right_tex_id_, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
         vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
     }
 

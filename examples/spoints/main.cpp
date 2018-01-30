@@ -75,17 +75,19 @@ int main(int argc, char** argv) {
 
   transform->translate(0.0f, 0.0f, -10.0f);
 
+/*
   auto light = graph.add_node<gua::node::LightNode>("/", "light");
-  light->data.set_type(gua::node::LightNode::Type::SUN);
-  light->data.set_brightness(4.f);
+  light->data.set_type(gua::node::LightNode::Type::SPOT);
+  light->data.set_brightness(8.f);
   light->data.set_shadow_cascaded_splits({0.1f, 1.f, 10.f, 50.f});
   light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
   light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
   light->data.set_max_shadow_dist(80.0f);
   light->data.set_shadow_offset(0.002f);
   light->data.set_enable_shadows(true);
-  light->data.set_shadow_map_size(2048);
+  light->data.set_shadow_map_size(512);
   light->rotate(-65, 1, 0, 0);
+*/
 
   auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
   screen->data.set_size(gua::math::vec2(1.218f, 1.218f));
@@ -109,7 +111,8 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
+  //camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
   camera->set_pipeline_description(pipe);
 
   auto window = std::make_shared<gua::GlfwWindow>();
@@ -117,8 +120,8 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
-  //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+  //window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
 
 /*
 
