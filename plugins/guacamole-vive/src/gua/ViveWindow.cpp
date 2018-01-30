@@ -212,8 +212,35 @@ math::vec2ui ViveWindow::get_window_resolution() const {
     return math::vec2ui(width, height);
 }
 
-math::mat4 const& ViveWindow::get_hmd_sensor_orientation() const {
-    return hmd_sensor_orientation_;
+math::mat4 const ViveWindow::get_hmd_sensor_orientation() const {
+    const int numberOfTrackedDevices(vr::k_unMaxTrackedDeviceCount);
+    vr::TrackedDevicePose_t trackedDevicesHandles[numberOfTrackedDevices];
+
+    float fSecondsSinceLastVsync;
+    pVRSystem->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
+    float fDisplayFrequency = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
+    float fFrameDuration = 1.0f / fDisplayFrequency;
+    float fVsyncToPhotons = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
+    float predictedSecondsFromNow = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
+
+    vr::HmdMatrix34_t pose;
+    pVRSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, predictedSecondsFromNow, trackedDevicesHandles, numberOfTrackedDevices);
+
+    for (short i = 0; i < numberOfTrackedDevices; ++i) {
+        if (pVRSystem->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_HMD) {
+            pose = trackedDevicesHandles[i].mDeviceToAbsoluteTracking;
+            break;
+        }
+    }
+
+    gua::math::mat4 hmdPose(
+        pose.m[0][0], pose.m[1][0], pose.m[2][0], 0.0,
+        pose.m[0][1], pose.m[1][1], pose.m[2][1], 0.0,
+        pose.m[0][2], pose.m[1][2], pose.m[2][2], 0.0,
+        pose.m[0][3], pose.m[1][3], pose.m[2][3], 1.0
+    );
+
+    return hmdPose;
 }
 
 math::vec2 const& ViveWindow::get_left_screen_size() const {
@@ -234,38 +261,6 @@ math::vec3 const& ViveWindow::get_right_screen_translation() const {
 
 void ViveWindow::start_frame() {
     GlfwWindow::start_frame();
-
-    float fSecondsSinceLastVsync;
-    pVRSystem->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
-
-    float fDisplayFrequency = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
-    float fFrameDuration = 1.0f / fDisplayFrequency;
-    float fVsyncToPhotons = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
-
-    float ftiming = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
-
-    vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
-
-    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, ftiming);
-    for (unsigned int device_idx = 0; device_idx < vr::k_unMaxTrackedDeviceCount; ++device_idx) {
-        if (devices[device_idx].bPoseIsValid) {
-            if (pVRSystem->GetTrackedDeviceClass(device_idx) == vr::TrackedDeviceClass_HMD) {
-
-                vr::HmdMatrix34_t pose = devices[device_idx].mDeviceToAbsoluteTracking;
-
-                math::mat4 orientation(
-                    pose.m[0][0], pose.m[1][0], pose.m[2][0], 0.0,
-                    pose.m[0][1], pose.m[1][1], pose.m[2][1], 0.0,
-                    pose.m[0][2], pose.m[1][2], pose.m[2][2], 0.0,
-                    pose.m[0][3], pose.m[1][3], pose.m[2][3], 1.0
-                );
-                
-                hmd_sensor_orientation_ = orientation;
-                break;
-            }
-        }
-    }
-
 }
 
 void ViveWindow::finish_frame() {
@@ -276,6 +271,9 @@ void ViveWindow::finish_frame() {
         vr::Texture_t rightEyeTexture{ (void*)right_tex_id_, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
         vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
     }
+
+    vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
+    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, 0.0f);
 
     GlfwWindow::finish_frame();
 }
