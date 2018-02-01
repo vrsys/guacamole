@@ -37,12 +37,64 @@
 
 //for the OpenVR members
 #include <openvr.h>
-#include <openvr_capi.h>
 
 
 namespace gua {
 
+struct TrackedDevice {
+    TrackedDevice() : state_(false), id_(-1), pose_() {};
+
+    void set_pose(vr::HmdMatrix34_t const& hmd_matrix_t_pose) {
+        pose_ = gua::math::mat4(
+            hmd_matrix_t_pose.m[0][0], hmd_matrix_t_pose.m[1][0], hmd_matrix_t_pose.m[2][0], 0.0,
+            hmd_matrix_t_pose.m[0][1], hmd_matrix_t_pose.m[1][1], hmd_matrix_t_pose.m[2][1], 0.0,
+            hmd_matrix_t_pose.m[0][2], hmd_matrix_t_pose.m[1][2], hmd_matrix_t_pose.m[2][2], 0.0,
+            hmd_matrix_t_pose.m[0][3], hmd_matrix_t_pose.m[1][3], hmd_matrix_t_pose.m[2][3], 1.0
+        );
+    };
+    bool state_;
+    short id_;
+    gua::math::mat4 pose_;
+};
+
+struct ControllerDevice : TrackedDevice {
+    
+    ControllerDevice() : TrackedDevice(),
+        active_button_states_(0x0), pad_x_value_(0.0f), pad_y_value_(0.0f), trigger_value_(0.0f) {}
+    
+    uint32_t active_button_states_;
+    float pad_x_value_;
+    float pad_y_value_;
+    float trigger_value_;
+
+};
+
 class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
+
+ public: // typedefs, enums
+
+  enum DeviceID {
+    HMD = 1 << 0,
+    CONTROLLER_0 = 1 << 1,
+    CONTROLLER_1 = 1 << 2,
+    TRACKING_REFERENCE_0 = 1 << 3,
+    TRACKING_REFERENCE_1 = 1 << 4
+  };
+
+  enum ControllerBinaryStates {
+    APP_MENU_BUTTON = 1 << 0,
+    GRIP_BUTTON = 1 << 1,
+    PAD_TOUCH = 1 << 2,
+    PAD_BUTTON = 1 << 3,
+    TRIGGER_BUTTON = 1 << 4
+  };
+
+  enum ControllerContinuousStates {
+    PAD_X_VALUE = 1 << 0,
+    PAD_Y_VALUE = 1 << 1,
+    TRIGGER_VALUE = 1 << 2
+  };
+
  public:
 
     ViveWindow(std::string const& display = ":0.0");
@@ -50,12 +102,19 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
     float const get_IPD() const;
     math::vec2ui get_window_resolution() const;
-    math::mat4 const get_hmd_sensor_orientation() const;
+    bool get_controller_button_active(DeviceID device_id, ControllerBinaryStates controller_binary_state);
+    float get_controller_value(DeviceID device_id, ControllerContinuousStates controller_continuous_state);
+    math::mat4 get_sensor_orientation(DeviceID device_id = DeviceID::HMD) const;
 
     math::vec2 const& get_left_screen_size() const;
     math::vec2 const& get_right_screen_size() const;
     math::vec3 const& get_left_screen_translation() const;
     math::vec3 const& get_right_screen_translation() const;
+
+    //needs to be called in order to update controller buttons and senor orientations
+    void update_sensor_orientations();
+
+
 
     void display(scm::gl::texture_2d_ptr const& texture, bool is_left) override;
 
@@ -70,7 +129,7 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
     void calculate_viewing_setup();
 
     std::string display_name_;
-    vr::IVRSystem *pVRSystem = nullptr;
+    vr::IVRSystem *p_vr_system_ = nullptr;
 
     math::vec2 screen_size_[2];
     math::vec3 screen_translation_[2];
@@ -84,6 +143,14 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
 
     scm::gl::texture_2d_ptr left_texture_ = nullptr;
     scm::gl::texture_2d_ptr right_texture_ = nullptr;
+
+    /*tracked devices associated with the ViveWindow*/
+    TrackedDevice                            hmd_device_;
+    std::vector<ControllerDevice> known_controller_devices_;
+    std::vector<TrackedDevice>    known_tracking_reference_devices_;
+
+    unsigned int number_of_tracked_devices_ = 0;
+    std::vector<vr::TrackedDevicePose_t> tracked_devices_handles_;
 };
 
 }
