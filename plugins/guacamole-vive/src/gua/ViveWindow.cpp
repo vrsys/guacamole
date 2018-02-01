@@ -313,14 +313,14 @@ void ViveWindow::update_sensor_orientations() {
 bool ViveWindow::get_controller_button_active(DeviceID device_id, ControllerBinaryStates controller_binary_state) {
   if(DeviceID::CONTROLLER_0 != device_id && 
      DeviceID::CONTROLLER_1 != device_id ) {
-    gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
+    //gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
     return false;
   }
 
   unsigned int requested_device_idx = (device_id == DeviceID::CONTROLLER_0) ? 0 : 1;
 
   if(requested_device_idx >= known_controller_devices_.size()) {
-    gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
+    //gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
     return false;
   }
 
@@ -330,14 +330,14 @@ bool ViveWindow::get_controller_button_active(DeviceID device_id, ControllerBina
 float ViveWindow::get_controller_value(DeviceID device_id, ControllerContinuousStates controller_continuous_state) {
   if(DeviceID::CONTROLLER_0 != device_id && 
      DeviceID::CONTROLLER_1 != device_id ) {
-    gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
+    //gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
     return false;
   }
 
   unsigned int requested_device_idx = (device_id == DeviceID::CONTROLLER_0) ? 0 : 1;
 
   if(requested_device_idx >= known_controller_devices_.size()) {
-    gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
+    //gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
     return false;
   }
 

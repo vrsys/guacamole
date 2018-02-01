@@ -168,6 +168,8 @@ int main(int argc, char** argv) {
     gua::Timer timer;
     timer.start();
 
+
+    float latest_trigger_value = 0.0f;
     //////////////////////////////////////////////////////////////////////////////////////
     // mainloop
     //////////////////////////////////////////////////////////////////////////////////////
@@ -185,11 +187,18 @@ int main(int argc, char** argv) {
         camera->set_transform(window->get_sensor_orientation());
 
 
-        //print button values
-        if(window->get_controller_button_active(gua::ViveWindow::DeviceID::CONTROLLER_0, gua::ViveWindow::ControllerBinaryStates::APP_MENU_BUTTON)) {
-            std::cout << "Controller 0 Button Pressed: APP_MENU_BUTTON\n";
+        //for the retrieval of one of the binary states use get_controller_button_active
+        if(window->get_controller_button_active(gua::ViveWindow::DeviceID::CONTROLLER_0, gua::ViveWindow::ControllerBinaryStates::TRIGGER_BUTTON)) {
+            std::cout << "Controller 0 Pressed: TRIGGER_BUTTON\n";
         }
 
+        //for the retrieval of one of the continuous states PAD_X_VALUE, PAD_Y_VALUE, TRIGGER_VALUE use get_controller_value
+        float trigger_value = window->get_controller_value(gua::ViveWindow::DeviceID::CONTROLLER_0, gua::ViveWindow::ControllerContinuousStates::TRIGGER_VALUE);
+        
+        if(trigger_value != latest_trigger_value) {
+            latest_trigger_value = trigger_value;
+            std::cout << "Controller 0 Trigger Value Changed: " << trigger_value << "\n";
+        }
 
         // window update
         if (window->should_close()) {
@@ -201,9 +210,10 @@ int main(int argc, char** argv) {
         }
 
         if (ctr++ % 150 == 0 && pipeline_show_fps) {
-            std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() << " ms, fps: "
-                << window->get_rendering_fps() << ", app fps: "
-                << renderer.get_application_fps() << std::endl;
+            std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() 
+                      << " ms, fps: "
+                      << window->get_rendering_fps() << ", app fps: "
+                      << renderer.get_application_fps() << std::endl;
         }
     });
 
