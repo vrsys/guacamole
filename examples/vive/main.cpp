@@ -65,25 +65,35 @@ int main(int argc, char** argv) {
     // setup scene
     gua::SceneGraph graph("main_scenegraph");
 
-    gua::TriMeshLoader loader;
+    gua::TriMeshLoader trimesh_loader;
 
-    auto monkey(loader.create_geometry_from_file(
-        "monkey",
-        "./data/objects/monkey.obj", gua::TriMeshLoader::LOAD_MATERIALS
-    ));
+    gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
 
-    auto casted(std::dynamic_pointer_cast<gua::node::TriMeshNode>(monkey));
-    casted->get_material()->set_uniform("Emissivity", 0.2f);
-    casted->get_material()->set_uniform("Color", gua::math::vec4(1.0, 1.0, 1.0, 1));
+    auto pbr_mat(gua::MaterialShaderDatabase::instance()
+                 ->lookup("gua_default_material")
+                 ->make_new_material());
+    pbr_mat->set_uniform("Color", chromium);
+    pbr_mat->set_uniform("Roughness", 0.2f);
+    pbr_mat->set_uniform("Metalness", 1.0f);
 
-    monkey->scale(0.2);
-    monkey->translate(0.0, 1.75, 0.0);
+    auto monkey(trimesh_loader.create_geometry_from_file(
+      "monkey", "data/objects/monkey.obj",
+      pbr_mat,
+      gua::TriMeshLoader::NORMALIZE_POSITION |
+      gua::TriMeshLoader::NORMALIZE_SCALE) );
 
-
+    monkey->scale(0.5f, 0.5f, 0.5f);
+    monkey->translate(0.0f, 1.0f, 0.0f);
     auto root = graph.add_node("/", monkey);
 
     auto nav = graph.add_node<gua::node::TransformNode>("/", "nav");
     nav->translate(0.0, user_height, 0.0);
+
+    auto light2 = graph.add_node<gua::node::LightNode>("/nav", "light2");
+    light2->data.set_type(gua::node::LightNode::Type::POINT);
+    light2->data.brightness = 150.0f;
+    light2->scale(12.f);
+    light2->translate(-3.f, 5.f, 5.f);
 
     // setup rendering pipeline and window
 #if WIN32
@@ -106,6 +116,19 @@ int main(int argc, char** argv) {
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
     resolve_pass->tone_mapping_exposure(1.0f);
 
+
+#if WIN32
+    //TODO: ADD PATHS FOR VIVE MODELS UNDER WINDOWS
+#else
+    auto vive_controller_0(trimesh_loader.create_geometry_from_file("vive_controller_0", "/opt/3d_models/vive/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_controller_1(trimesh_loader.create_geometry_from_file("vive_controller_1", "/opt/3d_models/vive/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_0(trimesh_loader.create_geometry_from_file("vive_lighthouse_0", "/opt/3d_models/vive/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_1(trimesh_loader.create_geometry_from_file("vive_lighthouse_1", "/opt/3d_models/vive/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+#endif
+    graph.add_node("/nav", vive_controller_0);
+    graph.add_node("/nav", vive_controller_1);
+    graph.add_node("/nav", vive_lighthouse_0);
+    graph.add_node("/nav", vive_lighthouse_1);
     // setup camera
     auto camera = graph.add_node<gua::node::CameraNode>("/nav", "cam");
 
@@ -154,7 +177,19 @@ int main(int argc, char** argv) {
         timer.reset();
 
         // tracking update
-        camera->set_transform(window->get_hmd_sensor_orientation());
+        window->update_sensor_orientations();
+        vive_controller_0->set_transform(window->get_sensor_orientation(gua::ViveWindow::DeviceID::CONTROLLER_0));
+        vive_controller_1->set_transform(window->get_sensor_orientation(gua::ViveWindow::DeviceID::CONTROLLER_1));
+        vive_lighthouse_0->set_transform(window->get_sensor_orientation(gua::ViveWindow::DeviceID::TRACKING_REFERENCE_0));
+        vive_lighthouse_1->set_transform(window->get_sensor_orientation(gua::ViveWindow::DeviceID::TRACKING_REFERENCE_1));
+        camera->set_transform(window->get_sensor_orientation());
+
+
+        //print button values
+        if(window->get_controller_button_active(gua::ViveWindow::DeviceID::CONTROLLER_0, gua::ViveWindow::ControllerBinaryStates::APP_MENU_BUTTON)) {
+            std::cout << "Controller 0 Button Pressed: APP_MENU_BUTTON\n";
+        }
+
 
         // window update
         if (window->should_close()) {
