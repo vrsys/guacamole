@@ -67,12 +67,12 @@ int main(int argc, char** argv) {
 
     gua::TriMeshLoader trimesh_loader;
 
-    gua::math::vec4 chromium(0.550, 0.556, 0.554, 1);
+    gua::math::vec4 red(1.0, 0.0, 0.0, 1);
 
     auto pbr_mat(gua::MaterialShaderDatabase::instance()
                  ->lookup("gua_default_material")
                  ->make_new_material());
-    pbr_mat->set_uniform("Color", chromium);
+    pbr_mat->set_uniform("Color", red);
     pbr_mat->set_uniform("Roughness", 0.2f);
     pbr_mat->set_uniform("Metalness", 1.0f);
 
@@ -116,15 +116,11 @@ int main(int argc, char** argv) {
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
     resolve_pass->tone_mapping_exposure(1.0f);
 
+    auto vive_controller_0(trimesh_loader.create_geometry_from_file("vive_controller_0", "./data/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_controller_1(trimesh_loader.create_geometry_from_file("vive_controller_1", "./data/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_0(trimesh_loader.create_geometry_from_file("vive_lighthouse_0", "./data/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_1(trimesh_loader.create_geometry_from_file("vive_lighthouse_1", "./data/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
 
-#if WIN32
-    //TODO: ADD PATHS FOR VIVE MODELS UNDER WINDOWS
-#else
-    auto vive_controller_0(trimesh_loader.create_geometry_from_file("vive_controller_0", "/opt/3d_models/vive/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_controller_1(trimesh_loader.create_geometry_from_file("vive_controller_1", "/opt/3d_models/vive/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_lighthouse_0(trimesh_loader.create_geometry_from_file("vive_lighthouse_0", "/opt/3d_models/vive/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_lighthouse_1(trimesh_loader.create_geometry_from_file("vive_lighthouse_1", "/opt/3d_models/vive/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-#endif
     graph.add_node("/nav", vive_controller_0);
     graph.add_node("/nav", vive_controller_1);
     graph.add_node("/nav", vive_lighthouse_0);
