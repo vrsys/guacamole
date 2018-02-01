@@ -116,10 +116,10 @@ int main(int argc, char** argv) {
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
     resolve_pass->tone_mapping_exposure(1.0f);
 
-    auto vive_controller_0(trimesh_loader.create_geometry_from_file("vive_controller_0", "./data/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_controller_1(trimesh_loader.create_geometry_from_file("vive_controller_1", "./data/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_lighthouse_0(trimesh_loader.create_geometry_from_file("vive_lighthouse_0", "./data/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
-    auto vive_lighthouse_1(trimesh_loader.create_geometry_from_file("vive_lighthouse_1", "./data/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_controller_0(trimesh_loader.create_geometry_from_file("vive_controller_0", "./data/objects/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_controller_1(trimesh_loader.create_geometry_from_file("vive_controller_1", "./data/objects/vive_controller/vive_controller.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_0(trimesh_loader.create_geometry_from_file("vive_lighthouse_0", "./data/objects/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
+    auto vive_lighthouse_1(trimesh_loader.create_geometry_from_file("vive_lighthouse_1", "./data/objects/vive_lighthouse/vive_lighthouse.obj",  gua::TriMeshLoader::LOAD_MATERIALS));
 
     graph.add_node("/nav", vive_controller_0);
     graph.add_node("/nav", vive_controller_1);
