@@ -6,6 +6,7 @@
 find_path(FBX_INCLUDE_DIR fbxsdk.h
             HINTS 
             ${GLOBAL_EXT_DIR}/fbx2016/include
+            ${GLOBAL_EXT_DIR}/fbx2017/include
             ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
             PATHS
              /usr/include/fbx20151
@@ -34,7 +35,8 @@ find_library(FBX_LIBRARY
 find_library(FBX_LIBRARY_DEBUG
             NAMES ${FBX_LIBRARY_NAME}
             HINTS 
-            ${GLOBAL_EXT_DIR}/fbx2016/lib
+	    ${GLOBAL_EXT_DIR}/fbx2016/lib
+            ${GLOBAL_EXT_DIR}/fbx2017/lib
             PATHS 
              /usr/lib
              /opt/project_animation/fbx20151/lib/gcc4/x64/debug
