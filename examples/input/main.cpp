@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      renderer.queue_draw({&graph});
+      //renderer.queue_draw({&graph});
     }
   });
 
