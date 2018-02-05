@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
     time += frame_time;
     timer.reset();
 
-    camera->set_transform(window->get_oculus_sensor_orientation());
+    camera->set_transform(window->get_hmd_sensor_orientation());
 
     if (pipeline_use_ssao != camera->get_pipeline_description()->get_resolve_pass()->ssao_enable()) {
       camera->get_pipeline_description()->get_resolve_pass()->ssao_intensity(pipeline_ssao_intensity);

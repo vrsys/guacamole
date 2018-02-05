@@ -38,6 +38,7 @@ class SceneGraph;
 
 namespace node {
   struct SerializedCameraNode;
+  class CameraNode;
 }
 
 /**
@@ -79,18 +80,23 @@ class GUA_DLL Renderer {
 
   void stop();
 
-  inline float get_application_fps() { 
-    return application_fps_.fps; 
+  inline float get_application_fps() {
+    return application_fps_.fps;
   }
 
  private:
+
+  void send_renderclient(std::string const& window,
+                         std::shared_ptr<const Renderer::SceneGraphs> sgs,
+                         node::CameraNode* cam,
+                         bool alternate_frame_rendering);
 
   struct Item {
     Item() = default;
     Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
           std::shared_ptr<const SceneGraphs> const& sgs,
           bool afr = false )
-          : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr) 
+          : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr)
     {}
 
     std::shared_ptr<node::SerializedCameraNode> serialized_cam;
@@ -101,7 +107,7 @@ class GUA_DLL Renderer {
   using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
   using Renderclient = std::pair<Mailbox, std::thread>;
 
-  static void renderclient(Mailbox in);
+  static void renderclient(Mailbox in, std::string name);
 
   std::map<std::string, Renderclient> render_clients_;
 

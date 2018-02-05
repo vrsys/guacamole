@@ -134,6 +134,10 @@ class GUA_DLL Node {
   template<typename T>
   std::shared_ptr<T> add_child(std::shared_ptr<T> const& new_node) {
 
+    if (new_node->parent_ != nullptr) {
+      new_node->parent_->remove_child(new_node);
+    }
+
     children_.push_back(new_node);
     new_node->parent_ = this;
 

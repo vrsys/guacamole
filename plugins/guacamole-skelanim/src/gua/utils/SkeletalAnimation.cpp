@@ -1,10 +1,10 @@
 // class header
-#include <gua/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
 
 // guacamole headers
-#include <gua/utils/SkeletalPose.hpp>
-#include <gua/utils/BonePose.hpp>
-#include <gua/utils/BoneAnimation.hpp>
+#include <gua/skelanim/utils/SkeletalPose.hpp>
+#include <gua/skelanim/utils/BonePose.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
 
 //external headers
 #ifdef GUACAMOLE_FBX

@@ -28,13 +28,23 @@
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ABuffer.hpp>
 
 #include <gua/databases/Resources.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
 #include <scm/core/math/math.h>
+
+namespace {
+
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = 0;
+  if (tex) {
+    handle = tex->native_handle();
+  }
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
 
 namespace gua {
 
@@ -43,6 +53,8 @@ namespace gua {
 TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
   : rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK))
   , rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE))
+  , rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK))
+  , rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE))
   , program_stages_()
   , programs_()
   , global_substitution_map_(smap)
@@ -140,8 +152,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
           current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
           // hack
-          current_shader->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx),
-                                      "gua_gbuffer_depth");
+          current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
+                                        "gua_gbuffer_depth");
         }
       }
 
@@ -162,7 +174,22 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
         }
 
-        current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+        bool show_backfaces   = tri_mesh_node->get_material()->get_show_back_faces();
+        bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
+
+        if (show_backfaces) {
+          if (render_wireframe) {
+            current_rasterizer_state = rs_wireframe_cull_none_;
+          } else {
+            current_rasterizer_state = rs_cull_none_;
+          }
+        } else {
+          if (render_wireframe) {
+            current_rasterizer_state = rs_wireframe_cull_back_;
+          } else {
+            current_rasterizer_state = rs_cull_back_;
+          }
+        }
 
         if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
           ctx.render_context->set_rasterizer_state(current_rasterizer_state);

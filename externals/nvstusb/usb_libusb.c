@@ -125,6 +125,7 @@ nvstusb_usb_load_firmware(
     uint16_t pos    = (lenPos[2]<<8) | lenPos[3];
   
     if (fread(buf, length, 1, fw) != 1) { 
+      fclose(fw);
       perror(filename); 
       return LIBUSB_ERROR_OTHER; 
     }
@@ -139,6 +140,7 @@ nvstusb_usb_load_firmware(
     );
     if (res < 0) {
       fprintf(stderr, "nvstusb: Error uploading firmware... Error %d: %s\n", res, libusb_error_to_string(res));
+      fclose(fw);
       return res;
     }
   }

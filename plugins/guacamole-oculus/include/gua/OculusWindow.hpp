@@ -23,19 +23,19 @@
 #define GUA_OCULUS_WINDOW_HPP
 
 #if defined (_MSC_VER)
-  #if defined (GUA_OCULUS_LIBRARY)
-    #define GUA_OCULUS_DLL __declspec( dllexport )
-  #else
+    #if defined (GUA_OCULUS_LIBRARY)
+        #define GUA_OCULUS_DLL __declspec( dllexport )
+    #else
 #define GUA_OCULUS_DLL __declspec( dllimport )
-  #endif
+    #endif
 #else
-  #define GUA_OCULUS_DLL
+    #define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
 #include <gua/renderer/GlfwWindow.hpp>
 
-//for the OVR members
+//for the Oculus SDK members
 #if defined (_WIN32)
     #include <OVR_CAPI.h>
     #include <Extras/OVR_Math.h>
@@ -51,54 +51,49 @@ namespace gua {
 class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
  public:
 
-  OculusWindow(std::string const& display);
-  virtual ~OculusWindow();
+    OculusWindow(std::string const& display);
+    virtual ~OculusWindow();
 
-  void open() override;
-  void init_context() override;
+    float const get_IPD() const;
+    math::vec2ui get_window_resolution() const;
+    math::mat4 const& get_hmd_sensor_orientation() const;
 
-  void recenter();
+    math::vec2 const& get_left_screen_size() const;
+    math::vec2 const& get_right_screen_size() const;
+    math::vec3 const& get_left_screen_translation() const;
+    math::vec3 const& get_right_screen_translation() const;
 
-  // virtual
-  void display(std::shared_ptr<Texture> const& texture, bool is_left);
+    void display(std::shared_ptr<Texture> const& texture, bool is_left);
 
-  math::vec2 const get_left_screen_size() const;
-  math::vec2 const get_right_screen_size() const;
-  math::vec3 const get_left_screen_translation() const;
-  math::vec3 const get_right_screen_translation() const;
-  float const get_IPD() const;
-  
-  math::vec2ui get_window_resolution() const;
-  math::mat4 get_oculus_sensor_orientation() const;
+    void open() override;
+    void init_context() override;
+    void start_frame() override;
+    void finish_frame() override;
 
-  void start_frame() override;
-  void finish_frame() override;
+    void recenter();
 
-  private:
+ private:
 
-    void initialize_oculus_environment();
-    void shutdown_oculus_environment();
+    void initialize_hmd_environment();
     void calculate_viewing_setup();
 
     std::string display_name_;
+    math::mat4 hmd_sensor_orientation_;
 
     math::vec2 screen_size_[2];
     math::vec3 screen_translation_[2];
 
-    math::mat4 oculus_sensor_orientation_;
+    unsigned int blit_fbo_read_;
+    unsigned int blit_fbo_write_;
 
-    ovrTextureSwapChain        texture_swap_chain_ = 0;
-    ovrTextureSwapChainDesc    texture_swap_chain_desc_ = {};
-                      
-    ovrLayerEyeFov             color_layer_;
+    ovrTextureSwapChain texture_swap_chain_ = 0;
+    ovrTextureSwapChainDesc texture_swap_chain_desc_ = {};
 
-    unsigned int               blit_fbo_read_;
-    unsigned int               blit_fbo_write_;
+    ovrLayerEyeFov color_layer_;
 
-    ovrHmdDesc                 hmd_desc_;
-    ovrSession                 hmd_session_;
-    unsigned                   framecount_ = 0;
-
+    ovrHmdDesc hmd_desc_;
+    ovrSession hmd_session_;
+    unsigned framecount_ = 0;
 
 };
 

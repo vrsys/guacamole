@@ -242,8 +242,7 @@ void WindowBase::finish_frame() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
-
+void WindowBase::display(scm::gl::texture_2d_ptr const& center_texture) {
   display(center_texture, true);
 
   if (config.get_stereo_mode() != StereoMode::MONO) {
@@ -254,10 +253,11 @@ void WindowBase::display(std::shared_ptr<Texture> const& center_texture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture> const& texture,
+void WindowBase::display(scm::gl::texture_2d_ptr const& texture,
                          bool is_left) {
 
   switch (config.get_stereo_mode()) {
+    case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
     case StereoMode::SIDE_BY_SIDE:
     #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
@@ -307,7 +307,7 @@ RenderContext* WindowBase::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(std::shared_ptr<Texture> const& texture,
+void WindowBase::display(scm::gl::texture_2d_ptr const& texture,
                      math::vec2ui const& size,
                      math::vec2ui const& position,
                      TextureDisplayMode mode,
@@ -321,7 +321,9 @@ void WindowBase::display(std::shared_ptr<Texture> const& texture,
   }
 
   fullscreen_shader_.use(ctx_);
-  fullscreen_shader_.set_uniform(ctx_, texture->get_handle(ctx_), "sampler");
+  uint64_t h = texture->native_handle();
+  math::vec2ui handle(h & 0x00000000ffffffff, h & 0xffffffff00000000);
+  fullscreen_shader_.set_uniform(ctx_, handle, "sampler");
 
   if (is_left) {
     if (warpRL_) fullscreen_shader_.set_uniform(ctx_, warpRL_->get_handle(ctx_), "warpR");

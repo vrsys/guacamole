@@ -6,29 +6,17 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-LIST(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
-
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}/include
-                     ${AWESOMIUM_INCLUDE_DIR}
-                     ${GUACAMOLE_GUI_INCLUDE_DIR}
-)
-
-ADD_EXECUTABLE( ${_EXE_NAME}
+add_executable( ${_EXE_NAME}
     ${EXAMPLE_SRC}
 )
 
-ADD_DEPENDENCIES(${_EXE_NAME} guacamole-gui)
-
-LIST(APPEND LIBS guacamole-gui guacamole udev)
+LIST(APPEND LIBS guacamole-gui udev)
 
 IF (MSVC)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
+  target_link_libraries( ${_EXE_NAME} ${LIBS}
                          debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
 ELSEIF (UNIX)
-  TARGET_LINK_LIBRARIES( ${_EXE_NAME} ${LIBS}
+  target_link_libraries( ${_EXE_NAME} ${LIBS}
                          general ${ASSIMP_LIBRARIES}
                        )
 ENDIF (MSVC)

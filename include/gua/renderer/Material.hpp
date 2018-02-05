@@ -41,6 +41,8 @@ class GUA_DLL Material {
     std::string const& get_shader_name() const;
     void set_shader_name(std::string const&);
 
+    void rename_existing_shader(std::string const& name);
+
     MaterialShader* get_shader() const;
 
     template <typename T>
@@ -78,6 +80,15 @@ class GUA_DLL Material {
 
     bool get_show_back_faces() const {
       return show_back_faces_;
+    }
+
+    Material& set_render_wireframe(bool value) {
+      render_wireframe_ = value;
+      return *this;
+    }
+
+    bool get_render_wireframe() const {
+      return render_wireframe_;
     }
 
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
@@ -134,6 +145,7 @@ class GUA_DLL Material {
     mutable MaterialShader* shader_cache_;
     std::map<std::string, ViewDependentUniform> uniforms_;
     bool show_back_faces_;
+    bool render_wireframe_;
 
     mutable std::mutex mutex_;
 };

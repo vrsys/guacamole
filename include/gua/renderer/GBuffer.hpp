@@ -46,13 +46,15 @@ class GUA_DLL GBuffer : public RenderTarget {
   void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
   void remove_buffers(RenderContext const& ctx) override;
 
-  std::shared_ptr<Texture2D> const& get_color_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_pbr_buffer()    const;
-  std::shared_ptr<Texture2D> const& get_normal_buffer() const;
-  std::shared_ptr<Texture2D> const& get_flags_buffer()  const;
-  std::shared_ptr<Texture2D> const& get_depth_buffer()  const override;
+  inline scm::gl::texture_2d_ptr const& get_color_buffer() const { return color_buffer_read_; }
+  inline scm::gl::texture_2d_ptr const& get_pbr_buffer() const { return pbr_buffer_; }
+  inline scm::gl::texture_2d_ptr const& get_normal_buffer() const { return normal_buffer_; }
+  inline scm::gl::texture_2d_ptr const& get_flags_buffer() const { return flags_buffer_; }
+  inline scm::gl::texture_2d_ptr const& get_depth_buffer()  const override { return depth_buffer_; }
 
   inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
+  inline scm::gl::sampler_state_desc const& get_sampler_state_desc() const { return sampler_state_desc_; }
+  inline scm::gl::sampler_state_ptr const& get_sampler_state() const { return sampler_state_; }
 
  private:
   ABuffer abuffer_;
@@ -63,12 +65,15 @@ class GUA_DLL GBuffer : public RenderTarget {
   scm::gl::frame_buffer_ptr fbo_read_only_color_;
   scm::gl::frame_buffer_ptr fbo_write_only_color_;
 
-  std::shared_ptr<Texture2D> color_buffer_read_;
-  std::shared_ptr<Texture2D> color_buffer_write_;
-  std::shared_ptr<Texture2D> pbr_buffer_;
-  std::shared_ptr<Texture2D> normal_buffer_;
-  std::shared_ptr<Texture2D> flags_buffer_;
-  std::shared_ptr<Texture2D> depth_buffer_;
+  scm::gl::sampler_state_desc sampler_state_desc_;
+  scm::gl::sampler_state_ptr sampler_state_;
+
+  scm::gl::texture_2d_ptr color_buffer_read_;
+  scm::gl::texture_2d_ptr color_buffer_write_;
+  scm::gl::texture_2d_ptr pbr_buffer_;
+  scm::gl::texture_2d_ptr normal_buffer_;
+  scm::gl::texture_2d_ptr flags_buffer_;
+  scm::gl::texture_2d_ptr depth_buffer_;
 };
 
 }

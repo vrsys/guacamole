@@ -23,7 +23,6 @@
 #include <gua/renderer/FullscreenPass.hpp>
 
 #include <gua/config.hpp>
-#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 #include <gua/databases/GeometryDatabase.hpp>

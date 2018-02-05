@@ -64,7 +64,7 @@ namespace gua {
 
 
   scm::gl::context_all_guard context_guard(ctx.render_context);
-  auto& gua_depth_buffer = target.get_depth_buffer()->get_buffer(ctx);
+  auto& gua_depth_buffer = target.get_depth_buffer();
 
   _check_for_shader_program();
 

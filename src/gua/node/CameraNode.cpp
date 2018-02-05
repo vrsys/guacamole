@@ -26,6 +26,7 @@
 #include <gua/scenegraph.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/databases/TextureDatabase.hpp>
 
 namespace gua {
 namespace node {
@@ -164,6 +165,24 @@ void CameraNode::set_scenegraph(SceneGraph* scenegraph) {
     scenegraph_->add_camera_node(this);
   }
 
+}
+
+void CameraNode::set_pre_render_cameras(std::vector<std::shared_ptr<CameraNode>> const& cams) {
+  for (auto const& cam : cams) {
+    auto tex_name = cam->config.get_output_texture_name();
+    if (tex_name != "") {
+      // insert dummy textures
+      math::vec2ui size(std::max(1U, cam->config.resolution().x),
+                        std::max(1U, cam->config.resolution().y));
+      scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
+      auto color = std::make_shared<Texture2D>(size.x, size.y, scm::gl::FORMAT_RGB_32F, 1, state);
+      TextureDatabase::instance()->add_if_not_element(tex_name, color);
+
+      auto depth = std::make_shared<Texture2D>(size.x, size.y, scm::gl::FORMAT_D24_S8,  1, state);
+      TextureDatabase::instance()->add_if_not_element(tex_name + "_depth", depth);
+    }
+  }
+  pre_render_cameras_ = cams;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

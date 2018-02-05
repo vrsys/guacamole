@@ -21,9 +21,6 @@
 
 // class header
 #include <gua/renderer/SSAAPass.hpp>
-
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 

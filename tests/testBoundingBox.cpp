@@ -27,7 +27,7 @@ vec3 operator*(float s, vec3 const& v) {
   return vec3(s * v[0], s * v[1], s * v[2]);
 }
 
-vec3 operator+(vec3 const u, vec3 const& v) {
+vec3 operator+(vec3 const& u, vec3 const& v) {
   return vec3(u[0] + v[0], u[1] + v[1], u[2] + v[2]);
 }
 }

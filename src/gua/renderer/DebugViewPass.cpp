@@ -22,8 +22,6 @@
 // class header
 #include <gua/renderer/DebugViewPass.hpp>
 
-#include <gua/renderer/GBuffer.hpp>
-#include <gua/renderer/ABuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>

@@ -20,19 +20,20 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/SkeletalAnimationLoader.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
 
 // guacamole headers
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
-#include <gua/utils/SkeletalAnimation.hpp>
-#include <gua/utils/BoneAnimation.hpp>
-#include <gua/utils/Bone.hpp>
-#include <gua/node/SkeletalAnimationNode.hpp>
+#include <gua/skelanim/utils/SkeletalAnimation.hpp>
+#include <gua/skelanim/utils/BoneAnimation.hpp>
+#include <gua/skelanim/utils/Bone.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
+#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
 #include <gua/renderer/Material.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 
@@ -47,6 +48,13 @@
 namespace gua {
 
 /////////////////////////////////////////////////////////////////////////////
+bool is_fbx(std::string const& file_name) {
+  auto point_pos(file_name.find_last_of("."));
+
+  return file_name.substr(point_pos + 1) == "fbx"
+      || file_name.substr(point_pos + 1) == "FBX";
+}
+
 
 SkeletalAnimationLoader::SkeletalAnimationLoader() {}
 
@@ -115,9 +123,7 @@ std::vector<SkeletalAnimation> SkeletalAnimationLoader::load_animation(
   }
 
 #ifdef GUACAMOLE_FBX
-  auto point_pos(file_name.find_last_of("."));
-  if (file_name.substr(point_pos + 1) == "fbx" ||
-      file_name.substr(point_pos + 1) == "FBX") {
+  if (is_fbx(file_name)) {
 
     //The first thing to do is to create the FBX Manager which is the object
     //allocator for almost all the classes in the SDK
@@ -268,7 +274,6 @@ SkeletalAnimationLoader::create_geometry_from_file(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-
 std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
     std::string const& file_name,
     std::string const& node_name,
@@ -278,10 +283,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
 
   if (file.is_valid()) {
 #ifdef GUACAMOLE_FBX
-    auto point_pos(file_name.find_last_of("."));
-
-    if (file_name.substr(point_pos + 1) == "fbx" ||
-        file_name.substr(point_pos + 1) == "FBX") {
+    if (is_fbx(file_name)) {
 
       //Create manager to hold resources
       FbxManager* sdk_manager = FbxManager::Create();
@@ -387,6 +389,83 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::load(
 }
 
 /////////////////////////////////////////////////////////////////////////////
+
+Skeleton SkeletalAnimationLoader::load_skeleton(
+    std::string const& file_name) {
+  Skeleton skeleton{};
+
+  if (!is_supported(file_name)) {
+    Logger::LOG_WARNING << "Unable to load " << file_name
+                        << ": Type is not supported!" << std::endl;
+    return skeleton;
+  }
+
+  TextFile file(file_name);
+
+  if (!file.is_valid()) {
+    Logger::LOG_WARNING << "Failed to load object \"" << file_name
+                        << "\": File does not exist!" << std::endl;
+    return skeleton;
+  }
+
+#ifdef GUACAMOLE_FBX
+  if (is_fbx(file_name)) {
+
+    //The first thing to do is to create the FBX Manager which is the object
+    //allocator for almost all the classes in the SDK
+    FbxManager* sdk_manager = FbxManager::Create();
+    if (!sdk_manager) {
+      Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+      assert(0);
+    }
+
+    //Create an IOSettings object. This object holds all import/export settings.
+    FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
+    ios->SetBoolProp(IMP_FBX_MATERIAL, false);
+    ios->SetBoolProp(IMP_FBX_TEXTURE, false);
+    ios->SetBoolProp(IMP_FBX_CHARACTER, false);
+    ios->SetBoolProp(IMP_FBX_CONSTRAINT, false);
+    ios->SetBoolProp(IMP_FBX_LINK, false);
+    ios->SetBoolProp(IMP_FBX_SHAPE, false);
+    ios->SetBoolProp(IMP_FBX_MODEL, false);
+    ios->SetBoolProp(IMP_FBX_GOBO, false);
+    ios->SetBoolProp(IMP_FBX_ANIMATION, true);
+    ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
+    sdk_manager->SetIOSettings(ios);
+
+    FbxScene* scene = load_fbx_file(sdk_manager, file_name);
+
+    skeleton = Skeleton{*scene};
+
+    sdk_manager->Destroy();
+  }
+  else
+#endif // GUACAMOLE_FBX
+  {
+    auto importer = std::make_shared<Assimp::Importer>();
+
+    unsigned ai_ignore_flags =
+        aiComponent_COLORS | aiComponent_LIGHTS | aiComponent_CAMERAS |
+        aiComponent_MATERIALS | aiComponent_MESHES;
+
+    importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
+    // removecomponent flag to enable removal of AI_CONFIG_PP_RVC_FLAGS
+    importer->ReadFile(file_name, 0);
+
+    aiScene const* scene(importer->GetScene());
+
+    std::string error = importer->GetErrorString();
+    if (!error.empty()) {
+      Logger::LOG_WARNING
+          << "SkeletalAnimationLoader::load_animation(): Importing failed, "
+          << error << std::endl;
+    }
+    skeleton = Skeleton{*scene}; 
+  }
+
+  return skeleton;
+}
+
 #ifdef GUACAMOLE_FBX
 std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     FbxScene* scene,
@@ -394,7 +473,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  std::shared_ptr<Bone> root = std::make_shared<Bone>(*scene);
+  Skeleton skeleton{*scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -417,7 +496,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
             desc.unique_key(),
             std::make_shared<SkinnedMeshResource>(
                 SkinnedMesh {
-          *mesh, *root, j
+          *mesh, skeleton, j
         },
                 flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -437,9 +516,9 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
       }
     }
   }
-
+  
   return std::make_shared<node::SkeletalAnimationNode>(
-      file_name + "_" + node_name, geometry_descriptions, materials, root);
+      file_name + "_" + node_name, geometry_descriptions, materials, skeleton);
 }
 #endif
 /////////////////////////////////////////////////////////////////////////////
@@ -450,7 +529,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
     std::string const& node_name,
     unsigned flags) {
 
-  auto root = std::make_shared<Bone>(*ai_scene);
+  Skeleton skeleton{*ai_scene};
 
   std::vector<std::string> geometry_descriptions {}
   ;
@@ -466,7 +545,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
         desc.unique_key(),
         std::make_shared<SkinnedMeshResource>(
             SkinnedMesh {
-      *ai_scene->mMeshes[i], *root
+      *ai_scene->mMeshes[i], skeleton
     },
             flags & SkeletalAnimationLoader::MAKE_PICKABLE));
 
@@ -485,7 +564,7 @@ std::shared_ptr<node::SkeletalAnimationNode> SkeletalAnimationLoader::get_node(
   }
 
   return std::make_shared<node::SkeletalAnimationNode>(
-      file_name + "_" + node_name, geometry_descriptions, materials, root);
+      file_name + "_" + node_name, geometry_descriptions, materials, skeleton);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

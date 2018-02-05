@@ -16,14 +16,7 @@ SOURCE_GROUP("resources" FILES ${GUA_VIDEO3D_SHADERS})
 
 SET(GUACAMOLE_VIDEO3D_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-video3d includes.")
 
-LINK_DIRECTORIES(${LIB_PATHS})
-
-INCLUDE_DIRECTORIES( ${INCLUDE_PATHS}
-                     ${GUACAMOLE_SOURCE_DIR}
-                     ${GUACAMOLE_VIDEO3D_INCLUDE_DIR}
-)
-
-ADD_LIBRARY( guacamole-video3d SHARED
+add_library( guacamole-video3d SHARED
     ${GUA_VIDEO3D_INC}
     ${GUA_VIDEO3D_SRC}
     ${GUA_VIDEO3D_DETAIL_INC}
@@ -31,9 +24,9 @@ ADD_LIBRARY( guacamole-video3d SHARED
     ${GUA_VIDEO3D_SHADERS}
 )
 
-target_link_libraries( guacamole-video3d guacamole)
+target_include_directories(guacamole-video3d PUBLIC ${GUACAMOLE_VIDEO3D_INCLUDE_DIR})
 
-ADD_DEPENDENCIES(guacamole-video3d guacamole)
+target_link_libraries( guacamole-video3d guacamole)
 
 IF (MSVC)
 	set_target_properties(guacamole-video3d PROPERTIES COMPILE_FLAGS "-D GUA_VIDEO3D_LIBRARY")

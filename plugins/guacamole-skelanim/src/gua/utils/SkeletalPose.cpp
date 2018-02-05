@@ -1,10 +1,10 @@
 // class header
-#include <gua/utils/SkeletalPose.hpp>
+#include <gua/skelanim/utils/SkeletalPose.hpp>
 
 // guacamole headers
-#include <gua/utils/BonePose.hpp>
+#include <gua/skelanim/utils/BonePose.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/utils/Bone.hpp>
+#include <gua/skelanim/utils/Skeleton.hpp>
 
 namespace gua {
 
@@ -12,8 +12,6 @@ const BonePose SkeletalPose::blank_pose = BonePose{};
 
 SkeletalPose::SkeletalPose() : transforms {}
 {}
-
-SkeletalPose::~SkeletalPose() {}
 
 bool SkeletalPose::contains(std::string const& name) const {
   return transforms.find(name) != transforms.end();
@@ -82,13 +80,14 @@ SkeletalPose SkeletalPose::operator*(float const factor) const {
 }
 
 void SkeletalPose::partial_replace(SkeletalPose const& pose2,
-                                   std::shared_ptr<Bone> const& pNode) {
-  if (pose2.contains(pNode->name)) {
-    set_transform(pNode->name, pose2.get_transform(pNode->name));
+                                   Skeleton const& skeleton,
+                                   unsigned bone) {
+  if (pose2.contains(skeleton.get(bone).name)) {
+    set_transform(skeleton.get(bone).name, pose2.get_transform(skeleton.get(bone).name));
   }
 
-  for (std::shared_ptr<Bone>& child : pNode->children) {
-    partial_replace(pose2, child);
+  for (auto const& child : skeleton.get(bone).children) {
+    partial_replace(pose2, skeleton, child);
   }
 }
 
