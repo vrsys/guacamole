@@ -37,47 +37,52 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution):
   fbo_read_(nullptr),
   fbo_write_(nullptr),
   fbo_read_only_color_(nullptr),
-  fbo_write_only_color_(nullptr) {
-
-#if 0
-  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST,
-    scm::gl::WRAP_MIRRORED_REPEAT,
-    scm::gl::WRAP_MIRRORED_REPEAT);
-#else
+  fbo_write_only_color_(nullptr),
+  sampler_state_desc_(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT)
   // linear filtering, only necessary for SSAA 3.11
-  scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
-    scm::gl::WRAP_MIRRORED_REPEAT,
-    scm::gl::WRAP_MIRRORED_REPEAT);
-#endif
+  //sampler_state_desc_(scm::gl::FILTER_MIN_MAG_NEAREST,
+  //  scm::gl::WRAP_MIRRORED_REPEAT,
+  //  scm::gl::WRAP_MIRRORED_REPEAT)
+{
 
-  color_buffer_read_  = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 1, state);
-  color_buffer_write_ = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_32F, 1, state);
-  pbr_buffer_         = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_8,   1, state);
-  normal_buffer_      = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_RGB_16,  1, state);
-  flags_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_R_8UI,   1, state);
-  depth_buffer_       = std::make_shared<Texture2D>(resolution.x, resolution.y, scm::gl::FORMAT_D24_S8,  1, state);
+  sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);
+
+  color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_32F, 1);
+  ctx.render_context->make_resident(color_buffer_read_, sampler_state_);
+  color_buffer_write_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_32F, 1);
+  ctx.render_context->make_resident(color_buffer_write_, sampler_state_);
+
+  pbr_buffer_         = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
+  ctx.render_context->make_resident(pbr_buffer_, sampler_state_);
+  normal_buffer_      = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_16, 1);
+  ctx.render_context->make_resident(normal_buffer_, sampler_state_);
+  flags_buffer_       = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_R_8UI, 1);
+  ctx.render_context->make_resident(flags_buffer_, sampler_state_);
+
+  depth_buffer_       = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_D24_S8,  1);
+  ctx.render_context->make_resident(depth_buffer_, sampler_state_);
 
   fbo_read_ = ctx.render_device->create_frame_buffer();
-  fbo_read_->attach_color_buffer(0, color_buffer_read_->get_buffer(ctx),0,0);
-  fbo_read_->attach_color_buffer(1, pbr_buffer_->get_buffer(ctx), 0, 0);
-  fbo_read_->attach_color_buffer(2, normal_buffer_->get_buffer(ctx),0,0);
-  fbo_read_->attach_color_buffer(3, flags_buffer_->get_buffer(ctx),0,0);
-  fbo_read_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+  fbo_read_->attach_color_buffer(0, color_buffer_read_,0,0);
+  fbo_read_->attach_color_buffer(1, pbr_buffer_, 0, 0);
+  fbo_read_->attach_color_buffer(2, normal_buffer_,0,0);
+  fbo_read_->attach_color_buffer(3, flags_buffer_,0,0);
+  fbo_read_->attach_depth_stencil_buffer(depth_buffer_,0,0);
 
   fbo_write_ = ctx.render_device->create_frame_buffer();
-  fbo_write_->attach_color_buffer(0, color_buffer_write_->get_buffer(ctx),0,0);
-  fbo_write_->attach_color_buffer(1, pbr_buffer_->get_buffer(ctx),0,0);
-  fbo_write_->attach_color_buffer(2, normal_buffer_->get_buffer(ctx),0,0);
-  fbo_write_->attach_color_buffer(3, flags_buffer_->get_buffer(ctx),0,0);
-  fbo_write_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+  fbo_write_->attach_color_buffer(0, color_buffer_write_,0,0);
+  fbo_write_->attach_color_buffer(1, pbr_buffer_,0,0);
+  fbo_write_->attach_color_buffer(2, normal_buffer_,0,0);
+  fbo_write_->attach_color_buffer(3, flags_buffer_,0,0);
+  fbo_write_->attach_depth_stencil_buffer(depth_buffer_,0,0);
 
   fbo_read_only_color_ = ctx.render_device->create_frame_buffer();
-  fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_->get_buffer(ctx),0,0);
-  fbo_read_only_color_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+  fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_,0,0);
+  fbo_read_only_color_->attach_depth_stencil_buffer(depth_buffer_,0,0);
 
   fbo_write_only_color_ = ctx.render_device->create_frame_buffer();
-  fbo_write_only_color_->attach_color_buffer(0, color_buffer_write_->get_buffer(ctx),0,0);
-  fbo_write_only_color_->attach_depth_stencil_buffer(depth_buffer_->get_buffer(ctx),0,0);
+  fbo_write_only_color_->attach_color_buffer(0, color_buffer_write_,0,0);
+  fbo_write_only_color_->attach_depth_stencil_buffer(depth_buffer_,0,0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +139,7 @@ void GBuffer::toggle_ping_pong() {
 
 void GBuffer::remove_buffers(RenderContext const& ctx) {
   unbind(ctx);
-  
+
   if (fbo_write_) {
     fbo_write_->clear_attachments();
     fbo_write_.reset();
@@ -146,53 +151,23 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
   }
 
   if (color_buffer_write_) {
-    color_buffer_write_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(color_buffer_write_);
   }
   if (color_buffer_read_) {
-    color_buffer_read_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(color_buffer_read_);
   }
   if (pbr_buffer_) {
-    pbr_buffer_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(pbr_buffer_);
   }
   if (normal_buffer_) {
-    normal_buffer_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(normal_buffer_);
   }
   if (flags_buffer_) {
-    flags_buffer_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(flags_buffer_);
   }
   if (depth_buffer_) {
-    depth_buffer_->make_non_resident(ctx);
+    ctx.render_context->make_non_resident(depth_buffer_);
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& GBuffer::get_color_buffer() const {
-  return color_buffer_read_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& GBuffer::get_pbr_buffer() const {
-  return pbr_buffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& GBuffer::get_normal_buffer() const {
-  return normal_buffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& GBuffer::get_flags_buffer() const {
-  return flags_buffer_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Texture2D> const& GBuffer::get_depth_buffer() const {
-  return depth_buffer_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

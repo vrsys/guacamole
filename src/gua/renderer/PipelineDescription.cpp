@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/LineStripPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/TexturedQuadPass.hpp>
@@ -42,6 +43,7 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default() {
   auto pipe(std::make_shared<PipelineDescription>());
 
   pipe->add_pass(std::make_shared<TriMeshPassDescription>());
+  pipe->add_pass(std::make_shared<LineStripPassDescription>());
   pipe->add_pass(std::make_shared<TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<BBoxPassDescription>());
@@ -95,6 +97,13 @@ std::shared_ptr<PipelinePassDescription> const& PipelineDescription::get_pass(st
 std::shared_ptr<TriMeshPassDescription> const PipelineDescription::get_tri_mesh_pass() const
 {
   return get_pass_by_type<TriMeshPassDescription>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<LineStripPassDescription> const PipelineDescription::get_line_strip_pass() const
+{
+  return get_pass_by_type<LineStripPassDescription>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

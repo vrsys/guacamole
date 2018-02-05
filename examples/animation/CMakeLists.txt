@@ -5,19 +5,9 @@ SET(_EXE_NAME example-${_EXAMPLE_NAME})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-list(APPEND LIB_PATHS ${CMAKE_SOURCE_DIR}/lib)
+add_executable(${_EXE_NAME} main.cpp)
 
-link_directories(${LIB_PATHS})
-
-include_directories( ${INCLUDE_PATHS}
-					 ${PROJECT_SOURCE_DIR}/include
-					 ${GUACAMOLE_SKELANIM_INCLUDE_DIR})
-
-add_executable( ${_EXE_NAME} main.cpp)
-
-add_dependencies(${_EXE_NAME} guacamole-skelanim)
-
-target_link_libraries( ${_EXE_NAME} guacamole guacamole-skelanim)
+target_link_libraries(${_EXE_NAME} guacamole-skelanim)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

@@ -47,6 +47,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     std::string const& assets_directory,
     bool optimize_material) const {
 
+
   // helper lambdas ------------------------------------------------------------
   auto get_color =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -57,13 +58,15 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     return string_utils::to_string(color);
   };
 
-  auto get_sampler =
+  auto get_string =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
     aiString value;
     if (AI_SUCCESS != ai_material->Get(pKey, type, idx, value))
       return "";
     return std::string(value.data);
   };
+
+  auto get_sampler = get_string;
 
   auto get_float =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -89,6 +92,9 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   std::string uniform_metalness_map(  get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_SPECULAR, 0)));
   std::string uniform_metalness(      get_color(    AI_MATKEY_COLOR_SPECULAR));
   std::string uniform_opacity_map(    get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_OPACITY, 0)));
+  std::string uniform_opacity(        get_float(    AI_MATKEY_OPACITY));
+
+  std::string material_name(          get_string(   AI_MATKEY_NAME));
 
   // obj bump and map_bump textures are imported as aiTextureType_HEIGHT
   std::string uniform_normal_map(     get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0)));
@@ -96,12 +102,11 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     uniform_normal_map =              get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0));
   }
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
   } else {
-
     if (uniform_color_map != "" && uniform_color != "") {
       capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
     } else if (uniform_color_map != "") {
@@ -162,7 +167,13 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   if (uniform_color != "") {
     auto c(string_utils::from_string<math::vec3>(uniform_color));
-    new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), 1.f));
+
+    float opacity_to_set = 1.0f;
+    if (uniform_opacity != "") {
+      opacity_to_set =  std::max(0.0f, std::min(1.0f,string_utils::from_string<float>(uniform_opacity)));
+    }
+
+    new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), opacity_to_set));
   }
 
 #if 0
@@ -193,6 +204,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   }
 
+  new_mat->rename_existing_shader(material_name);
 
   return new_mat;
 }
@@ -266,7 +278,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 #endif
   }
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
@@ -366,7 +378,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
   std::string uniform_emit_map{""};
   std::string uniform_normal_map{""};
 
-  unsigned capabilities;
+  unsigned capabilities = 0;
 
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
@@ -513,14 +525,14 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   } else {
     // color
     if (uniform_color_map != "") {
-      if(!isnan(uniform_color[0])) {
+      if(!std::isnan(uniform_color[0])) {
         capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
       }
       else {
         capabilities |= PBSMaterialFactory::COLOR_MAP;
       }
     }
-    else if (!isnan(uniform_color[0])) {
+    else if (!std::isnan(uniform_color[0])) {
         capabilities |= PBSMaterialFactory::COLOR_VALUE;
     }
     // normals
@@ -531,21 +543,21 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     if (uniform_roughness_map != "") {
       capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
     } 
-    else if (!isnan(uniform_roughness)) {
+    else if (!std::isnan(uniform_roughness)) {
       capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
     }
     // metalness
     if (uniform_metalness_map != "") {
       capabilities |= PBSMaterialFactory::METALNESS_MAP;
     } 
-    else if (!isnan(uniform_metalness)) {
+    else if (!std::isnan(uniform_metalness)) {
       capabilities |= PBSMaterialFactory::METALNESS_VALUE;
     }
     // emissivity
     if (uniform_emissivity_map != "") {
       capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
     } 
-    else if (!isnan(uniform_emissivity)) {
+    else if (!std::isnan(uniform_emissivity)) {
       capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
     }
   }
@@ -590,12 +602,16 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("Emissivity", uniform_emissivity);
   }
   // opacity
-  if (!isnan(uniform_opacity)) {
+  if (!std::isnan(uniform_opacity)) {
     new_mat->set_uniform("Opacity", uniform_opacity);
   }
   //culling 
   if (properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
     new_mat->set_show_back_faces(!properties["backface_culling"].asBool());
+  }
+  //wireframe rendering
+  if (properties["wireframe_rendering"] != Json::Value::null && properties["wireframe_rendering"].isBool()) {
+    new_mat->set_render_wireframe(properties["wireframe_rendering"].asBool());
   }
 
   return new_mat;

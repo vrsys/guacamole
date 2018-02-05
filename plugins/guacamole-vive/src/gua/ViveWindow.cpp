@@ -35,7 +35,7 @@ ViveWindow::ViveWindow(std::string const& display)
     , display_name_(display)
 {
     // initialize hmd and texture sizes
-    initialize_vive_environment();
+    initialize_hmd_environment();
 
     // calculate screen size, translation and eye distance
     calculate_viewing_setup();
@@ -45,18 +45,18 @@ ViveWindow::~ViveWindow() {
     vr::VR_Shutdown();
 }
 
-void ViveWindow::initialize_vive_environment() {
+void ViveWindow::initialize_hmd_environment() {
     vr::EVRInitError eError = vr::VRInitError_None;
-    pVRSystem = vr::VR_Init(&eError, vr::VRApplication_Scene);
+    p_vr_system_ = vr::VR_Init(&eError, vr::VRApplication_Scene);
 
     if (eError != vr::VRInitError_None) {
-        pVRSystem = nullptr;
+        p_vr_system_ = nullptr;
         Logger::LOG_WARNING << "Failed to initialize OpenVR environment."
             << "Errorcode:" << (int)eError << std::endl;
     }
 
     uint32_t width, height;
-    pVRSystem->GetRecommendedRenderTargetSize(&width, &height);
+    p_vr_system_->GetRecommendedRenderTargetSize(&width, &height);
     config.set_size(math::vec2ui(width, height));
 
     config.set_left_resolution(math::vec2ui(width, height));
@@ -67,8 +67,8 @@ void ViveWindow::initialize_vive_environment() {
 
 // get interpupillary distance
 float const ViveWindow::get_IPD() const {
-    vr::HmdMatrix34_t left_eye = pVRSystem->GetEyeToHeadTransform(vr::EVREye::Eye_Left);
-    vr::HmdMatrix34_t right_eye = pVRSystem->GetEyeToHeadTransform(vr::EVREye::Eye_Right);
+    vr::HmdMatrix34_t left_eye = p_vr_system_->GetEyeToHeadTransform(vr::EVREye::Eye_Left);
+    vr::HmdMatrix34_t right_eye = p_vr_system_->GetEyeToHeadTransform(vr::EVREye::Eye_Right);
     return std::fabs(left_eye.m[0][3]) + std::fabs(right_eye.m[0][3]);
 }
 
@@ -85,25 +85,25 @@ void ViveWindow::calculate_viewing_setup() {
     // do the viewing setup calculations for both eyes
     for (unsigned eye_num = 0; eye_num < 2; ++eye_num) {
         vr::EVREye eEye = eye_num == 0 ? vr::EVREye::Eye_Left : vr::EVREye::Eye_Right;
-        //retreive the correct projection matrix from the oculus API
-        auto const& vive_eye_projection = pVRSystem->GetProjectionMatrix(
-            eEye, near_distance, far_distance, vr::EGraphicsAPIConvention::API_OpenGL
+        //retreive the correct projection matrix from OpenVR
+        auto const& hmd_eye_projection = p_vr_system_->GetProjectionMatrix(
+            eEye, near_distance, far_distance
         );
 
         //convert the matrix to a gua compatible one
         scm::math::mat4 scm_eye_proj_matrix;
         for (int outer = 0; outer < 4; ++outer) {
             for (int inner = 0; inner < 4; ++inner) {
-                scm_eye_proj_matrix[outer*4 + inner] = vive_eye_projection.m[outer][inner];
+                scm_eye_proj_matrix[outer*4 + inner] = hmd_eye_projection.m[outer][inner];
             }
         }
 
         // unproject one frustum corner defining one clipping plane
-        scm::math::mat4 inv_oculus_eye_proj_matrix = scm::math::inverse(scm_eye_proj_matrix);
+        scm::math::mat4 inv_hmd_eye_proj_matrix = scm::math::inverse(scm_eye_proj_matrix);
         scm::math::vec4 back_right_top_frustum_corner = scm::math::vec4(-1.0, -1.0, -1.0,  1.0) *
-            inv_oculus_eye_proj_matrix;
+            inv_hmd_eye_proj_matrix;
         scm::math::vec4 back_left_bottom_frustum_corner = scm::math::vec4(1.0,  1.0, -1.0,  1.0) *
-            inv_oculus_eye_proj_matrix;
+            inv_hmd_eye_proj_matrix;
 
         scm::math::vec4 normalized_back_left_bottom_frustum_corner =
             back_left_bottom_frustum_corner / back_left_bottom_frustum_corner[3];
@@ -180,8 +180,8 @@ void ViveWindow::init_context() {
     glapi.glGenFramebuffers(1, &blit_fbo_write_);
 
     unsigned int width = 0, height = 0;
-    if (pVRSystem) {
-        pVRSystem->GetRecommendedRenderTargetSize(&width, &height);
+    if (p_vr_system_) {
+        p_vr_system_->GetRecommendedRenderTargetSize(&width, &height);
         left_texture_ = ctx_.render_device->create_texture_2d(
             scm::math::vec2ui(width, height),
             scm::gl::FORMAT_RGBA_8, 1, 1, 1);
@@ -194,12 +194,11 @@ void ViveWindow::init_context() {
         // createEyeTexture(glapi, width, height);
         right_tex_id_ = right_texture_->object_id();
     } else {
-        std::cerr << "ERROR: pVRSystem is nullptr." << std::endl;
+        std::cerr << "ERROR: p_vr_system_ is nullptr." << std::endl;
     }
 }
 
 void ViveWindow::open() {
-    // open side-by-side debug window which shows exactly the same as oculus
     config.set_title("guacamole");
     config.set_display_name(display_name_);
     config.set_stereo_mode(StereoMode::SIDE_BY_SIDE);
@@ -209,12 +208,193 @@ void ViveWindow::open() {
 
 math::vec2ui ViveWindow::get_window_resolution() const {
     uint32_t width, height;
-    pVRSystem->GetRecommendedRenderTargetSize(&width, &height);
+    p_vr_system_->GetRecommendedRenderTargetSize(&width, &height);
     return math::vec2ui(width, height);
 }
 
-math::mat4 const& ViveWindow::get_vive_sensor_orientation() const {
-    return vive_sensor_orientation_;
+void ViveWindow::update_sensor_orientations() {
+  const unsigned queried_number_of_tracked_devices(vr::k_unMaxTrackedDeviceCount);
+
+  if(number_of_tracked_devices_ < queried_number_of_tracked_devices) {
+    number_of_tracked_devices_ = queried_number_of_tracked_devices;
+    tracked_devices_handles_.resize(number_of_tracked_devices_);
+  }
+ // vr::TrackedDevicePose_t trackedDevicesHandles[numberOfTrackedDevices];
+
+  float fSecondsSinceLastVsync;
+  p_vr_system_->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
+  float fDisplayFrequency = p_vr_system_->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
+  float fFrameDuration = 1.0f / fDisplayFrequency;
+  float fVsyncToPhotons = p_vr_system_->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
+  float predictedSecondsFromNow = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
+
+  //vr::HmdMatrix34_t pose;
+  p_vr_system_->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, predictedSecondsFromNow, &tracked_devices_handles_[0], number_of_tracked_devices_);
+
+  hmd_device_.state_ = false;
+  for(auto& controller : known_controller_devices_) {
+    controller.state_ = false;
+    //controller.pad_touched_ = false;
+    controller.active_button_states_ = 0x0;
+  }
+  for(auto& tracking_reference_device : known_tracking_reference_devices_) {
+    tracking_reference_device.state_ = false;
+  }
+
+  unsigned current_controller_count = 0;
+  unsigned current_tracking_references_count = 0;
+
+  for (unsigned int device_idx = 0; device_idx < number_of_tracked_devices_; ++device_idx) {
+    auto const tracked_device_class = p_vr_system_->GetTrackedDeviceClass(device_idx);
+
+    auto const& tracked_pose = tracked_devices_handles_[device_idx].mDeviceToAbsoluteTracking;
+    if (tracked_device_class == vr::TrackedDeviceClass_HMD) {
+      hmd_device_.state_ = true;
+      hmd_device_.set_pose(tracked_pose);
+    }
+    else if (tracked_device_class == vr::TrackedDeviceClass_TrackingReference) {
+      ++current_tracking_references_count;
+
+      if(current_tracking_references_count > known_tracking_reference_devices_.size()) {
+        known_tracking_reference_devices_.resize(current_tracking_references_count);
+      }
+
+      auto& current_tracking_reference_device = known_tracking_reference_devices_[current_tracking_references_count-1];
+      current_tracking_reference_device.state_ = true;
+      current_tracking_reference_device.id_ = current_tracking_references_count-1;
+      current_tracking_reference_device.set_pose(tracked_pose);
+    }
+    else if (tracked_device_class == vr::TrackedDeviceClass_Controller) {
+      ++current_controller_count;
+      if(current_controller_count > known_controller_devices_.size()) {
+        known_controller_devices_.resize(current_controller_count);
+      }
+      auto& current_controller = known_controller_devices_[current_controller_count-1];
+      current_controller.state_ = true;
+      current_controller.id_ = current_controller_count-1;
+
+      current_controller.set_pose(tracked_pose);
+
+
+      vr::VRControllerState_t controller_state;
+      if (!p_vr_system_->GetControllerState(device_idx, &controller_state, sizeof(vr::VRControllerState_t))) {
+        continue;
+      }
+
+      current_controller.trigger_value_ = controller_state.rAxis[1].x;
+
+      if (controller_state.ulButtonTouched & vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Touchpad)) {
+        current_controller.active_button_states_ |= ControllerBinaryStates::GRIP_BUTTON;
+        current_controller.pad_x_value_ = controller_state.rAxis[0].x;
+        current_controller.pad_y_value_ = controller_state.rAxis[0].y;
+      }
+
+      if (controller_state.ulButtonPressed & vr::ButtonMaskFromId(vr::k_EButton_ApplicationMenu)) {
+        current_controller.active_button_states_ |= ControllerBinaryStates::APP_MENU_BUTTON;
+      }
+        
+      if (controller_state.ulButtonPressed & vr::ButtonMaskFromId(vr::k_EButton_Grip)) {
+        current_controller.active_button_states_ |= ControllerBinaryStates::GRIP_BUTTON;
+      }
+        
+      if (controller_state.ulButtonPressed & vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Trigger)) {
+        current_controller.active_button_states_ |= ControllerBinaryStates::TRIGGER_BUTTON;
+      }
+        
+      if (controller_state.ulButtonPressed & vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Touchpad)) {
+        current_controller.active_button_states_ |= ControllerBinaryStates::PAD_TOUCH;
+      }
+
+    }
+  }
+
+}
+
+bool ViveWindow::get_controller_button_active(DeviceID device_id, ControllerBinaryStates controller_binary_state) {
+  if(DeviceID::CONTROLLER_0 != device_id && 
+     DeviceID::CONTROLLER_1 != device_id ) {
+    //gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
+    return false;
+  }
+
+  unsigned int requested_device_idx = (device_id == DeviceID::CONTROLLER_0) ? 0 : 1;
+
+  if(requested_device_idx >= known_controller_devices_.size()) {
+    //gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
+    return false;
+  }
+
+  return known_controller_devices_[requested_device_idx].active_button_states_ & controller_binary_state;
+}
+
+float ViveWindow::get_controller_value(DeviceID device_id, ControllerContinuousStates controller_continuous_state) {
+  if(DeviceID::CONTROLLER_0 != device_id && 
+     DeviceID::CONTROLLER_1 != device_id ) {
+    //gua::Logger::LOG_WARNING << "DeviceID for requested Button does not belong to a controller. Returning 'false'\n";
+    return false;
+  }
+
+  unsigned int requested_device_idx = (device_id == DeviceID::CONTROLLER_0) ? 0 : 1;
+
+  if(requested_device_idx >= known_controller_devices_.size()) {
+    //gua::Logger::LOG_WARNING << "Requested Controller is not active. Returning 'false'\n";
+    return false;
+  }
+
+  auto const& current_controller = known_controller_devices_[requested_device_idx];
+
+  float requested_value(0.0f);
+
+  switch(controller_continuous_state) {
+    case(ControllerContinuousStates::PAD_X_VALUE):
+      requested_value = current_controller.pad_x_value_;
+      break;
+    case(ControllerContinuousStates::PAD_Y_VALUE):
+      requested_value = current_controller.pad_y_value_;
+      break;
+    case(ControllerContinuousStates::TRIGGER_VALUE):
+      requested_value = current_controller.trigger_value_;
+      break;
+    default:
+      break;
+  }
+
+  return requested_value;
+}
+
+math::mat4 ViveWindow::get_sensor_orientation(DeviceID device_id) const {
+
+  math::mat4 device_orientation;
+
+  switch(device_id) {
+    case DeviceID::HMD:
+      device_orientation = hmd_device_.pose_;
+      break;
+    case DeviceID::CONTROLLER_0:
+      if(known_controller_devices_.size() > 0) {
+        device_orientation = known_controller_devices_[0].pose_;
+      }
+      break;
+    case DeviceID::CONTROLLER_1:
+      if(known_controller_devices_.size() > 1) {
+        device_orientation = known_controller_devices_[1].pose_;
+      }
+      break;
+    case DeviceID::TRACKING_REFERENCE_0:
+      if(known_tracking_reference_devices_.size() > 0) {
+        device_orientation = known_tracking_reference_devices_[0].pose_;
+      }
+      break;
+    case DeviceID::TRACKING_REFERENCE_1:
+      if(known_tracking_reference_devices_.size() > 1) {
+        device_orientation = known_tracking_reference_devices_[1].pose_;
+      }
+      break;
+
+    default:
+      break;
+  }
+  return device_orientation;
 }
 
 math::vec2 const& ViveWindow::get_left_screen_size() const {
@@ -235,49 +415,24 @@ math::vec3 const& ViveWindow::get_right_screen_translation() const {
 
 void ViveWindow::start_frame() {
     GlfwWindow::start_frame();
-
-    float fSecondsSinceLastVsync;
-    pVRSystem->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, NULL);
-
-    float fDisplayFrequency = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
-    float fFrameDuration = 1.0f / fDisplayFrequency;
-    float fVsyncToPhotons = pVRSystem->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
-
-    float ftiming = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
-
-    vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
-    vr::HmdMatrix34_t pose;
-    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-    for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
-        if (devices[i].bPoseIsValid) {
-            if (pVRSystem->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_HMD) {
-                pose = devices[i].mDeviceToAbsoluteTracking;
-                break;
-            }
-        }
-    }
-    math::mat4 orientation(
-        pose.m[0][0], pose.m[1][0], pose.m[2][0], 0.0,
-        pose.m[0][1], pose.m[1][1], pose.m[2][1], 0.0,
-        pose.m[0][2], pose.m[1][2], pose.m[2][2], 0.0,
-        pose.m[0][3], pose.m[1][3], pose.m[2][3], 1.0
-    );
-    vive_sensor_orientation_ = orientation;
 }
 
 void ViveWindow::finish_frame() {
     if (left_tex_id_ && right_tex_id_) {
-        vr::Texture_t leftEyeTexture{ (void*)left_tex_id_, vr::API_OpenGL, vr::ColorSpace_Gamma };
+        vr::Texture_t leftEyeTexture{ (void*)left_tex_id_, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
         vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 
-        vr::Texture_t rightEyeTexture{ (void*)right_tex_id_, vr::API_OpenGL, vr::ColorSpace_Gamma };
+        vr::Texture_t rightEyeTexture{ (void*)right_tex_id_, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
         vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
     }
+
+    vr::TrackedDevicePose_t devices[vr::k_unMaxTrackedDeviceCount];
+    vr::VRCompositor()->WaitGetPoses(devices, vr::k_unMaxTrackedDeviceCount, NULL, 0.0f);
 
     GlfwWindow::finish_frame();
 }
 
-void ViveWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) {
+void ViveWindow::display(scm::gl::texture_2d_ptr const& texture, bool is_left) {
     auto const& glapi = ctx_.render_context->opengl_api();
 
     if (!left_tex_id_) {
@@ -297,16 +452,18 @@ void ViveWindow::display(std::shared_ptr<Texture> const& texture, bool is_left) 
     }
 
     // setup read buffer
-    glapi.glBindTexture(GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id());
+    glapi.glBindTexture(GL_TEXTURE_2D, texture->object_id());
     glapi.glBindFramebuffer(GL_READ_FRAMEBUFFER, blit_fbo_read_);
-    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->get_buffer(ctx_)->object_id(), 0);
+    glapi.glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->object_id(), 0);
 
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         gua::Logger::LOG_WARNING << "Read Framebuffer Incomplete.\n";
     }
 
-    glapi.glBlitFramebuffer(0, 0, texture->width(), texture->height(),
+    scm::math::vec2ui const tex_dimensions = texture->dimensions();
+
+    glapi.glBlitFramebuffer(0, 0, tex_dimensions[0], tex_dimensions[1],
         config.left_position().x, config.left_position().y,
         config.left_resolution().x, config.left_resolution().y,
         GL_COLOR_BUFFER_BIT, GL_NEAREST);

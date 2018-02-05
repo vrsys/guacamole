@@ -68,11 +68,20 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
+  auto teapot_mat(gua::MaterialShaderDatabase::instance()
+                  ->lookup("gua_default_material")
+                  ->make_new_material());
+
+  teapot_mat->set_render_wireframe(false);
+  teapot_mat->set_show_back_faces(false);
+
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   auto teapot(loader.create_geometry_from_file(
       "teapot", "data/objects/teapot.obj",
+      teapot_mat,
       gua::TriMeshLoader::NORMALIZE_POSITION |
-          gua::TriMeshLoader::NORMALIZE_SCALE));
+      gua::TriMeshLoader::NORMALIZE_SCALE) );
+
   graph.add_node("/transform", teapot);
   teapot->set_draw_bounding_box(true);
 

@@ -123,6 +123,30 @@ struct GUA_DLL RenderContext {
 
   mutable std::unordered_map<std::size_t, Mesh> meshes;
 
+  class LineStrip
+  {
+    public:
+      LineStrip() = default;
+      LineStrip( scm::gl::vertex_array_ptr const& a,
+                 scm::gl::buffer_ptr const& v
+               , scm::gl::buffer_ptr const& i)
+               : vertex_array(a)
+               , vertices(v)
+               , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY)
+               , vertex_reservoir_size(0)
+               , num_occupied_vertex_slots(0)
+               , current_buffer_size_in_vertices(0)
+      {}
+      scm::gl::vertex_array_ptr   vertex_array;
+      scm::gl::buffer_ptr         vertices;
+      scm::gl::primitive_topology vertex_topology;
+      int                         vertex_reservoir_size;
+      int                         num_occupied_vertex_slots;
+      int                         current_buffer_size_in_vertices;
+  };
+
+  mutable std::unordered_map<std::size_t, LineStrip> line_strips;
+
   class Texture
   {
     public:
@@ -139,6 +163,12 @@ struct GUA_DLL RenderContext {
   * Textures associated with this context
   */
   mutable std::unordered_map<std::size_t, Texture> textures;
+
+  /**
+  * Texture arrays associated with this contect
+  */
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr> > texture_2d_arrays;
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr> > texture_3d_arrays;
 
   /**
   * Resources associated with this context

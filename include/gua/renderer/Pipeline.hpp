@@ -91,7 +91,7 @@ class GUA_DLL Pipeline {
   Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
   Pipeline(Pipeline const&) = delete;
 
-  std::shared_ptr<Texture2D> render_scene(
+  scm::gl::texture_2d_ptr render_scene(
       CameraMode mode,
       node::SerializedCameraNode const& camera,
       std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs);
@@ -103,6 +103,7 @@ class GUA_DLL Pipeline {
 
   RenderContext& get_context();
   RenderContext const& get_context() const;
+  std::unique_ptr<GBuffer> const& get_gbuffer() const;
   LightTable& get_light_table();
 
   void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;

@@ -23,7 +23,6 @@
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 
 #include <gua/node/TexturedScreenSpaceQuadNode.hpp>
-#include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/Resources.hpp>

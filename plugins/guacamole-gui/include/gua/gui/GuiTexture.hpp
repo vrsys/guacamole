@@ -48,10 +48,7 @@ class GUA_DLL GuiTexture : public Texture2D {
   math::vec2ui const get_handle(RenderContext const& context) const override;
 
  protected:
-  Awesomium::WebView* view_;
-
-  std::mutex mutex_;
-
+  Awesomium::WebView* view_ = nullptr;
 };
 
 }

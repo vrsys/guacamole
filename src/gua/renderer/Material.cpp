@@ -31,7 +31,8 @@ namespace gua {
 Material::Material(std::string const& shader_name):
   shader_name_(shader_name),
   shader_cache_(nullptr),
-  show_back_faces_(false)
+  show_back_faces_(false),
+  render_wireframe_(false)
   {
     set_shader_name(shader_name_);
   }
@@ -42,7 +43,8 @@ Material::Material(Material const& copy):
   shader_name_(copy.shader_name_),
   shader_cache_(copy.shader_cache_),
   uniforms_(copy.uniforms_),
-  show_back_faces_(copy.show_back_faces_)
+  show_back_faces_(copy.show_back_faces_),
+  render_wireframe_(copy.render_wireframe_)
   {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +78,22 @@ void Material::set_shader_name(std::string const& name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Material::rename_existing_shader(std::string const& name) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
+
+  auto shader_with_old_name(MaterialShaderDatabase::instance()->lookup(shader_name_));
+
+  shader_name_ = name;
+  shader_cache_ = nullptr;
+
+
+  auto shader_with_new_name = std::make_shared<MaterialShader>(shader_name_, shader_with_old_name->get_description());
+  MaterialShaderDatabase::instance()->add(shader_with_new_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MaterialShader* Material::get_shader() const {
   // boost::unique_lock<boost::shared_mutex> lock(mutex_);
   if (!shader_cache_) {
@@ -97,8 +115,8 @@ void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, i
   std::lock_guard<std::mutex> lock(mutex_);
 
     for (auto const& uniform : uniforms_) {
-      uniform.second.apply(ctx, uniform.first, view, shader->get_program(ctx));
-    } 
+      uniform.second.apply(ctx, uniform.first, view, shader->get_program());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

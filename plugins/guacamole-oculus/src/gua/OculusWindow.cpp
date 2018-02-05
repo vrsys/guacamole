@@ -37,7 +37,7 @@ OculusWindow::OculusWindow(std::string const& display)
     display_name_(display)
 {
   // initialize hmd and texture sizes
-  initialize_oculus_environment();
+  initialize_hmd_environment();
 
   // calculate screen size, translation and eye distance
   calculate_viewing_setup();
@@ -149,21 +149,21 @@ void OculusWindow::display(std::shared_ptr<Texture> const& texture, bool is_left
     WindowBase::display(texture, is_left);
 }
 
-math::vec2 const OculusWindow::get_left_screen_size() const {
+math::vec2 const& OculusWindow::get_left_screen_size() const {
   return screen_size_[0];
 }
 
-math::vec2 const OculusWindow::get_right_screen_size() const {
+math::vec2 const& OculusWindow::get_right_screen_size() const {
   return screen_size_[1];
 }
 
 
-math::vec3 const OculusWindow::get_left_screen_translation() const {
+math::vec3 const& OculusWindow::get_left_screen_translation() const {
   return screen_translation_[0];
 }
 
 
-math::vec3 const OculusWindow::get_right_screen_translation() const {
+math::vec3 const& OculusWindow::get_right_screen_translation() const {
   return screen_translation_[1];
 }
 
@@ -189,8 +189,8 @@ math::vec2ui OculusWindow::get_window_resolution() const {
 }
 
 
-gua::math::mat4 OculusWindow::get_oculus_sensor_orientation() const {
-  return oculus_sensor_orientation_;
+gua::math::mat4 const& OculusWindow::get_hmd_sensor_orientation() const {
+  return hmd_sensor_orientation_;
 }
 
 
@@ -222,7 +222,7 @@ void OculusWindow::start_frame() {
           pose.Orientation.y,
           pose.Orientation.z);
 
-      oculus_sensor_orientation_ = scm::math::make_translation((double)pose.Position.x, (double)pose.Position.y, (double)pose.Position.z) * rot_quat.to_matrix();
+      hmd_sensor_orientation_ = scm::math::make_translation((double)pose.Position.x, (double)pose.Position.y, (double)pose.Position.z) * rot_quat.to_matrix();
     }
 }
 
@@ -241,7 +241,7 @@ void OculusWindow::finish_frame() {
 }
 
 
-void OculusWindow::initialize_oculus_environment() 
+void OculusWindow::initialize_hmd_environment() 
 {
   try {
 
@@ -323,24 +323,24 @@ void OculusWindow::calculate_viewing_setup() {
   for (unsigned eye_num = 0; eye_num < 2; ++eye_num) {
     //retreive the correct projection matrix from the oculus API
 
-      auto const& oculus_eye_projection
+      auto const& hmd_eye_projection
         = ovrMatrix4f_Projection(hmd_desc_.DefaultEyeFov[eye_num], near_distance, far_distance, 0);
 
     //convert the matrix to a gua compatible one
     scm::math::mat4 scm_eye_proj_matrix;
     for( int outer = 0; outer < 4; ++outer ) {
       for( int inner = 0; inner < 4; ++inner ){
-        scm_eye_proj_matrix[outer*4 + inner] = oculus_eye_projection.M[outer][inner];
+        scm_eye_proj_matrix[outer*4 + inner] = hmd_eye_projection.M[outer][inner];
       }
     }
 
     // unproject one frustum corner defining one clipping plane
-    scm::math::mat4 inv_oculus_eye_proj_matrix 
+    scm::math::mat4 inv_hmd_eye_proj_matrix 
       = scm::math::inverse(scm_eye_proj_matrix);
     scm::math::vec4 back_right_top_frustum_corner 
-      = scm::math::vec4(-1.0, -1.0, -1.0,  1.0) * inv_oculus_eye_proj_matrix;
+      = scm::math::vec4(-1.0, -1.0, -1.0,  1.0) * inv_hmd_eye_proj_matrix;
     scm::math::vec4 back_left_bottom_frustum_corner 
-      = scm::math::vec4( 1.0,  1.0, -1.0,  1.0) * inv_oculus_eye_proj_matrix;
+      = scm::math::vec4( 1.0,  1.0, -1.0,  1.0) * inv_hmd_eye_proj_matrix;
 
     scm::math::vec4 normalized_back_left_bottom_frustum_corner
       = back_left_bottom_frustum_corner / back_left_bottom_frustum_corner[3];

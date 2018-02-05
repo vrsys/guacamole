@@ -26,6 +26,15 @@
 
 #include <lamure/ren/controller.h>
 
+namespace {
+
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = tex->native_handle();
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
+
 namespace gua {
 
   LowQualitySplattingSubRenderer::LowQualitySplattingSubRenderer() : PLodSubRenderer(){
@@ -103,7 +112,7 @@ namespace gua {
         if (program_changed) {
           current_material_program->unuse(ctx);
           current_material_program->use(ctx);
-          current_material_program->set_uniform(ctx, target.get_depth_buffer()->get_handle(ctx), "gua_gbuffer_depth");
+          current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
         }
 
         plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);

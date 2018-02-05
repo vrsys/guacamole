@@ -20,14 +20,25 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/SkeletalAnimationRenderer.hpp>
+#include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 
 // guacamole headers
-#include <gua/node/SkeletalAnimationNode.hpp>
-#include <gua/renderer/SkinnedMeshResource.hpp>
+#include <gua/skelanim/node/SkeletalAnimationNode.hpp>
+#include <gua/skelanim/renderer/SkinnedMeshResource.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 #include <gua/databases/Resources.hpp>
+
+namespace {
+
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = tex->native_handle();
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
+
+
 
 namespace gua {
 
@@ -169,7 +180,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
             // hack
             current_shader->set_uniform(
                 ctx,
-                target.get_depth_buffer()->get_handle(ctx),
+                ::get_handle(target.get_depth_buffer()),
                 "gua_gbuffer_depth");
           }
         }
@@ -214,7 +225,6 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe,
           }
 
           ctx.render_context->apply_program();
-
           if (ctx.framecount > last_frame_) {
             skel_anim_node->update_bone_transforms();
           }

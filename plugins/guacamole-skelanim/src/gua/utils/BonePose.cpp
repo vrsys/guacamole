@@ -1,5 +1,5 @@
 // class header
-#include <gua/utils/BonePose.hpp>
+#include <gua/skelanim/utils/BonePose.hpp>
 
 namespace gua {
 
