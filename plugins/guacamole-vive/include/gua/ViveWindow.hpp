@@ -2,7 +2,7 @@
 * guacamole - delicious VR                                                             *
 *                                                                                      *
 * Copyright: (c) 2011-2016 Bauhaus-Universität Weimar                                  *
-* Contact:   philipp.rudloff@uni-weimar.de / nathalie.jolanthe.dittriech@uni-weimar.de *
+* Contact:   felix.lauer@uni-weimar.de / simon.schneegans@uni-weimar.de
 *                                                                                      *
 * This program is free software: you can redistribute it and/or modify it              *
 * under the terms of the GNU General Public License as published by the Free           *
