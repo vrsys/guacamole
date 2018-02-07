@@ -309,8 +309,8 @@ void NURBSResource::initialize_texture_buffers(RenderContext const& context) con
   _surface_tesselation_data.obb_texture_buffer =
     in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
     scm::gl::USAGE_STATIC_DRAW,
-    size_in_bytes(_data->object->serialized_raycasting_data_obbs()),
-    &_data->object->serialized_raycasting_data_obbs()[0]);
+    size_in_bytes(_data->object->serialized_tesselation_obbs()),
+    &_data->object->serialized_tesselation_obbs()[0]);
 
   _surface_tesselation_data.attribute_texture_buffer =
     in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
@@ -322,8 +322,8 @@ void NURBSResource::initialize_texture_buffers(RenderContext const& context) con
   _surface_raycasting_data.controlpoints =
                                        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
                                        scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(_data->object->serialized_raycasting_data_controlpoints()),
-                                       &_data->object->serialized_raycasting_data_controlpoints()[0]);
+                                       size_in_bytes(_data->object->serialized_controlpoints()),
+                                       &_data->object->serialized_controlpoints()[0]);
 
   // trimming data
   auto const& trimdata = _data->object->serialized_trimdata_as_contour_kd();
@@ -473,7 +473,7 @@ void NURBSResource::initialize_transform_feedback(RenderContext const& context) 
   int stride = sizeof(scm::math::vec3f) + 
                sizeof(unsigned) + 
                sizeof(scm::math::vec2f) + 
-               sizeof(float);
+               sizeof(scm::math::vec3f);
 
   scm::gl::vertex_format v_fmt = scm::gl::vertex_format(
       0,
@@ -483,7 +483,7 @@ void NURBSResource::initialize_transform_feedback(RenderContext const& context) 
                 // each time from buffer
   v_fmt(0, 1, scm::gl::TYPE_UINT, stride);   // Surface Index (indexf)
   v_fmt(0, 2, scm::gl::TYPE_VEC2F, stride);  // uv
-  v_fmt(0, 3, scm::gl::TYPE_FLOAT, stride);  // remaining tesselation level
+  v_fmt(0, 3, scm::gl::TYPE_VEC3F, stride);  // remaining tesselation level
 
   auto tfbuffer = Singleton<TransformFeedbackBuffer>::instance();
 

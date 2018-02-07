@@ -40,12 +40,26 @@ namespace gua {
 
   public:
 
+    static const unsigned MAX_XFB_BUFFER_SIZE_IN_BYTES = 1024000000; // reserve GB transform feedback buffer
+    static const unsigned MAX_FEEDBACK_BUFFER_INDICES = 1024000;
+    static const unsigned GPUCAST_HULLVERTEXMAP_SSBO_BINDING = 1;
+    static const unsigned GPUCAST_ATTRIBUTE_SSBO_BINDING = 2;
+    static const unsigned GPUCAST_ATOMIC_COUNTER_BINDING = 3;
+    static const unsigned GPUCAST_FEEDBACK_BUFFER_BINDING = 4;
+
+    static const unsigned GPUCAST_ABUFFER_MAX_FRAGMENTS = 10000000; // 10M fragments 
+    static const unsigned GPUCAST_ABUFFER_ATOMIC_BUFFER_BINDING = 5;
+    static const unsigned GPUCAST_ABUFFER_FRAGMENT_LIST_BUFFER_BINDING = 6;
+    static const unsigned GPUCAST_ABUFFER_FRAGMENT_DATA_BUFFER_BINDING = 7;
+
+    static const unsigned GPUCAST_OBJECT_UBO_BINDINGPOINT = 0;
+    static const unsigned GPUCAST_CAMERA_UBO_BINDINGPOINT = 1;
+
     NURBSRenderer();
     ~NURBSRenderer();
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
-
-    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+    void set_substitutions(SubstitutionMap const& smap);
 
   private:  // auxiliary methods
 
@@ -92,6 +106,11 @@ namespace gua {
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> tesselation_programs_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> raycasting_programs_;
 
+    bool _enable_triangular_tesselation = false;
+    bool _enable_count = false;
+    bool _antialiasing = false;
+    bool _enable_holefilling = false;
+    bool _pretessellation = true;
   };
 
 }

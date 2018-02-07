@@ -44,6 +44,14 @@
 #include <regex>
 #include <list>
 
+namespace {
+  gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+    uint64_t handle = tex->native_handle();
+    return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+  }
+}
+
+
 namespace gua {
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -54,162 +62,26 @@ namespace gua {
     factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR));
     factory_.add_search_path(std::string(GPUCAST_INSTALL_DIR) + "/resources/");
 
+    global_substitution_map_.insert(std::make_pair("GPUCAST_MAX_FEEDBACK_BUFFER_INDICES_INPUT", std::to_string(MAX_FEEDBACK_BUFFER_INDICES)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_SECOND_PASS_TRIANGLE_TESSELATION_INPUT", std::to_string(_enable_triangular_tesselation)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_WRITE_DEBUG_COUNTER_INPUT", std::to_string(_enable_count)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ANTI_ALIASING_MODE_INPUT", std::to_string(_antialiasing)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_HULLVERTEXMAP_SSBO_BINDING_INPUT", std::to_string(GPUCAST_HULLVERTEXMAP_SSBO_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ATTRIBUTE_SSBO_BINDING_INPUT", std::to_string(GPUCAST_ATTRIBUTE_SSBO_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ATOMIC_COUNTER_BINDING_INPUT", std::to_string(GPUCAST_ATOMIC_COUNTER_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_FEEDBACK_BUFFER_BINDING_INPUT", std::to_string(GPUCAST_FEEDBACK_BUFFER_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_HOLE_FILLING_INPUT", std::to_string(_enable_holefilling)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ABUFFER_ATOMIC_BUFFER_BINDING_INPUT", std::to_string(GPUCAST_ABUFFER_ATOMIC_BUFFER_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ABUFFER_FRAGMENT_LIST_BUFFER_BINDING_INPUT", std::to_string(GPUCAST_ABUFFER_FRAGMENT_LIST_BUFFER_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ABUFFER_FRAGMENT_DATA_BUFFER_BINDING_INPUT", std::to_string(GPUCAST_ABUFFER_FRAGMENT_DATA_BUFFER_BINDING)));
+    global_substitution_map_.insert(std::make_pair("GPUCAST_ENABLE_PRETESSELLATION_INPUT", std::to_string(_pretessellation)));
+
     _load_shaders();
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   NURBSRenderer::~NURBSRenderer()
   {}
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_load_shaders()
-  {
-    pre_tesselation_shader_stages_.clear();
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.vert")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.teval")));
-    pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.geom")));
-
-    pre_tesselation_interleaved_stream_capture_.clear();
-    pre_tesselation_interleaved_stream_capture_.push_back("transform_position");
-    pre_tesselation_interleaved_stream_capture_.push_back("transform_index");
-    pre_tesselation_interleaved_stream_capture_.push_back("transform_tesscoord");
-
-    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
-    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
-    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.teval")));
-    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.geom")));
-    tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.frag")));
-
-    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.vert")));
-    raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.frag")));
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_initialize_pre_tesselation_program(RenderContext const& ctx)
-  {
-    if (!pre_tesselation_program_)
-    {
-      auto new_program = std::make_shared<ShaderProgram>();
-
-      new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true);
-      pre_tesselation_program_ = new_program;
-      save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
-    }
-
-    pre_tesselation_program_->use(ctx);
-    {
-      pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f());
-      ctx.render_context->apply();
-    }
-    pre_tesselation_program_->unuse(ctx);
-
-    assert(pre_tesselation_program_);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
-  {
-    if (!tesselation_programs_.count(material))
-    {
-      auto program = std::make_shared<ShaderProgram>();
-
-      auto smap    = global_substitution_map_;
-      for (const auto& i : material->generate_substitution_map()) {
-        smap[i.first] = i.second;
-      }
-
-      program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
-      tesselation_programs_[material] = program;
-
-      save_to_file(*program, ".", "tesselation_program");
-    }
-    assert(tesselation_programs_.count(material));
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_initialize_raycasting_program(MaterialShader* material)
-  {
-    if (!raycasting_programs_.count(material))
-    {
-      auto program = std::make_shared<ShaderProgram>();
-
-      auto smap = global_substitution_map_;
-      for (const auto& i : material->generate_substitution_map()) {
-        smap[i.first] = i.second;
-      }
-
-      program->set_shaders(raycasting_shader_stages_, std::list<std::string>(), false, smap);
-      raycasting_programs_[material] = program;
-    }
-    assert(raycasting_programs_.count(material));
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<ShaderProgram> NURBSRenderer::_get_material_program(MaterialShader* material,
-                                                                      std::shared_ptr<ShaderProgram> const& current_program,
-                                                                      bool raycasting,
-                                                                      bool& program_changed)
-  {
-    if (raycasting) {
-      auto shader_iterator = raycasting_programs_.find(material);
-      if (shader_iterator == raycasting_programs_.end())
-      {
-        try {
-          _initialize_raycasting_program(material);
-          program_changed = true;
-          return raycasting_programs_.at(material);
-        }
-        catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
-          return std::shared_ptr<ShaderProgram>();
-        }
-      }
-      else {
-        if (current_program == shader_iterator->second)
-        {
-          program_changed = false;
-          return current_program;
-        }
-        else {
-          program_changed = true;
-          return shader_iterator->second;
-        }
-      }
-    } else {
-      auto shader_iterator = tesselation_programs_.find(material);
-      if (shader_iterator == tesselation_programs_.end())
-      {
-        try {
-          _initialize_tesselation_program(material);
-          program_changed = true;
-          return tesselation_programs_.at(material);
-        }
-        catch (std::exception& e) {
-          Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for tesselation program: " << e.what() << std::endl;
-          return std::shared_ptr<ShaderProgram>();
-        }
-      } else {
-        if (current_program == shader_iterator->second)
-        {
-          program_changed = false;
-          return current_program;
-        }
-        else {
-          program_changed = true;
-          return shader_iterator->second;
-        }
-      }
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  void NURBSRenderer::_reset()
-  {
-    pre_tesselation_program_.reset();
-    tesselation_programs_.clear();
-    raycasting_programs_.clear();
-  }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,8 +153,7 @@ namespace gua {
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
           
             // hack
-            current_material_program->set_uniform(ctx, target.get_depth_buffer()
-                                                  ->get_handle(ctx), "gua_gbuffer_depth");
+            current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
             nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
           
             nurbs_ressource->draw(ctx, true, nurbs_node->render_backfaces());
@@ -334,8 +205,7 @@ namespace gua {
             current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
 
             // hack
-            current_material_program->set_uniform(ctx, target.get_depth_buffer()
-                                                  ->get_handle(ctx), "gua_gbuffer_depth");
+            current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
             ctx.render_context->apply();
             nurbs_ressource->draw(ctx, false, nurbs_node->render_backfaces());
           }
@@ -351,5 +221,175 @@ namespace gua {
     target.unbind(ctx);
   }
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+  void NURBSRenderer::set_substitutions(SubstitutionMap const& smap)
+  {
+    for (auto const& replacement_pair : smap) {
+      global_substitution_map_[replacement_pair.first] = replacement_pair.second;
+    }
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::_load_shaders()
+{
+  pre_tesselation_shader_stages_.clear();
+  pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.vert")));
+  pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.tctrl")));
+  pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.teval")));
+  pre_tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/pre_tesselation.geom")));
+
+  pre_tesselation_interleaved_stream_capture_.clear();
+  pre_tesselation_interleaved_stream_capture_.push_back("transform_position");
+  pre_tesselation_interleaved_stream_capture_.push_back("transform_index");
+  pre_tesselation_interleaved_stream_capture_.push_back("transform_tesscoord");
+  pre_tesselation_interleaved_stream_capture_.push_back("transform_final_tesselation");
+
+  tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
+  tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
+  tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.teval")));
+  tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.geom")));
+  tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.frag")));
+
+  raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.vert")));
+  raycasting_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory_.read_shader_file("resources/shaders/nurbs/ray_casting.frag")));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::_initialize_pre_tesselation_program(RenderContext const& ctx)
+{
+  if (!pre_tesselation_program_)
+  {
+    auto new_program = std::make_shared<ShaderProgram>();
+
+    auto smap = global_substitution_map_;
+
+    new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true, smap);
+    pre_tesselation_program_ = new_program;
+    save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
+  }
+
+  pre_tesselation_program_->use(ctx);
+  {
+    pre_tesselation_program_->apply_uniform(ctx, "gua_normal_matrix", math::mat4f());
+    ctx.render_context->apply();
+  }
+  pre_tesselation_program_->unuse(ctx);
+
+  assert(pre_tesselation_program_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
+{
+  if (!tesselation_programs_.count(material))
+  {
+    auto program = std::make_shared<ShaderProgram>();
+
+    auto smap = global_substitution_map_;
+    for (const auto& i : material->generate_substitution_map()) {
+      smap[i.first] = i.second;
+      Logger::LOG_WARNING << i.first << " replaced by " << i.second << std::endl;
+    }
+
+    Logger::LOG_WARNING << "number of substitutions" << smap.size() << std::endl;
+
+    program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
+    tesselation_programs_[material] = program;
+
+    save_to_file(*program, ".", "tesselation_program");
+  }
+  assert(tesselation_programs_.count(material));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::_initialize_raycasting_program(MaterialShader* material)
+{
+  if (!raycasting_programs_.count(material))
+  {
+    auto program = std::make_shared<ShaderProgram>();
+
+    auto smap = global_substitution_map_;
+    for (const auto& i : material->generate_substitution_map()) {
+      smap[i.first] = i.second;
+    }
+
+    program->set_shaders(raycasting_shader_stages_, std::list<std::string>(), false, smap);
+    raycasting_programs_[material] = program;
+  }
+  assert(raycasting_programs_.count(material));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<ShaderProgram> NURBSRenderer::_get_material_program(MaterialShader* material,
+  std::shared_ptr<ShaderProgram> const& current_program,
+  bool raycasting,
+  bool& program_changed)
+{
+  if (raycasting) {
+    auto shader_iterator = raycasting_programs_.find(material);
+    if (shader_iterator == raycasting_programs_.end())
+    {
+      try {
+        _initialize_raycasting_program(material);
+        program_changed = true;
+        return raycasting_programs_.at(material);
+      }
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl;
+        return std::shared_ptr<ShaderProgram>();
+      }
+    }
+    else {
+      if (current_program == shader_iterator->second)
+      {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
+  }
+  else {
+    auto shader_iterator = tesselation_programs_.find(material);
+    if (shader_iterator == tesselation_programs_.end())
+    {
+      try {
+        _initialize_tesselation_program(material);
+        program_changed = true;
+        return tesselation_programs_.at(material);
+      }
+      catch (std::exception& e) {
+        Logger::LOG_WARNING << "NURBSPass::_get_material_program(): Cannot create material for tesselation program: " << e.what() << std::endl;
+        return std::shared_ptr<ShaderProgram>();
+      }
+    }
+    else {
+      if (current_program == shader_iterator->second)
+      {
+        program_changed = false;
+        return current_program;
+      }
+      else {
+        program_changed = true;
+        return shader_iterator->second;
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::_reset()
+{
+  pre_tesselation_program_.reset();
+  tesselation_programs_.clear();
+  raycasting_programs_.clear();
+}
+
+
 
 } // namespace gua

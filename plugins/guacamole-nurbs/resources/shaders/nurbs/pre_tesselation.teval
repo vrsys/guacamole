@@ -8,7 +8,7 @@ layout(quads, equal_spacing, ccw) in;
 in vec3  control_position[];                         
 in uint  control_index[];                            
 in vec2  control_tesscoord[];                        
-in float control_final_tesselation[];
+in vec3 control_final_tesselation[];
         
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -16,7 +16,7 @@ in float control_final_tesselation[];
 out vec3 eval_position;                           
 out uint eval_index;                              
 out vec2 eval_tesscoord;     
-out float eval_final_tesselation;                     
+out vec3 eval_final_tesselation;                     
          
 ///////////////////////////////////////////////////////////////////////////////                                                   
 // uniforms                                         
@@ -26,9 +26,7 @@ out float eval_final_tesselation;
 uniform samplerBuffer parameter_texture;    
 uniform samplerBuffer attribute_texture;              
 
-#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
-#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
-
+@include "resources/shaders/nurbs/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"   
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 
@@ -46,29 +44,22 @@ void main()
   vec2 p1 = mix(control_tesscoord[0].xy, control_tesscoord[1].xy, gl_TessCoord.x); 
   vec2 p2 = mix(control_tesscoord[3].xy, control_tesscoord[2].xy, gl_TessCoord.x); 
   vec2 uv = clamp(mix(p1, p2, gl_TessCoord.y), 0.0, 1.0);                                                                                 
-  
-#if TEXBUFFER_LAYOUT
-  vec4 data = texelFetch(attribute_texture, int(control_index[0]) * 5);      
 
-  uint surface_index   = floatBitsToUint(data.x);                      
-  uint surface_order_u = floatBitsToUint(data.y);                      
-  uint surface_order_v = floatBitsToUint(data.z);                             
-#else
   int surface_index   = 0;
   int surface_order_u = 0;
   int surface_order_v = 0;
   retrieve_patch_data(int(control_index[0]), surface_index, surface_order_u, surface_order_v);
-#endif                                                                        
+
   vec4 puv, du, dv;                                                    
   evaluateSurface(parameter_texture,                                   
-                  int(surface_index),                                  
-                  int(surface_order_u),                                
-                  int(surface_order_v),                                
+                  surface_index,                                  
+                  surface_order_u,                                
+                  surface_order_v,                                
                   uv,                                                  
                   puv);                                                
                                                                                
   eval_position  = puv.xyz;                                               
   eval_index     = control_index[0];                                            
-  eval_tesscoord = uv;                                                 
+  eval_tesscoord = uv;                                       
   eval_final_tesselation = control_final_tesselation[0];
 }  

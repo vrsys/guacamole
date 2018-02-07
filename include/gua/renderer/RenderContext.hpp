@@ -174,6 +174,17 @@ struct GUA_DLL RenderContext {
   * Resources associated with this context
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
+
+  /**
+  * Abstract base class for plugin ressources
+  */
+  class PluginRessource
+  {
+  public : 
+    virtual ~PluginRessource() = default;
+
+  };
+  mutable std::unordered_map<std::size_t, std::shared_ptr<PluginRessource>> plugin_ressources;
 };
 
 }
