@@ -165,7 +165,6 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
     _node->add_child(geometry_node);
 
     geometry_node->scale(scale.x, scale.y, scale.z);
-
     geometry_node->set_transform(flip_transform(geometry_node->get_transform()));
 
     return true;
@@ -177,7 +176,8 @@ void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
 
     _scale = scale.Ign();
 
-    _node->scale(_scale.X(), _scale.Z(), _scale.Y());
+    _node->scale(scale.x, scale.y, scale.z);
+    // _node->set_transform(flip_transform(_node->get_transform()));
 }
 void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
 {
@@ -187,20 +187,104 @@ void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
     scm::math::mat4d translation = scm::math::make_translation(pose.pos.x, pose.pos.y, pose.pos.z);
     scm::math::quatd quaternion = scm::math::quatd(pose.rot.w, pose.rot.x, pose.rot.y, pose.rot.z);
 
-    _node->set_transform(flip_transform(translation * quaternion.to_matrix()));
+    _node->set_transform(translation * quaternion.to_matrix());
+    // _node->set_transform(flip_transform(translation * quaternion.to_matrix()));
 }
 const scm::math::mat4d PagodaVisual::flip_transform(const scm::math::mat4d &transform)
 {
     // TODO: devise pre matrix by examining side by side
 
+    /* SCRATCHPAD START */
+
+    //    scm::math::mat4d robot_position = scm::math::mat4d::identity() * scm::math::make_translation(0., 0., 0.15);
+    //    scm::math::mat4d robot_rotation = scm::math::make_rotation(0.868112, 0.390607, -0.222017, -0.210987);
+    //
+    //    scm::math::mat4d robot = robot_position * robot_rotation;
+    //
+    //    scm::math::mat4d right_eye_position = scm::math::mat4d::identity() * scm::math::make_translation(-0.230682, -0.15136, 0.37049);
+    //    scm::math::mat4d right_eye_rotation = scm::math::make_rotation(0.889883, -0.337649, -0.00798238, -0.306656);
+    //
+    //    scm::math::mat4d right_eye = right_eye_position * right_eye_rotation;
+    //
+    //    scm::math::mat4d eff_relative = scm::math::inverse(robot) * right_eye;
+    //
+    //    scm::math::mat4d exp_relative_translation = scm::math::mat4d::identity() * scm::math::make_translation(-0.0564, 0.034, 0.34685);
+    //    scm::math::mat4d exp_relative_rotation = scm::math::quatd::from_euler(-1.5708, 0., 0.).to_matrix();
+    //
+    //    scm::math::mat4d exp_relative = exp_relative_translation * exp_relative_rotation;
+    //
+    //    std::cout << std::endl;
+    //    std::cout << "Effective: " << eff_relative.m00 << ", " << eff_relative.m01 << ", " << eff_relative.m02 << ", "<<eff_relative.m03 << ", " << std::endl;
+    //    std::cout << "Effective: " << eff_relative.m04 << ", " << eff_relative.m05 << ", " << eff_relative.m06 << ", "<<eff_relative.m07 << ", " << std::endl;
+    //    std::cout << "Effective: " << eff_relative.m08 << ", " << eff_relative.m09 << ", " << eff_relative.m10 << ", "<<eff_relative.m11 << ", " << std::endl;
+    //    std::cout << "Effective: " << eff_relative.m12 << ", " << eff_relative.m13 << ", " << eff_relative.m14 << ", "<<eff_relative.m15 << std::endl;
+    //
+    //    std::cout << "Expected: " << exp_relative.m00 << ", " << exp_relative.m01 << ", " << exp_relative.m02 << ", "<<exp_relative.m03 << ", " << std::endl;
+    //    std::cout << "Expected: " << exp_relative.m04 << ", " << exp_relative.m05 << ", " << exp_relative.m06 << ", "<<exp_relative.m07 << ", " << std::endl;
+    //    std::cout << "Expected: " << exp_relative.m08 << ", " << exp_relative.m09 << ", " << exp_relative.m10 << ", "<<exp_relative.m11 << ", " << std::endl;
+    //    std::cout << "Expected: " << exp_relative.m12 << ", " << exp_relative.m13 << ", " << exp_relative.m14 << ", "<<exp_relative.m15 << std::endl;
+    //    std::cout << std::endl;
+
+    //    scm::math::vec3d translation = gua::math::get_translation(relative);
+    //    scm::math::quatd rotation_quat = scm::math::quatd::from_matrix(gua::math::get_rotation(relative));
+
+    //    double roll, pitch, yaw;
+    //
+    //    // roll (x-axis rotation)
+    //    double sinr = +2.0 * (rotation_quat.w * rotation_quat.x + rotation_quat.y * rotation_quat.z);
+    //    double cosr = +1.0 - 2.0 * (rotation_quat.x * rotation_quat.x + rotation_quat.y * rotation_quat.y);
+    //    roll = atan2(sinr, cosr);
+    //
+    //    // pitch (y-axis rotation)
+    //    double sinp = +2.0 * (rotation_quat.w * rotation_quat.y - rotation_quat.z * rotation_quat.x);
+    //    if(fabs(sinp) >= 1)
+    //        pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    //    else
+    //        pitch = asin(sinp);
+    //
+    //    // yaw (z-axis rotation)
+    //    double siny = +2.0 * (rotation_quat.w * rotation_quat.z + rotation_quat.x * rotation_quat.y);
+    //    double cosy = +1.0 - 2.0 * (rotation_quat.y * rotation_quat.y + rotation_quat.z * rotation_quat.z);
+    //    yaw = atan2(siny, cosy);
+    //
+    //    std::cout << std::endl;
+    //    std::cout << "Position: " << translation.x << ", " << translation.y << ", " << translation.z << std::endl;
+    //    std::cout << "Rotation: " << roll << ", " << pitch << ", " << yaw << std::endl;
+    //    std::cout << std::endl;
+
+    /* SCRATCHPAD END */
+
     scm::math::mat4d transform_flipped = scm::math::mat4d::identity();
 
-    /* PRE-ROTATION AROUND X */
+    /* ROTATION */
 
-    gua::math::mat4d pre = scm::math::inverse(scm::math::make_rotation(-90., 1., 0., 0.));
+    scm::math::mat4d rot_90_x = scm::math::make_rotation(90., 1., 0., 0.);
+    //scm::math::mat4d rot_90_z = scm::math::make_rotation(90.0, 0., 0., 1.);
+    //scm::math::mat4d rot_90_y = scm::math::make_rotation(90.0, 0., 1., 0.);
 
-    transform_flipped *= pre;
+    //    gua::math::mat4d pre = scm::math::inverse(scm::math::mat4d(0.99942, -0.0040342, -0.03377, 0.,
+    //                                                               0.00324, 0.999717, -0.02356, 0.,
+    //                                                               0.03385, 0.0234378, 0.99915, 0.,
+    //                                                               -0.17511, -0.184189, -0.11825, 1.));
+
+    //    gua::math::mat4d post = scm::math::inverse(scm::math::mat4d(0.99942, -0.00468, -0.03376, 0.,
+    //                                                                0.00388397, 0.999717, -0.0234632, 0.,
+    //                                                                0.03386, 0.02332, 0.99915, 0.,
+    //                                                                -0.18371, -0.19253, -0.12382, 1.));
+
+    // scm::math::mat4d rot_180_z = scm::math::inverse(scm::math::make_rotation(180., 0., 0., 1.));
+
+    /* FLIP */
+
+    // scm::math::mat4d flip_y = scm::math::mat4d(1.0, 0., 0., 0., 0., -1.0, 0., 0., 0., 0., 1.0, 0., 0., 0., 0., 1.0);
+
+    /* MIRROR */
+
+    // scm::math::mat4d mirror_z = scm::math::inverse(scm::math::make_scale(1., 1., -1.));
+
     transform_flipped *= transform;
+    //transform_flipped *= rot_90_y;// * rot_90_z;
+    transform_flipped *= rot_90_x;
 
     /* FLIPPED QUAT */
 

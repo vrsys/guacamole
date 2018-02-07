@@ -142,6 +142,7 @@ public:
 private: // attributes
 
   static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
+  static gua::math::mat4 convert_transformation(aiMatrix4x4t<float> transform_mat);
   static void apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> transform_mat);
 };
 

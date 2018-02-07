@@ -3,7 +3,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 
-#include <gua/renderer/GlfwWindow.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/utils/ToGua.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -61,6 +60,37 @@ int main(int argc, char **argv)
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
+    auto plain_red_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    plain_red_material->set_uniform("Color", gua::math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    auto plain_green_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    plain_green_material->set_uniform("Color", gua::math::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    auto plain_blue_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    plain_blue_material->set_uniform("Color", gua::math::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+    auto x_axis = loader.create_geometry_from_file("x_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_red_material,
+                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
+
+    x_axis->scale(1.0, 0.01, 0.01);
+    x_axis->translate(0.5, 0., 0.);
+
+    graph.add_node("/transform", x_axis);
+
+    auto y_axis = loader.create_geometry_from_file("y_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_green_material,
+                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
+
+    y_axis->scale(0.01, 1.0, 0.01);
+    y_axis->translate(0., 0.5, 0.);
+
+    graph.add_node("/transform", y_axis);
+
+    auto z_axis = loader.create_geometry_from_file("z_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_blue_material,
+                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
+
+    z_axis->scale(0.01, 0.01, 1.0);
+    z_axis->translate(0., 0., 0.5);
+
+    graph.add_node("/transform", z_axis);
+
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::SUN);
     light2->data.set_brightness(2.f);
@@ -68,8 +98,8 @@ int main(int argc, char **argv)
     light2->data.set_shadow_near_clipping_in_sun_direction(1.0f);
     light2->data.set_shadow_far_clipping_in_sun_direction(100.0f);
     light2->data.set_enable_shadows(false);
-    light2->data.set_shadow_map_size(1024);
-    light2->rotate(-45, 1, 1, 0);
+    light2->data.set_shadow_map_size(4096);
+    light2->translate(-11.82075, -19.38429, 17.2198);
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
