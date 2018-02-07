@@ -45,11 +45,6 @@ public :
 
   friend class NURBSLoader;
 
-  enum trimming_mode_t {
-    classic = 0,
-    double_binary_contours = 1
-  };
-
 private : // c'tor
 
   NURBSNode(std::string const& node_name,
@@ -81,9 +76,6 @@ public: // render configuration
   void render_backfaces(bool);
   bool render_backfaces() const;
 
-  void trimming_mode(trimming_mode_t);
-  trimming_mode_t trimming_mode() const;
-
 public: // virtual/override methods
 
   void ray_test_impl(Ray const& ray,
@@ -112,7 +104,6 @@ private : // attributes e.g. special attributes for drawing
 
   bool                            enable_raycasting_ = false;
   bool                            enable_backfaces_ = false;
-  trimming_mode_t                 trimming_mode_ = trimming_mode_t::classic;
 
   float                           max_tesselation_error_ = 8.0f;
   float                           max_pre_tesselation_ = 64.0f;

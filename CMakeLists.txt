@@ -26,7 +26,11 @@ option (GUACAMOLE_TESTS "Enable testing." OFF)
 # fbx import crashes on nodetype-cast on windows
 if (NOT WIN32)
   option (GUACAMOLE_FBX "Set to enable FBX support." ON)
+else ()
+  option (GUACAMOLE_FBX "Set to enable FBX support." OFF)
 endif(NOT WIN32)
+
+
 
 # We require at least version 3.0.2
 cmake_minimum_required(VERSION 3.0.2)

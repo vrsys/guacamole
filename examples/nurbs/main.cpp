@@ -83,27 +83,6 @@ void toggle_backface_culling(std::shared_ptr<gua::node::Node> const& node)
   }
 }
 
-
-void toggle_trimming(std::shared_ptr<gua::node::Node> const& node)
-{
-  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
-  if (nurbs_node) {
-    switch (nurbs_node->trimming_mode())
-    {
-    case gua::node::NURBSNode::classic :
-      nurbs_node->trimming_mode(gua::node::NURBSNode::double_binary_contours);
-      break;
-    case gua::node::NURBSNode::double_binary_contours:
-      nurbs_node->trimming_mode(gua::node::NURBSNode::classic);
-      break;
-    }
-  }
-
-  for (auto const& node : node->get_children()) {
-    toggle_trimming(node);
-  }
-}
-
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -140,9 +119,6 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     break;
   case 'b':
     toggle_backface_culling(graph.get_root());
-    break;
-  case 'y':
-    toggle_trimming(graph.get_root());
     break;
   case 'u':
     increase_error(graph.get_root());

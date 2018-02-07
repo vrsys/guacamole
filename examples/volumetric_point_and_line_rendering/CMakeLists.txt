@@ -7,7 +7,12 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${_EXE_NAME} main.cpp)
 
-target_link_libraries(${_EXE_NAME} guacamole)
+target_link_libraries(${_EXE_NAME} guacamole 
+                      optimized ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE} debug ${Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG})
+
+if (MSVC)
+  SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D BOOST_PROGRAM_OPTIONS_DYN_LINK")
+endif (MSVC)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

@@ -39,10 +39,7 @@ uniform mat4 gua_view_inverse_matrix;
 
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
-#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
-#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
-
-@include "resources/glsl/common/obb_area.glsl"   
+@include "resources/shaders/nurbs/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"   
 
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
