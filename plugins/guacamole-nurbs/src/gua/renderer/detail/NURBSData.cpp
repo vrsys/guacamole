@@ -97,25 +97,33 @@ namespace gua {
     p.surface_offset = tess_parametric_data.size();
     p.order_u = (*it)->order_u();
     p.order_v = (*it)->order_v();
+
+    p.trim_type = (*it)->trimtype();
     p.trim_id = trim_id;
+
     auto obb_id = object->serialized_obb_base_indices().find((*it));
     if (obb_id != object->serialized_obb_base_indices().end()) {
       p.obb_id = obb_id->second;
     }
 
     p.nurbs_domain = scm::math::vec4f((*it)->bezierdomain().min[0],
-                                      (*it)->bezierdomain().min[1],
-                                      (*it)->bezierdomain().max[0],
-                                      (*it)->bezierdomain().max[1]);
+      (*it)->bezierdomain().min[1],
+      (*it)->bezierdomain().max[0],
+      (*it)->bezierdomain().max[1]);
     p.bbox_min = scm::math::vec4f((*it)->bbox().min[0],
-                                  (*it)->bbox().min[1],
-                                  (*it)->bbox().min[2],
-                                  (float) 0.0f);
+      (*it)->bbox().min[1],
+      (*it)->bbox().min[2],
+      (float)0);
     p.bbox_max = scm::math::vec4f((*it)->bbox().max[0],
-                                  (*it)->bbox().max[1],
-                                  (*it)->bbox().max[2],
-                                  (float) 0.0f);
-    p.dist = scm::math::abs(edge_dist);
+      (*it)->bbox().max[1],
+      (*it)->bbox().max[2],
+      (float)0);
+    //p.distance = math::vec4f(std::fabs(edge_dist[0]), std::fabs(edge_dist[1]), std::fabs(edge_dist[2]), std::fabs(edge_dist[3]));
+
+    p.edge_length_u = (*it)->max_edge_length_u();
+    p.edge_length_v = (*it)->max_edge_length_v();
+    p.ratio_uv = p.edge_length_u / p.edge_length_v;
+    p.curvature = (*it)->curvature();
 
     tess_attribute_data.push_back(p);
 

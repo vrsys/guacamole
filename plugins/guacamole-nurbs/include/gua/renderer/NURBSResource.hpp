@@ -47,6 +47,8 @@
 
 namespace gua {
 
+  class NURBSGPURessource;
+
   namespace node {
     class NURBSNode;
   };
@@ -71,7 +73,7 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
      unsigned unit;
    };
 
-   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 200000000; // 200MB temporary XFB Buffer
+   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 100000000; // 200MB temporary XFB Buffer
 
  public : // c'tor / d'tor
 
@@ -85,16 +87,14 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
  public : // methods
 
-  /*virtual*/ void predraw(RenderContext const& context, bool cull_face) const;
+  /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /*virtual*/ void draw(RenderContext const& context, bool raycasting, bool cull_face) const;
+  /*virtual*/ void draw(RenderContext const& context) const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}
 
-  scm::gl::buffer_ptr const& vertex_buffer() const;
-  scm::gl::buffer_ptr const& index_buffer() const;
-  scm::gl::vertex_array_ptr const& vertex_array() const;
+  void wireframe(bool enable);
 
  private:
    
@@ -103,68 +103,9 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
   /////////////////////////////////////////////////////////////////////////////////////////////
   std::shared_ptr<NURBSData> _data;
 
+  mutable std::mutex                                                        _upload_mutex;
+
   scm::gl::fill_mode         _fill_mode;
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  // GPU ressources
-  /////////////////////////////////////////////////////////////////////////////////////////////
-
-  // array and texture buffers for adaptive tesselation
-  struct surface_tesselation_buffer {
-    scm::gl::vertex_array_ptr     vertex_array;
-                                   
-    scm::gl::buffer_ptr           vertex_buffer;
-    scm::gl::buffer_ptr           index_buffer;
-    scm::gl::buffer_ptr           hullvertexmap;
-    scm::gl::buffer_ptr           attribute_buffer;
-
-    scm::gl::texture_buffer_ptr   parametric_texture_buffer;
-    scm::gl::texture_buffer_ptr   domain_texture_buffer;
-    scm::gl::texture_buffer_ptr   obb_texture_buffer;
-    scm::gl::texture_buffer_ptr   attribute_texture_buffer;
-  }; 
-
-  mutable surface_tesselation_buffer _surface_tesselation_data;
-  
-               
-  // array and texture buffers for raycasting
-  struct surface_raycasting_buffer {
-    scm::gl::vertex_array_ptr     vertex_array;
-
-    scm::gl::buffer_ptr           vertex_attrib0;
-    scm::gl::buffer_ptr           vertex_attrib1;
-    scm::gl::buffer_ptr           vertex_attrib2;
-    scm::gl::buffer_ptr           vertex_attrib3;
-    scm::gl::buffer_ptr           index_buffer;
-
-    scm::gl::texture_buffer_ptr   controlpoints;
-  };
-  mutable surface_raycasting_buffer _surface_raycasting_data;
-
-  // texture buffers for trimming   
-  mutable struct {
-   scm::gl::texture_buffer_ptr    partition_texture_buffer;
-   scm::gl::texture_buffer_ptr    contourlist_texture_buffer;
-   scm::gl::texture_buffer_ptr    curvelist_texture_buffer;
-   scm::gl::texture_buffer_ptr    curvedata_texture_buffer;
-   scm::gl::texture_buffer_ptr    pointdata_texture_buffer;
-   scm::gl::texture_buffer_ptr    preclassification_buffer;
-  } _contour_trimming_data;
-
-  mutable scm::gl::sampler_state_ptr    _sstate;
-  mutable scm::gl::rasterizer_state_ptr _rstate_no_cull;
-  mutable scm::gl::rasterizer_state_ptr _rstate_cull;
-  mutable scm::gl::rasterizer_state_ptr _rstate_ms_point;
-  mutable scm::gl::blend_state_ptr      _bstate_no_blend;
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  // Transformation Feedback Specific Members - only once per context
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  struct TransformFeedbackBuffer {
-    mutable scm::gl::transform_feedback_ptr _transform_feedback;
-    mutable scm::gl::vertex_array_ptr       _transform_feedback_vao;
-    mutable scm::gl::buffer_ptr             _transform_feedback_vbo;
-  };
 
   /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -175,14 +116,9 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
   void initialize_states(RenderContext const& context) const;
   void initialize_texture_buffers(RenderContext const& context) const;
   void validate_texture_buffers() const;
-
-  void initialize_transform_feedback(RenderContext const& context) const;
   void initialize_vertex_data(RenderContext const& context) const;
+  void initialize_transform_feedback(RenderContext const& context) const;
 
- private:  // attributes
-
-  std::size_t _max_transform_feedback_buffer_size;
-  mutable std::mutex upload_mutex_;
 };
 
 }  //namespace gua

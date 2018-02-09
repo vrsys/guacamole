@@ -39,7 +39,7 @@ uniform mat4 gua_view_inverse_matrix;
 
 @include "resources/shaders/common/gua_camera_uniforms.glsl"
 
-@include "resources/shaders/nurbs/parametrization_uniforms.glsl"
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"   
 
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
@@ -142,7 +142,7 @@ void main()
 
   @material_method_calls_frag@
 
-  gua_color = gua_normal;
+  //gua_color = gua_normal;
 
   submit_fragment(gl_FragCoord.z);
 }
