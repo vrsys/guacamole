@@ -32,19 +32,6 @@
 #include <gua/utils/Trackball.hpp>
 #include <gua/node/NURBSNode.hpp>
 
-void toggle_raycasting(std::shared_ptr<gua::node::Node> const& node)
-{
-  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
-  if (nurbs_node) {
-    nurbs_node->raycasting(!nurbs_node->raycasting());
-    std::cout << "Raycasting = " << nurbs_node->raycasting() << std::endl;
-  }
-
-  for (auto const& node : node->get_children()) {
-    toggle_raycasting(node);
-  }
-}
-
 void increase_error(std::shared_ptr<gua::node::Node> const& node)
 {
   auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
@@ -58,6 +45,18 @@ void increase_error(std::shared_ptr<gua::node::Node> const& node)
   }
 }
 
+void toggle_wireframe(std::shared_ptr<gua::node::Node> const& node)
+{
+  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
+  if (nurbs_node) {
+    nurbs_node->wireframe(!nurbs_node->wireframe());
+  }
+
+  for (auto const& node : node->get_children()) {
+    toggle_wireframe(node);
+  }
+}
+
 void decrease_error(std::shared_ptr<gua::node::Node> const& node)
 {
   auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
@@ -68,18 +67,6 @@ void decrease_error(std::shared_ptr<gua::node::Node> const& node)
 
   for (auto const& node : node->get_children()) {
     decrease_error(node);
-  }
-}
-
-
-void toggle_backface_culling(std::shared_ptr<gua::node::Node> const& node)
-{
-  auto nurbs_node = std::dynamic_pointer_cast<gua::node::NURBSNode>(node);
-  if (nurbs_node)
-    nurbs_node->render_backfaces(!nurbs_node->render_backfaces());
-
-  for (auto const& node : node->get_children()) {
-    toggle_backface_culling(node);
   }
 }
 
@@ -114,11 +101,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   case 'r' :
     pipe.get_pass_by_type<gua::NURBSPassDescription>()->touch();
     break;
-  case 't' : 
-    toggle_raycasting(graph.get_root());
-    break;
-  case 'b':
-    toggle_backface_culling(graph.get_root());
+  case 'w':
+    toggle_wireframe(graph.get_root());
     break;
   case 'u':
     increase_error(graph.get_root());
@@ -136,13 +120,19 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
 }
 
+void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::math::vec2ui const& res) {
+  window->config.set_size(res);
+  window->config.set_resolution(res);
+  window->config.set_enable_vsync(true);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // create node
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<gua::node::Node> create_node_from_igs_file(std::string const& nodename, std::string const& filepath, std::shared_ptr<gua::Material> const& material)
 {
   gua::NURBSLoader nurbs_loader;
-  auto node = nurbs_loader.load_geometry(nodename, filepath, material, gua::NURBSLoader::DEFAULTS);
+  auto node = nurbs_loader.load_geometry(nodename, filepath, material, gua::NURBSLoader::DEFAULTS || gua::NURBSLoader::WIREFRAME);
   node->max_tesselation_error(8.0f);
   return node;
 }
@@ -212,36 +202,19 @@ int main(int argc, char** argv)
 
   auto count = 0;
   model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/motor.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/antenne.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontblinker.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer.igs", glass));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/grill_innen.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/frontscheinwerfer_innen.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/karosserie.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/kuehlergrill.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/nebelscheinwerfer.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/seitenscheiben.igs", glass));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/tuergriffe.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/audi/windschutzscheibe.igs", glass));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/lack/kotfluegel_vorne.igs", lack));                                                    
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/scheiben/windschutzscheibe.igs", glass));
 
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_links.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/schweller_rechts.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_rechts.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_links.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/seitenteil_hinten_rechts.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/kotfluegel_vorn_links.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/kotfluegel_vorn_rechts.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/stossfaenger_vorn.igs", lack));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/lack/a_saeule_closed.igs", lack));
-  //                                                           
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/heckscheibe.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_links.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_links.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/windschutzscheibe.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_hinten_rechts.igs", glass));
-  //input_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/scheiben/tuerseitenscheibe_vorn_rechts.igs", glass));
+#if 0
+  gua::LineStripLoader line_strip_loader;
 
+  std::string example_model_name = "data/objects/pig_ALPHA_SHAPES.lob";
+  auto line_strip_example_real_geometry_node(line_strip_loader
+    .create_geometry_from_file("ls_example_node",
+      example_model_name,
+      gua::LineStripLoader::DEFAULTS));
+  model_transform->add_child(line_strip_example_real_geometry_node);
+#endif 
 
   graph.update_cache();
 
@@ -316,16 +289,27 @@ int main(int argc, char** argv)
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
+  camera->config.set_output_window_name("window1");
   camera->config.set_enable_frustum_culling(false);
   camera->config.set_near_clip(0.01f);
   camera->config.set_far_clip(100.0f);
+
+  auto camera2 = graph.add_node<gua::node::CameraNode>("/screen", "cam2");
+  camera2->translate(0, 0, 0.8 * viewer_screen_distance);
+  camera2->config.set_resolution(resolution);
+  camera2->config.set_screen_path("/screen");
+  camera2->config.set_scene_graph_name("main_scenegraph");
+  camera2->config.set_output_window_name("window2");
+  camera2->config.set_enable_frustum_culling(false);
+  camera2->config.set_near_clip(0.01f);
+  camera2->config.set_far_clip(100.0f);
 
   std::cout << "Setting near / far clip to : " << 0.01f * scene_size << " - " << 100.0f * scene_size << std::endl;
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
   pipe->add_pass(std::make_shared<gua::NURBSPassDescription>());
+  pipe->add_pass(std::make_shared<gua::LineStripPassDescription>());
 
   auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
   pipe->add_pass(light_visibility_pass);
@@ -340,42 +324,40 @@ int main(int argc, char** argv)
   pipe->set_enable_abuffer(true);
   
   camera->set_pipeline_description(pipe);
+  camera2->set_pipeline_description(pipe);
 
   gua::utils::Trackball trackball(0.1, 0.02, 0.2);
 
-  auto window = std::make_shared<gua::GlfwWindow>();
-  gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
-  window->config.set_size(resolution);
-  window->config.set_resolution(resolution);
+  auto add_window = [](std::string const& window_name,
+    std::shared_ptr<gua::node::CameraNode> const& cam_node) -> std::shared_ptr<gua::GlfwWindow> 
+  {
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add(window_name, window);
+    set_window_default(window, cam_node->config.get_resolution());
+    cam_node->config.set_output_window_name(window_name);
+    return window;
+  };
 
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_resolution(new_size);
-    camera->config.set_resolution(new_size);
 
-    auto new_aspect_ratio = float(new_size.x) / float(new_size.y);
-    screen->data.set_size(gua::math::vec2(scene_size * new_aspect_ratio, scene_size));
-  });
-
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+  auto window1 = add_window("window1", camera); 
+  window1->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
     trackball.motion(pos.x, pos.y);
   });
-
-  window->on_button_press.connect(std::bind(mouse_button, 
+  
+  window1->on_button_press.connect(std::bind(mouse_button, 
                                   std::ref(trackball), 
                                   std::placeholders::_1, 
                                   std::placeholders::_2, 
                                   std::placeholders::_3));
-
-  window->on_key_press.connect(std::bind(key_press,
+  
+  window1->on_key_press.connect(std::bind(key_press,
                                std::ref(*(camera->get_pipeline_description())),
                                std::ref(graph),
                                std::placeholders::_1, 
                                std::placeholders::_2,
                                std::placeholders::_3,
                                std::placeholders::_4));
-  window->open();
-
+  
   gua::Renderer renderer;
 
   // application loop
@@ -393,17 +375,42 @@ int main(int argc, char** argv)
     input_transform->set_transform(modelmatrix);
 
     if (frame_counter++ % 500 == 0)
-     std::cout << window->get_rendering_fps() << std::endl;
+     std::cout << window1->get_rendering_fps() << std::endl;
 
-    window->process_events();
-    if (window->should_close()) {
-      renderer.stop();
-      window->close();
-      loop.stop();
+    if (frame_counter == 1000) {
+#if 1
+      auto window2 = add_window("window2", camera2);
+      window2->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+        trackball.motion(pos.x, pos.y);
+      });
+      
+      window2->on_button_press.connect(std::bind(mouse_button,
+        std::ref(trackball),
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3));
+      
+      window2->on_key_press.connect(std::bind(key_press,
+        std::ref(*(camera2->get_pipeline_description())),
+        std::ref(graph),
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3,
+        std::placeholders::_4));
+#endif
     }
-    else {
-      renderer.queue_draw({ &graph });
+
+    // GLFW only allows event processing from main thread
+    if (gua::WindowDatabase::instance()->lookup("window1")) {
+      gua::WindowDatabase::instance()->lookup("window1")->process_events();
     }
+
+    if (gua::WindowDatabase::instance()->lookup("window2")) {
+      gua::WindowDatabase::instance()->lookup("window2")->process_events();
+    }
+
+    renderer.queue_draw({ &graph });
+
   });
 
   loop.start();

@@ -95,23 +95,17 @@ namespace gua {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    void NURBSNode::raycasting(bool b) {
-      enable_raycasting_ = b;
+    void NURBSNode::wireframe(bool enable)
+    {
+      wireframe_ = enable;
+      geometry_->wireframe(enable);
+      geometry_changed_ = true;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    bool NURBSNode::raycasting() const {
-      return enable_raycasting_;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    void NURBSNode::render_backfaces(bool bf) {
-      enable_backfaces_ = bf;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    bool NURBSNode::render_backfaces() const {
-      return enable_backfaces_;
+    bool NURBSNode::wireframe() const
+    {
+      return wireframe_;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -185,9 +179,6 @@ namespace gua {
       result->update_cache();
 
       result->shadow_mode_ = shadow_mode_;
-      result->enable_raycasting_ = enable_raycasting_;
-      result->enable_backfaces_ = enable_backfaces_;
-
       result->max_tesselation_error(this->max_tesselation_error());
       result->max_pre_tesselation(this->max_pre_tesselation());
 

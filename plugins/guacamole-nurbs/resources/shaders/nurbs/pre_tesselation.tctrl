@@ -30,7 +30,7 @@ uniform float gua_max_pre_tesselation;
 uniform float gua_texel_width;                    
 uniform float gua_texel_height;     
                                   
-@include "resources/shaders/nurbs/parametrization_uniforms.glsl"
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"                          
 @include "resources/glsl/trimmed_surface/estimate_edge_length.glsl"
 @include "resources/glsl/common/conversion.glsl" 
@@ -56,8 +56,29 @@ void main()
 
   // derive desired tesselation based on projected area estimate
   float total_tess_level = sqrt(area_pixels) / gua_tesselation_max_error;
-  float pre_tess_level = clamp(total_tess_level, 1.0, gua_max_pre_tesselation);
+
+#if GPUCAST_SCALE_TEXXELLATION_FACTOR_TO_TRIM_RATIO
+  int trim_index    = retrieve_trim_index(int(control_index[gl_InvocationID]));
+
+  vec4 trim_domain  = texelFetch(GUA_kd_partition, trim_index+1);
+  vec4 nurbs_domain = texelFetch(GUA_kd_partition, trim_index+2);
+
+  float trim_size   = (trim_domain[1] - trim_domain[0]) * (trim_domain[3] - trim_domain[2]);
+  float domain_size = (nurbs_domain[1] - nurbs_domain[0]) * (nurbs_domain[3] - nurbs_domain[2]);
+
+  total_tess_level *= clamp(trim_size / domain_size, 0.0, 1.0);
+#endif
+
+  // assume final tesselation performs 64 subdivisions
+  float pre_tess_level = total_tess_level / GPUCAST_HARDWARE_TESSELATION_LIMIT; 
+
+  // clamp remaining pretesselations to max
+  pre_tess_level = clamp(pre_tess_level, 1.0, gua_max_pre_tesselation);
   float final_tess_level = total_tess_level / pre_tess_level;
+
+#if GPUCAST_SKIP_PRETESSELATION
+  pre_tess_level = 1.0;
+#endif
 
   // in low-quality shadow mode - don't bother with much tesselation
   if ( gua_rendering_mode == 1 ) {

@@ -27,7 +27,7 @@ layout (xfb_offset=24) out vec3 transform_final_tesselation;
 uniform samplerBuffer parameter_texture;       
 uniform samplerBuffer attribute_texture;          
 
-@include "resources/shaders/nurbs/parametrization_uniforms.glsl"
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 

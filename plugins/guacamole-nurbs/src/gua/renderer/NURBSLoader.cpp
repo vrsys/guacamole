@@ -126,7 +126,6 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
         node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
       }
 
-      node->raycasting(flags & RAYCASTING);
       return node;
     }
   } catch (std::exception & e) {

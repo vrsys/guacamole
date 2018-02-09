@@ -118,6 +118,7 @@ find_package( Boost 1.54.0 COMPONENTS
   program_options
   regex
   system
+  log
   REQUIRED
   )
 
