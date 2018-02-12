@@ -71,35 +71,18 @@ void main()
   vec4 nurbs_domain = retrieve_patch_domain(int(teIndex[0]));
   vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y);
 
-  // force vertex order to be face forward to prevent backface culling!!!
-  vec3 a_view_space = (modelview * tePosition[0]).xyz;
-  vec3 b_view_space = (modelview * tePosition[1]).xyz;
-  vec3 c_view_space = (modelview * tePosition[2]).xyz;
-
-  vec3 normal_view_space = cross(normalize(b_view_space - a_view_space), normalize(c_view_space - b_view_space));
-  vec4 normal_world_space = gua_view_matrix * vec4(normal_view_space, 0.0);
-
-  int vertex_id_first = 0;
-  int vertex_id_last  = 3;
-  int increment       = 1;
-
-  bool invert_vertex_order = dot(normal_view_space, normalize(-a_view_space)) <= 0.0;
-  float inversion_factor = invert_vertex_order ? -1.0 : 1.0;
-
-  if (invert_vertex_order) {
-    vertex_id_first = 2;
-    vertex_id_last  = -1;
-    increment       = -1;
-  }
-
-  for ( int i = vertex_id_first; i != vertex_id_last; i = i + increment )
+  for ( int i = 0; i != 3; i = i + 1 )
   {
     gIndex      = teIndex[i];
 
     // write built-in input for material
     ///////////////////////////////////////////////////////
     gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;
-    gua_normal           = inversion_factor * teNormal[i].xyz;
+
+    vec3 nview           = (modelview * teNormal[i]).xyz;
+    float invert_normal  = nview.z < 0.0 ? -1.0 : 1.0;
+    gua_normal           = invert_normal * teNormal[i].xyz;
+
     gua_texcoords        = teTessCoord[i];
     gua_tangent          = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;
     gua_bitangent        = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;
