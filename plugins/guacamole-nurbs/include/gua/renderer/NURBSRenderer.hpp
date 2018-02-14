@@ -67,7 +67,7 @@ namespace gua {
     static const unsigned GUA_ATTRIBUTE_SSBO_BINDING = 2;
     static const unsigned GUA_ATOMIC_COUNTER_BINDING = 3;
     static const unsigned GUA_FEEDBACK_BUFFER_BINDING = 4;
-    static const unsigned GUA_ABUFFER_MAX_FRAGMENTS = 1000000; // 10M fragments 
+    //static const unsigned GUA_ABUFFER_MAX_FRAGMENTS = 10000000; // 10M fragments 
     static const unsigned GUA_ANTI_ALIASING_MODE = 0;
     static const unsigned GUA_WRITE_DEBUG_COUNTER = 0;
     static const unsigned GUA_SECOND_PASS_TRIANGLE_TESSELATION = 0;
