@@ -87,9 +87,10 @@ int main(int argc, char** argv) {
 
   //tests guis
   gua::math::vec2 test_size(500.f, 200.f);
+  gua::math::vec2 fps_size(170.f, 55.f);
 
   std::string test_1_path = "asset://gua/data/html/test.html";
-  std::string test_2_path = "http://cant-not-tweet-this.com/";
+  std::string test_2_path = "asset://gua/data/html/fps_subscription.html";
   //Test1
   auto test_1 = std::make_shared<gua::GuiResource>();
   test_1->init("test_1", test_1_path, test_size);
@@ -100,20 +101,17 @@ int main(int argc, char** argv) {
 
   //Test2
   auto test_2 = std::make_shared<gua::GuiResource>();
-  test_2->init("test_2", test_2_path, test_size);
+  test_2->init("test_2", test_2_path, fps_size);
   auto test_2_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_2_quad");
   test_2_quad->data.texture() = "test_2";
-  test_2_quad->data.size() = test_size;
+  test_2_quad->data.size() = fps_size;
   test_2_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
 
   graph.add_node("/", test_1_quad);
   graph.add_node("/", test_2_quad);
 
-  test_1->set_js_message("It's-a-me! Test1!");
-  test_1->send_js_message();
-
-  test_2->set_js_message("It's-a-me! Test2!");
-  test_2->send_js_message();
+  test_1->set_js_message("It's-a-me! Test2!");
+  //test_2->send_js_message();
 //////////////////////////////////////////////////////////////////////////
 /*
   //fps display
@@ -272,9 +270,13 @@ int main(int argc, char** argv) {
     std::stringstream sstr;
     sstr.precision(1);
     sstr.setf(std::ios::fixed, std::ios::floatfield);
-    //sstr << "FPS: " << renderer.get_application_fps()
-    //     << " / " << window->get_rendering_fps();
-    //fps->call_javascript("set_fps_text", sstr.str());
+    sstr << "FPS: " << renderer.get_application_fps()
+         << " / " << window->get_rendering_fps();
+    test_1->set_js_message(sstr.str());
+    test_1->send_js_message();
+
+    test_2->set_js_message(sstr.str());
+    test_2->send_js_message();
     // ray->rotate(1, 0, 1, 0);
     //gui->myTest();
     CEFInterface->update();

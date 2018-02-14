@@ -23,6 +23,9 @@
 
 #include <include/wrapper/cef_message_router.h>
 #include <include/wrapper/cef_helpers.h>
+#include <gua/gui/stl_helpers.hpp>
+#include <mutex>
+
 
 namespace gua {
 
@@ -31,7 +34,8 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
  public:
   GuiMessageHandler(const CefString& startup_url);
 
-  void send(CefString message);
+  void send();
+  void set_message(CefString message);
 
   ///////////////////////////////////////////////////////////////////////////
   // Called due to cefQuery execution in message_router.html.
@@ -45,6 +49,9 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
  private:
   const CefString startup_url_;
   CefString message_;
+  CefRefPtr<Callback> callback_;
+
+  std::mutex mutex_;
 
   DISALLOW_COPY_AND_ASSIGN(GuiMessageHandler);
 };

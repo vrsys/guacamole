@@ -33,11 +33,11 @@ GuiBrowserClient::GuiBrowserClient(GLSurface *renderHandler, CefString url)
     {std::cout << "Its-a-me-Client!" << std::endl;}
 
 void GuiBrowserClient::set_message(CefString message){
-  message_ = message;
+  message_handler_->set_message(message);
 }
 
 void GuiBrowserClient::send_message(){
-  message_handler_->send(message_); 
+  message_handler_->send(); 
 }
 
 bool GuiBrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,

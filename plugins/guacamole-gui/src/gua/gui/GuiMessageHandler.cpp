@@ -26,8 +26,19 @@ namespace gua {
 GuiMessageHandler::GuiMessageHandler(const CefString& startup_url)
     : startup_url_(startup_url) {}
 
-void GuiMessageHandler::send(CefString message){
+void GuiMessageHandler::set_message(CefString message){
+  std::unique_lock<std::mutex> lock(mutex_);
   message_ = message;
+}
+
+void GuiMessageHandler::send(){
+  //std::cout << "manual callback!\n";
+  
+  if(callback_ == nullptr) return;
+
+  std::unique_lock<std::mutex> lock(mutex_);
+  callback_->Success(message_);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -38,13 +49,10 @@ bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
              const CefString& request,
              bool persistent,
              CefRefPtr<Callback> callback) {
-  // Only handle messages from the startup URL.
-  const std::string& url = frame->GetURL();
-  if (url.find(startup_url_) != 0)
-    return false;
 
-  std::string  result = message_;
-  callback->Success(result);
+  if(persistent) callback_ = callback;
+  send();
+
   return true;
 }
 
