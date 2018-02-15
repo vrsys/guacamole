@@ -26,9 +26,7 @@ flat out vec4   tePosition;
 uniform samplerBuffer parameter_texture;            
 uniform samplerBuffer attribute_texture;            
 
-#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
-#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
-
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"   
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 
@@ -46,17 +44,10 @@ void main()
 {                                                                      
   vec4 p, du, dv;                                                      
         
-#if TEXBUFFER_LAYOUT                                                                                                                                
-  vec4 data = texelFetch(attribute_texture, int(tcIndex[0]) * 5);      
-  uint surface_index   = floatBitsToUint(data.x);                      
-  uint surface_order_u = floatBitsToUint(data.y);                      
-  uint surface_order_v = floatBitsToUint(data.z);                                                                     
-#else
   int surface_index   = 0;
   int surface_order_u = 0;
   int surface_order_v = 0;
   retrieve_patch_data(int(tcIndex[0]), surface_index, surface_order_u, surface_order_v);
-#endif
                                                                                                                                                             
   vec2 p1 = mix(tcTessCoord[0].xy, tcTessCoord[1].xy, gl_TessCoord.x); 
   vec2 p2 = mix(tcTessCoord[3].xy, tcTessCoord[2].xy, gl_TessCoord.x); 
