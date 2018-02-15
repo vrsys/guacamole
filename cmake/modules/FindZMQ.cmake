@@ -5,6 +5,8 @@ SET(ZMQ_INCLUDE_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/zmq/include
   ${ZMQ_INCLUDE_DIRS}
   ${ZMQ_INCLUDE_SEARCH_DIR}
+  /usr/include
+  /usr/local/include
   /opt/zmq/current/include
 )
 

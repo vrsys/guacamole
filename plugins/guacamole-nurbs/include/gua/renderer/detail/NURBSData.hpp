@@ -37,8 +37,9 @@ public :
   struct per_patch_data
   {
     unsigned surface_offset;
-    unsigned short order_u;
-    unsigned short order_v;
+    unsigned char order_u;
+    unsigned char order_v;
+    unsigned short trim_type;
     unsigned trim_id;
     unsigned obb_id;
 
@@ -46,7 +47,10 @@ public :
     scm::math::vec4f bbox_min;
     scm::math::vec4f bbox_max;
 
-    scm::math::vec4f dist;
+    float ratio_uv;
+    float edge_length_u;
+    float edge_length_v;
+    float curvature;
   };
   
 

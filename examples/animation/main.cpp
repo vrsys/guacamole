@@ -70,13 +70,24 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
   // load ground
+#if WIN32
+  auto ground_node(tri_loader.create_geometry_from_file("fbx", "data/objects/plane.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+#else
   auto ground_node(tri_loader.create_geometry_from_file("fbx", "/opt/avango/avango-applications/data/objects/plane.obj", mat1, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+#endif
   ground_node->set_transform(scm::math::make_translation(0.0, -0.48, 0.0) * scm::math::make_scale(5.0, 5.0, 5.0) * ground_node->get_transform());
   // load character
+
+#if WIN32
+  auto character_node(loader.create_geometry_from_file("fbx", "data/objects/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
+  character_node->set_transform(scm::math::make_rotation(-90.0, 1.0, 0.0, 0.0) * character_node->get_transform());
+  character_node->add_animations("data/objects/Assets/Walk.FBX", "walk");
+#else
   auto character_node(loader.create_geometry_from_file("fbx", "/opt/project_animation/Assets/HeroTPP.FBX", mat1, gua::SkeletalAnimationLoader::NORMALIZE_POSITION | gua::SkeletalAnimationLoader::NORMALIZE_SCALE));
   character_node->set_transform(scm::math::make_rotation(-90.0, 1.0, 0.0, 0.0) * character_node->get_transform());
-  
   character_node->add_animations("/opt/project_animation/Assets/Walk.FBX", "walk");
+#endif
+  
   character_node->set_animation_1("walk");
   character_node->add_animations("/opt/project_animation/Assets/Run.FBX", "run");
   character_node->set_animation_2("run");

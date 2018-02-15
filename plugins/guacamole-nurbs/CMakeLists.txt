@@ -50,7 +50,7 @@ target_include_directories( guacamole-nurbs PUBLIC
 # compiling and linking
 ###############################################################################
 IF (MSVC)
-	set_target_properties(guacamole-nurbs PROPERTIES COMPILE_FLAGS "-D GUA_NURBS_LIBRARY")
+	set_target_properties(guacamole-nurbs PROPERTIES COMPILE_FLAGS "-D GUA_NURBS_LIBRARY -D BOOST_LOG_DYN_LINK")
 ENDIF (MSVC)
 
 IF (UNIX)
@@ -60,8 +60,9 @@ ELSEIF (MSVC)
 ENDIF(UNIX)
 
 IF (MSVC)
-  target_link_libraries( guacamole-nurbs guacamole optimized ${GPUCAST_LIBRARY_RELEASE})
-  target_link_libraries( guacamole-nurbs guacamole debug ${GPUCAST_LIBRARY_DEBUG})
+  target_link_libraries( guacamole-nurbs guacamole 
+                         optimized ${GPUCAST_LIBRARY_RELEASE} debug ${GPUCAST_LIBRARY_DEBUG} 
+                       )
 ELSEIF (UNIX)
   target_link_libraries( guacamole-nurbs guacamole ${GPUCAST_LIBRARY})
 ENDIF (MSVC)

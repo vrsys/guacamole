@@ -72,7 +72,7 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx, Substitut
   PipelinePass pass{ *this, ctx, substitution_map };
 
   auto renderer = std::make_shared<NURBSRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
+  renderer->set_substitutions(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
