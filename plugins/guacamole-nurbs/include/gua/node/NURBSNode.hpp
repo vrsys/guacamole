@@ -45,7 +45,7 @@ public :
 
   friend class NURBSLoader;
 
-private : // c'tor
+public : // c'tor
 
   NURBSNode(std::string const& node_name,
             std::string const& geometry_description = "gua_default_geometry",

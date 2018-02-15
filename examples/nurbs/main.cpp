@@ -40,8 +40,8 @@ void increase_error(std::shared_ptr<gua::node::Node> const& node)
     std::cout << "Error = " << nurbs_node->max_tesselation_error() << std::endl;
   }
 
-  for (auto const& node : node->get_children()) {
-    increase_error(node);
+  for (auto const& n : node->get_children()) {
+    increase_error(n);
   }
 }
 
@@ -52,8 +52,8 @@ void toggle_wireframe(std::shared_ptr<gua::node::Node> const& node)
     nurbs_node->wireframe(!nurbs_node->wireframe());
   }
 
-  for (auto const& node : node->get_children()) {
-    toggle_wireframe(node);
+  for (auto const& n : node->get_children()) {
+    toggle_wireframe(n);
   }
 }
 
@@ -65,8 +65,8 @@ void decrease_error(std::shared_ptr<gua::node::Node> const& node)
     std::cout << "Error = " << nurbs_node->max_tesselation_error() << std::endl;
   }
 
-  for (auto const& node : node->get_children()) {
-    decrease_error(node);
+  for (auto const& n : node->get_children()) {
+    decrease_error(n);
   }
 }
 
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
   //input_transform->add_child(center);
 
   auto count = 0;
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/motor.igs", lack));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/part.igs", lack));
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/lack/kotfluegel_vorne.igs", lack));                                                    
   //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/scheiben/windschutzscheibe.igs", glass));
 

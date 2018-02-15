@@ -62,7 +62,7 @@ ENDIF(UNIX)
 IF (MSVC)
   target_link_libraries( guacamole-nurbs guacamole 
                          optimized ${GPUCAST_LIBRARY_RELEASE} debug ${GPUCAST_LIBRARY_DEBUG} 
-                         optimized ${Boost_LOG_LIBRARY_RELEASE} debug ${Boost_LOG_LIBRARY_DEBUG} )
+                       )
 ELSEIF (UNIX)
   target_link_libraries( guacamole-nurbs guacamole ${GPUCAST_LIBRARY})
 ENDIF (MSVC)

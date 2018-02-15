@@ -41,7 +41,7 @@ namespace gua {
     object->init(pre_subdivision_u, pre_subdivision_v, trim_texture);
   }
 
-  unsigned int patch_id = unsigned int(tess_attribute_data.size());
+  unsigned int patch_id(tess_attribute_data.size());
 
   // serialize trim domain
   typedef gpucast::math::domain::contour_map_kd<double> partition_type;
