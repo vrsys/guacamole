@@ -59,13 +59,9 @@ ELSEIF (MSVC)
     LIST(APPEND LIBS winmm.lib guacamole)
 ENDIF(UNIX)
 
-IF (MSVC)
-  target_link_libraries( guacamole-nurbs guacamole 
-                         optimized ${GPUCAST_LIBRARY_RELEASE} debug ${GPUCAST_LIBRARY_DEBUG} 
-                       )
-ELSEIF (UNIX)
-  target_link_libraries( guacamole-nurbs guacamole ${GPUCAST_LIBRARY})
-ENDIF (MSVC)
+target_link_libraries( guacamole-nurbs guacamole 
+                       optimized ${GPUCAST_LIBRARY_RELEASE} debug ${GPUCAST_LIBRARY_DEBUG} 
+)
 
 ###############################################################################
 # install 
