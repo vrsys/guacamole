@@ -64,6 +64,8 @@ int Interface::init(int argc, char** argv) {
 
   // Create a temporary CommandLine object.
   CefRefPtr<CefCommandLine> command_line = CreateCommandLine(main_args);
+  command_line->AppendSwitch("off-screen-rendering-enabled");
+  command_line->AppendSwitch("no-sandbox");
 
   // Create a CefApp of the correct process type.
   CefRefPtr<CefApp> app;
@@ -98,6 +100,11 @@ int Interface::init(int argc, char** argv) {
 
   // Specify CEF global settings here.
   CefSettings settings;
+  /*
+  settings.resources_dir_path;
+  settings.locales_dir_path;
+  settings.log_file;
+  */
 
   // Initialize CEF for the browser process. The first browser instance will be
   // created in CefBrowserProcessHandler::OnContextInitialized() after CEF has

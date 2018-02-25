@@ -34,7 +34,7 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
  public:
   GuiMessageHandler(const CefString& startup_url);
 
-  void send();
+  bool send();
   void set_message(CefString message);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,7 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
  private:
   const CefString startup_url_;
   CefString message_;
+  CefString response_;
   CefRefPtr<Callback> callback_;
 
   std::mutex mutex_;

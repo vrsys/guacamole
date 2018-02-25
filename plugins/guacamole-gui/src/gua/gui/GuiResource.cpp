@@ -190,13 +190,7 @@ void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int m
   //std::cout << "keyboard event " << action << " " << mods << " " << (int)key << std::endl;
   if (interactive_) {
     auto evt = static_cast<CefKeyEvent>(GuiCefKeyEvent(key, scancode, action, mods));
-    //evt.type = KEYEVENT_RAWKEYDOWN;
-    //browser_->GetHost()->SendKeyEvent(evt);
-    //evt.type = KEYEVENT_CHAR;
     browser_->GetHost()->SendKeyEvent(evt);
-    //evt.type = KEYEVENT_KEYUP;
-    //browser_->GetHost()->SendKeyEvent(evt);
-    //view_->InjectKeyboardEvent(AweKeyEvent(key, scancode, action, mods));
   }
 }
 
@@ -206,7 +200,6 @@ void GuiResource::inject_char_event(unsigned c) const {
   std::cout << "char event" << std::endl;
   if (interactive_) {
     browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(c));
-    //view_->InjectKeyboardEvent(AweKeyEvent(c));
   }
 }
 
@@ -214,7 +207,6 @@ void GuiResource::inject_char_event(unsigned c) const {
 
 void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
   focus();
-  //math::vec2 pos {position.x, (1-position.y)};
   inject_mouse_position(math::vec2(gui_texture_->width() * position.x, gui_texture_->height() * (1-position.y)));
 }
 
@@ -230,7 +222,6 @@ void GuiResource::inject_mouse_position(math::vec2 const& position) {
     evt.y = position.y;
 
     browser_->GetHost()->SendMouseMoveEvent(evt, false);
-    //view_->InjectMouseMove(position.x, gui_texture_->height() - position.y);
   }
 }
 
@@ -266,7 +257,6 @@ void GuiResource::inject_mouse_button(Button button, int action, int mods) const
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
-  std::cout << "wheeeeeel" << std::endl;
   if (interactive_) {
     CefMouseEvent evt;
     evt.x = mouse_position_.x;

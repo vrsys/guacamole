@@ -31,13 +31,13 @@ void GuiMessageHandler::set_message(CefString message){
   message_ = message;
 }
 
-void GuiMessageHandler::send(){
-  //std::cout << "manual callback!\n";
-  
-  if(callback_ == nullptr) return;
+bool GuiMessageHandler::send(){  
+  if(callback_ == nullptr) return false;
 
   std::unique_lock<std::mutex> lock(mutex_);
   callback_->Success(message_);
+
+  return true;
 
 }
 
@@ -51,6 +51,7 @@ bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
              CefRefPtr<Callback> callback) {
 
   if(persistent) callback_ = callback;
+  if(!request.empty()) response_ = request;
   send();
 
   return true;
