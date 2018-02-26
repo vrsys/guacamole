@@ -1,6 +1,12 @@
 @include "resources/shaders/common/header.glsl" 
                                               
 @include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"     
+@include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
+@include "resources/glsl/common/obb_area.glsl"   
+@include "resources/glsl/common/conversion.glsl" 
+@include "resources/glsl/trimmed_surface/estimate_edge_length.glsl"
+@include "resources/shaders/common/gua_camera_uniforms.glsl"   
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // input
@@ -29,14 +35,11 @@ uniform samplerBuffer attribute_texture;
 uniform samplerBuffer obb_texture;       
 
 uniform float gua_tesselation_max_error;   
-uniform float gua_max_pre_tesselation;
                                                           
 uniform float gua_texel_width;                    
 uniform float gua_texel_height;                   
 
-@include "resources/glsl/common/obb_area.glsl"   
-@include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
-@include "resources/shaders/common/gua_camera_uniforms.glsl"   
+
             
 ///////////////////////////////////////////////////////////////////////////////
 // functions
@@ -50,7 +53,7 @@ uniform float gua_texel_height;
 @include "resources/shaders/nurbs/detail/inner_tess_level.glsl"
 @include "resources/shaders/nurbs/detail/is_inside.glsl"
 @include "resources/shaders/nurbs/detail/frustum_cull.glsl"
-@include "resources/glsl/common/conversion.glsl" 
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,7 +77,7 @@ void adjust_tesselation_by_edge_length_estimate(in float final_tesselation_estim
   outer_tessel_level      = vec4(clamp(final_tesselation_estimate, 1.0, 64.0));
 }
 
-#if 1
+
 ///////////////////////////////////////////////////////////////////////////////
 void compute_screenspace_vertices(out vec4 umin_vmin,
                                   out vec4 umax_vmin,
@@ -156,8 +159,63 @@ void adjust_tesselation_by_edge_lengths(in float final_tesselation_estimate,
   outer_tessel_level[3] = clamp(length(vec2(gua_resolution) * umax_vmax.xy)/gua_tesselation_max_error, 1.0, 64.0);
 
 }
- #endif          
 
+
+ ///////////////////////////////////////////////////////////////////////////////////////
+vec3 compute_tessellation_levels(in int index)
+{
+  // project oriented boudning box to screen and estimate area          
+  int obb_index = retrieve_obb_index(index);
+
+  float area = calculate_obb_area(gua_projection_matrix * gua_model_view_matrix, gua_model_view_inverse_matrix, obb_texture, obb_index, false);
+  float area_pixels = float(gua_resolution.x * gua_resolution.y) * area;
+
+  // derive desired tesselation based on projected area estimate
+  float total_tess_level = sqrt(area_pixels) / gua_tesselation_max_error;
+
+#if GPUCAST_SCALE_TEXXELLATION_FACTOR_TO_TRIM_RATIO
+  int trim_index = retrieve_trim_index(index);
+
+  vec4 trim_domain = texelFetch(trim_partition, trim_index + 1);
+  vec4 nurbs_domain = texelFetch(trim_partition, trim_index + 2);
+
+  float trim_size = (trim_domain[1] - trim_domain[0]) * (trim_domain[3] - trim_domain[2]);
+  float domain_size = (nurbs_domain[1] - nurbs_domain[0]) * (nurbs_domain[3] - nurbs_domain[2]);
+
+  total_tess_level *= clamp(trim_size / domain_size, 0.0, 1.0);
+#endif
+
+  float final_tess_level = clamp(total_tess_level, 1.0, float(GPUCAST_HARDWARE_TESSELATION_LIMIT));
+
+#if 1
+  // in low-quality shadow mode - don't bother with much tesselation
+  if (gua_rendering_mode == 1) {
+    final_tess_level = final_tess_level / 16.0;
+  }
+
+  // in high-quality shadow mode - render @ 1/4 of the desired tesselation quality
+  if (gua_rendering_mode == 2) {
+    final_tess_level = final_tess_level / 4.0;
+  }
+#endif
+
+  // compute edge length to estimate tesselation
+  int surface_index = 0;
+  int surface_order_u = 0;
+  int surface_order_v = 0;
+  retrieve_patch_data(index, surface_index, surface_order_u, surface_order_v);
+
+  vec4 edge_lengths = estimate_edge_lengths_in_pixel(surface_index, 
+                                                     parameter_texture, 
+                                                     surface_order_u, 
+                                                     surface_order_v,
+                                                     gua_model_view_projection_matrix,
+                                                     vec2(gua_resolution));
+
+  return vec3(final_tess_level,
+    uintBitsToFloat(uint2ToUInt(uvec2(edge_lengths.xy))),
+    uintBitsToFloat(uint2ToUInt(uvec2(edge_lengths.zw))));
+}
 
 
 
@@ -183,7 +241,7 @@ void main()
   uvec2 u_edge_lengths   = intToUInt2(floatBitsToUint(v_final_tesselation.y));
   uvec2 v_edge_lengths   = intToUInt2(floatBitsToUint(v_final_tesselation.z));
 #endif
-  
+
   vec2 inner_tessel_level = vec2(final_tess_level);
   vec4 outer_tessel_level = vec4(final_tess_level);
 
@@ -215,5 +273,5 @@ void main()
   gl_TessLevelOuter[0] = outer_tessel_level[0];
   gl_TessLevelOuter[1] = outer_tessel_level[1];
   gl_TessLevelOuter[2] = outer_tessel_level[2];                                                                                                                
-  gl_TessLevelOuter[3] = outer_tessel_level[3];                                                                                                            
+  gl_TessLevelOuter[3] = outer_tessel_level[3];                                                                                                       
 }           

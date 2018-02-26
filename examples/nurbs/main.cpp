@@ -104,6 +104,10 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   case 'w':
     toggle_wireframe(graph.get_root());
     break;
+  case 'p':
+    pipe.get_pass_by_type<gua::NURBSPassDescription>()->enable_pretessellation(!pipe.get_pass_by_type<gua::NURBSPassDescription>()->enable_pretessellation());
+    pipe.get_pass_by_type<gua::NURBSPassDescription>()->touch();
+    break;
   case 'u':
     increase_error(graph.get_root());
     break;

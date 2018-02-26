@@ -122,7 +122,7 @@ void NURBSResource::predraw(RenderContext const& context) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::draw(RenderContext const& context) const
+void NURBSResource::draw(RenderContext const& context, bool pretessellation) const
 {
   // upload to GPU if neccessary
   auto iter = context.plugin_ressources.find(uuid());
@@ -179,11 +179,18 @@ void NURBSResource::draw(RenderContext const& context) const
     in_context->set_rasterizer_state(state_ptr->_solid_no_cull);
   }
 
-  in_context->apply();
-
-  in_context->draw_transform_feedback(
-    scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
-    xfb_ptr->_transform_feedback);
+  if (pretessellation) {
+    in_context->apply();
+    in_context->draw_transform_feedback(
+      scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
+      xfb_ptr->_transform_feedback);
+  }
+  else {
+    in_context->bind_vertex_array(resource->_surface_tesselation_data.vertex_array);
+    in_context->bind_index_buffer(resource->_surface_tesselation_data.index_buffer, scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, scm::gl::TYPE_UINT);
+    in_context->apply();
+    in_context->draw_elements(_data->tess_index_data.size());
+  }
 }
 
 

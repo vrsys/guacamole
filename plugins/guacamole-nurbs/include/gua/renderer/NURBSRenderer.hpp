@@ -62,7 +62,7 @@ namespace gua {
 
   public:
 
-    static const unsigned GUA_MAX_XFB_BUFFER_SIZE_IN_BYTES = 1024000000/2; // reserve GB transform feedback buffer
+    static const unsigned GUA_MAX_XFB_BUFFER_SIZE_IN_BYTES = 1024000000; // reserve GB transform feedback buffer
     static const unsigned GUA_HULLVERTEXMAP_SSBO_BINDING = 1;
     static const unsigned GUA_ATTRIBUTE_SSBO_BINDING = 2;
     static const unsigned GUA_ATOMIC_COUNTER_BINDING = 3;
@@ -80,6 +80,9 @@ namespace gua {
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_substitutions(SubstitutionMap const& smap);
+
+    void pretessellation(bool enable);
+    bool pretessellation() const;
 
   private:  // auxiliary methods
 

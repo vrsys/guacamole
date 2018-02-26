@@ -142,6 +142,8 @@ namespace gua {
 
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
 
+        if (_pretessellation)
+        {
           // render using two-pass tesselation approach
           pre_tesselation_program_->use(ctx);
           {
@@ -158,26 +160,27 @@ namespace gua {
             nurbs_ressource->predraw(ctx);
           }
           pre_tesselation_program_->unuse(ctx);
+        }
 
-          current_material_program->use(ctx);
-          //save_to_file(*current_material_program, ".", "tesselation");
-          {
-            nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+        current_material_program->use(ctx);
+        //save_to_file(*current_material_program, ".", "tesselation");
+        {
+          nurbs_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
-            current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
-            current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(modelview_matrix));
-            current_material_program->apply_uniform(ctx, "gua_model_view_inverse_matrix", math::mat4f(modelviewinverse_matrix));
-            current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
+          current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(model_matrix));
+          current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(modelview_matrix));
+          current_material_program->apply_uniform(ctx, "gua_model_view_inverse_matrix", math::mat4f(modelviewinverse_matrix));
+          current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(normal_matrix));
 
-            current_material_program->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
-            current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
+          current_material_program->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
+          current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
 
-            // hack
-            current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
-            ctx.render_context->apply();
-            nurbs_ressource->draw(ctx);
-          }
-          current_material_program->unuse(ctx);
+          // hack
+          current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+          ctx.render_context->apply();
+          nurbs_ressource->draw(ctx, _pretessellation);
+        }
+        current_material_program->unuse(ctx);
         
       }
       else {
@@ -201,6 +204,23 @@ namespace gua {
   }
 
 ////////////////////////////////////////////////////////////////////////////////
+void NURBSRenderer::pretessellation(bool enable)
+{
+  _pretessellation = enable;
+  global_substitution_map_["GPUCAST_ENABLE_PRETESSELLATION_INPUT"] = std::to_string(_pretessellation);
+
+  pre_tesselation_program_.reset();
+  tesselation_programs_.clear();
+  _load_shaders();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool NURBSRenderer::pretessellation() const
+{
+  return _pretessellation;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void NURBSRenderer::_load_shaders()
 {
   pre_tesselation_shader_stages_.clear();
@@ -215,6 +235,7 @@ void NURBSRenderer::_load_shaders()
   pre_tesselation_interleaved_stream_capture_.push_back("transform_tesscoord");
   pre_tesselation_interleaved_stream_capture_.push_back("transform_final_tesselation");
 
+  tesselation_shader_stages_.clear();
   tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.vert")));
   tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_CONTROL_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.tctrl")));
   tesselation_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_TESS_EVALUATION_SHADER, factory_.read_shader_file("resources/shaders/nurbs/final_tesselation.teval")));
@@ -233,7 +254,7 @@ void NURBSRenderer::_initialize_pre_tesselation_program(RenderContext const& ctx
 
     new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true, smap);
     pre_tesselation_program_ = new_program;
-    save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
+    //save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
   }
 
   pre_tesselation_program_->use(ctx);
@@ -261,7 +282,7 @@ void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
     program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
     tesselation_programs_[material] = program;
 
-    save_to_file(*program, ".", "tesselation_program");
+    //save_to_file(*program, ".", "tesselation_program");
   }
   assert(tesselation_programs_.count(material));
 }

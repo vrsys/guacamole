@@ -60,8 +60,8 @@ void main()
 #if GPUCAST_SCALE_TEXXELLATION_FACTOR_TO_TRIM_RATIO
   int trim_index    = retrieve_trim_index(int(control_index[gl_InvocationID]));
 
-  vec4 trim_domain  = texelFetch(GUA_kd_partition, trim_index+1);
-  vec4 nurbs_domain = texelFetch(GUA_kd_partition, trim_index+2);
+  vec4 trim_domain  = texelFetch(trim_partition, trim_index+1);
+  vec4 nurbs_domain = texelFetch(trim_partition, trim_index+2);
 
   float trim_size   = (trim_domain[1] - trim_domain[0]) * (trim_domain[3] - trim_domain[2]);
   float domain_size = (nurbs_domain[1] - nurbs_domain[0]) * (nurbs_domain[3] - nurbs_domain[2]);
