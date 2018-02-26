@@ -14,7 +14,7 @@ layout (location = 3) in vec3  final_tesselation;
 flat out vec3  vertex_position;                  
 flat out uint  vertex_index;                     
 flat out vec2  vertex_tessCoord; 
-flat out vec3 vertex_final_tesselation;                     
+out vec3  vertex_final_tesselation;                     
     
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

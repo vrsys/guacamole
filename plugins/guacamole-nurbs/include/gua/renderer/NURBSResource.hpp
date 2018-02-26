@@ -89,7 +89,7 @@ class GUA_NURBS_DLL NURBSResource : public GeometryResource {
 
   /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /*virtual*/ void draw(RenderContext const& context) const;
+  /*virtual*/ void draw(RenderContext const& context, bool pretessellation) const;
 
   void ray_test(Ray const& ray, int options,
                 node::Node* owner, std::set<PickResult>& hits) {}
