@@ -26,6 +26,7 @@
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/NURBSLoader.hpp>
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
@@ -104,6 +105,10 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
   case 'w':
     toggle_wireframe(graph.get_root());
     break;
+  case 'h':
+    pipe.get_pass_by_type<gua::SSAAPassDescription>()->enable_pinhole_correction(!pipe.get_pass_by_type<gua::SSAAPassDescription>()->enable_pinhole_correction());
+    pipe.get_pass_by_type<gua::SSAAPassDescription>()->touch();
+    break;    
   case 'p':
     pipe.get_pass_by_type<gua::NURBSPassDescription>()->enable_pretessellation(!pipe.get_pass_by_type<gua::NURBSPassDescription>()->enable_pretessellation());
     pipe.get_pass_by_type<gua::NURBSPassDescription>()->touch();
@@ -174,23 +179,26 @@ int main(int argc, char** argv)
   gua::MaterialShaderDatabase::instance()->add(material_shader);
   auto lack = material_shader->make_new_material();
   auto glass = material_shader->make_new_material();
-  auto gum = material_shader->make_new_material();
+  auto chrome = material_shader->make_new_material();
 
   // configure materials 
   lack->set_uniform("Color", copper);
   lack->set_uniform("Roughness", 0.3f);
-  lack->set_uniform("Metalness", 0.0f);
+  lack->set_uniform("Metalness", 1.0f);
   lack->set_uniform("Opacity", 1.0f);
+  lack->set_uniform("Spheremap", std::string("data/textures/spheremap.jpg"));
 
   glass->set_uniform("Color", water);
   glass->set_uniform("Roughness", 0.3f);
   glass->set_uniform("Metalness", 1.0f);
   glass->set_uniform("Opacity", 0.3f);
+  glass->set_uniform("Spheremap", std::string("data/textures/spheremap.jpg"));
 
-  gum->set_uniform("Color", gua::math::vec4f(0.1, 0.1, 0.1, 1.0));
-  gum->set_uniform("Roughness", 1.0f);
-  gum->set_uniform("Metalness", 0.0f);
-  gum->set_uniform("Opacity", 1.0f);
+  chrome->set_uniform("Color", chromium);
+  chrome->set_uniform("Roughness", 0.2f);
+  chrome->set_uniform("Metalness", 1.0f);
+  chrome->set_uniform("Opacity", 1.0f);
+  chrome->set_uniform("Spheremap", std::string("data/textures/spheremap.jpg"));
 
   /////////////////////////////////////////////////////////////////////////////
   // setup scene 
@@ -205,9 +213,9 @@ int main(int argc, char** argv)
   //input_transform->add_child(center);
 
   auto count = 0;
-  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/part.igs", lack));
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/lack/kotfluegel_vorne.igs", lack));                                                    
-  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/vw/exterior/scheiben/windschutzscheibe.igs", glass));
+  model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/part.igs", chrome));
+  //model_transform->add_child(create_node_from_igs_file("igs" + std::to_string(count++), "./data/objects/windschutzscheibe.igs", glass));
+  
 
 #if 0
   gua::LineStripLoader line_strip_loader;
@@ -311,9 +319,10 @@ int main(int argc, char** argv)
   std::cout << "Setting near / far clip to : " << 0.01f * scene_size << " - " << 100.0f * scene_size << std::endl;
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
+  auto npass = std::make_shared<gua::NURBSPassDescription>();
+  npass->enable_pretessellation(false);
+  pipe->add_pass(npass);
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  pipe->add_pass(std::make_shared<gua::NURBSPassDescription>());
-  pipe->add_pass(std::make_shared<gua::LineStripPassDescription>());
 
   auto light_visibility_pass = std::make_shared<gua::LightVisibilityPassDescription>();
   pipe->add_pass(light_visibility_pass);
@@ -324,6 +333,7 @@ int main(int argc, char** argv)
   pipe->add_pass(resolve_pass);
 
   pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
   pipe->set_enable_abuffer(true);
   
