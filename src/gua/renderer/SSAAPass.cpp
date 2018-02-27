@@ -44,6 +44,8 @@ namespace gua {
     uniforms["gua_fxaa_quality_subpix"] = 0.75f;
     uniforms["gua_fxaa_edge_threshold"] = 0.125f;
     uniforms["gua_fxaa_threshold_min"] = 0.0625f;
+
+    uniforms["gua_enable_pinhole_correction"] = false; 
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +94,19 @@ namespace gua {
   float SSAAPassDescription::fxaa_threshold_min() const {
     auto uniform(uniforms.find("gua_fxaa_threshold_min"));
     return boost::get<float>(uniform->second.data);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  SSAAPassDescription& SSAAPassDescription::enable_pinhole_correction(bool enable)
+  {
+    uniforms["gua_enable_pinhole_correction"] = enable;
+    return *this;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  bool SSAAPassDescription::enable_pinhole_correction() const{
+    auto uniform(uniforms.find("gua_enable_pinhole_correction"));
+    return boost::get<bool>(uniform->second.data);
   }
 
 
