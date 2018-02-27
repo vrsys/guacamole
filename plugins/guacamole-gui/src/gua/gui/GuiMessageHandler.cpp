@@ -24,21 +24,48 @@
 namespace gua {
 
 GuiMessageHandler::GuiMessageHandler(const CefString& startup_url)
-    : startup_url_(startup_url) {}
+    : startup_url_(startup_url) {
+    fastwriter_["indentation"] = "";
+    reader_.parse(message_, messageObject_, false);
+    messageObject_["functions"];
+    messageObject_["returnValues"];
+}
 
 void GuiMessageHandler::set_message(CefString message){
   std::unique_lock<std::mutex> lock(mutex_);
   message_ = message;
 }
 
-bool GuiMessageHandler::send(){  
+void GuiMessageHandler::add_function_call(std::string functionName, std::vector<std::string> const& args, bool persistent, bool withReturn){
+  //create JSON function object
+  Json::Value function;
+  function["return"] = withReturn;
+  function["persistent"] = persistent;
+
+  for(int i = 0; i < args.size(); ++i){
+    function["parameters"][i] = args[i];
+  }
+  //add function object to message
+  messageObject_["functions"][functionName] = function;
+  //if return, create return object and add to message
+  if(withReturn){
+    messageObject_["returnValues"][functionName];
+  }
+}
+
+void GuiMessageHandler::remove_function_call(std::string functionName){
+  messageObject_["functions"].removeMember(functionName);
+  messageObject_["returnValues"].removeMember(functionName);
+}
+
+
+bool GuiMessageHandler::send(){
   if(callback_ == nullptr) return false;
 
   std::unique_lock<std::mutex> lock(mutex_);
   callback_->Success(message_);
 
   return true;
-
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -51,7 +78,6 @@ bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
              CefRefPtr<Callback> callback) {
 
   if(persistent) callback_ = callback;
-  if(!request.empty()) response_ = request;
   send();
 
   return true;

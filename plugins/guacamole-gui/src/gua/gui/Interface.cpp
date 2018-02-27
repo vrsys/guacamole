@@ -65,7 +65,6 @@ int Interface::init(int argc, char** argv) {
   // Create a temporary CommandLine object.
   CefRefPtr<CefCommandLine> command_line = CreateCommandLine(main_args);
   command_line->AppendSwitch("off-screen-rendering-enabled");
-  command_line->AppendSwitch("no-sandbox");
 
   // Create a CefApp of the correct process type.
   CefRefPtr<CefApp> app;
@@ -90,56 +89,31 @@ int Interface::init(int argc, char** argv) {
     return exit_code;
   }
 
-  // Install xlib error handlers so that the application won't be terminated
-  // on non-fatal errors.
-  //XSetErrorHandler(XErrorHandlerImpl);
-  //XSetIOErrorHandler(XIOErrorHandlerImpl);
-
-  // Create the singleton manager instance.
-  //ClientManager manager;
-
   // Specify CEF global settings here.
   CefSettings settings;
-  /*
-  settings.resources_dir_path;
-  settings.locales_dir_path;
-  settings.log_file;
-  */
+  //CefString(&settings.resources_dir_path) = "./CEF-binaries/";
+  //CefString(&settings.locales_dir_path) = "./CEF-binaries/";
+  //CefString(&settings.log_file) = "./CEF-binaries/debug.log";
+
+  settings.no_sandbox = true;
 
   // Initialize CEF for the browser process. The first browser instance will be
   // created in CefBrowserProcessHandler::OnContextInitialized() after CEF has
   // been initialized.
   CefInitialize(main_args, settings, app, NULL);
 
-
-    return 0;
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Interface::Interface() {
-  /*
-  web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
-  web_core_->set_surface_factory(new GLSurfaceFactory());
 
-  Awesomium::WebPreferences prefs;
-  prefs.enable_smooth_scrolling = true;
-  web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
-
-  Awesomium::DataSource* data_source = new AweDataSource();
-  web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
-  */
 }
 
 
 Interface::~Interface() {
   std::cout << "Interface destroyed" << std::endl;
-  /*
-  auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
-  Awesomium::WebCore::Shutdown();
-  delete factory;
-  web_session_->Release();
-  */
   CefShutdown();
 }
 

@@ -25,6 +25,7 @@
 #include <include/wrapper/cef_helpers.h>
 #include <gua/gui/stl_helpers.hpp>
 #include <mutex>
+#include "json.h"
 
 
 namespace gua {
@@ -35,7 +36,13 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
   GuiMessageHandler(const CefString& startup_url);
 
   bool send();
+  void add_function_call(std::string functionName, std::vector<std::string> const& args, bool persistent, bool withReturn);
+  void remove_function_call(std::string functionName);
+
+  //TODO variable return type?
+  //void getReturn(std::string functionName);
   void set_message(CefString message);
+
 
   ///////////////////////////////////////////////////////////////////////////
   // Called due to cefQuery execution in message_router.html.
@@ -48,10 +55,12 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
 
  private:
   const CefString startup_url_;
-  CefString message_;
-  CefString response_;
+  CefString message_ = "{}";
   CefRefPtr<Callback> callback_;
 
+  Json::StreamWriterBuilder fastwriter_;
+  Json::Reader reader_;
+  Json::Value messageObject_;
   std::mutex mutex_;
 
   DISALLOW_COPY_AND_ASSIGN(GuiMessageHandler);
