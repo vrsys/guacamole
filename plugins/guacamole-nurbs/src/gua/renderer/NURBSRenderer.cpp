@@ -141,8 +141,8 @@ namespace gua {
       auto nurbs_ressource = nurbs_node->get_geometry();
 
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
-
-        if (_pretessellation)
+        auto resource_upload_required = ctx.plugin_ressources.end() == ctx.plugin_ressources.find(nurbs_ressource->uuid());
+        if (_pretessellation || resource_upload_required)
         {
           // render using two-pass tesselation approach
           pre_tesselation_program_->use(ctx);
