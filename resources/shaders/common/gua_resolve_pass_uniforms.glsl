@@ -31,5 +31,7 @@ uniform float   gua_vignette_coverage;
 uniform float   gua_vignette_softness;
 uniform vec4    gua_vignette_color;
 
+uniform bool    gua_enable_pinhole_correction = false;
+
 uniform float   gua_tone_mapping_exposure = 1.0;
 uniform int     gua_tone_mapping_operator = 0;

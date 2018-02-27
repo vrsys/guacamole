@@ -11,8 +11,8 @@ in vec2 gua_quad_coords;
 @include "common/gua_gbuffer_input.glsl"
 
 @include "fxaa_lotthes.glsl"
-
 @include "fxaa_simple.glsl"
+@include "pinhole_correction.glsl"
 
 // output
 layout(location=0) out vec3 gua_out_color;
@@ -59,4 +59,37 @@ void main ()
     default :  // No FXAA
       gua_out_color = gua_get_color();
   }
+
+  //////////////////////////
+  // pinhole error correction
+  //////////////////////////
+  if (gua_enable_pinhole_correction) 
+  {
+    float HOLE_FILLING_THRESHOLD = 0.0001;
+    vec4 color = vec4(gua_out_color, 1.0);  
+    bool fill_available = false;
+
+    //////////////////////////
+    // fill geometric hole
+    //////////////////////////
+    vec4  fill_color = vec4(0.0);
+    float fill_depth = 0.0;
+
+    fill_available = examine_potential_hole_fill(fill_color, fill_depth, HOLE_FILLING_THRESHOLD);
+
+    if (fill_available) {
+      color = fill_color;
+    }
+
+    //////////////////////////
+    // fill color hole
+    //////////////////////////
+    bool pixel_is_color_hole = examine_color_pinhole(fill_color, HOLE_FILLING_THRESHOLD, 0.4);
+    if (pixel_is_color_hole) {
+       color = fill_color;
+    }
+    gua_out_color = color.xyz;
+  }
+
+
 }
