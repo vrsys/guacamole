@@ -40,13 +40,8 @@
 
 
     vec2 
-    env_long_lat2(in vec3 normal_world) 
+    env_long_lat2(in vec3 R) 
     { 
-      vec4 n_view = gua_view_matrix * vec4(normal_world, 0.0);
-      vec4 p_view = gua_view_matrix * vec4(gua_world_position, 1.0);
-
-      vec3 R = normal_world;//reflect(normalize(p_view.xyz), normalize(n_view.xyz));
-
       float m = 2*sqrt(R.x*R.x + R.y*R.y + (R.z + 1)*(R.z + 1));
       float u = R.x/m + 0.5;
       float v = R.y/m + 0.5;
@@ -57,8 +52,12 @@
 
     void FragmentColor() 
     {
-      vec3 normal_world = (gua_model_view_matrix * vec4(gua_normal.xyz, 0.0)).xyz;
-      vec2 normal_world_in_long_lat = env_long_lat2(normalize(normal_world));
+      vec4 position_view = gua_view_matrix * vec4(gua_world_position, 1.0);
+      vec3 normal_view   = (gua_model_view_matrix * vec4(gua_normal.xyz, 0.0)).xyz;
+
+      vec3 R = reflect(normalize(position_view.xyz), normalize(normal_view));
+
+      vec2 normal_world_in_long_lat = env_long_lat2(normalize(R));
 
       vec3 env_incoming_light = texture(sampler2D(Spheremap), normal_world_in_long_lat).xyz;
  
