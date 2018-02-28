@@ -139,6 +139,7 @@ namespace gua {
       auto normal_matrix = scm::math::transpose(scm::math::inverse(model_matrix));
 
       auto nurbs_ressource = nurbs_node->get_geometry();
+      int rendering_mode = pipe.current_viewstate().shadow_mode ? (nurbs_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
       if (nurbs_ressource && pre_tesselation_program_ && current_material_program) {
         auto resource_upload_required = ctx.plugin_ressources.end() == ctx.plugin_ressources.find(nurbs_ressource->uuid());
@@ -155,6 +156,7 @@ namespace gua {
 
             pre_tesselation_program_->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
             pre_tesselation_program_->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
+            pre_tesselation_program_->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
             ctx.render_context->apply();
             nurbs_ressource->predraw(ctx);
@@ -174,6 +176,7 @@ namespace gua {
 
           current_material_program->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
           current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
+          current_material_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
           // hack
           current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
