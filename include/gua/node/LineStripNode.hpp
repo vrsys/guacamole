@@ -25,6 +25,8 @@
 // guacamole headers
 #include <gua/node/GeometryNode.hpp>
 
+#include <gua/utils/LineStrip.hpp>
+
 namespace gua {
 
 class LineStripResource;
@@ -75,6 +77,41 @@ public : // methods
   inline bool get_render_vertices_as_points() const { return render_vertices_as_points_; }
   inline void set_render_vertices_as_points(bool enable) { render_vertices_as_points_ = enable; }
 
+  inline float get_screen_space_point_size() const { return screen_space_point_size_; }
+  inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = /*std::max(1.0f, std::min(10.0f, */point_size/*))*/; }
+
+  inline float get_screen_space_line_width() const { return screen_space_line_width_; }
+  inline void set_screen_space_line_width(float line_width) { screen_space_line_width_ = std::max(1.0f, std::min(10.0f, line_width)); }
+
+  inline bool get_was_created_empty() const { return was_created_empty_; }
+  inline void set_was_created_empty(bool was_created_empty) { was_created_empty_ = was_created_empty; }
+
+  void set_empty() {was_created_empty_ = true;}
+
+  void compute_consistent_normals();
+
+  void enqueue_vertex(float x, float y, float z,
+                      float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
+                      float thickness = 1.0f,
+                      float nor_x = 0.0f, float nor_y = 1.0f, float nor_z = 0.0f);
+
+  void push_vertex(LineStrip::Vertex const& line_strip_vertex);
+
+  void push_vertex(float x, float y, float z,
+                   float col_r = 0.0f, float col_g = 0.0f, float col_b = 0.0f, float col_a = 1.0f,
+                   float thickness = 1.0f,
+                   float nor_x = 0.0f, float nor_y = 1.0f, float nor_z = 0.0f);
+
+  void pop_back_vertex();
+  void pop_front_vertex();
+
+  void clear_vertices();
+
+  void forward_queued_vertices();
+
+  void compile_buffer_string(std::string& buffer_string);
+  void uncompile_buffer_string(std::string const& buffer_string);
+
   /**
   * Implements ray picking for a triangular mesh
   */
@@ -91,6 +128,10 @@ public : // methods
   void update_cache() override;
 
   std::shared_ptr<LineStripResource> const& get_geometry() const;
+
+  bool get_trigger_update() const {return trigger_update_;}
+  void set_trigger_update(bool trigger_update) {trigger_update_ = trigger_update;}
+
 
   /**
    * Accepts a visitor and calls concrete visit method.
@@ -117,6 +158,19 @@ public : // methods
 
   bool                              render_volumetric_;
   bool                              render_vertices_as_points_;
+
+  float                             screen_space_line_width_;
+  float                             screen_space_point_size_;
+
+  bool                              was_created_empty_;
+
+  bool                              trigger_update_;
+
+  std::vector<scm::math::vec3f> queued_positions_;
+  std::vector<scm::math::vec4f> queued_colors_;
+  std::vector<float> queued_thicknesses_;
+  std::vector<scm::math::vec3f> queued_normals_;
+
 };
 
 } // namespace node {

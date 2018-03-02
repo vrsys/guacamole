@@ -81,11 +81,15 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       gpucast::igs_loader igsloader;
       gpucast::surface_converter surface_converter;
 
-      auto nurbs_object = std::make_shared<gpucast::nurbssurfaceobject>();
       auto bezier_object = std::make_shared<gpucast::beziersurfaceobject>();
+      auto nurbsobjects = igsloader.load(filename);
 
-      nurbs_object = igsloader.load(filename);
-      surface_converter.convert(nurbs_object, bezier_object);
+      for (auto nurbsobject : nurbsobjects)
+      {
+        auto object = std::make_shared<gpucast::beziersurfaceobject>();
+        surface_converter.convert(nurbsobject, object);
+        bezier_object->merge(*object);
+      }
 
       // check and set rendering mode and create render resources
       auto fill_mode = flags & WIREFRAME ? scm::gl::FILL_WIREFRAME : scm::gl::FILL_SOLID;
@@ -122,7 +126,6 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
         node->scale(1.0f / scm::math::length(bbox.max - bbox.min));
       }
 
-      node->raycasting(flags & RAYCASTING);
       return node;
     }
   } catch (std::exception & e) {

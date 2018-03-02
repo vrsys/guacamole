@@ -47,6 +47,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     std::string const& assets_directory,
     bool optimize_material) const {
 
+
   // helper lambdas ------------------------------------------------------------
   auto get_color =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -57,13 +58,15 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     return string_utils::to_string(color);
   };
 
-  auto get_sampler =
+  auto get_string =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
     aiString value;
     if (AI_SUCCESS != ai_material->Get(pKey, type, idx, value))
       return "";
     return std::string(value.data);
   };
+
+  auto get_sampler = get_string;
 
   auto get_float =
       [&](const char * pKey, unsigned int type, unsigned int idx)->std::string {
@@ -89,6 +92,9 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   std::string uniform_metalness_map(  get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_SPECULAR, 0)));
   std::string uniform_metalness(      get_color(    AI_MATKEY_COLOR_SPECULAR));
   std::string uniform_opacity_map(    get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_OPACITY, 0)));
+  std::string uniform_opacity(        get_float(    AI_MATKEY_OPACITY));
+
+  std::string material_name(          get_string(   AI_MATKEY_NAME));
 
   // obj bump and map_bump textures are imported as aiTextureType_HEIGHT
   std::string uniform_normal_map(     get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0)));
@@ -101,7 +107,6 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
   } else {
-
     if (uniform_color_map != "" && uniform_color != "") {
       capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
     } else if (uniform_color_map != "") {
@@ -162,7 +167,13 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   if (uniform_color != "") {
     auto c(string_utils::from_string<math::vec3>(uniform_color));
-    new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), 1.f));
+
+    float opacity_to_set = 1.0f;
+    if (uniform_opacity != "") {
+      opacity_to_set =  std::max(0.0f, std::min(1.0f,string_utils::from_string<float>(uniform_opacity)));
+    }
+
+    new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), opacity_to_set));
   }
 
 #if 0
@@ -193,6 +204,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   }
 
+  new_mat->rename_existing_shader(material_name);
 
   return new_mat;
 }

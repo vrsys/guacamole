@@ -3,6 +3,7 @@
 layout(location=0) in vec3 gua_in_position;
 layout(location=1) in vec4 gua_in_color;
 layout(location=2) in float gua_in_thickness;
+layout(location=3) in vec3 gua_in_normal;
 
 @include "common/gua_camera_uniforms.glsl"
 
@@ -12,6 +13,7 @@ out VertexData {
   vec3  gua_varying_object_position;
   vec4  gua_varying_color_rgba;
   float gua_varying_thickness;
+  vec3  gua_varying_normal;
   vec3  gua_varying_rme;
 } VertexOut;
 
@@ -46,6 +48,7 @@ void main() {
   VertexOut.gua_varying_object_position = gua_in_position;
   VertexOut.gua_varying_color_rgba      = vec4(gua_color, gua_alpha);
   VertexOut.gua_varying_thickness       = gua_thickness;
+  VertexOut.gua_varying_normal          = gua_in_normal;
   VertexOut.gua_varying_rme             = vec3(gua_metalness, gua_roughness, gua_emissivity);
 
   //gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);

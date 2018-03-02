@@ -52,7 +52,6 @@ SPointsResource::SPointsData::SPointsData(
 
   nka_ = std::make_shared<spoints::NetKinectArray>(spoints_resource.server_endpoint(), spoints_resource.feedback_endpoint());
 
-  frame_counter_ = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,33 +65,36 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
   init();
 }
 
-void 
-SPointsResource::push_matrix_package(spoints::matrix_package mp) {
-  if (nullptr != spointsdata_) {
-    spointsdata_->nka_->push_matrix_package(mp);
+void
+SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
+  //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
+
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      spointsdata_->nka_->push_matrix_package(cam_mat_package);
+    }
   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void SPointsResource::update_buffers(RenderContext const& ctx,
                                      Pipeline& pipe) {
 
-
-  // lazy resource initialization
-  if (nullptr == spointsdata_) {
-    spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
-  }
+  {
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+    // lazy resource initialization
+    if (nullptr == spointsdata_) {
+      spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
+    }
   
 
-
-  if (spointsdata_->frame_counter_ != ctx.framecount) {
-    spointsdata_->frame_counter_ = ctx.framecount;
-  } else {
-    return;
+    //std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
+    // synchronize feedback
+    spointsdata_->nka_->update_feedback(ctx);
   }
-
-  // synchronize feedback
-  spointsdata_->nka_->update_feedback(ctx);
 
   // synchronize vertex data
   spointsdata_->nka_->update(ctx);

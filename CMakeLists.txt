@@ -26,7 +26,11 @@ option (GUACAMOLE_TESTS "Enable testing." OFF)
 # fbx import crashes on nodetype-cast on windows
 if (NOT WIN32)
   option (GUACAMOLE_FBX "Set to enable FBX support." ON)
+else ()
+  option (GUACAMOLE_FBX "Set to enable FBX support." OFF)
 endif(NOT WIN32)
+
+
 
 # We require at least version 3.0.2
 cmake_minimum_required(VERSION 3.0.2)
@@ -114,6 +118,7 @@ find_package( Boost 1.54.0 COMPONENTS
   program_options
   regex
   system
+  log
   REQUIRED
   )
 
@@ -129,6 +134,29 @@ if (GUACAMOLE_ENABLE_PHYSICS)
   endif (UNIX)
   find_package(Bullet REQUIRED)
   include(FindHACD)
+
+	if (UNIX)
+		if (BULLET_COLLISION_LIBRARY)
+		  set(BULLET_COLLISION_LIBRARY_DEBUG ${BULLET_COLLISION_LIBRARY})
+		endif (BULLET_COLLISION_LIBRARY)
+
+		if (BULLET_HACD_LIBRARY)
+		  set(BULLET_HACD_LIBRARY_DEBUG ${BULLET_HACD_LIBRARY})
+		endif (BULLET_HACD_LIBRARY)
+
+		if (BULLET_DYNAMICS_LIBRARY)
+		  set(BULLET_DYNAMICS_LIBRARY_DEBUG ${BULLET_DYNAMICS_LIBRARY})
+		endif (BULLET_DYNAMICS_LIBRARY)
+
+		if (BULLET_MATH_LIBRARY)
+		  set(BULLET_MATH_LIBRARY_DEBUG ${BULLET_MATH_LIBRARY})
+		endif (BULLET_MATH_LIBRARY)
+
+		if (BULLET_SOFTBODY_LIBRARY)
+		  set(BULLET_SOFTBODY_LIBRARY_DEBUG ${BULLET_SOFTBODY_LIBRARY})
+		endif (BULLET_SOFTBODY_LIBRARY)
+	endif(UNIX)
+		 
 endif (GUACAMOLE_ENABLE_PHYSICS)
 
 ## fbx ###################################################

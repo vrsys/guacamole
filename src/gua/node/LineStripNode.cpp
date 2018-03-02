@@ -46,7 +46,11 @@ namespace node {
       render_to_gbuffer_(true),
       render_to_stencil_buffer_(false),
       render_volumetric_(false),
-      render_vertices_as_points_(false)
+      render_vertices_as_points_(false),
+      screen_space_line_width_(1.0f),
+      screen_space_point_size_(1.0f),
+      was_created_empty_(false),
+      trigger_update_(false)
   {}
 
 
@@ -217,7 +221,12 @@ namespace node {
           GeometryDescription desc(geometry_description_);
           try {
             gua::LineStripLoader loader;
-            loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
+
+            if(!was_created_empty_) {
+              loader.create_geometry_from_file(get_name(), desc.filepath(), get_material(), desc.flags());
+            } else {
+              loader.create_empty_geometry(get_name(), desc.filepath(), get_material(), desc.flags());
+            }
           }
           catch ( std::exception& e ) {
             Logger::GUA_LOG_WARNING << "LineStripNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
@@ -267,5 +276,97 @@ namespace node {
   std::shared_ptr<Node> LineStripNode::copy() const {
     return std::make_shared<LineStripNode>(*this);
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::compute_consistent_normals() {
+    if(nullptr != geometry_) {
+      geometry_->compute_consistent_normals();
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::push_vertex(LineStrip::Vertex const& line_strip_vertex) {
+    push_vertex(line_strip_vertex.pos[0], line_strip_vertex.pos[1], line_strip_vertex.pos[2],
+                line_strip_vertex.col[0], line_strip_vertex.col[1], 
+                line_strip_vertex.col[2], line_strip_vertex.col[3],
+                line_strip_vertex.thick,
+                line_strip_vertex.nor[0], line_strip_vertex.nor[1], line_strip_vertex.nor[2]);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::enqueue_vertex(float x, float y, float z,
+                                    float col_r, float col_g, float col_b, float col_a,
+                                    float thickness,
+                                    float nor_x, float nor_y, float nor_z) {
+    queued_positions_.push_back(scm::math::vec3f(x, y, z));
+    queued_colors_.push_back(scm::math::vec4f(col_r, col_g, col_b, col_a));
+    queued_thicknesses_.push_back(thickness);
+    queued_normals_.push_back(scm::math::vec3f(nor_x, nor_y, nor_z));
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::push_vertex(float x, float y, float z,
+                                  float col_r, float col_g, float col_b, float col_a,
+                                  float thickness,
+                                  float nor_x, float nor_y, float nor_z) {
+    if(nullptr != geometry_) {
+      LineStrip::Vertex vertex_to_push(x, y, z, 
+                                      col_r, col_g, col_b, col_a, 
+                                      thickness,
+                                      nor_x, nor_y, nor_z);
+
+      geometry_->push_vertex(vertex_to_push);
+    }
+    
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::pop_front_vertex() {
+    if(nullptr != geometry_) {
+      geometry_->pop_front_vertex();
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::pop_back_vertex() {
+    if(nullptr != geometry_) {
+      geometry_->pop_back_vertex();
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::clear_vertices() {
+    if(nullptr != geometry_) {
+      queued_positions_.clear();
+      queued_colors_.clear();
+      queued_thicknesses_.clear();
+      queued_normals_.clear();
+      //geometry_->clear_vertices();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::forward_queued_vertices() {
+    if(nullptr != geometry_) {
+      geometry_->forward_queued_vertices(queued_positions_, 
+                                         queued_colors_, 
+                                         queued_thicknesses_, queued_normals_);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::compile_buffer_string(std::string& buffer_string) {
+    if(nullptr != geometry_) {
+      geometry_->compile_buffer_string(buffer_string);
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////
+  void LineStripNode::uncompile_buffer_string(std::string const& buffer_string) {
+    if(nullptr != geometry_) {
+      geometry_->uncompile_buffer_string(buffer_string);
+    }
+  };
+
 }
 }

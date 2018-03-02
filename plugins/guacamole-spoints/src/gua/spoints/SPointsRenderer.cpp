@@ -160,7 +160,7 @@ void SPointsRenderer::render(Pipeline& pipe,
                              PipelinePassDescription const& desc) {
 
 
-  
+
   ///////////////////////////////////////////////////////////////////////////
   //  retrieve current view state
   ///////////////////////////////////////////////////////////////////////////
@@ -171,15 +171,28 @@ void SPointsRenderer::render(Pipeline& pipe,
 
   auto const& ctx(pipe.get_context());
 
+
   if (!initialized_) {
     initialized_ = true;
+    points_rasterizer_state_ = ctx.render_device
+      ->create_rasterizer_state(scm::gl::FILL_SOLID,
+                                scm::gl::CULL_NONE,
+                                scm::gl::ORIENT_CCW,
+                                false,
+                                false,
+                                0.0,
+                                false,
+                                false,
+                                scm::gl::point_raster_state(true));
   }
 
   auto objects(scene.nodes.find(std::type_index(typeid(node::SPointsNode))));
   int view_id(camera.config.get_view_id());
 
+
   if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
+    float last_known_point_size = std::numeric_limits<float>::max();
     for (auto& o : objects->second) {
 
       auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
@@ -219,10 +232,40 @@ void SPointsRenderer::render(Pipeline& pipe,
       memcpy((char*) &current_package, (char*) mv_matrix.data_array, 16 * sizeof(float) );
       memcpy( ((char*) &current_package) +  16 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
       
-      spoints_resource->push_matrix_package(current_package);
-      // update stream data
-      spoints_resource->update_buffers(pipe.get_context(), pipe);
-      //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
+      scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+
+
+
+      current_package.res_xy[0] = render_target_dims.x;
+      current_package.res_xy[1] = render_target_dims.y;
+
+
+    auto camera_id = pipe.current_viewstate().viewpoint_uuid;
+    //auto view_direction = pipe.current_viewstate().view_direction;
+    //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
+
+
+    bool is_camera = (!pipe.current_viewstate().shadow_mode);
+
+    bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
+
+    std::size_t view_uuid = camera_id;
+
+
+    spoints::camera_matrix_package cm_package;
+    cm_package.k_package.is_camera = is_camera;
+    cm_package.k_package.view_uuid = view_uuid;
+    cm_package.k_package.stereo_mode = stereo_mode;
+    cm_package.k_package.framecount = pipe.get_context().framecount;
+    cm_package.k_package.render_context_id = pipe.get_context().id;
+    cm_package.mat_package = current_package;
+
+
+
+    spoints_resource->push_matrix_package(cm_package);
+
+    spoints_resource->update_buffers(pipe.get_context(), pipe);
+    //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
 
 
 
@@ -263,10 +306,19 @@ void SPointsRenderer::render(Pipeline& pipe,
         scm::math::mat4f(model_matrix),
         "kinect_model_matrix");
 
+      float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+      current_shader->set_uniform(
+        ctx,
+        screen_space_point_size,
+        "point_size");
 
       bool write_depth = true;
       target.bind(ctx, write_depth);
       target.set_viewport(ctx);
+
+      ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+      ctx.render_context->apply();
 
       spoints_resource->draw(ctx);
 

@@ -12,6 +12,7 @@ in VertexData {
   vec3  gua_varying_object_position;
   vec4  gua_varying_color_rgba;
   float gua_varying_thickness;
+  vec3  gua_varying_normal;
   vec3  gua_varying_rme;
 } VertexIn[1];
 
