@@ -9,7 +9,7 @@ layout(triangles) in;
 in vec3  eval_position[3];                          
 in uint  eval_index[3];                             
 in vec2  eval_tesscoord[3];   
-in float eval_final_tesselation[3];          
+in vec3  eval_final_tesselation[3];          
                                                                                             
 ///////////////////////////////////////////////////////////////////////////////
 // output
@@ -19,18 +19,16 @@ layout(xfb_buffer = 0, points, max_vertices = 4) out;
 layout (xfb_offset=0)  out vec3 transform_position;    
 layout (xfb_offset=12) out uint transform_index;       
 layout (xfb_offset=16) out vec2 transform_tesscoord;                                                 
-layout (xfb_offset=24) out float transform_final_tesselation;     
+layout (xfb_offset=24) out vec3 transform_final_tesselation;     
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
 ///////////////////////////////////////////////////////////////////////////////
 uniform samplerBuffer parameter_texture;       
 uniform samplerBuffer attribute_texture;          
- 
-#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
-#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
 
-@include "resources/glsl/common/obb_area.glsl"   
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
+@include "resources/glsl/common/obb_area.glsl"
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,17 +79,11 @@ void main()
     vec4 new_puv;                                                                    
     vec4 new_du, new_dv;                                                             
                        
-#if TEXBUFFER_LAYOUT                                                                  
-    vec4 data = texelFetch(attribute_texture, int(eval_index[0]) * 5);                  
-    uint surface_index   = floatBitsToUint(data.x);                                  
-    uint surface_order_u = floatBitsToUint(data.y);                                  
-    uint surface_order_v = floatBitsToUint(data.z);                                  
-#else
     int surface_index   = 0;
     int surface_order_u = 0;
     int surface_order_v = 0;
     retrieve_patch_data(int(eval_index[0]), surface_index, surface_order_u, surface_order_v);
-#endif                                                                                             
+                                                                                           
     evaluateSurface ( parameter_texture,                                             
                       int(surface_index),                                            
                       int(surface_order_u),                                          

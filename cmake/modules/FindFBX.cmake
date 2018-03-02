@@ -6,6 +6,7 @@
 find_path(FBX_INCLUDE_DIR fbxsdk.h
             HINTS 
             ${GLOBAL_EXT_DIR}/fbx2016/include
+            ${GLOBAL_EXT_DIR}/fbx2017/include
             ${CMAKE_SOURCE_DIR}/externals/fbx20151/include
             PATHS
              /opt/fbx/fbx20160/include

@@ -77,6 +77,10 @@ class GUA_DLL SSAAPassDescription : public PipelinePassDescription {
   SSAAPassDescription& fxaa_threshold_min(float intensity);
   float fxaa_threshold_min() const;
 
+  /////////////////////////////////////////////////////////////////////////////
+  SSAAPassDescription& enable_pinhole_correction(bool enable);
+  bool enable_pinhole_correction() const;
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 

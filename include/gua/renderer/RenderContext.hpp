@@ -46,6 +46,15 @@ namespace node{
 }
 
 /**
+* Abstract base class for plugin ressources
+*/
+struct GUA_DLL PluginRessource
+{
+public:
+  virtual ~PluginRessource() = default;
+};
+
+/**
  * Information on a specific context.
  *
  * Stores all relevant information on a OpenGL context.
@@ -174,6 +183,8 @@ struct GUA_DLL RenderContext {
   * Resources associated with this context
   */
   std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
+
+  mutable std::unordered_map<std::size_t, std::shared_ptr<PluginRessource>> plugin_ressources;
 };
 
 }
