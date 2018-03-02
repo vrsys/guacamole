@@ -61,7 +61,7 @@ unsigned Skeleton::addBone(FbxNode& node) {
     FbxSkeleton const* skelnode { node.GetChild(i)->GetSkeleton() };
     if (skelnode && skelnode->GetSkeletonType() == FbxSkeleton::eEffector &&
         node.GetChild(i)->GetChildCount() == 0) {
-      Logger::LOG_DEBUG << node.GetChild(i)->GetName()
+      Logger::GUA_LOG_DEBUG << node.GetChild(i)->GetName()
                         << " is effector, ignoring it" << std::endl;
     } else {
       unsigned child_index = addBone(*(node.GetChild(i)));
@@ -92,7 +92,7 @@ Skeleton::Skeleton(FbxScene& scene) {
       }
 
       if (!skin) {
-        Logger::LOG_ERROR << "Mesh does not contain skin deformer" << std::endl;
+        Logger::GUA_LOG_ERROR << "Mesh does not contain skin deformer" << std::endl;
         assert(false);
       }
 
@@ -102,7 +102,7 @@ Skeleton::Skeleton(FbxScene& scene) {
         FbxNode* node = cluster->GetLink();
 
         if (!node) {
-          Logger::LOG_ERROR << "associated node does not exist!" << std::endl;
+          Logger::GUA_LOG_ERROR << "associated node does not exist!" << std::endl;
           assert(false);
         }
 
@@ -125,7 +125,7 @@ Skeleton::Skeleton(FbxScene& scene) {
         cluster->GetTransformMatrix(cluster_transform);
         if (magnitude(to_gua::mat4f(cluster_transform) -
                       scm::math::mat4f::identity()) > 0.000000001f) {
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
               << "weight cluster of bone '" << bone_name
               << "' has transformation, animation will be skewed" << std::endl;
         }
@@ -176,7 +176,7 @@ std::map<std::string, int> const& Skeleton::get_mapping() const {
 void Skeleton::store_mapping() {
   for (std::size_t i = 0; i < m_bones.size(); ++i) {
     if(m_mapping.find(m_bones[i].name) != m_mapping.end()) {
-      Logger::LOG_WARNING << "two bones named '" << m_bones[i].name 
+      Logger::GUA_LOG_WARNING << "two bones named '" << m_bones[i].name 
                           << "' exist, overrriding"  << std::endl;
     }
     m_mapping[m_bones[i].name] = i;

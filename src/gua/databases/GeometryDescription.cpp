@@ -58,7 +58,7 @@ namespace gua {
     }
     catch (std::exception& e)
     {
-      Logger::LOG_WARNING << "GeometryDescription(std::string const& unique_key): Failed to tokenize unique key." << e.what() << std::endl;
+      Logger::GUA_LOG_WARNING << "GeometryDescription(std::string const& unique_key): Failed to tokenize unique key." << e.what() << std::endl;
     }
   }
 

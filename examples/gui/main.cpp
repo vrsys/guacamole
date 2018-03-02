@@ -47,8 +47,17 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 
 int main(int argc, char** argv) {
 
+  //initialize CEF
+  auto CEFInterface = gua::Interface::instance();
+  int result = CEFInterface->init(argc, argv);
+  if(result != 0){
+    return result;
+  }
   // initialize guacamole
   gua::init(argc, argv);
+
+  auto Paths = gua::Paths::instance();
+  Paths->init(argc, argv);
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -76,46 +85,38 @@ int main(int argc, char** argv) {
   auto gui = std::make_shared<gua::GuiResource>();
   gui->init("google", "https://www.google.com", gua::math::vec2(1024.f, 1024.f));
 
+  //tests guis
+  gua::math::vec2 test_size(500.f, 200.f);
   gua::math::vec2 fps_size(170.f, 55.f);
 
-  auto fps = std::make_shared<gua::GuiResource>();
-  fps->init("fps", "asset://gua/data/html/fps.html", fps_size);
+  std::string test_1_path = "asset://gua/data/html/test.html";
+  std::string test_2_path = "asset://gua/data/html/fps_subscription.html";
+  //Test1
+  auto test_1 = std::make_shared<gua::GuiResource>();
+  test_1->init("test_1", test_1_path, test_size);
+  auto test_1_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_1_quad");
+  test_1_quad->data.texture() = "test_1";
+  test_1_quad->data.size() = test_size;
+  test_1_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
-  auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
-  fps_quad->data.texture() = "fps";
-  fps_quad->data.size() = fps_size;
-  fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
-
-  graph.add_node("/", fps_quad);
-
-  gua::math::vec2 address_bar_size(340.f, 55.f);
-
-  auto address_bar = std::make_shared<gua::GuiResource>();
-  address_bar->init("address_bar", "asset://gua/data/html/address_bar.html", address_bar_size);
-
-  auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
-  address_bar_quad->data.texture() = "address_bar";
-  address_bar_quad->data.size() = address_bar_size;
-  address_bar_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
-
-  graph.add_node("/transform/monkey", address_bar_quad);
-
-
-  address_bar->on_loaded.connect([address_bar]() {
-    address_bar->add_javascript_callback("update_address");
-    address_bar->add_javascript_callback("address_back");
-    address_bar->add_javascript_callback("address_forward");
+  test_1->on_javascript_callback.connect([test_1](std::string const& callback, std::vector<std::string> const& params) {
+      if (callback == "test") {
+        test_1->call_javascript("set_fps_text", "button clicked!");
+      }
   });
 
-  address_bar->on_javascript_callback.connect([gui](std::string const& callback, std::vector<std::string> const& params) {
-    if (callback == "update_address") {
-      gui->set_url(params[0]);
-    } else if (callback == "address_back") {
-      gui->go_back();
-    } else if (callback == "address_forward") {
-      gui->go_forward();
-    }
-  });
+  //Test2
+  auto test_2 = std::make_shared<gua::GuiResource>();
+  test_2->init("test_2", test_2_path, fps_size);
+  auto test_2_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("test_2_quad");
+  test_2_quad->data.texture() = "test_2";
+  test_2_quad->data.size() = fps_size;
+  test_2_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
+
+  graph.add_node("/", test_1_quad);
+  graph.add_node("/", test_2_quad);
+
+//////////////////////////////////////////////////////////////////////////
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
@@ -175,15 +176,19 @@ int main(int argc, char** argv) {
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
     camera->config.set_resolution(new_size);
+    resolution = new_size;
     screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
   });
   window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-
+    
     gua::math::vec2 hit_pos;
 
-    if (address_bar_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
-      address_bar->inject_mouse_position_relative(hit_pos);
-      focused_element = address_bar;
+    if (test_1_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      test_1->inject_mouse_position_relative(hit_pos);
+      focused_element = test_1;
+    } else if (test_2_quad->pixel_to_texcoords(pos, resolution, hit_pos)) {
+      test_2->inject_mouse_position_relative(hit_pos);
+      focused_element = test_2;
     } else {
       auto screen_space_pos(pos/resolution-0.5);
 
@@ -203,6 +208,7 @@ int main(int argc, char** argv) {
         trackball.motion(pos.x, pos.y);
       }
     }
+
   });
   window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
@@ -220,10 +226,9 @@ int main(int argc, char** argv) {
     sstr.setf(std::ios::fixed, std::ios::floatfield);
     sstr << "FPS: " << renderer.get_application_fps()
          << " / " << window->get_rendering_fps();
-    fps->call_javascript("set_fps_text", sstr.str());
- 
+    test_2->call_javascript("set_fps_text", sstr.str());
     // ray->rotate(1, 0, 1, 0);
-    gua::Interface::instance()->update();
+    CEFInterface->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();
     transform->set_transform(modelmatrix);
@@ -232,7 +237,7 @@ int main(int argc, char** argv) {
     if (window->should_close()) {
       renderer.stop();
       window->close();
-      loop.stop();
+      loop.stop();      
     } else {
       renderer.queue_draw({&graph});
     }

@@ -62,7 +62,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& n
     }
   }
   
-  Logger::LOG_WARNING << "NURBSLoader::load_geometry() : unable to create NURBS Node" << std::endl;
+  Logger::GUA_LOG_WARNING << "NURBSLoader::load_geometry() : unable to create NURBS Node" << std::endl;
   return std::shared_ptr<node::NURBSNode>(new node::NURBSNode(nodename));
 }
 
@@ -103,7 +103,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       if (flags & TRIM_TEXTURE_32) trim_resolution = 32;
 
       auto ressource = std::make_shared<NURBSResource>(bezier_object, pre_subdivision_u, pre_subdivision_v, trim_resolution, fill_mode);
-      Logger::LOG_WARNING << "NURBS Object loaded with " << bezier_object->surfaces() << " surfaces.\n";
+      Logger::GUA_LOG_WARNING << "NURBS Object loaded with " << bezier_object->surfaces() << " surfaces.\n";
 
       // add resource to database
       GeometryDescription desc("NURBS", filename, 0, flags);
@@ -129,7 +129,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& f
       return node;
     }
   } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load NURBS object \"" << filename << "\": " << e.what() << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to load NURBS object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }

@@ -125,7 +125,7 @@ std::string ResourceFactory::resolve_substitutions(std::string const& shader_sou
       subs = search->second;
     }
     else {
-      Logger::LOG_WARNING << "Option \"" << match[1]
+      Logger::GUA_LOG_WARNING << "Option \"" << match[1]
                           << "\" is unknown!" << std::endl;
       subs = match.str();
     }
@@ -166,7 +166,7 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
 
   // log error if failed to find file
   if (!ifs) {
-    Logger::LOG_ERROR << "Failed to get file: \"" << filename.string()
+    Logger::GUA_LOG_ERROR << "Failed to get file: \"" << filename.string()
                       << "\" from any of the search paths:" << std::endl
                       << error_info.str() << std::endl;
     contents = "";
@@ -211,7 +211,7 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename,
 
   // log error if failed to find file
   if (!ifs) {
-    Logger::LOG_ERROR << "Failed to get file: \"" << filename.string()
+    Logger::GUA_LOG_ERROR << "Failed to get file: \"" << filename.string()
       << "\" from any of the search paths:" << std::endl
       << error_info.str() << std::endl;
     contents = L"";

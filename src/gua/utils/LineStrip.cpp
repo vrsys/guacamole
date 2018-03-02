@@ -37,8 +37,8 @@ LineStrip(LineObject const& line_object) {
         || (line_object.vertex_position_database.size() != line_object.vertex_thickness_database.size()) 
         || (line_object.vertex_position_database.size() != line_object.vertex_normal_database.size()) 
       ) {
-      Logger::LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
-      Logger::LOG_WARNING << line_object.vertex_position_database.size() << ", "
+      Logger::GUA_LOG_WARNING << "Unequal size of line strip vertex attributes!" << std::endl;
+      Logger::GUA_LOG_WARNING << line_object.vertex_position_database.size() << ", "
                           << line_object.vertex_color_database.size() << ", "
                           << line_object.vertex_thickness_database.size() << ", "
                           << line_object.vertex_normal_database.size() << "\n";
@@ -179,7 +179,7 @@ void LineStrip::uncompile_buffer_string(std::string const& buffer_string) {
   }
 
   if(buffer_string.size() != num_vertices_written*sizeof(Vertex) + sizeof(uint64_t) ) {
-    Logger::LOG_WARNING << "Buffer String size and expected size are not consistent! Ignoring line strip update." << std::endl;
+    Logger::GUA_LOG_WARNING << "Buffer String size and expected size are not consistent! Ignoring line strip update." << std::endl;
     return;
   }
 
@@ -224,7 +224,7 @@ bool LineStrip::push_vertex(Vertex const& v_to_push) {
 bool LineStrip::pop_front_vertex() {
 
   if(num_occupied_vertex_slots < 2) {
-    Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
+    Logger::GUA_LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
     return false;
   }
   positions.erase(positions.begin());
@@ -239,7 +239,7 @@ bool LineStrip::pop_front_vertex() {
 bool LineStrip::pop_back_vertex() {
 
   if(num_occupied_vertex_slots < 2) {
-    Logger::LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
+    Logger::GUA_LOG_WARNING << "No LineStrip Vertex left to pop!" << std::endl;
 
     return false;
   }

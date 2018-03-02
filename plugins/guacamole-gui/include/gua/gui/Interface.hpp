@@ -28,12 +28,16 @@
 #include <gua/events/Signal.hpp>
 #include <gua/gui/mouse_enums.hpp>
 
+#include <include/cef_app.h>
+#include <include/cef_command_line.h>
+#include <gua/gui/GuiBrowserClient.hpp>
+/*
+#if defined(OS_WIN)
+#include <windows.h>
+#endif
+*/
+
 // forward declares ------------------------------------------------------------
-namespace Awesomium {
-  class WebCore;
-  class WebView;
-  class WebSession;
-}
 
 namespace gua {
 
@@ -48,13 +52,18 @@ class GUA_DLL Interface : public Singleton<Interface> {
  ///////////////////////////////////////////////////////////////////////////////
  // ----------------------------------------------------------- public interface
  public:
-
-  events::Signal<Cursor> on_cursor_change;
-
-  void update() const;
+  void update();
+  int init(int argc, char** argv);
 
   friend class GuiResource;
   friend class Singleton<Interface>;
+
+  // Process types that may have different CefApp instances.
+  enum ProcessType {
+    PROCESS_TYPE_BROWSER,
+    PROCESS_TYPE_RENDERER,
+    PROCESS_TYPE_OTHER,
+  };
 
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private interface
@@ -63,10 +72,31 @@ class GUA_DLL Interface : public Singleton<Interface> {
   Interface();
   ~Interface();
 
-  Awesomium::WebView* create_webview(int width, int height) const;
+  CefRefPtr<CefBrowser> create_browser(CefWindowInfo& info, CefRefPtr<GuiBrowserClient> client,
+                                       std::string url, CefBrowserSettings settings) const;
+  // Called in the main browser process to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateBrowserProcessApp();
 
-  Awesomium::WebCore* web_core_;
-  Awesomium::WebSession* web_session_;
+  // Called in the renderer sub-process to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateRendererProcessApp();
+
+  // Called in other sub-processes to create the CefApp for that process.
+  CefRefPtr<CefApp> CreateOtherProcessApp();
+
+  // Create a new CommandLine object for use before CEF initialization.
+  CefRefPtr<CefCommandLine> CreateCommandLine(const CefMainArgs& main_args);
+  // Determine the process type based on command-line arguments.
+  ProcessType GetProcessType(const CefRefPtr<CefCommandLine>& command_line);
+
+ ///////////////////////////////////////////////////////////////////////////////
+ // ---------------------------------------------------------- private member
+
+  //process flags
+  const std::string kProcessType = "type";
+  const std::string kRendererProcess = "renderer";
+  #if defined(OS_LINUX)
+  const std::string kZygoteProcess = "zygote";
+  #endif
 };
 
 // -----------------------------------------------------------------------------

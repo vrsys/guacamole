@@ -83,7 +83,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
   }
 
   if (!skin) {
-    Logger::LOG_WARNING
+    Logger::GUA_LOG_WARNING
         << "Mesh does not contain skin deformer, ignoring weights" << std::endl;
     return std::vector<bone_influences> {};
   }
@@ -98,7 +98,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
     FbxNode* bone = cluster->GetLink();
 
     if (!bone) {
-      Logger::LOG_ERROR << "associated Bone does not exist!" << std::endl;
+      Logger::GUA_LOG_ERROR << "associated Bone does not exist!" << std::endl;
       assert(false);
     }
 
@@ -108,7 +108,7 @@ std::vector<SkinnedMesh::bone_influences> SkinnedMesh::get_weights(
     if (bone_mapping.find(bone_name) != bone_mapping.end()) {
       bone_index = bone_mapping.at(bone_name);
     } else {
-      Logger::LOG_ERROR << "Bone with name '" << bone_name
+      Logger::GUA_LOG_ERROR << "Bone with name '" << bone_name
                         << "' does not exist!, ignoring weights" << std::endl;
       return std::vector<bone_influences> {};
     }

@@ -96,7 +96,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 
     if (!fileload_succeed) {
 
-      Logger::LOG_WARNING << "Unable to load " << file_name
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
   }
@@ -172,7 +172,7 @@ std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_na
 
     if (!fileload_succeed) {
 
-      Logger::LOG_WARNING << "Unable to load " << file_name
+      Logger::GUA_LOG_WARNING << "Unable to load " << file_name
                           << ": Type is not supported!" << std::endl;
     }
   }
@@ -263,7 +263,7 @@ std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& fil
     return cached_node;
   }
 
-  Logger::LOG_WARNING << "TV_3Loader::load_tv_3() : unable to create Lod Node" << std::endl;
+  Logger::GUA_LOG_WARNING << "TV_3Loader::load_tv_3() : unable to create Lod Node" << std::endl;
   return std::shared_ptr<node::TV_3Node>(new node::TV_3Node(filename));
 
 }

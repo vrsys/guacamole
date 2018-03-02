@@ -100,7 +100,7 @@ class GUA_DLL SceneGraph {
     std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
-      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
+      Logger::GUA_LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
       return new_node;
     }
 
@@ -149,7 +149,7 @@ class GUA_DLL SceneGraph {
     std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
     if (!parent) {
-      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
+      Logger::GUA_LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
       return new_node;
     }
 

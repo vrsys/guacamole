@@ -23,6 +23,7 @@
 #define GUA_GUI_RESOURCE_HPP
 
 // guacamole headers
+#include <gua/gui/GuiBrowserClient.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/events/Signal.hpp>
@@ -30,11 +31,8 @@
 #include <gua/gui/mouse_enums.hpp>
 #include <gua/gui/stl_helpers.hpp>
 
+#include <include/cef_app.h>
 
-namespace Awesomium {
-  class WebView;
-  class JSValue;
-}
 
 namespace gua {
 
@@ -84,10 +82,11 @@ class GuiResource {
     void inject_keyboard_event(Key key, int scancode, int action, int mods) const;
     void inject_char_event(unsigned c) const;
 
-    void inject_mouse_position_relative(math::vec2 const& position) const;
-    void inject_mouse_position(math::vec2 const& position) const;
+    void inject_mouse_position_relative(math::vec2 const& position);
+    void inject_mouse_position(math::vec2 const& position);
     void inject_mouse_button(Button button, int action, int mods) const;
     void inject_mouse_wheel(math::vec2 const& direction) const;
+
 
     template<typename ...Args>
     void call_javascript(std::string const& method, Args&& ... a) const {
@@ -113,18 +112,25 @@ class GuiResource {
       return result_callbacks_;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////
+
   private:
 
     void add_javascript_callback(std::string const& callback, bool with_result);
 
     std::string name_;
     std::string url_;
+    math::vec2 mouse_position_;
 
     std::shared_ptr<GuiTexture> gui_texture_ = nullptr;
 
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
-    Awesomium::WebView* view_ = nullptr;
-    Awesomium::JSValue* js_window_ = nullptr;
+
+
+    CefRefPtr<CefBrowser> browser_;
+    CefRefPtr<GuiBrowserClient> browserClient_;
+    CefWindowInfo window_info_;
+    CefBrowserSettings browserSettings_;
     bool                interactive_ = true;
 
 };

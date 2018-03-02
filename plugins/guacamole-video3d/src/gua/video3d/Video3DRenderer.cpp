@@ -428,7 +428,7 @@ void Video3DRenderer::render(Pipeline& pipe,
       auto video_desc(video_node->get_video_description());
 
       if (!GeometryDatabase::instance()->contains(video_desc)) {
-        gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): No such video."
+        gua::Logger::GUA_LOG_WARNING << "Video3DRenderer::draw(): No such video."
                                  << video_desc << ", " << std::endl;
         continue;
       }
@@ -436,7 +436,7 @@ void Video3DRenderer::render(Pipeline& pipe,
       auto video3d_ressource = std::static_pointer_cast<Video3DResource>(
           GeometryDatabase::instance()->lookup(video_desc));
       if (!video3d_ressource) {
-        gua::Logger::LOG_WARNING << "Video3DRenderer::draw(): Invalid video."
+        gua::Logger::GUA_LOG_WARNING << "Video3DRenderer::draw(): Invalid video."
                                  << std::endl;
         continue;
       }
@@ -543,7 +543,7 @@ void Video3DRenderer::render(Pipeline& pipe,
           programs_[current_material] = current_shader;
         }
       } else {
-        Logger::LOG_WARNING << "Video3DPass::render(): Cannot find material: "
+        Logger::GUA_LOG_WARNING << "Video3DPass::render(): Cannot find material: "
                             << video_node->get_material()->get_shader_name()
                             << std::endl;
       }

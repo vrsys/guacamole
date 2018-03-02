@@ -217,7 +217,7 @@ void WindowBase::start_frame() {
   if (config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION && !nv_context_) {
     nv_context_ = nvstusb_init(GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH);
     if (!nv_context_) {
-      Logger::LOG_ERROR << "Could not initialize NVIDIA 3D Vision IR emitter!" << std::endl;
+      Logger::GUA_LOG_ERROR << "Could not initialize NVIDIA 3D Vision IR emitter!" << std::endl;
     } else {
       Display *display = XOpenDisplay(0);
       double display_num = DefaultScreen(display);
@@ -225,7 +225,7 @@ void WindowBase::start_frame() {
       int pixel_clk = 0;
       XF86VidModeGetModeLine(display, display_num, &pixel_clk, &mode_line);
       double frame_rate = (double) pixel_clk * 1000.0 / mode_line.htotal / mode_line.vtotal;
-      Logger::LOG_MESSAGE << "Detected refresh rate of " << frame_rate << " Hz." << std::endl;
+      Logger::GUA_LOG_MESSAGE << "Detected refresh rate of " << frame_rate << " Hz." << std::endl;
       nvstusb_set_rate(nv_context_, frame_rate);
     }
   }
@@ -388,7 +388,7 @@ void WindowBase::DebugOutput::operator()(scm::gl::debug_source source,
                                      scm::gl::debug_severity severity,
                                      const std::string& message) const {
 
-  Logger::LOG_MESSAGE << "[Source: " << scm::gl::debug_source_string(source)
+  Logger::GUA_LOG_MESSAGE << "[Source: " << scm::gl::debug_source_string(source)
                       << ", type: " << scm::gl::debug_type_string(type)
                       << ", severity: " << scm::gl::debug_severity_string(severity)
                       << "]: " << message << std::endl;

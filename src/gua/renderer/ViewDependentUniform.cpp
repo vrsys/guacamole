@@ -71,7 +71,7 @@ void ViewDependentUniform::apply(RenderContext const& ctx,
     }
   }
   catch (std::exception& e) {
-    Logger::LOG_WARNING << "Error: ViewDependentUniform::apply(): Unable to apply ViewDependentUniform.\n";
+    Logger::GUA_LOG_WARNING << "Error: ViewDependentUniform::apply(): Unable to apply ViewDependentUniform.\n";
   }
 }
 

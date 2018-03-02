@@ -6,12 +6,17 @@ SET(OPENVR_INCLUDE_SEARCH_DIRS
     ${GLOBAL_EXT_DIR}/openvr/headers
     ${OPENVR_INCLUDE_DIRS}
     ${OPENVR_INCLUDE_SEARCH_DIR}
+    /opt/openvr/headers
+    /usr/include
 )
 
 SET(OPENVR_LIBRARY_SEARCH_DIRS
     ${GLOBAL_EXT_DIR}/openvr/lib
     ${OPENVR_LIBRARY_DIRS}
     ${OPENVR_LIBRARY_SEARCH_DIR}
+    /opt/openvr/lib
+    /usr/lib
+    /usr/lib64
 )
 
 ##############################################################################

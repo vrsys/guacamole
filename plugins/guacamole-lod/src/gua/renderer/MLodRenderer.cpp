@@ -102,7 +102,7 @@ namespace gua {
         return programs_.at(material);
       } 
       catch (std::exception& e) {
-        Logger::LOG_WARNING << "LodPass::_get_material_program(): Cannot create material for tri_mesh_lod program: " << e.what() << std::endl;
+        Logger::GUA_LOG_WARNING << "LodPass::_get_material_program(): Cannot create material for tri_mesh_lod program: " << e.what() << std::endl;
         return std::shared_ptr<ShaderProgram>();
       }
     }
@@ -374,7 +374,7 @@ namespace gua {
         program_changed = false;
       }
       else {
-        Logger::LOG_WARNING << "MLodRenderer::render(): Cannot find ressources for node: " << mlod_node->get_name() << std::endl;
+        Logger::GUA_LOG_WARNING << "MLodRenderer::render(): Cannot find ressources for node: " << mlod_node->get_name() << std::endl;
       }
     }
 

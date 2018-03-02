@@ -220,14 +220,14 @@ namespace gua {
               loader.load_geometry(get_name(), desc.filepath(), get_material(), desc.flags());
             }
             catch (std::exception& e) {
-              Logger::LOG_WARNING << "NURBSNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+              Logger::GUA_LOG_WARNING << "NURBSNode::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
             }
           }
 
           geometry_ = std::dynamic_pointer_cast<NURBSResource>(GeometryDatabase::instance()->lookup(geometry_description_));
 
           if (!geometry_) {
-            Logger::LOG_WARNING << "Failed to get TriMeshRessource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
+            Logger::GUA_LOG_WARNING << "Failed to get TriMeshRessource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
           }
         }
 

@@ -93,7 +93,7 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& nod
       return node;
     }
   } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load PLOD object \"" << filename << "\": " << e.what() << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to load PLOD object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }
@@ -115,7 +115,7 @@ std::shared_ptr<node::PLODNode> PLODLoader::load_geometry(std::string const& fil
     return cached_node;
   }
 
-  Logger::LOG_WARNING << "PLODLoader::load_geometry() : unable to create PLOD Node" << std::endl;
+  Logger::GUA_LOG_WARNING << "PLODLoader::load_geometry() : unable to create PLOD Node" << std::endl;
   return std::shared_ptr<node::PLODNode>(new node::PLODNode(filename));
 
 }

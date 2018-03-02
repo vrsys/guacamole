@@ -58,12 +58,12 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
     }
     else {
       lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
-      Logger::LOG_WARNING << "Trying to load " << filename << std::endl;
+      Logger::GUA_LOG_WARNING << "Trying to load " << filename << std::endl;
       GeometryDescription desc("PLod", filename, 0, flags);
 
       lamure::model_t model_id = database->add_model(filename, desc.unique_key());
       if (database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::POINTCLOUD) {
-         Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_trimesh for meshes" << std::endl;
+         Logger::GUA_LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_trimesh for meshes" << std::endl;
          return nullptr;
       }
 
@@ -95,7 +95,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
       return node;
     }
   } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load Lod object \"" << filename << "\": " << e.what() << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to load Lod object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }
@@ -118,7 +118,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& n
 
       lamure::model_t model_id = database->add_model(filename, desc.unique_key());
       if (database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::TRIMESH) {
-         Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_pointcloud for pointclouds" << std::endl;
+         Logger::GUA_LOG_WARNING << "Failed to load lod file \"" << filename << "\":" << ". Please use load_lod_pointcloud for pointclouds" << std::endl;
          return nullptr;
       }
 
@@ -150,7 +150,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& n
       return node;
     }
   } catch (std::exception & e) {
-    Logger::LOG_WARNING << "Failed to load Lod object \"" << filename << "\": " << e.what() << std::endl;
+    Logger::GUA_LOG_WARNING << "Failed to load Lod object \"" << filename << "\": " << e.what() << std::endl;
     return nullptr;
   }
 }
@@ -172,7 +172,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
     return cached_node;
   }
 
-  Logger::LOG_WARNING << "LodLoader::load_lod_pointcloud() : unable to create Lod Node" << std::endl;
+  Logger::GUA_LOG_WARNING << "LodLoader::load_lod_pointcloud() : unable to create Lod Node" << std::endl;
   return std::shared_ptr<node::PLodNode>(new node::PLodNode(filename));
 
 }
@@ -193,7 +193,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& f
     return cached_node;
   }
 
-  Logger::LOG_WARNING << "LodLoader::load_lod_trimesh() : unable to create Lod Node" << std::endl;
+  Logger::GUA_LOG_WARNING << "LodLoader::load_lod_trimesh() : unable to create Lod Node" << std::endl;
   return std::shared_ptr<node::MLodNode>(new node::MLodNode(filename));
 
 }

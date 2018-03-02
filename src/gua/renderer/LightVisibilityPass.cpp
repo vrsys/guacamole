@@ -50,7 +50,7 @@ PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx,
 
   if (    rasterization_mode() == CONSERVATIVE
       && !glapi.extension_NV_conservative_raster) {
-    Logger::LOG_WARNING << "CONSERVATIVE rasterization mode is not supported on this hardware. "
+    Logger::GUA_LOG_WARNING << "CONSERVATIVE rasterization mode is not supported on this hardware. "
                         << "Falling back to SIMPLE mode." << std::endl;
     rasterization_mode(SIMPLE);
   }

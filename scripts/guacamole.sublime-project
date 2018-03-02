@@ -1,27 +1,44 @@
 {
+	"build_systems":
+	[
+		{
+			"cmd":
+			[
+				"./scripts/make.sh"
+			],
+			"file_regex": "^(..[^:]*):(.*)$",
+			"name": "guacamole-project",
+			"working_dir": "${project_path}/.."
+		},
+		{
+			"cmd":
+			[
+				"doxygen"
+			],
+			"file_regex": "^(..[^:]*):(.*)$",
+			"name": "guacamole-doc",
+			"shell": "true",
+			"working_dir": "${project_path}/../doc/"
+		}
+	],
 	"folders":
 	[
 		{
-			"follow_symlinks": true,
-			"path": "..",
-            "folder_exclude_patterns": ["doc", "build", "lib", "install"],
-            "file_exclude_patterns": ["*.nfs*"]
+			"file_exclude_patterns":
+			[
+				"*.nfs*"
+			],
+			"folder_exclude_patterns":
+			[
+				"doc",
+				"build",
+				"lib",
+				"install"
+			],
+			"path": "/home/joje1609/Documents/Projects/guacamole"
+		},
+		{
+			"path": "/home/joje1609/Documents/Projects/gua_orig/guacamole"
 		}
-	],
-	"build_systems":
-	[
-	  {
-	    "name": "guacamole-project",
-	    "file_regex": "^(..[^:]*):(.*)$",
-	    "working_dir": "${project_path}/..",
-	    "cmd":  ["./scripts/make.sh"]
-	  },
-	  {
-	    "name": "guacamole-doc",
-	    "file_regex": "^(..[^:]*):(.*)$",
-	    "working_dir": "${project_path}/../doc/",
-	    "shell" : "true",
-	    "cmd":  ["doxygen"]
-	  }
 	]
 }

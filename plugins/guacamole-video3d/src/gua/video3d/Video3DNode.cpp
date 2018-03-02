@@ -125,10 +125,10 @@ std::shared_ptr<Node> Video3DNode::copy() const {
 				try {
 					gua::Video3DLoader loader;
 					loader.create_geometry_from_file("tmp", desc.filepath(), nullptr, desc.flags());
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
             << "Video3DNode::update_cache(): Loading " << desc.filepath() << std::endl;
 				} catch (std::exception& e) {
-					Logger::LOG_WARNING
+					Logger::GUA_LOG_WARNING
 						<< "Video3DNode::update_cache(): Loading failed from "
 						<< desc.filepath() << " : " << e.what() << std::endl;
 				}
@@ -138,7 +138,7 @@ std::shared_ptr<Node> Video3DNode::copy() const {
         GeometryDatabase::instance()->lookup(video_description_));
 
       if (!video_) {
-				Logger::LOG_WARNING
+				Logger::GUA_LOG_WARNING
 					<< "Failed to get VideoResource for " << video_description_
 					<< ": The data base entry is of wrong type!" << std::endl;
 			}

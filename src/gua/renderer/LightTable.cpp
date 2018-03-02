@@ -39,7 +39,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx,
   if (   width > max_tex3d_size
       || height > max_tex3d_size
       || light_bitset_words > max_tex3d_size) {
-    Logger::LOG_ERROR << "Dimensions of light table cannot be greater than "
+    Logger::GUA_LOG_ERROR << "Dimensions of light table cannot be greater than "
                       << max_tex3d_size << " in size" << std::endl;
   }
 
@@ -59,8 +59,8 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx,
     light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words,
                                                 scm::gl::FORMAT_R_32UI, 1, state);
     light_bitset_words_ = light_bitset_words;
-    Logger::LOG_DEBUG << "Light bitset allocation for " << light_bitset_words << " words" << std::endl;
-    Logger::LOG_DEBUG << "Size of LightBlock: " << sizeof(LightBlock) << std::endl;
+    Logger::GUA_LOG_DEBUG << "Light bitset allocation for " << light_bitset_words << " words" << std::endl;
+    Logger::GUA_LOG_DEBUG << "Size of LightBlock: " << sizeof(LightBlock) << std::endl;
   }
 
 
@@ -75,7 +75,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx,
   if (uniform_block_.array_size() < lights_num_) {
     uniform_block_ = scm::gl::make_uniform_block_array<LightBlock>(ctx.render_device, 
                                                                    lights_num_);
-    Logger::LOG_DEBUG << "Create light UBO for " << lights_num_ << " elements" << std::endl;
+    Logger::GUA_LOG_DEBUG << "Create light UBO for " << lights_num_ << " elements" << std::endl;
     needs_update = true;
   }
 
@@ -89,7 +89,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx,
   if (needs_update) {
     uniform_block_.begin_manipulation(ctx.render_context);
     uniform_block_.end_manipulation();
-    //Logger::LOG_DEBUG << "Light data upload" << std::endl;
+    //Logger::GUA_LOG_DEBUG << "Light data upload" << std::endl;
   }
   return math::vec2ui(width, height);
 }

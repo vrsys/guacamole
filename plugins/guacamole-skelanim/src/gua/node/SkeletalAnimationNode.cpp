@@ -90,7 +90,7 @@ void SkeletalAnimationNode::add_material(
   // if (geometries_.size() > materials_.size()) {
     materials_.push_back(material);
   // } else {
-  //   Logger::LOG_WARNING << "Cant have more materials than geometries"
+  //   Logger::GUA_LOG_WARNING << "Cant have more materials than geometries"
   //                     << std::endl;
   // }
 }
@@ -101,7 +101,7 @@ std::shared_ptr<Material> const& SkeletalAnimationNode::get_material(
   if (index < materials_.size()) {
     return materials_[index];
   } else {
-    Logger::LOG_ERROR << "Cant return material of invalid index!" << std::endl;
+    Logger::GUA_LOG_ERROR << "Cant return material of invalid index!" << std::endl;
     return materials_[0];
   }
 }
@@ -118,7 +118,7 @@ void SkeletalAnimationNode::set_material(std::shared_ptr<Material> material,
   if (index < materials_.size()) {
     materials_[index] = material;
   } else {
-    Logger::LOG_ERROR << "Cant set material of invalid index!" << std::endl;
+    Logger::GUA_LOG_ERROR << "Cant set material of invalid index!" << std::endl;
   }
 }
 
@@ -372,7 +372,7 @@ void SkeletalAnimationNode::update_cache() {
                 get_name(), desc.filepath(), materials_[i], desc.flags());
           }
           catch (std::exception & e) {
-            Logger::LOG_ERROR
+            Logger::GUA_LOG_ERROR
                 << "SkeletalAnimationNode::update_cache(): Loading failed from "
                 << desc.filepath() << " : " << e.what() << std::endl;
           }
@@ -382,7 +382,7 @@ void SkeletalAnimationNode::update_cache() {
             GeometryDatabase::instance()->lookup(geometry_descriptions_[i]));
 
         if (!geometries_[i]) {
-          Logger::LOG_ERROR << "Failed to get SkinnedMeshResource for "
+          Logger::GUA_LOG_ERROR << "Failed to get SkinnedMeshResource for "
                               << geometry_descriptions_[i]
                               << ": The data base entry is of wrong type!"
                               << std::endl;
@@ -504,7 +504,7 @@ void SkeletalAnimationNode::set_animation_1(std::string const& animation_name) {
   // }
     anim_1_ = animation_name;
   //  else {
-  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //   gua::Logger::GUA_LOG_ERROR << "No matching animation with name: '"
   //                            << animation_name << "' found!" << std::endl;
   // }
 }
@@ -521,7 +521,7 @@ void SkeletalAnimationNode::set_animation_2(std::string const& animation_name) {
   // }
     anim_2_ = animation_name;
   //  else {
-  //   gua::Logger::LOG_ERROR << "No matching animation with name: '"
+  //   gua::Logger::GUA_LOG_ERROR << "No matching animation with name: '"
   //                            << animation_name << "' found!" << std::endl;
   // }
 }
@@ -531,7 +531,7 @@ float SkeletalAnimationNode::get_duration(
   if (animations_.find(animation_name) != animations_.end()) {
     return animations_.at(animation_name).get_duration();
   } else {
-    gua::Logger::LOG_ERROR << "No matching animation with name: '"
+    gua::Logger::GUA_LOG_ERROR << "No matching animation with name: '"
                              << animation_name << "' found!" << std::endl;
     return 0;
   }

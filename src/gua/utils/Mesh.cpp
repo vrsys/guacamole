@@ -46,7 +46,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
       };
     }
     else {
-      Logger::LOG_ERROR << "Type of material reference not supported" << std::endl;
+      Logger::GUA_LOG_ERROR << "Type of material reference not supported" << std::endl;
     }
   }
   else if(material_layer->GetMappingMode() == FbxGeometryElement::eAllSame){
@@ -55,12 +55,12 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
     };
   }
   else {
-    Logger::LOG_ERROR << "Type of material mapping not supported" << std::endl;
+    Logger::GUA_LOG_ERROR << "Type of material mapping not supported" << std::endl;
   }
 
 //polygons
   if(mesh.GetPolygonCount() < 1) {
-    Logger::LOG_ERROR << "No polygons in mesh" << std::endl;
+    Logger::GUA_LOG_ERROR << "No polygons in mesh" << std::endl;
     assert(0);
   }
 
@@ -74,12 +74,12 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
 //UV coordinates
   bool has_uvs = true;
   if(mesh.GetElementUVCount() == 0) {
-    Logger::LOG_WARNING << "Mesh has no texture coordinates" << std::endl;
+    Logger::GUA_LOG_WARNING << "Mesh has no texture coordinates" << std::endl;
     has_uvs = false;
   }
   else {
     if(mesh.GetElementUVCount() > 1) {
-      Logger::LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
+      Logger::GUA_LOG_WARNING << "Mesh has multiple UV sets, only using first one" << std::endl;
     }
   }
 
@@ -90,7 +90,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
       mesh.GenerateTangentsData(0, true);
     }
     else {
-      Logger::LOG_DEBUG << "No UVs, can't generate tangents" << std::endl;
+      Logger::GUA_LOG_DEBUG << "No UVs, can't generate tangents" << std::endl;
       has_tangents = false;
     }
   }
@@ -103,7 +103,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   FbxAMatrix identity = FbxAMatrix{};
   identity.SetIdentity();
   if(geo_transform != identity) {
-    Logger::LOG_WARNING << "Mesh has Geometric Transform, vertices may be skewed." << std::endl;
+    Logger::GUA_LOG_WARNING << "Mesh has Geometric Transform, vertices may be skewed." << std::endl;
   }
 
   //one vector of temp_vert represents one control point, every temp_vert in that vector is one vertex at that point
@@ -329,7 +329,7 @@ std::vector<unsigned> Mesh::construct(FbxMesh& mesh, int material_index) {
   }
 
   //output reduction info
-  // Logger::LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
+  // Logger::GUA_LOG_DEBUG << "Number of vertices reduced from " << old_num_vertices << " to " << num_vertices << " ,time taken: " << timer.get_elapsed() << std::endl;
 
   return point_indices;
 }
@@ -352,7 +352,7 @@ std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLay
       };
     }
     else {
-      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+      Logger::GUA_LOG_ERROR << "Type of reference not supported" << std::endl;
     }
   }
   //mapping to vertex
@@ -368,11 +368,11 @@ std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLay
       };
     }
     else {
-      Logger::LOG_ERROR << "Type of reference not supported" << std::endl;
+      Logger::GUA_LOG_ERROR << "Type of reference not supported" << std::endl;
     }
   }
   else {
-    Logger::LOG_ERROR << "Type of mapping not supported" << std::endl;
+    Logger::GUA_LOG_ERROR << "Type of mapping not supported" << std::endl;
   }
 
   return access_function;

@@ -41,7 +41,7 @@ namespace utils {
 
         registered_tags_[tag] = new_set;
       } else {
-        Logger::LOG_WARNING << "Unable to add new tag: Maximum number of tags is " << GUA_MAX_TAG_COUNT << "!" << std::endl;
+        Logger::GUA_LOG_WARNING << "Unable to add new tag: Maximum number of tags is " << GUA_MAX_TAG_COUNT << "!" << std::endl;
         return default_tag_;
       }
     }

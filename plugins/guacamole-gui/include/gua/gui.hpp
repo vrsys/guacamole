@@ -22,7 +22,12 @@
 #ifndef GUA_INCLUDE_GUI_HPP
 #define GUA_INCLUDE_GUI_HPP
 
+#undef Success
+
 #include <gua/gui/GuiResource.hpp>
 #include <gua/gui/Interface.hpp>
+#include <gua/gui/GLSurface.hpp>
+#include <gua/gui/GuiTexture.hpp>
+#include <gua/gui/Paths.hpp>
 
 #endif  // GUA_INCLUDE_GUI_HPP

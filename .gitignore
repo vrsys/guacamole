@@ -65,3 +65,9 @@ examples/plod_simple/example-plod_simple
 
 install
 examples/picking/example-picking
+
+#CLion
+cmake-build-debug/
+debug.log
+.idea/
+CMakeFiles/

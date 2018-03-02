@@ -51,7 +51,7 @@ void ViveWindow::initialize_hmd_environment() {
 
     if (eError != vr::VRInitError_None) {
         p_vr_system_ = nullptr;
-        Logger::LOG_WARNING << "Failed to initialize OpenVR environment."
+        Logger::GUA_LOG_WARNING << "Failed to initialize OpenVR environment."
             << "Errorcode:" << (int)eError << std::endl;
     }
 
@@ -448,7 +448,7 @@ void ViveWindow::display(scm::gl::texture_2d_ptr const& texture, bool is_left) {
 
     GLenum status = glapi.glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        gua::Logger::LOG_WARNING << "Draw Framebuffer Incomplete.\n";
+        gua::Logger::GUA_LOG_WARNING << "Draw Framebuffer Incomplete.\n";
     }
 
     // setup read buffer
@@ -458,7 +458,7 @@ void ViveWindow::display(scm::gl::texture_2d_ptr const& texture, bool is_left) {
 
     status = glapi.glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        gua::Logger::LOG_WARNING << "Read Framebuffer Incomplete.\n";
+        gua::Logger::GUA_LOG_WARNING << "Read Framebuffer Incomplete.\n";
     }
 
     scm::math::vec2ui const tex_dimensions = texture->dimensions();

@@ -107,7 +107,7 @@ namespace gua {
   int BoneAnimation::find_key(float animationTime,
     std::vector<Keyframe<T> > keys) const {
     if (keys.size() < 1) {
-      Logger::LOG_ERROR << "no keys" << std::endl;
+      Logger::GUA_LOG_ERROR << "no keys" << std::endl;
       assert(false);
     }
 

@@ -103,7 +103,7 @@ std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_no
     auto result(find_node(path_to_node, "/"));
 
     if (result == nullptr)
-        Logger::LOG_WARNING << "Unable to get node: A node at location " << path_to_node << " doesn't exist!" << std::endl;
+        Logger::GUA_LOG_WARNING << "Unable to get node: A node at location " << path_to_node << " doesn't exist!" << std::endl;
     return result;
 }
 

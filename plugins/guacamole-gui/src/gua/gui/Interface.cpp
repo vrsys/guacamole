@@ -29,62 +29,138 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/utils/TextFile.hpp>
 
-#include <Awesomium/WebCore.h>
-#include <Awesomium/STLHelpers.h>
+#include <include/wrapper/cef_message_router.h>
 
-#include "GLSurface.inl"
-
-// Awesomium bug in linux
-#ifndef _WIN32
-Awesomium::DataSource::~DataSource(){}
-#endif
+#include <gua/gui/GLSurface.hpp>
 
 namespace gua {
 
 namespace {
 
 #include "GLSurfaceFactory.ipp"
-#include "AweDataSource.ipp"
+#include "GuiProcessApps.ipp"
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Interface::update() const {
-  web_core_->Update();
+void Interface::update() {
+  CefDoMessageLoopWork();
+}
+
+
+int Interface::init(int argc, char** argv) {
+  // Provide CEF with command-line arguments.
+  CefMainArgs main_args(argc, argv);
+
+  // Create a temporary CommandLine object.
+  CefRefPtr<CefCommandLine> command_line = CreateCommandLine(main_args);
+  command_line->AppendSwitch("off-screen-rendering-enabled");
+
+  // Create a CefApp of the correct processc type.
+  CefRefPtr<CefApp> app;
+  switch (GetProcessType(command_line)) {
+    case PROCESS_TYPE_BROWSER:
+      app = CreateBrowserProcessApp();
+      break;
+    case PROCESS_TYPE_RENDERER:
+      app = CreateRendererProcessApp();
+      break;
+    case PROCESS_TYPE_OTHER:
+      app = CreateOtherProcessApp();
+      break;
+  }
+
+  // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+  // that share the same executable. This function checks the command-line and,
+  // if this is a sub-process, executes the appropriate logic.
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
+  if (exit_code >= 0) {
+    // The sub-process has completed so return here.
+    return exit_code;
+  }
+
+  // Specify CEF global settings here.
+  CefSettings settings;
+  //CefString(&settings.resources_dir_path) = "./CEF-binaries/";
+  //CefString(&settings.locales_dir_path) = "./CEF-binaries/";
+  //CefString(&settings.log_file) = "./CEF-binaries/debug.log";
+
+  settings.no_sandbox = true;
+
+  // Initialize CEF for the browser process. The first browser instance will be
+  // created in CefBrowserProcessHandler::OnContextInitialized() after CEF has
+  // been initialized.
+  CefInitialize(main_args, settings, app, NULL);
+
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Interface::Interface() {
-  web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
-  web_core_->set_surface_factory(new GLSurfaceFactory());
 
-  Awesomium::WebPreferences prefs;
-  prefs.enable_smooth_scrolling = true;
-  web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
-
-  Awesomium::DataSource* data_source = new AweDataSource();
-  web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
 Interface::~Interface() {
-  auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
-  Awesomium::WebCore::Shutdown();
-  delete factory;
-  web_session_->Release();
+  std::cout << "Interface destroyed" << std::endl;
+  CefShutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Awesomium::WebView* Interface::create_webview(int width, int height) const {
-  return web_core_->CreateWebView(width, height, web_session_,
-                                  Awesomium::kWebViewType_Offscreen);
+CefRefPtr<CefBrowser> Interface::create_browser(CefWindowInfo& info, CefRefPtr<GuiBrowserClient> client,
+                                       std::string url, CefBrowserSettings settings) const{
+  info.SetAsWindowless(0);
+  return CefBrowserHost::CreateBrowserSync(info, client.get(), url, settings, nullptr);
+}
+
+// No CefApp for other subprocesses.
+CefRefPtr<CefApp> Interface::CreateOtherProcessApp() {
+  return NULL;
+}
+
+//TODO: building fails when returning RendererApp
+CefRefPtr<CefApp> Interface::CreateRendererProcessApp() {
+  return new gua::GuiRendererApp();
+}
+
+
+CefRefPtr<CefApp> Interface::CreateBrowserProcessApp() {
+  return new gua::GuiBrowserApp();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+CefRefPtr<CefCommandLine> Interface::CreateCommandLine(const CefMainArgs& main_args) {
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  #if defined(OS_WIN)
+    command_line->InitFromString(::GetCommandLineW());
+  #else
+    command_line->InitFromArgv(main_args.argc, main_args.argv);
+  #endif
+  return command_line;
 }
+
+Interface::ProcessType Interface::GetProcessType(const CefRefPtr<CefCommandLine>& command_line) {
+  // The command-line flag won't be specified for the browser process.
+  if (!command_line->HasSwitch(kProcessType))
+    return PROCESS_TYPE_BROWSER;
+
+  const std::string& process_type = command_line->GetSwitchValue(kProcessType);
+  if (process_type == kRendererProcess)
+    return PROCESS_TYPE_RENDERER;
+
+  #if defined(OS_LINUX)
+    // On Linux the zygote process is used to spawn other process types. Since we
+    // don't know what type of process it will be we give it the renderer app.
+    if (process_type == kZygoteProcess)
+      return PROCESS_TYPE_RENDERER;
+  #endif
+
+  return PROCESS_TYPE_OTHER;
+}
+////////////////////////////////////////////////////////////////////////////////
+} //namespace gua
 

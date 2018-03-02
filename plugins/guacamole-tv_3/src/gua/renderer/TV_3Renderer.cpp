@@ -208,7 +208,7 @@ namespace gua {
         return current_map_by_mode.at(material);
       }
       catch (std::exception& e) {
-        Logger::LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
+        Logger::GUA_LOG_WARNING << "TV_3Pass::_get_material_program(): Cannot create material for raycasting program: " << e.what() << std::endl; 
         return std::shared_ptr<ShaderProgram>();
       }
     } else {

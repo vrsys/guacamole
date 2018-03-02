@@ -143,7 +143,7 @@ void TV_3Node::update_cache() {
           gua::TV_3Loader loader;
           loader.load_geometry(desc.filepath(), desc.flags());
         } catch (std::exception& e) {
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
               << "TV_3Node::update_cache(): Loading failed from "
               << desc.filepath() << " : " << e.what() << std::endl;
         }
@@ -152,7 +152,7 @@ void TV_3Node::update_cache() {
           GeometryDatabase::instance()->lookup(geometry_description_));
 
       if (!geometry_) {
-        Logger::LOG_WARNING
+        Logger::GUA_LOG_WARNING
             << "Failed to get TV_3Resource for " << geometry_description_
             << ": The data base entry is of wrong type!" << std::endl;
       }

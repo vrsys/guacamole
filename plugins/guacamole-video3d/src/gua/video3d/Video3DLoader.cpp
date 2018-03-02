@@ -89,7 +89,7 @@ namespace gua {
       return result;
     }
     catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
+      Logger::GUA_LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
       return nullptr;
     }
   }

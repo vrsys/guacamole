@@ -126,10 +126,10 @@ std::shared_ptr<Node> SPointsNode::copy() const {
 				try {
 					gua::SPointsLoader loader;
 					loader.create_geometry_from_file("tmp", desc.filepath(), nullptr, desc.flags());
-          Logger::LOG_WARNING
+          Logger::GUA_LOG_WARNING
             << "SPointsNode::update_cache(): Loading " << desc.filepath() << std::endl;
 				} catch (std::exception& e) {
-					Logger::LOG_WARNING
+					Logger::GUA_LOG_WARNING
 						<< "SPointsNode::update_cache(): Loading failed from "
 						<< desc.filepath() << " : " << e.what() << std::endl;
 				}
@@ -139,7 +139,7 @@ std::shared_ptr<Node> SPointsNode::copy() const {
         GeometryDatabase::instance()->lookup(spoints_description_));
 
       if (!spoints_) {
-				Logger::LOG_WARNING
+				Logger::GUA_LOG_WARNING
 					<< "Failed to get SPoints3DResource for " << spoints_description_
 					<< ": The data base entry is of wrong type!" << std::endl;
 			}

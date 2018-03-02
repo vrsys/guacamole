@@ -189,7 +189,7 @@ void Window::set_active(bool active) {
                                       swap_group_);
 #endif
       if (!result) {
-        Logger::LOG_ERROR << "fpJoinSwapGroupNV: couldn't join swap group " << swap_group_ << std::endl;
+        Logger::GUA_LOG_ERROR << "fpJoinSwapGroupNV: couldn't join swap group " << swap_group_ << std::endl;
       }
 
     }
@@ -204,11 +204,11 @@ void Window::set_active(bool active) {
                                           swap_barrier_);
 #endif
       if (!result) {
-        Logger::LOG_ERROR << "fpBindSwapBarrierNV: couldn't bind swap barrier " << swap_barrier_ << std::endl;
+        Logger::GUA_LOG_ERROR << "fpBindSwapBarrierNV: couldn't bind swap barrier " << swap_barrier_ << std::endl;
       }
     }
   } else {
-    Logger::LOG_MESSAGE << config.get_display_name() << " no GL_NV_swap_group extension\n";
+    Logger::GUA_LOG_MESSAGE << config.get_display_name() << " no GL_NV_swap_group extension\n";
   }
 }
 
@@ -224,7 +224,7 @@ void Window::swap_buffers_impl() {
     int screen = config.get_display_name().back() - '0';
     auto result = fpQueryFrameCountNV(display, screen, &frame_count_);
     if (!result) {
-      Logger::LOG_ERROR << "fpQueryFrameCountNV: couldn't successfully retrieve framecounter for display " << d << std::endl;
+      Logger::GUA_LOG_ERROR << "fpQueryFrameCountNV: couldn't successfully retrieve framecounter for display " << d << std::endl;
     }
     if (frame_count_ > 200) {
       fpResetFrameCountNV(display, screen);

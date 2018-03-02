@@ -81,7 +81,7 @@ namespace Resources {
     auto it(data_.find(file));
 
     if (it == data_.end())
-      Logger::LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
+      Logger::GUA_LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
 
     return lookup_string(*it->second);
   }
@@ -118,7 +118,7 @@ namespace Resources {
     auto it(data_.find(file));
 
     if (it == data_.end())
-      Logger::LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
+      Logger::GUA_LOG_ERROR << "Failed to get string resource: Entry \"" << file << "\" does not exist!" << std::endl;
 
     return *it->second;
   }

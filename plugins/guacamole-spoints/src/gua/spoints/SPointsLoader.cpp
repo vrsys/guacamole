@@ -90,7 +90,7 @@ namespace gua {
   {
 	    if (!is_supported(spoints_resource_filepath)) {
 
-        Logger::LOG_WARNING << "Unable to load " << spoints_resource_filepath
+        Logger::GUA_LOG_WARNING << "Unable to load " << spoints_resource_filepath
                             << ": Type is not supported!" << std::endl;
       }
 
@@ -179,7 +179,7 @@ namespace gua {
       return result;
     }
     catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load SPoints object " << spoints_resource_filepath.c_str() << std::endl;
+      Logger::GUA_LOG_WARNING << "Warning: " << e.what() << " : Failed to load SPoints object " << spoints_resource_filepath.c_str() << std::endl;
       return nullptr;
     }
   }
