@@ -24,8 +24,6 @@
 
 #include <gua/gui/GLSurface.hpp>
 
-#include <Awesomium/WebCore.h>
-
 #include <include/cef_client.h>
 
 namespace gua {

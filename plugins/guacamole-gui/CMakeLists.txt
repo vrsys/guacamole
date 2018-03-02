@@ -1,6 +1,5 @@
 # dependencies
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(find_awesomium)
 include(FindCEF)
 
 

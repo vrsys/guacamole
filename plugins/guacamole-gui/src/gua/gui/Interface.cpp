@@ -31,22 +31,13 @@
 
 #include <include/wrapper/cef_message_router.h>
 
-#include <Awesomium/WebCore.h>
-#include <Awesomium/STLHelpers.h>
-
 #include <gua/gui/GLSurface.hpp>
-
-// Awesomium bug in linux
-#ifndef _WIN32
-Awesomium::DataSource::~DataSource(){}
-#endif
 
 namespace gua {
 
 namespace {
 
 #include "GLSurfaceFactory.ipp"
-#include "AweDataSource.ipp"
 #include "GuiProcessApps.ipp"
 
 }
