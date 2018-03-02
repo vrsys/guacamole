@@ -36,18 +36,19 @@
       div = document.getElementById('fps');
       div.innerHTML = text;
     }
-  
-    // Send a query to the browser process.
+
     function subscribe() {
-      // Results in a call to the OnQuery method in client_impl.cc.
-      window.cefQuery({
-        request: '',
-        persistent: true,
-        onSuccess: function(response) {
-          set_fps_text(response);
-        },
-        onFailure: function(error_code, error_message) {}
-      });
+        // Results in a call to the OnQuery method in client_impl.cc.
+        window.cefQuery({
+            request: 'subscribe',
+            persistent: true,
+            onSuccess: function(response) {
+                obj = JSON.parse(response);
+                window[obj.functionName](obj.parameters);
+                //set_fps_text(response)
+            },
+            onFailure: function(error_code, error_message) {}
+        });
     }
   </script>
 

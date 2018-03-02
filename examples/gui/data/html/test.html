@@ -4,30 +4,41 @@
 	<script language="JavaScript">
 
 	// Send a query to the browser process.
-	function sendMessage() {
+	function subscribe() {
 	  // Results in a call to the OnQuery method in client_impl.cc.
 	  window.cefQuery({
-	    request: 'MessageRouterTest:' + document.getElementById("message").value,
+	    request: 'subscribe',
 	    persistent: true,
 	    onSuccess: function(response) {
-	      document.getElementById('result').value = 'Response: '+response;
+			obj = JSON.parse(response);
+			window[obj.functionName](obj.parameters);
+	  		//set_fps_text(response)
 	    },
 	    onFailure: function(error_code, error_message) {}
 	  });
 	}
+
+    function set_fps_text(text) {
+        document.getElementById('result').value = text;
+    }
+
+    function callback(method, params){
+	    window.cefQuery({
+			request:'callback://' + method + "." + params,
+			persistent: false,
+			onSuccess: function(response){},
+			onFailure: function(error_code, error_message) {}
+		});
+	}
 	</script>
 
 </head>
-<script type="text/javascript">
-  console.log("huhu");
-
-</script>
-<body bgcolor="white" onload="sendMessage();">
-<form>
-Message: <input type="text" id="message" value="My Message">
-<br/><input type="button" onclick="sendMessage();" value="Send Message">
-<br/>You should see the reverse of your message below:
-<br/><textarea rows="10" cols="40" id="result"></textarea>
-</form>
+<body bgcolor="white" onload="subscribe();">
+	<form>
+		Message: <input type="text" id="message" value="My Message">
+		<br/><input type="button" onclick="callback('test', 'hi')" value="Send Message">
+		<br/>You should see the reverse of your message below:
+		<br/><textarea rows="10" cols="40" id="result"></textarea>
+	</form>
 </body>
 </html>

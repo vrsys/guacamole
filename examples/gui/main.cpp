@@ -99,6 +99,13 @@ int main(int argc, char** argv) {
   test_1_quad->data.size() = test_size;
   test_1_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
+  test_1->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
+      if (callback == "test") {
+        std::cout << "hi" << std::endl;
+        //test_1->call_javascript("set_fps_text", "button clicked!");
+      }
+  });
+
   //Test2
   auto test_2 = std::make_shared<gua::GuiResource>();
   test_2->init("test_2", test_2_path, fps_size);
@@ -110,60 +117,8 @@ int main(int argc, char** argv) {
   graph.add_node("/", test_1_quad);
   graph.add_node("/", test_2_quad);
 
-  test_1->set_js_message("It's-a-me! Test2!");
-  //test_2->send_js_message();
 //////////////////////////////////////////////////////////////////////////
-/*
-  //fps display
-  gua::math::vec2 fps_size(170.f, 55.f);
 
-  std::string fps_path = "asset://gua/data/html/fps.html";
-  std::cout << fps_path << std::endl;
-  auto fps = std::make_shared<gua::GuiResource>();
-  fps->init("fps", fps_path, fps_size);
-
-  auto fps_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("fps_quad");
-  fps_quad->data.texture() = "fps";
-  fps_quad->data.size() = fps_size;
-  fps_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
-
-  graph.add_node("/", fps_quad);
-
-//////////////////////////////////////////////////////////////////////////
-  //address bar
-  gua::math::vec2 address_bar_size(340.f, 55.f);
-
-  std::string address_bar_path = "asset://gua/data/html/address_bar.html";
-  std::cout << address_bar_path << std::endl;
-
-  auto address_bar = std::make_shared<gua::GuiResource>();
-  address_bar->init("address_bar", address_bar_path, address_bar_size);
-
-  auto address_bar_quad = std::make_shared<gua::node::TexturedScreenSpaceQuadNode>("address_bar_quad");
-  address_bar_quad->data.texture() = "address_bar";
-  address_bar_quad->data.size() = address_bar_size;
-  address_bar_quad->data.anchor() = gua::math::vec2(-1.f, 1.f);
-
-  graph.add_node("/transform/monkey", address_bar_quad);
-
-
-  address_bar->on_loaded.connect([address_bar]() {
-    address_bar->add_javascript_callback("update_address");
-    address_bar->add_javascript_callback("address_back");
-    address_bar->add_javascript_callback("address_forward");
-  });
-
-  address_bar->on_javascript_callback.connect([gui](std::string const& callback, std::vector<std::string> const& params) {
-    if (callback == "update_address") {
-      gui->set_url(params[0]);
-    } else if (callback == "address_back") {
-      gui->go_back();
-    } else if (callback == "address_forward") {
-      gui->go_forward();
-    }
-  });
-*/  
-//////////////////////////////////////////////////////////////////////////
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::SUN);
   light2->data.set_brightness(2.f);
@@ -272,13 +227,8 @@ int main(int argc, char** argv) {
     sstr.setf(std::ios::fixed, std::ios::floatfield);
     sstr << "FPS: " << renderer.get_application_fps()
          << " / " << window->get_rendering_fps();
-    test_1->set_js_message(sstr.str());
-    test_1->send_js_message();
-
-    test_2->set_js_message(sstr.str());
-    test_2->send_js_message();
+    test_2->call_javascript("set_fps_text", sstr.str());
     // ray->rotate(1, 0, 1, 0);
-    //gui->myTest();
     CEFInterface->update();
     // apply trackball matrix to object
     auto modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * trackball.rotation();

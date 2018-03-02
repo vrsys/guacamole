@@ -24,8 +24,6 @@
 
 #include <gua/renderer/RenderContext.hpp>
 
-#include <Awesomium/BitmapSurface.h>
-
 #include <include/cef_app.h>
 #include <include/cef_client.h>
 #include <include/cef_render_handler.h>
@@ -53,19 +51,7 @@ class GLSurface : public CefRenderHandler {
     bool bind(RenderContext const& ctx, const GuiTexture* gui_texture);
 
     //////////////////////////////////////////////////////////////////////////////
-    /*
-    void Paint(unsigned char* src_buffer, int src_row_span,
-             Awesomium::Rect const& src_rect,
-             Awesomium::Rect const& dest_rect);
-    */
 
-
-
-    //////////////////////////////////////////////////////////////////////////////
-
-    //void Scroll(int dx, int dy);
-
-    ///////////////////////////////////////////////////////////////////////////////
 
     bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect);
 

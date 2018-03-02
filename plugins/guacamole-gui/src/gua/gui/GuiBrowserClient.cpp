@@ -21,23 +21,22 @@
  ******************************************************************************/
 
 #include <gua/gui/GuiBrowserClient.hpp>
-#include <include/wrapper/cef_helpers.h>
 
 namespace gua {
 
 //GuiBrowserClient
 //////////////////////////////////////////////////////////////////////////
-GuiBrowserClient::GuiBrowserClient(GLSurface *renderHandler, CefString url)
-        : startup_url_(url)
-        , m_renderHandler(renderHandler)
+GuiBrowserClient::GuiBrowserClient(GLSurface *renderHandler,
+                                   events::Signal<std::string, std::vector<std::string>>* on_js_callback,
+                                   events::Signal<>* on_loaded)
+        : m_renderHandler(renderHandler)
+        , on_javascript_callback_(on_js_callback)
+        , on_loaded_(on_loaded)
     {std::cout << "Its-a-me-Client!" << std::endl;}
 
-void GuiBrowserClient::set_message(CefString message){
-  message_handler_->set_message(message);
-}
-
-void GuiBrowserClient::send_message(){
-  message_handler_->send(); 
+void GuiBrowserClient::call_javascript(std::string functionName, std::vector<std::string> const& args){
+  std::string call = message_handler_->create_function_call(functionName, args);
+  message_handler_->call_javascript(call);
 }
 
 bool GuiBrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
@@ -56,12 +55,11 @@ void GuiBrowserClient::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
   if (!message_router_) {
-    // Create the browser-side router for query handling.
     CefMessageRouterConfig config;
     message_router_ = CefMessageRouterBrowserSide::Create(config);
 
     // Register handlers with the router.
-    message_handler_.reset(new GuiMessageHandler(startup_url_));
+    message_handler_.reset(new GuiMessageHandler(on_javascript_callback_, on_loaded_));
     message_router_->AddHandler(message_handler_.get(), false);
   }
 }

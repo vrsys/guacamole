@@ -34,11 +34,6 @@
 #include <include/cef_app.h>
 
 
-namespace Awesomium {
-  class WebView;
-  class JSValue;
-}
-
 namespace gua {
 
 class GuiTexture;
@@ -92,8 +87,6 @@ class GuiResource {
     void inject_mouse_button(Button button, int action, int mods) const;
     void inject_mouse_wheel(math::vec2 const& direction) const;
 
-    void set_js_message(std::string message);
-    void send_js_message();
 
     template<typename ...Args>
     void call_javascript(std::string const& method, Args&& ... a) const {
@@ -120,7 +113,6 @@ class GuiResource {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////
-    void myTest() const;
 
   private:
 

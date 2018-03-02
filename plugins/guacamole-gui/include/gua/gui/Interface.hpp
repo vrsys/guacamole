@@ -38,11 +38,6 @@
 */
 
 // forward declares ------------------------------------------------------------
-namespace Awesomium {
-  class WebCore;
-  class WebView;
-  class WebSession;
-}
 
 namespace gua {
 
@@ -57,9 +52,6 @@ class GUA_DLL Interface : public Singleton<Interface> {
  ///////////////////////////////////////////////////////////////////////////////
  // ----------------------------------------------------------- public interface
  public:
-
-  events::Signal<Cursor> on_cursor_change;
-
   void update();
   int init(int argc, char** argv);
 
@@ -99,7 +91,6 @@ class GUA_DLL Interface : public Singleton<Interface> {
  ///////////////////////////////////////////////////////////////////////////////
  // ---------------------------------------------------------- private member
 
-  CefSettings settings_;
   //process flags
   const std::string kProcessType = "type";
   const std::string kRendererProcess = "renderer";

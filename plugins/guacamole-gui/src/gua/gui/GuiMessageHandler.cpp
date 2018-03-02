@@ -21,51 +21,46 @@
  ******************************************************************************/
 #include <gua/gui/GuiMessageHandler.hpp>
 
+
 namespace gua {
 
-GuiMessageHandler::GuiMessageHandler(const CefString& startup_url)
-    : startup_url_(startup_url) {
+GuiMessageHandler::GuiMessageHandler(events::Signal<std::string, std::vector<std::string>>* on_js_callback,
+                                      events::Signal<>* on_loaded)
+  : on_javascript_callback_(on_js_callback)
+  , on_loaded_(on_loaded){
     fastwriter_["indentation"] = "";
-    reader_.parse(message_, messageObject_, false);
-    messageObject_["functions"];
-    messageObject_["returnValues"];
 }
 
-void GuiMessageHandler::set_message(CefString message){
-  std::unique_lock<std::mutex> lock(mutex_);
-  message_ = message;
-}
-
-void GuiMessageHandler::add_function_call(std::string functionName, std::vector<std::string> const& args, bool persistent, bool withReturn){
+std::string GuiMessageHandler::create_function_call(std::string functionName, std::vector<std::string> const& args){
   //create JSON function object
   Json::Value function;
-  function["return"] = withReturn;
-  function["persistent"] = persistent;
+  function["functionName"] = functionName;
 
   for(int i = 0; i < args.size(); ++i){
     function["parameters"][i] = args[i];
   }
-  //add function object to message
-  messageObject_["functions"][functionName] = function;
-  //if return, create return object and add to message
-  if(withReturn){
-    messageObject_["returnValues"][functionName];
-  }
+
+  return Json::writeString(fastwriter_, function);
 }
 
-void GuiMessageHandler::remove_function_call(std::string functionName){
-  messageObject_["functions"].removeMember(functionName);
-  messageObject_["returnValues"].removeMember(functionName);
-}
-
-
-bool GuiMessageHandler::send(){
+bool GuiMessageHandler::call_javascript(std::string call) {
   if(callback_ == nullptr) return false;
 
   std::unique_lock<std::mutex> lock(mutex_);
-  callback_->Success(message_);
+  callback_->Success(call);
 
   return true;
+}
+
+std::vector<std::string> GuiMessageHandler::split(std::string s, std::string delimiter){
+  size_t pos = 0;
+  std::string token;
+  std::vector<std::string> list;
+  while ((pos = s.find(delimiter)) != std::string::npos) {
+    token = s.substr(0, pos);
+    list.push_back(token);
+    s.erase(0, pos + delimiter.length());
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -77,8 +72,21 @@ bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
              bool persistent,
              CefRefPtr<Callback> callback) {
 
+  std::string requestString = request;
+  std::string method;
+  std::vector<std::string> args;
+  if(requestString.find(callback_string_, 0) == 0){
+    std::cout << "hi2" << std::endl;
+    requestString.erase(0, 11);
+    args = split(requestString, ".");
+    method = args[0];
+    args.erase(args.begin());
+
+    on_javascript_callback_->emit(method, args);
+
+  }
   if(persistent) callback_ = callback;
-  send();
+  callback->Success("");
 
   return true;
 }

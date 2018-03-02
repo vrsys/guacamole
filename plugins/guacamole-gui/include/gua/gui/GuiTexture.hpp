@@ -27,11 +27,6 @@
 #include <gua/gui/GuiBrowserClient.hpp>
 #include <include/cef_client.h>
 
-
-namespace Awesomium {
-  class WebView;
-}
-
 namespace gua {
 
 /**
@@ -46,14 +41,11 @@ class GUA_DLL GuiTexture : public Texture2D {
   /**
    * Constructor.
    */
-  //GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view);
-
   GuiTexture(unsigned width, unsigned height, CefRefPtr<GuiBrowserClient> browserClient);
 
   math::vec2ui const get_handle(RenderContext const& context) const override;
 
  protected:
-  //Awesomium::WebView* view_ = nullptr;
  	CefRefPtr<GuiBrowserClient> browserClient_;
 };
 

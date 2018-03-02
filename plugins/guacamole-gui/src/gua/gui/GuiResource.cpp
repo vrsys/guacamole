@@ -25,18 +25,7 @@
 // guacamole headers
 #include <gua/gui/Interface.hpp>
 #include <gua/gui/GuiTexture.hpp>
-#include <gua/gui/GLSurface.hpp>
-#include <gua/platform.hpp>
-#include <gua/renderer/RenderContext.hpp>
-#include <gua/utils/Logger.hpp>
 #include <gua/gui/Paths.hpp>
-
-// external headers
-#include <Awesomium/WebCore.h>
-#include <Awesomium/BitmapSurface.h>
-#include <Awesomium/STLHelpers.h>
-
-#include <include/cef_app.h>
 
 namespace {
 #include "GuiCefKeyEvent.ipp"
@@ -44,14 +33,6 @@ namespace {
 
 namespace gua {
 
-/*
-
-#include "AweViewListener.ipp"
-#include "AweLoadListener.ipp"
-#include "AweProcessListener.ipp"
-#include "AweJSMethodHandler.ipp"
-
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,27 +54,11 @@ void GuiResource::init(std::string const& name, std::string const& url,
                        math::vec2 const& size) {
 
   name_ = name;
-  /*on_loaded.connect([this]() {
-    js_window_ = new Awesomium::JSValue();
-    *js_window_ = view_->ExecuteJavascriptWithResult(
-      Awesomium::WSLit("window"), Awesomium::WSLit("")
-    );
-
-    if (!js_window_->IsObject()) {
-      Logger::GUA_LOG_WARNING << "Failed to initialize GuiResource!" << std::endl;
-    }
-  });
-  */
-
-  //view_->set_view_listener(new AweViewListener());
-  //view_->set_load_listener(new AweLoadListener(this));
-  //view_->set_process_listener(new AweProcessListener());
-  //view_->set_js_method_handler(new AweJSMethodHandler(this));
 
   set_url(url);
 
   GLSurface* surface = new GLSurface(size.x, size.y);
-  browserClient_ = new GuiBrowserClient(surface, url_);
+  browserClient_ = new GuiBrowserClient(surface, &on_javascript_callback, &on_loaded);
 
   browser_ = Interface::instance()->create_browser(window_info_, browserClient_, url_, browserSettings_);
   std::cout << "Browser setup" << std::endl;
@@ -105,23 +70,7 @@ void GuiResource::init(std::string const& name, std::string const& url,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GuiResource::~GuiResource() {
-  std::cout << name_ << " destroyed" << std::endl;
-  /*
-  delete static_cast<AweViewListener*>(view_->view_listener());
-  delete static_cast<AweLoadListener*>(view_->load_listener());
-  delete static_cast<AweProcessListener*>(view_->process_listener());
-  delete static_cast<AweJSMethodHandler*>(view_->js_method_handler());
-  view_->Destroy();
-
-  if (js_window_) {
-    delete js_window_;
-  }
-  */
-  
-  //delete static_cast<GLSurface*>(browserClient_->GetRenderHandler().get());
-
-}
+GuiResource::~GuiResource() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -144,32 +93,30 @@ std::string const& GuiResource::get_url() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::go_forward() {
-  //view_->GoForward();
+  browser_->GoForward();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::go_back() {
-  //view_->GoBack();
+  browser_->GoBack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::go_to_history_offset(int offset) {
-  //view_->GoToHistoryOffset(offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::reload() {
-  //view_->Reload(true);
+  browser_->Reload();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::focus() {
-  browser_->GetHost()->SendFocusEvent(true);
-  //view_->Focus();
+  browser_->GetHost()->SendFocusEvent(true);;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +134,6 @@ bool GuiResource::is_interactive() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int mods) const {
-  //std::cout << "keyboard event " << action << " " << mods << " " << (int)key << std::endl;
   if (interactive_) {
     auto evt = static_cast<CefKeyEvent>(GuiCefKeyEvent(key, scancode, action, mods));
     browser_->GetHost()->SendKeyEvent(evt);
@@ -197,7 +143,6 @@ void GuiResource::inject_keyboard_event(Key key, int scancode, int action, int m
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_char_event(unsigned c) const {
-  std::cout << "char event" << std::endl;
   if (interactive_) {
     browser_->GetHost()->SendKeyEvent(GuiCefKeyEvent(c));
   }
@@ -214,7 +159,6 @@ void GuiResource::inject_mouse_position_relative(math::vec2 const& position) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_position(math::vec2 const& position) {
-  //std::cout << "Mouse Movement!" << position.x << " " << position.y <<  std::endl;
   if (interactive_) {
     mouse_position_ = position;
     CefMouseEvent evt;
@@ -228,7 +172,6 @@ void GuiResource::inject_mouse_position(math::vec2 const& position) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::inject_mouse_button(Button button, int action, int mods) const {
-  //std::cout << "click! on " << name_ << std::endl;
   if (interactive_) {
     bool up = (action == 0); 
     CefMouseEvent evt;
@@ -236,21 +179,6 @@ void GuiResource::inject_mouse_button(Button button, int action, int mods) const
     evt.y = mouse_position_.y;
 
     browser_->GetHost()->SendMouseClickEvent(evt, MBT_LEFT, up, 1);
-
-    /*
-    CefBrowserHost::MouseButtonType btn;
-    //different mouse buttons disabled until drop-down menu position correct
-    switch(button) {
-      case Button::BUTTON_1:  btn = MBT_LEFT;
-                      break;
-      case Button::BUTTON_2:  btn = MBT_RIGHT;
-                      break;
-      case Button::BUTTON_3:  btn = MBT_MIDDLE;
-                      break;
-      default:        btn = MBT_LEFT;
-    }
-    browser_->GetHost()->SendMouseClickEvent(evt, btn, up, 1);
-    */
   }
 }
 
@@ -269,28 +197,9 @@ void GuiResource::inject_mouse_wheel(math::vec2 const& direction) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GuiResource::set_js_message(std::string message){
-  browserClient_->set_message(message);
-}
-
-void GuiResource::send_js_message(){
-  browserClient_->send_message();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 void GuiResource::call_javascript_arg_vector(std::string const& method, std::vector<std::string> const& args) const {
-  /*
-  if (!js_window_) {
-    return;
-  }
-
-  Awesomium::JSArray j_args;
-  for (auto const& arg: args) {
-    j_args.Push(Awesomium::JSValue(Awesomium::ToWebString(arg)));
-  }
-  js_window_->ToObject().Invoke(Awesomium::ToWebString(method), j_args);
-  */
+  browserClient_->call_javascript(method, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,11 +248,7 @@ void GuiResource::add_javascript_callback(std::string const& callback, bool with
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void GuiResource::myTest() const{
-  CefRefPtr<CefFrame> frame = browser_->GetMainFrame();
-  frame->ExecuteJavaScript("alert('ExecuteJavaScript works!');",
-  frame->GetURL(), 0);
-}
+
 
 
 }

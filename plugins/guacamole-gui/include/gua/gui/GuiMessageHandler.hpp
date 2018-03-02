@@ -25,7 +25,9 @@
 #include <include/wrapper/cef_helpers.h>
 #include <gua/gui/stl_helpers.hpp>
 #include <mutex>
-#include "json.h"
+#include <gua/gui/json.h>
+#include <gua/gui/stl_helpers.hpp>
+#include <gua/events/Signal.hpp>
 
 
 namespace gua {
@@ -33,15 +35,13 @@ namespace gua {
 // Handle messages in the browser process.
 class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
  public:
-  GuiMessageHandler(const CefString& startup_url);
+  GuiMessageHandler(events::Signal<std::string, std::vector<std::string>>* on_js_callback,
+                    events::Signal<>* on_loaded);
 
-  bool send();
-  void add_function_call(std::string functionName, std::vector<std::string> const& args, bool persistent, bool withReturn);
-  void remove_function_call(std::string functionName);
+  bool call_javascript(std::string call);
+  std::string create_function_call(std::string functionName, std::vector<std::string> const& args);
 
-  //TODO variable return type?
-  //void getReturn(std::string functionName);
-  void set_message(CefString message);
+  std::vector<std::string> split(std::string s, std::string delimiter);
 
 
   ///////////////////////////////////////////////////////////////////////////
@@ -54,14 +54,15 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
                CefRefPtr<Callback> callback) OVERRIDE;
 
  private:
-  const CefString startup_url_;
-  CefString message_ = "{}";
+  const std::string callback_string_ = "callback://";
   CefRefPtr<Callback> callback_;
 
   Json::StreamWriterBuilder fastwriter_;
-  Json::Reader reader_;
-  Json::Value messageObject_;
+
   std::mutex mutex_;
+
+  events::Signal<std::string, std::vector<std::string>>* on_javascript_callback_;
+  events::Signal<>*                                      on_loaded_;
 
   DISALLOW_COPY_AND_ASSIGN(GuiMessageHandler);
 };

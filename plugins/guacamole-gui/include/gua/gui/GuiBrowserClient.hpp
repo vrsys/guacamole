@@ -42,11 +42,15 @@ class GuiBrowserClient :	public CefClient,
 			              	public CefKeyboardHandler
 {
 public:
-    GuiBrowserClient(GLSurface *renderHandler, CefString url);
+    GuiBrowserClient(GLSurface *renderHandler,
+					 events::Signal<std::string, std::vector<std::string>>* on_js_callback,
+					 events::Signal<>* on_loaded);
 
     //JS communication
     void set_message(CefString message);
     void send_message();
+
+	void call_javascript(std::string functionName, std::vector<std::string> const& args);
 
 	///////////////////////////////////////////////////////////////////////////
 	// CefClient methods:
@@ -79,12 +83,13 @@ public:
 	///////////////////////////////////////////////////////////////////////////
 
 	private:
-	const CefString startup_url_;
-	CefString message_;
     CefRefPtr<CefRenderHandler> m_renderHandler;
      // Handles the browser side of query routing.
 	CefRefPtr<CefMessageRouterBrowserSide> message_router_;
 	scoped_ptr<gua::GuiMessageHandler> message_handler_;
+
+	events::Signal<std::string, std::vector<std::string>>* on_javascript_callback_;
+	events::Signal<>*                                      on_loaded_;
 
     IMPLEMENT_REFCOUNTING(GuiBrowserClient);
     DISALLOW_COPY_AND_ASSIGN(GuiBrowserClient);
