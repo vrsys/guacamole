@@ -1,8 +1,12 @@
+#ifndef GUA_NURBS_PATCH_ATTRIBUTE_SSBO_GLSL
+#define GUA_NURBS_PATCH_ATTRIBUTE_SSBO_GLSL
+
 struct per_patch_data
 {
   uint surface_offset;
-  uint16_t order_u;
-  uint16_t order_v;
+  uint8_t order_u;
+  uint8_t order_v;
+  uint16_t trim_type;
   uint trim_id;
   uint obb_id;
 
@@ -10,7 +14,10 @@ struct per_patch_data
   vec4 bbox_min;
   vec4 bbox_max;
 
-  vec4 dist;
+  float ratio_uv;
+  float edge_u;
+  float edge_v;
+  float curvature;
 };
 
 layout(std430, binding = GPUCAST_ATTRIBUTE_SSBO_BINDING) buffer attribute_buffer{
@@ -23,8 +30,8 @@ layout(std430, binding = GPUCAST_ATTRIBUTE_SSBO_BINDING) buffer attribute_buffer
 
 void retrieve_patch_order(in int index, out int order_u, out int order_v) 
 {
-  order_u = clamp(int(attribute_data[index].order_u), 1, 10);
-  order_v = clamp(int(attribute_data[index].order_v), 1, 10);
+  order_u = clamp(int(attribute_data[index].order_u), 1, 20);
+  order_v = clamp(int(attribute_data[index].order_v), 1, 20);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,7 +74,27 @@ void retrieve_patch_bbox(in int index, out vec4 bboxmin, out vec4 bboxmax)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec4 retrieve_patch_distance(in int index)
+float retrieve_patch_ratio_uv(in int index)
 {
-  return attribute_data[index].dist;
+  return attribute_data[index].ratio_uv;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+float retrieve_patch_curvature(in int index)
+{
+  return attribute_data[index].curvature;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+float retrieve_patch_edge_length_u(in int index)
+{
+  return attribute_data[index].edge_u;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+float retrieve_patch_edge_length_v(in int index)
+{
+  return attribute_data[index].edge_v;
+}
+
+#endif
