@@ -41,7 +41,7 @@ class GuiMessageHandler : public CefMessageRouterBrowserSide::Handler {
   bool call_javascript(std::string call);
   std::string create_function_call(std::string functionName, std::vector<std::string> const& args);
 
-  std::vector<std::string> split(std::string s, std::string delimiter);
+  std::vector<std::string> split(std::string s, char delimiter);
 
 
   ///////////////////////////////////////////////////////////////////////////

@@ -99,10 +99,9 @@ int main(int argc, char** argv) {
   test_1_quad->data.size() = test_size;
   test_1_quad->data.anchor() = gua::math::vec2(1.f, 1.f);
 
-  test_1->on_javascript_callback.connect([&](std::string const& callback, std::vector<std::string> const& params) {
+  test_1->on_javascript_callback.connect([test_1](std::string const& callback, std::vector<std::string> const& params) {
       if (callback == "test") {
-        std::cout << "hi" << std::endl;
-        //test_1->call_javascript("set_fps_text", "button clicked!");
+        test_1->call_javascript("set_fps_text", "button clicked!");
       }
   });
 

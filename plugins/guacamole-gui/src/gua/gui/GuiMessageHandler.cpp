@@ -52,6 +52,7 @@ bool GuiMessageHandler::call_javascript(std::string call) {
   return true;
 }
 
+/*
 std::vector<std::string> GuiMessageHandler::split(std::string s, std::string delimiter){
   size_t pos = 0;
   std::string token;
@@ -59,8 +60,21 @@ std::vector<std::string> GuiMessageHandler::split(std::string s, std::string del
   while ((pos = s.find(delimiter)) != std::string::npos) {
     token = s.substr(0, pos);
     list.push_back(token);
+    std::cout << token << std::endl;
     s.erase(0, pos + delimiter.length());
   }
+}
+ */
+
+std::vector<std::string> GuiMessageHandler::split(std::string str, char delimiter){
+      std::istringstream f(str);
+      std::string s;
+      std::vector<std::string> list;
+      while (getline(f, s, delimiter)) {
+        list.push_back(s);
+      }
+
+      return list;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -73,20 +87,20 @@ bool GuiMessageHandler::OnQuery(CefRefPtr<CefBrowser> browser,
              CefRefPtr<Callback> callback) {
 
   std::string requestString = request;
-  std::string method;
-  std::vector<std::string> args;
-  if(requestString.find(callback_string_, 0) == 0){
-    std::cout << "hi2" << std::endl;
+
+  if(requestString.find(callback_string_) == 0){
+    std::string method;
+    std::vector<std::string> args;
     requestString.erase(0, 11);
-    args = split(requestString, ".");
-    method = args[0];
+    args = split(requestString, '.');
+    method = args.front();
     args.erase(args.begin());
 
     on_javascript_callback_->emit(method, args);
 
   }
   if(persistent) callback_ = callback;
-  callback->Success("");
+  //callback->Success("");
 
   return true;
 }
