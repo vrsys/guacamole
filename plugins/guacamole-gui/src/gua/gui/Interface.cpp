@@ -66,7 +66,7 @@ int Interface::init(int argc, char** argv) {
   CefRefPtr<CefCommandLine> command_line = CreateCommandLine(main_args);
   command_line->AppendSwitch("off-screen-rendering-enabled");
 
-  // Create a CefApp of the correct process type.
+  // Create a CefApp of the correct processc type.
   CefRefPtr<CefApp> app;
   switch (GetProcessType(command_line)) {
     case PROCESS_TYPE_BROWSER:
