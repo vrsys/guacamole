@@ -32,7 +32,7 @@ GuiBrowserClient::GuiBrowserClient(GLSurface *renderHandler,
         : m_renderHandler(renderHandler)
         , on_javascript_callback_(on_js_callback)
         , on_loaded_(on_loaded)
-    {std::cout << "Its-a-me-Client!" << std::endl;}
+    {}
 
 void GuiBrowserClient::call_javascript(std::string functionName, std::vector<std::string> const& args){
   std::string call = message_handler_->create_function_call(functionName, args);

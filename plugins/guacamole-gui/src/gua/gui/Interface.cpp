@@ -127,19 +127,16 @@ CefRefPtr<CefBrowser> Interface::create_browser(CefWindowInfo& info, CefRefPtr<G
 
 // No CefApp for other subprocesses.
 CefRefPtr<CefApp> Interface::CreateOtherProcessApp() {
-  std::cout << "it's a me, OTHER!" << std::endl;
   return NULL;
 }
 
 //TODO: building fails when returning RendererApp
 CefRefPtr<CefApp> Interface::CreateRendererProcessApp() {
-  std::cout << "it's a me, RENDERER!" << std::endl;
   return new gua::GuiRendererApp();
 }
 
 
 CefRefPtr<CefApp> Interface::CreateBrowserProcessApp() {
-  std::cout << "it's a me, BOWSER!" << std::endl;
   return new gua::GuiBrowserApp();
 }
 

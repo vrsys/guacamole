@@ -34,7 +34,6 @@ namespace gua {
     , width_(width)
     , height_(height)
     , needs_update_() {
-      std::cout << "Its-a-me-Surface!" << std::endl;
     }
 
 

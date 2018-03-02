@@ -61,11 +61,9 @@ void GuiResource::init(std::string const& name, std::string const& url,
   browserClient_ = new GuiBrowserClient(surface, &on_javascript_callback, &on_loaded);
 
   browser_ = Interface::instance()->create_browser(window_info_, browserClient_, url_, browserSettings_);
-  std::cout << "Browser setup" << std::endl;
   gui_texture_ = std::make_shared<GuiTexture>(size.x, size.y, browserClient_);
 
   gua::TextureDatabase::instance()->add(name, gui_texture_);
-  std::cout << "texture setup" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
