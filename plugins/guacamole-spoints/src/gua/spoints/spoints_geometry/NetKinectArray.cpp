@@ -25,8 +25,8 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
     m_feedback_need_swap{false},
     m_recv()
 {
-  PointCloudGridEncoder encoder;
- 
+  m_encoder.settings.verbose = true;
+
   m_recv = std::thread([this]() { readloop(); });
 
   m_send_feedback = std::thread([this]() {sendfeedbackloop();});

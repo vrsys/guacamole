@@ -41,9 +41,8 @@ void main() {
 
   @include "shaders/common/gua_varyings_assignment.glsl"
 
-
+  gl_PointSize = 500000.0;
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
-
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }
