@@ -80,6 +80,8 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   void draw(RenderContext const& ctx);
 
+  Vec<float> const getQuantizationStepSize(int cell_idx=0) const;
+
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 

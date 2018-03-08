@@ -83,6 +83,10 @@ public:
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
+  /* Forwards the minimum quantization step size from m_encoder 
+    (see PointCloudGridEncoder::getQuantizationStepSize) */
+  Vec<float> const getQuantizationStepSize(int cell_idx=0) const;
+
 private:
   void readloop();
   void sendfeedbackloop();

@@ -233,6 +233,20 @@ void NetKinectArray::readloop() {
 
 }
 
+Vec<float> const NetKinectArray::getQuantizationStepSize(int cell_idx) const
+{
+  Vec<float> res = m_encoder.getQuantizationStepSize(cell_idx);
+  Vec<int> dim(
+    m_encoder.settings.grid_precision.dimensions.x,
+    m_encoder.settings.grid_precision.dimensions.y,
+    m_encoder.settings.grid_precision.dimensions.z
+  );
+  std::cout << "DIM " << dim << std::endl;
+  std::cout << "BB min" << m_encoder.settings.grid_precision.bounding_box.min << " max" << m_encoder.settings.grid_precision.bounding_box.max << std::endl;
+  std::cout << "STEP " << res << std::endl; 
+  return res;
+}
+
 void NetKinectArray::sendfeedbackloop() {
   
   // open multicast listening connection to server and port

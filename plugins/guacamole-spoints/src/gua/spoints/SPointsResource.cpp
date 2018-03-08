@@ -106,8 +106,11 @@ void SPointsResource::draw(RenderContext const& ctx) {
   spointsdata_->nka_->draw(ctx);
 }
 
-
-
+Vec<float> const SPointsResource::getQuantizationStepSize(int cell_idx) const {
+  if(!spointsdata_ || !spointsdata_->nka_)
+    return Vec<float>(-1,-1,-1);
+  return spointsdata_->nka_->getQuantizationStepSize(cell_idx);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void SPointsResource::init() {
