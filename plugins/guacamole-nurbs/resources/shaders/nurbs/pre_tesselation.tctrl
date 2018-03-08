@@ -15,7 +15,7 @@ layout(vertices = 4) out;
 out vec3 control_position[];
 out uint control_index[];
 out vec2 control_tesscoord[];
-out float control_final_tesselation[];
+out vec3 control_final_tesselation[];
 
 ///////////////////////////////////////////////////////////////////////////////
 // uniforms
@@ -30,10 +30,11 @@ uniform float gua_max_pre_tesselation;
 uniform float gua_texel_width;                    
 uniform float gua_texel_height;     
                                   
-#define GPUCAST_HULLVERTEXMAP_SSBO_BINDING 1
-#define GPUCAST_ATTRIBUTE_SSBO_BINDING 2
-
+@include "resources/glsl/trimmed_surface/parametrization_uniforms.glsl"
 @include "resources/glsl/common/obb_area.glsl"                          
+@include "resources/glsl/trimmed_surface/estimate_edge_length.glsl"
+@include "resources/glsl/common/conversion.glsl" 
+
 @include "resources/shaders/nurbs/patch_attribute_ssbo.glsl"
 @include "resources/shaders/common/gua_camera_uniforms.glsl"   
                                                                                                  
@@ -50,14 +51,34 @@ void main()
   // project oriented boudning box to screen and estimate area 
   mat4 mvp_matrix = gua_projection_matrix * gua_model_view_matrix;             
   int obb_index = retrieve_obb_index(int(vertex_index[gl_InvocationID]));
-  float area = calculate_obb_area(mvp_matrix, gua_model_view_inverse_matrix, obb_texture, obb_index);
+  float area = calculate_obb_area(mvp_matrix, gua_model_view_inverse_matrix, obb_texture, obb_index, false);
   float area_pixels = gua_resolution.x * gua_resolution.y * area;
 
   // derive desired tesselation based on projected area estimate
   float total_tess_level = sqrt(area_pixels) / gua_tesselation_max_error;
-  float pre_tess_level = clamp(total_tess_level, 1.0, gua_max_pre_tesselation);
+
+#if GPUCAST_SCALE_TEXXELLATION_FACTOR_TO_TRIM_RATIO
+  int trim_index    = retrieve_trim_index(int(control_index[gl_InvocationID]));
+
+  vec4 trim_domain  = texelFetch(trim_partition, trim_index+1);
+  vec4 nurbs_domain = texelFetch(trim_partition, trim_index+2);
+
+  float trim_size   = (trim_domain[1] - trim_domain[0]) * (trim_domain[3] - trim_domain[2]);
+  float domain_size = (nurbs_domain[1] - nurbs_domain[0]) * (nurbs_domain[3] - nurbs_domain[2]);
+
+  total_tess_level *= clamp(trim_size / domain_size, 0.0, 1.0);
+#endif
+
+  // assume final tesselation performs 64 subdivisions
+  float pre_tess_level = total_tess_level / GPUCAST_HARDWARE_TESSELATION_LIMIT; 
+
+  // clamp remaining pretesselations to max
+  pre_tess_level = clamp(pre_tess_level, 1.0, gua_max_pre_tesselation);
   float final_tess_level = total_tess_level / pre_tess_level;
-  control_final_tesselation[gl_InvocationID] = final_tess_level;
+
+#if GPUCAST_SKIP_PRETESSELATION
+  pre_tess_level = 1.0;
+#endif
 
   // in low-quality shadow mode - don't bother with much tesselation
   if ( gua_rendering_mode == 1 ) {
@@ -78,4 +99,21 @@ void main()
   gl_TessLevelOuter[0] = pre_tess_level;
   gl_TessLevelOuter[2] = pre_tess_level;               
   
+  // compute edge length to estimate tesselation
+  int surface_index   = 0;
+  int surface_order_u = 0;
+  int surface_order_v = 0;
+  retrieve_patch_data(int(vertex_index[gl_InvocationID]), surface_index, surface_order_u, surface_order_v);
+
+  vec4 edge_lengths = estimate_edge_lengths_in_pixel(surface_index, 
+                                                     parameter_texture, 
+                                                     surface_order_u, 
+                                                     surface_order_v,
+                                                     gua_model_view_projection_matrix,
+                                                     vec2(gua_resolution));
+  edge_lengths /= pre_tess_level;
+
+  control_final_tesselation[gl_InvocationID] = vec3(final_tess_level,
+                                                    uintBitsToFloat(uint2ToUInt(uvec2(edge_lengths.xy))),
+                                                    uintBitsToFloat(uint2ToUInt(uvec2(edge_lengths.zw))));
 }

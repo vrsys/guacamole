@@ -5,7 +5,10 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${_EXE_NAME} main.cpp)
 
-target_link_libraries(${_EXE_NAME} guacamole-nurbs)
+add_dependencies(${_EXE_NAME} guacamole guacamole-nurbs)
+
+target_link_libraries(${_EXE_NAME} guacamole-nurbs
+                      debug ${Boost_LOG_LIBRARY_DEBUG} optimized ${Boost_LOG_LIBRARY_RELEASE})
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

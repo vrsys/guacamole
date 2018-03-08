@@ -3,6 +3,7 @@
 layout(location=0) in vec3 gua_in_position;
 layout(location=1) in vec4 gua_in_color;
 layout(location=2) in float gua_in_thickness;
+layout(location=3) in vec3 gua_in_normal;
 
 @include "common/gua_camera_uniforms.glsl"
 
@@ -29,6 +30,7 @@ void main() {
   gua_emissivity     = 1.0;
 
   @material_method_calls_vert@
+
   gua_color          = gua_in_color.xyz;
   gua_alpha          = gua_in_color.a;
   @include "common/gua_varyings_assignment.glsl"
