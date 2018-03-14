@@ -61,6 +61,13 @@ int retrieve_obb_index(in int index)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+int retrieve_trim_type(in int index)
+{
+  return int(attribute_data[index].trim_type);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 vec4 retrieve_patch_domain(in int index)
 {
   return attribute_data[index].nurbs_domain;
