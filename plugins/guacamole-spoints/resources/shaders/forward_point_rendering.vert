@@ -18,6 +18,18 @@ layout(location=0) in vec4 gua_in_position_plus_packed_floatified_color;
 uniform mat4 kinect_model_matrix;
 uniform float point_size = 1.0;
 uniform float quant_step = -1.0;
+
+float calcPointSize() {
+  if(quant_step > 0) {
+    vec4 quant_screen = gua_projection_matrix * 
+      gua_view_matrix * 
+      kinect_model_matrix * 
+      vec4(quant_step, quant_step, quant_step,1.0);
+    return 30.0/length(quant_screen);
+  }
+  return point_size;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,21 +57,5 @@ void main() {
 
   vec4 in_pos = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * in_pos;
-  vec4 test = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(quant_step,quant_step,quant_step,1.0);
-
-  float final_point_size = point_size;
-  if(quant_step > 0) {
-    float half_step = quant_step / 2.0;
-    vec4 left_pos = in_pos;
-    left_pos.x -= half_step;
-    vec4 right_pos = in_pos;
-    right_pos.x += half_step;
-    right_pos = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * right_pos;
-    left_pos = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * left_pos;
-    final_point_size = 30.0/length(test);
-  }
-  gl_PointSize = final_point_size;
-  
-  //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
-
+  gl_PointSize = calcPointSize();
 }

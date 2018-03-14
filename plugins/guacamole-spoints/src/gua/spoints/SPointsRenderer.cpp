@@ -314,7 +314,7 @@ void SPointsRenderer::render(Pipeline& pipe,
         "point_size");
 
       Vec<float> quant_step_vec = spoints_resource->getQuantizationStepSize();
-      std::cout << "QUANT STEP " << quant_step_vec << std::endl;
+      //std::cout << "QUANT STEP " << quant_step_vec << std::endl;
       float quant_step = std::max(quant_step_vec.z, std::max(quant_step_vec.x, quant_step_vec.y));
 
       current_shader->set_uniform(
