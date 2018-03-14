@@ -177,6 +177,7 @@ namespace gua {
           current_material_program->apply_uniform(ctx, "gua_tesselation_max_error", nurbs_node->max_tesselation_error());
           current_material_program->apply_uniform(ctx, "gua_max_pre_tesselation", nurbs_node->max_pre_tesselation());
           current_material_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+          current_material_program->apply_uniform(ctx, "trim_enabled", nurbs_node->trimming());
 
           // hack
           current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
