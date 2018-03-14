@@ -73,6 +73,9 @@ public: // render configuration
   void wireframe(bool enable);
   bool wireframe() const;
 
+  void trimming(bool enable);
+  bool trimming() const;
+
 public: // virtual/override methods
 
   void ray_test_impl(Ray const& ray,
@@ -102,6 +105,7 @@ private : // attributes e.g. special attributes for drawing
   float                           max_tesselation_error_ = 8.0f;
   float                           max_pre_tesselation_ = 64.0f;
   bool                            wireframe_ = false;
+  bool                            trimming_ = true;
 
 };
 

@@ -34,6 +34,7 @@ uniform samplerBuffer trim_curvelist;
 uniform samplerBuffer trim_curvedata;
 uniform samplerBuffer trim_pointdata;
 uniform samplerBuffer trim_preclassification;
+uniform bool trim_enabled;
 
 uniform mat4 gua_view_inverse_matrix;
 
@@ -74,6 +75,7 @@ void main()
   // retrieve patch information from ssbo
   vec4 nurbs_domain = retrieve_patch_domain(int(gIndex));
   int trim_index    = retrieve_trim_index(int(gIndex));
+  int trim_type     = retrieve_trim_type(int(gIndex));
 
   // transform bezier coordinates to knot span of according NURBS element
   vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y);
@@ -89,10 +91,10 @@ void main()
                                            trim_pointdata,
                                            trim_preclassification,
                                            uv_nurbs,
-                                           int(trim_index), 1, tmp, GPUCAST_TRIMMING_DOMAIN_ERROR_THRESHOLD, GPUCAST_TRIMMING_MAX_BISECTIONS);
+                                           int(trim_index), trim_type, tmp, GPUCAST_TRIMMING_DOMAIN_ERROR_THRESHOLD, GPUCAST_TRIMMING_MAX_BISECTIONS);
 
   // fully discard trimmed fragments
-  if ( trimmed ) {
+  if ( trimmed && trim_enabled ) {
       discard;
   }
 
