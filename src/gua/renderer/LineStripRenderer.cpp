@@ -219,7 +219,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         bool show_backfaces   = line_strip_node->get_material()->get_show_back_faces();
         bool render_wireframe = line_strip_node->get_material()->get_render_wireframe();
-
+        
         if (show_backfaces) {
           if (render_wireframe) {
             current_rasterizer_state = rs_wireframe_cull_none_;
@@ -234,8 +234,11 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
           }
         }
 
+        float screen_space_line_width = line_strip_node->get_screen_space_line_width();
+        float screen_space_point_size = line_strip_node->get_screen_space_point_size();
+
         if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
-          ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+          ctx.render_context->set_rasterizer_state(current_rasterizer_state, screen_space_line_width);
           ctx.render_context->apply_state_objects();
         }
 

@@ -52,7 +52,8 @@ LineStripLoader::LineStripLoader(){}
 
 std::shared_ptr<node::Node> LineStripLoader::load_geometry(
     std::string const& file_name,
-    unsigned flags) {
+    unsigned flags,
+    bool create_empty) {
   std::shared_ptr<node::Node> cached_node;
   std::string key(file_name + "_" + string_utils::to_string(flags));
   auto searched(loaded_files_.find(key));
@@ -69,7 +70,7 @@ std::shared_ptr<node::Node> LineStripLoader::load_geometry(
 
     if (topology_type) {
       bool create_lines = (topology_type == 1);
-      cached_node = load(file_name, flags, create_lines);
+      cached_node = load(file_name, flags, create_lines, create_empty);
       cached_node->update_cache();
 
       loaded_files_.insert(std::make_pair(key, cached_node));
@@ -152,20 +153,70 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(
 
 /////////////////////////////////////////////////////////////////////////////
 
+std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const& node_name,
+                                                  std::string const& empty_name,
+                                                  std::shared_ptr<Material> const& fallback_material,
+                                                  unsigned flags) {
+  auto cached_node(load_geometry(empty_name, flags, true));
+
+  if (cached_node) {
+    auto copy(cached_node->deep_copy());
+
+    apply_fallback_material(
+        copy, fallback_material, flags & NO_SHARED_MATERIALS);
+
+    copy->set_name(node_name);
+    return copy;
+  }
+
+  return std::make_shared<node::TransformNode>(node_name);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const& node_name,
+                                                  std::string const& empty_name,
+                                                  unsigned flags) {
+  auto cached_node(load_geometry(empty_name, flags, true));
+
+  if (cached_node) {
+    auto copy(cached_node->deep_copy());
+
+    auto shader(gua::MaterialShaderDatabase::instance()->lookup(
+        "gua_default_material"));
+    apply_fallback_material(
+        copy, shader->make_new_material(), flags & NO_SHARED_MATERIALS);
+
+    copy->set_name(node_name);
+    return copy;
+  }
+
+  return std::make_shared<node::TransformNode>(node_name);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<node::Node> LineStripLoader::load(
     std::string const& file_name,
     unsigned flags,
-    bool create_lines) {
+    bool create_lines,
+    bool create_empty) {
   TextFile file(file_name);
 
   // MESSAGE("Loading mesh file %s", file_name.c_str());
 
-  if (file.is_valid()) {
+  if (file.is_valid() || create_empty) {
 
       
     auto importer = std::make_shared<LineStripImporter>();
     
-    importer->read_file(file_name);
+
+    if(!create_empty) {
+      importer->read_file(file_name);
+    } else {
+      importer->create_empty_line(file_name);
+    }
 
     if(importer->parsing_successful()) {
       std::cout << "Successfully parsed lob object\n";
@@ -177,6 +228,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(
     // creates a geometry node and returns it
     auto load_geometry = [&](int obj_idx) {
       GeometryDescription desc("LineStrip", file_name, line_strip_count++, flags);
+
       GeometryDatabase::instance()->add(
           desc.unique_key(),
           std::make_shared<LineStripResource>(
@@ -185,6 +237,10 @@ std::shared_ptr<node::Node> LineStripLoader::load(
 
     std::shared_ptr<node::LineStripNode> node_to_return = 
         std::make_shared<node::LineStripNode>(node::LineStripNode("", desc.unique_key()) );
+
+    if(create_empty) {
+      node_to_return->set_empty();
+    }
 
     if(create_lines) {
       node_to_return->set_render_vertices_as_points(false);
