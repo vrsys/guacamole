@@ -65,9 +65,6 @@ void main()
 {
   @material_input@
 
-  // force vertex order to be face forward! 
-  mat4 modelview = gua_view_matrix * gua_model_matrix;
-
   vec4 nurbs_domain = retrieve_patch_domain(int(teIndex[0]));
   vec2 domain_size  = vec2(nurbs_domain.z - nurbs_domain.x, nurbs_domain.w - nurbs_domain.y);
 
@@ -78,16 +75,13 @@ void main()
     // write built-in input for material
     ///////////////////////////////////////////////////////
     gua_world_position   = (gua_model_matrix * tePosition[i]).xyz;
-
-    vec3 nview           = (modelview * teNormal[i]).xyz;
-    float invert_normal  = nview.z < 0.0 ? -1.0 : 1.0;
-    gua_normal           = invert_normal * teNormal[i].xyz;
+    gua_normal           = teNormal[i].xyz;
 
     gua_texcoords        = teTessCoord[i];
-    gua_tangent          = normalize ( gua_normal_matrix * vec4 (teTangent[i].xyz, 0.0) ).xyz;
-    gua_bitangent        = normalize ( gua_normal_matrix * vec4 (teBitangent[i].xyz, 0.0) ).xyz;
+    gua_tangent          = teTangent[i].xyz;
+    gua_bitangent        = teBitangent[i].xyz;
     
-    gua_metalness      = 0;
+    gua_metalness        = 0;
     gua_roughness        = 50;
     gua_emissivity       = 0;
     ///////////////////////////////////////////////////////

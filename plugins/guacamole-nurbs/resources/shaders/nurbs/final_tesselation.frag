@@ -104,6 +104,15 @@ void main()
   @material_input@
   @include "resources/shaders/common/gua_global_variable_assignment.glsl"
 
+  // correct normal to be front-facing
+  vec4 nworld  = vec4(gua_normal.xyz, 0.0);
+  vec4 nview   = transpose(inverse(gua_view_matrix * gua_model_matrix)) * vec4(gua_normal.xyz, 0.0);
+  vec4 cam2pos = gua_view_matrix * vec4(gua_world_position.xyz, 1.0);
+
+  float invert_normal = dot(normalize(nview.xyz), normalize(-cam2pos.xyz)) < 0.0 ? -1.0 : 1.0;
+  
+  gua_normal = invert_normal * normalize(nworld.xyz);
+
   @material_method_calls_frag@
 
   submit_fragment(gl_FragCoord.z);
