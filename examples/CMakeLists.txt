@@ -77,6 +77,12 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(video3d)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-video3d})
 
+  # spoints example requires glfw and spoints-plugin
+  IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
+    add_subdirectory(spoints)
+  ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
+
+
   IF (GUACAMOLE_ENABLE_PHYSICS)
     add_subdirectory(physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)

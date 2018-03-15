@@ -74,7 +74,7 @@ public:
    /**
    *
    */
-   std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
+   std::shared_ptr<node::Node> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS, bool create_empty = false);
 
    /**
    *
@@ -88,6 +88,21 @@ public:
                                                    std::string const& file_name,
                                                    unsigned flags = DEFAULTS);
 
+   /**
+   *
+   */
+   std::shared_ptr<node::Node> create_empty_geometry(std::string const& node_name,
+                                                    std::string const& empty_name,
+                                                    std::shared_ptr<Material> const& fallback_material,
+                                                    unsigned flags = DEFAULTS);
+
+   /**
+   *
+   */
+   std::shared_ptr<node::Node> create_empty_geometry(std::string const& node_name,
+                                                    std::string const& empty_name,
+                                                    unsigned flags = DEFAULTS);
+
 
   /**
    * Constructor from a file.
@@ -99,7 +114,8 @@ public:
  */
   std::shared_ptr<node::Node> load(std::string const& file_name,
                                   unsigned flags,
-                                  bool create_lines);
+                                  bool create_lines,
+                                  bool create_empty);
 
   /**
    * Constructor from memory buffer.

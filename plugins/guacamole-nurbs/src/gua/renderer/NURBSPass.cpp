@@ -61,6 +61,19 @@ NURBSPassDescription::NURBSPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void NURBSPassDescription::enable_pretessellation(bool enable) { 
+  _enable_pretessellation = enable;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool NURBSPassDescription::enable_pretessellation() const {
+  return _enable_pretessellation;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PipelinePassDescription> NURBSPassDescription::make_copy() const {
   return std::make_shared<NURBSPassDescription>(*this);
 }
@@ -72,7 +85,8 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx, Substitut
   PipelinePass pass{ *this, ctx, substitution_map };
 
   auto renderer = std::make_shared<NURBSRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
+  renderer->pretessellation(_enable_pretessellation);
+  renderer->set_substitutions(substitution_map);
 
   pass.process_ = [renderer](
     PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {

@@ -33,12 +33,18 @@ namespace gua {
 
    friend class Pipeline;
 
+   void enable_pretessellation(bool enable);
+   bool enable_pretessellation() const;
+
   public :
 
     NURBSPassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap& substitution_map) override;
 
+  private :
+
+    bool _enable_pretessellation = true;
 };
 
 }

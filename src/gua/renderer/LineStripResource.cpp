@@ -36,59 +36,109 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 LineStripResource::LineStripResource()
-    : kd_tree_(), line_strip_() {}
+    : kd_tree_(), line_strip_(), clean_flags_per_context_() {
+  compute_bounding_box();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::compute_bounding_box() {
+
+  //if (line_strip_.num_occupied_vertex_slots > 0) {
+    bounding_box_ = math::BoundingBox<math::vec3>();
+
+    if(0 == line_strip_.num_occupied_vertex_slots) {
+      bounding_box_.expandBy(math::vec3{-0.5, -0.5, -0.5 });
+      bounding_box_.expandBy(math::vec3{ 0.5,  0.5,  0.5});      
+    }
+    if(1 == line_strip_.num_occupied_vertex_slots) {
+       bounding_box_.expandBy(math::vec3{line_strip_.positions[0] - 0.0001f });
+       bounding_box_.expandBy(math::vec3{line_strip_.positions[0] + 0.0001f });
+    } else {
+      for (int v(0); v < line_strip_.num_occupied_vertex_slots; ++v) {
+        bounding_box_.expandBy(math::vec3{line_strip_.positions[v]});
+      }
+    }
+  //}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_tree)
-    : kd_tree_(), line_strip_(line_strip) {
-  if (line_strip_.num_occupied_vertex_slots > 0) {
-    bounding_box_ = math::BoundingBox<math::vec3>();
+    : kd_tree_(), line_strip_(line_strip), clean_flags_per_context_() {
+    
+  compute_bounding_box();
 
-    for (int v(0); v < line_strip_.num_occupied_vertex_slots; ++v) {
-      bounding_box_.expandBy(math::vec3{line_strip_.positions[v]});
-    }
-
-    if (build_kd_tree) {
-      //kd_tree_.generate(line_strip);
-    }
+  if (build_kd_tree) {
+    //kd_tree_.generate(line_strip);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::upload_to(RenderContext& ctx) const {
-  RenderContext::LineStrip clinestrip{};
-  clinestrip.vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
-  clinestrip.vertex_reservoir_size = line_strip_.vertex_reservoir_size;
-  clinestrip.num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
 
 
+/*
   if (line_strip_.vertex_reservoir_size == 0) {
     Logger::LOG_WARNING << "Unable to load LineStrip! Has no vertex data." << std::endl;
     return;
   }
-
+*/
  
-  clinestrip.vertices =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_DYNAMIC_DRAW,
-                                       (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
-                                       0);
 
-  LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
-      clinestrip.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-  line_strip_.copy_to_buffer(data);
 
-  //std::cout << buffer_content << ""
-  ctx.render_context->unmap_buffer(clinestrip.vertices);
 
-  clinestrip.vertex_array = ctx.render_device->create_vertex_array(
-      line_strip_.get_vertex_format(),
-      {clinestrip.vertices});
-  ctx.line_strips[uuid()] = clinestrip;
+  auto line_strip_iterator = ctx.line_strips.find(uuid());
 
+  bool update_cached_linestrip{false};
+
+  if((ctx.line_strips.end() == line_strip_iterator)) {
+    ctx.line_strips[uuid()] = RenderContext::LineStrip();
+  }
+
+  RenderContext::LineStrip* line_strip_to_update_ptr = &ctx.line_strips[uuid()];
+
+  if(update_cached_linestrip) {
+    line_strip_to_update_ptr = &(line_strip_iterator->second);
+  }
+
+  line_strip_to_update_ptr->vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
+  line_strip_to_update_ptr->vertex_reservoir_size = line_strip_.vertex_reservoir_size;
+  line_strip_to_update_ptr->num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;
+
+  if(line_strip_to_update_ptr->current_buffer_size_in_vertices < line_strip_.vertex_reservoir_size+3) {
+    line_strip_to_update_ptr->vertices =
+        ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
+                                         scm::gl::USAGE_DYNAMIC_DRAW,
+                                         (line_strip_.vertex_reservoir_size+3) * sizeof(LineStrip::Vertex),
+                                         0);
+
+    line_strip_to_update_ptr->current_buffer_size_in_vertices = line_strip_.vertex_reservoir_size+3;
+  } else {
+    update_cached_linestrip = true;
+  }
+
+
+
+
+  if(line_strip_.vertex_reservoir_size != 0) {
+    LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(
+      line_strip_to_update_ptr->vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+    line_strip_.copy_to_buffer(data);
+    ctx.render_context->unmap_buffer(line_strip_to_update_ptr->vertices);
+  
+    line_strip_to_update_ptr->vertex_array = ctx.render_device->create_vertex_array(
+         line_strip_.get_vertex_format(),
+          {line_strip_to_update_ptr->vertices});
+
+  }
+  
   ctx.render_context->apply();
 }
 
@@ -98,15 +148,25 @@ void LineStripResource::draw(RenderContext& ctx) const {
   //DUMMY
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
+
   auto iter = ctx.line_strips.find(uuid());
-  if (iter == ctx.line_strips.end()) {
+
+
+
+  bool& clean_flag_for_context = clean_flags_per_context_[uuid()];
+
+  if (iter == ctx.line_strips.end() || (!clean_flag_for_context) /*|| ctx_dirty_flag*/) {
     // upload to GPU if neccessary
+
+    compute_consistent_normals();
     upload_to(ctx);
     iter = ctx.line_strips.find(uuid());
+
+    clean_flag_for_context = true;
+    //dirty_flags_per_context_[uuid()] = false;;
   }
   
 
@@ -133,6 +193,114 @@ void LineStripResource::ray_test(Ray const& ray, int options,
                     node::Node* owner, std::set<PickResult>& hits) {
 
   //kd_tree_.ray_test(ray, line_strip_, options, owner, hits);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+void LineStripResource::resolve_vertex_updates(RenderContext& ctx) {
+
+  //TODO: PROTECT BY LINE STRIP UPDATE MUTEX
+
+  for(auto& update_job_ptr : line_strip_update_queue_) {
+    auto iter = ctx.line_strips.find(update_job_ptr->owner_uuid);
+    auto ctx_dirty_flag_iter = dirty_flags_per_context_.find(uuid());
+    bool ctx_dirty_flag = false;
+
+    if (iter == ctx.line_strips.end() || ctx_dirty_flag) {
+      dirty_flags_per_context_[uuid()] = false;;
+    }
+
+    update_job_ptr->execute(this);
+  }
+}
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::make_clean_flags_dirty() {
+  for( auto& known_clean_flag : clean_flags_per_context_) {
+    known_clean_flag.second = false;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::compute_consistent_normals() const {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.compute_consistent_normals();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::compile_buffer_string(std::string& buffer_string) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.compile_buffer_string(buffer_string);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::uncompile_buffer_string(std::string const& buffer_string) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.uncompile_buffer_string(buffer_string);
+  make_clean_flags_dirty();
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::push_vertex(LineStrip::Vertex const& in_vertex) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+
+  if(line_strip_.push_vertex(in_vertex)) {
+    if (line_strip_.num_occupied_vertex_slots > 0) {
+        bounding_box_.expandBy(math::vec3{line_strip_.positions[line_strip_.num_occupied_vertex_slots-1]});
+    }
+    make_clean_flags_dirty();
+  }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::pop_front_vertex() {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  if(line_strip_.pop_front_vertex()){
+    compute_bounding_box();
+    make_clean_flags_dirty();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::pop_back_vertex() {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  if(line_strip_.pop_back_vertex()){
+    compute_bounding_box();
+    make_clean_flags_dirty();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::clear_vertices() {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  if(line_strip_.clear_vertices()) {
+    compute_bounding_box();
+    make_clean_flags_dirty();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void LineStripResource::forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                                                std::vector<scm::math::vec4f> const& queued_colors,
+                                                std::vector<float> const& queued_thicknesses,
+                                                std::vector<scm::math::vec3f> const& queued_normals) {
+  std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
+  line_strip_.forward_queued_vertices(queued_positions,
+                                      queued_colors,
+                                      queued_thicknesses,
+                                      queued_normals);
+  make_clean_flags_dirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
