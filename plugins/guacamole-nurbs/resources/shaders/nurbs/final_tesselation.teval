@@ -67,12 +67,5 @@ void main()
   teTangent   = normalize(dv.xyz);                                     
   teIndex     = tcIndex[0];                                            
   teTessCoord = uv;                                                    
-  teNormal    = vec4(normalize(cross(du.xyz, dv.xyz)), 0.0);           
-                                                                               
-  vec4 nview  = gua_normal_matrix * teNormal;                          
-  vec4 pview  = gua_view_matrix * gua_model_matrix * tePosition;       
-                                                                               
-  if ( dot(normalize(nview.xyz), -normalize(pview.xyz)) < 0.0f ) {     
-    teNormal = -teNormal;                                              
-  }                                                                    
+  teNormal    = vec4(normalize(cross(teBitangent, teTangent)), 0.0);           
 }                  
