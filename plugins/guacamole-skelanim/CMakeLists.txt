@@ -15,7 +15,7 @@ file(GLOB_RECURSE GUA_SKELANIM_INC
 add_library(guacamole-skelanim SHARED
              ${GUA_SKELANIM_SRC}
              ${GUA_SKELANIM_INC}
-            )
+        ../guacamole-nrp/include/gua/nrp/platform.hpp)
 
 target_include_directories(guacamole-skelanim PUBLIC ${GUA_SKELANIM_INCLUDE_DIR})
 

@@ -10,8 +10,8 @@ add_executable(${_EXE_NAME} main.cpp)
 
 list(APPEND GAZEBO_INCLUDE_DIRS "/usr/include/gazebo-7")
 
-target_include_directories(${_EXE_NAME} PUBLIC ${GAZEBO_INCLUDE_DIRS})
-target_link_libraries(${_EXE_NAME} ${GAZEBO_LIBRARIES} guacamole-gazebo)
+target_include_directories(${_EXE_NAME} PUBLIC ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})
+target_link_libraries(${_EXE_NAME} ${GAZEBO_LIBRARIES} guacamole-nrp)
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

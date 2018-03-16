@@ -36,8 +36,13 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include "pagoda_visual.hpp"
+#include <gua/nrp/platform.hpp>
+#include <gua/nrp/pagoda_visual.hpp>
 
+namespace gua
+{
+namespace nrp
+{
 typedef std::map<uint32_t, ptr_visual> visuals_map;
 
 typedef std::map<uint32_t, gazebo::msgs::Pose> pose_msgs_map;
@@ -59,8 +64,8 @@ class PagodaScene
     PagodaScene();
     ~PagodaScene();
 
-    void set_scene_graph(gua::SceneGraph *scene_graph);
-    gua::SceneGraph *get_scene_graph() const;
+    void set_root_node(gua::node::Node *root_node);
+    gua::node::Node *get_root_node() const;
 
     const ptr_visual &get_world_visual() const;
 
@@ -94,7 +99,7 @@ class PagodaScene
     std::recursive_mutex _mutex_pose_msgs;
 
     std::mutex _mutex_scenegraph;
-    gua::SceneGraph *_scene_graph;
+    gua::node::Node *_root_node;
 
     std::string _name;
     ptr_visual _world_visual;
@@ -102,5 +107,7 @@ class PagodaScene
     ptr_visual get_visual(const uint32_t id) const;
     ptr_visual get_visual(const std::string &name) const;
 };
+}
+}
 
 #endif // GUACAMOLE_PAGODA_SCENE_H

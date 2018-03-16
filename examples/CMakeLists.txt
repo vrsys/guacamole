@@ -87,8 +87,8 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
-  IF (${PLUGIN_guacamole-gazebo})
+  IF (${PLUGIN_guacamole-nrp})
     add_subdirectory(gazebo_scene)
-  ENDIF (${PLUGIN_guacamole-gazebo})
+  ENDIF (${PLUGIN_guacamole-nrp})
 
 ENDIF (GUACAMOLE_EXAMPLES)

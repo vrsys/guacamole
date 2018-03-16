@@ -38,16 +38,21 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include "pagoda/pagoda_log.hpp"
-#include "pagoda/pagoda_scene.hpp"
+#include <gua/nrp/platform.hpp>
+#include <gua/nrp/pagoda_scene.hpp>
+#include <gua/nrp/pagoda_log.hpp>
 
-class PagodaBinder
+namespace gua
+{
+namespace nrp
+{
+class GUA_NRP_DLL PagodaBinder
 {
   public:
     PagodaBinder();
     ~PagodaBinder();
 
-    void bind_scene_graph(gua::SceneGraph *sceneGraph);
+    void bind_root_node(gua::node::Node *root_node);
     void bind_transport_layer(int argc, char **argv);
 
     void pre_render();
@@ -71,5 +76,7 @@ class PagodaBinder
     void callback_request(ConstRequestPtr &ptr);
     void callback_response(ConstResponsePtr &ptr);
 };
+}
+}
 
 #endif // GUACAMOLE_PAGODA_H

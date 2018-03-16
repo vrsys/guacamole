@@ -1,12 +1,16 @@
-#include "../../../include/gua/pagoda_binder.hpp"
+#include <gua/nrp/pagoda_binder.hpp>
 
+namespace gua
+{
+namespace nrp
+{
 PagodaBinder::PagodaBinder() : _log("transport"), _scene() {}
 PagodaBinder::~PagodaBinder()
 {
     _halt_transport_layer();
     _worker.join();
 }
-void PagodaBinder::bind_scene_graph(gua::SceneGraph *sceneGraph) { _scene.set_scene_graph(sceneGraph); }
+void PagodaBinder::bind_root_node(gua::node::Node *root_node) { _scene.set_root_node(root_node); }
 void PagodaBinder::bind_transport_layer(int argc, char **argv)
 {
     _worker = std::thread([&] { _connect_to_transport_layer(argc, argv); });
@@ -111,4 +115,6 @@ void PagodaBinder::callback_response(ConstResponsePtr &ptr)
     _log.d(sceneMsg.DebugString().c_str());
 
     _scene.on_response_msg(ptr);
+}
+}
 }

@@ -1,6 +1,9 @@
-#include "../../../include/gua/pagoda/pagoda_scene.hpp"
-#include "../../../include/gua/pagoda/pagoda_joint_visual.hpp"
-
+#include <gua/nrp/pagoda_joint_visual.hpp>
+#include <gua/nrp/pagoda_scene.hpp>
+namespace gua
+{
+namespace nrp
+{
 PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs() {}
 PagodaScene::~PagodaScene()
 {
@@ -14,11 +17,11 @@ PagodaScene::~PagodaScene()
     _visuals.clear();
     _world_visual.reset();
 }
-void PagodaScene::set_scene_graph(gua::SceneGraph *scene_graph)
+void PagodaScene::set_root_node(node::Node *root_node)
 {
-    _scene_graph = scene_graph;
+    _root_node = root_node;
     _mutex_scenegraph.lock();
-    _world_visual.reset(new PagodaVisual("world_visual", _scene_graph));
+    _world_visual.reset(new PagodaVisual("world_visual", _root_node));
     _mutex_scenegraph.unlock();
 }
 void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
@@ -556,4 +559,6 @@ void PagodaScene::pre_render()
     }
 }
 const ptr_visual &PagodaScene::get_world_visual() const { return _world_visual; }
-gua::SceneGraph *PagodaScene::get_scene_graph() const { return _scene_graph; }
+gua::node::Node *PagodaScene::get_root_node() const { return _root_node; }
+}
+}
