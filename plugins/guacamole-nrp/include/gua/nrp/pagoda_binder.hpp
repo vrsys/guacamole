@@ -53,7 +53,7 @@ class GUA_NRP_DLL PagodaBinder
     ~PagodaBinder();
 
     void bind_root_node(gua::node::Node *root_node);
-    void bind_transport_layer(int argc, char **argv);
+    void bind_transport_layer();
 
     void pre_render();
 

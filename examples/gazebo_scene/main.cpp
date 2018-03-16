@@ -7,6 +7,7 @@
 #include <gua/utils/Trackball.hpp>
 
 #include <gua/nrp/pagoda_binder.hpp>
+#include <gua/nrp/nrp_node.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
 {
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
     gua::SceneGraph graph("main_scenegraph");
     gua::TriMeshLoader loader;
 
-    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+    auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
 
     auto plain_red_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
     plain_red_material->set_uniform("Color", gua::math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -134,11 +135,6 @@ int main(int argc, char **argv)
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     window->on_key_press.connect(std::bind(key_press, window, std::ref(should_close), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
-    gua::nrp::PagodaBinder pagoda_binder;
-    // pagoda_binder.bind_root_node(graph.get_root().get());
-    pagoda_binder.bind_root_node(transform.get());
-    pagoda_binder.bind_transport_layer(argc, argv);
-
     gua::Renderer renderer;
 
     gua::events::MainLoop loop;
@@ -154,9 +150,9 @@ int main(int argc, char **argv)
         else
         {
             gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
-            transform->set_transform(modelmatrix);
+            nrp_root->set_transform(modelmatrix);
 
-            pagoda_binder.pre_render();
+            nrp_root->pre_draw();
             renderer.queue_draw({&graph});
         }
     });
