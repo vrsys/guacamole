@@ -53,7 +53,7 @@ typedef std::list<boost::shared_ptr<gazebo::msgs::Link const>> link_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Model const>> model_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::PoseAnimation const>> skeleton_msgs_list;
 
-class PagodaScene
+class GUA_NRP_DLL PagodaScene
 {
   public:
     struct VisualMessageLess

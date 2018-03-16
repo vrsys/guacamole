@@ -10,7 +10,7 @@ namespace gua
 {
 namespace nrp
 {
-class PagodaLog
+class GUA_NRP_DLL PagodaLog
 {
   public:
     enum LOG_LEVEL

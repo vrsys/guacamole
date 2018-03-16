@@ -12,7 +12,7 @@ class PagodaJointVisual;
 
 typedef std::shared_ptr<PagodaJointVisual> ptr_joint_visual;
 
-class PagodaJointVisual : public PagodaVisual
+class GUA_NRP_DLL PagodaJointVisual : public PagodaVisual
 {
   public:
     PagodaJointVisual(const std::string &name, ptr_visual parent);
