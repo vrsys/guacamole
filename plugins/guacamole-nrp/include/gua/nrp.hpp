@@ -1,6 +1,7 @@
 #ifndef GUA_INCLUDE_NRP_HPP
 #define GUA_INCLUDE_NRP_HPP
 
+#include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/pagoda_binder.hpp>
 
 #if defined (_MSC_VER)

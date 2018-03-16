@@ -11,9 +11,9 @@ PagodaBinder::~PagodaBinder()
     _worker.join();
 }
 void PagodaBinder::bind_root_node(gua::node::Node *root_node) { _scene.set_root_node(root_node); }
-void PagodaBinder::bind_transport_layer(int argc, char **argv)
+void PagodaBinder::bind_transport_layer()
 {
-    _worker = std::thread([&] { _connect_to_transport_layer(argc, argv); });
+    _worker = std::thread([&] { _connect_to_transport_layer(0, nullptr); });
 }
 void PagodaBinder::pre_render()
 {
