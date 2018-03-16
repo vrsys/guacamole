@@ -25,7 +25,8 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
     m_feedback_need_swap_{false},
     m_recv_()
 {
- 
+  m_encoder.settings.verbose = false;
+
   m_recv_ = std::thread([this]() { readloop(); });
 
   m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
@@ -202,17 +203,17 @@ void NetKinectArray::readloop() {
   std::string endpoint("tcp://" + m_server_endpoint_);
   socket.connect(endpoint.c_str());
   while (m_running_) {
-    std::cout << "===========RECEIVING==========\n";
+    //std::cout << "===========RECEIVING==========\n";
     zmq::message_t zmqm;
     socket.recv(&zmqm); // blocking
-    std::cout << "RECEIVED.\n";
+    //std::cout << "RECEIVED.\n";
     m_encoder.decode(zmqm, &m_voxels);
-    std::cout << "DONE DECODING\n";
+    //std::cout << "DONE DECODING\n";
     while (m_need_cpu_swap_) {
       ;
     }
 
-    std::cout << "VOXELS received " << m_voxels.size() << std::endl;
+    //std::cout << "VOXELS received " << m_voxels.size() << std::endl;
     size_t data_points_byte_size = m_voxels.size() * sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back_.size() < data_points_byte_size) {
       m_buffer_back_.resize(data_points_byte_size);

@@ -26,6 +26,8 @@
 #include <gua/spoints/platform.hpp>
 #include <gua/node/GeometryNode.hpp>
 #include <gua/databases/GeometryDescription.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/spoints/SPointsResource.hpp>
 
 // external headers
 #include <string>
@@ -62,6 +64,102 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
 
   inline float get_screen_space_point_size() const { return screen_space_point_size_; }
   inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
+
+  inline void set_global_grid_dimension_x(int grid_x) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_grid_dimension_x(grid_x);
+  }
+
+  inline int get_global_grid_dimension_x() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_grid_dimension_x();
+  }
+
+  inline void set_global_grid_dimension_y(int grid_y) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_grid_dimension_y(grid_y);
+  }
+
+  inline int get_global_grid_dimension_y() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_grid_dimension_y();
+  }
+
+  inline void set_global_grid_dimension_z(int grid_z) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_grid_dimension_z(grid_z);
+  }
+
+  inline int get_global_grid_dimension_z() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_grid_dimension_z();
+  }
+
+  inline void set_global_point_precision_x(int point_x) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_point_precision_x(point_x);
+  }
+
+  inline int get_global_point_precision_x() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_point_precision_x();
+  }
+
+  inline void set_global_point_precision_y(int point_y) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_point_precision_y(point_y);
+  }
+
+  inline int get_global_point_precision_y() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_point_precision_y();
+  }
+
+  inline void set_global_point_precision_z(int point_z) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_point_precision_z(point_z);
+  }
+
+  inline int get_global_point_precision_z() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_point_precision_z();
+  }
 
   /**
    * Accepts a visitor and calls concrete visit method.

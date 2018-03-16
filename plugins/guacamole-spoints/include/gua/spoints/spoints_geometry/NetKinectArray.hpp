@@ -24,7 +24,12 @@ struct matrix_package {
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
-
+  int global_grid_dimension_x;
+  int global_grid_dimension_y;
+  int global_grid_dimension_z;
+  int global_point_precision_x;
+  int global_point_precision_y;
+  int global_point_precision_z;
 /*
   void swap(matrix_package& rhs) {
     modelview_matrix.swap(rhs.modelview_matrix);

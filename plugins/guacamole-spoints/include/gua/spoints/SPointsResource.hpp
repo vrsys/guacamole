@@ -83,9 +83,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   Vec<float> const getQuantizationStepSize(int cell_idx=0) const;
 
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
-  void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
-
-
+  void push_matrix_package(spoints::camera_matrix_package& cam_mat_package);
 
   void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
@@ -104,6 +102,54 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
    */
   void init();
 
+  inline void set_global_grid_dimension_x(int grid_x) {
+    global_grid_dimension_x = grid_x;
+  }
+
+  inline int get_global_grid_dimension_x() const {
+    return global_grid_dimension_x;
+  }
+
+  inline void set_global_grid_dimension_y(int grid_y) {
+    global_grid_dimension_y = grid_y;
+  }
+
+  inline int get_global_grid_dimension_y() const {
+    return global_grid_dimension_y;
+  }
+
+  inline void set_global_grid_dimension_z(int grid_z) {
+    global_grid_dimension_z = grid_z;
+  }
+
+  inline int get_global_grid_dimension_z() const {
+    return global_grid_dimension_z;
+  }
+
+  inline void set_global_point_precision_x(int grid_x) {
+    global_point_precision_x = grid_x;
+  }
+
+  inline int get_global_point_precision_x() const {
+    return global_point_precision_x;
+  }
+
+  inline void set_global_point_precision_y(int grid_y) {
+    global_point_precision_y = grid_y;
+  }
+
+  inline int get_global_point_precision_y() const {
+    return global_point_precision_y;
+  }
+
+  inline void set_global_point_precision_z(int grid_z) {
+    global_point_precision_z = grid_z;
+  }
+
+  inline int get_global_point_precision_z() const {
+    return global_point_precision_z;
+  }
+
   std::string                     server_endpoint() const {return server_endpoint_; }
   std::string                     feedback_endpoint() const {return feedback_endpoint_; }
   bool                            is_pickable() const { return is_pickable_; }
@@ -118,6 +164,15 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   std::string                     feedback_endpoint_;
 
   bool is_pickable_;
+
+  int global_grid_dimension_x;
+  int global_grid_dimension_y;
+  int global_grid_dimension_z;
+
+  int global_point_precision_x;
+  int global_point_precision_y;
+  int global_point_precision_z;
+
 };
 
 }

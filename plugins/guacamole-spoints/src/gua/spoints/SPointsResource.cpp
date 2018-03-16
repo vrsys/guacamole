@@ -61,18 +61,30 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
                                  unsigned flags)
     : server_endpoint_(server_endpoint),
       feedback_endpoint_(feedback_endpoint),
-      is_pickable_(flags & SPointsLoader::MAKE_PICKABLE) {
+      is_pickable_(flags & SPointsLoader::MAKE_PICKABLE),
+      global_grid_dimension_x(-1),
+      global_grid_dimension_y(-1),
+      global_grid_dimension_z(-1),
+      global_point_precision_x(-1),
+      global_point_precision_y(-1),
+      global_point_precision_z(-1) {
   init();
 }
 
 void
-SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
+SPointsResource::push_matrix_package(spoints::camera_matrix_package& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
 
   std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
 
   if(spointsdata_) {
     if(spointsdata_->nka_) {
+      cam_mat_package.mat_package.global_grid_dimension_x = global_grid_dimension_x;
+      cam_mat_package.mat_package.global_grid_dimension_y = global_grid_dimension_y;
+      cam_mat_package.mat_package.global_grid_dimension_z = global_grid_dimension_z;
+      cam_mat_package.mat_package.global_point_precision_x = global_point_precision_x;
+      cam_mat_package.mat_package.global_point_precision_y = global_point_precision_y;
+      cam_mat_package.mat_package.global_point_precision_z = global_point_precision_z;
       spointsdata_->nka_->push_matrix_package(cam_mat_package);
     }
   }
