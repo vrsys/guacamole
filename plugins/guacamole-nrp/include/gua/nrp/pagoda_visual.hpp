@@ -21,7 +21,7 @@ class PagodaScene;
 
 typedef std::shared_ptr<PagodaVisual> ptr_visual;
 
-class PagodaVisual
+class GUA_NRP_DLL PagodaVisual
 {
   public:
     enum VisualType
