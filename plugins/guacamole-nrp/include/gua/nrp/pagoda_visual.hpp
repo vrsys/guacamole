@@ -10,6 +10,12 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <memory>
 
+#include <gua/nrp/platform.hpp>
+
+namespace gua
+{
+namespace nrp
+{
 class PagodaVisual;
 class PagodaScene;
 
@@ -26,7 +32,7 @@ class PagodaVisual
         VT_VISUAL
     };
 
-    PagodaVisual(const std::string &name, gua::SceneGraph *scene_graph);
+    PagodaVisual(const std::string &name, gua::node::Node *root_node);
     PagodaVisual(const std::string &name, ptr_visual parent);
     ~PagodaVisual();
 
@@ -62,8 +68,9 @@ class PagodaVisual
 
     std::shared_ptr<gua::node::TransformNode> _node;
 
-    bool attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale);
+    bool attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset);
     void detach_meshes();
 };
-
+}
+}
 #endif // GUACAMOLE_PAGODA_VISUAL_H

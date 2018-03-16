@@ -6,6 +6,10 @@
 #include <fstream>
 #include <gua/node/Node.hpp>
 
+namespace gua
+{
+namespace nrp
+{
 class PagodaLog
 {
   public:
@@ -121,5 +125,7 @@ class PagodaLog
         s[len] = 0;
     }
 };
+}
+}
 
 #endif // PAGODA_LOG_H
