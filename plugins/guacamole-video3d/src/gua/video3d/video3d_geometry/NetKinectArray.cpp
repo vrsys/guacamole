@@ -47,11 +47,10 @@ void NetKinectArray::readloop() {
 
   RGBDSizes size;
   const unsigned num_streams(m_calib_files.size());
-  //std::string serverport = "141.54.147.62:7000";
 
   // init server 
   kinect::MultiRGBDStreamClient c(
-    m_server_endpoint, //serverport,
+    m_server_endpoint,
     num_streams,
     size.color_width,
     size.color_height,
