@@ -6,6 +6,7 @@ SET(PCC_INCLUDE_SEARCH_DIRS
   ${PCC_INCLUDE_DIRS}
   /opt/libpcc/current/include
   /home/buda8714/Documents/git/libpcc/include
+  /home/jesa8605/Documents/git/pc_pipeline/libpcc/include
 )
 
 SET(PCC_LIBRARY_SEARCH_DIRS
@@ -13,6 +14,7 @@ SET(PCC_LIBRARY_SEARCH_DIRS
   ${PCC_LIBRARY_DIRS}
   /opt/libpcc/current/lib
   /home/buda8714/Documents/git/libpcc/lib
+  /home/jesa8605/Documents/git/pc_pipeline/libpcc/lib
 )
 
 ##############################################################################
