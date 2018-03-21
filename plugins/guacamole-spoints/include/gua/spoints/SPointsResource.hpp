@@ -126,28 +126,52 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
     return global_grid_dimension_z;
   }
 
-  inline void set_global_point_precision_x(int grid_x) {
-    global_point_precision_x = grid_x;
+  inline void set_global_point_precision_x(int point_x) {
+    global_point_precision_x = point_x;
   }
 
   inline int get_global_point_precision_x() const {
     return global_point_precision_x;
   }
 
-  inline void set_global_point_precision_y(int grid_y) {
-    global_point_precision_y = grid_y;
+  inline void set_global_point_precision_y(int point_y) {
+    global_point_precision_y = point_y;
   }
 
   inline int get_global_point_precision_y() const {
     return global_point_precision_y;
   }
 
-  inline void set_global_point_precision_z(int grid_z) {
-    global_point_precision_z = grid_z;
+  inline void set_global_point_precision_z(int point_z) {
+    global_point_precision_z = point_z;
   }
 
   inline int get_global_point_precision_z() const {
     return global_point_precision_z;
+  }
+
+  inline void set_global_color_precision_x(int color_x) {
+    global_color_precision_x = color_x;
+  }
+
+  inline int get_global_color_precision_x() const {
+    return global_color_precision_x;
+  }
+
+  inline void set_global_color_precision_y(int color_y) {
+    global_color_precision_y = color_y;
+  }
+
+  inline int get_global_color_precision_y() const {
+    return global_color_precision_y;
+  }
+
+  inline void set_global_color_precision_z(int color_z) {
+    global_color_precision_z = color_z;
+  }
+
+  inline int get_global_color_precision_z() const {
+    return global_color_precision_z;
   }
 
   std::string                     server_endpoint() const {return server_endpoint_; }
@@ -173,6 +197,9 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   int global_point_precision_y;
   int global_point_precision_z;
 
+  int global_color_precision_x;
+  int global_color_precision_y;
+  int global_color_precision_z;
 };
 
 }

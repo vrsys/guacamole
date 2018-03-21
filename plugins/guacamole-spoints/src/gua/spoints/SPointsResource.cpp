@@ -67,7 +67,10 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
       global_grid_dimension_z(-1),
       global_point_precision_x(-1),
       global_point_precision_y(-1),
-      global_point_precision_z(-1) {
+      global_point_precision_z(-1),
+      global_color_precision_x(-1),
+      global_color_precision_y(-1),
+      global_color_precision_z(-1) {
   init();
 }
 
@@ -85,6 +88,9 @@ SPointsResource::push_matrix_package(spoints::camera_matrix_package& cam_mat_pac
       cam_mat_package.mat_package.global_point_precision_x = global_point_precision_x;
       cam_mat_package.mat_package.global_point_precision_y = global_point_precision_y;
       cam_mat_package.mat_package.global_point_precision_z = global_point_precision_z;
+      cam_mat_package.mat_package.global_color_precision_x = global_color_precision_x;
+      cam_mat_package.mat_package.global_color_precision_y = global_color_precision_y;
+      cam_mat_package.mat_package.global_color_precision_z = global_color_precision_z;
       spointsdata_->nka_->push_matrix_package(cam_mat_package);
     }
   }

@@ -161,6 +161,54 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
     return spoints_resource->get_global_point_precision_z();
   }
 
+  inline void set_global_color_precision_x(int color_x) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_color_precision_x(color_x);
+  }
+
+  inline int get_global_color_precision_x() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_color_precision_x();
+  }
+
+  inline void set_global_color_precision_y(int color_y) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_color_precision_y(color_y);
+  }
+
+  inline int get_global_color_precision_y() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_color_precision_y();
+  }
+
+  inline void set_global_color_precision_z(int color_z) {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return;
+    spoints_resource->set_global_color_precision_z(color_z);
+  }
+
+  inline int get_global_color_precision_z() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return -1;
+    return spoints_resource->get_global_color_precision_z();
+  }
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *

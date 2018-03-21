@@ -30,6 +30,9 @@ struct matrix_package {
   int global_point_precision_x;
   int global_point_precision_y;
   int global_point_precision_z;
+  int global_color_precision_x;
+  int global_color_precision_y;
+  int global_color_precision_z;
 /*
   void swap(matrix_package& rhs) {
     modelview_matrix.swap(rhs.modelview_matrix);
