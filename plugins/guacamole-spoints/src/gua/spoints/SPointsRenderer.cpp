@@ -313,6 +313,15 @@ void SPointsRenderer::render(Pipeline& pipe,
         screen_space_point_size,
         "point_size");
 
+      Vec<float> quant_step_vec = spoints_resource->getQuantizationStepSize();
+      //std::cout << "QUANT STEP " << quant_step_vec << std::endl;
+      float quant_step = std::max(quant_step_vec.z, std::max(quant_step_vec.x, quant_step_vec.y));
+
+      current_shader->set_uniform(
+        ctx,
+        quant_step,
+        "quant_step");
+
       bool write_depth = true;
       target.bind(ctx, write_depth);
       target.set_viewport(ctx);

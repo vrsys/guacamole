@@ -7,7 +7,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable( ${_EXE_NAME} main.cpp)
 
-target_link_libraries(${_EXE_NAME} guacamole-spoints)
+target_link_libraries(${_EXE_NAME} guacamole-spoints ${ZLIB_LIBRARIES})
+target_include_directories(guacamole-spoints PUBLIC ${ZLIB_INCLUDE_DIRS})
 
 # copy runtime libraries as a post-build process
 IF (MSVC)

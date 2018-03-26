@@ -7,6 +7,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_set>
+#include "PointCloudGridEncoder.hpp"
 
 namespace spoints{
 
@@ -23,7 +24,15 @@ struct matrix_package {
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
-
+  int global_grid_dimension_x;
+  int global_grid_dimension_y;
+  int global_grid_dimension_z;
+  int global_point_precision_x;
+  int global_point_precision_y;
+  int global_point_precision_z;
+  int global_color_precision_x;
+  int global_color_precision_y;
+  int global_color_precision_z;
 /*
   void swap(matrix_package& rhs) {
     modelview_matrix.swap(rhs.modelview_matrix);
@@ -82,11 +91,18 @@ public:
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
+  /* Forwards the minimum quantization step size from m_encoder 
+    (see PointCloudGridEncoder::getQuantizationStepSize) */
+  Vec<float> const getQuantizationStepSize(int cell_idx=0) const;
+
 private:
   void readloop();
   void sendfeedbackloop();
 
   //receiving geometry
+  PointCloudGridEncoder m_encoder;
+  std::vector<UncompressedVoxel> m_voxels;
+
   std::mutex m_mutex_;
   bool           m_running_;
   const std::string m_server_endpoint_;

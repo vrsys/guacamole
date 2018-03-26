@@ -12,7 +12,9 @@ namespace spoints {
 
 NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
-  : m_mutex_(),
+  : m_encoder(),
+    m_voxels(),
+    m_mutex_(),
     m_running_(true),
     m_feedback_running_(true),
     m_server_endpoint_(server_endpoint),
@@ -23,7 +25,8 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
     m_feedback_need_swap_{false},
     m_recv_()
 {
- 
+  m_encoder.settings.verbose = false;
+
   m_recv_ = std::thread([this]() { readloop(); });
 
   m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
@@ -189,42 +192,34 @@ void NetKinectArray::readloop() {
   zmq::socket_t  socket(ctx, ZMQ_SUB); // means a subscriber
 
   socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-
-  int conflate_messages = 1;
-  socket.setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
-
+  #if ZMQ_VERSION_MAJOR < 3
+    int64_t hwm = 1;
+    socket.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+  #else
+    int hwm = 1;
+    socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
+  #endif
+  
   std::string endpoint("tcp://" + m_server_endpoint_);
   socket.connect(endpoint.c_str());
-
-  const unsigned message_size = sizeof(size_t);//(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
-
-  size_t header_byte_size = 100;
-  std::vector<uint8_t> header_data(header_byte_size, 0);
-
   while (m_running_) {
-    
-    zmq::message_t zmqm(message_size);
+    //std::cout << "===========RECEIVING==========\n";
+    zmq::message_t zmqm;
     socket.recv(&zmqm); // blocking
-    
+    //std::cout << "RECEIVED.\n";
+    m_encoder.decode(zmqm, &m_voxels);
+    //std::cout << "DONE DECODING\n";
     while (m_need_cpu_swap_) {
       ;
     }
 
-    memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
-
-    size_t num_voxels_received{0};
-
-    memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[0], sizeof(size_t) );
-
-    size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
-    //if(m_buffer_back.size() < data_points_byte_size) {
+    //std::cout << "VOXELS received " << m_voxels.size() << std::endl;
+    size_t data_points_byte_size = m_voxels.size() * sizeof(gua::point_types::XYZ32_RGB8);
+    //if(m_buffer_back_.size() < data_points_byte_size) {
       m_buffer_back_.resize(data_points_byte_size);
-   // }
+    //}
 
-    //memcpy((unsigned char*) m_buffer_back.data(), (unsigned char*) zmqm.data(), message_size);
-    memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size, data_points_byte_size);
-
-  
+    memcpy((unsigned char*) &m_buffer_back_[0], (unsigned char*) m_voxels.data(), data_points_byte_size);
     { // swap
       std::lock_guard<std::mutex> lock(m_mutex_);
       m_need_cpu_swap_.store(true);
@@ -239,8 +234,16 @@ void NetKinectArray::readloop() {
 
 }
 
-
-
+Vec<float> const NetKinectArray::getQuantizationStepSize(int cell_idx) const
+{
+  Vec<float> res = m_encoder.getPointCloudGrid()->getQuantizationStepSize(cell_idx);
+  Vec<int> dim(
+    m_encoder.settings.grid_precision.dimensions.x,
+    m_encoder.settings.grid_precision.dimensions.y,
+    m_encoder.settings.grid_precision.dimensions.z
+  );
+  return res;
+}
 
 void NetKinectArray::sendfeedbackloop() {
   

@@ -17,6 +17,19 @@ layout(location=0) in vec4 gua_in_position_plus_packed_floatified_color;
 
 uniform mat4 kinect_model_matrix;
 uniform float point_size = 1.0;
+uniform float quant_step = -1.0;
+
+float calcPointSize() {
+  if(quant_step > 0) {
+    vec4 quant_screen = gua_projection_matrix * 
+      gua_view_matrix * 
+      kinect_model_matrix * 
+      vec4(quant_step, quant_step, quant_step,1.0);
+    return 30.0/length(quant_screen);
+  }
+  return point_size;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,10 +55,7 @@ void main() {
 
   @include "shaders/common/gua_varyings_assignment.glsl"
 
-
-  gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
-
-  gl_PointSize = point_size;
-  //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
-
+  vec4 in_pos = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
+  gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * in_pos;
+  gl_PointSize = calcPointSize();
 }
