@@ -95,6 +95,9 @@ public:
     (see PointCloudGridEncoder::getQuantizationStepSize) */
   Vec<float> const getQuantizationStepSize(int cell_idx=0) const;
 
+  /* Forwards last received message appendix. */
+  const std::string& get_message_appendix() const;
+
 private:
   void readloop();
   void sendfeedbackloop();
@@ -102,6 +105,7 @@ private:
   //receiving geometry
   PointCloudGridEncoder m_encoder;
   std::vector<UncompressedVoxel> m_voxels;
+  std::string m_appendix;
 
   std::mutex m_mutex_;
   bool           m_running_;

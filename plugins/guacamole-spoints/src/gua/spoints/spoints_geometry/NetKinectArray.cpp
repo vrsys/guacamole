@@ -14,6 +14,7 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
   : m_encoder(),
     m_voxels(),
+    m_appendix(),
     m_mutex_(),
     m_running_(true),
     m_feedback_running_(true),
@@ -208,6 +209,7 @@ void NetKinectArray::readloop() {
     socket.recv(&zmqm); // blocking
     //std::cout << "RECEIVED.\n";
     m_encoder.decode(zmqm, &m_voxels);
+    m_encoder.readFromAppendix(zmqm, m_appendix);
     //std::cout << "DONE DECODING\n";
     while (m_need_cpu_swap_) {
       ;
@@ -243,6 +245,11 @@ Vec<float> const NetKinectArray::getQuantizationStepSize(int cell_idx) const
     m_encoder.settings.grid_precision.dimensions.z
   );
   return res;
+}
+
+const std::string& NetKinectArray::get_message_appendix() const
+{
+  return m_appendix;
 }
 
 void NetKinectArray::sendfeedbackloop() {

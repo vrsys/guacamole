@@ -174,6 +174,12 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
     return global_color_precision_z;
   }
 
+  inline const std::string get_message_appendix() const {
+    if(!spointsdata_ || !spointsdata_->nka_)
+      return std::string();
+    return spointsdata_->nka_->get_message_appendix();
+  }
+
   std::string                     server_endpoint() const {return server_endpoint_; }
   std::string                     feedback_endpoint() const {return feedback_endpoint_; }
   bool                            is_pickable() const { return is_pickable_; }

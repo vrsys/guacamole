@@ -209,6 +209,14 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
     return spoints_resource->get_global_color_precision_z();
   }
 
+  inline const std::string get_message_appendix() const {
+    auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+          GeometryDatabase::instance()->lookup(spoints_description_));
+    if(!spoints_resource)
+      return std::string();
+    return spoints_resource->get_message_appendix();
+  }
+
   /**
    * Accepts a visitor and calls concrete visit method.
    *
