@@ -81,6 +81,14 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    */
   void init();
 
+  inline int get_compression_lvl(){
+    return global_comp_lvl_;
+  }
+
+  inline void set_compression_lvl(int comp_lvl){
+    global_comp_lvl_ = comp_lvl;
+  }
+
   /**
   *
   */
@@ -117,6 +125,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   unsigned width_colorimage_;
   unsigned height_colorimage_;
+
+  int global_comp_lvl_;
 
   bool overwrite_normal_;
   scm::math::vec3f o_normal_;

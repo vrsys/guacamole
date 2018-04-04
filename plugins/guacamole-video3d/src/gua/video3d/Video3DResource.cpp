@@ -59,7 +59,8 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
       height_colorimage_(0),
       overwrite_normal_(false),
       o_normal_(),
-      is_pickable_(flags & Video3DLoader::MAKE_PICKABLE) {
+      is_pickable_(flags & Video3DLoader::MAKE_PICKABLE),
+      global_comp_lvl_(-1) {
   init();
 }
 
