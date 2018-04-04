@@ -57,5 +57,5 @@ void main() {
 
   vec4 in_pos = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * in_pos;
-  gl_PointSize = calcPointSize();
+  gl_PointSize = point_size;//calcPointSize();
 }
