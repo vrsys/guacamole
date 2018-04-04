@@ -47,6 +47,8 @@ void NetKinectArray::readloop() {
 
   RGBDSizes size;
   const unsigned num_streams(m_calib_files.size());
+  float* debug_values           = new float [11];
+  float* feedback_val           = new float [1];
 
   // init server 
   kinect::MultiRGBDStreamClient c(
@@ -61,21 +63,28 @@ void NetKinectArray::readloop() {
   // open multicast listening connection to server and port
   zmq::context_t ctx(1); // means single threaded
   zmq::socket_t  socket(ctx, ZMQ_SUB);    // means a subscriber
+  zmq::socket_t  socket_d(ctx, ZMQ_SUB);    // means a subscriber
   zmq::socket_t  socket_f(ctx, ZMQ_PUB);  // means a Publisher
 
   socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+  socket_d.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+
 #if ZMQ_VERSION_MAJOR < 3
   int64_t hwm = 1;
   socket.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+  socket_d.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
   socket_f.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
 #else
   int hwm = 1;
   socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
+  socket_d.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_f("tcp://141.54.147.108:7001");
+  std::string endpoint_d("tcp://141.54.147.29:7051");
+  std::string endpoint_f("tcp://141.54.147.29:7001");
   socket.connect(endpoint.c_str());
+  socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
 
 
@@ -96,22 +105,30 @@ void NetKinectArray::readloop() {
       ;
     }
 
-    zmq::message_t zmqm_f(6*sizeof(float));
-    std::vector<float> test_inputs;
-    test_inputs.push_back(cont);
-    cont += 1;
-    test_inputs.push_back(cont);
-    cont += 1;
-    test_inputs.push_back(cont);
-    cont += 1;
-    test_inputs.push_back(cont);
-    cont += 1;
-    test_inputs.push_back(cont);
-    cont += 1;
-    test_inputs.push_back(cont);
-    cont += 1;
     
-    memcpy(zmqm_f.data(), test_inputs.data(), 6*sizeof(float));    
+    zmq::message_t zmqm_d(11*sizeof(float));
+    socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
+    bool got_debug = false;
+    if(zmqm_d.size() == 11*sizeof(float)){  
+      memcpy((float*) debug_values, zmqm_d.data(), 11*sizeof(float));    
+      std::cout << "\n   > Debug information: "                   << std::endl;
+      std::cout << "\t > total_MegaBitPerSecond@30Hz: "           << debug_values[1]<< std::endl;
+      std::cout << "\t > total_MegaBitPerSecond@30Hz_color: "     << debug_values[2]<< std::endl;
+      std::cout << "\t > total_MegaBitPerSecond@30Hz_depth:"      << debug_values[3]<< std::endl;
+      std::cout << "\t > total_byte_base: "                       << debug_values[7]<< std::endl;
+      std::cout << "\t > total_byte_enc: "                        << debug_values[8]<< std::endl;
+      std::cout << "\t > total_byte_enc_color: "                  << debug_values[9]<< std::endl;
+      std::cout << "\t > total_byte_enc_depth: "                  << debug_values[10]<< std::endl;
+      std::cout << "\t > total_compression_ratio_percent: "       << debug_values[4]<< std::endl;
+      std::cout << "\t > total_compression_ratio_color_percent: " << debug_values[5]<< std::endl;
+      std::cout << "\t > total_compression_ratio_depth_percent: " << debug_values[6]<< std::endl;
+      std::cout << "\t > total_time: "                            << debug_values[0]<< std::endl;
+      got_debug = true;
+    }
+
+
+    zmq::message_t zmqm_f(1*sizeof(float));
+    memcpy(zmqm_f.data(), (float*) feedback_val, 1*sizeof(float));    
     socket_f.send(zmqm_f);
 
 
