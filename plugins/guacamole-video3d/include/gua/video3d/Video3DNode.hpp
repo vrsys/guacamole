@@ -61,6 +61,7 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
 
   void update_cache() override;
 
+
   inline int get_compression_lvl() const {
     auto video3D_resource = std::static_pointer_cast<Video3DResource>(
           GeometryDatabase::instance()->lookup(video_description_));
@@ -76,6 +77,7 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
       return;
     video3D_resource->set_compression_lvl(comp_lvl);
   }
+
 
   /**
    * Accepts a visitor and calls concrete visit method.

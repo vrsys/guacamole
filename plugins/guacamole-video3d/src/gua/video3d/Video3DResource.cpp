@@ -64,6 +64,12 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
   init();
 }
 
+/*
+void
+Video3DResource::push_feedback_package(video3d::feedback_package& feedPack){
+  feedPack.global_comp_lvl = global_comp_lvl_;
+}
+*/
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DResource::init() {
   // approximately local space - can be overwritten from .ks file

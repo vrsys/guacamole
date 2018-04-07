@@ -20,11 +20,21 @@ struct RGBDSizes {
   const unsigned points_per_grid = 0.01 * 256;
   const unsigned mask_height = 16;
   const unsigned mask_width = 16;
-  
+  const unsigned debug_size = 11;
+  const unsigned feedback_size = 1;
+  const unsigned debug_byte = 11*sizeof(float);
+  const unsigned feedback_byte = 1*sizeof(float);
 };
 
 namespace video3d{
 
+struct feedback_package{
+  feedback_package():
+    global_comp_lvl(7)
+  {}
+  
+  int global_comp_lvl;
+};
 
 class NetKinectArray{
 
@@ -35,6 +45,14 @@ public:
 
   bool update();
   inline unsigned char* getBuffer() { return m_buffer.data(); }
+
+  inline void set_feedback_comp_lvl(int comp_lvl){
+    feedPack.global_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_comp_lvl() const {
+    return feedPack.global_comp_lvl;
+  }
 
 private:
   void readloop();
@@ -49,6 +67,7 @@ private:
   std::vector<uint8_t> m_buffer_back;
   std::atomic<bool> m_need_swap;
   std::thread m_recv;
+  feedback_package feedPack;
 };
 
 

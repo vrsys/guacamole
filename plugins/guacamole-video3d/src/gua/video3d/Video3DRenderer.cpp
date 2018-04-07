@@ -247,6 +247,13 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
 void Video3DRenderer::draw_video3dResource(
     RenderContext& ctx,
     Video3DResource const& video3d_ressource) {
+    for (const auto& any : video3Ddata_) {
+      if(any.second.nka_){
+        if(video3d_ressource.get_compression_lvl() != any.second.nka_->get_feedback_comp_lvl()){
+          any.second.nka_->set_feedback_comp_lvl(video3d_ressource.get_compression_lvl());
+        }
+      }
+    }
   // ctx.render_context->apply();
   auto iter = ctx.meshes.find(video3d_ressource.uuid());
   if (iter == ctx.meshes.end()) {

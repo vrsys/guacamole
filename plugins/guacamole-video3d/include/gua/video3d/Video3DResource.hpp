@@ -25,7 +25,7 @@
 #include <gua/video3d/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/video3d/video3d_geometry/KinectCalibrationFile.hpp>
-#include <gua/video3d/video3d_geometry/FileBuffer.h>
+//#include <gua/video3d/video3d_geometry/FileBuffer.h>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -60,7 +60,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    * \param video3d      Holds information about kinect streams.
   */
    Video3DResource(std::string const& video3d, unsigned flags);
-
+   //void push_feedback_package(video3d::feedback_package& feedPack);
   /**
    * destructor.
    */
@@ -81,7 +81,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    */
   void init();
 
-  inline int get_compression_lvl(){
+  inline int get_compression_lvl() const{
     return global_comp_lvl_;
   }
 
