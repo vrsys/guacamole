@@ -62,20 +62,52 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
   void update_cache() override;
 
 
-  inline int get_compression_lvl() const {
+  inline int get_global_compression_lvl() const {
     auto video3D_resource = std::static_pointer_cast<Video3DResource>(
           GeometryDatabase::instance()->lookup(video_description_));
     if(!video3D_resource)
       return -1;
-    return video3D_resource->get_compression_lvl();
+    return video3D_resource->get_global_compression_lvl();
   }
 
-  inline void set_compression_lvl(int comp_lvl){
+  inline void set_global_compression_lvl(int comp_lvl){
     auto video3D_resource = std::static_pointer_cast<Video3DResource>(
           GeometryDatabase::instance()->lookup(video_description_));
     if(!video3D_resource)
       return;
-    video3D_resource->set_compression_lvl(comp_lvl);
+    video3D_resource->set_global_compression_lvl(comp_lvl);
+  }
+
+  inline int get_depth_compression_lvl() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return -1;
+    return video3D_resource->get_depth_compression_lvl();
+  }
+
+  inline void set_depth_compression_lvl(int comp_lvl){
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return;
+    video3D_resource->set_depth_compression_lvl(comp_lvl);
+  }
+
+  inline int get_color_compression_lvl() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return -1;
+    return video3D_resource->get_color_compression_lvl();
+  }
+
+  inline void set_color_compression_lvl(int comp_lvl){
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return;
+    video3D_resource->set_color_compression_lvl(comp_lvl);
   }
 
 

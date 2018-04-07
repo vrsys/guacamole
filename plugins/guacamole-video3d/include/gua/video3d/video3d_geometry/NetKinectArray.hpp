@@ -23,17 +23,21 @@ struct RGBDSizes {
   const unsigned debug_size = 11;
   const unsigned feedback_size = 1;
   const unsigned debug_byte = 11*sizeof(float);
-  const unsigned feedback_byte = 1*sizeof(float);
+  const unsigned feedback_byte = 3*sizeof(float);
 };
 
 namespace video3d{
 
 struct feedback_package{
   feedback_package():
-    global_comp_lvl(7)
+    global_comp_lvl(7),
+    depth_comp_lvl(7),
+    color_comp_lvl(7)
   {}
   
   int global_comp_lvl;
+  int depth_comp_lvl;
+  int color_comp_lvl;
 };
 
 class NetKinectArray{
@@ -46,12 +50,28 @@ public:
   bool update();
   inline unsigned char* getBuffer() { return m_buffer.data(); }
 
-  inline void set_feedback_comp_lvl(int comp_lvl){
+  inline void set_feedback_global_comp_lvl(int comp_lvl){
     feedPack.global_comp_lvl = comp_lvl;
   }
 
-  inline int get_feedback_comp_lvl() const {
+  inline int get_feedback_global_comp_lvl() const {
     return feedPack.global_comp_lvl;
+  }
+
+  inline void set_feedback_depth_comp_lvl(int comp_lvl){
+    feedPack.depth_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_depth_comp_lvl() const {
+    return feedPack.depth_comp_lvl;
+  }
+
+  inline void set_feedback_color_comp_lvl(int comp_lvl){
+    feedPack.color_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_color_comp_lvl() const {
+    return feedPack.color_comp_lvl;
   }
 
 private:

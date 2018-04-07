@@ -81,12 +81,28 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    */
   void init();
 
-  inline int get_compression_lvl() const{
+  inline int get_global_compression_lvl() const{
     return global_comp_lvl_;
   }
 
-  inline void set_compression_lvl(int comp_lvl){
+  inline void set_global_compression_lvl(int comp_lvl){
     global_comp_lvl_ = comp_lvl;
+  }
+
+  inline int get_depth_compression_lvl() const{
+    return depth_comp_lvl_;
+  }
+
+  inline void set_depth_compression_lvl(int comp_lvl){
+    depth_comp_lvl_ = comp_lvl;
+  }
+
+  inline int get_color_compression_lvl() const{
+    return color_comp_lvl_;
+  }
+
+  inline void set_color_compression_lvl(int comp_lvl){
+    color_comp_lvl_ = comp_lvl;
   }
 
   /**
@@ -127,6 +143,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   unsigned height_colorimage_;
 
   int global_comp_lvl_;
+  int depth_comp_lvl_;
+  int color_comp_lvl_;
 
   bool overwrite_normal_;
   scm::math::vec3f o_normal_;

@@ -249,8 +249,14 @@ void Video3DRenderer::draw_video3dResource(
     Video3DResource const& video3d_ressource) {
     for (const auto& any : video3Ddata_) {
       if(any.second.nka_){
-        if(video3d_ressource.get_compression_lvl() != any.second.nka_->get_feedback_comp_lvl()){
-          any.second.nka_->set_feedback_comp_lvl(video3d_ressource.get_compression_lvl());
+        if(video3d_ressource.get_global_compression_lvl() != any.second.nka_->get_feedback_global_comp_lvl()){
+          any.second.nka_->set_feedback_global_comp_lvl(video3d_ressource.get_global_compression_lvl());
+        }
+        if(video3d_ressource.get_depth_compression_lvl() != any.second.nka_->get_feedback_depth_comp_lvl()){
+          any.second.nka_->set_feedback_depth_comp_lvl(video3d_ressource.get_depth_compression_lvl());
+        }
+        if(video3d_ressource.get_color_compression_lvl() != any.second.nka_->get_feedback_color_comp_lvl()){
+          any.second.nka_->set_feedback_color_comp_lvl(video3d_ressource.get_color_compression_lvl());
         }
       }
     }

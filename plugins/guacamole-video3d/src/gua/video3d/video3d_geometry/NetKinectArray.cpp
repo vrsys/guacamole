@@ -130,6 +130,8 @@ void NetKinectArray::readloop() {
 
     zmq::message_t zmqm_f(size.feedback_byte);
     feedback_val[0] = feedPack.global_comp_lvl;
+    feedback_val[1] = feedPack.depth_comp_lvl;
+    feedback_val[2] = feedPack.color_comp_lvl;
     memcpy(zmqm_f.data(), (float*) feedback_val, size.feedback_byte);
     socket_f.send(zmqm_f);
 
