@@ -51,27 +51,35 @@ public:
   inline unsigned char* getBuffer() { return m_buffer.data(); }
 
   inline void set_feedback_global_comp_lvl(int comp_lvl){
-    feedPack.global_comp_lvl = comp_lvl;
+    m_feedPack.global_comp_lvl = comp_lvl;
   }
 
   inline int get_feedback_global_comp_lvl() const {
-    return feedPack.global_comp_lvl;
+    return m_feedPack.global_comp_lvl;
   }
 
   inline void set_feedback_depth_comp_lvl(int comp_lvl){
-    feedPack.depth_comp_lvl = comp_lvl;
+    m_feedPack.depth_comp_lvl = comp_lvl;
   }
 
   inline int get_feedback_depth_comp_lvl() const {
-    return feedPack.depth_comp_lvl;
+    return m_feedPack.depth_comp_lvl;
   }
 
   inline void set_feedback_color_comp_lvl(int comp_lvl){
-    feedPack.color_comp_lvl = comp_lvl;
+    m_feedPack.color_comp_lvl = comp_lvl;
   }
 
   inline int get_feedback_color_comp_lvl() const {
-    return feedPack.color_comp_lvl;
+    return m_feedPack.color_comp_lvl;
+  }
+
+  inline void set_debug_message(std::string debug_msg){
+    m_debug_message = debug_msg;
+  }
+
+  inline const std::string& get_debug_message() const{
+    return m_debug_message;
   }
 
 private:
@@ -87,7 +95,8 @@ private:
   std::vector<uint8_t> m_buffer_back;
   std::atomic<bool> m_need_swap;
   std::thread m_recv;
-  feedback_package feedPack;
+  feedback_package m_feedPack;
+  std::string m_debug_message;
 };
 
 

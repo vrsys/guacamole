@@ -22,7 +22,8 @@ NetKinectArray::NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrati
     m_buffer_back(/* (m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
     m_need_swap(false),
     m_recv(),
-    feedPack()
+    m_feedPack(),
+    m_debug_message()
 {
   m_recv = std::thread([this]() { readloop(); });
 }
@@ -43,6 +44,7 @@ bool NetKinectArray::update() {
   }
   return false;
 }
+
 
 void NetKinectArray::readloop() {
 
@@ -111,7 +113,13 @@ void NetKinectArray::readloop() {
     socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
     bool got_debug = false;
     if(zmqm_d.size() == size.debug_byte){  
-      memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);    
+      memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);
+
+      set_debug_message(  std::to_string(debug_values[1])  + ", "+ std::to_string(debug_values[2]) + ", "+ std::to_string(debug_values[3]) + ", "
+                        + std::to_string(debug_values[7])  + ", "+ std::to_string(debug_values[8]) + ", "+ std::to_string(debug_values[9]) + ", "
+                        + std::to_string(debug_values[10]) + ", "+ std::to_string(debug_values[4]) + ", "+ std::to_string(debug_values[5]) + ", "
+                        + std::to_string(debug_values[6])  + ", "+ std::to_string(debug_values[0]));
+
       std::cout << "\n   > Debug information: "                   << std::endl;
       std::cout << "\t > total_MegaBitPerSecond@30Hz: "           << debug_values[1]<< std::endl;
       std::cout << "\t > total_MegaBitPerSecond@30Hz_color: "     << debug_values[2]<< std::endl;
@@ -129,9 +137,9 @@ void NetKinectArray::readloop() {
 
 
     zmq::message_t zmqm_f(size.feedback_byte);
-    feedback_val[0] = feedPack.global_comp_lvl;
-    feedback_val[1] = feedPack.depth_comp_lvl;
-    feedback_val[2] = feedPack.color_comp_lvl;
+    feedback_val[0] = get_feedback_global_comp_lvl();
+    feedback_val[1] = get_feedback_depth_comp_lvl();
+    feedback_val[2] = get_feedback_color_comp_lvl();
     memcpy(zmqm_f.data(), (float*) feedback_val, size.feedback_byte);
     socket_f.send(zmqm_f);
 

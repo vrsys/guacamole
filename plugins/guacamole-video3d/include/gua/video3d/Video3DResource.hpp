@@ -105,6 +105,15 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
     color_comp_lvl_ = comp_lvl;
   }
 
+  inline std::string get_debug_message() const{
+    return debug_msg_;
+  }
+
+  inline void set_debug_message(std::string debug_msg){
+    debug_msg_ = debug_msg;
+  }
+
+  
   /**
   *
   */
@@ -145,6 +154,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   int global_comp_lvl_;
   int depth_comp_lvl_;
   int color_comp_lvl_;
+  std::string debug_msg_;
+
 
   bool overwrite_normal_;
   scm::math::vec3f o_normal_;

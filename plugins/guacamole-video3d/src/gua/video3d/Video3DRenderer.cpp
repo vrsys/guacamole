@@ -258,6 +258,9 @@ void Video3DRenderer::draw_video3dResource(
         if(video3d_ressource.get_color_compression_lvl() != any.second.nka_->get_feedback_color_comp_lvl()){
           any.second.nka_->set_feedback_color_comp_lvl(video3d_ressource.get_color_compression_lvl());
         }
+        if(video3d_ressource.get_debug_message() != any.second.nka_->get_debug_message()){
+          //video3d_ressource.set_debug_message(any.second.nka_->get_debug_message());
+        }
       }
     }
   // ctx.render_context->apply();
