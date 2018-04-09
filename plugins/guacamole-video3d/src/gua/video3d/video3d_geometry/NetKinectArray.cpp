@@ -84,8 +84,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.29:7051");
-  std::string endpoint_f("tcp://141.54.147.29:7001");
+  std::string endpoint_d("tcp://141.54.147.57:7051");
+  std::string endpoint_f("tcp://141.54.147.57:7001");
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
@@ -119,7 +119,7 @@ void NetKinectArray::readloop() {
                         + std::to_string(debug_values[7])  + ", "+ std::to_string(debug_values[8]) + ", "+ std::to_string(debug_values[9]) + ", "
                         + std::to_string(debug_values[10]) + ", "+ std::to_string(debug_values[4]) + ", "+ std::to_string(debug_values[5]) + ", "
                         + std::to_string(debug_values[6])  + ", "+ std::to_string(debug_values[0]));
-
+      /*
       std::cout << "\n   > Debug information: "                   << std::endl;
       std::cout << "\t > total_MegaBitPerSecond@30Hz: "           << debug_values[1]<< std::endl;
       std::cout << "\t > total_MegaBitPerSecond@30Hz_color: "     << debug_values[2]<< std::endl;
@@ -132,6 +132,7 @@ void NetKinectArray::readloop() {
       std::cout << "\t > total_compression_ratio_color_percent: " << debug_values[5]<< std::endl;
       std::cout << "\t > total_compression_ratio_depth_percent: " << debug_values[6]<< std::endl;
       std::cout << "\t > total_time: "                            << debug_values[0]<< std::endl;
+      */
       got_debug = true;
     }
 

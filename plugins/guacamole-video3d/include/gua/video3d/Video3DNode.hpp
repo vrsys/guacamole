@@ -110,11 +110,11 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
     video3D_resource->set_color_compression_lvl(comp_lvl);
   }
 
-  inline const std::string get_debug_message() const {
+  inline std::string get_debug_message() const {
     auto video3D_resource = std::static_pointer_cast<Video3DResource>(
           GeometryDatabase::instance()->lookup(video_description_));
     if(!video3D_resource)
-      return std::string();
+      return std::string("video3D_resource->get_debug_message() ain't working");
     return video3D_resource->get_debug_message();
   }
 

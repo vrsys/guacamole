@@ -38,6 +38,7 @@
 #include <gua/video3d/video3d_geometry/NetKinectArray.hpp>
 
 #include <scm/gl_core/render_device/context_guards.h>
+#include <iostream>
 
 namespace {
 
@@ -138,7 +139,7 @@ namespace gua {
 
 Video3DRenderer::Video3DData::Video3DData(
     RenderContext const& ctx,
-    Video3DResource const& video3d_ressource) {
+    Video3DResource& video3d_ressource) {
   // initialize Texture Arrays (kinect depths & colors)
   depth_tex_ = ctx.render_device->create_texture_2d(
       scm::math::vec2ui(video3d_ressource.width_depthimage(),
@@ -246,7 +247,7 @@ Video3DRenderer::Video3DRenderer() : initialized_(false) {
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::draw_video3dResource(
     RenderContext& ctx,
-    Video3DResource const& video3d_ressource) {
+    Video3DResource& video3d_ressource) {
     for (const auto& any : video3Ddata_) {
       if(any.second.nka_){
         if(video3d_ressource.get_global_compression_lvl() != any.second.nka_->get_feedback_global_comp_lvl()){
@@ -259,7 +260,7 @@ void Video3DRenderer::draw_video3dResource(
           any.second.nka_->set_feedback_color_comp_lvl(video3d_ressource.get_color_compression_lvl());
         }
         if(video3d_ressource.get_debug_message() != any.second.nka_->get_debug_message()){
-          //video3d_ressource.set_debug_message(any.second.nka_->get_debug_message());
+          video3d_ressource.set_debug_message(any.second.nka_->get_debug_message());
         }
       }
     }
@@ -278,7 +279,7 @@ void Video3DRenderer::draw_video3dResource(
 
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::update_buffers(RenderContext const& ctx,
-                                     Video3DResource const& video3d_ressource,
+                                     Video3DResource& video3d_ressource,
                                      Pipeline& pipe) {
   auto iter = video3Ddata_.find(video3d_ressource.uuid());
   if (iter == video3Ddata_.end()) {
@@ -326,7 +327,7 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx,
 
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::process_textures(RenderContext const& ctx,
-                                       Video3DResource const& video3d_ressource,
+                                       Video3DResource& video3d_ressource,
                                        Pipeline& pipe) {
   Video3DData& video3d_data = video3Ddata_[video3d_ressource.uuid()];
   // store current state
