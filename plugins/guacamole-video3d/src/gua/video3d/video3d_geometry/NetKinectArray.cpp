@@ -6,6 +6,7 @@
 #include <MultiRGBDStreamHeader.h>
 
 #include <iostream>
+#include <chrono>
 #include <mutex>
 
 namespace video3d {
@@ -84,8 +85,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.57:7051");
-  std::string endpoint_f("tcp://141.54.147.57:7001");
+  std::string endpoint_d("tcp://141.54.147.54:7051");
+  std::string endpoint_f("tcp://141.54.147.54:7001");
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
@@ -100,10 +101,9 @@ void NetKinectArray::readloop() {
 
     //zmq::message_t zmqm(message_size);
     //socket.recv(&zmqm); // blocking
-    
     c.receive();
     c.waitForDecode();
-
+    
     while (m_need_swap) {
       ;
     }
@@ -115,10 +115,27 @@ void NetKinectArray::readloop() {
     if(zmqm_d.size() == size.debug_byte){  
       memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);
 
+      /*
       set_debug_message(  std::to_string(debug_values[1])  + ", "+ std::to_string(debug_values[2]) + ", "+ std::to_string(debug_values[3]) + ", "
                         + std::to_string(debug_values[7])  + ", "+ std::to_string(debug_values[8]) + ", "+ std::to_string(debug_values[9]) + ", "
                         + std::to_string(debug_values[10]) + ", "+ std::to_string(debug_values[4]) + ", "+ std::to_string(debug_values[5]) + ", "
                         + std::to_string(debug_values[6])  + ", "+ std::to_string(debug_values[0]));
+      */
+
+      set_debug_message("{\"total_MegaBitPerSecond@30Hz\" : \""                + std::to_string(debug_values[1]) + 
+                          "\",\"total_MegaBitPerSecond@30Hz_color\" : \""      + std::to_string(debug_values[2]) + 
+                          "\",\"total_MegaBitPerSecond@30Hz_depth\" : \""      + std::to_string(debug_values[3]) + 
+                          "\",\"total_byte_base\" : \""                        + std::to_string(debug_values[7]) + 
+                          "\",\"total_byte_enc\" : \""                         + std::to_string(debug_values[8]) + 
+                          "\",\"total_byte_enc_color\" : \""                   + std::to_string(debug_values[9]) + 
+                          "\",\"total_byte_enc_depth\" : \""                   + std::to_string(debug_values[10]) + 
+                          "\",\"total_compression_ratio_percent\" : \""        + std::to_string(debug_values[4]) + 
+                          "\",\"total_compression_ratio_color_percent\" : \""  + std::to_string(debug_values[5]) + 
+                          "\",\"total_compression_ratio_depth_percent\" : \""  + std::to_string(debug_values[6]) + 
+                          "\",\"total_time\" : \""                             + std::to_string(debug_values[0]) + 
+                          "\"}");
+
+
       /*
       std::cout << "\n   > Debug information: "                   << std::endl;
       std::cout << "\t > total_MegaBitPerSecond@30Hz: "           << debug_values[1]<< std::endl;
