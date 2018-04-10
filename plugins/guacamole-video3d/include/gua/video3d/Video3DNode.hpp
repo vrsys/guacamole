@@ -26,6 +26,8 @@
 #include <gua/video3d/platform.hpp>
 #include <gua/node/GeometryNode.hpp>
 #include <gua/databases/GeometryDescription.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/video3d/Video3DResource.hpp>
 
 // external headers
 #include <string>
@@ -58,6 +60,63 @@ class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
                      std::set<PickResult>& hits) override;
 
   void update_cache() override;
+
+
+  inline int get_global_compression_lvl() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return -1;
+    return video3D_resource->get_global_compression_lvl();
+  }
+
+  inline void set_global_compression_lvl(int comp_lvl){
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return;
+    video3D_resource->set_global_compression_lvl(comp_lvl);
+  }
+
+  inline int get_depth_compression_lvl() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return -1;
+    return video3D_resource->get_depth_compression_lvl();
+  }
+
+  inline void set_depth_compression_lvl(int comp_lvl){
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return;
+    video3D_resource->set_depth_compression_lvl(comp_lvl);
+  }
+
+  inline int get_color_compression_lvl() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return -1;
+    return video3D_resource->get_color_compression_lvl();
+  }
+
+  inline void set_color_compression_lvl(int comp_lvl){
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return;
+    video3D_resource->set_color_compression_lvl(comp_lvl);
+  }
+
+  inline std::string get_debug_message() const {
+    auto video3D_resource = std::static_pointer_cast<Video3DResource>(
+          GeometryDatabase::instance()->lookup(video_description_));
+    if(!video3D_resource)
+      return std::string("video3D_resource->get_debug_message() ain't working");
+    return video3D_resource->get_debug_message();
+  }
 
   /**
    * Accepts a visitor and calls concrete visit method.

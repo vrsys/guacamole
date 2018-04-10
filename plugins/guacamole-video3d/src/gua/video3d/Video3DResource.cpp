@@ -59,10 +59,19 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
       height_colorimage_(0),
       overwrite_normal_(false),
       o_normal_(),
-      is_pickable_(flags & Video3DLoader::MAKE_PICKABLE) {
+      is_pickable_(flags & Video3DLoader::MAKE_PICKABLE),
+      global_comp_lvl_(-1),
+      depth_comp_lvl_(-1),
+      color_comp_lvl_(-1) {
   init();
 }
 
+/*
+void
+Video3DResource::push_feedback_package(video3d::feedback_package& feedPack){
+  feedPack.global_comp_lvl = global_comp_lvl_;
+}
+*/
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DResource::init() {
   // approximately local space - can be overwritten from .ks file

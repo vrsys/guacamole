@@ -20,11 +20,25 @@ struct RGBDSizes {
   const unsigned points_per_grid = 0.01 * 256;
   const unsigned mask_height = 16;
   const unsigned mask_width = 16;
-  
+  const unsigned debug_size = 11;
+  const unsigned feedback_size = 1;
+  const unsigned debug_byte = 11*sizeof(float);
+  const unsigned feedback_byte = 3*sizeof(float);
 };
 
 namespace video3d{
 
+struct feedback_package{
+  feedback_package():
+    global_comp_lvl(7),
+    depth_comp_lvl(7),
+    color_comp_lvl(7)
+  {}
+  
+  int global_comp_lvl;
+  int depth_comp_lvl;
+  int color_comp_lvl;
+};
 
 class NetKinectArray{
 
@@ -35,6 +49,38 @@ public:
 
   bool update();
   inline unsigned char* getBuffer() { return m_buffer.data(); }
+
+  inline void set_feedback_global_comp_lvl(int comp_lvl){
+    m_feedPack.global_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_global_comp_lvl() const {
+    return m_feedPack.global_comp_lvl;
+  }
+
+  inline void set_feedback_depth_comp_lvl(int comp_lvl){
+    m_feedPack.depth_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_depth_comp_lvl() const {
+    return m_feedPack.depth_comp_lvl;
+  }
+
+  inline void set_feedback_color_comp_lvl(int comp_lvl){
+    m_feedPack.color_comp_lvl = comp_lvl;
+  }
+
+  inline int get_feedback_color_comp_lvl() const {
+    return m_feedPack.color_comp_lvl;
+  }
+
+  inline void set_debug_message(std::string debug_msg){
+    m_debug_message = debug_msg;
+  }
+
+  inline const std::string& get_debug_message() const{
+    return m_debug_message;
+  }
 
 private:
   void readloop();
@@ -49,6 +95,8 @@ private:
   std::vector<uint8_t> m_buffer_back;
   std::atomic<bool> m_need_swap;
   std::thread m_recv;
+  feedback_package m_feedPack;
+  std::string m_debug_message;
 };
 
 

@@ -67,11 +67,11 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
     global_substitution_map_ = smap;
   }
 
-  void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
-  void update_buffers(RenderContext const& ctx, Video3DResource const& video3d, Pipeline& pipe);
+  void draw_video3dResource(RenderContext& ctx, Video3DResource& video3d);
+  void update_buffers(RenderContext const& ctx, Video3DResource& video3d, Pipeline& pipe);
 
  private:  // attributes
-  void process_textures(RenderContext const& ctx, Video3DResource const& res, Pipeline& pipe);
+  void process_textures(RenderContext const& ctx, Video3DResource& res, Pipeline& pipe);
 
   bool initialized_;
 
@@ -97,7 +97,7 @@ class GUA_VIDEO3D_DLL Video3DRenderer {
 
   struct Video3DData {
     Video3DData() = default;
-    Video3DData(RenderContext const& ctx, Video3DResource const& video3d);
+    Video3DData(RenderContext const& ctx, Video3DResource& video3d);
     // gl resources
     scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
     scm::gl::texture_2d_ptr color_tex_ = nullptr;

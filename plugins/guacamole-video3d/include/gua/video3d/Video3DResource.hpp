@@ -25,7 +25,7 @@
 #include <gua/video3d/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/video3d/video3d_geometry/KinectCalibrationFile.hpp>
-#include <gua/video3d/video3d_geometry/FileBuffer.h>
+//#include <gua/video3d/video3d_geometry/FileBuffer.h>
 #include <gua/renderer/Texture2D.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
@@ -60,7 +60,7 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    * \param video3d      Holds information about kinect streams.
   */
    Video3DResource(std::string const& video3d, unsigned flags);
-
+   //void push_feedback_package(video3d::feedback_package& feedPack);
   /**
    * destructor.
    */
@@ -81,6 +81,39 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
    */
   void init();
 
+  inline int get_global_compression_lvl() const{
+    return global_comp_lvl_;
+  }
+
+  inline void set_global_compression_lvl(int comp_lvl){
+    global_comp_lvl_ = comp_lvl;
+  }
+
+  inline int get_depth_compression_lvl() const{
+    return depth_comp_lvl_;
+  }
+
+  inline void set_depth_compression_lvl(int comp_lvl){
+    depth_comp_lvl_ = comp_lvl;
+  }
+
+  inline int get_color_compression_lvl() const{
+    return color_comp_lvl_;
+  }
+
+  inline void set_color_compression_lvl(int comp_lvl){
+    color_comp_lvl_ = comp_lvl;
+  }
+
+  inline std::string get_debug_message() const{
+    return debug_msg_;
+  }
+
+  inline void set_debug_message(std::string debug_msg){
+    debug_msg_ = debug_msg;
+  }
+
+  
   /**
   *
   */
@@ -117,6 +150,12 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
 
   unsigned width_colorimage_;
   unsigned height_colorimage_;
+
+  int global_comp_lvl_;
+  int depth_comp_lvl_;
+  int color_comp_lvl_;
+  std::string debug_msg_;
+
 
   bool overwrite_normal_;
   scm::math::vec3f o_normal_;
