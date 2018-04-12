@@ -113,7 +113,7 @@ void NetKinectArray::readloop() {
     socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
     bool got_debug = false;
     if(zmqm_d.size() == size.debug_byte){ 
-     
+
       memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);
 
       float total_MegaBitPerSecond_30Hz             = debug_values[1];
@@ -127,9 +127,11 @@ void NetKinectArray::readloop() {
       float total_compression_ratio_color_percent   = debug_values[5];
       float total_compression_ratio_depth_percent   = debug_values[6];
       float total_time                              = debug_values[0];
+      float enc_time                                = debug_values[11];
+      float mask_time                               = debug_values[12];
 
-      float Mbits_Compressed        = total_MegaBitPerSecond_30Hz/30;
-      float Mbits_Compressed_30f    = total_MegaBitPerSecond_30Hz;
+      float Mbits_Compressed        =  total_MegaBitPerSecond_30Hz/30;
+      float Mbits_Compressed_30f    =  total_MegaBitPerSecond_30Hz;
       float comp_color_ratio        = (total_MegaBitPerSecond_30Hz_color/30)/Mbits_Compressed;
       float comp_depth_ratio        = (total_MegaBitPerSecond_30Hz_depth/30)/Mbits_Compressed;
       float Mbits_Uncompressed      = (8 * total_byte_base)/(1024 * 1024);
