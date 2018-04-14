@@ -22,7 +22,7 @@ struct RGBDSizes {
   const unsigned mask_width = 16;
   const unsigned debug_size = 11;
   const unsigned feedback_size = 1;
-  const unsigned debug_byte = 11*sizeof(float);
+  const unsigned debug_byte = 13*sizeof(float);
   const unsigned feedback_byte = 3*sizeof(float);
 };
 

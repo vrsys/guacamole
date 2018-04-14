@@ -85,8 +85,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.54:7051");
-  std::string endpoint_f("tcp://141.54.147.54:7001");
+  std::string endpoint_d("tcp://141.54.147.24:7051");
+  std::string endpoint_f("tcp://141.54.147.24:7001");
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
@@ -112,44 +112,42 @@ void NetKinectArray::readloop() {
     zmq::message_t zmqm_d(size.debug_byte);
     socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
     bool got_debug = false;
-    if(zmqm_d.size() == size.debug_byte){  
+    if(zmqm_d.size() == size.debug_byte){ 
+
       memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);
 
-      /*
-      set_debug_message(  std::to_string(debug_values[1])  + ", "+ std::to_string(debug_values[2]) + ", "+ std::to_string(debug_values[3]) + ", "
-                        + std::to_string(debug_values[7])  + ", "+ std::to_string(debug_values[8]) + ", "+ std::to_string(debug_values[9]) + ", "
-                        + std::to_string(debug_values[10]) + ", "+ std::to_string(debug_values[4]) + ", "+ std::to_string(debug_values[5]) + ", "
-                        + std::to_string(debug_values[6])  + ", "+ std::to_string(debug_values[0]));
-      */
+      float total_MegaBitPerSecond_30Hz             = debug_values[1];
+      float total_MegaBitPerSecond_30Hz_color       = debug_values[2];
+      float total_MegaBitPerSecond_30Hz_depth       = debug_values[3];
+      float total_byte_base                         = debug_values[7];
+      float total_byte_enc                          = debug_values[8];
+      float total_byte_enc_color                    = debug_values[9];
+      float total_byte_enc_depth                    = debug_values[10];
+      float total_compression_ratio_percent         = debug_values[4];
+      float total_compression_ratio_color_percent   = debug_values[5];
+      float total_compression_ratio_depth_percent   = debug_values[6];
+      float total_time                              = debug_values[0];
+      float enc_time                                = debug_values[11];
+      float mask_time                               = debug_values[12];
 
-      set_debug_message("{\"total_MegaBitPerSecond@30Hz\" : \""                + std::to_string(debug_values[1]) + 
-                          "\",\"total_MegaBitPerSecond@30Hz_color\" : \""      + std::to_string(debug_values[2]) + 
-                          "\",\"total_MegaBitPerSecond@30Hz_depth\" : \""      + std::to_string(debug_values[3]) + 
-                          "\",\"total_byte_base\" : \""                        + std::to_string(debug_values[7]) + 
-                          "\",\"total_byte_enc\" : \""                         + std::to_string(debug_values[8]) + 
-                          "\",\"total_byte_enc_color\" : \""                   + std::to_string(debug_values[9]) + 
-                          "\",\"total_byte_enc_depth\" : \""                   + std::to_string(debug_values[10]) + 
-                          "\",\"total_compression_ratio_percent\" : \""        + std::to_string(debug_values[4]) + 
-                          "\",\"total_compression_ratio_color_percent\" : \""  + std::to_string(debug_values[5]) + 
-                          "\",\"total_compression_ratio_depth_percent\" : \""  + std::to_string(debug_values[6]) + 
-                          "\",\"total_time\" : \""                             + std::to_string(debug_values[0]) + 
+      float Mbits_Compressed        =  total_MegaBitPerSecond_30Hz/30;
+      float Mbits_Compressed_30f    =  total_MegaBitPerSecond_30Hz;
+      float comp_color_ratio        = (total_MegaBitPerSecond_30Hz_color/30)/Mbits_Compressed;
+      float comp_depth_ratio        = (total_MegaBitPerSecond_30Hz_depth/30)/Mbits_Compressed;
+      float Mbits_Uncompressed      = (8 * total_byte_base)/(1024 * 1024);
+      float Mbits_Uncompressed_30f  = (8 * 30.0 * total_byte_base)/(1024 * 1024);
+      
+      set_debug_message("{    \"Mbits_Compressed\" : \""                    + std::to_string(Mbits_Compressed) + 
+                          "\",\"Mbits_Compressed@30_Frames\" : \""          + std::to_string(Mbits_Compressed_30f) + 
+                          "\",\"Color_raito\" : \""                         + std::to_string(comp_color_ratio) + 
+                          "\",\"Depth_ratio\" : \""                         + std::to_string(comp_depth_ratio) + 
+                          "\",\"Mbits_Uncompressed\" : \""                  + std::to_string(Mbits_Uncompressed) + 
+                          "\",\"Mbits_Uncompressed@30_Frames\" : \""        + std::to_string(Mbits_Uncompressed_30f) + 
+                          "\",\"Compression_Ratio\" : \"~"                  + std::to_string(total_compression_ratio_percent) + "%" +
+                          "\",\"Compression_Ratio_(color)\" : \"~"          + std::to_string(total_compression_ratio_color_percent) + "%" +
+                          "\",\"Compression_Ratio_(depth)\" : \"~"          + std::to_string(total_compression_ratio_depth_percent) + "%" +
                           "\"}");
 
-
-      /*
-      std::cout << "\n   > Debug information: "                   << std::endl;
-      std::cout << "\t > total_MegaBitPerSecond@30Hz: "           << debug_values[1]<< std::endl;
-      std::cout << "\t > total_MegaBitPerSecond@30Hz_color: "     << debug_values[2]<< std::endl;
-      std::cout << "\t > total_MegaBitPerSecond@30Hz_depth:"      << debug_values[3]<< std::endl;
-      std::cout << "\t > total_byte_base: "                       << debug_values[7]<< std::endl;
-      std::cout << "\t > total_byte_enc: "                        << debug_values[8]<< std::endl;
-      std::cout << "\t > total_byte_enc_color: "                  << debug_values[9]<< std::endl;
-      std::cout << "\t > total_byte_enc_depth: "                  << debug_values[10]<< std::endl;
-      std::cout << "\t > total_compression_ratio_percent: "       << debug_values[4]<< std::endl;
-      std::cout << "\t > total_compression_ratio_color_percent: " << debug_values[5]<< std::endl;
-      std::cout << "\t > total_compression_ratio_depth_percent: " << debug_values[6]<< std::endl;
-      std::cout << "\t > total_time: "                            << debug_values[0]<< std::endl;
-      */
       got_debug = true;
     }
 
