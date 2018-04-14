@@ -11,6 +11,14 @@
 
 namespace video3d {
 
+template<typename T>
+const std::string toString(const T& value) {
+  std::stringstream ss;
+  ss.precision(3);
+  ss << value;
+  return ss.str();
+}
+
 NetKinectArray::NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
                                const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte)
   : m_mutex(),
@@ -85,8 +93,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.24:7051");
-  std::string endpoint_f("tcp://141.54.147.24:7001");
+  std::string endpoint_d("tcp://141.54.147.29:7051");
+  std::string endpoint_f("tcp://141.54.147.29:7001");
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
@@ -109,7 +117,7 @@ void NetKinectArray::readloop() {
     }
 
     
-    zmq::message_t zmqm_d(size.debug_byte);
+    zmq::message_t zmqm_d;//(size.debug_byte*sizeof(float));
     socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
     bool got_debug = false;
     if(zmqm_d.size() == size.debug_byte){ 
@@ -127,8 +135,11 @@ void NetKinectArray::readloop() {
       float total_compression_ratio_color_percent   = debug_values[5];
       float total_compression_ratio_depth_percent   = debug_values[6];
       float total_time                              = debug_values[0];
-      float enc_time                                = debug_values[11];
-      float mask_time                               = debug_values[12];
+      int comp_ratio = (int) (100.0f / total_compression_ratio_percent);
+      int comp_ratio_depth = (int) (100.0f / total_compression_ratio_depth_percent);
+      int comp_ratio_color = (int) (100.0f / total_compression_ratio_color_percent);
+      //float enc_time                                = debug_values[11];
+      //float mask_time                               = debug_values[12];
 
       float Mbits_Compressed        =  total_MegaBitPerSecond_30Hz/30;
       float Mbits_Compressed_30f    =  total_MegaBitPerSecond_30Hz;
@@ -136,22 +147,24 @@ void NetKinectArray::readloop() {
       float comp_depth_ratio        = (total_MegaBitPerSecond_30Hz_depth/30)/Mbits_Compressed;
       float Mbits_Uncompressed      = (8 * total_byte_base)/(1024 * 1024);
       float Mbits_Uncompressed_30f  = (8 * 30.0 * total_byte_base)/(1024 * 1024);
-      
-      set_debug_message("{    \"Mbits_Compressed\" : \""                    + std::to_string(Mbits_Compressed) + 
-                          "\",\"Mbits_Compressed@30_Frames\" : \""          + std::to_string(Mbits_Compressed_30f) + 
-                          "\",\"Color_raito\" : \""                         + std::to_string(comp_color_ratio) + 
-                          "\",\"Depth_ratio\" : \""                         + std::to_string(comp_depth_ratio) + 
-                          "\",\"Mbits_Uncompressed\" : \""                  + std::to_string(Mbits_Uncompressed) + 
-                          "\",\"Mbits_Uncompressed@30_Frames\" : \""        + std::to_string(Mbits_Uncompressed_30f) + 
-                          "\",\"Compression_Ratio\" : \"~"                  + std::to_string(total_compression_ratio_percent) + "%" +
-                          "\",\"Compression_Ratio_(color)\" : \"~"          + std::to_string(total_compression_ratio_color_percent) + "%" +
-                          "\",\"Compression_Ratio_(depth)\" : \"~"          + std::to_string(total_compression_ratio_depth_percent) + "%" +
+
+      set_debug_message("{    \"<i>Mbits Uncompressed</i>\" : \""           + toString<float>(Mbits_Uncompressed) + 
+                          "\",\"<i>Mbits Uncompressed@30 Frames</i>\" : \"" + toString<float>(Mbits_Uncompressed_30f) + 
+                          "\",\"<i>Mbits Compressed</i>\" : \""             + toString<float>(Mbits_Compressed) + 
+                          "\",\"<i>Mbits Compressed@30 Frames</i>\" : \""   + toString<float>(Mbits_Compressed_30f) + 
+                          "\",\"<i>Remaining Size</i>\" : \"~"              + toString<float>(total_compression_ratio_percent) + "%" +
+                          "\",\"<i>Compression Ratio</i>\" : \"~1:"         + toString<float>(comp_ratio) +
+                          "\",\"Remaining Size (color)\" : \"~"      + toString<float>(total_compression_ratio_color_percent) + "%" +
+                          "\",\"Compression Ratio (color)\" : \"~1:" + toString<float>(comp_ratio_color) +
+                          "\",\"Remaining Size (depth)\" : \"~"      + toString<float>(total_compression_ratio_depth_percent) + "%" +
+                          "\",\"Compression Ratio (depth)\" : \"~1:" + toString<float>(comp_ratio_depth) +
+                          "\",\"Color ratio\" : \""                  + toString<float>(comp_color_ratio) + 
+                          "\",\"Depth ratio\" : \""                  + toString<float>(comp_depth_ratio) + 
                           "\"}");
 
       got_debug = true;
     }
-
-
+    
     zmq::message_t zmqm_f(size.feedback_byte);
     feedback_val[0] = get_feedback_global_comp_lvl();
     feedback_val[1] = get_feedback_depth_comp_lvl();
