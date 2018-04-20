@@ -14,12 +14,9 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
 {
   public:
     NRPNode();
-    explicit NRPNode(const std::string &name, math::mat4 const &transform = math::mat4::identity());
+    NRPNode(const std::string &name, math::mat4 const &transform = math::mat4::identity());
 
-    void pre_draw();
-
-  private:
-    PagodaBinder *_binder;
+    std::shared_ptr<node::Node> deep_copy() const override;
 };
 }
 }

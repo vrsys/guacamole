@@ -1,13 +1,14 @@
 #include <GLFW/glfw3.h>
 
 #include <gua/guacamole.hpp>
-#include <gua/renderer/DebugViewPass.hpp>
 
+#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/MaterialLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
 #include <gua/nrp/pagoda_binder.hpp>
 #include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
 {
@@ -91,16 +92,6 @@ int main(int argc, char **argv)
 
     graph.add_node("/transform", z_axis);
 
-    auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-    light2->data.set_type(gua::node::LightNode::Type::SUN);
-    light2->data.set_brightness(2.f);
-    light2->data.set_shadow_cascaded_splits({0.1f, 1.f, 2.f, 5.f});
-    light2->data.set_shadow_near_clipping_in_sun_direction(1.0f);
-    light2->data.set_shadow_far_clipping_in_sun_direction(100.0f);
-    light2->data.set_enable_shadows(false);
-    light2->data.set_shadow_map_size(4096);
-    light2->translate(-11.82075, -19.38429, 17.2198);
-
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
@@ -116,6 +107,14 @@ int main(int argc, char **argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
+
+    auto pipe = std::make_shared<gua::PipelineDescription>();
+    pipe->add_pass(std::make_shared<gua::nrp::NRPPassDescription>());
+    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+    camera->set_pipeline_description(pipe);
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
@@ -152,7 +151,6 @@ int main(int argc, char **argv)
             gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
             nrp_root->set_transform(modelmatrix);
 
-            nrp_root->pre_draw();
             renderer.queue_draw({&graph});
         }
     });

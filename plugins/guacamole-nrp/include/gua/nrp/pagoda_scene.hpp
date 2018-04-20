@@ -38,16 +38,19 @@
 
 #include <gua/nrp/platform.hpp>
 #include <gua/nrp/pagoda_visual.hpp>
+#include <gua/nrp/pagoda_light.hpp>
 
 namespace gua
 {
 namespace nrp
 {
 typedef std::map<uint32_t, ptr_visual> visuals_map;
+typedef std::map<std::string, ptr_light> light_map;
 
 typedef std::map<uint32_t, gazebo::msgs::Pose> pose_msgs_map;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Visual const>> visual_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Scene const>> scene_msgs_list;
+typedef std::list<boost::shared_ptr<gazebo::msgs::Light const>> light_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Joint const>> joint_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Link const>> link_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Model const>> model_msgs_list;
@@ -65,22 +68,25 @@ class GUA_NRP_DLL PagodaScene
     ~PagodaScene();
 
     void set_root_node(gua::node::Node *root_node);
-    gua::node::Node *get_root_node() const;
-
-    const ptr_visual &get_world_visual() const;
 
     void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
     void on_model_msg(ConstModelPtr &msg);
     void on_response_msg(ConstResponsePtr &msg);
     void on_pose_msg(ConstPosesStampedPtr &msg);
+    void on_light_factory_msg(ConstLightPtr &msg);
+    void on_light_modify_msg(ConstLightPtr &msg);
 
     bool process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualType type = PagodaVisual::VT_ENTITY);
     bool process_link_msg(ConstLinkPtr &msg);
     bool process_joint_msg(ConstJointPtr &msg);
+    bool process_light_factory_msg(ConstLightPtr &msg);
+    bool process_light_modify_msg(ConstLightPtr &msg);
     bool process_model_msg(const gazebo::msgs::Model &msg);
     bool process_scene_msg(ConstScenePtr &msg);
 
-    void pre_render();
+  std::mutex &get_mutex_scenegraph() ;
+
+  void pre_render();
 
   private:
     visual_msgs_list _msgs_model_visual;
@@ -89,11 +95,14 @@ class GUA_NRP_DLL PagodaScene
     pose_msgs_map _msgs_pose;
     scene_msgs_list _msgs_scene;
     joint_msgs_list _msgs_joint;
+    light_msgs_list _msgs_light_factory;
+    light_msgs_list _msgs_light_modify;
     link_msgs_list _msgs_link;
     model_msgs_list _msgs_model;
     skeleton_msgs_list _msgs_skeleton_pose;
 
     visuals_map _visuals;
+    light_map _lights;
 
     std::mutex _mutex_receive;
     std::recursive_mutex _mutex_pose_msgs;

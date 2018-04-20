@@ -5,6 +5,7 @@
 #include <ctime>
 #include <fstream>
 #include <gua/node/Node.hpp>
+#include <gua/nrp/platform.hpp>
 
 namespace gua
 {
@@ -93,7 +94,11 @@ class GUA_NRP_DLL PagodaLog
 
   private:
     std::ofstream _ofstream;
+#ifndef NDEBUG
     LOG_LEVEL _log_level = DEBUG;
+#else
+    LOG_LEVEL _log_level = ERROR;
+#endif
 
     bool log(const char *msg)
     {

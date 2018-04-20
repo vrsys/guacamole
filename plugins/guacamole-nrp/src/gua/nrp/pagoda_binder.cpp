@@ -41,6 +41,9 @@ void PagodaBinder::_connect_to_transport_layer(int argc, char **argv)
     gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("~/pose/info", &PagodaBinder::callback_pose_info, this);
     gazebo::transport::SubscriberPtr sub_material = node->Subscribe("~/material", &PagodaBinder::callback_material, this);
 
+    gazebo::transport::SubscriberPtr sub_factory_light = node->Subscribe("~/factory/light", &PagodaBinder::callback_factory_light, this);
+    gazebo::transport::SubscriberPtr sub_modify_light = node->Subscribe("~/light/modify", &PagodaBinder::callback_modify_light, this);
+
     gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("~/request");
 
     gazebo::transport::SubscriberPtr sub_request = node->Subscribe("~/request", &PagodaBinder::callback_request, this);
@@ -116,5 +119,21 @@ void PagodaBinder::callback_response(ConstResponsePtr &ptr)
 
     _scene.on_response_msg(ptr);
 }
+void PagodaBinder::callback_factory_light(ConstLightPtr &ptr)
+{
+    _log.d("callback_factory_light");
+    _log.d(ptr->DebugString().c_str());
+
+    _scene.on_light_factory_msg(ptr);
+}
+void PagodaBinder::callback_modify_light(ConstLightPtr &ptr)
+{
+    _log.d("callback_modify_light");
+    _log.d(ptr->DebugString().c_str());
+
+    _scene.on_light_modify_msg(ptr);
+}
+void PagodaBinder::lock_scene() { _scene.get_mutex_scenegraph().lock(); }
+void PagodaBinder::unlock_scene() { _scene.get_mutex_scenegraph().unlock(); }
 }
 }

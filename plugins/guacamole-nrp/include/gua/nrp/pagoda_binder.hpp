@@ -38,9 +38,9 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include <gua/nrp/platform.hpp>
-#include <gua/nrp/pagoda_scene.hpp>
 #include <gua/nrp/pagoda_log.hpp>
+#include <gua/nrp/pagoda_scene.hpp>
+#include <gua/nrp/platform.hpp>
 
 namespace gua
 {
@@ -49,7 +49,14 @@ namespace nrp
 class GUA_NRP_DLL PagodaBinder
 {
   public:
-    PagodaBinder();
+    static PagodaBinder &get_instance()
+    {
+        static PagodaBinder pagoda_binder;
+        return pagoda_binder;
+    }
+    PagodaBinder(PagodaBinder const &) = delete;
+    void operator=(PagodaBinder const &) = delete;
+
     ~PagodaBinder();
 
     void bind_root_node(gua::node::Node *root_node);
@@ -57,7 +64,12 @@ class GUA_NRP_DLL PagodaBinder
 
     void pre_render();
 
+    void lock_scene();
+    void unlock_scene();
+
   private:
+    PagodaBinder();
+
     std::thread _worker;
     std::mutex _worker_mutex;
     std::condition_variable _worker_cv;
@@ -73,6 +85,8 @@ class GUA_NRP_DLL PagodaBinder
     void callback_skeleton_pose_info(ConstPoseAnimationPtr &ptr);
     void callback_model_info(ConstModelPtr &ptr);
     void callback_pose_info(ConstPosesStampedPtr &ptr);
+    void callback_factory_light(ConstLightPtr &ptr);
+    void callback_modify_light(ConstLightPtr &ptr);
     void callback_request(ConstRequestPtr &ptr);
     void callback_response(ConstResponsePtr &ptr);
 };
