@@ -153,21 +153,37 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
             // do nothing for now - keep unit scale.
         }
         else
-            gzerr << "Unknown geometry type[" << msg->geometry().type() << "]\n";
+            std::cerr << "Unknown geometry type[" << msg->geometry().type() << "]\n";
     }
 }
 
 bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
 {
-    std::cout << "attach_mesh(" << mesh_name << ")" << std::endl;
-
     if(mesh_name.empty())
         return false;
 
     unsigned int flags = !normalize_shape ? gua::TriMeshLoader::LOAD_MATERIALS : gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION;
 
-    auto geometry_node = _tml.create_geometry_from_file(mesh_name, mesh_name, flags);
+    static auto &chrs = "0123456789"
+                        "abcdefghijklmnopqrstuvwxyz"
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
+
+    std::string mesh_random_name;
+
+    int length = 8;
+
+    mesh_random_name.reserve(length);
+
+    while(length--)
+        mesh_random_name += chrs[pick(rg)];
+
+    auto geometry_node = _tml.create_geometry_from_file(mesh_random_name, mesh_name, flags);
     // geometry_node->set_draw_bounding_box(true);
+
+    //std::cout << "attach_mesh(" << mesh_random_name << ")" << std::endl;
 
     _node->add_child(geometry_node);
 
@@ -187,8 +203,8 @@ void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
 }
 void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
 {
-    std::cout << "set_pose(" << pose.pos.x << "," << pose.pos.y << "," << pose.pos.z << ")" << std::endl;
-    std::cout << "set_rotation(" << pose.rot.w << "," << pose.rot.x << "," << pose.rot.y << "," << pose.rot.z << ")" << std::endl;
+    // std::cout << "set_pose(" << pose.pos.x << "," << pose.pos.y << "," << pose.pos.z << ")" << std::endl;
+    // std::cout << "set_rotation(" << pose.rot.w << "," << pose.rot.x << "," << pose.rot.y << "," << pose.rot.z << ")" << std::endl;
 
     scm::math::mat4d translation = scm::math::make_translation(pose.pos.x, pose.pos.y, pose.pos.z);
     scm::math::quatd quaternion = scm::math::quatd(pose.rot.w, pose.rot.x, pose.rot.y, pose.rot.z);

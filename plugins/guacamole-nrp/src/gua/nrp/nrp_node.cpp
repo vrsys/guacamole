@@ -6,22 +6,24 @@ namespace nrp
 {
 NRPNode::NRPNode() : TransformNode()
 {
-    _binder = new PagodaBinder();
-    _binder->bind_root_node(this);
-    _binder->bind_transport_layer();
+    auto *binder = &PagodaBinder::get_instance();
+    binder->bind_root_node(this);
+    binder->bind_transport_layer();
 }
 NRPNode::NRPNode(const std::string &name, const math::mat4 &transform) : TransformNode(name, transform)
 {
-    _binder = new PagodaBinder();
-    _binder->bind_root_node(this);
-    _binder->bind_transport_layer();
+    auto *binder = &PagodaBinder::get_instance();
+    binder->bind_root_node(this);
+    binder->bind_transport_layer();
 }
-void NRPNode::pre_draw()
+std::shared_ptr<node::Node> NRPNode::deep_copy() const
 {
-    if(_binder != nullptr)
-    {
-        _binder->pre_render();
-    }
+    PagodaBinder::get_instance().lock_scene();
+    auto copied_node = node::Node::deep_copy();
+    PagodaBinder::get_instance().unlock_scene();
+
+    return  copied_node;
 }
+
 }
 }

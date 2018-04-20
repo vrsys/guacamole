@@ -1,10 +1,12 @@
 #ifndef GUACAMOLE_NRP_PASS_HPP
 #define GUACAMOLE_NRP_PASS_HPP
 
-#include <gua/renderer/Lod.hpp>
+#include <gua/nrp/pagoda_binder.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 namespace gua
+{
+namespace nrp
 {
 class GUA_NRP_DLL NRPPassDescription : public PipelinePassDescription
 {
@@ -16,6 +18,7 @@ class GUA_NRP_DLL NRPPassDescription : public PipelinePassDescription
 
     friend class Pipeline;
 };
+}
 }
 
 #endif // GUACAMOLE_NRP_PASS_HPP

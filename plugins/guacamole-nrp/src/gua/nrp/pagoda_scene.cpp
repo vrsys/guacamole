@@ -12,9 +12,13 @@ PagodaScene::~PagodaScene()
     _msgs_pose.clear();
     _msgs_scene.clear();
     _msgs_joint.clear();
+    _msgs_light_factory.clear();
+    _msgs_light_modify.clear();
     _msgs_link.clear();
 
     _visuals.clear();
+    _lights.clear();
+
     _world_visual.reset();
 }
 void PagodaScene::set_root_node(node::Node *root_node)
@@ -113,7 +117,7 @@ bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualTy
             }
 
             if(iter != _visuals.end())
-                gzerr << "Visual already exists. This shouldn't happen.\n";
+                std::cerr << "Visual already exists. This shouldn't happen.\n";
 
             // Make sure the parent visual exists before trying to add a child
             // visual
@@ -233,6 +237,42 @@ bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
 
     return true;
 }
+bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
+{
+    light_map::iterator iter;
+    iter = _lights.find(msg->name());
+
+    if (iter == _lights.end())
+    {
+        ptr_light light(new PagodaLight(msg->name(), _root_node));
+        light->load_from_msg(msg);
+        _lights[msg->name()] = light;
+    }
+    else
+    {
+        std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+bool PagodaScene::process_light_modify_msg(ConstLightPtr &msg)
+{
+    light_map::iterator iter;
+    iter = _lights.find(msg->name());
+
+    if (iter == _lights.end())
+    {
+        std::cerr  << "Light [" << msg->name() << "] not found." << " Use topic ~/factory/light to spawn a new light." << std::endl;
+        return false;
+    }
+    else
+    {
+        iter->second->load_from_msg(msg);
+    }
+
+    return true;
+}
 bool PagodaScene::process_model_msg(const gazebo::msgs::Model &msg)
 {
     std::string modelName, linkName;
@@ -333,7 +373,8 @@ bool PagodaScene::process_scene_msg(ConstScenePtr &msg)
 
     for(int i = 0; i < msg->light_size(); ++i)
     {
-        // ignore lights
+        boost::shared_ptr<gazebo::msgs::Light> lm(new gazebo::msgs::Light(msg->light(i)));
+        _msgs_light_factory.emplace_back(lm);
     }
 
     for(int i = 0; i < msg->joint_size(); ++i)
@@ -384,6 +425,8 @@ void PagodaScene::pre_render()
 
     scene_msgs_list scene_msgs_copy;
     model_msgs_list model_msgs_copy;
+    light_msgs_list light_factory_msgs_copy;
+    light_msgs_list light_modify_msgs_copy;
     visual_msgs_list model_visual_msgs_copy;
     visual_msgs_list link_visual_msgs_copy;
     visual_msgs_list visual_msgs_copy;
@@ -398,6 +441,12 @@ void PagodaScene::pre_render()
 
         std::copy(_msgs_model.begin(), _msgs_model.end(), std::back_inserter(model_msgs_copy));
         _msgs_model.clear();
+
+        std::copy(_msgs_light_factory.begin(), _msgs_light_factory.end(), std::back_inserter(light_factory_msgs_copy));
+        _msgs_light_factory.clear();
+
+        std::copy(_msgs_light_modify.begin(), _msgs_light_modify.end(), std::back_inserter(light_modify_msgs_copy));
+        _msgs_light_modify.clear();
 
         std::copy(_msgs_model_visual.begin(), _msgs_model_visual.end(), std::back_inserter(model_visual_msgs_copy));
         _msgs_model_visual.clear();
@@ -449,6 +498,24 @@ void PagodaScene::pre_render()
         }
     }
 
+    // Process the light factory messages.
+    for (auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
+    {
+        if (this->process_light_factory_msg(*light_factory_iter))
+            light_factory_msgs_copy.erase(light_factory_iter++);
+        else
+            ++light_factory_iter;
+    }
+
+    // Process the light modify messages.
+    for (auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
+    {
+        if (this->process_light_modify_msg(*light_modify_iter))
+            light_modify_msgs_copy.erase(light_modify_iter++);
+        else
+            ++light_modify_iter;
+    }
+
     for(auto model_visual_msgs_iter = model_visual_msgs_copy.begin(); model_visual_msgs_iter != model_visual_msgs_copy.end();)
     {
         if(this->process_visual_msg(*model_visual_msgs_iter, PagodaVisual::VT_MODEL))
@@ -497,6 +564,8 @@ void PagodaScene::pre_render()
 
         std::copy(scene_msgs_copy.begin(), scene_msgs_copy.end(), std::front_inserter(_msgs_scene));
         std::copy(model_msgs_copy.begin(), model_msgs_copy.end(), std::front_inserter(_msgs_model));
+        std::copy(light_factory_msgs_copy.begin(), light_factory_msgs_copy.end(), std::front_inserter(_msgs_light_factory));
+        std::copy(light_modify_msgs_copy.begin(), light_modify_msgs_copy.end(), std::front_inserter(_msgs_light_modify));
         std::copy(model_visual_msgs_copy.begin(), model_visual_msgs_copy.end(), std::front_inserter(_msgs_model_visual));
         std::copy(link_visual_msgs_copy.begin(), link_visual_msgs_copy.end(), std::front_inserter(_msgs_link_visual));
         std::copy(visual_msgs_copy.begin(), visual_msgs_copy.end(), std::front_inserter(_msgs_visual));
@@ -554,11 +623,20 @@ void PagodaScene::pre_render()
             else
                 ++skeleton_pose_iter;
         }
-
-        _mutex_scenegraph.unlock();
     }
+
+    _mutex_scenegraph.unlock();
 }
-const ptr_visual &PagodaScene::get_world_visual() const { return _world_visual; }
-gua::node::Node *PagodaScene::get_root_node() const { return _root_node; }
+std::mutex &PagodaScene::get_mutex_scenegraph() {
+    return _mutex_scenegraph;
+}
+void PagodaScene::on_light_factory_msg(ConstLightPtr &msg) {
+    std::lock_guard<std::mutex> lock(_mutex_receive);
+    _msgs_light_factory.emplace_back(msg);
+}
+void PagodaScene::on_light_modify_msg(ConstLightPtr &msg) {
+    std::lock_guard<std::mutex> lock(_mutex_receive);
+    _msgs_light_modify.emplace_back(msg);
+}
 }
 }
