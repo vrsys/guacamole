@@ -17,6 +17,7 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
     NRPNode(const std::string &name, math::mat4 const &transform = math::mat4::identity());
 
     std::shared_ptr<node::Node> deep_copy() const override;
+  void update_cache() override;
 };
 }
 }
