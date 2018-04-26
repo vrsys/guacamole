@@ -154,6 +154,53 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
         }
         else
             std::cerr << "Unknown geometry type[" << msg->geometry().type() << "]\n";
+
+        if(msg->has_material())
+        {
+            gazebo::msgs::Material material = msg->material();
+            gua::math::vec4 ambient, diffuse, specular, emissive;
+
+            if(material.has_script() && material.script().has_name())
+            {
+                gazebo::common::Color mat_ambient, mat_diffuse, mat_specular, mat_emissive;
+
+                bool material_colors = get_material_colors_for_material_name(material.script().name(), mat_ambient, mat_diffuse, mat_specular, mat_emissive);
+
+                if(material_colors)
+                {
+                    ambient = gua::math::vec4(mat_ambient.r, mat_ambient.g, mat_ambient.b, mat_ambient.a);
+                    diffuse = gua::math::vec4(mat_diffuse.r, mat_diffuse.g, mat_diffuse.b, mat_diffuse.a);
+                    specular = gua::math::vec4(mat_specular.r, mat_specular.g, mat_specular.b, mat_specular.a);
+                    emissive = gua::math::vec4(mat_emissive.r, mat_emissive.g, mat_emissive.b, mat_emissive.a);
+                }
+                else
+                {
+                    std::cerr << "Material not found in group General: " << material.script().name() << std::endl;
+                }
+            }else{
+                if(material.has_ambient())
+                {
+                    ambient = gua::math::vec4(material.ambient().r(), material.ambient().g(), material.ambient().b(), material.ambient().a());
+                }
+
+                if(material.has_diffuse())
+                {
+                    diffuse = gua::math::vec4(material.diffuse().r(), material.diffuse().g(), material.diffuse().b(), material.diffuse().a());
+                }
+
+                if(material.has_specular())
+                {
+                    specular = gua::math::vec4(material.specular().r(), material.specular().g(), material.specular().b(), material.specular().a());
+                }
+
+                if(material.has_emissive())
+                {
+                    emissive = gua::math::vec4(material.emissive().r(), material.emissive().g(), material.emissive().b(), material.emissive().a());
+                }
+            }
+
+            set_material(ambient, diffuse, specular, emissive);
+        }
     }
 }
 
@@ -180,10 +227,11 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
     while(length--)
         mesh_random_name += chrs[pick(rg)];
 
-    auto geometry_node = _tml.create_geometry_from_file(mesh_random_name, mesh_name, flags);
+    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(mesh_random_name, mesh_name, flags);
+
     // geometry_node->set_draw_bounding_box(true);
 
-    //std::cout << "attach_mesh(" << mesh_random_name << ")" << std::endl;
+    // std::cout << "attach_mesh(" << mesh_name << " , " << mesh_random_name << ")" << std::endl;
 
     _node->add_child(geometry_node);
 
@@ -192,6 +240,39 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
 
     return true;
 }
+
+void PagodaVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse, gua::math::vec4 &specular, gua::math::vec4 &emissive)
+{
+    // TODO: shading specifics are not accounted for
+
+    for(const std::shared_ptr<node::Node> &geometry_node : _node->get_children())
+    {
+        std::stack<std::shared_ptr<node::Node>> trav_stack;
+        trav_stack.push(geometry_node);
+
+        while(!trav_stack.empty())
+        {
+            std::shared_ptr<node::Node> top = trav_stack.top();
+            trav_stack.pop();
+
+            for(const std::shared_ptr<node::Node> &child : top->get_children())
+            {
+                trav_stack.push(child);
+            }
+
+            std::shared_ptr<gua::node::TriMeshNode> tm_candidate = std::dynamic_pointer_cast<gua::node::TriMeshNode>(top);
+            if(tm_candidate)
+            {
+                std::shared_ptr<Material> material = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
+                material->set_uniform("Color", ambient);
+                tm_candidate->set_material(material);
+
+                //std::cout << "Material set to: " << ambient << std::endl;
+            }
+        }
+    }
+}
+
 void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
 {
     if(_scale == scale.Ign())
@@ -225,5 +306,34 @@ const gazebo::math::Vector3 &PagodaVisual::get_scale() const { return _scale; }
 const ptr_visual PagodaVisual::get_parent() const { return _parent; }
 void PagodaVisual::detach_meshes() { _node->clear_children(); }
 const std::shared_ptr<gua::node::TransformNode> PagodaVisual::get_node() const { return _node; }
+bool PagodaVisual::get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
+                                                         gazebo::common::Color &emissive)
+{
+    Ogre::MaterialPtr material_ptr;
+
+    if(Ogre::MaterialManager::getSingleton().resourceExists(material_name))
+    {
+        material_ptr = Ogre::MaterialManager::getSingleton().getByName(material_name, "General");
+
+        if(material_ptr.isNull())
+            return false;
+
+        Ogre::Technique *technique = material_ptr->getTechnique(0);
+        if(technique && technique->getNumPasses() > 0)
+        {
+            Ogre::Pass *pass = technique->getPass(0);
+            if(pass)
+            {
+                ambient = gazebo::rendering::Conversions::Convert(pass->getAmbient());
+                diffuse = gazebo::rendering::Conversions::Convert(pass->getDiffuse());
+                specular = gazebo::rendering::Conversions::Convert(pass->getSpecular());
+                emissive = gazebo::rendering::Conversions::Convert(pass->getSelfIllumination());
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 }
 }

@@ -359,7 +359,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const &importer, aiScene const *ai_scene, aiNode *ai_root, std::string const &file_name, unsigned flags,
                                                     unsigned &mesh_count)
 {
-    std::cout << "get_tree, " << file_name.c_str() << std::endl;
+    // std::cout << "get_tree, " << file_name.c_str() << std::endl;
 
     // creates a geometry node and returns it
     auto load_geometry = [&](aiNode *ai_current, int i) {

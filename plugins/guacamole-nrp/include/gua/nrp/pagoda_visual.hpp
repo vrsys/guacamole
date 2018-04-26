@@ -4,9 +4,19 @@
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/common.hh>
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/rendering/Material.hh>
 #include <gazebo/rendering/Visual.hh>
+
+#include "OgreMaterialManager.h"
+#include "OgrePass.h"
+#include "OgreTechnique.h"
+#include "gazebo/rendering/Conversions.hh"
+
+#include <gua/guacamole.hpp>
+
 #include <gua/node/Node.hpp>
 #include <gua/node/TransformNode.hpp>
+#include <gua/renderer/MaterialLoader.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <memory>
 
@@ -51,6 +61,7 @@ class GUA_NRP_DLL PagodaVisual
 
     void set_scale(const gazebo::math::Vector3 &scale);
     void set_pose(const gazebo::math::Pose &pose);
+    void set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse, gua::math::vec4 &specular, gua::math::vec4 &emissive);
 
     const scm::math::mat4d flip_transform(const scm::math::mat4d &transform);
 
@@ -70,6 +81,8 @@ class GUA_NRP_DLL PagodaVisual
 
     bool attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset);
     void detach_meshes();
+    bool get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
+                                               gazebo::common::Color &emissive);
 };
 }
 }

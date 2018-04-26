@@ -1,10 +1,284 @@
 #include <gua/nrp/pagoda_joint_visual.hpp>
 #include <gua/nrp/pagoda_scene.hpp>
+
+#include "OgreGpuProgramManager.h"
+#include "OgreHighLevelGpuProgramManager.h"
+#include "OgreMaterialManager.h"
+#include "OgreResourceGroupManager.h"
+#include "OgreRoot.h"
+#include "OgreTextureManager.h"
+
 namespace gua
 {
 namespace nrp
 {
-PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs() {}
+class SimplifiedPassTranslator : public Ogre::PassTranslator
+{
+  public:
+    void translate(Ogre::ScriptCompiler *compiler, const Ogre::AbstractNodePtr &node) override
+    {
+        using namespace Ogre;
+        ObjectAbstractNode *obj = reinterpret_cast<ObjectAbstractNode*>(node.get());
+
+        Technique *technique = any_cast<Technique*>(obj->parent->context);
+        mPass = technique->createPass();
+        obj->context = Any(mPass);
+
+        // Get the name of the technique
+        if(!obj->name.empty())
+            mPass->setName(obj->name);
+
+        for(AbstractNodeList::iterator i = obj->children.begin(); i != obj->children.end(); ++i)
+        {
+            if((*i)->type == ANT_PROPERTY)
+            {
+                PropertyAbstractNode *prop = reinterpret_cast<PropertyAbstractNode *>((*i).get());
+                switch(prop->id)
+                {
+                case ID_AMBIENT:
+                    if(prop->values.empty())
+                    {
+                        compiler->addError(ScriptCompiler::CE_NUMBEREXPECTED, prop->file, prop->line);
+                    }
+                    else if(prop->values.size() > 4)
+                    {
+                        compiler->addError(ScriptCompiler::CE_FEWERPARAMETERSEXPECTED, prop->file, prop->line, "ambient must have at most 4 parameters");
+                    }
+                    else
+                    {
+                        if(prop->values.front()->type == ANT_ATOM && ((AtomAbstractNode *)prop->values.front().get())->id == ID_VERTEXCOLOUR)
+                        {
+                            mPass->setVertexColourTracking(mPass->getVertexColourTracking() | TVC_AMBIENT);
+                        }
+                        else
+                        {
+                            ColourValue val = ColourValue::White;
+                            if(getColour(prop->values.begin(), prop->values.end(), &val))
+                                mPass->setAmbient(val);
+                            else
+                                compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "ambient requires 3 or 4 colour arguments, or a \"vertexcolour\" directive");
+                        }
+                    }
+                    break;
+                case ID_DIFFUSE:
+                    if(prop->values.empty())
+                    {
+                        compiler->addError(ScriptCompiler::CE_NUMBEREXPECTED, prop->file, prop->line);
+                    }
+                    else if(prop->values.size() > 4)
+                    {
+                        compiler->addError(ScriptCompiler::CE_FEWERPARAMETERSEXPECTED, prop->file, prop->line, "diffuse must have at most 4 arguments");
+                    }
+                    else
+                    {
+                        if(prop->values.front()->type == ANT_ATOM && ((AtomAbstractNode *)prop->values.front().get())->id == ID_VERTEXCOLOUR)
+                        {
+                            mPass->setVertexColourTracking(mPass->getVertexColourTracking() | TVC_DIFFUSE);
+                        }
+                        else
+                        {
+                            ColourValue val = ColourValue::White;
+                            if(getColour(prop->values.begin(), prop->values.end(), &val))
+                                mPass->setDiffuse(val);
+                            else
+                                compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "diffuse requires 3 or 4 colour arguments, or a \"vertexcolour\" directive");
+                        }
+                    }
+                    break;
+                case ID_SPECULAR:
+                    if(prop->values.empty())
+                    {
+                        compiler->addError(ScriptCompiler::CE_NUMBEREXPECTED, prop->file, prop->line);
+                    }
+                    else if(prop->values.size() > 5)
+                    {
+                        compiler->addError(ScriptCompiler::CE_FEWERPARAMETERSEXPECTED, prop->file, prop->line, "specular must have at most 5 arguments");
+                    }
+                    else
+                    {
+                        if(prop->values.front()->type == ANT_ATOM && ((AtomAbstractNode *)prop->values.front().get())->id == ID_VERTEXCOLOUR)
+                        {
+                            mPass->setVertexColourTracking(mPass->getVertexColourTracking() | TVC_SPECULAR);
+
+                            if(prop->values.size() >= 2)
+                            {
+                                Real val = 0;
+                                if(getReal(prop->values.back(), &val))
+                                    mPass->setShininess(val);
+                                else
+                                    compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line,
+                                                       "specular does not support \"" + prop->values.back()->getValue() + "\" as its second argument");
+                            }
+                        }
+                        else
+                        {
+                            if(prop->values.size() < 4)
+                            {
+                                compiler->addError(ScriptCompiler::CE_NUMBEREXPECTED, prop->file, prop->line, "specular expects at least 4 arguments");
+                            }
+                            else
+                            {
+                                AbstractNodeList::const_iterator i0 = getNodeAt(prop->values, 0), i1 = getNodeAt(prop->values, 1), i2 = getNodeAt(prop->values, 2);
+                                ColourValue val(0.0f, 0.0f, 0.0f, 1.0f);
+                                if(getFloat(*i0, &val.r) && getFloat(*i1, &val.g) && getFloat(*i2, &val.b))
+                                {
+                                    if(prop->values.size() == 4)
+                                    {
+                                        mPass->setSpecular(val);
+
+                                        AbstractNodeList::const_iterator i3 = getNodeAt(prop->values, 3);
+                                        Real shininess = 0.0f;
+                                        if(getReal(*i3, &shininess))
+                                            mPass->setShininess(shininess);
+                                        else
+                                            compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "specular fourth argument must be a valid number for shininess attribute");
+                                    }
+                                    else
+                                    {
+                                        AbstractNodeList::const_iterator i3 = getNodeAt(prop->values, 3);
+                                        if(!getFloat(*i3, &val.a))
+                                            compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "specular fourth argument must be a valid color component value");
+                                        else
+                                            mPass->setSpecular(val);
+
+                                        AbstractNodeList::const_iterator i4 = getNodeAt(prop->values, 4);
+                                        Real shininess = 0.0f;
+                                        if(getReal(*i4, &shininess))
+                                            mPass->setShininess(shininess);
+                                        else
+                                            compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "specular fourth argument must be a valid number for shininess attribute");
+                                    }
+                                }
+                                else
+                                {
+                                    compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "specular must have first 3 arguments be a valid colour");
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case ID_EMISSIVE:
+                    if(prop->values.empty())
+                    {
+                        compiler->addError(ScriptCompiler::CE_NUMBEREXPECTED, prop->file, prop->line);
+                    }
+                    else if(prop->values.size() > 4)
+                    {
+                        compiler->addError(ScriptCompiler::CE_FEWERPARAMETERSEXPECTED, prop->file, prop->line, "emissive must have at most 4 arguments");
+                    }
+                    else
+                    {
+                        if(prop->values.front()->type == ANT_ATOM && ((AtomAbstractNode *)prop->values.front().get())->id == ID_VERTEXCOLOUR)
+                        {
+                            mPass->setVertexColourTracking(mPass->getVertexColourTracking() | TVC_EMISSIVE);
+                        }
+                        else
+                        {
+                            ColourValue val(0.0f, 0.0f, 0.0f, 1.0f);
+                            if(getColour(prop->values.begin(), prop->values.end(), &val))
+                                mPass->setSelfIllumination(val);
+                            else
+                                compiler->addError(ScriptCompiler::CE_INVALIDPARAMETERS, prop->file, prop->line, "emissive requires 3 or 4 colour arguments, or a \"vertexcolour\" directive");
+                        }
+                    }
+                    break;
+                }
+            }
+            else if((*i)->type == ANT_OBJECT)
+            {
+                ObjectAbstractNode *child = reinterpret_cast<ObjectAbstractNode *>((*i).get());
+                processNode(compiler, *i);
+            }
+        }
+    }
+};
+class SimplifiedScriptTranslator : public Ogre::ScriptTranslatorManager
+{
+  public:
+    SimplifiedScriptTranslator() {}
+    size_t getNumTranslators() const { return 3; }
+    Ogre::ScriptTranslator *getTranslator(const Ogre::AbstractNodePtr &node)
+    {
+        using namespace Ogre;
+
+        Ogre::ScriptTranslator *translator = 0;
+
+        if(node->type == ANT_OBJECT)
+        {
+            ObjectAbstractNode *obj = reinterpret_cast<ObjectAbstractNode *>(node.get());
+            ObjectAbstractNode *parent = obj->parent ? reinterpret_cast<ObjectAbstractNode *>(obj->parent) : 0;
+            if(obj->id == ID_MATERIAL)
+                translator = &mMaterialTranslator;
+            else if(obj->id == ID_TECHNIQUE && parent && parent->id == ID_MATERIAL)
+                translator = &mTechniqueTranslator;
+            else if(obj->id == ID_PASS && parent && parent->id == ID_TECHNIQUE)
+                translator = &mPassTranslator;
+            // TODO: investigate possibility of using textures, particles, etc.
+            //          else if(obj->id == ID_TEXTURE_UNIT && parent && parent->id == ID_PASS)
+            //              translator = &mTextureUnitTranslator;
+            //          else if(obj->id == ID_TEXTURE_SOURCE && parent && parent->id == ID_TEXTURE_UNIT)
+            //              translator = &mTextureSourceTranslator;
+            //          else if(obj->id == ID_FRAGMENT_PROGRAM ||
+            //              obj->id == ID_VERTEX_PROGRAM ||
+            //              obj->id == ID_GEOMETRY_PROGRAM ||
+            //              obj->id == ID_TESSELATION_HULL_PROGRAM ||
+            //              obj->id == ID_TESSELATION_DOMAIN_PROGRAM ||
+            //              obj->id == ID_COMPUTE_PROGRAM)
+            //              translator = &mGpuProgramTranslator;
+            //          else if(obj->id == ID_SHARED_PARAMS)
+            //              translator = &mSharedParamsTranslator;
+            //          else if(obj->id == ID_PARTICLE_SYSTEM)
+            //              translator = &mParticleSystemTranslator;
+            //          else if(obj->id == ID_EMITTER)
+            //              translator = &mParticleEmitterTranslator;
+            //          else if(obj->id == ID_AFFECTOR)
+            //              translator = &mParticleAffectorTranslator;
+            //          else if(obj->id == ID_COMPOSITOR)
+            //              translator = &mCompositorTranslator;
+            //          else if(obj->id == ID_TECHNIQUE && parent && parent->id == ID_COMPOSITOR)
+            //              translator = &mCompositionTechniqueTranslator;
+            //          else if((obj->id == ID_TARGET || obj->id == ID_TARGET_OUTPUT) && parent && parent->id == ID_TECHNIQUE)
+            //              translator = &mCompositionTargetPassTranslator;
+            //          else if(obj->id == ID_PASS && parent && (parent->id == ID_TARGET || parent->id == ID_TARGET_OUTPUT))
+            //              translator = &mCompositionPassTranslator;
+        }
+        return translator;
+    }
+
+  private:
+    Ogre::MaterialTranslator mMaterialTranslator;
+    Ogre::TechniqueTranslator mTechniqueTranslator;
+    SimplifiedPassTranslator mPassTranslator;
+};
+
+PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
+{
+    new Ogre::LodStrategyManager();
+    new Ogre::LogManager();
+    new Ogre::ResourceGroupManager();
+    new Ogre::HighLevelGpuProgramManager();
+    new Ogre::ScriptCompilerManager();
+    new Ogre::MaterialManager();
+
+    Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+
+    Ogre::MaterialManager::getSingleton().initialise();
+
+    auto mock_translator = new SimplifiedScriptTranslator();
+
+    Ogre::ScriptCompilerManager::getSingleton().clearTranslatorManagers();
+    Ogre::ScriptCompilerManager::getSingleton().addTranslatorManager(mock_translator);
+
+    Ogre::DataStreamPtr ptr_ds_grid(
+        new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/home/xaf/NRP/gazebo/media/materials/scripts/grid.material", std::fstream::in), false));
+    Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_grid, "General");
+    ptr_ds_grid.setNull();
+
+    Ogre::DataStreamPtr ptr_ds_gazebo(
+        new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/home/xaf/NRP/gazebo/media/materials/scripts/gazebo-copy.material", std::fstream::in), false));
+    Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_gazebo, "General");
+    ptr_ds_gazebo.setNull();
+}
 PagodaScene::~PagodaScene()
 {
     _msgs_model.clear();
@@ -242,7 +516,7 @@ bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
     light_map::iterator iter;
     iter = _lights.find(msg->name());
 
-    if (iter == _lights.end())
+    if(iter == _lights.end())
     {
         ptr_light light(new PagodaLight(msg->name(), _root_node));
         light->load_from_msg(msg);
@@ -250,7 +524,8 @@ bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
     }
     else
     {
-        std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
+        // TODO: happens too frequently
+        // std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
         return false;
     }
 
@@ -261,9 +536,10 @@ bool PagodaScene::process_light_modify_msg(ConstLightPtr &msg)
     light_map::iterator iter;
     iter = _lights.find(msg->name());
 
-    if (iter == _lights.end())
+    if(iter == _lights.end())
     {
-        std::cerr  << "Light [" << msg->name() << "] not found." << " Use topic ~/factory/light to spawn a new light." << std::endl;
+        std::cerr << "Light [" << msg->name() << "] not found."
+                  << " Use topic ~/factory/light to spawn a new light." << std::endl;
         return false;
     }
     else
@@ -499,18 +775,18 @@ void PagodaScene::pre_render()
     }
 
     // Process the light factory messages.
-    for (auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
+    for(auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
     {
-        if (this->process_light_factory_msg(*light_factory_iter))
+        if(this->process_light_factory_msg(*light_factory_iter))
             light_factory_msgs_copy.erase(light_factory_iter++);
         else
             ++light_factory_iter;
     }
 
     // Process the light modify messages.
-    for (auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
+    for(auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
     {
-        if (this->process_light_modify_msg(*light_modify_iter))
+        if(this->process_light_modify_msg(*light_modify_iter))
             light_modify_msgs_copy.erase(light_modify_iter++);
         else
             ++light_modify_iter;
@@ -627,14 +903,14 @@ void PagodaScene::pre_render()
 
     _mutex_scenegraph.unlock();
 }
-std::mutex &PagodaScene::get_mutex_scenegraph() {
-    return _mutex_scenegraph;
-}
-void PagodaScene::on_light_factory_msg(ConstLightPtr &msg) {
+std::mutex &PagodaScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
+void PagodaScene::on_light_factory_msg(ConstLightPtr &msg)
+{
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_light_factory.emplace_back(msg);
 }
-void PagodaScene::on_light_modify_msg(ConstLightPtr &msg) {
+void PagodaScene::on_light_modify_msg(ConstLightPtr &msg)
+{
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_light_modify.emplace_back(msg);
 }
