@@ -36,9 +36,9 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include <gua/nrp/platform.hpp>
-#include <gua/nrp/pagoda_visual.hpp>
 #include <gua/nrp/pagoda_light.hpp>
+#include <gua/nrp/pagoda_visual.hpp>
+#include <gua/nrp/platform.hpp>
 
 namespace gua
 {
@@ -84,9 +84,9 @@ class GUA_NRP_DLL PagodaScene
     bool process_model_msg(const gazebo::msgs::Model &msg);
     bool process_scene_msg(ConstScenePtr &msg);
 
-  std::mutex &get_mutex_scenegraph() ;
+    std::mutex &get_mutex_scenegraph();
 
-  void pre_render();
+    void pre_render();
 
   private:
     visual_msgs_list _msgs_model_visual;
