@@ -278,6 +278,10 @@ PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_
         new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/home/xaf/NRP/gazebo/media/materials/scripts/gazebo-copy.material", std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_gazebo, "General");
     ptr_ds_gazebo.setNull();
+
+    auto uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/materials/uniform_color.gmd");
+    auto uniform_color_shader (std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
+    gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
 }
 PagodaScene::~PagodaScene()
 {
@@ -525,8 +529,8 @@ bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
     else
     {
         // TODO: happens too frequently
-        // std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
-        return false;
+        std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
+        return process_light_modify_msg(msg);
     }
 
     return true;
@@ -540,7 +544,7 @@ bool PagodaScene::process_light_modify_msg(ConstLightPtr &msg)
     {
         std::cerr << "Light [" << msg->name() << "] not found."
                   << " Use topic ~/factory/light to spawn a new light." << std::endl;
-        return false;
+        return process_light_factory_msg(msg);
     }
     else
     {

@@ -177,7 +177,9 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
                 {
                     std::cerr << "Material not found in group General: " << material.script().name() << std::endl;
                 }
-            }else{
+            }
+            else
+            {
                 if(material.has_ambient())
                 {
                     ambient = gua::math::vec4(material.ambient().r(), material.ambient().g(), material.ambient().b(), material.ambient().a());
@@ -263,11 +265,16 @@ void PagodaVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffu
             std::shared_ptr<gua::node::TriMeshNode> tm_candidate = std::dynamic_pointer_cast<gua::node::TriMeshNode>(top);
             if(tm_candidate)
             {
-                std::shared_ptr<Material> material = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
-                material->set_uniform("Color", ambient);
+                auto material = gua::MaterialShaderDatabase::instance()->lookup("overwrite_color")->make_new_material();
+
+                material->set_uniform("color", gua::math::vec3f((float)ambient.r, (float)ambient.g, (float)ambient.b));
+                material->set_uniform("metalness", (float)(specular.r + specular.g + specular.b) / 3.f);
+                material->set_uniform("roughness", (float)(diffuse.r + specular.g + specular.b) / 3.f);
+                material->set_uniform("emissivity", (float)(emissive.r + emissive.g + emissive.b) / 3.f);
+
                 tm_candidate->set_material(material);
 
-                //std::cout << "Material set to: " << ambient << std::endl;
+                // std::cout << "Material set to: " << ambient << std::endl;
             }
         }
     }

@@ -107,6 +107,8 @@ int main(int argc, char **argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
+    camera->config.set_near_clip(0.1f);
+    camera->config.set_far_clip(1000.0f);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::nrp::NRPPassDescription>());
@@ -114,6 +116,21 @@ int main(int argc, char **argv)
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+
+    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+
+    camera->get_pipeline_description()->get_resolve_pass()->ssao_intensity(1.0);
+    camera->get_pipeline_description()->get_resolve_pass()->ssao_enable(true);
+    camera->get_pipeline_description()->get_resolve_pass()->ssao_falloff(1.0);
+    camera->get_pipeline_description()->get_resolve_pass()->ssao_radius(4.0);
+
+    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadows(true);
+    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_radius(1.0);
+    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_intensity(0.9);
+
+    camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+    camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+
     camera->set_pipeline_description(pipe);
 
     auto window = std::make_shared<gua::GlfwWindow>();

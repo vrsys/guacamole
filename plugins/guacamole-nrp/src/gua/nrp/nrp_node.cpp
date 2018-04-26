@@ -22,8 +22,12 @@ std::shared_ptr<node::Node> NRPNode::deep_copy() const
     auto copied_node = node::Node::deep_copy();
     PagodaBinder::get_instance().unlock_scene();
 
-    return  copied_node;
+    return copied_node;
 }
-
+void NRPNode::update_cache() {
+    PagodaBinder::get_instance().lock_scene();
+    Node::update_cache();
+    PagodaBinder::get_instance().unlock_scene();
+}
 }
 }
