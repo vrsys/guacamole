@@ -1,3 +1,5 @@
+#include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/pagoda_binder.hpp>
 
 namespace gua
@@ -10,7 +12,8 @@ PagodaBinder::~PagodaBinder()
     _halt_transport_layer();
     _worker.join();
 }
-void PagodaBinder::bind_root_node(gua::node::Node *root_node) { _scene.set_root_node(root_node); }
+void PagodaBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_node(root_node); }
+void PagodaBinder::bind_cam_node(gua::nrp::NRPCameraNode *cam_node) { _scene.set_cam_node(cam_node); }
 void PagodaBinder::bind_transport_layer()
 {
     _worker = std::thread([&] { _connect_to_transport_layer(0, nullptr); });
