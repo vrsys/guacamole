@@ -45,11 +45,19 @@ void PagodaLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Ligh
         // specular color not used if diffuse is given
         _node->data.set_color(gua::utils::Color3f(msg->specular().r(), msg->specular().g(), msg->specular().b()));
     }
+    //else
+    //{
+        //_node->data.set_enable_specular_shading(false);
+    //}
 
     if(msg->has_diffuse())
     {
         _node->data.set_enable_diffuse_shading(true);
         _node->data.set_color(gua::utils::Color3f(msg->diffuse().r(), msg->diffuse().g(), msg->diffuse().b()));
+    }
+    else
+    {
+        _node->data.set_enable_diffuse_shading(false);
     }
 
     if(msg->has_type())
@@ -84,7 +92,7 @@ void PagodaLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Ligh
                 set_direction(msg->direction());
             }
 
-            _node->data.set_brightness(10 * (msg->diffuse().r()+ msg->diffuse().g() + msg->diffuse().b()) / 3.0f);
+            _node->data.set_brightness(10 * (msg->diffuse().r() + msg->diffuse().g() + msg->diffuse().b()) / 3.0f);
 
             break;
         }

@@ -2,7 +2,7 @@
 #define GUA_INCLUDE_NRP_HPP
 
 #include <gua/nrp/nrp_node.hpp>
-#include <gua/nrp/nrp_pass.hpp>
+#include <gua/nrp/nrp_cam_node.hpp>
 
 #if defined (_MSC_VER)
 #if defined (GUA_NRP_LIBRARY)

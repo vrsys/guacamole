@@ -1,3 +1,5 @@
+#include <gua/nrp/nrp_cam_node.hpp>
+#include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/pagoda_joint_visual.hpp>
 #include <gua/nrp/pagoda_scene.hpp>
 
@@ -18,9 +20,9 @@ class SimplifiedPassTranslator : public Ogre::PassTranslator
     void translate(Ogre::ScriptCompiler *compiler, const Ogre::AbstractNodePtr &node) override
     {
         using namespace Ogre;
-        ObjectAbstractNode *obj = reinterpret_cast<ObjectAbstractNode*>(node.get());
+        ObjectAbstractNode *obj = reinterpret_cast<ObjectAbstractNode *>(node.get());
 
-        Technique *technique = any_cast<Technique*>(obj->parent->context);
+        Technique *technique = any_cast<Technique *>(obj->parent->context);
         mPass = technique->createPass();
         obj->context = Any(mPass);
 
@@ -280,7 +282,7 @@ PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_
     ptr_ds_gazebo.setNull();
 
     auto uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/materials/uniform_color.gmd");
-    auto uniform_color_shader (std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
+    auto uniform_color_shader(std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
     gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
 }
 PagodaScene::~PagodaScene()
@@ -299,11 +301,17 @@ PagodaScene::~PagodaScene()
 
     _world_visual.reset();
 }
-void PagodaScene::set_root_node(node::Node *root_node)
+void PagodaScene::set_root_node(gua::nrp::NRPNode *root_node)
 {
-    _root_node = root_node;
     _mutex_scenegraph.lock();
+    _root_node = root_node;
     _world_visual.reset(new PagodaVisual("world_visual", _root_node));
+    _mutex_scenegraph.unlock();
+}
+void PagodaScene::set_cam_node(gua::nrp::NRPCameraNode *cam_node)
+{
+    _mutex_scenegraph.lock();
+    _cam_node = cam_node;
     _mutex_scenegraph.unlock();
 }
 void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
@@ -529,7 +537,8 @@ bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
     else
     {
         // TODO: happens too frequently
-        std::cerr << "Light [" << msg->name() << "] already exists." << " Use topic ~/light/modify to modify it." << std::endl;
+        std::cerr << "Light [" << msg->name() << "] already exists."
+                  << " Use topic ~/light/modify to modify it." << std::endl;
         return process_light_modify_msg(msg);
     }
 
@@ -665,12 +674,18 @@ bool PagodaScene::process_scene_msg(ConstScenePtr &msg)
 
     if(msg->has_ambient())
     {
-        // ignore ambient color
+        auto pipe = _cam_node->get_pipeline_description();
+        pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+        pipe->get_resolve_pass()->environment_lighting(gua::utils::Color3f(msg->ambient().r(), msg->ambient().g(), msg->ambient().b()));
+        pipe->get_resolve_pass()->touch();
     }
 
     if(msg->has_background())
     {
-        // ignore background
+        auto pipe = _cam_node->get_pipeline_description();
+        pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
+        pipe->get_resolve_pass()->background_color(gua::utils::Color3f(msg->background().r(), msg->background().g(), msg->background().b()));
+        pipe->get_resolve_pass()->touch();
     }
 
     if(msg->has_shadows())

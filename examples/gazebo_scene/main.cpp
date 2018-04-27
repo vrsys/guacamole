@@ -3,11 +3,11 @@
 #include <gua/guacamole.hpp>
 
 #include <gua/renderer/SSAAPass.hpp>
-#include <gua/renderer/MaterialLoader.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#include <gua/nrp/pagoda_binder.hpp>
 #include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp/nrp_cam_node.hpp>
+#include <gua/nrp/nrp_pass.hpp>
 #include <gua/nrp.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
@@ -61,37 +61,6 @@ int main(int argc, char **argv)
 
     auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
 
-    auto plain_red_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    plain_red_material->set_uniform("Color", gua::math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    auto plain_green_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    plain_green_material->set_uniform("Color", gua::math::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    auto plain_blue_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    plain_blue_material->set_uniform("Color", gua::math::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-    auto x_axis = loader.create_geometry_from_file("x_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_red_material,
-                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
-
-    x_axis->scale(1.0, 0.01, 0.01);
-    x_axis->translate(0.5, 0., 0.);
-
-    graph.add_node("/transform", x_axis);
-
-    auto y_axis = loader.create_geometry_from_file("y_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_green_material,
-                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
-
-    y_axis->scale(0.01, 1.0, 0.01);
-    y_axis->translate(0., 0.5, 0.);
-
-    graph.add_node("/transform", y_axis);
-
-    auto z_axis = loader.create_geometry_from_file("z_axis", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj", plain_blue_material,
-                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
-
-    z_axis->scale(0.01, 0.01, 1.0);
-    z_axis->translate(0., 0., 0.5);
-
-    graph.add_node("/transform", z_axis);
-
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
@@ -100,7 +69,8 @@ int main(int argc, char **argv)
 
     auto resolution = gua::math::vec2ui(1920, 1080);
 
-    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+    auto camera = graph.add_node<gua::nrp::NRPCameraNode>("/screen", "cam");
+
     camera->translate(0, 0, 2.0);
     camera->config.set_resolution(resolution);
     camera->config.set_screen_path("/screen");
@@ -117,19 +87,14 @@ int main(int argc, char **argv)
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    pipe->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
-    camera->get_pipeline_description()->get_resolve_pass()->ssao_intensity(1.0);
-    camera->get_pipeline_description()->get_resolve_pass()->ssao_enable(true);
-    camera->get_pipeline_description()->get_resolve_pass()->ssao_falloff(1.0);
-    camera->get_pipeline_description()->get_resolve_pass()->ssao_radius(4.0);
+    pipe->get_resolve_pass()->ssao_intensity(1.0);
+    pipe->get_resolve_pass()->ssao_enable(true);
+    pipe->get_resolve_pass()->ssao_falloff(1.0);
+    pipe->get_resolve_pass()->ssao_radius(4.0);
 
-    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadows(true);
-    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_radius(1.0);
-    camera->get_pipeline_description()->get_resolve_pass()->screen_space_shadow_intensity(0.9);
-
-    camera->get_pipeline_description()->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
-    camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
 
     camera->set_pipeline_description(pipe);
 

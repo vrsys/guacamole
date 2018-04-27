@@ -1,5 +1,7 @@
 #include <gua/nrp/nrp_node.hpp>
 
+#include <gua/nrp/pagoda_binder.hpp>
+
 namespace gua
 {
 namespace nrp

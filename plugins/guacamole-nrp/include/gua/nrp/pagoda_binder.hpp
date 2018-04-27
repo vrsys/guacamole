@@ -46,6 +46,9 @@ namespace gua
 {
 namespace nrp
 {
+class NRPNode;
+class NRPCameraNode;
+
 class GUA_NRP_DLL PagodaBinder
 {
   public:
@@ -59,7 +62,8 @@ class GUA_NRP_DLL PagodaBinder
 
     ~PagodaBinder();
 
-    void bind_root_node(gua::node::Node *root_node);
+    void bind_root_node(NRPNode *root_node);
+    void bind_cam_node(NRPCameraNode *cam_node);
     void bind_transport_layer();
 
     void pre_render();

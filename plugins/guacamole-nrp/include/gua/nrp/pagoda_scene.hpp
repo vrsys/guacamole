@@ -44,6 +44,10 @@ namespace gua
 {
 namespace nrp
 {
+
+class NRPNode;
+class NRPCameraNode;
+
 typedef std::map<uint32_t, ptr_visual> visuals_map;
 typedef std::map<std::string, ptr_light> light_map;
 
@@ -67,7 +71,8 @@ class GUA_NRP_DLL PagodaScene
     PagodaScene();
     ~PagodaScene();
 
-    void set_root_node(gua::node::Node *root_node);
+    void set_root_node(NRPNode *root_node);
+    void set_cam_node(NRPCameraNode *cam_node);
 
     void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
     void on_model_msg(ConstModelPtr &msg);
@@ -108,7 +113,8 @@ class GUA_NRP_DLL PagodaScene
     std::recursive_mutex _mutex_pose_msgs;
 
     std::mutex _mutex_scenegraph;
-    gua::node::Node *_root_node;
+    NRPNode *_root_node;
+    NRPCameraNode *_cam_node;
 
     std::string _name;
     ptr_visual _world_visual;
