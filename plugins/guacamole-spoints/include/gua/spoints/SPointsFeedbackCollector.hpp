@@ -52,19 +52,43 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
       std::unique_lock<std::mutex> lock(m_feedback_mutex_);
 
-      std::cout << "Context " << ctx.id << " pushed feedback\n";
+    //std::cout << "Context " << ctx.id << " pushed feedback\n";
 
       //++num_called_push_feedbacks_per_context_[ctx.id];
 
-      auto const& collected_feedback_matrices_for_socket = feedback_packages_per_socket_[socket_string];
-      for (auto const& curr_matrix_package : collected_feedback_matrices_for_socket) {
-        if (!memcmp ( &curr_matrix_package, &pushed_feedback_matrix, sizeof(curr_matrix_package) ) ) {
-          //std::cout << "BUT WAS ALREADY REGISTERED\n";
-          return;
+          
+      auto last_seen_frame_count_iterator_for_context = last_seen_application_frame_count_per_context_.find(ctx.id);
+      bool swap_feedback_for_context = false;
+      
+      /*if (last_seen_application_frame_count_per_context_.end() == last_seen_frame_count_iterator_for_context) {
+        swap_feedback_for_context = true;
+      } else {
+        if(last_seen_application_frame_count_per_context_[ctx.id] != ctx.framecount) {
+          swap_feedback_for_context = true;
         }
       }
 
-      feedback_packages_per_socket_[socket_string].push_back(pushed_feedback_matrix);
+      last_seen_application_frame_count_per_context_[ctx.id] = ctx.framecount;
+      */
+
+      /*if(swap_feedback_for_context) {
+        std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
+        queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
+
+
+      }*/
+
+        //queued_feedback_packages_per_context_per_socket_
+
+        auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
+        for (auto const& curr_matrix_package : collected_feedback_matrices_for_socket) {
+          if (!memcmp ( &curr_matrix_package, &pushed_feedback_matrix, sizeof(curr_matrix_package) ) ) {
+            //std::cout << "BUT WAS ALREADY REGISTERED\n";
+            return;
+          }
+        }
+        queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string].push_back(pushed_feedback_matrix);
+      
 
   }
 
@@ -75,129 +99,100 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
     std::unique_lock<std::mutex> lock(m_feedback_mutex_);
 
-    auto feedback_id_map_iter = seen_feedback_ids_.find(ctx.id);
+    std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
+    queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
 
-    std::cout << "Current CTX ID wants to push: " << ctx.id << "\n";
-    
+    std::cout << "Trying to send feedback frame\n";
+    std::map<std::string, std::vector<spoints::matrix_package>> serialized_matrices_per_socket; 
 
-    if (application_frame_count == last_seen_application_frame_count_) {
-      ++calls_in_this_frame_;
-      return;
-    } else {
-      last_seen_application_frame_count_ = application_frame_count;
-  
-      std::cout << "Send feedback frame calls in last frame: " << calls_in_this_frame_ << "\n";
-      calls_in_this_frame_ = 1;
+    for(auto const& all_feedback_per_socket_per_context : finalized_feedback_packages_per_context_per_socket_) {
+      std::vector<spoints::matrix_package> collected_finalized_matrices_for_socket;
+      for (auto const& all_feedback_per_socket_for_current_context : all_feedback_per_socket_per_context.second) {
+        std::string current_socket_string = all_feedback_per_socket_for_current_context.first;
 
-      for (auto& entry : seen_feedback_ids_) {
-        entry.second = false;
-      }
-      //std::cout << "Context " << ctx.id << " cleared the feedback\n";
+        auto socket_iterator              = socket_per_socket_string_.find(current_socket_string);
+        if (socket_per_socket_string_.end() == socket_iterator) {
 
-      //for (auto& entry : seen_feedback_ids_) {
-      //  entry.second = false;
-      //}
-      
-    }
+          auto new_socket_ptr = std::make_shared<zmq::socket_t>(*feedback_zmq_context_, ZMQ_PUB);
 
-    std::cout << "After first check\n";
+          int conflate_messages  = 1;
 
-    for (auto entry : seen_feedback_ids_) {
-      if (true == entry.second) {
-        return;
-      }
-    }
+          new_socket_ptr->setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
 
-    std::cout << "After second check\n";
+          std::string endpoint(std::string("tcp://") + current_socket_string.c_str());
 
-    if (seen_feedback_ids_.end() == feedback_id_map_iter) {
-      seen_feedback_ids_.insert(std::make_pair(ctx.id, true));
-    } else {
-      seen_feedback_ids_[ctx.id] = true;
-    }
+          try { 
+            new_socket_ptr->bind(endpoint.c_str()); 
+          } catch (const std::exception& e) {
+            std::cout << "Failed to bind feedback socket\n";
+            return;
+          }
 
-    std::cout << "Context actually pushes: " << ctx.id << "\n";
-
-
-
-    //++num_attempted_send_feedback_calls_per_context_[ctx.id];
-
-
-/*
-    for (auto entry : num_attempted_send_feedback_calls_per_context_) {
-      if (entry.second < num_called_push_feedbacks_per_context_[entry.first]){
-        return;
-      }
-    }
-*/
-    for (auto const& feedback_vector_per_socket : feedback_packages_per_socket_) {
-      std::string current_socket_string = feedback_vector_per_socket.first;
-
-      auto socket_iterator              = socket_per_socket_string_.find(current_socket_string);
-      if (socket_per_socket_string_.end() == socket_iterator) {
-
-        auto new_socket_ptr = std::make_shared<zmq::socket_t>(*feedback_zmq_context_, ZMQ_PUB);
-
-        int conflate_messages  = 1;
-
-
-
-        new_socket_ptr->setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
-
-        std::string endpoint(std::string("tcp://") + current_socket_string.c_str());
-
-        try { 
-          new_socket_ptr->bind(endpoint.c_str()); 
-        } catch (const std::exception& e) {
-          std::cout << "Failed to bind feedback socket\n";
-          return;
+          socket_per_socket_string_.insert(std::make_pair(current_socket_string, new_socket_ptr) );
         }
 
-        socket_per_socket_string_.insert(std::make_pair(current_socket_string, new_socket_ptr) );
+
+
+
+        auto const& matrix_packages_to_submit = all_feedback_per_socket_for_current_context.second;
+
+        auto& matrix_collection_vector_for_socket_string = serialized_matrices_per_socket[current_socket_string];
+        matrix_collection_vector_for_socket_string.insert(matrix_collection_vector_for_socket_string.end(), 
+          matrix_packages_to_submit.begin(), matrix_packages_to_submit.end());
+
+
+
+ 
+
+
+
+        //for (auto const& recorded_matrix : matrix_packages_to_submit) {
+          //std::cout << "Mat " << mat_counter << ":\n";
+          //std::cout << .mat_package << "\n";
+        //}
       }
 
 
-      auto& current_socket = socket_per_socket_string_[current_socket_string];
+      for( auto const& collected_feedback_pair_per_socket : serialized_matrices_per_socket) {
 
-      size_t feedback_header_byte = 100;
+        size_t feedback_header_byte = 100;
 
-
-
-      uint32_t num_recorded_matrix_packages = 0;
-
-      auto const& matrix_packages_to_submit = feedback_vector_per_socket.second;
-
-      num_recorded_matrix_packages = matrix_packages_to_submit.size();
+        uint32_t num_recorded_matrix_packages = 0;
 
 
-      //for (auto const& recorded_matrix : matrix_packages_to_submit) {
-        //std::cout << "Mat " << mat_counter << ":\n";
-        //std::cout << .mat_package << "\n";
-      //}
+        auto& current_socket = socket_per_socket_string_[collected_feedback_pair_per_socket.first];
 
-      //HEADER DATA SO FAR:
+        //serialized_matrices_per_socket
 
-      // 00000000 uint32_t num_matrices
+        auto const& collected_matrices = collected_feedback_pair_per_socket.second;
+
+        num_recorded_matrix_packages = collected_matrices.size();
+
+        //HEADER DATA SO FAR:
+
+        // 00000000 uint32_t num_matrices
 
       
-      zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(spoints::matrix_package) );
+        zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(spoints::matrix_package) );
 
-      memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
-      memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(matrix_packages_to_submit[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
+        memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
+        memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(collected_matrices[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
 
-      std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
-      // send feedback
-      current_socket->send(zmqm); // blocking
+        std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
+        // send feedback
+        current_socket->send(zmqm); // blocking
+      }
+
+
 
     }
-
-
-
+    //feedback_packages_per_socket_[frame_count_id_to_send].clear();
   }
 
-  int32_t                                                                      main_context_id_ = -1;
   std::mutex                                                                   m_feedback_mutex_;
-  std::unordered_map<std::string, std::vector<spoints::matrix_package>>        feedback_packages_per_socket_;
+
+  std::map<size_t, 
+    std::map<std::string, std::vector<spoints::matrix_package>>>               finalized_feedback_packages_per_context_per_socket_;
 
   std::unordered_map<std::string,std::shared_ptr<zmq::socket_t>>               socket_per_socket_string_;
   std::shared_ptr<zmq::context_t>                                              feedback_zmq_context_;
@@ -205,9 +200,11 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
   std::unordered_map<unsigned, bool>                                           seen_feedback_ids_;
   std::unordered_map<unsigned, int>                                            num_called_push_feedbacks_per_context_;
   std::unordered_map<unsigned, int>                                            num_attempted_send_feedback_calls_per_context_;
-  std::size_t                                                                  last_seen_application_frame_count_ = std::numeric_limits<std::size_t>::max();
+  std::unordered_map<std::size_t, std::size_t>                                 last_seen_application_frame_count_per_context_; 
 
-  int64_t                                                                      calls_in_this_frame_ = 0;
+  std::map<size_t, 
+  std::map<std::string, std::vector<spoints::matrix_package>>>                 queued_feedback_packages_per_context_per_socket_;
+
 };
 
 }
