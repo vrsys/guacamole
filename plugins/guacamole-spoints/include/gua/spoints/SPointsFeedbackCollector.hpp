@@ -83,7 +83,6 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
         for (auto const& curr_matrix_package : collected_feedback_matrices_for_socket) {
           if (!memcmp ( &curr_matrix_package, &pushed_feedback_matrix, sizeof(curr_matrix_package) ) ) {
-            //std::cout << "BUT WAS ALREADY REGISTERED\n";
             return;
           }
         }
@@ -137,19 +136,21 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         auto const& matrix_packages_to_submit = all_feedback_per_socket_for_current_context.second;
 
         auto& matrix_collection_vector_for_socket_string = serialized_matrices_per_socket[current_socket_string];
-        matrix_collection_vector_for_socket_string.insert(matrix_collection_vector_for_socket_string.end(), 
-          matrix_packages_to_submit.begin(), matrix_packages_to_submit.end());
 
+        for( auto const& matrix_to_potentially_insert : matrix_packages_to_submit ) {
+          //auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
+          bool already_inside = false;
+          for (auto const& curr_matrix_package_to_compare_to : matrix_collection_vector_for_socket_string) {
+            if (!memcmp ( &matrix_to_potentially_insert, &curr_matrix_package_to_compare_to, sizeof(curr_matrix_package_to_compare_to) ) ) {
+              already_inside = true;
+              break;
+            }
+          }
 
-
- 
-
-
-
-        //for (auto const& recorded_matrix : matrix_packages_to_submit) {
-          //std::cout << "Mat " << mat_counter << ":\n";
-          //std::cout << .mat_package << "\n";
-        //}
+          if(!already_inside) {
+            matrix_collection_vector_for_socket_string.push_back(matrix_to_potentially_insert);
+          }
+        }
       }
 
 
@@ -186,7 +187,6 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
 
     }
-    //feedback_packages_per_socket_[frame_count_id_to_send].clear();
   }
 
   std::mutex                                                                   m_feedback_mutex_;
