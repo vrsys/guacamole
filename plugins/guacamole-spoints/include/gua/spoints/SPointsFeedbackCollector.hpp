@@ -150,7 +150,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
         memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(collected_matrices[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
 
-        std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
+        //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
         // send feedback
         current_socket->send(zmqm); // blocking
       }
