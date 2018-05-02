@@ -29,23 +29,15 @@ class GUA_NRP_DLL PagodaLog
         gen_random(rand_name, 8);
 
         _ofstream = std::ofstream();
-        _ofstream.open(std::string(rand_name) + ".txt", std::ios::out | std::ios::app);
+        _ofstream.open(std::string(rand_name) + ".txt", std::ios::out | std::ios::trunc);
 
         assert(_ofstream.is_open());
     }
 
-    explicit PagodaLog(const char *log_name)
+    explicit PagodaLog(const char *log_name, LOG_LEVEL log_level = LOG_LEVEL::DEBUG, bool truncate_log = false)
     {
         _ofstream = std::ofstream();
-        _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
-
-        assert(_ofstream.is_open());
-    }
-
-    PagodaLog(const char *log_name, LOG_LEVEL log_level)
-    {
-        _ofstream = std::ofstream();
-        _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
+        _ofstream.open(std::string(log_name) + ".txt", std::ios::out | (truncate_log ? std::ios::trunc : std::ios::app));
 
         _log_level = log_level;
 
@@ -94,7 +86,7 @@ class GUA_NRP_DLL PagodaLog
 
   private:
     std::ofstream _ofstream;
-#ifndef NDEBUG
+#if GUA_DEBUG == 1
     LOG_LEVEL _log_level = DEBUG;
 #else
     LOG_LEVEL _log_level = ERROR;

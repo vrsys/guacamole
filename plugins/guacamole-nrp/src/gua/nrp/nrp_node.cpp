@@ -20,16 +20,54 @@ NRPNode::NRPNode(const std::string &name, const math::mat4 &transform) : Transfo
 }
 std::shared_ptr<node::Node> NRPNode::deep_copy() const
 {
-    PagodaBinder::get_instance().lock_scene();
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
     auto copied_node = node::Node::deep_copy();
-    PagodaBinder::get_instance().unlock_scene();
-
     return copied_node;
 }
-void NRPNode::update_cache() {
-    PagodaBinder::get_instance().lock_scene();
+void NRPNode::update_cache()
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
     Node::update_cache();
-    PagodaBinder::get_instance().unlock_scene();
+}
+void NRPNode::set_transform(math::mat4 const &transform)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::set_transform(transform);
+}
+void NRPNode::scale(math::float_t x, math::float_t y, math::float_t z)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::scale(x, y, z);
+}
+void NRPNode::scale(math::vec3 const &s)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::scale(s);
+}
+void NRPNode::scale(math::float_t s)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::scale(s);
+}
+void NRPNode::rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::rotate(angle, x, y, z);
+}
+void NRPNode::rotate(math::float_t angle, math::vec3 const &axis)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::rotate(angle, axis);
+}
+void NRPNode::translate(math::float_t x, math::float_t y, math::float_t z)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::translate(x, y, z);
+}
+void NRPNode::translate(math::vec3 const &offset)
+{
+    std::unique_lock<std::mutex> lock(PagodaBinder::get_instance().get_scene_mutex());
+    Node::translate(offset);
 }
 }
 }

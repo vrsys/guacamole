@@ -4,14 +4,14 @@
 SET(SCHISM_INCLUDE_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/schism/include
   ${SCHISM_INCLUDE_SEARCH_DIR}
-  /home/xaf/guacamole/schism
+  /opt/schism/current
 )
 
 SET(SCHISM_LIBRARY_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/schism/lib
   ${SCHISM_LIBRARY_SEARCH_DIR}
   ../
-  /home/xaf/guacamole/schism/lib/linux_x86
+  /opt/schism/current/lib/linux_x86
 )
 
 ##############################################################################
