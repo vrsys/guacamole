@@ -45,9 +45,9 @@ void PagodaLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Ligh
         // specular color not used if diffuse is given
         _node->data.set_color(gua::utils::Color3f(msg->specular().r(), msg->specular().g(), msg->specular().b()));
     }
-    //else
+    // else
     //{
-        //_node->data.set_enable_specular_shading(false);
+    //_node->data.set_enable_specular_shading(false);
     //}
 
     if(msg->has_diffuse())

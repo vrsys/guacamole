@@ -5,9 +5,6 @@
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#include <gua/nrp/nrp_node.hpp>
-#include <gua/nrp/nrp_cam_node.hpp>
-#include <gua/nrp/nrp_pass.hpp>
 #include <gua/nrp.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)

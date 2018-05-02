@@ -16,6 +16,14 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
 
     std::shared_ptr<node::Node> deep_copy() const override;
     void update_cache() override;
+    void set_transform(math::mat4 const &transform) override;
+    void scale(math::float_t x, math::float_t y, math::float_t z) override;
+    void scale(math::vec3 const &s) override;
+    void scale(math::float_t s) override;
+    void rotate(math::float_t angle, math::float_t x, math::float_t y, math::float_t z) override;
+    void rotate(math::float_t angle, math::vec3 const &axis) override;
+    void translate(math::float_t x, math::float_t y, math::float_t z) override;
+    void translate(math::vec3 const &offset) override;
 };
 }
 }

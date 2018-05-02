@@ -22,16 +22,18 @@ PagodaVisual::PagodaVisual(const std::string &name, ptr_visual parent) : _name(n
     _scale = gazebo::math::Vector3::One.Ign();
 }
 PagodaVisual::~PagodaVisual() { _node.reset(); }
-
 void PagodaVisual::set_name(const std::string &name) { _name = name; }
 std::string PagodaVisual::get_name() const { return _name; }
 uint32_t PagodaVisual::get_id() const { return _id; }
 void PagodaVisual::set_id(uint32_t id) { _id = id; }
 PagodaVisual::VisualType PagodaVisual::get_type() const { return _type; }
 void PagodaVisual::set_type(PagodaVisual::VisualType type) { _type = type; }
-
 void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
 {
+#if GUA_DEBUG == 1
+    auto start = std::chrono::high_resolution_clock::now();
+#endif
+
     if(msg->has_pose())
     {
         set_pose(gazebo::msgs::ConvertIgn(msg->pose()));
@@ -47,7 +49,7 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
         set_scale(gazebo::msgs::ConvertIgn(msg->scale()));
     }
 
-    if(msg->has_geometry() && msg->geometry().has_type())
+    if(_mesh_random_name.empty() && msg->has_geometry() && msg->geometry().has_type())
     {
         detach_meshes();
 
@@ -204,6 +206,15 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
             set_material(ambient, diffuse, specular, emissive);
         }
     }
+#if GUA_DEBUG == 1
+    auto end = std::chrono::high_resolution_clock::now();
+    float update_from_msg = std::chrono::duration<float, std::milli>(end - start).count();
+
+    if(update_from_msg > 0.01f)
+    {
+        std::cout << "update_from_msg: " << update_from_msg << std::endl;
+    }
+#endif
 }
 
 bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
@@ -211,25 +222,14 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
     if(mesh_name.empty())
         return false;
 
+    if(_mesh_random_name.empty())
+    {
+        generate_random_name();
+    }
+
     unsigned int flags = !normalize_shape ? gua::TriMeshLoader::LOAD_MATERIALS : gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION;
 
-    static auto &chrs = "0123456789"
-                        "abcdefghijklmnopqrstuvwxyz"
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    thread_local static std::mt19937 rg{std::random_device{}()};
-    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
-
-    std::string mesh_random_name;
-
-    int length = 8;
-
-    mesh_random_name.reserve(length);
-
-    while(length--)
-        mesh_random_name += chrs[pick(rg)];
-
-    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(mesh_random_name, mesh_name, flags);
+    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(_mesh_random_name, mesh_name, flags);
 
     // geometry_node->set_draw_bounding_box(true);
 
@@ -341,6 +341,24 @@ bool PagodaVisual::get_material_colors_for_material_name(const std::string &mate
     }
 
     return false;
+}
+void PagodaVisual::generate_random_name()
+{
+    static auto &chrs = "0123456789"
+                        "abcdefghijklmnopqrstuvwxyz"
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
+
+    std::string mesh_random_name;
+
+    int length = 8;
+
+    mesh_random_name.reserve((uint8_t)length);
+
+    while(length--)
+        mesh_random_name += chrs[pick(rg)];
 }
 }
 }
