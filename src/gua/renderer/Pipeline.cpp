@@ -247,11 +247,11 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::apply_post_render_actions(RenderContext const& ctx, std::size_t application_frame_count) {
+void Pipeline::apply_post_render_actions(RenderContext const& ctx) {
   auto pass_descriptions = last_description_.get_passes();
 
   for (auto& pass : pass_descriptions) {
-    pass->apply_post_render_action(ctx, application_frame_count);
+    pass->apply_post_render_action(ctx);
   }
 }
 

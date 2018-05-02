@@ -89,21 +89,18 @@ class GUA_DLL Renderer {
   void send_renderclient(std::string const& window,
                          std::shared_ptr<const Renderer::SceneGraphs> sgs,
                          node::CameraNode* cam,
-                         std::size_t application_frame_count,
                          bool alternate_frame_rendering);
 
   struct Item {
     Item() = default;
     Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
           std::shared_ptr<const SceneGraphs> const& sgs,
-          std::size_t afc,
           bool afr = false )
-          : serialized_cam(sc), scene_graphs(sgs), application_frame_count(afc), alternate_frame_rendering(afr)
+          : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr)
     {}
 
     std::shared_ptr<node::SerializedCameraNode> serialized_cam;
     std::shared_ptr<const SceneGraphs>          scene_graphs;
-    std::size_t                                 application_frame_count;
     bool                                        alternate_frame_rendering;
   };
 
@@ -115,7 +112,6 @@ class GUA_DLL Renderer {
   std::map<std::string, Renderclient> render_clients_;
 
   FpsCounter application_fps_;
-  std::size_t application_frame_count_;
 };
 
 }
