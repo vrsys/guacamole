@@ -41,7 +41,7 @@ class GUA_SPOINTS_DLL SPointsPassDescription : public PipelinePassDescription {
 
   PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
-  void apply_post_render_action(RenderContext const& ctx, std::size_t application_frame_count) const override;
+  void apply_post_render_action(RenderContext const& ctx) const override;
 
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;

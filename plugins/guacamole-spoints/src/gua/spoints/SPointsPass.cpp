@@ -59,12 +59,12 @@ PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, Substit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx, std::size_t application_frame_count) const {
+void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx) const {
   /*
   std::cout << "POST RENDER ACTION IS CALLED" << std::endl;
   */
   
-  SPointsFeedbackCollector::instance()->send_feedback_frame(ctx, application_frame_count);
+  SPointsFeedbackCollector::instance()->send_feedback_frame(ctx);
   
 }
 

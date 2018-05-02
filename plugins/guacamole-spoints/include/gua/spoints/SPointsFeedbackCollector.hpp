@@ -52,34 +52,6 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
       std::unique_lock<std::mutex> lock(m_feedback_mutex_);
 
-    //std::cout << "Context " << ctx.id << " pushed feedback\n";
-
-      //++num_called_push_feedbacks_per_context_[ctx.id];
-
-          
-      auto last_seen_frame_count_iterator_for_context = last_seen_application_frame_count_per_context_.find(ctx.id);
-      bool swap_feedback_for_context = false;
-      
-      /*if (last_seen_application_frame_count_per_context_.end() == last_seen_frame_count_iterator_for_context) {
-        swap_feedback_for_context = true;
-      } else {
-        if(last_seen_application_frame_count_per_context_[ctx.id] != ctx.framecount) {
-          swap_feedback_for_context = true;
-        }
-      }
-
-      last_seen_application_frame_count_per_context_[ctx.id] = ctx.framecount;
-      */
-
-      /*if(swap_feedback_for_context) {
-        std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
-        queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
-
-
-      }*/
-
-        //queued_feedback_packages_per_context_per_socket_
-
         auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
         for (auto const& curr_matrix_package : collected_feedback_matrices_for_socket) {
           if (!memcmp ( &curr_matrix_package, &pushed_feedback_matrix, sizeof(curr_matrix_package) ) ) {
@@ -92,7 +64,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
   }
 
 
-  void send_feedback_frame(RenderContext const& ctx, std::size_t application_frame_count) {
+  void send_feedback_frame(RenderContext const& ctx) {
 
 
 
@@ -101,7 +73,6 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
     std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
     queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
 
-    std::cout << "Trying to send feedback frame\n";
     std::map<std::string, std::vector<spoints::matrix_package>> serialized_matrices_per_socket; 
 
     for(auto const& all_feedback_per_socket_per_context : finalized_feedback_packages_per_context_per_socket_) {
@@ -196,11 +167,6 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   std::unordered_map<std::string,std::shared_ptr<zmq::socket_t>>               socket_per_socket_string_;
   std::shared_ptr<zmq::context_t>                                              feedback_zmq_context_;
-
-  std::unordered_map<unsigned, bool>                                           seen_feedback_ids_;
-  std::unordered_map<unsigned, int>                                            num_called_push_feedbacks_per_context_;
-  std::unordered_map<unsigned, int>                                            num_attempted_send_feedback_calls_per_context_;
-  std::unordered_map<std::size_t, std::size_t>                                 last_seen_application_frame_count_per_context_; 
 
   std::map<size_t, 
   std::map<std::string, std::vector<spoints::matrix_package>>>                 queued_feedback_packages_per_context_per_socket_;
