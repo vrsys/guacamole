@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
   camera->config.set_enable_stereo(true);
   camera->set_pipeline_description(pipe);
 
-  //camera->set_pre_render_cameras({portal_camera});
+  camera->set_pre_render_cameras({portal_camera});
 
   auto camera2 = graph.add_node<gua::node::CameraNode>("/screen2", "cam2");
   camera2->translate(0.0, 1.5, 2.0);
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
   camera2->config.set_enable_stereo(true);
   camera2->set_pipeline_description(pipe);
 
-  //camera2->set_pre_render_cameras({portal_camera});
+  camera2->set_pre_render_cameras({portal_camera});
 
   auto camera3 = graph.add_node<gua::node::CameraNode>("/screen3", "cam3");
   camera3->translate(0.5, 0, 2.0);
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
   camera3->config.set_enable_stereo(true);
   camera3->set_pipeline_description(pipe);
 
-  //camera3->set_pre_render_cameras({portal_camera});
+  camera3->set_pre_render_cameras({portal_camera});
 
   auto camera4 = graph.add_node<gua::node::CameraNode>("/screen4", "cam4");
   camera4->translate(-0.5, 0, 2.0);
@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
   camera4->config.set_enable_stereo(true);
   camera4->set_pipeline_description(pipe);
 
-  //camera4->set_pre_render_cameras({portal_camera});
+  camera4->set_pre_render_cameras({portal_camera});
 
   auto add_window = [](std::string const& window_name, 
                        std::shared_ptr<gua::node::CameraNode> const& cam_node)
@@ -281,13 +281,13 @@ int main(int argc, char** argv) {
     } else {
       renderer.queue_draw({&graph});
 
-      if(500 == framecount) {
+      if(50 == framecount) {
         add_window("window2", camera2);
       }
-      if(1000 == framecount) {
+      if(100 == framecount) {
         add_window("window3", camera3);
       }
-      if(1500 == framecount) {
+      if(150 == framecount) {
         add_window("window4", camera4);
       }
       ++framecount;
