@@ -66,7 +66,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   /**
    * constructor.
    *
-   * Creates a new Video3D from a given spoints string.
+   * Creates a new SPoints from a given spoints string.
    * \param spoints      Holds information about kinect streams.
   */
    SPointsResource(std::string const& server_endpoint, 
@@ -80,6 +80,8 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   void draw(RenderContext const& ctx);
 
+  std::string get_socket_string();
+
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
@@ -88,7 +90,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
   /**
-   * Raytest for Video3D
+   * Raytest for SPoints
    *
    * Not implemented yet.
    *

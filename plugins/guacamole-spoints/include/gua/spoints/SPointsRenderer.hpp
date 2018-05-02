@@ -83,4 +83,4 @@ class GUA_SPOINTS_DLL SPointsRenderer {
 
 }
 
-#endif  // GUA_VIDEO3D_RENDERER_HPP
+#endif  // GUA_SPOINTS_RENDERER_HPP

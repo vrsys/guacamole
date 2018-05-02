@@ -79,12 +79,14 @@ public:
 
   inline unsigned char* getBuffer() { return m_buffer_.data(); }
 
+
+  std::string get_socket_string();
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
 private:
   void readloop();
-  void sendfeedbackloop();
+  //void sendfeedbackloop();
 
   //receiving geometry
   std::mutex m_mutex_;
@@ -100,7 +102,7 @@ private:
 
   //sending matrices
   std::mutex m_feedback_mutex_;
-  bool       m_feedback_running_;
+  //bool       m_feedback_running_;
   const std::string m_server_feedback_endpoint_;
   matrix_package m_matrix_package_;
   matrix_package m_matrix_package_back_;
@@ -128,10 +130,10 @@ private:
   camera_group_to_uuid_to_matrix_package_list_back;
 */
 
-  std::atomic<bool> m_feedback_need_swap_;
-  std::thread m_send_feedback_;
+  //std::atomic<bool> m_feedback_need_swap_;
+  //std::thread m_send_feedback_;
 
-  mutable std::unordered_set<std::size_t> known_context_ids_;
+  //mutable std::unordered_set<std::size_t> known_context_ids_;
   mutable std::unordered_set<std::size_t> encountered_context_ids_for_feedback_frame_;
 
   mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;

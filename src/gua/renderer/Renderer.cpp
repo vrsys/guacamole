@@ -141,6 +141,9 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
 
         window->rendering_fps = fpsc.fps;
 
+
+
+
         if (cmd.serialized_cam->config.get_enable_stereo()) {
           if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
             #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
@@ -159,7 +162,6 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
             //auto mode = window->config.get_is_left() ? CameraMode::LEFT : CameraMode::RIGHT;
             auto mode = is_left ? CameraMode::LEFT : CameraMode::RIGHT;
             auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs);
-
             if (img) {
               window->display(img, false);
             }
@@ -173,10 +175,13 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
                   *cmd.serialized_cam, *cmd.scene_graphs));
+
+
           if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
         }
 
         pipe->clear_frame_cache();
+        pipe->apply_post_render_actions(*window->get_context(), cmd.application_frame_count);
 
         // swap buffers
         window->finish_frame();
@@ -184,6 +189,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
         ++(window->get_context()->framecount);
 
         fpsc.step();
+
 
       }
     }
@@ -193,7 +199,8 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
 
 Renderer::Renderer() :
   render_clients_(),
-  application_fps_(20) {
+  application_fps_(20),
+  application_frame_count_(0) {
 
   application_fps_.start();
 }
@@ -201,20 +208,21 @@ Renderer::Renderer() :
 void Renderer::send_renderclient(std::string const& window_name,
                          std::shared_ptr<const Renderer::SceneGraphs> sgs,
                          node::CameraNode* cam,
+                         std::size_t application_frame_count,
                          bool alternate_frame_rendering)
 {
   auto rclient = render_clients_.find(window_name);
   if (rclient != render_clients_.end()) {
     rclient->second.first->push_back(
         Item(std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-        sgs, alternate_frame_rendering));
+        sgs, application_frame_count, alternate_frame_rendering));
 
   } else {
     if (auto win = WindowDatabase::instance()->lookup(window_name)) {
       auto p = spawnDoublebufferred<Item>();
       p.first->push_back(Item(
           std::make_shared<node::SerializedCameraNode>(cam->serialize()),
-          sgs));
+          sgs, application_frame_count));
       render_clients_[window_name] = std::make_pair(
           p.first, std::thread(Renderer::renderclient, p.second, window_name));
     }
@@ -228,16 +236,20 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
 
   auto sgs = garbage_collected_copy(scene_graphs);
 
+  ++application_frame_count_;
+
   for (auto graph : scene_graphs) {
     for (auto& cam : graph->get_camera_nodes()) {
       if (cam->config.separate_windows()) {
-        send_renderclient(cam->config.get_left_output_window(), sgs, cam, alternate_frame_rendering);
-        send_renderclient(cam->config.get_right_output_window(), sgs, cam, alternate_frame_rendering);
+        send_renderclient(cam->config.get_left_output_window(), sgs, cam, application_frame_count_, alternate_frame_rendering);
+        send_renderclient(cam->config.get_right_output_window(), sgs, cam, application_frame_count_, alternate_frame_rendering);
       } else {
-        send_renderclient(cam->config.get_output_window_name(), sgs, cam, alternate_frame_rendering);
+        send_renderclient(cam->config.get_output_window_name(), sgs, cam, application_frame_count_, alternate_frame_rendering);
       }
     }
   }
+
+
   application_fps_.step();
 }
 

@@ -46,7 +46,7 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
  public :
 
   SPointsNode(std::string const& name,
-              std::string const& spoints_description = "gua_default_video",
+              std::string const& spoints_description = "gua_default_spoints",
               std::shared_ptr<Material> const& material = nullptr,
               math::mat4  const& transform = math::mat4::identity());
 
@@ -77,7 +77,7 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
   void               force_reload();
 
   std::shared_ptr<Material> const& get_material() const;
-  void                      set_material(std::shared_ptr<Material> const& material);
+  void                            set_material(std::shared_ptr<Material> const& material);
 
  protected:
   std::shared_ptr<Node> copy() const override;
@@ -96,4 +96,4 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
 } // namespace node {
 } // namespace gua {
 
-#endif  // GUA_VIDEO3D_NODE_HPP
+#endif  // GUA_SPOINTS_NODE_HPP
