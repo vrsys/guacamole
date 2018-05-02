@@ -36,6 +36,7 @@
 #include <gua/spoints/SPointsResource.hpp>
 #include <gua/spoints/SPointsNode.hpp>
 #include <gua/spoints/spoints_geometry/NetKinectArray.hpp>
+#include <gua/spoints/SPointsFeedbackCollector.hpp>
 
 #include <scm/gl_core/render_device/context_guards.h>
 
@@ -251,7 +252,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
     std::size_t view_uuid = camera_id;
 
-
+/*
     spoints::camera_matrix_package cm_package;
     cm_package.k_package.is_camera = is_camera;
     cm_package.k_package.view_uuid = view_uuid;
@@ -259,12 +260,27 @@ void SPointsRenderer::render(Pipeline& pipe,
     cm_package.k_package.framecount = pipe.get_context().framecount;
     cm_package.k_package.render_context_id = pipe.get_context().id;
     cm_package.mat_package = current_package;
+*/
 
-
-
-    spoints_resource->push_matrix_package(cm_package);
 
     spoints_resource->update_buffers(pipe.get_context(), pipe);
+   // spoints_resource->push_matrix_package(cm_package);
+    std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
+
+    if ("" != feedback_socket_string_of_resource) {
+      SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
+//      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
+    } else {
+ //     std::cout << "FBS: 0" << "\n";
+    }
+
+
+
+
+    
+
+
+
     //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
 
 

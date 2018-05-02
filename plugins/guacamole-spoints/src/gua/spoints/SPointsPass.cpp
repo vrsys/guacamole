@@ -22,6 +22,7 @@
 // class header
 #include <gua/spoints/SPointsPass.hpp>
 
+#include <gua/spoints/SPointsFeedbackCollector.hpp>
 #include <gua/spoints/SPointsNode.hpp>
 #include <gua/spoints/SPointsRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -44,7 +45,7 @@ PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, Substit
 
   PipelinePass pass{*this, ctx, substitution_map};
 
-  auto renderer(std::make_shared<SPointsRenderer>());
+  auto renderer{std::make_shared<SPointsRenderer>()};
   renderer->set_global_substitution_map(substitution_map);
 
   pass.process_ = [renderer](
@@ -54,6 +55,17 @@ PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, Substit
   };
 
   return pass;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx, std::size_t application_frame_count) const {
+  /*
+  std::cout << "POST RENDER ACTION IS CALLED" << std::endl;
+  */
+  
+  SPointsFeedbackCollector::instance()->send_feedback_frame(ctx, application_frame_count);
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////

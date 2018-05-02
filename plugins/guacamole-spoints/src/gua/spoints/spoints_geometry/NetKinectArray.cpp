@@ -14,19 +14,19 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
   : m_mutex_(),
     m_running_(true),
-    m_feedback_running_(true),
+    //m_feedback_running_(true),
     m_server_endpoint_(server_endpoint),
     m_feedback_endpoint_(feedback_endpoint),
     m_buffer_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
     m_buffer_back_( /*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
     m_need_cpu_swap_{false},
-    m_feedback_need_swap_{false},
+    //m_feedback_need_swap_{false},
     m_recv_()
 {
  
   m_recv_ = std::thread([this]() { readloop(); });
 
-  m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
+  //m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
 
   //std::cout << "CREATED A NETKINECTARRAY!\n";
 }
@@ -57,6 +57,10 @@ NetKinectArray::draw(gua::RenderContext const& ctx) {
   }
 }
 
+std::string 
+NetKinectArray::get_socket_string() {
+  return m_feedback_endpoint_;
+};
 
 void 
 NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
@@ -68,10 +72,6 @@ NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& cam_ma
 bool
 NetKinectArray::update(gua::RenderContext const& ctx) {
   {
-
-    known_context_ids_.insert(ctx.id);
-
-    //std::cout << "UPDATING CONTEXT ID: " << ctx.id << "\n"; 
     auto& current_encountered_frame_count = encountered_frame_counts_per_context_[ctx.id];
 
     if (current_encountered_frame_count != ctx.framecount) {
@@ -136,14 +136,14 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
   return false;
 }
 
+/*
 void
 NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
   {
 
     //std::cout << !m_feedback_need_swap_.load() << "\n";
 
-    if( true/*(submitted_camera_matrix_package_back_.k_package.framecount != last_omitted_frame_count_)*/ /*&&
-        !m_feedback_need_swap_.load()*/) {
+    if( true) {
       std::lock_guard<std::mutex> lock(m_feedback_mutex_);
 
       std::swap(submitted_camera_matrix_package_back_, submitted_camera_matrix_package_);
@@ -182,7 +182,7 @@ NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
 
   }
 }
-
+*/
 void NetKinectArray::readloop() {
   // open multicast listening connection to server and port
   zmq::context_t ctx(1); // means single threaded
@@ -241,7 +241,7 @@ void NetKinectArray::readloop() {
 
 
 
-
+/*
 void NetKinectArray::sendfeedbackloop() {
   
   // open multicast listening connection to server and port
@@ -250,7 +250,7 @@ void NetKinectArray::sendfeedbackloop() {
 
   int conflate_messages  = 1;
   socket.setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
-
+  //socket.set
   std::string endpoint(std::string("tcp://") + m_feedback_endpoint_);
 
   try { 
@@ -278,9 +278,9 @@ void NetKinectArray::sendfeedbackloop() {
 
       //HEADER DATA SO FAR:
 
-      /* 00000000 uint32_t num_matrices
+      // 00000000 uint32_t num_matrices
 
-      */
+      
 
 
       zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(matrix_package) );
@@ -301,6 +301,7 @@ void NetKinectArray::sendfeedbackloop() {
   }
 
 }
+*/
 
 
 

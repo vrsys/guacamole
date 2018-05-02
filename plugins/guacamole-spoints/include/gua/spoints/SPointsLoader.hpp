@@ -85,4 +85,4 @@ class GUA_SPOINTS_DLL SPointsLoader {
 
 }
 
-#endif  // GUA_VIDEO3D_LOADER_HPP
+#endif  // GUA_SPOINTS_LOADER_HPP

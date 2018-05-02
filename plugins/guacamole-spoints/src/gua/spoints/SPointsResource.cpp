@@ -65,6 +65,19 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
   init();
 }
 
+std::string 
+SPointsResource::get_socket_string() {
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_socket_string();
+    }
+  }
+
+  return "";
+}
+
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
@@ -93,7 +106,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
 
     //std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
     // synchronize feedback
-    spointsdata_->nka_->update_feedback(ctx);
+    //spointsdata_->nka_->update_feedback(ctx);
   }
 
   // synchronize vertex data

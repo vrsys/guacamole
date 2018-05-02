@@ -41,10 +41,14 @@ class GUA_SPOINTS_DLL SPointsPassDescription : public PipelinePassDescription {
 
   PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
+  void apply_post_render_action(RenderContext const& ctx, std::size_t application_frame_count) const override;
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
+
+  private:
 };
 
 }
 
-#endif  // GUA_VIDEO3D_PASS_HPP
+#endif  // GUA_SPOINTS_PASS_HPP
