@@ -61,7 +61,7 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode {
 
 
   inline float get_screen_space_point_size() const { return screen_space_point_size_; }
-  inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
+  inline void  set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
 
   /**
    * Accepts a visitor and calls concrete visit method.

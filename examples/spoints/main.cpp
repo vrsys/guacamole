@@ -284,12 +284,13 @@ int main(int argc, char** argv) {
       if(50 == framecount) {
         add_window("window2", camera2);
       }
+      /*
       if(100 == framecount) {
         add_window("window3", camera3);
       }
       if(150 == framecount) {
         add_window("window4", camera4);
-      }
+      }*/
       ++framecount;
     }
   });
