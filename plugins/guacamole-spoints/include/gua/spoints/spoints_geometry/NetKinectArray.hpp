@@ -81,8 +81,8 @@ public:
 
   inline unsigned char* getBuffer() { return m_buffer_.data(); }
 
-  unsigned get_remote_server_screen_width() const {return remote_server_screen_width_;}
-  unsigned get_remote_server_screen_height() const {return remote_server_screen_height_;}
+  unsigned get_remote_server_screen_width() const {return remote_server_screen_width_to_return_;}
+  unsigned get_remote_server_screen_height() const {return remote_server_screen_height_to_return_;}
 
   std::string get_socket_string();
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
