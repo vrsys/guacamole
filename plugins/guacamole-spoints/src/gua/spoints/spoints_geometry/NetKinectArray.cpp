@@ -70,7 +70,7 @@ NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& cam_ma
 }
 
 bool
-NetKinectArray::update(gua::RenderContext const& ctx) {
+NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb) {
   {
     auto& current_encountered_frame_count = encountered_frame_counts_per_context_[ctx.id];
 
@@ -108,11 +108,20 @@ NetKinectArray::update(gua::RenderContext const& ctx) {
 
 
         } else {
+          in_out_bb = gua::math::BoundingBox<scm::math::vec3d>();
+
           //std::cout << "RESIZED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
           ctx.render_device->resize_buffer(current_net_data_vbo, total_num_bytes_to_copy);
 
+          size_t total_num_points_in_buffer = total_num_bytes_to_copy / sizeof_point;
           float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
           memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
+
+          for(size_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
+            in_out_bb.min[dim_idx] = latest_received_bb_min[dim_idx];
+            in_out_bb.max[dim_idx] = latest_received_bb_max[dim_idx];
+          }
+
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
         }
 
@@ -214,7 +223,16 @@ void NetKinectArray::readloop() {
 
     size_t num_voxels_received{0};
 
-    memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[0], sizeof(size_t) );
+    // num points -> 8 byte
+    // bb_min     -> 3*4 byte
+    // bb_max     -> 3*4 byte
+    size_t header_data_offset = 0;
+    memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[header_data_offset], sizeof(size_t) );
+    header_data_offset += sizeof(size_t);
+    memcpy((unsigned char*) &latest_received_bb_min[0], (unsigned char*) &header_data[header_data_offset], 3 * sizeof(float));
+    header_data_offset += 3 * sizeof(float);
+    memcpy((unsigned char*) &latest_received_bb_max[0], (unsigned char*) &header_data[header_data_offset], 3 * sizeof(float));
+    header_data_offset += 3 * sizeof(float);
 
     size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back.size() < data_points_byte_size) {
