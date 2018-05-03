@@ -125,8 +125,8 @@ void SPointsResource::draw(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 void SPointsResource::init() {
   // approximately local space - can be overwritten from .ks file
-  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-5.0, -5.0, -5.0),
-                                                math::vec3(5.0,   5.0,  5.0));
+  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-2.5, -2.5, -2.5),
+                                                math::vec3(2.5,   2.5,  2.5));
 
 }
 

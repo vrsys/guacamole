@@ -116,12 +116,13 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           size_t total_num_points_in_buffer = total_num_bytes_to_copy / sizeof_point;
           float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
           memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
-
+          //do not set bounding box to avoid culling problems during scene graph serialization
+/*
           for(size_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
             in_out_bb.min[dim_idx] = latest_received_bb_min[dim_idx];
             in_out_bb.max[dim_idx] = latest_received_bb_max[dim_idx];
           }
-
+*/
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
         }
 
