@@ -114,6 +114,21 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
   
 }
 
+unsigned SPointsResource::get_remote_server_screen_width() const {
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_remote_server_screen_width();
+    }
+  }
+}
+unsigned SPointsResource::get_remote_server_screen_height() const {
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_remote_server_screen_height();
+    }
+  }
+}
+
 
 void SPointsResource::draw(RenderContext const& ctx) {
   spointsdata_->nka_->draw(ctx);

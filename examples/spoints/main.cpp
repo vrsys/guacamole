@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(800, 800);
+  auto resolution = gua::math::vec2ui(900, 900);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
   portal_screen->translate(0.0f, 1.0f, 0.0f);
   auto portal_camera = graph.add_node<gua::node::CameraNode>("/transform/portal_screen", "portal_cam");
   portal_camera->translate(0.f, 1.8f, 2.f);
-  portal_camera->config.set_resolution(gua::math::vec2ui(800, 800));
+  portal_camera->config.set_resolution(gua::math::vec2ui(resolution[0], resolution[1]));
   portal_camera->config.set_screen_path("/transform/portal_screen");
   portal_camera->config.set_scene_graph_name("main_scenegraph");
   portal_camera->config.set_output_texture_name("portal");
@@ -281,9 +281,9 @@ int main(int argc, char** argv) {
     } else {
       renderer.queue_draw({&graph});
 
-      if(50 == framecount) {
-        add_window("window2", camera2);
-      }
+      //if(50 == framecount) {
+      //  add_window("window2", camera2);
+      //}
       /*
       if(100 == framecount) {
         add_window("window3", camera3);

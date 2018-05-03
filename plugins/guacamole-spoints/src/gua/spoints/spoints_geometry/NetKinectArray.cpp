@@ -123,6 +123,10 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
             in_out_bb.max[dim_idx] = latest_received_bb_max[dim_idx];
           }
 */
+
+          remote_server_screen_width_to_return_ = remote_server_screen_width_;
+          remote_server_screen_height_to_return_ = remote_server_screen_height_;
+
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
         }
 
@@ -234,6 +238,11 @@ void NetKinectArray::readloop() {
     header_data_offset += 3 * sizeof(float);
     memcpy((unsigned char*) &latest_received_bb_max[0], (unsigned char*) &header_data[header_data_offset], 3 * sizeof(float));
     header_data_offset += 3 * sizeof(float);
+    memcpy((char*) &remote_server_screen_width_, (char*)&header_data[header_data_offset], sizeof(unsigned));
+    header_data_offset += sizeof(unsigned);
+    memcpy((char*) &remote_server_screen_height_, (char*)&header_data[header_data_offset], sizeof(unsigned));
+    header_data_offset += sizeof(unsigned);
+    
 
     size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back.size() < data_points_byte_size) {

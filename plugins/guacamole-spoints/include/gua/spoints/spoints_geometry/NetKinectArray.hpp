@@ -81,6 +81,8 @@ public:
 
   inline unsigned char* getBuffer() { return m_buffer_.data(); }
 
+  unsigned get_remote_server_screen_width() const {return remote_server_screen_width_;}
+  unsigned get_remote_server_screen_height() const {return remote_server_screen_height_;}
 
   std::string get_socket_string();
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
@@ -128,6 +130,12 @@ private:
 
   std::array<float, 3> latest_received_bb_min;
   std::array<float, 3> latest_received_bb_max;
+
+  unsigned int remote_server_screen_width_  = 800;
+  unsigned int remote_server_screen_height_ = 800;
+
+  unsigned int remote_server_screen_width_to_return_  = 800;
+  unsigned int remote_server_screen_height_to_return_ = 800;
 /*
   std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
   camera_group_to_uuid_to_matrix_package_list;
