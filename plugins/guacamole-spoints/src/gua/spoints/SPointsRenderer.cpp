@@ -327,12 +327,13 @@ void SPointsRenderer::render(Pipeline& pipe,
       unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
       unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
 
-      float target_ratio = 1.20;
 
-      float scale_x = (target_ratio * render_target_dims.x) / remote_renderer_screen_width;
-      float scale_y = (target_ratio * render_target_dims.y) / remote_renderer_screen_height;
+
+      float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
+      float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
       //render_target_dims.x 
 
+      float target_ratio = 1.20;
       float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
 
       current_shader->set_uniform(
