@@ -2,6 +2,8 @@
 #define SPOINTS_NETKINECTARRAY_HPP
 
 #include <gua/renderer/RenderContext.hpp>
+#include <gua/math/BoundingBox.hpp>
+#include <gua/math/math.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -74,7 +76,7 @@ public:
   ~NetKinectArray();
 
   void draw(gua::RenderContext const& ctx);
-  bool update(gua::RenderContext const& ctx);
+  bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
   void update_feedback(gua::RenderContext const& ctx);
 
   inline unsigned char* getBuffer() { return m_buffer_.data(); }
@@ -123,6 +125,9 @@ private:
 
   std::size_t last_frame_count_ = std::numeric_limits<std::size_t>::max();
   std::size_t last_omitted_frame_count_ = std::numeric_limits<std::size_t>::max();
+
+  std::array<float, 3> latest_received_bb_min;
+  std::array<float, 3> latest_received_bb_max;
 /*
   std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
   camera_group_to_uuid_to_matrix_package_list;

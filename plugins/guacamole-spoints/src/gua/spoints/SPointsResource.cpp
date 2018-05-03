@@ -110,7 +110,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
   }
 
   // synchronize vertex data
-  spointsdata_->nka_->update(ctx);
+  spointsdata_->nka_->update(ctx, bounding_box_);
   
 }
 
@@ -125,8 +125,8 @@ void SPointsResource::draw(RenderContext const& ctx) {
 ////////////////////////////////////////////////////////////////////////////////
 void SPointsResource::init() {
   // approximately local space - can be overwritten from .ks file
-  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-1.5, -0.1, -1.0),
-                                                math::vec3(1.5, 2.2, 1.5));
+  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-5.0, -5.0, -5.0),
+                                                math::vec3(5.0,   5.0,  5.0));
 
 }
 
