@@ -28,6 +28,7 @@
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/Texture.hpp>
 
+#include <mutex>
 #include <future>
 
 namespace gua {
@@ -62,7 +63,8 @@ namespace gua {
   ~TextureDatabase() = default;
 
   std::vector<std::future<std::string>> textures_loading_;
-
+  std::mutex                            texture_request_mutex_;
+  std::set<std::string>                 texture_loading_;
 
 };
 

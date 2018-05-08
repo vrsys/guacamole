@@ -52,26 +52,34 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".tif"
       || extension == ".tga") {
 
-    auto exists = TextureDatabase::instance()->lookup(filename);
-    if (exists)
-      return;
+    {
+      std::lock_guard<std::mutex> lock(texture_request_mutex_);
+      auto needs_to_be_loaded_it = texture_loading_.find(filename);
 
-    // else
-    textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
+      if(texture_loading_.end() != needs_to_be_loaded_it)
+        return;
 
-      auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
-      if (default_tex) {
-        gua::TextureDatabase::instance()->add(filename, default_tex);
-      }
+      texture_loading_.insert(filename);
+    }
 
-      auto image = gua::load_image_2d(filename, true);
+      // else
+      textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
 
-      instance()->add(filename, std::make_shared<Texture2D>(image, 1,
-            scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                        scm::gl::WRAP_REPEAT,
-                                        scm::gl::WRAP_REPEAT)));
-      return filename;
-    }));
+        auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
+        if (default_tex) {
+          gua::TextureDatabase::instance()->add(filename, default_tex);
+        }
+
+        auto image = gua::load_image_2d(filename, true);
+
+        instance()->add(filename, std::make_shared<Texture2D>(image, 1,
+              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                          scm::gl::WRAP_REPEAT,
+                                          scm::gl::WRAP_REPEAT)));
+        return filename;
+      }));
+
+
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   }
