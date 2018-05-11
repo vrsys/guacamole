@@ -82,14 +82,15 @@ int main(int argc, char **argv)
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    // pipe->add_pass(std::make_shared<gua::SSAOPassDescription>());
     pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.0f);
 
-    pipe->get_resolve_pass()->ssao_intensity(1.0);
-    pipe->get_resolve_pass()->ssao_enable(true);
-    pipe->get_resolve_pass()->ssao_falloff(1.0);
-    pipe->get_resolve_pass()->ssao_radius(4.0);
+    // pipe->get_resolve_pass()->ssao_intensity(1.0);
+    // pipe->get_resolve_pass()->ssao_enable(true);
+    // pipe->get_resolve_pass()->ssao_falloff(1.0);
+    // pipe->get_resolve_pass()->ssao_radius(4.0);
 
     pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
 

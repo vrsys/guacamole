@@ -1,7 +1,7 @@
 #ifndef GUA_INCLUDE_NRP_PLATFORM_HPP
 #define GUA_INCLUDE_NRP_PLATFORM_HPP
 
-#define GUA_DEBUG 0
+#define GUA_DEBUG 1
 
 #if defined(_MSC_VER)
 #if defined(GUA_NRP_LIBRARY)
