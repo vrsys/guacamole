@@ -93,8 +93,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.29:7051");
-  std::string endpoint_f("tcp://141.54.147.29:7001");
+  std::string endpoint_d("tcp://141.54.147.47:7051");
+  std::string endpoint_f("tcp://141.54.147.47:7001");
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
