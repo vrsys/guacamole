@@ -123,6 +123,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   unsigned color_size() const { return color_size_; }
   unsigned depth_size_byte() const { return depth_size_byte_; }
   std::string server_endpoint() const { return server_endpoint_; }
+  std::string feedback_port() const { return feedback_port_; }
+  std::string debug_port() const { return debug_port_; }
   unsigned width_depthimage() const { return width_depthimage_; }
   unsigned height_depthimage() const { return height_depthimage_; }
   unsigned width_colorimage() const { return width_colorimage_; }
@@ -139,6 +141,8 @@ class GUA_VIDEO3D_DLL Video3DResource : public GeometryResource {
   std::string                         ks_filename_;
   std::vector<std::shared_ptr<KinectCalibrationFile>> calib_files_;
   std::string                         server_endpoint_;
+  std::string                         feedback_port_;
+  std::string                         debug_port_; 
 
   // cpu resources
   unsigned depth_size_;
