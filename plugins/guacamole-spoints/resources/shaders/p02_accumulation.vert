@@ -14,6 +14,7 @@ layout(location=0) in vec4 gua_in_position_plus_packed_floatified_color;
 
 @material_method_declarations_vert@
 
+out vec3 pass_point_color;
 
 uniform mat4 kinect_model_matrix;
 uniform float point_size = 1.0;
@@ -21,7 +22,7 @@ uniform float point_size = 1.0;
 // main
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
-
+/*
   gua_world_position = vec3(0);
   gua_normal     = vec3(0);
   gua_tangent    = vec3(0);
@@ -30,7 +31,7 @@ void main() {
   gua_metalness  = 0.5;
   gua_roughness  = 0.5;
   gua_emissivity = 1;
-
+*/
   uint packed_vertex_color = floatBitsToUint(gua_in_position_plus_packed_floatified_color.a);
 
   float r_channel = float(((packed_vertex_color >> 24) & 0xFF)) / 255.0;
@@ -40,17 +41,14 @@ void main() {
   vec3 separated_color = vec3(r_channel, g_channel, b_channel);
 
 
+  pass_point_color = vec3(r_channel, g_channel, b_channel);
 
-  gua_color = vec3(r_channel, g_channel, b_channel);
 
-  //@material_method_calls_vert@
-
-  @include "shaders/common/gua_varyings_assignment.glsl"
 
 
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
-  gl_PointSize = 10.0f;//point_size;
+  gl_PointSize = 16.0f;//point_size;
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }
