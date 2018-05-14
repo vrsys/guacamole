@@ -27,6 +27,7 @@
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 
 
 void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::math::vec2ui const& res) {
@@ -132,7 +133,7 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(900, 900);
+  auto resolution = gua::math::vec2ui(800, 800);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
@@ -140,6 +141,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/transform", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 1.2f));
@@ -169,11 +171,11 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("window1");
-  //camera->config.set_enable_stereo(false);
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
+  //camera->config.set_enable_stereo(true);
   camera->set_pipeline_description(pipe);
 
-  camera->set_pre_render_cameras({portal_camera});
+  //camera->set_pre_render_cameras({portal_camera});
 
   auto camera2 = graph.add_node<gua::node::CameraNode>("/screen2", "cam2");
   camera2->translate(0.0, 1.5, 2.0);
@@ -181,11 +183,11 @@ int main(int argc, char** argv) {
   camera2->config.set_screen_path("/screen2");
   camera2->config.set_scene_graph_name("main_scenegraph");
   camera2->config.set_output_window_name("window2");
-  //camera->config.set_enable_stereo(false);
-  camera2->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
+  //camera2->config.set_enable_stereo(true);
   camera2->set_pipeline_description(pipe);
 
-  camera2->set_pre_render_cameras({portal_camera});
+ // camera2->set_pre_render_cameras({portal_camera});
 
   auto camera3 = graph.add_node<gua::node::CameraNode>("/screen3", "cam3");
   camera3->translate(0.5, 0, 2.0);
@@ -193,11 +195,11 @@ int main(int argc, char** argv) {
   camera3->config.set_screen_path("/screen3");
   camera3->config.set_scene_graph_name("main_scenegraph");
   camera3->config.set_output_window_name("window3");
-  //camera->config.set_enable_stereo(false);
-  camera3->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
+  //camera3->config.set_enable_stereo(true);
   camera3->set_pipeline_description(pipe);
 
-  camera3->set_pre_render_cameras({portal_camera});
+  //camera3->set_pre_render_cameras({portal_camera});
 
   auto camera4 = graph.add_node<gua::node::CameraNode>("/screen4", "cam4");
   camera4->translate(-0.5, 0, 2.0);
@@ -205,8 +207,8 @@ int main(int argc, char** argv) {
   camera4->config.set_screen_path("/screen4");
   camera4->config.set_scene_graph_name("main_scenegraph");
   camera4->config.set_output_window_name("window4");
-  //camera->config.set_enable_stereo(false);
-  camera4->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
+  //camera4->config.set_enable_stereo(true);
   camera4->set_pipeline_description(pipe);
 
   camera4->set_pre_render_cameras({portal_camera});
@@ -219,10 +221,10 @@ int main(int argc, char** argv) {
     set_window_default(window, cam_node->config.get_resolution());
     cam_node->config.set_output_window_name(window_name);
 
-   // window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
 
     //if("window3" == window_name) {
-      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+      //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     //}
   };
 

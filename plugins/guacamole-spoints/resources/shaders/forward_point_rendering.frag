@@ -14,6 +14,7 @@
 @include "shaders/common/gua_global_variable_declaration.glsl"
 
 @material_method_declarations_frag@
+@include "common/gua_abuffer_collect.glsl"
 
 ///////////////////////////////////////////////////////////////////////////////
 // main
@@ -28,7 +29,10 @@ void main() {
   //gua_color = vec3(1.0, 0.0, 0.0);
   gua_emissivity = 1.0;
 
+  vec2 centered_point_coord = (gl_PointCoord.xy - 0.5) * 2.0;
+  float blend_weight = 2.0 - dot(centered_point_coord, centered_point_coord) / 2.0;
+  gua_color = mix(vec3(0.0, 0.0, 0.0), gua_color, blend_weight);
   //@material_method_calls_frag@
 
-  @include "shaders/common/gua_write_gbuffer.glsl"
+  submit_fragment(gl_FragCoord.z);
 }

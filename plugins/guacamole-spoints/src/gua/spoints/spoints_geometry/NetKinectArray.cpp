@@ -243,11 +243,13 @@ void NetKinectArray::readloop() {
     memcpy((char*) &remote_server_screen_height_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);
     
+    std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
 
     size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back.size() < data_points_byte_size) {
       m_buffer_back_.resize(data_points_byte_size);
    // }
+
 
     //memcpy((unsigned char*) m_buffer_back.data(), (unsigned char*) zmqm.data(), message_size);
     memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size, data_points_byte_size);
