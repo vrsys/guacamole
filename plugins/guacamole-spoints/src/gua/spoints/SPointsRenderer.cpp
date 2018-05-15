@@ -177,12 +177,11 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
       log_to_lin_conversion_shader_stages_.clear();
       log_to_lin_conversion_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p00_log_to_lin_conversion.vert")));
       log_to_lin_conversion_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p00_log_to_lin_conversion.frag")));
-
-      depth_pass_shader_stages_.clear();
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.vert")));
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.geom")));
-      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/gbuffer/plod/p01_depth.frag")));
 */
+      depth_pass_shader_stages_.clear();
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/p01_depth.vert")));
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/p01_depth.frag")));
+
       accumulation_pass_shader_stages_.clear();
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/p02_accumulation.vert")));
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/p02_accumulation.frag")));
@@ -200,6 +199,16 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
     }
   }
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  void SPointsRenderer::_initialize_depth_pass_program() {
+    if(!depth_pass_program_) {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(depth_pass_shader_stages_);
+      depth_pass_program_ = new_program;
+    }
+    assert(depth_pass_program_);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   void SPointsRenderer::_initialize_accumulation_pass_program(MaterialShader* material) {
@@ -242,17 +251,17 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
                                            scm::math::vec2ui const& render_target_dims,
              bool resize_resource_containers) {
 
-    /*depth_pass_log_depth_result_ = ctx.render_device
+    depth_pass_log_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_R_32F,
                           1, 1, 1);
-    */
-/*
+    
+
     depth_pass_linear_depth_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_D32F,
                           1, 1, 1);
-*/
+
     accumulation_pass_color_result_ = ctx.render_device
       ->create_texture_2d(render_target_dims,
                           scm::gl::FORMAT_RGB_16F,
@@ -276,11 +285,11 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
     log_to_lin_gua_depth_conversion_pass_fbo_ = ctx.render_device->create_frame_buffer();
 
     log_to_lin_gua_depth_conversion_pass_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
-
+*/
     depth_pass_result_fbo_ = ctx.render_device->create_frame_buffer();
     depth_pass_result_fbo_->clear_attachments();
     depth_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
-    depth_pass_result_fbo_->attach_color_buffer(0,
+/*    depth_pass_result_fbo_->attach_color_buffer(0,
                                                 depth_pass_log_depth_result_);
 */
 
@@ -422,11 +431,11 @@ void SPointsRenderer::render(Pipeline& pipe,
  /*     if (!log_to_lin_conversion_pass_program_) {
         _initialize_log_to_lin_conversion_pass_program();
       }
-
+*/
       if (!depth_pass_program_) {
         _initialize_depth_pass_program();
       }
-*/
+
       
       if (!normalization_pass_program_) {
         _initialize_normalization_pass_program();
@@ -460,8 +469,118 @@ void SPointsRenderer::render(Pipeline& pipe,
     float last_known_point_size = std::numeric_limits<float>::max();
 
 
+
+
+
+
+    // depth pass
     {
       scm::gl::context_all_guard context_guard(ctx.render_context);
+
+      for (auto& o : objects->second) {
+
+        auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+        auto spoints_desc(spoints_node->get_spoints_description());
+
+        if (!GeometryDatabase::instance()->contains(spoints_desc)) {
+          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+                                   << spoints_desc << ", " << std::endl;
+          continue;
+        }
+
+        auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+            GeometryDatabase::instance()->lookup(spoints_desc));
+        if (!spoints_resource) {
+          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                   << std::endl;
+          continue;
+        }
+
+
+        auto const& model_matrix(spoints_node->get_cached_world_transform());
+        auto normal_matrix(scm::math::transpose(
+            scm::math::inverse(spoints_node->get_cached_world_transform())));
+        auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+
+        scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+        scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+
+        scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
+
+        const float scaling = scm::math::length(
+            (model_matrix * view_matrix) * scm::math::vec4d(1.0, 0.0, 0.0, 0.0));
+
+
+
+
+      spoints_resource->update_buffers(pipe.get_context(), pipe);
+
+
+
+        ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
+
+        ctx.render_context->apply();
+
+        depth_pass_program_->use(ctx);
+      
+        /*depth_pass_program_->set_uniform(
+          ctx,
+          scm::math::mat4f(model_matrix),
+          "kinect_model_matrix");
+        */
+
+        depth_pass_program_->set_uniform(
+          ctx,
+          scm::math::mat4f(mvp_matrix),
+          "kinect_mvp_matrix");
+
+        ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
+
+
+
+        //float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+        unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
+        unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
+
+
+
+        float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
+        float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
+        //render_target_dims.x 
+
+
+        //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
+
+        float target_ratio = 2.5;
+        float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
+
+        depth_pass_program_->set_uniform(
+          ctx,
+          screen_space_point_size,
+          "point_size");
+
+        bool write_depth = true;
+        //target.bind(ctx, write_depth);
+        target.set_viewport(ctx);
+
+        ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+        ctx.render_context->apply();
+
+        spoints_resource->draw(ctx);
+
+
+      }
+    }
+
+    // accumulation pass
+    {
+      scm::gl::context_all_guard context_guard(ctx.render_context);
+
+
+      accumulation_pass_result_fbo_->attach_depth_stencil_buffer(depth_pass_linear_depth_result_);
+
 
       for (auto& o : objects->second) {
 
@@ -521,22 +640,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
       std::size_t view_uuid = camera_id;
 
-  /*
-      spoints::camera_matrix_package cm_package;
-      cm_package.k_package.is_camera = is_camera;
-      cm_package.k_package.view_uuid = view_uuid;
-      cm_package.k_package.stereo_mode = stereo_mode;
-      cm_package.k_package.framecount = pipe.get_context().framecount;
-      cm_package.k_package.render_context_id = pipe.get_context().id;
-      cm_package.mat_package = current_package;
-  */
 
-
-
-
-
-
-      spoints_resource->update_buffers(pipe.get_context(), pipe);
      // spoints_resource->push_matrix_package(cm_package);
       std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
 
@@ -585,28 +689,24 @@ void SPointsRenderer::render(Pipeline& pipe,
                               << std::endl;
         }
 
-
+        scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
         current_shader->use(ctx);
-      
+      /*
         current_shader->set_uniform(
           ctx,
           scm::math::mat4f(model_matrix),
           "kinect_model_matrix");
-
+*/
+        current_shader->set_uniform(
+          ctx,
+          scm::math::mat4f(mvp_matrix),
+          "kinect_mvp_matrix");
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
         ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
         ctx.render_context->set_blend_state(color_accumulation_state_);
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
-
-
-
-
-
-
-
-
 
 
 
@@ -624,7 +724,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
 
-        float target_ratio = 5.20;
+        float target_ratio = 2.5;
         float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
 
         current_shader->set_uniform(
