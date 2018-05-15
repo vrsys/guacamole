@@ -69,7 +69,7 @@ class GUA_SPOINTS_DLL SPointsRenderer {
 private:
   void          _load_shaders();
   //void          _initialize_log_to_lin_conversion_pass_program();
-  //void          _initialize_depth_pass_program();
+  void          _initialize_depth_pass_program();
   void          _initialize_accumulation_pass_program(MaterialShader* material);
   void          _initialize_normalization_pass_program();
   void          _initialize_shadow_pass_program();
@@ -83,6 +83,12 @@ private:
             bool resize_resource_containers); 
 
  private:  // attributes
+
+  //depth pass FBO & attachments
+  scm::gl::texture_2d_ptr                      depth_pass_log_depth_result_;
+  scm::gl::texture_2d_ptr                      depth_pass_linear_depth_result_;
+
+  scm::gl::frame_buffer_ptr                    depth_pass_result_fbo_;
 
   //accumulation pass FBO & attachments
   scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
@@ -121,7 +127,7 @@ private:
 
   //CPU resources
   //std::vector<ShaderProgramStage>                                      log_to_lin_conversion_shader_stages_;
-  //std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
+  std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
   std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
   std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
 
@@ -129,7 +135,7 @@ private:
 
   //additional GPU resources 
   //std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
-  //std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
+  std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
   std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 

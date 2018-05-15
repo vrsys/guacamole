@@ -47,7 +47,7 @@ void main() {
     gua_metalness  = 0.0;
     gua_roughness  = 1.0;
     gua_emissivity = 1.0;
-    gua_alpha      = 1.0;
+    gua_alpha      = accumulated_weight;
     gua_flags_passthrough = true;//(gua_emissivity > 0.99999);
 
     // calculate world position from blended depth
