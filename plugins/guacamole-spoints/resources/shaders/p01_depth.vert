@@ -15,5 +15,5 @@ uniform float point_size = 1.0;
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
   gl_Position = kinect_mvp_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
-  gl_PointSize = 6;//*point_size;
+  gl_PointSize = point_size;
 }
