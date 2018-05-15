@@ -19,6 +19,7 @@ layout(binding=3) uniform sampler2D p02_weight_and_depth_texture;
 ///////////////////////////////////////////////////////////////////////////////
 @include "common/gua_fragment_shader_output.glsl"
 
+@include "common/gua_abuffer_collect.glsl"
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,13 +48,13 @@ void main() {
     gua_metalness  = 0.0;
     gua_roughness  = 1.0;
     gua_emissivity = 1.0;
-    gua_alpha      = accumulated_weight;
+    gua_alpha      = 1.0;
     gua_flags_passthrough = true;//(gua_emissivity > 0.99999);
 
     // calculate world position from blended depth
     //vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, depth_visibility_pass, 1.0);
 
-    if( (accumulated_weight == 0.0) || !(blended_depth >= 0.0 && blended_depth  <= 0.9999999) )
+    if( (accumulated_weight < 0.5) || !(blended_depth >= 0.0 && blended_depth  <= 0.9999999) )
       discard;
       //blended_depth = 0.0;
 
@@ -68,9 +69,7 @@ void main() {
     gl_FragDepth = blended_depth; 
 
 
-
-    @include "common/gua_write_gbuffer.glsl"
-
+    submit_fragment(blended_depth);
   //gua_out_color = vec3(1.0, 0.0, 0.0);
 }
 

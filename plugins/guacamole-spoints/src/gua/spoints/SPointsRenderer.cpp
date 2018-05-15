@@ -230,7 +230,9 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
   void SPointsRenderer::_initialize_normalization_pass_program() {
     if(!normalization_pass_program_) {
       auto new_program = std::make_shared<ShaderProgram>();
-      new_program->set_shaders(normalization_pass_shader_stages_);
+
+      auto smap = global_substitution_map_;
+      new_program->set_shaders(normalization_pass_shader_stages_, std::list<std::string>(), false, smap);
       normalization_pass_program_ = new_program;
     }
     assert(normalization_pass_program_);
