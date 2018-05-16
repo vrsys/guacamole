@@ -20,10 +20,13 @@ const std::string toString(const T& value) {
 }
 
 NetKinectArray::NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
-                               const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte)
+                               const std::string& server_endpoint, const std::string& feedback_port, const std::string& debug_port, 
+                               unsigned colorsize_byte, unsigned depthsize_byte)
   : m_mutex(),
     m_running(true),
     m_server_endpoint(server_endpoint),
+    m_feedback_port(feedback_port),
+    m_debug_port(debug_port),
     m_calib_files(calib_files),
     m_colorsize_byte(colorsize_byte),
     m_depthsize_byte(depthsize_byte),
@@ -93,8 +96,8 @@ void NetKinectArray::readloop() {
   socket_f.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
   std::string endpoint("tcp://" + m_server_endpoint);
-  std::string endpoint_d("tcp://141.54.147.47:7051");
-  std::string endpoint_f("tcp://141.54.147.47:7001");
+  std::string endpoint_d("tcp://" + m_debug_port);
+  std::string endpoint_f("tcp://" + m_feedback_port);
   socket.connect(endpoint.c_str());
   socket_d.connect(endpoint_d.c_str());
   socket_f.bind(endpoint_f.c_str());
@@ -119,7 +122,7 @@ void NetKinectArray::readloop() {
     
     zmq::message_t zmqm_d;//(size.debug_byte*sizeof(float));
     socket_d.recv(&zmqm_d, ZMQ_NOBLOCK);
-    bool got_debug = false;
+    
     if(zmqm_d.size() == size.debug_byte){ 
 
       memcpy((float*) debug_values, zmqm_d.data(), size.debug_byte);
@@ -135,9 +138,12 @@ void NetKinectArray::readloop() {
       float total_compression_ratio_color_percent   = debug_values[5];
       float total_compression_ratio_depth_percent   = debug_values[6];
       float total_time                              = debug_values[0];
+<<<<<<< HEAD
       int comp_ratio = (int) (100.0f / total_compression_ratio_percent);
       int comp_ratio_depth = (int) (100.0f / total_compression_ratio_depth_percent);
       int comp_ratio_color = (int) (100.0f / total_compression_ratio_color_percent);
+=======
+>>>>>>> lib_rgbd
       //float enc_time                                = debug_values[11];
       //float mask_time                               = debug_values[12];
 
@@ -161,8 +167,6 @@ void NetKinectArray::readloop() {
                           "\",\"Color ratio\" : \""                  + toString<float>(comp_color_ratio) + 
                           "\",\"Depth ratio\" : \""                  + toString<float>(comp_depth_ratio) + 
                           "\"}");
-
-      got_debug = true;
     }
     
     zmq::message_t zmqm_f(size.feedback_byte);

@@ -172,6 +172,8 @@ Video3DRenderer::Video3DData::Video3DData(
 
   nka_ = std::make_shared<video3d::NetKinectArray>(video3d_ressource.calib_files(),
                                      video3d_ressource.server_endpoint(),
+                                     video3d_ressource.feedback_port(),
+                                     video3d_ressource.debug_port(),
                                      video3d_ressource.color_size(),
                                      video3d_ressource.depth_size_byte());
 

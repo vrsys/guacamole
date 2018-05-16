@@ -44,7 +44,8 @@ class NetKinectArray{
 
 public:
   NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files,
-                 const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte);
+                 const std::string& server_endpoint, const std::string& feedback_port, const std::string& debug_port,
+                 unsigned colorsize_byte, unsigned depthsize_byte);
   ~NetKinectArray();
 
   bool update();
@@ -88,6 +89,8 @@ private:
   std::mutex m_mutex;
   bool           m_running;
   const std::string m_server_endpoint;
+  const std::string m_feedback_port;
+  const std::string m_debug_port;
   std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
   unsigned m_colorsize_byte;
   unsigned m_depthsize_byte;

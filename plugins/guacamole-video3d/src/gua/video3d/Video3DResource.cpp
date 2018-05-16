@@ -50,6 +50,8 @@ Video3DResource::Video3DResource(std::string const& video3d, unsigned flags)
     : ks_filename_(video3d),
       calib_files_(),
       server_endpoint_(),
+      feedback_port_(),
+      debug_port_(),
       depth_size_(0),
       depth_size_byte_(0),
       color_size_(0),
@@ -90,6 +92,10 @@ void Video3DResource::init() {
     while (istr >> token) {
       if (token == "serverport") {
         istr >> server_endpoint_;
+      } else if (token =="feedbackport") {
+        istr >> feedback_port_;
+      } else if (token =="debugport") {
+        istr >> debug_port_;
       } else if (token == "kinect") {
         istr >> token;
         std::string cf_absolute_path = ks_dir.string() + "/" + token;
