@@ -95,8 +95,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
       if(0 != total_num_bytes_to_copy) {
 
-        size_t sizeof_point = 4*sizeof(float);
-
+        //size_t sizeof_point = 4*sizeof(float);
+        size_t sizeof_point = 2*sizeof(uint32_t);
         num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
 
         auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
@@ -132,10 +132,13 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
         if(!current_is_vbo_created) {
           auto& current_point_layout = point_layout_per_context_[ctx.id];
-          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
+          /*current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
                                                                       (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
                                                                       boost::assign::list_of(current_net_data_vbo));
-
+          */
+          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
+                                                                                (0, 0, scm::gl::TYPE_VEC2UI, sizeof_point, scm::gl::INT_PURE),
+                                                                                boost::assign::list_of(current_net_data_vbo));
           current_is_vbo_created = true;
 
         }
@@ -245,7 +248,7 @@ void NetKinectArray::readloop() {
     
     std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
 
-    size_t data_points_byte_size = num_voxels_received * sizeof(gua::point_types::XYZ32_RGB8);
+    size_t data_points_byte_size = num_voxels_received * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back.size() < data_points_byte_size) {
       m_buffer_back_.resize(data_points_byte_size);
    // }
