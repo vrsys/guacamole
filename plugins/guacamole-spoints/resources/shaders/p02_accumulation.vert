@@ -28,6 +28,12 @@ const vec3 quant_steps               = vec3( (conservative_bb_limit_max.x - cons
                                              (conservative_bb_limit_max.y - conservative_bb_limit_min.y) / (1<<13),
                                              (conservative_bb_limit_max.z - conservative_bb_limit_min.z) / (1<<13));
 
+
+const uvec4 shift_vector = uvec4(18, 5, 0, 24);
+const uvec4 mask_vector  = uvec4(0x3FFFu, 0x1FFFu, 0x1F, 0xFFu);
+
+const uvec3 color_mask_vector  = uvec3(0xFF0000, 0xFF00, 0XFF);
+const uvec3 color_shift_vector = uvec3(16, 8, 0);
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,37 +47,16 @@ void main() {
   gua_metalness  = 0.5;
   gua_roughness  = 0.5;
   gua_emissivity = 1;
-*//*
-  uint packed_vertex_color = floatBitsToUint(gua_in_position_plus_packed_floatified_color.a);
-
-  float r_channel = float(((packed_vertex_color >> 24) & 0xFF)) / 255.0;
-  float g_channel = float(((packed_vertex_color >> 16) & 0xFF)) / 255.0;
-  float b_channel = float(((packed_vertex_color >> 8) & 0xFF)) / 255.0;
-
-  vec3 separated_color = vec3(r_channel, g_channel, b_channel);
-
-
-  pass_point_color = vec3(r_channel, g_channel, b_channel);
-
-
-
-
-  gl_Position = kinect_mvp_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 */
-
-  uvec3 decoded_quantized_pos = uvec3(  ((pos_14_13_13qz_col_8_8_8qz.x >> 18) & 0x3FFFu),
-  										((pos_14_13_13qz_col_8_8_8qz.x >>  5) & 0x1FFFu),
-  										(((pos_14_13_13qz_col_8_8_8qz.x >>  0) & 0x1Fu) << 8) | ((pos_14_13_13qz_col_8_8_8qz.y >> 24) & 0xFF)
-  									 );
+  uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
+  uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
   vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
 
-  vec3 decoded_color = vec3( ((pos_14_13_13qz_col_8_8_8qz.y & 0xFF0000) >> 16)/255.0f,
-  							 ((pos_14_13_13qz_col_8_8_8qz.y &   0xFF00) >>  8)/255.0f,
-  							 ((pos_14_13_13qz_col_8_8_8qz.y &     0xFF) >>  0)/255.0f );
+  vec3 decoded_color = vec3( (pos_14_13_13qz_col_8_8_8qz.yyy & color_mask_vector) >> color_shift_vector)/255.0f;
 
   gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
   pass_point_color = decoded_color;
-  gl_PointSize = point_size / 2.0;
+  gl_PointSize = point_size;
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }
