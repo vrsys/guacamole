@@ -11,7 +11,7 @@ namespace gua
 {
 namespace nrp
 {
-class GUA_NRP_DLL PagodaLog
+class GUA_NRP_DLL NRPLog
 {
   public:
     enum LOG_LEVEL
@@ -22,7 +22,7 @@ class GUA_NRP_DLL PagodaLog
         ERROR = 0
     };
 
-    PagodaLog()
+    NRPLog()
     {
         auto *rand_name = new char[8];
 
@@ -34,7 +34,7 @@ class GUA_NRP_DLL PagodaLog
         assert(_ofstream.is_open());
     }
 
-    explicit PagodaLog(const char *log_name)
+    explicit NRPLog(const char *log_name)
     {
         _ofstream = std::ofstream();
         _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
@@ -42,7 +42,7 @@ class GUA_NRP_DLL PagodaLog
         assert(_ofstream.is_open());
     }
 
-    PagodaLog(const char *log_name, LOG_LEVEL log_level)
+    NRPLog(const char *log_name, LOG_LEVEL log_level)
     {
         _ofstream = std::ofstream();
         _ofstream.open(std::string(log_name) + ".txt", std::ios::out | std::ios::app);
@@ -52,7 +52,7 @@ class GUA_NRP_DLL PagodaLog
         assert(_ofstream.is_open());
     }
 
-    ~PagodaLog() { _ofstream.close(); }
+    ~NRPLog() { _ofstream.close(); }
 
     bool i(const char *msg) { return (_log_level >= LOG_LEVEL::INFO) && log(msg); }
 

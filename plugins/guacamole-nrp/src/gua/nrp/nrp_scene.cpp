@@ -1,7 +1,7 @@
 #include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
-#include <gua/nrp/pagoda_joint_visual.hpp>
-#include <gua/nrp/pagoda_scene.hpp>
+#include <gua/nrp/nrp_joint_visual.hpp>
+#include <gua/nrp/nrp_scene.hpp>
 
 #include "OgreGpuProgramManager.h"
 #include "OgreHighLevelGpuProgramManager.h"
@@ -253,7 +253,7 @@ class SimplifiedScriptTranslator : public Ogre::ScriptTranslatorManager
     SimplifiedPassTranslator mPassTranslator;
 };
 
-PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
+NRPScene::NRPScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
 {
     new Ogre::LodStrategyManager();
     new Ogre::LogManager();
@@ -285,7 +285,7 @@ PagodaScene::PagodaScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_
     auto uniform_color_shader(std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
     gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
 }
-PagodaScene::~PagodaScene()
+NRPScene::~NRPScene()
 {
     _msgs_model.clear();
     _msgs_visual.clear();
@@ -301,20 +301,20 @@ PagodaScene::~PagodaScene()
 
     _world_visual.reset();
 }
-void PagodaScene::set_root_node(gua::nrp::NRPNode *root_node)
+void NRPScene::set_root_node(gua::nrp::NRPNode *root_node)
 {
     _mutex_scenegraph.lock();
     _root_node = root_node;
-    _world_visual.reset(new PagodaVisual("world_visual", _root_node));
+    _world_visual.reset(new NRPVisual("world_visual", _root_node));
     _mutex_scenegraph.unlock();
 }
-void PagodaScene::set_cam_node(gua::nrp::NRPCameraNode *cam_node)
+void NRPScene::set_cam_node(gua::nrp::NRPCameraNode *cam_node)
 {
     _mutex_scenegraph.lock();
     _cam_node = cam_node;
     _mutex_scenegraph.unlock();
 }
-void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
+void NRPScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
     skeleton_msgs_list::iterator iter;
@@ -331,12 +331,12 @@ void PagodaScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
 
     _msgs_skeleton_pose.push_back(msg);
 }
-void PagodaScene::on_model_msg(ConstModelPtr &msg)
+void NRPScene::on_model_msg(ConstModelPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_model.push_back(msg);
 }
-void PagodaScene::on_response_msg(ConstResponsePtr &msg)
+void NRPScene::on_response_msg(ConstResponsePtr &msg)
 {
     gazebo::msgs::Scene sceneMsg;
     sceneMsg.ParseFromString(msg->serialized_data());
@@ -345,7 +345,7 @@ void PagodaScene::on_response_msg(ConstResponsePtr &msg)
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_scene.emplace_back(sm);
 }
-void PagodaScene::on_pose_msg(ConstPosesStampedPtr &msg)
+void NRPScene::on_pose_msg(ConstPosesStampedPtr &msg)
 {
     std::lock_guard<std::recursive_mutex> lock(_mutex_pose_msgs);
 
@@ -358,7 +358,7 @@ void PagodaScene::on_pose_msg(ConstPosesStampedPtr &msg)
             _msgs_pose.insert(std::make_pair(msg->pose(i).id(), msg->pose(i)));
     }
 }
-bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualType type)
+bool NRPScene::process_visual_msg(ConstVisualPtr &msg, NRPVisual::VisualType type)
 {
     bool result = false;
     auto iter = _visuals.end();
@@ -410,7 +410,7 @@ bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualTy
             iter = _visuals.find(msg->parent_id());
             if(iter != _visuals.end())
             {
-                visual.reset(new PagodaVisual(msg->name(), iter->second));
+                visual.reset(new NRPVisual(msg->name(), iter->second));
                 if(msg->has_id())
                     visual->set_id(msg->id());
             }
@@ -418,7 +418,7 @@ bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualTy
         else
         {
             // Add a visual that is attached to the scene root
-            visual.reset(new PagodaVisual(msg->name(), _world_visual));
+            visual.reset(new NRPVisual(msg->name(), _world_visual));
             if(msg->has_id())
                 visual->set_id(msg->id());
         }
@@ -436,7 +436,7 @@ bool PagodaScene::process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualTy
     return result;
 }
 
-ptr_visual PagodaScene::get_visual(const uint32_t id) const
+ptr_visual NRPScene::get_visual(const uint32_t id) const
 {
     auto iter = _visuals.find(id);
     if(iter != _visuals.end())
@@ -444,7 +444,7 @@ ptr_visual PagodaScene::get_visual(const uint32_t id) const
     return ptr_visual();
 }
 
-ptr_visual PagodaScene::get_visual(const std::string &name) const
+ptr_visual NRPScene::get_visual(const std::string &name) const
 {
     ptr_visual result;
 
@@ -482,7 +482,7 @@ ptr_visual PagodaScene::get_visual(const std::string &name) const
     return result;
 }
 
-bool PagodaScene::process_link_msg(ConstLinkPtr &msg)
+bool NRPScene::process_link_msg(ConstLinkPtr &msg)
 {
     ptr_visual linkVis;
 
@@ -499,7 +499,7 @@ bool PagodaScene::process_link_msg(ConstLinkPtr &msg)
 
     return true;
 }
-bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
+bool NRPScene::process_joint_msg(ConstJointPtr &msg)
 {
     // TODO
 
@@ -513,7 +513,7 @@ bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
     //    if(!child_vis)
     //        return false;
     //
-    //    ptr_joint_visual joint_vis(new PagodaJointVisual(msg->name() + "_JOINT_VISUAL__", child_vis));
+    //    ptr_joint_visual joint_vis(new NRPJointVisual(msg->name() + "_JOINT_VISUAL__", child_vis));
     //    joint_vis->update_from_joint_msg(msg);
     //
     //    if(msg->has_id())
@@ -523,14 +523,14 @@ bool PagodaScene::process_joint_msg(ConstJointPtr &msg)
 
     return true;
 }
-bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
+bool NRPScene::process_light_factory_msg(ConstLightPtr &msg)
 {
     light_map::iterator iter;
     iter = _lights.find(msg->name());
 
     if(iter == _lights.end())
     {
-        ptr_light light(new PagodaLight(msg->name(), _root_node));
+        ptr_light light(new NRPLight(msg->name(), _root_node));
         light->load_from_msg(msg);
         _lights[msg->name()] = light;
     }
@@ -544,7 +544,7 @@ bool PagodaScene::process_light_factory_msg(ConstLightPtr &msg)
 
     return true;
 }
-bool PagodaScene::process_light_modify_msg(ConstLightPtr &msg)
+bool NRPScene::process_light_modify_msg(ConstLightPtr &msg)
 {
     light_map::iterator iter;
     iter = _lights.find(msg->name());
@@ -562,7 +562,7 @@ bool PagodaScene::process_light_modify_msg(ConstLightPtr &msg)
 
     return true;
 }
-bool PagodaScene::process_model_msg(const gazebo::msgs::Model &msg)
+bool NRPScene::process_model_msg(const gazebo::msgs::Model &msg)
 {
     std::string modelName, linkName;
 
@@ -641,7 +641,7 @@ bool PagodaScene::process_model_msg(const gazebo::msgs::Model &msg)
 
     return true;
 }
-bool PagodaScene::process_scene_msg(ConstScenePtr &msg)
+bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 {
     {
         std::lock_guard<std::recursive_mutex> lock(_mutex_pose_msgs);
@@ -714,7 +714,7 @@ bool PagodaScene::process_scene_msg(ConstScenePtr &msg)
     }
     return true;
 }
-void PagodaScene::pre_render()
+void NRPScene::pre_render()
 {
     _mutex_scenegraph.lock();
 
@@ -813,7 +813,7 @@ void PagodaScene::pre_render()
 
     for(auto model_visual_msgs_iter = model_visual_msgs_copy.begin(); model_visual_msgs_iter != model_visual_msgs_copy.end();)
     {
-        if(this->process_visual_msg(*model_visual_msgs_iter, PagodaVisual::VT_MODEL))
+        if(this->process_visual_msg(*model_visual_msgs_iter, NRPVisual::VT_MODEL))
             model_visual_msgs_copy.erase(model_visual_msgs_iter++);
         else
             ++model_visual_msgs_iter;
@@ -821,7 +821,7 @@ void PagodaScene::pre_render()
 
     for(auto link_visual_msgs_iter = link_visual_msgs_copy.begin(); link_visual_msgs_iter != link_visual_msgs_copy.end();)
     {
-        if(this->process_visual_msg(*link_visual_msgs_iter, PagodaVisual::VT_LINK))
+        if(this->process_visual_msg(*link_visual_msgs_iter, NRPVisual::VT_LINK))
             link_visual_msgs_copy.erase(link_visual_msgs_iter++);
         else
             ++link_visual_msgs_iter;
@@ -922,13 +922,13 @@ void PagodaScene::pre_render()
 
     _mutex_scenegraph.unlock();
 }
-std::mutex &PagodaScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
-void PagodaScene::on_light_factory_msg(ConstLightPtr &msg)
+std::mutex &NRPScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
+void NRPScene::on_light_factory_msg(ConstLightPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_light_factory.emplace_back(msg);
 }
-void PagodaScene::on_light_modify_msg(ConstLightPtr &msg)
+void NRPScene::on_light_modify_msg(ConstLightPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
     _msgs_light_modify.emplace_back(msg);

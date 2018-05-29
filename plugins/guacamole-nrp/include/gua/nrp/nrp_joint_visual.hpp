@@ -3,20 +3,20 @@
 
 #include <memory>
 #include <gua/nrp/platform.hpp>
-#include <gua/nrp/pagoda_visual.hpp>
+#include <gua/nrp/nrp_visual.hpp>
 namespace gua
 {
 namespace nrp
 {
-class PagodaJointVisual;
+class NRPJointVisual;
 
-typedef std::shared_ptr<PagodaJointVisual> ptr_joint_visual;
+typedef std::shared_ptr<NRPJointVisual> ptr_joint_visual;
 
-class GUA_NRP_DLL PagodaJointVisual : public PagodaVisual
+class GUA_NRP_DLL NRPJointVisual : public NRPVisual
 {
   public:
-    PagodaJointVisual(const std::string &name, ptr_visual parent);
-    ~PagodaJointVisual();
+    NRPJointVisual(const std::string &name, ptr_visual parent);
+    ~NRPJointVisual();
 
     void update_from_joint_msg(boost::shared_ptr<const gazebo::msgs::Joint> &msg);
 };

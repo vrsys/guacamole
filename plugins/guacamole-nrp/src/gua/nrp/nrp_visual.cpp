@@ -1,11 +1,11 @@
 #include <utility>
 
-#include <gua/nrp/pagoda_scene.hpp>
+#include <gua/nrp/nrp_scene.hpp>
 namespace gua
 {
 namespace nrp
 {
-PagodaVisual::PagodaVisual(const std::string &name, node::Node *root_node) : _name(name), _parent(), _node()
+NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(name), _parent(), _node()
 {
     std::shared_ptr<gua::node::TransformNode> node = root_node->add_child(std::make_shared<gua::node::TransformNode>("/transform/" + name));
     _node.reset(node.get());
@@ -13,7 +13,7 @@ PagodaVisual::PagodaVisual(const std::string &name, node::Node *root_node) : _na
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
 }
-PagodaVisual::PagodaVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node()
+NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node()
 {
     auto node(std::make_shared<gua::node::TransformNode>(name));
     _node.reset(parent->get_node()->add_child(node).get());
@@ -21,16 +21,16 @@ PagodaVisual::PagodaVisual(const std::string &name, ptr_visual parent) : _name(n
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
 }
-PagodaVisual::~PagodaVisual() { _node.reset(); }
+NRPVisual::~NRPVisual() { _node.reset(); }
 
-void PagodaVisual::set_name(const std::string &name) { _name = name; }
-std::string PagodaVisual::get_name() const { return _name; }
-uint32_t PagodaVisual::get_id() const { return _id; }
-void PagodaVisual::set_id(uint32_t id) { _id = id; }
-PagodaVisual::VisualType PagodaVisual::get_type() const { return _type; }
-void PagodaVisual::set_type(PagodaVisual::VisualType type) { _type = type; }
+void NRPVisual::set_name(const std::string &name) { _name = name; }
+std::string NRPVisual::get_name() const { return _name; }
+uint32_t NRPVisual::get_id() const { return _id; }
+void NRPVisual::set_id(uint32_t id) { _id = id; }
+NRPVisual::VisualType NRPVisual::get_type() const { return _type; }
+void NRPVisual::set_type(NRPVisual::VisualType type) { _type = type; }
 
-void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
+void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
 {
     if(msg->has_pose())
     {
@@ -206,7 +206,7 @@ void PagodaVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual 
     }
 }
 
-bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
+bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
 {
     if(mesh_name.empty())
         return false;
@@ -243,7 +243,7 @@ bool PagodaVisual::attach_mesh(const std::string &mesh_name, bool normalize_shap
     return true;
 }
 
-void PagodaVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse, gua::math::vec4 &specular, gua::math::vec4 &emissive)
+void NRPVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse, gua::math::vec4 &specular, gua::math::vec4 &emissive)
 {
     // TODO: shading specifics are not accounted for
 
@@ -280,7 +280,7 @@ void PagodaVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffu
     }
 }
 
-void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
+void NRPVisual::set_scale(const gazebo::math::Vector3 &scale)
 {
     if(_scale == scale.Ign())
         return;
@@ -289,7 +289,7 @@ void PagodaVisual::set_scale(const gazebo::math::Vector3 &scale)
 
     _node->scale(scale.x, scale.y, scale.z);
 }
-void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
+void NRPVisual::set_pose(const gazebo::math::Pose &pose)
 {
     // std::cout << "set_pose(" << pose.pos.x << "," << pose.pos.y << "," << pose.pos.z << ")" << std::endl;
     // std::cout << "set_rotation(" << pose.rot.w << "," << pose.rot.x << "," << pose.rot.y << "," << pose.rot.z << ")" << std::endl;
@@ -299,7 +299,7 @@ void PagodaVisual::set_pose(const gazebo::math::Pose &pose)
 
     _node->set_transform(translation * quaternion.to_matrix());
 }
-const scm::math::mat4d PagodaVisual::flip_transform(const scm::math::mat4d &transform)
+const scm::math::mat4d NRPVisual::flip_transform(const scm::math::mat4d &transform)
 {
     scm::math::mat4d transform_flipped = scm::math::mat4d::identity();
     scm::math::mat4d rot_90_x = scm::math::make_rotation(90., 1., 0., 0.);
@@ -309,11 +309,11 @@ const scm::math::mat4d PagodaVisual::flip_transform(const scm::math::mat4d &tran
 
     return transform_flipped;
 }
-const gazebo::math::Vector3 &PagodaVisual::get_scale() const { return _scale; }
-const ptr_visual PagodaVisual::get_parent() const { return _parent; }
-void PagodaVisual::detach_meshes() { _node->clear_children(); }
-const std::shared_ptr<gua::node::TransformNode> PagodaVisual::get_node() const { return _node; }
-bool PagodaVisual::get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
+const gazebo::math::Vector3 &NRPVisual::get_scale() const { return _scale; }
+const ptr_visual NRPVisual::get_parent() const { return _parent; }
+void NRPVisual::detach_meshes() { _node->clear_children(); }
+const std::shared_ptr<gua::node::TransformNode> NRPVisual::get_node() const { return _node; }
+bool NRPVisual::get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
                                                          gazebo::common::Color &emissive)
 {
     Ogre::MaterialPtr material_ptr;

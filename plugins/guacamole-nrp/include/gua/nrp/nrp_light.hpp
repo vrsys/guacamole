@@ -14,15 +14,15 @@ namespace gua
 {
 namespace nrp
 {
-class PagodaLight;
+class NRPLight;
 
-typedef std::shared_ptr<PagodaLight> ptr_light;
+typedef std::shared_ptr<NRPLight> ptr_light;
 
-class GUA_NRP_DLL PagodaLight
+class GUA_NRP_DLL NRPLight
 {
   public:
-    PagodaLight(const std::string &name, node::Node *root_node);
-    ~PagodaLight();
+    NRPLight(const std::string &name, node::Node *root_node);
+    ~NRPLight();
 
     void load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> &msg);
 
