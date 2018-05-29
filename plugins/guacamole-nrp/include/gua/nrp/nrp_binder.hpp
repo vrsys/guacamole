@@ -38,8 +38,8 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include <gua/nrp/pagoda_log.hpp>
-#include <gua/nrp/pagoda_scene.hpp>
+#include <gua/nrp/nrp_log.hpp>
+#include <gua/nrp/nrp_scene.hpp>
 #include <gua/nrp/platform.hpp>
 
 namespace gua
@@ -49,18 +49,18 @@ namespace nrp
 class NRPNode;
 class NRPCameraNode;
 
-class GUA_NRP_DLL PagodaBinder
+class GUA_NRP_DLL NRPBinder
 {
   public:
-    static PagodaBinder &get_instance()
+    static NRPBinder &get_instance()
     {
-        static PagodaBinder pagoda_binder;
-        return pagoda_binder;
+        static NRPBinder nrp_binder;
+        return nrp_binder;
     }
-    PagodaBinder(PagodaBinder const &) = delete;
-    void operator=(PagodaBinder const &) = delete;
+    NRPBinder(NRPBinder const &) = delete;
+    void operator=(NRPBinder const &) = delete;
 
-    ~PagodaBinder();
+    ~NRPBinder();
 
     void bind_root_node(NRPNode *root_node);
     void bind_cam_node(NRPCameraNode *cam_node);
@@ -72,14 +72,14 @@ class GUA_NRP_DLL PagodaBinder
     void unlock_scene();
 
   private:
-    PagodaBinder();
+    NRPBinder();
 
     std::thread _worker;
     std::mutex _worker_mutex;
     std::condition_variable _worker_cv;
 
-    PagodaLog _log;
-    PagodaScene _scene;
+    NRPLog _log;
+    NRPScene _scene;
 
     void _connect_to_transport_layer(int argc, char **argv);
     void _halt_transport_layer();

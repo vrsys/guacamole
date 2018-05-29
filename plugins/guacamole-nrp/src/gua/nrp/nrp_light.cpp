@@ -1,10 +1,10 @@
-#include <gua/nrp/pagoda_light.hpp>
+#include <gua/nrp/nrp_light.hpp>
 #include <gua/scenegraph.hpp>
 namespace gua
 {
 namespace nrp
 {
-PagodaLight::PagodaLight(const std::string &name, node::Node *root_node)
+NRPLight::NRPLight(const std::string &name, node::Node *root_node)
 {
     std::shared_ptr<gua::node::LightNode> node = root_node->add_child(std::make_shared<gua::node::LightNode>(name));
     _node.reset(node.get());
@@ -13,8 +13,8 @@ PagodaLight::PagodaLight(const std::string &name, node::Node *root_node)
     _scale = 1.0f;
     _direction = scm::math::mat4d::identity();
 }
-PagodaLight::~PagodaLight() { _node.reset(); }
-void PagodaLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> &msg)
+NRPLight::~NRPLight() { _node.reset(); }
+void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> &msg)
 {
     if(msg->has_cast_shadows())
     {
@@ -115,7 +115,7 @@ void PagodaLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Ligh
         set_pose(gazebo::msgs::ConvertIgn(msg->pose()));
     }
 }
-void PagodaLight::set_pose(const gazebo::math::Pose &pose)
+void NRPLight::set_pose(const gazebo::math::Pose &pose)
 {
     scm::math::mat4d translation = scm::math::make_translation(pose.pos.x, pose.pos.y, pose.pos.z);
     scm::math::quatd quaternion = scm::math::quatd(pose.rot.w, pose.rot.x, pose.rot.y, pose.rot.z);
@@ -123,7 +123,7 @@ void PagodaLight::set_pose(const gazebo::math::Pose &pose)
 
     _node->set_transform(translation * quaternion.to_matrix() * _direction * scale);
 }
-void PagodaLight::set_direction(const gazebo::msgs::Vector3d &direction)
+void NRPLight::set_direction(const gazebo::msgs::Vector3d &direction)
 {
     scm::math::quatd quaternion = scm::math::quatd::from_euler(direction.x(), direction.y(), direction.z());
     _direction = quaternion.to_matrix();

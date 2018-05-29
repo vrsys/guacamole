@@ -1,7 +1,7 @@
 #ifndef GUACAMOLE_NRP_PASS_HPP
 #define GUACAMOLE_NRP_PASS_HPP
 
-#include <gua/nrp/pagoda_binder.hpp>
+#include <gua/nrp/nrp_binder.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 namespace gua

@@ -36,8 +36,8 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-#include <gua/nrp/pagoda_light.hpp>
-#include <gua/nrp/pagoda_visual.hpp>
+#include <gua/nrp/nrp_light.hpp>
+#include <gua/nrp/nrp_visual.hpp>
 #include <gua/nrp/platform.hpp>
 
 namespace gua
@@ -60,7 +60,7 @@ typedef std::list<boost::shared_ptr<gazebo::msgs::Link const>> link_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Model const>> model_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::PoseAnimation const>> skeleton_msgs_list;
 
-class GUA_NRP_DLL PagodaScene
+class GUA_NRP_DLL NRPScene
 {
   public:
     struct VisualMessageLess
@@ -68,8 +68,8 @@ class GUA_NRP_DLL PagodaScene
         bool operator()(const boost::shared_ptr<gazebo::msgs::Visual const> &_i, const boost::shared_ptr<gazebo::msgs::Visual const> &_j) { return _i->name().size() < _j->name().size(); }
     } VisualMessageLessOp;
 
-    PagodaScene();
-    ~PagodaScene();
+    NRPScene();
+    ~NRPScene();
 
     void set_root_node(NRPNode *root_node);
     void set_cam_node(NRPCameraNode *cam_node);
@@ -81,7 +81,7 @@ class GUA_NRP_DLL PagodaScene
     void on_light_factory_msg(ConstLightPtr &msg);
     void on_light_modify_msg(ConstLightPtr &msg);
 
-    bool process_visual_msg(ConstVisualPtr &msg, PagodaVisual::VisualType type = PagodaVisual::VT_ENTITY);
+    bool process_visual_msg(ConstVisualPtr &msg, NRPVisual::VisualType type = NRPVisual::VT_ENTITY);
     bool process_link_msg(ConstLinkPtr &msg);
     bool process_joint_msg(ConstJointPtr &msg);
     bool process_light_factory_msg(ConstLightPtr &msg);

@@ -26,12 +26,12 @@ namespace gua
 {
 namespace nrp
 {
-class PagodaVisual;
-class PagodaScene;
+class NRPVisual;
+class NRPScene;
 
-typedef std::shared_ptr<PagodaVisual> ptr_visual;
+typedef std::shared_ptr<NRPVisual> ptr_visual;
 
-class GUA_NRP_DLL PagodaVisual
+class GUA_NRP_DLL NRPVisual
 {
   public:
     enum VisualType
@@ -42,9 +42,9 @@ class GUA_NRP_DLL PagodaVisual
         VT_VISUAL
     };
 
-    PagodaVisual(const std::string &name, gua::node::Node *root_node);
-    PagodaVisual(const std::string &name, ptr_visual parent);
-    ~PagodaVisual();
+    NRPVisual(const std::string &name, gua::node::Node *root_node);
+    NRPVisual(const std::string &name, ptr_visual parent);
+    ~NRPVisual();
 
     void set_id(uint32_t _id);
     void set_name(const std::string &name);
