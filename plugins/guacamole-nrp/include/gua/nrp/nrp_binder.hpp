@@ -84,7 +84,7 @@ class GUA_NRP_DLL NRPBinder
     std::atomic_bool _scene_initialized;
     std::atomic_int_fast32_t _scene_frame_distance;
 
-    void _connect_to_transport_layer(int argc, char **argv);
+    void _connect_to_transport_layer();
     void _halt_transport_layer();
 
     void callback_world(ConstWorldStatisticsPtr &_msg);
