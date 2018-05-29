@@ -29,7 +29,7 @@ class GUA_NRP_DLL NRPLog
         gen_random(rand_name, 8);
 
         _ofstream = std::ofstream();
-        _ofstream.open(std::string(rand_name) + ".txt", std::ios::out | std::ios::app);
+        _ofstream.open(std::string(rand_name) + ".txt", std::ios::out | std::ios::trunc);
 
         assert(_ofstream.is_open());
     }
@@ -94,7 +94,7 @@ class GUA_NRP_DLL NRPLog
 
   private:
     std::ofstream _ofstream;
-#ifndef NDEBUG
+#if GUA_DEBUG == 1
     LOG_LEVEL _log_level = DEBUG;
 #else
     LOG_LEVEL _log_level = ERROR;

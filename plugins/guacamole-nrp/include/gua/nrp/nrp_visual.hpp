@@ -72,6 +72,8 @@ class GUA_NRP_DLL NRPVisual
     std::string _name;
     VisualType _type;
 
+    std::string _mesh_random_name = "";
+
     ptr_visual _parent;
     std::vector<ptr_visual> _children;
 
@@ -83,6 +85,7 @@ class GUA_NRP_DLL NRPVisual
     void detach_meshes();
     bool get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
                                                gazebo::common::Color &emissive);
+    void generate_random_name();
 };
 }
 }

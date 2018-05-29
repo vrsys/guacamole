@@ -24,9 +24,10 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         {
             _node->data.set_shadow_map_size(4096);
             _node->data.set_max_shadow_dist(1000);
-            _node->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.0f, 10.0f});
-            _node->data.set_shadow_near_clipping_in_sun_direction(0.0f);
-            _node->data.set_shadow_far_clipping_in_sun_direction(1000.0f);
+            _node->data.set_shadow_offset(0.00001f);
+            _node->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.f, 10.f});
+            _node->data.set_shadow_near_clipping_in_sun_direction(0.f);
+            _node->data.set_shadow_far_clipping_in_sun_direction(10.f);
         }
     }
 
@@ -45,9 +46,9 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         // specular color not used if diffuse is given
         _node->data.set_color(gua::utils::Color3f(msg->specular().r(), msg->specular().g(), msg->specular().b()));
     }
-    //else
+    // else
     //{
-        //_node->data.set_enable_specular_shading(false);
+    //_node->data.set_enable_specular_shading(false);
     //}
 
     if(msg->has_diffuse())
@@ -125,8 +126,17 @@ void NRPLight::set_pose(const gazebo::math::Pose &pose)
 }
 void NRPLight::set_direction(const gazebo::msgs::Vector3d &direction)
 {
-    scm::math::quatd quaternion = scm::math::quatd::from_euler(direction.x(), direction.y(), direction.z());
-    _direction = quaternion.to_matrix();
+    scm::math::vec3d orientation_direction(direction.x(), direction.y(), direction.z());
+    orientation_direction = scm::math::normalize(orientation_direction);
+    double angle = scm::math::acos(scm::math::dot(orientation_direction, scm::math::vec3d(0, 0, -1.)));
+    scm::math::vec3d axis = scm::math::normalize(scm::math::cross(orientation_direction, scm::math::vec3d(0, 0, -1.)));
+    _direction = scm::math::make_rotation(-angle * 57.295779513, axis);
+
+    std::cout << angle << std::endl;
+    std::cout << axis << std::endl;
+
+    // scm::math::quatd quaternion = scm::math::quatd::from_euler(direction.x(), direction.y(), direction.z());
+    // _direction = quaternion.to_matrix();
 }
 }
 }

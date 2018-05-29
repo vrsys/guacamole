@@ -412,7 +412,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
             current.gua_node_->add_child(gua_child);
             stack.push({ai_child, gua_child});
 
-            std::cout << current.ai_node_->mChildren[child_id]->mName.data << std::endl;
+            // std::cout << current.ai_node_->mChildren[child_id]->mName.data << std::endl;
         }
     }
 

@@ -44,7 +44,6 @@ namespace gua
 {
 namespace nrp
 {
-
 class NRPNode;
 class NRPCameraNode;
 
@@ -55,7 +54,6 @@ typedef std::map<uint32_t, gazebo::msgs::Pose> pose_msgs_map;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Visual const>> visual_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Scene const>> scene_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Light const>> light_msgs_list;
-typedef std::list<boost::shared_ptr<gazebo::msgs::Joint const>> joint_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Link const>> link_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::Model const>> model_msgs_list;
 typedef std::list<boost::shared_ptr<gazebo::msgs::PoseAnimation const>> skeleton_msgs_list;
@@ -76,14 +74,13 @@ class GUA_NRP_DLL NRPScene
 
     void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
     void on_model_msg(ConstModelPtr &msg);
-    void on_response_msg(ConstResponsePtr &msg);
+    void on_scene_msg(ConstScenePtr &msg);
     void on_pose_msg(ConstPosesStampedPtr &msg);
     void on_light_factory_msg(ConstLightPtr &msg);
     void on_light_modify_msg(ConstLightPtr &msg);
 
     bool process_visual_msg(ConstVisualPtr &msg, NRPVisual::VisualType type = NRPVisual::VT_ENTITY);
     bool process_link_msg(ConstLinkPtr &msg);
-    bool process_joint_msg(ConstJointPtr &msg);
     bool process_light_factory_msg(ConstLightPtr &msg);
     bool process_light_modify_msg(ConstLightPtr &msg);
     bool process_model_msg(const gazebo::msgs::Model &msg);
@@ -99,7 +96,6 @@ class GUA_NRP_DLL NRPScene
     visual_msgs_list _msgs_visual;
     pose_msgs_map _msgs_pose;
     scene_msgs_list _msgs_scene;
-    joint_msgs_list _msgs_joint;
     light_msgs_list _msgs_light_factory;
     light_msgs_list _msgs_light_modify;
     link_msgs_list _msgs_link;
