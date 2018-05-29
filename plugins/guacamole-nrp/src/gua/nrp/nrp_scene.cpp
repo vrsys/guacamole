@@ -1,6 +1,5 @@
 #include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
-#include <gua/nrp/nrp_joint_visual.hpp>
 #include <gua/nrp/nrp_scene.hpp>
 
 #include "OgreGpuProgramManager.h"
@@ -271,13 +270,11 @@ NRPScene::NRPScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
     Ogre::ScriptCompilerManager::getSingleton().clearTranslatorManagers();
     Ogre::ScriptCompilerManager::getSingleton().addTranslatorManager(mock_translator);
 
-    Ogre::DataStreamPtr ptr_ds_grid(
-        new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/home/xaf/NRP/gazebo/media/materials/scripts/grid.material", std::fstream::in), false));
+    Ogre::DataStreamPtr ptr_ds_grid(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/opt/NRP/grid.material", std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_grid, "General");
     ptr_ds_grid.setNull();
 
-    Ogre::DataStreamPtr ptr_ds_gazebo(
-        new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/home/xaf/NRP/gazebo/media/materials/scripts/gazebo-copy.material", std::fstream::in), false));
+    Ogre::DataStreamPtr ptr_ds_gazebo(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/opt/NRP/gazebo-copy.material", std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_gazebo, "General");
     ptr_ds_gazebo.setNull();
 
@@ -291,7 +288,6 @@ NRPScene::~NRPScene()
     _msgs_visual.clear();
     _msgs_pose.clear();
     _msgs_scene.clear();
-    _msgs_joint.clear();
     _msgs_light_factory.clear();
     _msgs_light_modify.clear();
     _msgs_link.clear();
@@ -329,21 +325,17 @@ void NRPScene::on_skeleton_pose_msg(ConstPoseAnimationPtr &msg)
         }
     }
 
-    _msgs_skeleton_pose.push_back(msg);
+    _msgs_skeleton_pose.emplace_back(msg);
 }
 void NRPScene::on_model_msg(ConstModelPtr &msg)
 {
     std::lock_guard<std::mutex> lock(_mutex_receive);
-    _msgs_model.push_back(msg);
+    _msgs_model.emplace_back(msg);
 }
-void NRPScene::on_response_msg(ConstResponsePtr &msg)
+void NRPScene::on_scene_msg(ConstScenePtr &msg)
 {
-    gazebo::msgs::Scene sceneMsg;
-    sceneMsg.ParseFromString(msg->serialized_data());
-    boost::shared_ptr<gazebo::msgs::Scene> sm(new gazebo::msgs::Scene(sceneMsg));
-
     std::lock_guard<std::mutex> lock(_mutex_receive);
-    _msgs_scene.emplace_back(sm);
+    _msgs_scene.emplace_back(msg);
 }
 void NRPScene::on_pose_msg(ConstPosesStampedPtr &msg)
 {
@@ -357,6 +349,16 @@ void NRPScene::on_pose_msg(ConstPosesStampedPtr &msg)
         else
             _msgs_pose.insert(std::make_pair(msg->pose(i).id(), msg->pose(i)));
     }
+}
+void NRPScene::on_light_factory_msg(ConstLightPtr &msg)
+{
+    std::lock_guard<std::mutex> lock(_mutex_receive);
+    _msgs_light_factory.emplace_back(msg);
+}
+void NRPScene::on_light_modify_msg(ConstLightPtr &msg)
+{
+    std::lock_guard<std::mutex> lock(_mutex_receive);
+    _msgs_light_modify.emplace_back(msg);
 }
 bool NRPScene::process_visual_msg(ConstVisualPtr &msg, NRPVisual::VisualType type)
 {
@@ -493,33 +495,9 @@ bool NRPScene::process_link_msg(ConstLinkPtr &msg)
 
     if(!linkVis)
     {
-        gzerr << "No link visual with id[" << msg->id() << "] and name[" << msg->name() << "]\n";
+        std::cerr << "No link visual with id[" << msg->id() << "] and name[" << msg->name() << "]\n";
         return false;
     }
-
-    return true;
-}
-bool NRPScene::process_joint_msg(ConstJointPtr &msg)
-{
-    // TODO
-
-    //    ptr_visual child_vis;
-    //
-    //    if(msg->has_child() && msg->child() == "world")
-    //        child_vis = this->_world_visual;
-    //    else if(msg->has_child_id())
-    //        child_vis = this->get_visual(msg->child_id());
-    //
-    //    if(!child_vis)
-    //        return false;
-    //
-    //    ptr_joint_visual joint_vis(new NRPJointVisual(msg->name() + "_JOINT_VISUAL__", child_vis));
-    //    joint_vis->update_from_joint_msg(msg);
-    //
-    //    if(msg->has_id())
-    //        joint_vis->set_id(msg->id());
-    //
-    //    _visuals[joint_vis->get_id()] = joint_vis;
 
     return true;
 }
@@ -536,9 +514,8 @@ bool NRPScene::process_light_factory_msg(ConstLightPtr &msg)
     }
     else
     {
-        // TODO: happens too frequently
-        std::cerr << "Light [" << msg->name() << "] already exists."
-                  << " Use topic ~/light/modify to modify it." << std::endl;
+        //        std::cerr << "Light [" << msg->name() << "] already exists."
+        //                  << " Use topic ~/light/modify to modify it." << std::endl;
         return process_light_modify_msg(msg);
     }
 
@@ -551,8 +528,8 @@ bool NRPScene::process_light_modify_msg(ConstLightPtr &msg)
 
     if(iter == _lights.end())
     {
-        std::cerr << "Light [" << msg->name() << "] not found."
-                  << " Use topic ~/factory/light to spawn a new light." << std::endl;
+        //        std::cerr << "Light [" << msg->name() << "] not found."
+        //                  << " Use topic ~/factory/light to spawn a new light." << std::endl;
         return process_light_factory_msg(msg);
     }
     else
@@ -586,12 +563,6 @@ bool NRPScene::process_model_msg(const gazebo::msgs::Model &msg)
         vm->mutable_scale()->set_y(msg.scale().y());
         vm->mutable_scale()->set_z(msg.scale().z());
         _msgs_model_visual.emplace_back(vm);
-    }
-
-    for(int j = 0; j < msg.joint_size(); ++j)
-    {
-        boost::shared_ptr<gazebo::msgs::Joint> jm(new gazebo::msgs::Joint(msg.joint(j)));
-        _msgs_joint.emplace_back(jm);
     }
 
     for(int j = 0; j < msg.link_size(); ++j)
@@ -666,13 +637,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
         _msgs_light_factory.emplace_back(lm);
     }
 
-    for(int i = 0; i < msg->joint_size(); ++i)
-    {
-        boost::shared_ptr<gazebo::msgs::Joint> jm(new gazebo::msgs::Joint(msg->joint(i)));
-        _msgs_joint.emplace_back(jm);
-    }
-
-    if(msg->has_ambient())
+    if(msg->has_ambient() && _cam_node != nullptr)
     {
         auto pipe = _cam_node->get_pipeline_description();
         pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
@@ -680,7 +645,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
         pipe->get_resolve_pass()->touch();
     }
 
-    if(msg->has_background())
+    if(msg->has_background() && _cam_node != nullptr)
     {
         auto pipe = _cam_node->get_pipeline_description();
         pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
@@ -716,7 +681,11 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 }
 void NRPScene::pre_render()
 {
-    _mutex_scenegraph.lock();
+    std::unique_lock<std::mutex> lock_scene(_mutex_scenegraph);
+
+#if GUA_DEBUG == 1
+    auto start = std::chrono::high_resolution_clock::now();
+#endif
 
     scene_msgs_list scene_msgs_copy;
     model_msgs_list model_msgs_copy;
@@ -725,7 +694,6 @@ void NRPScene::pre_render()
     visual_msgs_list model_visual_msgs_copy;
     visual_msgs_list link_visual_msgs_copy;
     visual_msgs_list visual_msgs_copy;
-    joint_msgs_list joint_msgs_copy;
     link_msgs_list link_msgs_copy;
 
     {
@@ -752,9 +720,6 @@ void NRPScene::pre_render()
         _msgs_visual.sort(VisualMessageLessOp);
         std::copy(_msgs_visual.begin(), _msgs_visual.end(), std::back_inserter(visual_msgs_copy));
         _msgs_visual.clear();
-
-        std::copy(_msgs_joint.begin(), _msgs_joint.end(), std::back_inserter(joint_msgs_copy));
-        _msgs_joint.clear();
 
         std::copy(_msgs_link.begin(), _msgs_link.end(), std::back_inserter(link_msgs_copy));
         _msgs_link.clear();
@@ -838,14 +803,6 @@ void NRPScene::pre_render()
         }
     }
 
-    for(auto joint_msgs_iter = joint_msgs_copy.begin(); joint_msgs_iter != joint_msgs_copy.end();)
-    {
-        if(this->process_joint_msg(*joint_msgs_iter))
-            joint_msgs_copy.erase(joint_msgs_iter++);
-        else
-            ++joint_msgs_iter;
-    }
-
     for(auto link_msgs_iter = link_msgs_copy.begin(); link_msgs_iter != link_msgs_copy.end();)
     {
         if(this->process_link_msg(*link_msgs_iter))
@@ -864,7 +821,6 @@ void NRPScene::pre_render()
         std::copy(model_visual_msgs_copy.begin(), model_visual_msgs_copy.end(), std::front_inserter(_msgs_model_visual));
         std::copy(link_visual_msgs_copy.begin(), link_visual_msgs_copy.end(), std::front_inserter(_msgs_link_visual));
         std::copy(visual_msgs_copy.begin(), visual_msgs_copy.end(), std::front_inserter(_msgs_visual));
-        std::copy(joint_msgs_copy.begin(), joint_msgs_copy.end(), std::front_inserter(_msgs_joint));
         std::copy(link_msgs_copy.begin(), link_msgs_copy.end(), std::front_inserter(_msgs_link));
     }
 
@@ -920,18 +876,13 @@ void NRPScene::pre_render()
         }
     }
 
-    _mutex_scenegraph.unlock();
+#if GUA_DEBUG == 1
+    auto end = std::chrono::high_resolution_clock::now();
+    float pre_render_time = std::chrono::duration<float, std::milli>(end - start).count();
+
+    std::cout << "pre_render_time: " << pre_render_time << std::endl;
+#endif
 }
 std::mutex &NRPScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
-void NRPScene::on_light_factory_msg(ConstLightPtr &msg)
-{
-    std::lock_guard<std::mutex> lock(_mutex_receive);
-    _msgs_light_factory.emplace_back(msg);
-}
-void NRPScene::on_light_modify_msg(ConstLightPtr &msg)
-{
-    std::lock_guard<std::mutex> lock(_mutex_receive);
-    _msgs_light_modify.emplace_back(msg);
-}
 }
 }

@@ -68,18 +68,21 @@ class GUA_NRP_DLL NRPBinder
 
     void pre_render();
 
-    void lock_scene();
-    void unlock_scene();
+    std::mutex &get_scene_mutex();
 
   private:
     NRPBinder();
 
     std::thread _worker;
+    std::atomic_bool _worker_should_stop;
     std::mutex _worker_mutex;
     std::condition_variable _worker_cv;
 
     NRPLog _log;
     NRPScene _scene;
+
+    std::atomic_bool _scene_initialized;
+    std::atomic_int_fast32_t _scene_frame_distance;
 
     void _connect_to_transport_layer(int argc, char **argv);
     void _halt_transport_layer();
@@ -91,7 +94,7 @@ class GUA_NRP_DLL NRPBinder
     void callback_pose_info(ConstPosesStampedPtr &ptr);
     void callback_factory_light(ConstLightPtr &ptr);
     void callback_modify_light(ConstLightPtr &ptr);
-    void callback_request(ConstRequestPtr &ptr);
+    void callback_scene(ConstScenePtr &ptr);
     void callback_response(ConstResponsePtr &ptr);
 };
 }

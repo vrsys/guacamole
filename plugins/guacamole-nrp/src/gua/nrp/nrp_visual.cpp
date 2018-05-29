@@ -32,6 +32,10 @@ void NRPVisual::set_type(NRPVisual::VisualType type) { _type = type; }
 
 void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
 {
+#if GUA_DEBUG == 1
+    auto start = std::chrono::high_resolution_clock::now();
+#endif
+
     if(msg->has_pose())
     {
         set_pose(gazebo::msgs::ConvertIgn(msg->pose()));
@@ -47,7 +51,7 @@ void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual con
         set_scale(gazebo::msgs::ConvertIgn(msg->scale()));
     }
 
-    if(msg->has_geometry() && msg->geometry().has_type())
+    if(_mesh_random_name.empty() && msg->has_geometry() && msg->geometry().has_type())
     {
         detach_meshes();
 
@@ -204,6 +208,15 @@ void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual con
             set_material(ambient, diffuse, specular, emissive);
         }
     }
+#if GUA_DEBUG == 1
+    auto end = std::chrono::high_resolution_clock::now();
+    float update_from_msg = std::chrono::duration<float, std::milli>(end - start).count();
+
+    if(update_from_msg > 0.01f)
+    {
+        std::cout << "update_from_msg: " << update_from_msg << std::endl;
+    }
+#endif
 }
 
 bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
@@ -211,25 +224,14 @@ bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, 
     if(mesh_name.empty())
         return false;
 
+    if(_mesh_random_name.empty())
+    {
+        generate_random_name();
+    }
+
     unsigned int flags = !normalize_shape ? gua::TriMeshLoader::LOAD_MATERIALS : gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION;
 
-    static auto &chrs = "0123456789"
-                        "abcdefghijklmnopqrstuvwxyz"
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    thread_local static std::mt19937 rg{std::random_device{}()};
-    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
-
-    std::string mesh_random_name;
-
-    int length = 8;
-
-    mesh_random_name.reserve(length);
-
-    while(length--)
-        mesh_random_name += chrs[pick(rg)];
-
-    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(mesh_random_name, mesh_name, flags);
+    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(_mesh_random_name, mesh_name, flags);
 
     // geometry_node->set_draw_bounding_box(true);
 
@@ -314,7 +316,7 @@ const ptr_visual NRPVisual::get_parent() const { return _parent; }
 void NRPVisual::detach_meshes() { _node->clear_children(); }
 const std::shared_ptr<gua::node::TransformNode> NRPVisual::get_node() const { return _node; }
 bool NRPVisual::get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
-                                                         gazebo::common::Color &emissive)
+                                                      gazebo::common::Color &emissive)
 {
     Ogre::MaterialPtr material_ptr;
 
@@ -341,6 +343,24 @@ bool NRPVisual::get_material_colors_for_material_name(const std::string &materia
     }
 
     return false;
+}
+void NRPVisual::generate_random_name()
+{
+    static auto &chrs = "0123456789"
+                        "abcdefghijklmnopqrstuvwxyz"
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type> pick(0, sizeof(chrs) - 2);
+
+    std::string mesh_random_name;
+
+    int length = 8;
+
+    mesh_random_name.reserve((uint8_t)length);
+
+    while(length--)
+        mesh_random_name += chrs[pick(rg)];
 }
 }
 }
