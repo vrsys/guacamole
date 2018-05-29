@@ -29,11 +29,11 @@ void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_n
 void NRPBinder::bind_cam_node(gua::nrp::NRPCameraNode *cam_node) { _scene.set_cam_node(cam_node); }
 void NRPBinder::bind_transport_layer()
 {
-    _worker = std::thread([&] { _connect_to_transport_layer(0, nullptr); });
+    _worker = std::thread([&] { _connect_to_transport_layer(); });
 }
 void NRPBinder::pre_render() { _scene.pre_render(); }
 
-void NRPBinder::_connect_to_transport_layer(int argc, char **argv)
+void NRPBinder::_connect_to_transport_layer()
 {
 #if GUA_DEBUG == 1
     NRPLog log("worker", NRPLog::LOG_LEVEL::DEBUG);
