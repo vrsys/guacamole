@@ -70,7 +70,7 @@ void NRPBinder::_connect_to_transport_layer()
     //
     //    gazebo::transport::SubscriberPtr sub_world = node->Subscribe("/gazebo/default/world_stats", &NRPBinder::callback_world, this);
     //    gazebo::transport::SubscriberPtr sub_model = node->Subscribe("/gazebo/default/model/info", &NRPBinder::callback_model_info, this);
-    //    gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("/gazebo/default/pose/info", &NRPBinder::callback_pose_info, this);
+    gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("/gazebo/nrp_plugins/poses", &NRPBinder::callback_pose_info, this);
     //    gazebo::transport::SubscriberPtr sub_material = node->Subscribe("/gazebo/default/material", &NRPBinder::callback_material, this);
     //
     //    gazebo::transport::SubscriberPtr sub_factory_light = node->Subscribe("/gazebo/default/factory/light", &NRPBinder::callback_factory_light, this);
@@ -101,8 +101,8 @@ void NRPBinder::_connect_to_transport_layer()
             }
             else
             {
-                auto request_entity = gazebo::msgs::CreateRequest("entity_list");
-                pub_request->Publish(*(request_entity), true);
+                // auto request_entity = gazebo::msgs::CreateRequest("entity_list");
+                // pub_request->Publish(*(request_entity), true);
 
                 _scene_frame_distance.store(scene_frame_distance + 1);
             }
@@ -122,7 +122,7 @@ void NRPBinder::_connect_to_transport_layer()
     //
     //    sub_world.reset();
     //    sub_model.reset();
-    //    sub_pose_info.reset();
+    sub_pose_info.reset();
     //    sub_material.reset();
     //
     //    sub_factory_light.reset();
