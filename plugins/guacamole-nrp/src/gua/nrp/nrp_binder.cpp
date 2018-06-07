@@ -18,7 +18,7 @@ NRPBinder::NRPBinder()
 {
     _worker_should_stop.store(false);
     _scene_initialized.store(false);
-    _scene_frame_distance.store(0);
+    _scene_frame.store(0);
 }
 NRPBinder::~NRPBinder()
 {
@@ -61,7 +61,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     log.d("init transport node");
 
-    gazebo::transport::NodePtr node(new gazebo::transport::Node());
+    gazebo::transport::NodePtr node = boost::make_shared<gazebo::transport::Node>();
     node->Init();
 
     log.d("begin subscription");
@@ -69,16 +69,16 @@ void NRPBinder::_connect_to_transport_layer()
     //    gazebo::transport::SubscriberPtr sub_scene = node->Subscribe("/gazebo/default/scene", &NRPBinder::callback_scene, this);
     //
     //    gazebo::transport::SubscriberPtr sub_world = node->Subscribe("/gazebo/default/world_stats", &NRPBinder::callback_world, this);
-    //    gazebo::transport::SubscriberPtr sub_model = node->Subscribe("/gazebo/default/model/info", &NRPBinder::callback_model_info, this);
-    gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("/gazebo/nrp_plugins/poses", &NRPBinder::callback_pose_info, this);
-    //    gazebo::transport::SubscriberPtr sub_material = node->Subscribe("/gazebo/default/material", &NRPBinder::callback_material, this);
-    //
-    //    gazebo::transport::SubscriberPtr sub_factory_light = node->Subscribe("/gazebo/default/factory/light", &NRPBinder::callback_factory_light, this);
-    //    gazebo::transport::SubscriberPtr sub_modify_light = node->Subscribe("/gazebo/default/light/modify", &NRPBinder::callback_modify_light, this);
-    //
+    gazebo::transport::SubscriberPtr sub_model = node->Subscribe("/gazebo/default/model/info", &NRPBinder::callback_model_info, this);
+    gazebo::transport::SubscriberPtr sub_pose_info = node->Subscribe("/gazebo/default/pose/info", &NRPBinder::callback_pose_info, this);
+    gazebo::transport::SubscriberPtr sub_material = node->Subscribe("/gazebo/default/material", &NRPBinder::callback_material, this);
+
+    gazebo::transport::SubscriberPtr sub_factory_light = node->Subscribe("/gazebo/default/factory/light", &NRPBinder::callback_factory_light, this);
+    gazebo::transport::SubscriberPtr sub_modify_light = node->Subscribe("/gazebo/default/light/modify", &NRPBinder::callback_modify_light, this);
+
     //    gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("/gazebo/default/skeleton_pose/info", &NRPBinder::callback_skeleton_pose_info, this);
 
-    gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 60, 60);
+    gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
     log.d("subscription done");
@@ -90,21 +90,21 @@ void NRPBinder::_connect_to_transport_layer()
         std::unique_lock<std::mutex> lk(_worker_mutex);
         while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _worker_should_stop.load(); }))
         {
-            int_fast32_t scene_frame_distance = _scene_frame_distance.load();
+            int_fast32_t scene_frame = _scene_frame.load();
 
-            if(!_scene_initialized.load() || scene_frame_distance > 16)
+            if(!_scene_initialized.load() || scene_frame > 256)
             {
                 auto request_scene = gazebo::msgs::CreateRequest("scene_info");
                 pub_request->Publish(*(request_scene), true);
 
-                _scene_frame_distance.store(0);
+                _scene_frame.store(0);
             }
             else
             {
                 // auto request_entity = gazebo::msgs::CreateRequest("entity_list");
                 // pub_request->Publish(*(request_entity), true);
 
-                _scene_frame_distance.store(scene_frame_distance + 1);
+                _scene_frame.store(scene_frame + 1);
             }
         }
 
