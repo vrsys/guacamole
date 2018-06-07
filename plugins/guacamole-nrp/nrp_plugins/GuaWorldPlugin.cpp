@@ -17,69 +17,84 @@ void gazebo::GuaWorldPlugin::Load(gazebo::physics::WorldPtr world, sdf::ElementP
 }
 void gazebo::GuaWorldPlugin::on_update()
 {
-    if(pub && pub->HasConnections())
+    try
     {
-#if GUA_DEBUG == 1
-        gzerr << "8" << std::endl;
-        std::cerr << "8" << std::endl;
-#endif
-
-        msgs::PosesStamped msg;
-        msgs::Set(msg.mutable_time(), this->_world->GetSimTime());
-
-        if(!this->_world->GetModels().empty())
+        if(pub && pub->HasConnections())
         {
 #if GUA_DEBUG == 1
-            gzerr << "9" << std::endl;
-            std::cerr << "9" << std::endl;
+            gzerr << "8" << std::endl;
+            std::cerr << "8" << std::endl;
 #endif
 
-            for(auto const &model : this->_world->GetModels())
+            msgs::PosesStamped msg;
+            msgs::Set(msg.mutable_time(), this->_world->GetSimTime());
+
+            if(!this->_world->GetModels().empty())
             {
 #if GUA_DEBUG == 1
-                gzerr << "10" << std::endl;
-                std::cerr << "10" << std::endl;
+                gzerr << "9" << std::endl;
+                std::cerr << "9" << std::endl;
 #endif
 
-                std::list<physics::ModelPtr> modelList;
-                modelList.push_back(model);
-                while(!modelList.empty())
+                for(auto const &model : this->_world->GetModels())
                 {
-                    physics::ModelPtr m = modelList.front();
-                    modelList.pop_front();
-                    msgs::Pose *poseMsg = msg.add_pose();
+#if GUA_DEBUG == 1
+                    gzerr << "10" << std::endl;
+                    std::cerr << "10" << std::endl;
+#endif
 
-                    poseMsg->set_name(m->GetScopedName());
-                    poseMsg->set_id(m->GetId());
-                    msgs::Set(poseMsg, m->GetRelativePose().Ign());
-
-                    physics::Link_V links = m->GetLinks();
-                    for(auto const &link : links)
+                    std::list<physics::ModelPtr> modelList;
+                    modelList.push_back(model);
+                    while(!modelList.empty())
                     {
-                        poseMsg = msg.add_pose();
-                        poseMsg->set_name(link->GetScopedName());
-                        poseMsg->set_id(link->GetId());
-                        msgs::Set(poseMsg, link->GetRelativePose().Ign());
+                        physics::ModelPtr m = modelList.front();
+                        modelList.pop_front();
+                        msgs::Pose *poseMsg = msg.add_pose();
+
+                        poseMsg->set_name(m->GetScopedName());
+                        poseMsg->set_id(m->GetId());
+                        msgs::Set(poseMsg, m->GetRelativePose().Ign());
+
+                        physics::Link_V links = m->GetLinks();
+                        for(auto const &link : links)
+                        {
+                            poseMsg = msg.add_pose();
+                            poseMsg->set_name(link->GetScopedName());
+                            poseMsg->set_id(link->GetId());
+                            msgs::Set(poseMsg, link->GetRelativePose().Ign());
+                        }
+
+                        physics::Model_V models = m->NestedModels();
+                        for(auto const &n : models)
+                            modelList.push_back(n);
                     }
-
-                    physics::Model_V models = m->NestedModels();
-                    for(auto const &n : models)
-                        modelList.push_back(n);
                 }
+
+#if GUA_DEBUG == 1
+                gzerr << "11" << std::endl;
+                std::cerr << "11" << std::endl;
+#endif
+
+                if(pub && pub->HasConnections())
+                {
+                    pub->Publish(msg, true);
+                }
+
+#if GUA_DEBUG == 1
+                gzerr << "12" << std::endl;
+                std::cerr << "12" << std::endl;
+#endif
             }
-
-#if GUA_DEBUG == 1
-            gzerr << "11" << std::endl;
-            std::cerr << "11" << std::endl;
-#endif
-
-            if(pub && pub->HasConnections())
-                pub->Publish(msg, true);
-
-#if GUA_DEBUG == 1
-            gzerr << "12" << std::endl;
-            std::cerr << "12" << std::endl;
-#endif
         }
+    }
+    catch(const std::exception &e)
+    {
+        gzerr << "Exception caught: " << e.what() << std::endl;
+        std::cerr << "Exception caught: " << e.what() << std::endl;
+    }
+    catch(...)
+    {
+        gzerr << "Caught unrecognized error" << std::endl;
+        std::cerr << "Caught unrecognized error" << std::endl;
     }
 }
