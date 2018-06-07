@@ -1,4 +1,5 @@
 #include "GuaWorldPlugin.h"
+
 gazebo::GuaWorldPlugin::GuaWorldPlugin() {}
 gazebo::GuaWorldPlugin::~GuaWorldPlugin()
 {
@@ -11,7 +12,7 @@ void gazebo::GuaWorldPlugin::Load(gazebo::physics::WorldPtr world, sdf::ElementP
     _sdf = sdf;
 
     this->node.reset(new transport::Node());
-    this->pub = node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 60, 60);
+    this->pub = node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 1, 60);
 
     this->updateConnection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaWorldPlugin::on_update, this));
 }
@@ -22,8 +23,8 @@ void gazebo::GuaWorldPlugin::on_update()
         if(pub && pub->HasConnections())
         {
 #if GUA_DEBUG == 1
-            gzerr << "8" << std::endl;
-            std::cerr << "8" << std::endl;
+            gzerr << "Publisher has connections" << std::endl;
+            std::cerr << "Publisher has connections" << std::endl;
 #endif
 
             msgs::PosesStamped msg;
@@ -32,19 +33,19 @@ void gazebo::GuaWorldPlugin::on_update()
             if(!this->_world->GetModels().empty())
             {
 #if GUA_DEBUG == 1
-                gzerr << "9" << std::endl;
-                std::cerr << "9" << std::endl;
+                gzerr << "Collecting models" << std::endl;
+                std::cerr << "Collecting models" << std::endl;
 #endif
 
                 for(auto const &model : this->_world->GetModels())
                 {
 #if GUA_DEBUG == 1
-                    gzerr << "10" << std::endl;
-                    std::cerr << "10" << std::endl;
+                    gzerr << "Collecting a model" << std::endl;
+                    std::cerr << "Collecting a model" << std::endl;
 #endif
 
                     std::list<physics::ModelPtr> modelList;
-                    modelList.push_back(model);
+                    modelList.emplace_back(model);
                     while(!modelList.empty())
                     {
                         physics::ModelPtr m = modelList.front();
@@ -66,23 +67,37 @@ void gazebo::GuaWorldPlugin::on_update()
 
                         physics::Model_V models = m->NestedModels();
                         for(auto const &n : models)
-                            modelList.push_back(n);
+                            modelList.emplace_back(n);
                     }
                 }
 
 #if GUA_DEBUG == 1
-                gzerr << "11" << std::endl;
-                std::cerr << "11" << std::endl;
+                gzerr << "Preparing to publish" << std::endl;
+                std::cerr << "Preparing to publish" << std::endl;
 #endif
 
                 if(pub && pub->HasConnections())
                 {
+
+#if GUA_DEBUG == 1
+                    gzerr << "Published successfully" << std::endl;
+                    std::cerr << "Published successfully" << std::endl;
+#endif
+
                     pub->Publish(msg, true);
+
+#if GUA_DEBUG == 1
+                    gzerr << "Enqued: " << pub->GetOutgoingCount() << std::endl;
+                    std::cerr << "Enqued: " << pub->GetOutgoingCount() << std::endl;
+#endif
                 }
 
 #if GUA_DEBUG == 1
-                gzerr << "12" << std::endl;
-                std::cerr << "12" << std::endl;
+                else
+                {
+                    gzerr << "Publisher has no connections" << std::endl;
+                    std::cerr << "Publisher has no connections" << std::endl;
+                }
 #endif
             }
         }
