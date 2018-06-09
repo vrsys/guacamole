@@ -24,7 +24,8 @@ const float sqrt_of_two = 1.4142135623730951;
 void main() {
 
   vec2 centered_point_coord = (gl_PointCoord.xy - 0.5) * 2.0;
-  float blend_weight = sqrt_of_two - length(centered_point_coord);
+  vec2 max_abs_center_coord = abs(centered_point_coord);
+  float blend_weight = sqrt_of_two - max(max_abs_center_coord.x, max_abs_center_coord.y );//*/length(centered_point_coord);
 
 
   //blend_weight = gaussian[min(31, max(0,(int)(blend_weight * 15.5)))];
