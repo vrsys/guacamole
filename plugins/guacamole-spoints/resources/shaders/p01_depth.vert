@@ -46,5 +46,5 @@ void main() {
   vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
 
   gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
-  gl_PointSize = point_size;
+  gl_PointSize = point_size*1.5;
 }
