@@ -63,6 +63,9 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   }
 
+  bool is_server() const {
+    return m_is_server_;
+  }
 
   void send_feedback_frame(RenderContext const& ctx) {
 
@@ -91,13 +94,14 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
           std::string endpoint(std::string("tcp://") + current_socket_string.c_str());
 
-          try { 
-            new_socket_ptr->bind(endpoint.c_str()); 
-          } catch (const std::exception& e) {
-            std::cout << "Failed to bind feedback socket\n";
-            return;
-          }
-
+            try { 
+             new_socket_ptr->bind(endpoint.c_str()); 
+            } catch (const std::exception& e) {
+              std::cout << "Failed to bind feedback socket\n";
+              std::cout << "App is considered to be a server from now on\n";
+              m_is_server_ = true;
+              return;
+            }
           socket_per_socket_string_.insert(std::make_pair(current_socket_string, new_socket_ptr) );
         }
 
@@ -170,6 +174,8 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   std::map<size_t, 
   std::map<std::string, std::vector<spoints::matrix_package>>>                 queued_feedback_packages_per_context_per_socket_;
+
+  bool                                                                         m_is_server_ = false;
 
 };
 
