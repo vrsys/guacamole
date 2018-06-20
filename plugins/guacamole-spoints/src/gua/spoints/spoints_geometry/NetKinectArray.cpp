@@ -248,6 +248,9 @@ void NetKinectArray::readloop() {
     
     std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
 
+    if(num_voxels_received > 10000000) {
+      return;
+    }
     size_t data_points_byte_size = num_voxels_received * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
     //if(m_buffer_back.size() < data_points_byte_size) {
       m_buffer_back_.resize(data_points_byte_size);

@@ -53,7 +53,7 @@ class GUA_DLL PipelinePassDescription {
   virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) = 0;
   friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
 
-  virtual void apply_post_render_action(RenderContext const& ctx) const {};
+  virtual void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const {};
   // shader names
   std::string vertex_shader_ = "";
   std::string fragment_shader_ = "";

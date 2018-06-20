@@ -172,4 +172,11 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void GBuffer::retrieve_depth_data(RenderContext const& ctx, uint32_t* out_data) {
+  toggle_ping_pong();
+  ctx.render_context->retrieve_texture_data(depth_buffer_, 0, out_data);
+  toggle_ping_pong();
+}
+////////////////////////////////////////////////////////////////////////////////
+
 }

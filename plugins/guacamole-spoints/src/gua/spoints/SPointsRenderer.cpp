@@ -482,97 +482,102 @@ void SPointsRenderer::render(Pipeline& pipe,
       for (auto& o : objects->second) {
 
         auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
-        auto spoints_desc(spoints_node->get_spoints_description());
 
-        if (!GeometryDatabase::instance()->contains(spoints_desc)) {
-          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
-                                   << spoints_desc << ", " << std::endl;
-          continue;
+
+        if(!spoints_node->get_is_server_resource()) {
+
+          auto spoints_desc(spoints_node->get_spoints_description());
+
+          if (!GeometryDatabase::instance()->contains(spoints_desc)) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+                                     << spoints_desc << ", " << std::endl;
+            continue;
+          }
+
+          auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+              GeometryDatabase::instance()->lookup(spoints_desc));
+          if (!spoints_resource) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                     << std::endl;
+            continue;
+          }
+
+
+          auto const& model_matrix(spoints_node->get_cached_world_transform());
+          auto normal_matrix(scm::math::transpose(
+              scm::math::inverse(spoints_node->get_cached_world_transform())));
+          auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+
+          scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+          scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+
+          scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
+
+          const float scaling = scm::math::length(
+              (model_matrix * view_matrix) * scm::math::vec4d(1.0, 0.0, 0.0, 0.0));
+
+
+
+
+          spoints_resource->update_buffers(pipe.get_context(), pipe);
+
+
+
+          ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
+
+          ctx.render_context->apply();
+
+          depth_pass_program_->use(ctx);
+        
+          /*depth_pass_program_->set_uniform(
+            ctx,
+            scm::math::mat4f(model_matrix),
+            "kinect_model_matrix");
+          */
+
+          depth_pass_program_->set_uniform(
+            ctx,
+            scm::math::mat4f(mvp_matrix),
+            "kinect_mvp_matrix");
+
+          ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
+
+
+
+          //float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+          unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
+          unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
+
+
+
+          float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
+          float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
+          //render_target_dims.x 
+
+
+          //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
+
+          float target_ratio = 2.5;
+          float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
+
+          depth_pass_program_->set_uniform(
+            ctx,
+            screen_space_point_size,
+            "point_size");
+
+          bool write_depth = true;
+          //target.bind(ctx, write_depth);
+          target.set_viewport(ctx);
+
+          ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+          ctx.render_context->apply();
+
+
+
+          spoints_resource->draw(ctx);
         }
-
-        auto spoints_resource = std::static_pointer_cast<SPointsResource>(
-            GeometryDatabase::instance()->lookup(spoints_desc));
-        if (!spoints_resource) {
-          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
-                                   << std::endl;
-          continue;
-        }
-
-
-        auto const& model_matrix(spoints_node->get_cached_world_transform());
-        auto normal_matrix(scm::math::transpose(
-            scm::math::inverse(spoints_node->get_cached_world_transform())));
-        auto view_matrix(pipe.current_viewstate().frustum.get_view());
-
-
-        scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
-        scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-
-        scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
-
-        const float scaling = scm::math::length(
-            (model_matrix * view_matrix) * scm::math::vec4d(1.0, 0.0, 0.0, 0.0));
-
-
-
-
-      spoints_resource->update_buffers(pipe.get_context(), pipe);
-
-
-
-        ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
-
-        ctx.render_context->apply();
-
-        depth_pass_program_->use(ctx);
-      
-        /*depth_pass_program_->set_uniform(
-          ctx,
-          scm::math::mat4f(model_matrix),
-          "kinect_model_matrix");
-        */
-
-        depth_pass_program_->set_uniform(
-          ctx,
-          scm::math::mat4f(mvp_matrix),
-          "kinect_mvp_matrix");
-
-        ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
-
-
-
-        //float const screen_space_point_size = spoints_node->get_screen_space_point_size();
-
-        unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
-        unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
-
-
-
-        float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
-        float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
-        //render_target_dims.x 
-
-
-        //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
-
-        float target_ratio = 2.5;
-        float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
-
-        depth_pass_program_->set_uniform(
-          ctx,
-          screen_space_point_size,
-          "point_size");
-
-        bool write_depth = true;
-        //target.bind(ctx, write_depth);
-        target.set_viewport(ctx);
-
-        ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
-        ctx.render_context->apply();
-
-        spoints_resource->draw(ctx);
-
-
       }
     }
 
@@ -589,160 +594,187 @@ void SPointsRenderer::render(Pipeline& pipe,
         auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
         auto spoints_desc(spoints_node->get_spoints_description());
 
-        if (!GeometryDatabase::instance()->contains(spoints_desc)) {
-          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
-                                   << spoints_desc << ", " << std::endl;
-          continue;
-        }
+        if (!spoints_node->get_is_server_resource()) {
 
-        auto spoints_resource = std::static_pointer_cast<SPointsResource>(
-            GeometryDatabase::instance()->lookup(spoints_desc));
-        if (!spoints_resource) {
-          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
-                                   << std::endl;
-          continue;
-        }
-
-
-        auto const& model_matrix(spoints_node->get_cached_world_transform());
-        auto normal_matrix(scm::math::transpose(
-            scm::math::inverse(spoints_node->get_cached_world_transform())));
-        auto view_matrix(pipe.current_viewstate().frustum.get_view());
-
-
-        scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
-        scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-
-
-
-        const float scaling = scm::math::length(
-            (model_matrix * view_matrix) * scm::math::vec4d(1.0, 0.0, 0.0, 0.0));
-
-
-        spoints::matrix_package current_package;
-        memcpy((char*) &current_package, (char*) mv_matrix.data_array, 16 * sizeof(float) );
-        memcpy( ((char*) &current_package) +  16 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
-        
-
-
-
-
-      current_package.res_xy[0] = render_target_dims.x;
-      current_package.res_xy[1] = render_target_dims.y;
-
-
-      auto camera_id = pipe.current_viewstate().viewpoint_uuid;
-      //auto view_direction = pipe.current_viewstate().view_direction;
-      //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
-
-
-      bool is_camera = (!pipe.current_viewstate().shadow_mode);
-
-      bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
-
-      std::size_t view_uuid = camera_id;
-
-
-     // spoints_resource->push_matrix_package(cm_package);
-      std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
-
-      if ("" != feedback_socket_string_of_resource) {
-        SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
-  //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
-      } else {
-   //     std::cout << "FBS: 0" << "\n";
-      }
-
-
-
-
-      
-
-
-
-      //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
-
-
-
-
-        // get material dependent shader
-        std::shared_ptr<ShaderProgram> current_shader;
-
-        MaterialShader* current_material =
-            spoints_node->get_material()->get_shader();
-        if (current_material) {
-
-          auto shader_iterator = programs_.find(current_material);
-          if (shader_iterator != programs_.end()) {
-            current_shader = shader_iterator->second;
-          } else {
-            auto smap = global_substitution_map_;
-            for (const auto& i : current_material->generate_substitution_map())
-              smap[i.first] = i.second;
-
-            current_shader = std::make_shared<ShaderProgram>();
-            current_shader->set_shaders(
-                accumulation_pass_shader_stages_, std::list<std::string>(), false, smap);
-            programs_[current_material] = current_shader;
+          if (!GeometryDatabase::instance()->contains(spoints_desc)) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+                                     << spoints_desc << ", " << std::endl;
+            continue;
           }
+
+          auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+              GeometryDatabase::instance()->lookup(spoints_desc));
+          if (!spoints_resource) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                     << std::endl;
+            continue;
+          }
+
+
+          auto const& model_matrix(spoints_node->get_cached_world_transform());
+          auto normal_matrix(scm::math::transpose(
+              scm::math::inverse(spoints_node->get_cached_world_transform())));
+          auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+
+          scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+          scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+
+
+
+          const float scaling = scm::math::length(
+              (model_matrix * view_matrix) * scm::math::vec4d(1.0, 0.0, 0.0, 0.0));
+
+
+
+        //auto const& spoints_data = spointsdata_[spoints_resource->uuid()];
+
+
+
+
+          // get material dependent shader
+          std::shared_ptr<ShaderProgram> current_shader;
+
+          MaterialShader* current_material =
+              spoints_node->get_material()->get_shader();
+          if (current_material) {
+
+            auto shader_iterator = programs_.find(current_material);
+            if (shader_iterator != programs_.end()) {
+              current_shader = shader_iterator->second;
+            } else {
+              auto smap = global_substitution_map_;
+              for (const auto& i : current_material->generate_substitution_map())
+                smap[i.first] = i.second;
+
+              current_shader = std::make_shared<ShaderProgram>();
+              current_shader->set_shaders(
+                  accumulation_pass_shader_stages_, std::list<std::string>(), false, smap);
+              programs_[current_material] = current_shader;
+            }
+          } else {
+            Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+                                << spoints_node->get_material()->get_shader_name()
+                                << std::endl;
+          }
+
+          scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
+
+          current_shader->use(ctx);
+        /*
+          current_shader->set_uniform(
+            ctx,
+            scm::math::mat4f(model_matrix),
+            "kinect_model_matrix");
+  */
+          current_shader->set_uniform(
+            ctx,
+            scm::math::mat4f(mvp_matrix),
+            "kinect_mvp_matrix");
+
+          ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+          ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+          ctx.render_context->set_blend_state(color_accumulation_state_);
+          ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
+
+
+
+          //float const screen_space_point_size = spoints_node->get_screen_space_point_size();
+
+          unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
+          unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
+
+
+
+          float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
+          float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
+          //render_target_dims.x 
+
+
+          //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
+
+          float target_ratio = 2.5;
+          float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
+
+          current_shader->set_uniform(
+            ctx,
+            screen_space_point_size,
+            "point_size");
+
+          bool write_depth = true;
+          //target.bind(ctx, write_depth);
+          target.set_viewport(ctx);
+
+          ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+          ctx.render_context->apply();
+
+          if(!spoints_node->get_is_server_resource()) {
+            spoints_resource->draw(ctx);
+          }
+
+
+
+
+
         } else {
-          Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
-                              << spoints_node->get_material()->get_shader_name()
-                              << std::endl;
+
+
+          auto const& model_matrix(spoints_node->get_cached_world_transform());
+          auto normal_matrix(scm::math::transpose(
+              scm::math::inverse(spoints_node->get_cached_world_transform())));
+          auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+
+          scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+          scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+
+          spoints::matrix_package current_package;
+          memcpy((char*) &current_package, (char*) mv_matrix.data_array, 16 * sizeof(float) );
+          memcpy( ((char*) &current_package) +  16 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
+          
+
+
+
+
+          current_package.res_xy[0] = render_target_dims.x;
+          current_package.res_xy[1] = render_target_dims.y;
+
+
+          auto camera_id = pipe.current_viewstate().viewpoint_uuid;
+          //auto view_direction = pipe.current_viewstate().view_direction;
+          //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
+
+
+          bool is_camera = (!pipe.current_viewstate().shadow_mode);
+
+          bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
+
+          std::size_t view_uuid = camera_id;
+          
+
+
+          auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+              GeometryDatabase::instance()->lookup(spoints_desc));
+          if (!spoints_resource) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                     << std::endl;
+            continue;
+          }
+
+         // spoints_resource->push_matrix_package(cm_package);
+          std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
+
+
+
+
+          if ("" != feedback_socket_string_of_resource) {
+            SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
+      //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
+          } else {
+       //     std::cout << "FBS: 0" << "\n";
+          }
+
         }
-
-        scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
-
-        current_shader->use(ctx);
-      /*
-        current_shader->set_uniform(
-          ctx,
-          scm::math::mat4f(model_matrix),
-          "kinect_model_matrix");
-*/
-        current_shader->set_uniform(
-          ctx,
-          scm::math::mat4f(mvp_matrix),
-          "kinect_mvp_matrix");
-
-        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-        ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
-        ctx.render_context->set_blend_state(color_accumulation_state_);
-        ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
-
-
-
-        //float const screen_space_point_size = spoints_node->get_screen_space_point_size();
-
-        unsigned const remote_renderer_screen_width = spoints_resource->get_remote_server_screen_width();
-        unsigned const remote_renderer_screen_height = spoints_resource->get_remote_server_screen_height();
-
-
-
-        float scale_x = (render_target_dims.x) / remote_renderer_screen_width;
-        float scale_y = (render_target_dims.y) / remote_renderer_screen_height;
-        //render_target_dims.x 
-
-
-        //std::cout << "REMOTE RENDERER SCREEN WIDHT/HEIGHT: " << remote_renderer_screen_width << "/" << remote_renderer_screen_height << "\n";
-
-        float target_ratio = 2.5;
-        float screen_space_point_size = std::max(target_ratio, std::max(scale_x, scale_y) );
-
-        current_shader->set_uniform(
-          ctx,
-          screen_space_point_size,
-          "point_size");
-
-        bool write_depth = true;
-        //target.bind(ctx, write_depth);
-        target.set_viewport(ctx);
-
-        ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
-        ctx.render_context->apply();
-
-        spoints_resource->draw(ctx);
-
 
       }
 

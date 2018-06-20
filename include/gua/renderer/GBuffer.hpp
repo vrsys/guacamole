@@ -46,6 +46,8 @@ class GUA_DLL GBuffer : public RenderTarget {
   void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
   void remove_buffers(RenderContext const& ctx) override;
 
+  void retrieve_depth_data(RenderContext const& ctx, uint32_t* out_datasd );
+
   inline scm::gl::texture_2d_ptr const& get_color_buffer() const { return color_buffer_read_; }
   inline scm::gl::texture_2d_ptr const& get_pbr_buffer() const { return pbr_buffer_; }
   inline scm::gl::texture_2d_ptr const& get_normal_buffer() const { return normal_buffer_; }

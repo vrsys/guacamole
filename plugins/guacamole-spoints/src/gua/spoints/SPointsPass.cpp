@@ -57,9 +57,10 @@ PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, Substit
   return pass;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx) const {
+void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx, Pipeline* pipe) const {
   /*
   std::cout << "POST RENDER ACTION IS CALLED" << std::endl;
   */
