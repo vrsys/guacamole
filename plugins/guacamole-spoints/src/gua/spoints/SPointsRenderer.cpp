@@ -715,9 +715,9 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-
+          std::cout << "IS CLIENT RESOURCE\n";
         } else {
-
+          std::cout << "IS SERVER RESOURCE\n";
 
           auto const& model_matrix(spoints_node->get_cached_world_transform());
           auto normal_matrix(scm::math::transpose(

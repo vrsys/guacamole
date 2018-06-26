@@ -123,6 +123,7 @@ void ResolvePassDescription::apply_post_render_action(RenderContext const& ctx, 
   //ctx.render_context->retrieve_texture_data(gua_depth_buffer, 0, (void*)&texture_data[0]);
    // pipe->get_gbuffer()->toggle_ping_pong();
 
+/*
   std::cout << "Retrieving Depth buffer data!\n";
 
   uint32_t max_uint = std::numeric_limits<uint32_t>::max();
@@ -136,6 +137,8 @@ void ResolvePassDescription::apply_post_render_action(RenderContext const& ctx, 
     std::cout << "\n";
   }
   std::cout << "\n";
+*/
+
 
 /*
   TextureDistance::TextureDistance(unsigned width,
