@@ -252,12 +252,9 @@ void NetKinectArray::readloop() {
       return;
     }
     size_t data_points_byte_size = num_voxels_received * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
-    //if(m_buffer_back.size() < data_points_byte_size) {
-      m_buffer_back_.resize(data_points_byte_size);
-   // }
 
+    m_buffer_back_.resize(data_points_byte_size);
 
-    //memcpy((unsigned char*) m_buffer_back.data(), (unsigned char*) zmqm.data(), message_size);
     memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size, data_points_byte_size);
 
   
@@ -274,71 +271,6 @@ void NetKinectArray::readloop() {
   }
 
 }
-
-
-
-/*
-void NetKinectArray::sendfeedbackloop() {
-  
-  // open multicast listening connection to server and port
-  zmq::context_t ctx(1); // means single threaded
-  zmq::socket_t  socket(ctx, ZMQ_PUB); // means a subscriber
-
-  int conflate_messages  = 1;
-  socket.setsockopt(ZMQ_CONFLATE, &conflate_messages, sizeof(conflate_messages));
-  //socket.set
-  std::string endpoint(std::string("tcp://") + m_feedback_endpoint_);
-
-  try { 
-    socket.bind(endpoint.c_str()); 
-  } 
-  catch (const std::exception& e) {
-    std::cout << "Failed to bind feedback socket\n";
-    return;
-  }
-
-  while (m_feedback_running_) {
-    
-
-    if(m_feedback_need_swap_.load()) { // swap
-      std::lock_guard<std::mutex> lock(m_feedback_mutex_);
-
-      size_t feedback_header_byte = 100;
-
-
-
-      uint32_t num_recorded_matrix_packages = 0;
-
-
-      num_recorded_matrix_packages +=  matrix_packages_to_submit_.size();
-
-      //HEADER DATA SO FAR:
-
-      // 00000000 uint32_t num_matrices
-
-      
-
-
-      zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(matrix_package) );
-
-
-      memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
-      memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(matrix_packages_to_submit_[0]), (num_recorded_matrix_packages) *  sizeof(matrix_package) );
-
-      //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
-
-      // send feedback
-      socket.send(zmqm); // blocking
-
-      m_feedback_need_swap_.store(false);
-
-    }
-    
-  }
-
-}
-*/
-
 
 
 }
