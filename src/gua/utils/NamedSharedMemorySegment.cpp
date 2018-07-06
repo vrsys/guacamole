@@ -30,22 +30,16 @@ namespace gua
                           uint64_t shared_memory_size_in_byte) 
                             : mName(shared_memory_segment_name),
                               mSize(shared_memory_size_in_byte),
-                              mSharedMemoryObjectPtr(nullptr),
-                              mMappedRegionPtr(nullptr),
+                              mManagedSharedMemoryObjectPtr(nullptr),
                               mWasCreated(false),
-                              mWasMapped(false),
                               mInitRead(false)
                           {}
 
   NamedSharedMemorySegment::
   ~NamedSharedMemorySegment() {
     if (mWasCreated) {
-      delete mSharedMemoryObjectPtr;
-      delete mMappedRegionPtr;
-    }
-
-    if(mWasMapped) {
-      delete mMappedRegionPtr;
+      boost::interprocess::shared_memory_object::remove(mName.c_str());
+      delete mManagedSharedMemoryObjectPtr;
     }
   }
 
@@ -54,31 +48,21 @@ namespace gua
   void NamedSharedMemorySegment::create_writeable() {
     boost::interprocess::shared_memory_object::remove(mName.c_str());
 
-    mSharedMemoryObjectPtr = new boost::interprocess::shared_memory_object(::boost::interprocess::create_only, mName.c_str(), ::boost::interprocess::read_write);
-    mWasCreated            = true;
-
-    mSharedMemoryObjectPtr->truncate(mSize);
-    mMappedRegionPtr = new boost::interprocess::mapped_region (*mSharedMemoryObjectPtr, ::boost::interprocess::read_write);
-    mWasMapped = true;
+    mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::create_only, mName.c_str(), mSize);
   }
 
   void NamedSharedMemorySegment::create_readable() {
     boost::interprocess::shared_memory_object::remove(mName.c_str());
-    mSharedMemoryObjectPtr = new boost::interprocess::shared_memory_object(::boost::interprocess::open_only, mName.c_str(), ::boost::interprocess::read_only);
-    mWasCreated            = true;
-    mInitRead              = true;
-
-    mMappedRegionPtr = new boost::interprocess::mapped_region (*mSharedMemoryObjectPtr, ::boost::interprocess::read_only);
-    mWasMapped = true;
+    mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::open_only, mName.c_str());
   }
 
 
   void NamedSharedMemorySegment::write(char* const data, std::size_t byte_length, std::size_t byte_offset) {
-    std::memcpy( (char*)(mMappedRegionPtr->get_address()) + byte_offset, data, byte_length);
+    std::memcpy( (char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, data, byte_length);
   }
 
   void NamedSharedMemorySegment::read(char* data, std::size_t byte_length, std::size_t byte_offset) {
-    std::memcpy( data, (char*)(mMappedRegionPtr->get_address()) + byte_offset, byte_length);
+    std::memcpy( data, (char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, byte_length);
   }
 
 }

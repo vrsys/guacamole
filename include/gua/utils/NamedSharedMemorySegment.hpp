@@ -26,6 +26,7 @@
 #include <gua/utils/Singleton.hpp>
 #include <gua/databases/Database.hpp>
 
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
@@ -52,6 +53,20 @@ namespace gua
 
     void create_readable();
 
+    template <typename T>
+    void construct_named_object(std::string const& object_name) {
+      mManagedSharedMemoryObjectPtr->construct<T>(object_name.c_str())();
+    }
+
+    template <typename T>
+    void destroy_named_object(std::string const& object_name) {
+      mManagedSharedMemoryObjectPtr->destroy<T>(object_name.c_str());
+    }
+
+    template <typename T>
+    std::pair<T*, std::size_t> retrieve_named_object(std::string const& object_name) {
+      return mManagedSharedMemoryObjectPtr->find<T>(object_name.c_str());
+    }
 
     void write(char* const data, std::size_t byte_length, std::size_t byte_offset = 0x0);
     void read(char* data, std::size_t byte_length, std::size_t byte_offset = 0x0);
@@ -67,13 +82,12 @@ namespace gua
     void _create();
     std::string mName;
     uint64_t    mSize;
+
     //actual shared memory instance
-    boost::interprocess::shared_memory_object* mSharedMemoryObjectPtr;
-    boost::interprocess::mapped_region*        mMappedRegionPtr;
+    boost::interprocess::managed_shared_memory* mManagedSharedMemoryObjectPtr;
 
 
     bool        mWasCreated;
-    bool        mWasMapped;
     bool        mInitRead;
 
   };
