@@ -71,6 +71,15 @@ namespace gua
     void write(char* const data, std::size_t byte_length, std::size_t byte_offset = 0x0);
     void read(char* data, std::size_t byte_length, std::size_t byte_offset = 0x0);
 
+    template <typename T, typename U>
+    void set_value_on_named_object(std::string const& object_name, U const& value) {
+      *(retrieve_named_object<T>(object_name).first) = value;
+    }
+
+    template <typename INTERNAL_TYPE, typename EXTERNAL_TYPE>
+    EXTERNAL_TYPE get_value_from_named_object(std::string const& object_name) {
+      return *(retrieve_named_object<INTERNAL_TYPE>(object_name).first);
+    }
 
     /**
      * Destructor.
@@ -78,7 +87,6 @@ namespace gua
     ~NamedSharedMemorySegment();
 
   private:
-
     void _create();
     std::string mName;
     uint64_t    mSize;
