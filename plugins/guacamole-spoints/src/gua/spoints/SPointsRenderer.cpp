@@ -364,9 +364,8 @@ void SPointsRenderer::render(Pipeline& pipe,
   auto& scene = *pipe.current_viewstate().scene;
   auto objects(scene.nodes.find(std::type_index(typeid(node::SPointsNode))));
 
-  if ( !(sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0) ) {
+  if ( !(objects != scene.nodes.end() && objects->second.size() > 0) ) {
     return;
-
   }
 
   ///////////////////////////////////////////////////////////////////////////
