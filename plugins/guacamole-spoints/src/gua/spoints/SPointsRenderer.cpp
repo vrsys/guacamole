@@ -473,7 +473,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-  std::cout << "NUM RENDERABLE OBJECTS: " << objects->second.size() << "\n";
+  //std::cout << "NUM RENDERABLE OBJECTS: " << objects->second.size() << "\n";
 
   float last_known_point_size = std::numeric_limits<float>::max();
 
@@ -715,10 +715,10 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-        std::cout << "IS CLIENT RESOURCE\n";
+        //std::cout << "IS CLIENT RESOURCE\n";
       }
       if (true)/*else*/ {
-        std::cout << "IS SERVER RESOURCE\n";
+        //std::cout << "IS SERVER RESOURCE\n";
 
         auto const& model_matrix(spoints_node->get_cached_world_transform());
         auto normal_matrix(scm::math::transpose(
