@@ -64,6 +64,7 @@ namespace gua
       Logger::LOG_WARNING << "Named Shared Memory \"" << segment_name << "\" already exists!" << std::endl;
     }
   }
+
 /*
   std::shared_ptr<NamedSharedMemorySegment> NamedSharedMemoryController::
   get_memory_segment(std::string const& segment_name) {
