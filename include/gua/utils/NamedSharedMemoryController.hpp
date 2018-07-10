@@ -47,6 +47,9 @@ namespace gua
     void add_memory_segment(std::string const& segment_name, uint64_t size_in_byte);
     //std::shared_ptr<NamedSharedMemorySegment> get_memory_segment(std::string const& segment_name);
 
+
+    void add_read_only_memory_segment(std::string const& segment_name);
+
     void write_to_segment(std::string const& segment_name, 
                           char* const data, std::size_t byte_length, std::size_t byte_offset = 0x0) {
       // for now without checking whether the segment actually exists
@@ -74,6 +77,11 @@ namespace gua
     EXTERNAL_TYPE get_value_from_named_object(std::string const& object_name){
       return mNamedObjects[object_name]->get_value_from_named_object<INTERNAL_TYPE, EXTERNAL_TYPE>(object_name);
     }
+
+    void register_remotely_constructed_object_on_segment(std::string const& segment_name, std::string const& object_name) {
+      mNamedObjects[object_name] = mNamedMemorySegments[segment_name];
+    }
+
 
     template <typename INTERNAL_TYPE>
     void destroy_named_object(std::string const& object_name) {
