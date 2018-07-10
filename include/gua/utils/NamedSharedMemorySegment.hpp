@@ -47,7 +47,7 @@ namespace gua
      * Constructor.
      */
     NamedSharedMemorySegment(std::string const& shared_memory_segment_name,
-                             uint64_t shared_memory_size_in_byte);
+                             uint64_t shared_memory_size_in_byte = 0);
 
     void create_writeable();
 

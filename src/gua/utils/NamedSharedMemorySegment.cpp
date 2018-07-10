@@ -52,7 +52,6 @@ namespace gua
   }
 
   void NamedSharedMemorySegment::create_readable() {
-    boost::interprocess::shared_memory_object::remove(mName.c_str());
     mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::open_only, mName.c_str());
   }
 
