@@ -55,8 +55,8 @@
 
 
     virtual void create_gpu_resources(gua::RenderContext const& ctx,
-                                       scm::math::vec2ui const& render_target_dims,
-                                       gua::plod_shared_resources& shared_resources) {};
+                                      scm::math::vec2ui const& render_target_dims,
+                                      gua::plod_shared_resources& shared_resources) {};
 
   protected: //shader related auxiliary methods
     virtual void _initialize_shader_program();
