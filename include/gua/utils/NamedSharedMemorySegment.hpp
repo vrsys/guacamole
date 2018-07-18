@@ -81,6 +81,25 @@ namespace gua
       return *(retrieve_named_object<INTERNAL_TYPE>(object_name).first);
     }
 
+    //memcpy interface
+    template <typename INTERNAL_TYPE>
+    void memcpy_value_from_named_object(std::string const& object_name, char* to_write, std::size_t byte_to_write) {
+      auto& array_to_copy_from = *(retrieve_named_object<INTERNAL_TYPE>(object_name).first);
+      std::cout << "Executed innermost read call\n";
+      std::cout << "Reading: " << byte_to_write << " bytes\n";
+      std::memcpy(to_write, (char*) &(array_to_copy_from[0]), byte_to_write);
+    }
+
+    //memcpy interface
+    template <typename INTERNAL_TYPE>
+    void memcpy_value_to_named_object(std::string const& object_name, char* const to_read, std::size_t byte_to_read) {
+      auto& array_to_copy_to = *(retrieve_named_object<INTERNAL_TYPE>(object_name).first);
+      std::cout << "Executed innermost write call\n";
+      std::cout << "Writing: " << byte_to_read << " bytes\n";
+      std::memcpy((char*) &(array_to_copy_to[0]), to_read, byte_to_read);
+    }
+
+
     /**
      * Destructor.
      */

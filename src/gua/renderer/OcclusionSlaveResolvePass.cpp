@@ -26,21 +26,23 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/utils/NamedSharedMemoryController.hpp>
 
 #include <boost/variant.hpp>
 
+#include <atomic>
 namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
   : PipelinePassDescription()
 {
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = "shaders/resolve.frag";
+  vertex_shader_ = "";
+  fragment_shader_ = "";
   name_ = "OcclusionSlaveResolvePass";
-  needs_color_buffer_as_input_ = true;
+  needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+  rendermode_ = RenderMode::Custom;
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
       false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
@@ -53,53 +55,18 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
 void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const {
 
 
+  auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
+  //std::cout << "Writing depth buffer to: " << depth_buffer_shared_memory_name << "\n";
+
+  memory_controller->add_read_only_memory_segment("DEPTH_FEEDBACK_SEGMENT");
+
+  memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_FEEDBACK_SEMAPHOR");
+  memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_FEEDBACK_SEMAPHOR", 2);
+  std::cout << "Would signal now!\n";
+
     //pipe->get_gbuffer()->toggle_ping_pong();
-    auto& target = pipe->current_viewstate().target;
 
-
-
-
-    auto& gua_depth_buffer = target->get_depth_buffer();
-
-    //gua_depth_buffer->toggle_ping_pong();
-
-
-  auto const& camera = pipe->current_viewstate().camera;
-
-
-
-  scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
-
-
-
-  uint32_t pixel_size = render_target_dims[0] * render_target_dims[1];
- // uint32_t byte_size = pixel_size * sizeof(uint32_t); 
-  //texture_data_ = (uint32_t*)malloc(byte_size);
-  //world_depth_data_ = std::vector<float>(pixel_size, -1.0f);i0
-  std::vector<uint32_t> texture_data(pixel_size, 0);
-
-  pipe->get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
-
-  //ctx.render_context->retrieve_texture_data(gua_depth_buffer, 0, (void*)&texture_data[0]);
-   // pipe->get_gbuffer()->toggle_ping_pong();
-
-
-/*
-  std::cout << "Retrieving Depth buffer data!\n";
-
-  uint32_t max_uint = std::numeric_limits<uint32_t>::max();
-
-  for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
-    for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
-
-      float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
-      printf("%.10f ", normalized_depth);
-    }
-    std::cout << "\n";
-  }
-  std::cout << "\n";
-*/
-
+ // memory_controller->add_read_only_memory_segment()
 
 /*
   TextureDistance::TextureDistance(unsigned width,
@@ -168,6 +135,114 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
   PipelinePass pass{*this, ctx, substitution_map};
+
+  pass.process_ = [&](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
+
+      auto& target = pipe.current_viewstate().target;
+
+
+
+
+      auto& gua_depth_buffer = target->get_depth_buffer();
+
+      //gua_depth_buffer->toggle_ping_pong();
+
+
+    auto const& camera = pipe.current_viewstate().camera;
+
+
+
+    scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+
+
+
+    uint32_t pixel_size = render_target_dims[0] * render_target_dims[1];
+   // uint32_t byte_size = pixel_size * sizeof(uint32_t); 
+    //texture_data_ = (uint32_t*)malloc(byte_size);
+    //world_depth_data_ = std::vector<float>(pixel_size, -1.0f);i0
+    std::vector<uint32_t> texture_data(pixel_size, 0);
+
+    pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
+
+    //ctx.render_context->retrieve_texture_data(gua_depth_buffer, 0, (void*)&texture_data[0]);
+     // pipe->get_gbuffer()->toggle_ping_pong();
+
+    //std::cout << "Post Render Action of OS Resolve Pass\n";
+
+    std::cout << "Retrieving Depth buffer data!\n";
+
+    uint32_t max_uint = std::numeric_limits<uint32_t>::max();
+  
+    for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
+      for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
+
+        float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
+        printf("%.10f ", normalized_depth);
+      }
+      std::cout << "\n";
+    }
+  
+   // std::cout << "\n";
+  
+
+
+
+    std::string depth_buffer_shared_memory_name = "DB_";
+    auto const camera_view_id = camera.config.view_id();
+    if(camera.config.enable_stereo()) {
+      bool is_left_cam = true;
+      if(camera_view_id == last_rendered_view_id) {
+        last_rendered_side = (last_rendered_side + 1)%2;
+        is_left_cam = (last_rendered_side == 0) ? true : false;
+      } 
+      std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
+
+      depth_buffer_shared_memory_name += std::to_string(camera.config.view_id()) + (is_left_cam ? "L" : "R");
+    } else {
+      last_rendered_side = 0;
+      depth_buffer_shared_memory_name += std::to_string(camera.config.view_id()) + "M";
+    }
+
+    last_rendered_view_id = camera_view_id;
+
+
+    auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
+    std::cout << "Writing depth buffer to: " << depth_buffer_shared_memory_name << "\n";
+    //memory_controller->add_read_only_memory_segment(depth_buffer_shared_memory_name.c_str());
+
+    std::vector<uint32_t> to_write(20*20, 127);
+
+    uint32_t taken_y_samples = 0;
+    uint32_t taken_x_samples = 0;
+    uint32_t value_offset = 0;
+
+
+    for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
+      for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
+
+        //if(value_offset > 399) {
+        //  std::cout << "SCREAAAAAAAAAAAAAAAAAAAM: " << value_offset << "\n";
+       // }
+        to_write[value_offset++] = (texture_data[x_idx + y_idx * render_target_dims[0]] );
+        float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
+        printf("%.10f ", normalized_depth);
+      }
+      std::cout << "\n";
+    }
+    //std::memcpy((char*) &to_write[0], (char*) &texture_data[0], to_write.size());
+    
+
+    std::cout << "\n";
+    std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
+
+    std::string memory_label_segment = "segment_for_" + depth_buffer_shared_memory_name;
+    memory_controller->add_read_only_memory_segment(memory_label_segment);
+    memory_controller->register_remotely_constructed_object_on_segment(memory_label_segment, depth_buffer_shared_memory_name);
+    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_shared_memory_name.c_str(), (char*)&to_write[0], to_write.size() * 4);
+    //memory_controller->write_to_segment(depth_buffer_shared_memory_name.c_str(),
+    //                                    (char*)&texture_data[0], 100*100*sizeof(float));
+  };
+
   return pass;
 }
 
