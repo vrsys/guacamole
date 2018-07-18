@@ -25,6 +25,7 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
+
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/NamedSharedMemoryController.hpp>
 
@@ -35,12 +36,18 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
-  : PipelinePassDescription()
+  : PipelinePassDescription(),
+    last_rendered_view_id(std::numeric_limits<int>::max()),
+    last_rendered_side(0),
+    gbuffer_extraction_resolution_(scm::math::vec2ui{20, 20}),
+    shader_stages_(),
+    shader_program_(nullptr),
+    gpu_resources_already_created_(false)
 {
   vertex_shader_ = "";
   fragment_shader_ = "";
   name_ = "OcclusionSlaveResolvePass";
-  needs_color_buffer_as_input_ = false;
+  needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Custom;
   depth_stencil_state_ = boost::make_optional(
@@ -126,8 +133,31 @@ get_depth_buffer()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<PipelinePassDescription> OcclusionSlaveResolvePassDescription::make_copy() const {
   return std::make_shared<OcclusionSlaveResolvePassDescription>(*this);
+}
+
+
+void OcclusionSlaveResolvePassDescription::
+create_gpu_resources(gua::RenderContext const& ctx,
+                     scm::math::vec2ui const& render_target_dims) {
+
+  ResourceFactory factory;
+
+  shader_stages_.clear();
+  shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
+  shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/occlusion_resolve.frag")));
+
+  auto new_program = std::make_shared<ShaderProgram>();
+  new_program->set_shaders(shader_stages_);
+  shader_program_ = new_program;
+
+  no_depth_test_depth_stencil_state_ = ctx.render_device
+    ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,42 +168,88 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
   pass.process_ = [&](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
 
-      auto& target = pipe.current_viewstate().target;
-
-
-
-
-      auto& gua_depth_buffer = target->get_depth_buffer();
-
-      //gua_depth_buffer->toggle_ping_pong();
-
+    //auto& target = pipe.current_viewstate().target;
+    //auto& gua_depth_buffer = target->get_depth_buffer();
 
     auto const& camera = pipe.current_viewstate().camera;
 
-
-
     scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+
+    // custom render pass
+    if(!gpu_resources_already_created_) {
+
+      create_gpu_resources(ctx, render_target_dims);
+      gpu_resources_already_created_ = true;
+    }
+
+/////<<<<<<<<<<<<<<
+
+    auto& target = *pipe.current_viewstate().target;
+
+    target.bind(ctx, !writes_only_color_buffer_);
+    target.set_viewport(ctx);
+
+    shader_program_->use(ctx);
+
+    for (auto const& u : desc.uniforms) {
+      u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+    }
+
+    pipe.bind_gbuffer_input(shader_program_);
+    //pipe.bind_light_table(shader_);
+
+    //std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
+    //pipe.begin_gpu_query(ctx, gpu_query_name);
+
+    //if (RenderMode::Callback == rendermode_) {
+    //  process_(*this, desc, pipe);
+    //} else { // RenderMode::Quad
+
+    ctx.render_context->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+
+      pipe.draw_quad();
+    //}
+
+    //pipe.end_gpu_query(ctx, gpu_query_name);
+
+    target.unbind(ctx);
+    ctx.render_context->reset_state_objects();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////>>>>>>>>>>>>>>>>
+
+
 
 
 
     uint32_t pixel_size = render_target_dims[0] * render_target_dims[1];
-   // uint32_t byte_size = pixel_size * sizeof(uint32_t); 
-    //texture_data_ = (uint32_t*)malloc(byte_size);
-    //world_depth_data_ = std::vector<float>(pixel_size, -1.0f);i0
+
     std::vector<uint32_t> texture_data(pixel_size, 0);
 
     pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
 
-
-    //ctx.render_context->retrieve_texture_data(gua_depth_buffer, 0, (void*)&texture_data[0]);
-     // pipe->get_gbuffer()->toggle_ping_pong();
-
-    //std::cout << "Post Render Action of OS Resolve Pass\n";
-
     std::cout << "Retrieving Depth buffer data!\n";
 
     uint32_t max_uint = std::numeric_limits<uint32_t>::max();
-  
+
     for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
       for(uint32_t x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
 
@@ -215,8 +291,8 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
     uint32_t taken_x_samples = 0;
     uint32_t value_offset = 0;
 
-    for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
-      for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
+    for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
+      for(uint32_t x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
 
         //if(value_offset > 399) {
         //  std::cout << "SCREAAAAAAAAAAAAAAAAAAAM: " << value_offset << "\n";

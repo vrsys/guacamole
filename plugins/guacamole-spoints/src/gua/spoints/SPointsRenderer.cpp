@@ -747,6 +747,8 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         uint32_t current_camera_feedback_uuid = camera.config.view_id();
 
+        std::cout << "Starting with camera feedback uuid: " << current_camera_feedback_uuid << "\n";
+
         if(camera.config.enable_stereo()) {
           bool is_left_cam = true;
           if(camera_view_id == last_rendered_view_id) {
@@ -758,12 +760,14 @@ void SPointsRenderer::render(Pipeline& pipe,
           // set the first MSB of 32 bits or the second MSB of the id to 1 depending on whether the cam is a
           // left or right eye  
                                                   /* v 0b10...      0b01...*/
-          uint32_t bit_mask_to_or = (is_left_cam ? 0x80000000 : 0x40000000);
-          current_camera_feedback_uuid |= bit_mask_to_or;
+          //int32_t bit_mask_to_or = (is_left_cam ? 0x00800000 : 0x00400000);
+          //current_camera_feedback_uuid |= bit_mask_to_or;
+          current_package.camera_type = (is_left_cam ? 1 : 2);
+          std::cout << "After ORing this is : " << current_camera_feedback_uuid << "\n";
           //std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
         } else {
           last_rendered_side = 0;
-
+          current_package.camera_type = 0;
           // the mono camera has both MSB bit set to 0.
           
           // current_camera_uuid_string = std::to_string(camera.config.view_id()) + "M";
