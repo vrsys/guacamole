@@ -113,7 +113,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         auto& matrix_collection_vector_for_socket_string = serialized_matrices_per_socket[current_socket_string];
 
         for( auto const& matrix_to_potentially_insert : matrix_packages_to_submit ) {
-          //auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
+
           bool already_inside = false;
           for (auto const& curr_matrix_package_to_compare_to : matrix_collection_vector_for_socket_string) {
             if (!memcmp ( &matrix_to_potentially_insert, &curr_matrix_package_to_compare_to, sizeof(curr_matrix_package_to_compare_to) ) ) {

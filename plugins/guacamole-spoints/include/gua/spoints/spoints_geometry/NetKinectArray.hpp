@@ -25,6 +25,7 @@ struct matrix_package {
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
+  int32_t camera_type; //mono = 0, left = 1, right = 2
   int32_t uuid;
 /*
   void swap(matrix_package& rhs) {

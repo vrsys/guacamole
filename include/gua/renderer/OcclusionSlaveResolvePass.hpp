@@ -45,9 +45,24 @@ class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescript
   friend class Pipeline;
 
  protected:
+
+  void create_gpu_resources(gua::RenderContext const& ctx,
+                            scm::math::vec2ui const& render_target_dims);
+ 
+
+
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-  mutable int last_rendered_view_id = std::numeric_limits<int>::max();
-  mutable int last_rendered_side = 0;
+  mutable int last_rendered_view_id;
+  mutable int last_rendered_side;
+
+  scm::math::vec2ui gbuffer_extraction_resolution_;
+
+  std::vector<ShaderProgramStage>                    shader_stages_;
+  std::shared_ptr<ShaderProgram>                     shader_program_;
+
+  bool                                               gpu_resources_already_created_;
+
+  scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
 };
 }
 
