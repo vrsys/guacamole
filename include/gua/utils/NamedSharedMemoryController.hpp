@@ -35,6 +35,12 @@
 namespace gua
 {
 
+  namespace MemAllocSizes {
+    constexpr static std::size_t KB2 =      2048ul;
+    constexpr static std::size_t KB64 =    65536ul;
+    constexpr static std::size_t MB1  =  1048576ul;
+    constexpr static std::size_t MB16 = 16777216ul;
+  };
   /**
    * Represents a shared memory segment.
    *
@@ -77,6 +83,21 @@ namespace gua
     EXTERNAL_TYPE get_value_from_named_object(std::string const& object_name){
       return mNamedObjects[object_name]->get_value_from_named_object<INTERNAL_TYPE, EXTERNAL_TYPE>(object_name);
     }
+
+
+    //memcpy interface
+    template <typename INTERNAL_TYPE>
+    void memcpy_buffer_from_named_object(std::string const& object_name, char* to_read, std::size_t bytes_to_read) {
+      mNamedObjects[object_name]->memcpy_value_from_named_object<INTERNAL_TYPE>(object_name, to_read, bytes_to_read);
+    }
+
+
+    //memcpy interface
+    template <typename INTERNAL_TYPE>
+    void memcpy_buffer_to_named_object(std::string const& object_name, char* const to_write, std::size_t bytes_to_write) {
+      mNamedObjects[object_name]->memcpy_value_to_named_object<INTERNAL_TYPE>(object_name, to_write, bytes_to_write);
+    }
+	
 
     void register_remotely_constructed_object_on_segment(std::string const& segment_name, std::string const& object_name) {
       mNamedObjects[object_name] = mNamedMemorySegments[segment_name];
