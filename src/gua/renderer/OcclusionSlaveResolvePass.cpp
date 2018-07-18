@@ -164,6 +164,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
     pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
 
+
     //ctx.render_context->retrieve_texture_data(gua_depth_buffer, 0, (void*)&texture_data[0]);
      // pipe->get_gbuffer()->toggle_ping_pong();
 
@@ -173,8 +174,8 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
     uint32_t max_uint = std::numeric_limits<uint32_t>::max();
   
-    for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
-      for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
+    for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
+      for(uint32_t x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
 
         float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
         printf("%.10f ", normalized_depth);
@@ -187,7 +188,8 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
 
-    std::string depth_buffer_shared_memory_name = "DB_";
+
+    std::string camera_uuid_string = "";
     auto const camera_view_id = camera.config.view_id();
     if(camera.config.enable_stereo()) {
       bool is_left_cam = true;
@@ -197,25 +199,21 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
       } 
       std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
 
-      depth_buffer_shared_memory_name += std::to_string(camera.config.view_id()) + (is_left_cam ? "L" : "R");
+      camera_uuid_string = std::to_string(camera.config.view_id()) + (is_left_cam ? "L" : "R");
     } else {
       last_rendered_side = 0;
-      depth_buffer_shared_memory_name += std::to_string(camera.config.view_id()) + "M";
+      camera_uuid_string = std::to_string(camera.config.view_id()) + "M";
     }
 
     last_rendered_view_id = camera_view_id;
 
 
-    auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
-    std::cout << "Writing depth buffer to: " << depth_buffer_shared_memory_name << "\n";
-    //memory_controller->add_read_only_memory_segment(depth_buffer_shared_memory_name.c_str());
 
     std::vector<uint32_t> to_write(20*20, 127);
 
     uint32_t taken_y_samples = 0;
     uint32_t taken_x_samples = 0;
     uint32_t value_offset = 0;
-
 
     for(int y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
       for(int x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
@@ -235,12 +233,20 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
     std::cout << "\n";
     std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
 
-    std::string memory_label_segment = "segment_for_" + depth_buffer_shared_memory_name;
-    memory_controller->add_read_only_memory_segment(memory_label_segment);
-    memory_controller->register_remotely_constructed_object_on_segment(memory_label_segment, depth_buffer_shared_memory_name);
-    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_shared_memory_name.c_str(), (char*)&to_write[0], to_write.size() * 4);
-    //memory_controller->write_to_segment(depth_buffer_shared_memory_name.c_str(),
-    //                                    (char*)&texture_data[0], 100*100*sizeof(float));
+    std::string depth_buffer_object = "DB_" + camera_uuid_string;
+
+    std::cout << "DEPTH BUFFER OBJECT: " << depth_buffer_object << "\n";
+
+    std::string memory_segment_label_prefix = "segment_for_" + depth_buffer_object;
+
+    auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
+    memory_controller->add_memory_segment(memory_segment_label_prefix, gua::MemAllocSizes::KB2*2);
+    memory_controller
+      ->construct_named_object_on_segment<std::array<char, 
+                                          gua::MemAllocSizes::KB2> >
+                                            (memory_segment_label_prefix, 
+                                             depth_buffer_object);
+    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_object.c_str(), (char*)&to_write[0], to_write.size() * 4);
   };
 
   return pass;

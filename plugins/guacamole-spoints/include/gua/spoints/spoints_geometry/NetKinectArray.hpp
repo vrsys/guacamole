@@ -25,7 +25,7 @@ struct matrix_package {
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
-
+  int32_t uuid;
 /*
   void swap(matrix_package& rhs) {
     modelview_matrix.swap(rhs.modelview_matrix);

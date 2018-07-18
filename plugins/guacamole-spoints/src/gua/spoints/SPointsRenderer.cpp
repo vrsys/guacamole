@@ -741,6 +741,39 @@ void SPointsRenderer::render(Pipeline& pipe,
         current_package.res_xy[1] = render_target_dims.y;
 
 
+        auto const& camera = pipe.current_viewstate().camera;
+
+        auto const camera_view_id = camera.config.view_id();
+
+        uint32_t current_camera_feedback_uuid = camera.config.view_id();
+
+        if(camera.config.enable_stereo()) {
+          bool is_left_cam = true;
+          if(camera_view_id == last_rendered_view_id) {
+            last_rendered_side = (last_rendered_side + 1)%2;
+            is_left_cam = (last_rendered_side == 0) ? true : false;
+          }
+          //current_camera_uuid_string = std::to_string(camera.config.view_id()) + (is_left_cam ? "L" : "R");
+
+          // set the first MSB of 32 bits or the second MSB of the id to 1 depending on whether the cam is a
+          // left or right eye  
+                                                  /* v 0b10...      0b01...*/
+          uint32_t bit_mask_to_or = (is_left_cam ? 0x80000000 : 0x40000000);
+          current_camera_feedback_uuid |= bit_mask_to_or;
+          //std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
+        } else {
+          last_rendered_side = 0;
+
+          // the mono camera has both MSB bit set to 0.
+          
+          // current_camera_uuid_string = std::to_string(camera.config.view_id()) + "M";
+        }
+
+        last_rendered_view_id = camera_view_id;
+
+        current_package.uuid = current_camera_feedback_uuid;
+
+
         auto camera_id = pipe.current_viewstate().viewpoint_uuid;
         //auto view_direction = pipe.current_viewstate().view_direction;
         //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));

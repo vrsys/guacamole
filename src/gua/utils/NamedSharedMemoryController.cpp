@@ -25,64 +25,48 @@
 
 namespace gua
 {
-/*
-  NamedSharedMemoryController::
-  NamedSharedMemoryController() 
-                            : mNamedMemorySegments()
-                          {}
 
-  NamedSharedMemoryController::
-  ~NamedSharedMemoryController() {
-    for (auto named_shared_memory_ptr : mNamedMemorySegments) {
-      delete named_shared_memory_ptr.second;
-    }
-  }
-*/
-  void NamedSharedMemoryController::
-  add_memory_segment(std::string const& segment_name, uint64_t size_in_byte) {
+  // check whether memory segment was created already by this process
+  bool NamedSharedMemoryController::
+  check_memory_segment_exists(std::string const& segment_name) const {
     auto memory_segment_it = mNamedMemorySegments.find(segment_name);
+    return (mNamedMemorySegments.end() != memory_segment_it);
+  }
 
-    if (mNamedMemorySegments.end() == memory_segment_it) {
+  bool NamedSharedMemoryController::
+  check_constructed_object_exists(std::string const& object_name) const {
+    auto named_object_it = mNamedObjects.find(object_name);
+    return (mNamedObjects.end() != named_object_it);
+  }
+
+  void NamedSharedMemoryController::
+  add_memory_segment(std::string const& segment_name, uint64_t size_in_byte, bool enable_warning) {
+
+    if (!check_memory_segment_exists(segment_name)) {
       auto new_named_memory_segment = std::make_shared<NamedSharedMemorySegment>(segment_name, size_in_byte);
       new_named_memory_segment->create_writeable();
       mNamedMemorySegments[segment_name] = new_named_memory_segment;
     } else {
-      Logger::LOG_WARNING << "Named Shared Memory \"" << segment_name << "\" already exists!" << std::endl;
+      if(enable_warning) {
+        Logger::LOG_WARNING << "Named Shared Memory \"" << segment_name << "\" already exists!" << std::endl;
+      }
     }
   }
 
 
   void NamedSharedMemoryController::
-  add_read_only_memory_segment(std::string const& segment_name) {
-    auto memory_segment_it = mNamedMemorySegments.find(segment_name);
-
-    if (mNamedMemorySegments.end() == memory_segment_it) {
+  add_read_only_memory_segment(std::string const& segment_name, bool enable_warning) {
+    if (!check_memory_segment_exists(segment_name)) {
       auto new_named_memory_segment = std::make_shared<NamedSharedMemorySegment>(segment_name, 0);
       new_named_memory_segment->create_readable();
       mNamedMemorySegments[segment_name] = new_named_memory_segment;
     } else {
-      Logger::LOG_WARNING << "Named Shared Memory \"" << segment_name << "\" already exists!" << std::endl;
+      if (enable_warning) {
+        Logger::LOG_WARNING << "Named Shared Memory \"" << segment_name << "\" already exists!" << std::endl;
+      }
     }
   }
 
-/*
-  std::shared_ptr<NamedSharedMemorySegment> NamedSharedMemoryController::
-  get_memory_segment(std::string const& segment_name) {
-    auto memory_segment_it = mNamedMemorySegments.find(segment_name);
-
-    if (mNamedMemorySegments.end() != memory_segment_it) {
-      return memory_segment_it->second;
-    } else {
-      Logger::LOG_MESSAGE << "Requested Named Shared Memory \"" << segment_name << "\" does not exists!" << std::endl;
-      Logger::LOG_MESSAGE << "Creating Read-Only Memory Segment \"" << segment_name << "\"." << std::endl;
-
-      auto new_ro_named_memory_segment = std::make_shared<NamedSharedMemorySegment>(segment_name, 0);
-      new_ro_named_memory_segment->create_readable();
-      mNamedMemorySegments[segment_name] = new_ro_named_memory_segment;           
-      return nullptr;
-    }
-  }
-*/
 }
 
 
