@@ -50,11 +50,11 @@ namespace gua
 
   public:
 
-    void add_memory_segment(std::string const& segment_name, uint64_t size_in_byte);
-    //std::shared_ptr<NamedSharedMemorySegment> get_memory_segment(std::string const& segment_name);
+    bool check_memory_segment_exists(std::string const& segment_name) const;
 
+    void add_memory_segment(std::string const& segment_name, uint64_t size_in_byte, bool enable_warning = false);
 
-    void add_read_only_memory_segment(std::string const& segment_name);
+    void add_read_only_memory_segment(std::string const& segment_name, bool enable_warning = false);
 
     void write_to_segment(std::string const& segment_name, 
                           char* const data, std::size_t byte_length, std::size_t byte_offset = 0x0) {
@@ -70,8 +70,10 @@ namespace gua
 
     template <typename INTERNAL_TYPE>
     void construct_named_object_on_segment(std::string const& segment_name, std::string const& object_name) {
-      mNamedObjects[object_name] = mNamedMemorySegments[segment_name];
-      mNamedObjects[object_name]->construct_named_object<INTERNAL_TYPE>(object_name);
+      if (!check_constructed_object_exists(object_name)) {
+        mNamedObjects[object_name] = mNamedMemorySegments[segment_name];
+        mNamedObjects[object_name]->construct_named_object<INTERNAL_TYPE>(object_name);
+      }
     }
 
     template <typename INTERNAL_TYPE, typename EXTERNAL_TYPE>
@@ -98,6 +100,7 @@ namespace gua
       mNamedObjects[object_name]->memcpy_value_to_named_object<INTERNAL_TYPE>(object_name, to_write, bytes_to_write);
     }
 	
+    bool check_constructed_object_exists(std::string const& object_name) const;
 
     void register_remotely_constructed_object_on_segment(std::string const& segment_name, std::string const& object_name) {
       mNamedObjects[object_name] = mNamedMemorySegments[segment_name];

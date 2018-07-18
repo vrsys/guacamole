@@ -46,8 +46,8 @@ class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescript
 
  protected:
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-  mutable std::size_t last_rendered_view_id = std::numeric_limits<std::size_t>::max();
-  mutable std::size_t last_rendered_side = 0;
+  mutable int last_rendered_view_id = std::numeric_limits<int>::max();
+  mutable int last_rendered_side = 0;
 };
 }
 

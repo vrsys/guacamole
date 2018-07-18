@@ -122,6 +122,9 @@ private:
   unsigned                                     current_rendertarget_width_;  
   unsigned                                     current_rendertarget_height_;
 
+  mutable int last_rendered_view_id = std::numeric_limits<int>::max();
+  mutable int last_rendered_side = 0;
+
 
   std::vector<ShaderProgramStage> program_stages_;
 
