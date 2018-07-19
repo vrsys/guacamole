@@ -57,12 +57,24 @@ class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescript
 
   scm::math::vec2ui gbuffer_extraction_resolution_;
 
-  std::vector<ShaderProgramStage>                    shader_stages_;
-  std::shared_ptr<ShaderProgram>                     shader_program_;
+
+
+  std::vector<ShaderProgramStage>                    control_monitor_shader_stages_;
+  std::shared_ptr<ShaderProgram>                     control_monitor_shader_program_;
+
+  std::vector<ShaderProgramStage>                    depth_downsampling_shader_stages_;
+  std::shared_ptr<ShaderProgram>                     depth_downsampling_shader_program_;
 
   bool                                               gpu_resources_already_created_;
 
-  scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
+  scm::gl::depth_stencil_state_ptr                   no_depth_test_depth_stencil_state_;
+  scm::gl::depth_stencil_state_ptr                   always_write_depth_stencil_state_;
+
+  scm::gl::sampler_state_ptr                         nearest_sampler_state_;
+
+  scm::gl::frame_buffer_ptr                          depth_buffer_downsampling_fbo_;
+  scm::gl::texture_2d_ptr                            downsampled_depth_attachment_;
+
 };
 }
 
