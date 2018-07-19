@@ -40,8 +40,10 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
     last_rendered_view_id(std::numeric_limits<int>::max()),
     last_rendered_side(0),
     gbuffer_extraction_resolution_(scm::math::vec2ui{20, 20}),
-    shader_stages_(),
-    shader_program_(nullptr),
+    control_monitor_shader_stages_(),
+    control_monitor_shader_program_(nullptr),
+    depth_downsampling_shader_stages_(),
+    depth_downsampling_shader_program_(nullptr),
     gpu_resources_already_created_(false)
 {
   vertex_shader_ = "";
@@ -147,16 +149,55 @@ create_gpu_resources(gua::RenderContext const& ctx,
 
   ResourceFactory factory;
 
-  shader_stages_.clear();
-  shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
-  shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/occlusion_resolve.frag")));
+  //init control monitor shaders
+  {
+    control_monitor_shader_stages_.clear();
+    control_monitor_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
+    control_monitor_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/occlusion_resolve_control_monitor.frag")));
 
-  auto new_program = std::make_shared<ShaderProgram>();
-  new_program->set_shaders(shader_stages_);
-  shader_program_ = new_program;
+    auto new_program = std::make_shared<ShaderProgram>();
+    new_program->set_shaders(control_monitor_shader_stages_);
+    control_monitor_shader_program_ = new_program;
+  }
+
+  //init depth downsampling shaders
+  {
+    depth_downsampling_shader_stages_.clear();
+    depth_downsampling_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert")));
+    depth_downsampling_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/occlusion_resolve_depth_downsampling.frag")));
+
+    auto new_program = std::make_shared<ShaderProgram>();
+    new_program->set_shaders(depth_downsampling_shader_stages_);
+    depth_downsampling_shader_program_ = new_program;
+  }
 
   no_depth_test_depth_stencil_state_ = ctx.render_device
     ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
+
+  always_write_depth_stencil_state_ = ctx.render_device
+    ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_ALWAYS);
+
+  depth_buffer_downsampling_fbo_ = ctx.render_device->create_frame_buffer();
+  downsampled_depth_attachment_ = ctx.render_device->create_texture_2d(gbuffer_extraction_resolution_, 
+                        scm::gl::FORMAT_R_32F,
+                        1, 1, 1);
+
+  depth_buffer_downsampling_fbo_->attach_color_buffer(0, downsampled_depth_attachment_);
+
+  nearest_sampler_state_ = ctx.render_device
+    ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+
+/*
+    depth_buffer_       = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_D24_S8,  1);
+  ctx.render_context->make_resident(depth_buffer_, sampler_state_);
+
+  fbo_read_ = ctx.render_device->create_frame_buffer();
+  fbo_read_->attach_color_buffer(0, color_buffer_read_,0,0);
+  fbo_read_->attach_color_buffer(1, pbr_buffer_, 0, 0);
+  fbo_read_->attach_color_buffer(2, normal_buffer_,0,0);
+  fbo_read_->attach_color_buffer(3, flags_buffer_,0,0);
+  fbo_read_->attach_depth_stencil_buffer(depth_buffer_,0,0);
+*/
 
 }
 
@@ -182,20 +223,107 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
       gpu_resources_already_created_ = true;
     }
 
+
+
+
+
+
+
+
+
+
+
+////// >> perform depth downsampling
+
+{
+  scm::gl::context_all_guard context_guard(ctx.render_context);
+  auto& target = *pipe.current_viewstate().target;
+  auto& gua_depth_buffer = target.get_depth_buffer();
+
+
+  //target.unbind(ctx);
+  depth_downsampling_shader_program_->use(ctx);
+
+
+  //ctx.render_context
+  //  ->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+
+  depth_buffer_downsampling_fbo_->attach_color_buffer(0, downsampled_depth_attachment_);
+
+
+  ctx.render_context
+    ->set_frame_buffer( depth_buffer_downsampling_fbo_ );
+
+  ctx.render_context
+    ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
+
+  depth_downsampling_shader_program_->apply_uniform(ctx,
+    "gua_in_depth_buffer", 0);
+
+  scm::math::vec2 downsampling_ratio = scm::math::vec2(render_target_dims) / scm::math::vec2(gbuffer_extraction_resolution_);
+  depth_downsampling_shader_program_->set_uniform(ctx, downsampling_ratio, "downsampling_factors");
+  depth_downsampling_shader_program_->set_uniform(ctx, render_target_dims, "original_resolution");
+
+  ctx.render_context->apply();
+  pipe.draw_quad();
+}
+
+
+/*
+  depth_downsampling_shader_program_->use(ctx);
+
+  for (auto const& u : desc.uniforms) {
+    u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+  }
+
+  pipe.bind_gbuffer_input(depth_downsampling_shader_program_);
+
+  ctx.render_context->clear_depth_stencil_buffer(depth_buffer_downsampling_fbo_);
+  ctx.render_context->set_depth_stencil_state(always_write_depth_stencil_state_);
+  ctx.render_context->set_frame_buffer(depth_buffer_downsampling_fbo_);
+
+
+
+  //ctx.render_context
+  //    ->bind_texture(gua_depth_buffer, nearest_sampler_state_, 0);
+
+  //depth_downsampling_shader_program_->apply_uniform(ctx,
+  //  "gua_depth_buffer", 0);
+
+
+  scm::math::vec2 downsampling_ratio = scm::math::vec2(render_target_dims) / scm::math::vec2(gbuffer_extraction_resolution_);
+  depth_downsampling_shader_program_->set_uniform(ctx, downsampling_ratio, "downsampling_factors");
+  depth_downsampling_shader_program_->set_uniform(ctx, render_target_dims, "original_resolution");
+
+  ctx.render_context->apply();
+  pipe.draw_quad();
+
+  ctx.render_context->reset_state_objects();
+
+  */
+
+
+
+
+
 /////<<<<<<<<<<<<<<
 
+  {
+    //scm::gl::context_all_guard context_guard(ctx.render_context);
     auto& target = *pipe.current_viewstate().target;
-
     target.bind(ctx, !writes_only_color_buffer_);
     target.set_viewport(ctx);
 
-    shader_program_->use(ctx);
+    //scm::math::vec2 downsampling_ratio = scm::math::vec2(render_target_dims) / scm::math::vec2(gbuffer_extraction_resolution_);
+    //control_monitor_shader_program_->set_uniform(ctx, downsampling_ratio, "downsampling_factors");
+
+    control_monitor_shader_program_->use(ctx);
 
     for (auto const& u : desc.uniforms) {
       u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
     }
 
-    pipe.bind_gbuffer_input(shader_program_);
+    pipe.bind_gbuffer_input(control_monitor_shader_program_);
     //pipe.bind_light_table(shader_);
 
     //std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
@@ -207,14 +335,20 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
     ctx.render_context->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
 
-      pipe.draw_quad();
+    ctx.render_context
+      ->bind_texture(downsampled_depth_attachment_, nearest_sampler_state_, 0);
+    depth_downsampling_shader_program_->apply_uniform(ctx,
+      "downsampled_depth_buffer", 0);
+    
+    ctx.render_context->apply();
+    pipe.draw_quad();
     //}
 
     //pipe.end_gpu_query(ctx, gpu_query_name);
 
     target.unbind(ctx);
     ctx.render_context->reset_state_objects();
-
+  }
 
 
 
@@ -287,8 +421,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
     std::vector<uint32_t> to_write(20*20, 127);
 
-    uint32_t taken_y_samples = 0;
-    uint32_t taken_x_samples = 0;
+
     uint32_t value_offset = 0;
 
     for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {

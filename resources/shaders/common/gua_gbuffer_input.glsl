@@ -19,6 +19,10 @@ float gua_get_unscaled_depth() {
     return texture2D(sampler2D(gua_gbuffer_depth), frag_pos).x;
 }
 
+float gua_get_unscaled_depth(vec2 frag_pos) {
+    return texture2D(sampler2D(gua_gbuffer_depth), frag_pos).x;
+}
+
 float gua_get_depth(vec2 frag_pos) {
     return texture2D(sampler2D(gua_gbuffer_depth), frag_pos).x * 2.0 - 1.0;
 }
