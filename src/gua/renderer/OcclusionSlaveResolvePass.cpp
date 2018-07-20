@@ -235,12 +235,16 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 ////// >> perform depth downsampling
 
-{
-  scm::gl::context_all_guard context_guard(ctx.render_context);
+
+  //scm::gl::context_all_guard context_guard(ctx.render_context);
   auto& target = *pipe.current_viewstate().target;
-  auto& gua_depth_buffer = target.get_depth_buffer();
 
+  target.set_viewport(ctx);
 
+  //auto& gua_depth_buffer = target.get_depth_buffer();
+
+  auto& gua_depth_buffer = pipe.get_gbuffer()->get_depth_buffer();
+  pipe.get_gbuffer()->toggle_ping_pong();
   //target.unbind(ctx);
   depth_downsampling_shader_program_->use(ctx);
 
@@ -266,8 +270,9 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
   ctx.render_context->apply();
   pipe.draw_quad();
-}
 
+  depth_downsampling_shader_program_->unuse(ctx);
+  pipe.get_gbuffer()->toggle_ping_pong();
 
 /*
   depth_downsampling_shader_program_->use(ctx);
@@ -308,9 +313,9 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 /////<<<<<<<<<<<<<<
 
-  {
+  
     //scm::gl::context_all_guard context_guard(ctx.render_context);
-    auto& target = *pipe.current_viewstate().target;
+
     target.bind(ctx, !writes_only_color_buffer_);
     target.set_viewport(ctx);
 
@@ -342,13 +347,13 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
     
     ctx.render_context->apply();
     pipe.draw_quad();
+    control_monitor_shader_program_->unuse(ctx);
     //}
 
     //pipe.end_gpu_query(ctx, gpu_query_name);
 
     target.unbind(ctx);
-    ctx.render_context->reset_state_objects();
-  }
+  
 
 
 
@@ -374,25 +379,26 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
 
-    uint32_t pixel_size = render_target_dims[0] * render_target_dims[1];
+    uint32_t pixel_size = gbuffer_extraction_resolution_[0] * gbuffer_extraction_resolution_[1];
 
-    std::vector<uint32_t> texture_data(pixel_size, 0);
+    std::vector<float> texture_data(pixel_size, 0);
 
-    pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
+    ctx.render_context->retrieve_texture_data(downsampled_depth_attachment_, 0, (uint32_t*)&texture_data[0]);
+    //pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
 
-    std::cout << "Retrieving Depth buffer data!\n";
+    //std::cout << "Retrieving Depth buffer data!\n";
 
-    uint32_t max_uint = std::numeric_limits<uint32_t>::max();
+    //uint32_t max_uint = std::numeric_limits<uint32_t>::max();
 
-    for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
-      for(uint32_t x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
+    /*for(uint32_t y_idx = 0; y_idx < gbuffer_extraction_resolution_[1]; ++y_idx ) {
+      for(uint32_t x_idx = 0; x_idx < gbuffer_extraction_resolution_[0]; ++x_idx ) {
 
-        float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
+        float normalized_depth = (texture_data[x_idx + y_idx * gbuffer_extraction_resolution_[0] ] );// / (float)(max_uint);
         printf("%.10f ", normalized_depth);
       }
       std::cout << "\n";
     }
-  
+  */
    // std::cout << "\n";
   
 
@@ -419,34 +425,20 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
 
-    std::vector<uint32_t> to_write(20*20, 127);
 
-
-    uint32_t value_offset = 0;
-
-    for(uint32_t y_idx = 0; y_idx < render_target_dims[1]; y_idx += (render_target_dims[1]) / 20 ) {
-      for(uint32_t x_idx = 0; x_idx < render_target_dims[0]; x_idx += (render_target_dims[0]) / 20) {
-
-        //if(value_offset > 399) {
-        //  std::cout << "SCREAAAAAAAAAAAAAAAAAAAM: " << value_offset << "\n";
-       // }
-        to_write[value_offset++] = (texture_data[x_idx + y_idx * render_target_dims[0]] );
-        float normalized_depth = (texture_data[x_idx + y_idx * render_target_dims[0]] ) / (float)(max_uint);
-        printf("%.10f ", normalized_depth);
-      }
-      std::cout << "\n";
-    }
-    //std::memcpy((char*) &to_write[0], (char*) &texture_data[0], to_write.size());
     
 
+
+
     std::cout << "\n";
-    std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
+    //std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
 
     std::string depth_buffer_object = "DB_" + camera_uuid_string;
 
     std::cout << "DEPTH BUFFER OBJECT: " << depth_buffer_object << "\n";
 
     std::string memory_segment_label_prefix = "segment_for_" + depth_buffer_object;
+
 
     auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
     memory_controller->add_memory_segment(memory_segment_label_prefix, gua::MemAllocSizes::KB2*2);
@@ -455,7 +447,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
                                           gua::MemAllocSizes::KB2> >
                                             (memory_segment_label_prefix, 
                                              depth_buffer_object);
-    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_object.c_str(), (char*)&to_write[0], to_write.size() * 4);
+    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
   };
 
   return pass;
