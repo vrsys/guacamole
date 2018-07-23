@@ -39,7 +39,7 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
   : PipelinePassDescription(),
     last_rendered_view_id(std::numeric_limits<int>::max()),
     last_rendered_side(0),
-    gbuffer_extraction_resolution_(scm::math::vec2ui{20, 20}),
+    gbuffer_extraction_resolution_(scm::math::vec2ui{25, 25}),
     control_monitor_shader_stages_(),
     control_monitor_shader_program_(nullptr),
     depth_downsampling_shader_stages_(),
@@ -69,68 +69,17 @@ void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContex
 
   memory_controller->add_read_only_memory_segment("DEPTH_FEEDBACK_SEGMENT");
 
+
+  //write depth res x & y
+  memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_BUFFER_RES_X");
+  memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_BUFFER_RES_X", gbuffer_extraction_resolution_[0]);
+
+  memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_BUFFER_RES_Y");
+  memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_BUFFER_RES_Y", gbuffer_extraction_resolution_[1]);
+
   memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_FEEDBACK_SEMAPHOR");
   memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_FEEDBACK_SEMAPHOR", 2);
   std::cout << "Would signal now!\n";
-
-    //pipe->get_gbuffer()->toggle_ping_pong();
-
- // memory_controller->add_read_only_memory_segment()
-
-/*
-  TextureDistance::TextureDistance(unsigned width,
-                   unsigned height,
-                   scm::gl::data_format color_format,
-                   unsigned mipmap_layers,
-                   scm::gl::sampler_state_desc const& state_descripton)
-    : Texture2D(width, height, color_format, mipmap_layers, state_descripton){
-
-    int pixel_size = height_ * width_ * 6; 
-    int byte_size = pixel_size * sizeof(uint32_t); 
-    texture_data_ = (uint32_t*)malloc(byte_size);
-    world_depth_data_ = std::vector<float>(pixel_size, -1.0f);
-  }
-
-
-
-  RenderContext const& ctx(pipe.get_context());
-  auto& target = *pipe.current_viewstate().target;
-  auto const& camera = pipe.current_viewstate().camera;
-
-  scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
-
-
-  scm::gl::context_all_guard context_guard(ctx.render_context);
-  auto& gua_depth_buffer = target.get_depth_buffer();
-
-get_depth_buffer()
-    ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
-    */
-/*    unsigned size = height_*width_;
-    for (int texel = 0; texel < size; ++texel){
-      if (texture_data_[texel] == 0xFFFFFFFF){
-        world_depth_data_[texel] = -1.0;
-      }else{
-        float x = (float(texel%height_) / height_) - 0.5; //height = width/6
-        float y = (float(texel/width_) / height_) - 0.5;
-        float z = (float)texture_data_[texel] / 4294967295.0;
-
-        float z_n = 2.0 * near_clip * far_clip / (far_clip + near_clip - z * (far_clip - near_clip));
-        float x_n = x * z_n / 0.5;
-        float y_n = y * z_n / 0.5;
-
-        float distance = std::sqrt( (x_n*x_n) + (y_n*y_n) + (z_n*z_n) ) * 0.5;
-        world_depth_data_[texel] = distance;
-      }
-    } 
-  }
-*/
-
-
-
-
-
-
 }
 
 
@@ -441,13 +390,13 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
     auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
-    memory_controller->add_memory_segment(memory_segment_label_prefix, gua::MemAllocSizes::KB2*2);
+    memory_controller->add_memory_segment(memory_segment_label_prefix, gua::MemAllocSizes::KB64*2);
     memory_controller
       ->construct_named_object_on_segment<std::array<char, 
-                                          gua::MemAllocSizes::KB2> >
+                                          gua::MemAllocSizes::KB64> >
                                             (memory_segment_label_prefix, 
                                              depth_buffer_object);
-    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB2> >(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
+    memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64> >(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
   };
 
   return pass;
