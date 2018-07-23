@@ -35,28 +35,12 @@ void main() {
 
   for (uint y = floored_xy.y; y <= ceiled_xy.y; ++y) {
     for (uint x = floored_xy.x; x <= ceiled_xy.x; ++x) {
-      //vec2 normalized_sampling_pos = vec2(x,y));
       float current_depth_sample = texelFetch(gua_in_depth_buffer, ivec2(x,y), 0).r;
       max_depth = max(max_depth, current_depth_sample);
     }
   }
 
 
-  //gl_FragDepth = gua_get_unscaled_depth();
-  //gl_FragDepth = 0.1;
-
   gua_out_downs_depth = max_depth;
-  //gua_out_downs_depth = texelFetch(gua_in_depth_buffer, ivec2( downsampling_factors * frag_pos), 0 ).r;
-  //gua_out_downs_depth = texelFetch(gua_in_depth_buffer, ivec2(600, 300), 0 ).r;
- // gua_out_downs_depth = 0.2;
-  //texture(gua_depth_buffer, vec2(0.9, 0.5)).r;//max_depth;
-  //gl_FragDepth = 0.2;
-//  if(read_depth < 0.96) {
-    //gua_out_color = vec3(max_depth, 0, 0);
-  //} else {
-  //  gua_out_color = vec3(0.0, 0.0, 0.0);
-  //}
-  //*/
-  //gua_out_color = vec3(1.0, 0.0, 0.0);
 }
 
