@@ -26,6 +26,10 @@ const vec3 quant_steps               = vec3( (conservative_bb_limit_max.x - cons
 const uvec4 shift_vector = uvec4(18, 5, 0, 24);
 const uvec4 mask_vector  = uvec4(0x3FFFu, 0x1FFFu, 0x1F, 0xFFu);
 
+out VertexData {
+  vec3 ms_pos;
+} VertexOut;
+
 void main() {
 /*
   uvec3 decoded_quantized_pos = uvec3(  ((pos_14_13_13qz_col_8_8_8qz.x >> 18) & 0x3FFFu),
@@ -45,6 +49,8 @@ void main() {
   uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
   vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
 
-  gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
-  gl_PointSize = point_size*1.5;
+  VertexOut.ms_pos = unquantized_pos;
+
+  //gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
+  //gl_PointSize = point_size*1.5;
 }

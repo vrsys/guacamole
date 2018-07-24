@@ -246,7 +246,7 @@ void NetKinectArray::readloop() {
     memcpy((char*) &remote_server_screen_height_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);
     
-    std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
+    //std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
 
     if(num_voxels_received > 10000000) {
       return;

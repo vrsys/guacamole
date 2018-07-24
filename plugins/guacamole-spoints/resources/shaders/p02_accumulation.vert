@@ -15,7 +15,11 @@ layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
 
 @material_method_declarations_vert@
 
-out vec3 pass_point_color;
+out VertexDataIn {
+  vec3 ms_pos;
+  vec3 color;
+} VertexOut;
+//out vec3 pass_point_color;
 
 //uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_mvp_matrix;
@@ -54,9 +58,10 @@ void main() {
 
   vec3 decoded_color = vec3( (pos_14_13_13qz_col_8_8_8qz.yyy & color_mask_vector) >> color_shift_vector)/255.0f;
 
-  gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
-  pass_point_color = decoded_color;
-  gl_PointSize = point_size*1.5;
+  //gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
+  VertexOut.color = decoded_color;
+  VertexOut.ms_pos = unquantized_pos;
+  //gl_PointSize = point_size*1.5;
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }
