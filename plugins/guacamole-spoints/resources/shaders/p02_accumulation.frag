@@ -7,6 +7,8 @@
 //in vec3 pass_point_color;
 
 in VertexDataOut {
+  vec3 ms_center_pos;
+  vec3 ms_curr_pos;
   vec3 color;
 } FragmentIn;
 
@@ -31,11 +33,11 @@ void main() {
   vec2 max_abs_center_coord = abs(centered_point_coord);
   float blend_weight = sqrt_of_two - max(max_abs_center_coord.x, max_abs_center_coord.y );
 */
-
-  float blend_weight = 1.0;
+  float dist_to_center = (length( FragmentIn.ms_curr_pos - FragmentIn.ms_center_pos) / 0.01);
+  float blend_weight = 2 - dist_to_center;//1.0;
   //blend_weight = gaussian[min(31, max(0,(int)(blend_weight * 15.5)))];
 
-  gl_FragDepth = (gl_FragCoord.z * gua_clip_far) / gua_clip_far;
+  //gl_FragDepth = (gl_FragCoord.z * gua_clip_far) / gua_clip_far;
 
   out_accumulated_color = vec3(blend_weight * FragmentIn.color);
 

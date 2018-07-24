@@ -321,11 +321,17 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
     depth_test_without_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL);
 
+
+
     no_depth_test_with_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_ALWAYS);
 
     depth_test_with_writing_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS_EQUAL);
+
+
+    default_depth_stencil_state_ =  ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
+                                                          scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL));
 
     color_accumulation_state_ = ctx.render_device->create_blend_state(true,
                                                                       scm::gl::FUNC_ONE,
@@ -421,10 +427,10 @@ void SPointsRenderer::render(Pipeline& pipe,
     gpu_resources_already_created_ = true;
   }
 
-/*
+
   ctx.render_context
-    ->clear_color_buffer(depth_pass_result_fbo_, 0, scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-*/
+    ->clear_depth_stencil_buffer(depth_pass_result_fbo_);
+
   ctx.render_context
     ->clear_color_buffer(accumulation_pass_result_fbo_,
     0,
@@ -516,6 +522,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
         scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+
         scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
 
         scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
@@ -525,8 +532,10 @@ void SPointsRenderer::render(Pipeline& pipe,
         spoints_resource->update_buffers(pipe.get_context(), pipe);
 
 
+        //NO SPECIAL DEPTH STENCIL STATE!
+        //ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
 
-        ctx.render_context->set_depth_stencil_state(no_depth_test_with_writing_depth_stencil_state_);
+        ctx.render_context->set_depth_stencil_state(default_depth_stencil_state_);
 
         ctx.render_context->apply();
 
@@ -538,10 +547,18 @@ void SPointsRenderer::render(Pipeline& pipe,
           "kinect_model_matrix");
         */
 
+
+        depth_pass_program_->set_uniform(
+          ctx,
+          scm::math::mat4f(mv_matrix),
+          "kinect_mv_matrix");
+
         depth_pass_program_->set_uniform(
           ctx,
           scm::math::mat4f(mvp_matrix),
           "kinect_mvp_matrix");
+
+
 
         ctx.render_context->set_frame_buffer(depth_pass_result_fbo_);
 
@@ -573,7 +590,7 @@ void SPointsRenderer::render(Pipeline& pipe,
         //target.bind(ctx, write_depth);
         target.set_viewport(ctx);
 
-        ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+        //ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
         ctx.render_context->apply();
 
 
@@ -674,8 +691,13 @@ void SPointsRenderer::render(Pipeline& pipe,
           scm::math::mat4f(mvp_matrix),
           "kinect_mvp_matrix");
 
+        current_shader->set_uniform(
+          ctx,
+          scm::math::mat4f(mv_matrix),
+          "kinect_mv_matrix");
+
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-        ctx.render_context->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
+        ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
         ctx.render_context->set_blend_state(color_accumulation_state_);
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
 
