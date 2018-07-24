@@ -105,6 +105,8 @@ private:
   scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
   scm::gl::depth_stencil_state_ptr             no_depth_test_with_writing_depth_stencil_state_;
 
+  scm::gl::depth_stencil_state_ptr             default_depth_stencil_state_;
+
   scm::gl::depth_stencil_state_ptr             depth_test_with_writing_depth_stencil_state_;
 
   scm::gl::blend_state_ptr                     no_color_accumulation_state_;

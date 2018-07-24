@@ -22,6 +22,7 @@ out VertexDataIn {
 //out vec3 pass_point_color;
 
 //uniform mat4 kinect_model_matrix;
+uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 uniform float point_size = 1.0;
 

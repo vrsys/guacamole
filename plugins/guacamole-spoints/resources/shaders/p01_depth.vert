@@ -9,6 +9,8 @@ layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
 @include "shaders/common/gua_camera_uniforms.glsl"
 
 //uniform mat4 kinect_model_matrix;
+
+uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 uniform float point_size = 1.0;
 
