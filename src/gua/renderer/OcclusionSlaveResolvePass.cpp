@@ -39,7 +39,7 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
   : PipelinePassDescription(),
     last_rendered_view_id(std::numeric_limits<int>::max()),
     last_rendered_side(0),
-    gbuffer_extraction_resolution_(scm::math::vec2ui{25, 25}),
+    gbuffer_extraction_resolution_(scm::math::vec2ui{50, 50}),
     control_monitor_shader_stages_(),
     control_monitor_shader_program_(nullptr),
     depth_downsampling_shader_stages_(),
@@ -70,13 +70,14 @@ void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContex
   memory_controller->add_read_only_memory_segment("DEPTH_FEEDBACK_SEGMENT");
 
 
-  //write depth res x & y
+  // write depth res x & y
   memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_BUFFER_RES_X");
   memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_BUFFER_RES_X", gbuffer_extraction_resolution_[0]);
 
   memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_BUFFER_RES_Y");
   memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_BUFFER_RES_Y", gbuffer_extraction_resolution_[1]);
 
+  // signal reconstruction server
   memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_FEEDBACK_SEMAPHOR");
   memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_FEEDBACK_SEMAPHOR", 2);
   std::cout << "Would signal now!\n";

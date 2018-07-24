@@ -180,10 +180,12 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
 */
       depth_pass_shader_stages_.clear();
       depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/p01_depth.vert")));
+      depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/p01_depth.geom")));
       depth_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/p01_depth.frag")));
 
       accumulation_pass_shader_stages_.clear();
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/p02_accumulation.vert")));
+      accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/p02_accumulation.geom")));
       accumulation_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/p02_accumulation.frag")));
 
       normalization_pass_shader_stages_.clear();
@@ -673,7 +675,7 @@ void SPointsRenderer::render(Pipeline& pipe,
           "kinect_mvp_matrix");
 
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
-        ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
+        ctx.render_context->set_depth_stencil_state(no_depth_test_depth_stencil_state_);
         ctx.render_context->set_blend_state(color_accumulation_state_);
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);
 
@@ -747,7 +749,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         uint32_t current_camera_feedback_uuid = camera.config.view_id();
 
-        std::cout << "Starting with camera feedback uuid: " << current_camera_feedback_uuid << "\n";
+       // std::cout << "Starting with camera feedback uuid: " << current_camera_feedback_uuid << "\n";
 
         if(camera.config.enable_stereo()) {
           bool is_left_cam = true;
@@ -763,7 +765,7 @@ void SPointsRenderer::render(Pipeline& pipe,
           //int32_t bit_mask_to_or = (is_left_cam ? 0x00800000 : 0x00400000);
           //current_camera_feedback_uuid |= bit_mask_to_or;
           current_package.camera_type = (is_left_cam ? 1 : 2);
-          std::cout << "After ORing this is : " << current_camera_feedback_uuid << "\n";
+          //std::cout << "After ORing this is : " << current_camera_feedback_uuid << "\n";
           //std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
         } else {
           last_rendered_side = 0;
