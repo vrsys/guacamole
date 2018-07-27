@@ -98,6 +98,7 @@ private:
   //schism-GL states:
   //////////////////////////////////////////////////////////////////////////////////////
   scm::gl::rasterizer_state_ptr                no_backface_culling_rasterizer_state_;
+  scm::gl::rasterizer_state_ptr                backface_culling_rasterizer_state_;
 
   scm::gl::sampler_state_ptr                   nearest_sampler_state_;
 

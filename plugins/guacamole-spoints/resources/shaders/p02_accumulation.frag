@@ -10,11 +10,13 @@ in VertexDataOut {
   vec3 ms_center_pos;
   vec3 ms_curr_pos;
   vec3 color;
+  float log_depth;
 } FragmentIn;
 
 layout (location = 0) out vec3 out_accumulated_color;
 layout (location = 3) out vec2 out_accumulated_weight_and_depth;
 
+uniform float voxel_half_size = 0.0;
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,15 +35,15 @@ void main() {
   vec2 max_abs_center_coord = abs(centered_point_coord);
   float blend_weight = sqrt_of_two - max(max_abs_center_coord.x, max_abs_center_coord.y );
 */
-  float dist_to_center = (length( FragmentIn.ms_curr_pos - FragmentIn.ms_center_pos) / 0.01);
-  float blend_weight = 2 - dist_to_center;//1.0;
+  float dist_to_center = (length( FragmentIn.ms_curr_pos - FragmentIn.ms_center_pos) ); // / length( vec3(voxel_half_size, voxel_half_size, voxel_half_size) );
+  float blend_weight = 10.0 - dist_to_center;// - dist_to_center;//1.0;// 3 - dist_to_center;//1.0;
   //blend_weight = gaussian[min(31, max(0,(int)(blend_weight * 15.5)))];
 
   //gl_FragDepth = (gl_FragCoord.z * gua_clip_far) / gua_clip_far;
 
   out_accumulated_color = vec3(blend_weight * FragmentIn.color);
 
-  out_accumulated_weight_and_depth = vec2(blend_weight, blend_weight * gl_FragCoord.z);
+  out_accumulated_weight_and_depth = vec2(blend_weight, blend_weight * FragmentIn.log_depth);
 
 
 }

@@ -39,7 +39,7 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
   : PipelinePassDescription(),
     last_rendered_view_id(std::numeric_limits<int>::max()),
     last_rendered_side(0),
-    gbuffer_extraction_resolution_(scm::math::vec2ui{50, 50}),
+    gbuffer_extraction_resolution_(scm::math::vec2ui{100, 100}),
     control_monitor_shader_stages_(),
     control_monitor_shader_program_(nullptr),
     depth_downsampling_shader_stages_(),

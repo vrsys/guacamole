@@ -85,7 +85,8 @@ public:
   unsigned get_remote_server_screen_width() const {return remote_server_screen_width_to_return_;}
   unsigned get_remote_server_screen_height() const {return remote_server_screen_height_to_return_;}
 
-  std::string get_socket_string();
+  std::string get_socket_string() const;
+  float       get_voxel_size() const;
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
@@ -100,6 +101,9 @@ private:
   const std::string m_feedback_endpoint_;
   std::vector<uint8_t> m_buffer_;
   std::vector<uint8_t> m_buffer_back_;
+
+  float m_voxel_size_ = 0.0;
+  float m_voxel_size_back_ = 0.0;
 
   std::atomic<bool> m_need_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_gpu_swap_;

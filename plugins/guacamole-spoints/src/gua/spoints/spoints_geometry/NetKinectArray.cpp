@@ -58,7 +58,7 @@ NetKinectArray::draw(gua::RenderContext const& ctx) {
 }
 
 std::string 
-NetKinectArray::get_socket_string() {
+NetKinectArray::get_socket_string() const {
   return m_feedback_endpoint_;
 };
 
@@ -85,6 +85,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
     if(m_need_cpu_swap_.load()){
       //start of synchro point
       m_buffer_.swap(m_buffer_back_);
+      std::swap(m_voxel_size_, m_voxel_size_back_);
 
       //end of synchro point
       m_need_cpu_swap_.store(false);
@@ -153,53 +154,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
   return false;
 }
 
-/*
-void
-NetKinectArray::update_feedback(gua::RenderContext const& ctx) {
-  {
 
-    //std::cout << !m_feedback_need_swap_.load() << "\n";
-
-    if( true) {
-      std::lock_guard<std::mutex> lock(m_feedback_mutex_);
-
-      std::swap(submitted_camera_matrix_package_back_, submitted_camera_matrix_package_);
-      //std::swap(m_matrix_package, m_matrix_package_back);
-
-      bool is_stereo = submitted_camera_matrix_package_back_.k_package.stereo_mode;
-      unsigned framecount = submitted_camera_matrix_package_back_.k_package.framecount;
-      unsigned view_uuid = submitted_camera_matrix_package_back_.k_package.view_uuid;
-
-
-      //std::cout << "FCT: " << submitted_camera_matrix_package_back_.k_package.framecount << "\n"; 
-
-      if(submitted_camera_matrix_package_back_.k_package.framecount != last_frame_count_) {
-        m_feedback_need_swap_.store(true);
-        std::swap(matrix_packages_to_submit_, matrix_packages_to_collect_);
-        matrix_packages_to_collect_.clear();
-        last_frame_count_ = submitted_camera_matrix_package_back_.k_package.framecount;
-      }
-
-      bool detected_matrix_identity = false;
-
-      for(auto const& curr_matrix_package : matrix_packages_to_collect_) {
-        if( !memcmp ( &curr_matrix_package, &submitted_camera_matrix_package_back_.mat_package, sizeof(matrix_package) ) ) {
-          detected_matrix_identity = true;
-          break;
-        }
-      }
-
-      if(!detected_matrix_identity) {
-        matrix_packages_to_collect_.push_back(submitted_camera_matrix_package_back_.mat_package);
-      }
-
-    } else {
-      last_omitted_frame_count_ = submitted_camera_matrix_package_back_.k_package.framecount;
-    }
-
-  }
+float NetKinectArray::get_voxel_size() const {
+  return m_voxel_size_;
 }
-*/
+
 void NetKinectArray::readloop() {
   // open multicast listening connection to server and port
   zmq::context_t ctx(1); // means single threaded
@@ -234,6 +193,12 @@ void NetKinectArray::readloop() {
     // num points -> 8 byte
     // bb_min     -> 3*4 byte
     // bb_max     -> 3*4 byte
+    // remote_server_screen_width  -> 4  byte
+    // remote_server_screen_height -> 4  byte
+    //--------------------------------------
+    //                                40 byte 
+    // m_voxel_size                -> 4 byte
+
     size_t header_data_offset = 0;
     memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[header_data_offset], sizeof(size_t) );
     header_data_offset += sizeof(size_t);
@@ -245,8 +210,11 @@ void NetKinectArray::readloop() {
     header_data_offset += sizeof(unsigned);
     memcpy((char*) &remote_server_screen_height_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);
+
+    memcpy((char*) &m_voxel_size_back_, (char*)&header_data[header_data_offset], sizeof(float));
+    header_data_offset += sizeof(float);
     
-    //std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
+    std::cout << "NUM VOXELS RECEIVED: " << num_voxels_received << "\n";
 
     if(num_voxels_received > 10000000) {
       return;
