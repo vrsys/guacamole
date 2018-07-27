@@ -12,7 +12,7 @@ in VertexData {
 uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 uniform float point_size = 1.0;
-
+uniform float voxel_half_size = 0.0;
 
 const vec3 conservative_bb_limit_min = vec3(-1.5, -0.5, -1.5);
 const vec3 conservative_bb_limit_max = vec3( 1.5,  2.5,  1.5);
@@ -38,7 +38,7 @@ const int ordered_line_strip_indices[14] = {3, 2, 6, 7, 4, 2, 0, 3, 1, 6,   5, 4
 void main() {
 
   vec3 cube_object_space_center = VertexIn[0].ms_pos;
-  float cube_half_side_length = 0.01;
+  float cube_half_side_length = voxel_half_size * 2.0;
 
   vec4 cube_vertex_object_space_positions[8] = {
     vec4( vec3(cube_object_space_center + vec3(cube_half_side_length) * vec3( 1.0, 1.0, -1.0) ), 1.0), //vertex 0
@@ -67,7 +67,7 @@ void main() {
 
     gl_Position = projected_vertex;
 
-    gl_Position.z = (-(model_view_transformed_vertex.z - view_space_voxel_diag_length)) / gua_clip_far;
+    gl_Position.z = (-(model_view_transformed_vertex.z - 1.5*view_space_voxel_diag_length)) / gua_clip_far;
     gl_Position.z  = (gl_Position.z - 0.5) * 2.0;
     gl_Position.z  *= gl_Position.w;
 

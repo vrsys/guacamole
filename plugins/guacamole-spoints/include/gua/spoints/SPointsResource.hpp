@@ -80,7 +80,9 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   void draw(RenderContext const& ctx);
 
-  std::string get_socket_string();
+  std::string get_socket_string() const;
+
+  float get_voxel_size() const;
 
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
@@ -114,7 +116,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
  private:
 
 
-  std::mutex                      m_push_matrix_package_mutex;
+  mutable std::mutex              m_push_matrix_package_mutex_;
   std::shared_ptr<SPointsData>    spointsdata_;
 
   std::string                     server_endpoint_;

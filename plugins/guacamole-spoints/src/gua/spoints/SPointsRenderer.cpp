@@ -354,6 +354,10 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
                                 false,
                                 scm::gl::point_raster_state(false));
 
+    backface_culling_rasterizer_state_ = ctx.render_device
+      ->create_rasterizer_state(scm::gl::FILL_SOLID,
+                                scm::gl::CULL_FRONT,
+                                scm::gl::ORIENT_CCW);
 
     fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
                                                       scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
@@ -586,11 +590,19 @@ void SPointsRenderer::render(Pipeline& pipe,
           screen_space_point_size,
           "point_size");
 
+
+        float voxel_half_size = spoints_resource->get_voxel_size() / 2.0;
+
+        depth_pass_program_->set_uniform(
+          ctx,
+          voxel_half_size,
+          "voxel_half_size");
+
         bool write_depth = true;
         //target.bind(ctx, write_depth);
         target.set_viewport(ctx);
 
-        //ctx.render_context->set_rasterizer_state(points_rasterizer_state_);
+        ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
         ctx.render_context->apply();
 
 
@@ -696,7 +708,15 @@ void SPointsRenderer::render(Pipeline& pipe,
           scm::math::mat4f(mv_matrix),
           "kinect_mv_matrix");
 
-        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+
+        float voxel_half_size = spoints_resource->get_voxel_size() / 2.0;
+
+        current_shader->set_uniform(
+          ctx,
+          voxel_half_size,
+          "voxel_half_size");
+
+        ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
         ctx.render_context->set_depth_stencil_state(depth_test_without_writing_depth_stencil_state_);
         ctx.render_context->set_blend_state(color_accumulation_state_);
         ctx.render_context->set_frame_buffer(accumulation_pass_result_fbo_);

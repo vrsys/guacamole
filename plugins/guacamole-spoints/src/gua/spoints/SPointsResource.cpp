@@ -66,8 +66,8 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
 }
 
 std::string 
-SPointsResource::get_socket_string() {
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+SPointsResource::get_socket_string() const {
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
 
   if(spointsdata_) {
     if(spointsdata_->nka_) {
@@ -78,11 +78,24 @@ SPointsResource::get_socket_string() {
   return "";
 }
 
+float
+SPointsResource::get_voxel_size() const {
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_voxel_size();
+    }
+  }
+
+  return 0.0;
+}
+
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
 
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
 
   if(spointsdata_) {
     if(spointsdata_->nka_) {
@@ -97,7 +110,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
                                      Pipeline& pipe) {
 
   {
-    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
     // lazy resource initialization
     if (nullptr == spointsdata_) {
       spointsdata_ = std::make_shared<SPointsData>(ctx, *this);

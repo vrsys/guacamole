@@ -29,7 +29,7 @@ layout(location=0) out vec3 gua_out_color;
 void main() {
   float retrieved_depth = texture(downsampled_depth_buffer, gua_quad_coords).r;
 
-  gua_out_color = vec3(pow(retrieved_depth,4));
+  gua_out_color = vec3(pow(retrieved_depth,10));
   //gua_out_color = vec3(1.0, 0.0, 0.0);
 }
 
