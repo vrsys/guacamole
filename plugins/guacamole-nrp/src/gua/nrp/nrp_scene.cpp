@@ -1,5 +1,6 @@
 #include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_scene.hpp>
 
 #include "OgreGpuProgramManager.h"
@@ -302,6 +303,12 @@ void NRPScene::set_root_node(gua::nrp::NRPNode *root_node)
     _mutex_scenegraph.lock();
     _root_node = root_node;
     _world_visual.reset(new NRPVisual("world_visual", _root_node));
+    _mutex_scenegraph.unlock();
+}
+void NRPScene::set_interactive_node(NRPInteractiveNode *interactive_node)
+{
+    _mutex_scenegraph.lock();
+    _interactive_node = interactive_node;
     _mutex_scenegraph.unlock();
 }
 void NRPScene::set_cam_node(gua::nrp::NRPCameraNode *cam_node)

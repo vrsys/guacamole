@@ -38,16 +38,6 @@ void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action,
     trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-void key_press(std::shared_ptr<gua::GlfwWindow> window, bool &should_close, int key, int scancode, int action, int mods)
-{
-    switch(key)
-    {
-    case GLFW_KEY_ESCAPE:
-        should_close = true;
-        break;
-    }
-}
-
 int main(int argc, char **argv)
 {
     bool should_close = false;
@@ -57,6 +47,11 @@ int main(int argc, char **argv)
     gua::TriMeshLoader loader;
 
     auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
+    auto nrp_interactive = graph.add_node<gua::nrp::NRPInteractiveNode>("/", "interactive_transform");
+
+    auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    teapot->set_draw_bounding_box(true);
+    nrp_interactive->add_child(teapot);
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -112,7 +107,26 @@ int main(int argc, char **argv)
 
     window->on_move_cursor.connect([&](gua::math::vec2 const &pos) { trackball.motion(static_cast<int>(pos.x), static_cast<int>(pos.y)); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    window->on_key_press.connect(std::bind(key_press, window, std::ref(should_close), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+    window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+        switch(key)
+        {
+        case GLFW_KEY_W:
+            nrp_interactive->translate(0.f, 0.f, -0.05f);
+            break;
+        case GLFW_KEY_A:
+            nrp_interactive->translate(0.05f, 0.f, 0.f);
+            break;
+        case GLFW_KEY_S:
+            nrp_interactive->translate(0.f, 0.f, 0.05f);
+            break;
+        case GLFW_KEY_D:
+            nrp_interactive->translate(-0.05f, 0.f, 0.f);
+            break;
+        case GLFW_KEY_ESCAPE:
+            should_close = true;
+            break;
+        }
+    });
 
     gua::Renderer renderer;
 

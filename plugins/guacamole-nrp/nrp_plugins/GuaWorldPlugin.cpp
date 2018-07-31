@@ -1,25 +1,25 @@
-#include "GuaWorldPlugin.h"
+#include "GuaWorldPlugin.hpp"
 gazebo::GuaWorldPlugin::GuaWorldPlugin() {}
 gazebo::GuaWorldPlugin::~GuaWorldPlugin()
 {
-    pub.reset();
-    node.reset();
+    _pub.reset();
+    _node.reset();
 }
 void gazebo::GuaWorldPlugin::Load(gazebo::physics::WorldPtr world, sdf::ElementPtr sdf)
 {
     _world = world;
     _sdf = sdf;
 
-    this->node.reset(new transport::Node());
-    this->pub = node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 60, 60);
+    this->_node.reset(new transport::Node());
+    this->_pub = _node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 60, 60);
 
-    this->updateConnection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaWorldPlugin::on_update, this));
+    this->_update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaWorldPlugin::on_update, this));
 }
 void gazebo::GuaWorldPlugin::on_update()
 {
     try
     {
-        if(pub && pub->HasConnections())
+        if(_pub && _pub->HasConnections())
         {
 #if GUA_DEBUG == 1
             gzerr << "8" << std::endl;
@@ -75,9 +75,9 @@ void gazebo::GuaWorldPlugin::on_update()
                 std::cerr << "11" << std::endl;
 #endif
 
-                if(pub && pub->HasConnections())
+                if(_pub && _pub->HasConnections())
                 {
-                    pub->Publish(msg, true);
+                    _pub->Publish(msg, true);
                 }
 
 #if GUA_DEBUG == 1

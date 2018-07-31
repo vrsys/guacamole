@@ -63,6 +63,7 @@ class GUA_NRP_DLL NRPBinder
     ~NRPBinder();
 
     void bind_root_node(NRPNode *root_node);
+    void bind_interactive_node(NRPInteractiveNode *interactive_node);
     void bind_cam_node(NRPCameraNode *cam_node);
     void bind_transport_layer();
 

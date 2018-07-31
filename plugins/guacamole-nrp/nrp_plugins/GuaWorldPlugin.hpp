@@ -23,9 +23,9 @@ class GuaWorldPlugin : public WorldPlugin
     gazebo::physics::WorldPtr _world;
     sdf::ElementPtr _sdf;
 
-    transport::NodePtr node;
-    transport::PublisherPtr pub;
-    event::ConnectionPtr updateConnection;
+    transport::NodePtr _node;
+    transport::PublisherPtr _pub;
+    event::ConnectionPtr _update_connection;
 };
 
 GZ_REGISTER_WORLD_PLUGIN(GuaWorldPlugin)

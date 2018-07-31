@@ -45,6 +45,7 @@ namespace gua
 namespace nrp
 {
 class NRPNode;
+class NRPInteractiveNode;
 class NRPCameraNode;
 
 typedef std::map<uint32_t, ptr_visual> visuals_map;
@@ -70,6 +71,7 @@ class GUA_NRP_DLL NRPScene
     ~NRPScene();
 
     void set_root_node(NRPNode *root_node);
+    void set_interactive_node(NRPInteractiveNode *interactive_node);
     void set_cam_node(NRPCameraNode *cam_node);
 
     void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
@@ -110,6 +112,7 @@ class GUA_NRP_DLL NRPScene
 
     std::mutex _mutex_scenegraph;
     NRPNode *_root_node;
+    NRPInteractiveNode *_interactive_node;
     NRPCameraNode *_cam_node;
 
     std::string _name;
