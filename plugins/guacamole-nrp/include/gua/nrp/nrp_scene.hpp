@@ -74,6 +74,8 @@ class GUA_NRP_DLL NRPScene
     void set_interactive_node(NRPInteractiveNode *interactive_node);
     void set_cam_node(NRPCameraNode *cam_node);
 
+    NRPInteractiveNode *get_interactive_node() const;
+
     void on_skeleton_pose_msg(ConstPoseAnimationPtr &msg);
     void on_model_msg(ConstModelPtr &msg);
     void on_scene_msg(ConstScenePtr &msg);

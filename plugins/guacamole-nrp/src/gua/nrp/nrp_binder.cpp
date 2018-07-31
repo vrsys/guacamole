@@ -1,7 +1,7 @@
 #include <gua/nrp/nrp_binder.hpp>
 #include <gua/nrp/nrp_cam_node.hpp>
-#include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/nrp_interactive_node.hpp>
+#include <gua/nrp/nrp_node.hpp>
 
 namespace gua
 {
@@ -19,6 +19,7 @@ NRPBinder::NRPBinder()
 {
     _worker_should_stop.store(false);
     _scene_initialized.store(false);
+    _publish_interactive.store(false);
     _scene_frame.store(0);
 }
 NRPBinder::~NRPBinder()
@@ -27,7 +28,11 @@ NRPBinder::~NRPBinder()
     _worker.join();
 }
 void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_node(root_node); }
-void NRPBinder::bind_interactive_node(NRPInteractiveNode *interactive_node){ _scene.set_interactive_node(interactive_node); }
+void NRPBinder::bind_interactive_node(NRPInteractiveNode *interactive_node)
+{
+    _scene.set_interactive_node(interactive_node);
+    _publish_interactive.store(true);
+}
 void NRPBinder::bind_cam_node(gua::nrp::NRPCameraNode *cam_node) { _scene.set_cam_node(cam_node); }
 void NRPBinder::bind_transport_layer()
 {
@@ -81,9 +86,18 @@ void NRPBinder::_connect_to_transport_layer()
     //    gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("/gazebo/default/skeleton_pose/info", &NRPBinder::callback_skeleton_pose_info, this);
 
     gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
+    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::Request>("/nrp-gua/interactive_pos", 1, 1);
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
     log.d("subscription done");
+
+    if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
+    {
+        log.e("no interactive node subscribers available");
+
+        _publish_interactive.store(true);
+        pub_interactive.reset();
+    }
 
     if(pub_request->WaitForConnection(gazebo::common::Time(5, 0)))
     {
@@ -108,6 +122,22 @@ void NRPBinder::_connect_to_transport_layer()
 
                 _scene_frame.store(scene_frame + 1);
             }
+
+            if(_publish_interactive.load())
+            {
+                auto interactive_node = _scene.get_interactive_node();
+
+                gazebo::msgs::PosesStamped msg;
+
+                gazebo::msgs::Pose *poseMsg = msg.add_pose();
+                poseMsg->set_name(interactive_node->get_name());
+                gua::math::vec3 pos = interactive_node->get_world_position();
+                ignition::math::Pose3d pose;
+                pose.Set(pos.x, pos.y, pos.y, 0.,0.,0.);
+                gazebo::msgs::Set(poseMsg, pose);
+
+                pub_interactive->Publish(msg, true);
+            }
         }
 
         pub_request.reset();
@@ -119,6 +149,8 @@ void NRPBinder::_connect_to_transport_layer()
 
         throw std::runtime_error("connection not established");
     }
+
+    pub_interactive.reset();
 
     //    sub_scene.reset();
     //

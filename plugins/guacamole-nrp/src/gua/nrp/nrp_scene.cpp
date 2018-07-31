@@ -1,6 +1,6 @@
 #include <gua/nrp/nrp_cam_node.hpp>
-#include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/nrp_interactive_node.hpp>
+#include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/nrp_scene.hpp>
 
 #include "OgreGpuProgramManager.h"
@@ -891,5 +891,6 @@ void NRPScene::pre_render()
 #endif
 }
 std::mutex &NRPScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
+NRPInteractiveNode *NRPScene::get_interactive_node() const { return _interactive_node; }
 }
 }
