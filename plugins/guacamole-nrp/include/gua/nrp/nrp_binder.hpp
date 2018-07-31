@@ -83,6 +83,7 @@ class GUA_NRP_DLL NRPBinder
     NRPScene _scene;
 
     std::atomic_bool _scene_initialized;
+    std::atomic_bool _publish_interactive;
     std::atomic_int_fast32_t _scene_frame;
 
     void _connect_to_transport_layer();
