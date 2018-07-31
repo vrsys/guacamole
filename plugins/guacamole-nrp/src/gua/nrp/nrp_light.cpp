@@ -132,8 +132,10 @@ void NRPLight::set_direction(const gazebo::msgs::Vector3d &direction)
     scm::math::vec3d axis = scm::math::normalize(scm::math::cross(orientation_direction, scm::math::vec3d(0, 0, -1.)));
     _direction = scm::math::make_rotation(-angle * 57.295779513, axis);
 
+#if GUA_DEBUG == 1
     std::cout << angle << std::endl;
     std::cout << axis << std::endl;
+#endif
 
     // scm::math::quatd quaternion = scm::math::quatd::from_euler(direction.x(), direction.y(), direction.z());
     // _direction = quaternion.to_matrix();

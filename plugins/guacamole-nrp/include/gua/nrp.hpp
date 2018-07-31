@@ -3,6 +3,7 @@
 
 #include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_pass.hpp>
 #include <gua/nrp/platform.hpp>
 

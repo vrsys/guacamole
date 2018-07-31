@@ -1,6 +1,7 @@
 #include <gua/nrp/nrp_binder.hpp>
 #include <gua/nrp/nrp_cam_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
+#include <gua/nrp/nrp_interactive_node.hpp>
 
 namespace gua
 {
@@ -26,6 +27,7 @@ NRPBinder::~NRPBinder()
     _worker.join();
 }
 void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_node(root_node); }
+void NRPBinder::bind_interactive_node(NRPInteractiveNode *interactive_node){ _scene.set_interactive_node(interactive_node); }
 void NRPBinder::bind_cam_node(gua::nrp::NRPCameraNode *cam_node) { _scene.set_cam_node(cam_node); }
 void NRPBinder::bind_transport_layer()
 {
