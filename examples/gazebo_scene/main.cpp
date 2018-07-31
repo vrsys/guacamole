@@ -46,12 +46,12 @@ int main(int argc, char **argv)
     gua::SceneGraph graph("main_scenegraph");
     gua::TriMeshLoader loader;
 
-    auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
     auto nrp_interactive = graph.add_node<gua::nrp::NRPInteractiveNode>("/", "interactive_transform");
-
     auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     teapot->set_draw_bounding_box(true);
     nrp_interactive->add_child(teapot);
+
+    auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));

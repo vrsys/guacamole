@@ -17,7 +17,10 @@ class GuaInteractiveModelPlugin : public ModelPlugin
     void Load(physics::ModelPtr _parent, sdf::ElementPtr) override;
 
   private:
+    void on_update();
     void callback_pos(ConstPosesStampedPtr &msg);
+
+    ignition::math::Pose3d _pose;
 
     physics::ModelPtr _model;
     sdf::ElementPtr _sdf;

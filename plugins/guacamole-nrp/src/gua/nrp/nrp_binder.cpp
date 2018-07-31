@@ -86,16 +86,17 @@ void NRPBinder::_connect_to_transport_layer()
     //    gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("/gazebo/default/skeleton_pose/info", &NRPBinder::callback_skeleton_pose_info, this);
 
     gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
-    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::Request>("/nrp-gua/interactive_pos", 1, 1);
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
     log.d("subscription done");
+
+    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 1, 1);
 
     if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
     {
         log.e("no interactive node subscribers available");
 
-        _publish_interactive.store(true);
+        _publish_interactive.store(false);
         pub_interactive.reset();
     }
 
@@ -123,20 +124,60 @@ void NRPBinder::_connect_to_transport_layer()
                 _scene_frame.store(scene_frame + 1);
             }
 
-            if(_publish_interactive.load())
+            if(_scene_initialized.load() && _publish_interactive.load() && pub_interactive && pub_interactive->HasConnections())
             {
-                auto interactive_node = _scene.get_interactive_node();
+                try
+                {
+#if GUA_DEBUG == 1
+                    auto start = std::chrono::high_resolution_clock::now();
+#endif
 
-                gazebo::msgs::PosesStamped msg;
+                    auto interactive_node = _scene.get_interactive_node();
 
-                gazebo::msgs::Pose *poseMsg = msg.add_pose();
-                poseMsg->set_name(interactive_node->get_name());
-                gua::math::vec3 pos = interactive_node->get_world_position();
-                ignition::math::Pose3d pose;
-                pose.Set(pos.x, pos.y, pos.y, 0.,0.,0.);
-                gazebo::msgs::Set(poseMsg, pose);
+                    if(interactive_node == nullptr)
+                    {
+                        continue;
+                    }
 
-                pub_interactive->Publish(msg, true);
+                    gazebo::msgs::PosesStamped msg;
+                    gazebo::msgs::Set(msg.mutable_time(), gazebo::common::Time::GetWallTime());
+
+                    gua::math::vec3 pos = interactive_node->get_world_position();
+
+                    gazebo::msgs::Pose *poseMsg = msg.add_pose();
+                    poseMsg->set_name("interactive");
+                    poseMsg->set_id(0);
+                    ignition::math::Pose3d pose;
+                    pose.Set(pos.x, pos.y, pos.y, 0., 0., 0.);
+                    gazebo::msgs::Set(poseMsg, pose);
+
+                    if(pub_interactive && pub_interactive->HasConnections())
+                    {
+                        pub_interactive->Publish(msg, true);
+                    }
+
+#if GUA_DEBUG == 1
+                    auto end = std::chrono::high_resolution_clock::now();
+                    float interactive_upload = std::chrono::duration<float, std::milli>(end - start).count();
+
+                    std::cout << "interactive_upload: " << interactive_upload << std::endl;
+#endif
+                }
+                catch(const std::exception &e)
+                {
+                    gzerr << "Exception caught: " << e.what() << std::endl;
+                    std::cerr << "Exception caught: " << e.what() << std::endl;
+                }
+                catch(const gazebo::common::Exception &e)
+                {
+                    gzerr << "Exception caught: " << e.GetErrorStr() << std::endl;
+                    std::cerr << "Exception caught: " << e.GetErrorStr() << std::endl;
+                }
+                catch(...)
+                {
+                    gzerr << "Caught unrecognized error" << std::endl;
+                    std::cerr << "Caught unrecognized error" << std::endl;
+                }
             }
         }
 
