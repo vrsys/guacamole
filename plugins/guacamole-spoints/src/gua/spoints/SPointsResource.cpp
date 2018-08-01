@@ -143,11 +143,17 @@ unsigned SPointsResource::get_remote_server_screen_height() const {
 }
 
 
-void SPointsResource::draw(RenderContext const& ctx) {
-  spointsdata_->nka_->draw(ctx);
+void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
+  spointsdata_->nka_->draw_vertex_colored_points(ctx);
 }
 
+void SPointsResource::draw_vertex_colored_triangle_soup(RenderContext const& ctx) {
+  spointsdata_->nka_->draw_vertex_colored_triangle_soup(ctx);
+}
 
+void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx) {
+  spointsdata_->nka_->draw_textured_triangle_soup(ctx);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

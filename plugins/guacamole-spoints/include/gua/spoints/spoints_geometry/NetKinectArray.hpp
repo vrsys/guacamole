@@ -76,7 +76,9 @@ public:
                  const std::string& feedback_endpoint = "");
   ~NetKinectArray();
 
-  void draw(gua::RenderContext const& ctx);
+  void draw_vertex_colored_points(gua::RenderContext const& ctx);
+  void draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx);
+  void draw_textured_triangle_soup(gua::RenderContext const& ctx);
   bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
   void update_feedback(gua::RenderContext const& ctx);
 
@@ -157,7 +159,16 @@ private:
   mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
 
-  mutable std::unordered_map<std::size_t, std::size_t> num_points_to_draw_per_context_;
+  uint32_t m_received_vertex_colored_points_ = 0.0;
+  uint32_t m_received_vertex_colored_points_back_ = 0.0;
+  uint32_t m_received_vertex_colored_tris_ = 0.0;
+  uint32_t m_received_vertex_colored_tris_back_ = 0.0;
+  uint32_t m_received_textured_tris_ = 0.0;
+  uint32_t m_received_textured_tris_back_ = 0.0;
+
+  mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
+  mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
+  mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;
 
   mutable std::unordered_map<std::size_t, bool> is_vbo_created_per_context_;// = false;
 
