@@ -3,6 +3,8 @@
 #include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
 
+#include <scm/core/math/math.h>
+
 namespace gua
 {
 namespace nrp
@@ -142,15 +144,16 @@ void NRPBinder::_connect_to_transport_layer()
                     gazebo::msgs::PosesStamped msg;
                     gazebo::msgs::Set(msg.mutable_time(), gazebo::common::Time::GetWallTime());
 
-                    auto transform = interactive_node->get_world_transform();
-                    ignition::math::Matrix4d mat(transform.m00, transform.m01, transform.m02, transform.m03, transform.m04, transform.m05, transform.m06, transform.m07, transform.m08, transform.m09,
-                                                transform.m10, transform.m11, transform.m12, transform.m13, transform.m14, transform.m15);
+                    scm::math::mat4d transform = interactive_node->get_transform();
+                    scm::math::vec3d translation = gua::math::get_translation(transform);
+                    scm::math::mat4d rotation = gua::math::get_rotation(transform);
+
+                    ignition::math::Pose3d pose;
+                    pose.Set(translation.x, translation.y, translation.z, 0.,0.,0.);
 
                     gazebo::msgs::Pose *poseMsg = msg.add_pose();
                     poseMsg->set_name("interactive");
                     poseMsg->set_id(0);
-                    ignition::math::Pose3d pose;
-                    pose.Set(mat.Translation(), mat.Rotation());
                     gazebo::msgs::Set(poseMsg, pose);
 
                     if(pub_interactive && pub_interactive->HasConnections())
@@ -159,6 +162,9 @@ void NRPBinder::_connect_to_transport_layer()
                     }
 
 #if GUA_DEBUG == 1
+                    // std::cout << transform << std::endl;
+                    std::cout << pose << std::endl;
+
                     auto end = std::chrono::high_resolution_clock::now();
                     float interactive_upload = std::chrono::duration<float, std::milli>(end - start).count();
 
