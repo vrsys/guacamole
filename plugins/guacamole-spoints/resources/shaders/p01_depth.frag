@@ -6,34 +6,16 @@
 // main
 ///////////////////////////////////////////////////////////////////////////////
 
-
-#define ZNEAR gua_clip_near
-#define ZFAR gua_clip_far
-
-#define A (ZNEAR + ZFAR)
-#define B (ZNEAR - ZFAR)
-#define C (2.0 * ZNEAR * ZFAR)
-#define D (ndcPos.z * B)
-#define ZEYE -(C / (A + D))
-
-float get_lin_eyespace_depth_from_fragment() {
-
-  vec3 ndcPos;
-  ndcPos.xy = gl_FragCoord.xy / vec2(gua_resolution.xy);
-  ndcPos.z =gl_FragCoord.z;
-  ndcPos -= 0.5;
-  ndcPos *= 2.0;
-  vec4 clipPos;
-  clipPos.w = -ZEYE;
-  clipPos.xyz = ndcPos * clipPos.w;
-  vec4 eyePos = gua_inverse_projection_matrix * clipPos;
-  return eyePos.z;
-}
-
-//out float gl_FragDepth;
+in vec2 uv_coords;
 //in float es_half_cube_side_length;
 //in float eye_space_depth;
 void main() {
+
+  if( dot(uv_coords, uv_coords) >= 1.0)
+    discard;
+
+
+
   //float epsilon = //(gua_clip_far - gua_clip_near) / 100000.0;
   //gl_FragDepth = (-(get_lin_eyespace_depth_from_fragment() + es_half_cube_side_length)) / gua_clip_far;//((gl_FragCoord.z * gua_clip_far) / gua_clip_far) + epsilon;
 

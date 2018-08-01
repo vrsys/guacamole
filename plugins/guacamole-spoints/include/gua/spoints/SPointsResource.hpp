@@ -78,8 +78,10 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
    */
    ~SPointsResource() {}
 
-  void draw(RenderContext const& ctx);
-
+  void draw_vertex_colored_points(RenderContext const& ctx);
+  void draw_vertex_colored_triangle_soup(RenderContext const& ctx);
+  void draw_textured_triangle_soup(RenderContext const& ctx);
+  
   std::string get_socket_string() const;
 
   float get_voxel_size() const;
