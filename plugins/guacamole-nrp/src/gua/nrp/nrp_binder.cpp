@@ -90,7 +90,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     log.d("subscription done");
 
-    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 1, 1);
+    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 120, 30);
 
     if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
     {
@@ -142,13 +142,15 @@ void NRPBinder::_connect_to_transport_layer()
                     gazebo::msgs::PosesStamped msg;
                     gazebo::msgs::Set(msg.mutable_time(), gazebo::common::Time::GetWallTime());
 
-                    gua::math::vec3 pos = interactive_node->get_world_position();
+                    auto transform = interactive_node->get_world_transform();
+                    ignition::math::Matrix4d mat(transform.m00, transform.m01, transform.m02, transform.m03, transform.m04, transform.m05, transform.m06, transform.m07, transform.m08, transform.m09,
+                                                transform.m10, transform.m11, transform.m12, transform.m13, transform.m14, transform.m15);
 
                     gazebo::msgs::Pose *poseMsg = msg.add_pose();
                     poseMsg->set_name("interactive");
                     poseMsg->set_id(0);
                     ignition::math::Pose3d pose;
-                    pose.Set(pos.x, pos.y, pos.y, 0., 0., 0.);
+                    pose.Set(mat.Translation(), mat.Rotation());
                     gazebo::msgs::Set(poseMsg, pose);
 
                     if(pub_interactive && pub_interactive->HasConnections())
