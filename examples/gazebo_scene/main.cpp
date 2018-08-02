@@ -47,9 +47,17 @@ int main(int argc, char **argv)
     gua::TriMeshLoader loader;
 
     auto nrp_interactive = graph.add_node<gua::nrp::NRPInteractiveNode>("/", "interactive_transform");
-    auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    teapot->set_draw_bounding_box(true);
-    nrp_interactive->add_child(teapot);
+
+    /// InteractiveNode subhierarchy: begin
+
+    auto teapot_1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    teapot_1->translate(1., 0., 0.);
+    auto teapot_2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    teapot_2->translate(0., 1., 0.);
+    teapot_1->add_child(teapot_2);
+    nrp_interactive->add_child(teapot_1);
+
+    /// InteractiveNode subhierarchy: end
 
     auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "transform");
 

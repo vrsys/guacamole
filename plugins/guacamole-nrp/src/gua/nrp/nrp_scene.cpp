@@ -892,5 +892,6 @@ void NRPScene::pre_render()
 }
 std::mutex &NRPScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
 NRPInteractiveNode *NRPScene::get_interactive_node() const { return _interactive_node; }
+NRPNode *NRPScene::get_root_node() const { return _root_node; }
 }
 }
