@@ -161,7 +161,7 @@ void NRPBinder::_connect_to_transport_layer()
                     pose.Set(translation.x, translation.y, translation.z, rotation[0], rotation[1], rotation[2]);
 
                     gazebo::msgs::Pose *pose_msg = msg.add_pose();
-                    pose_msg->set_name("interactive");
+                    pose_msg->set_name("interactive_transform");
                     pose_msg->set_id(0);
                     gazebo::msgs::Set(pose_msg, pose);
 
@@ -172,10 +172,16 @@ void NRPBinder::_connect_to_transport_layer()
                         while(!nodes.empty())
                         {
                             auto child_node = nodes.front();
-                            // TODO: downcasting?
                             nodes.pop_front();
 
-                            transform = child_node->get_transform();
+                            // TODO: downcasting?
+
+                            if(child_node->get_name().empty())
+                            {
+                                continue;
+                            }
+
+                            transform = scm::math::inverse(nrp_node->get_world_transform()) * child_node->get_world_transform();
                             translation = gua::math::get_translation(transform);
                             rot_quat = scm::math::quatd::from_matrix(gua::math::get_rotation(transform));
                             rotation = euler_angles(rot_quat.x, rot_quat.y, rot_quat.z, rot_quat.w);
