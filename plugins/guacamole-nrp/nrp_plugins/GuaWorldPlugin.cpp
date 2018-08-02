@@ -11,10 +11,11 @@ void gazebo::GuaWorldPlugin::Load(gazebo::physics::WorldPtr world, sdf::ElementP
     _world = world;
     _sdf = sdf;
 
-    this->_node.reset(new transport::Node());
-    this->_pub = _node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 60, 60);
+    _node.reset(new transport::Node());
+    _node->Init();
+    _pub = _node->Advertise<gazebo::msgs::PosesStamped>("/gazebo/nrp_plugins/poses", 60, 60);
 
-    this->_update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaWorldPlugin::on_update, this));
+    _update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaWorldPlugin::on_update, this));
 }
 void gazebo::GuaWorldPlugin::on_update()
 {

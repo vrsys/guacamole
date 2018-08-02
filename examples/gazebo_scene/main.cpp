@@ -50,9 +50,9 @@ int main(int argc, char **argv)
 
     /// InteractiveNode subhierarchy: begin
 
-    auto teapot_1(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto teapot_1(loader.create_geometry_from_file("teapot_1", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     teapot_1->translate(1., 0., 0.);
-    auto teapot_2(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto teapot_2(loader.create_geometry_from_file("teapot_2", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     teapot_2->translate(0., 1., 0.);
     teapot_1->add_child(teapot_2);
     nrp_interactive->add_child(teapot_1);
