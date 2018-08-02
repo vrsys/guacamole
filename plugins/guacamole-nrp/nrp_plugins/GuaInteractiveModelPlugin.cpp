@@ -26,6 +26,11 @@ void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
     std::cerr << "callback_pos: begin" << std::endl;
 #endif
 
+/*#if GUA_DEBUG == 1
+    gzerr << _model->GetName() << std::endl;
+    std::cerr << _model->GetName() << std::endl;
+#endif*/
+
     for(int i = 0; i < msg->pose_size(); i++)
     {
         if(msg->pose(i).has_name() && msg->pose(i).name() == _model->GetName())
@@ -36,19 +41,19 @@ void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
     }
 
 #if GUA_DEBUG == 1
-    gzerr << "callback_pos: begin" << std::endl;
-    std::cerr << "callback_pos: begin" << std::endl;
+    gzerr << "callback_pos: end" << std::endl;
+    std::cerr << "callback_pos: end" << std::endl;
 #endif
 }
 void gazebo::GuaInteractiveModelPlugin::on_update()
 {
-#if GUA_DEBUG == 1
-    gzerr << "on_update: begin" << std::endl;
-    std::cerr << "on_update: begin" << std::endl;
-#endif
+    /*#if GUA_DEBUG == 1
+        gzerr << "on_update: begin" << std::endl;
+        std::cerr << "on_update: begin" << std::endl;
+    #endif*/
     _model->SetWorldPose(_pose, true, true);
-#if GUA_DEBUG == 1
-    gzerr << "on_update: end" << std::endl;
-    std::cerr << "on_update: end" << std::endl;
-#endif
+    /*#if GUA_DEBUG == 1
+        gzerr << "on_update: end" << std::endl;
+        std::cerr << "on_update: end" << std::endl;
+    #endif*/
 }
