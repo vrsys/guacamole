@@ -11,12 +11,13 @@ void gazebo::GuaInteractiveModelPlugin::Load(gazebo::physics::ModelPtr parent, s
     _sdf = sdf;
 
     _node.reset(new transport::Node());
+    _node->Init();
     _sub = _node->Subscribe("/nrp-gua/interactive_pos", &GuaInteractiveModelPlugin::callback_pos, this);
 
     _model = parent;
     _pose = _model->GetWorldPose().Ign();
 
-    this->_update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GuaInteractiveModelPlugin::on_update, this));
+    this->_update_connection = event::Events::ConnectBeforePhysicsUpdate(boost::bind(&GuaInteractiveModelPlugin::on_update, this));
 }
 void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
 {
