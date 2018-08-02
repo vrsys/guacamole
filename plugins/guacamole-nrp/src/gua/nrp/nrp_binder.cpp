@@ -175,7 +175,13 @@ void NRPBinder::_connect_to_transport_layer()
                             nodes.pop_front();
 
                             // TODO: downcasting?
-                            transform = child_node->get_transform();
+
+                            if(child_node->get_name().empty())
+                            {
+                                continue;
+                            }
+
+                            transform = scm::math::inverse(nrp_node->get_world_transform()) * child_node->get_world_transform();
                             translation = gua::math::get_translation(transform);
                             rot_quat = scm::math::quatd::from_matrix(gua::math::get_rotation(transform));
                             rotation = euler_angles(rot_quat.x, rot_quat.y, rot_quat.z, rot_quat.w);
