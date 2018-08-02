@@ -17,7 +17,7 @@ void gazebo::GuaInteractiveModelPlugin::Load(gazebo::physics::ModelPtr parent, s
     _model = parent;
     _pose = _model->GetWorldPose().Ign();
 
-    this->_update_connection = event::Events::ConnectBeforePhysicsUpdate(boost::bind(&GuaInteractiveModelPlugin::on_update, this));
+    _update_connection = event::Events::ConnectBeforePhysicsUpdate(boost::bind(&GuaInteractiveModelPlugin::on_update, this));
 }
 void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
 {
@@ -25,7 +25,16 @@ void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
     gzerr << "callback_pos: begin" << std::endl;
     std::cerr << "callback_pos: begin" << std::endl;
 #endif
-    _pose = msgs::ConvertIgn(msg->pose(0));
+
+    for(int i = 0; i < msg->pose_size(); i++)
+    {
+        if(msg->pose(i).has_name() && msg->pose(i).name() == _model->GetName())
+        {
+            _pose = msgs::ConvertIgn(msg->pose(i));
+            break;
+        }
+    }
+
 #if GUA_DEBUG == 1
     gzerr << "callback_pos: begin" << std::endl;
     std::cerr << "callback_pos: begin" << std::endl;
