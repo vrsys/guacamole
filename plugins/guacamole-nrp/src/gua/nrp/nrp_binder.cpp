@@ -5,6 +5,13 @@
 
 #include <scm/core/math/math.h>
 
+#include <array>
+
+std::array<double, 3> euler_angles(double q0, double q1, double q2, double q3)
+{
+    return {atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2)), asin(2 * (q0 * q2 - q3 * q1)), atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 * q2 + q3 * q3))};
+}
+
 namespace gua
 {
 namespace nrp
@@ -135,6 +142,7 @@ void NRPBinder::_connect_to_transport_layer()
 #endif
 
                     auto interactive_node = _scene.get_interactive_node();
+                    auto nrp_node = _scene.get_root_node();
 
                     if(interactive_node == nullptr)
                     {
@@ -144,17 +152,47 @@ void NRPBinder::_connect_to_transport_layer()
                     gazebo::msgs::PosesStamped msg;
                     gazebo::msgs::Set(msg.mutable_time(), gazebo::common::Time::GetWallTime());
 
-                    scm::math::mat4d transform = interactive_node->get_transform();
+                    scm::math::mat4d transform = scm::math::inverse(nrp_node->get_world_transform()) * interactive_node->get_world_transform();
                     scm::math::vec3d translation = gua::math::get_translation(transform);
-                    scm::math::mat4d rotation = gua::math::get_rotation(transform);
+                    scm::math::quatd rot_quat = scm::math::quatd::from_matrix(gua::math::get_rotation(transform));
+                    std::array<double, 3> rotation = euler_angles(rot_quat.x, rot_quat.y, rot_quat.z, rot_quat.w);
 
                     ignition::math::Pose3d pose;
-                    pose.Set(translation.x, translation.y, translation.z, 0.,0.,0.);
+                    pose.Set(translation.x, translation.y, translation.z, rotation[0], rotation[1], rotation[2]);
 
-                    gazebo::msgs::Pose *poseMsg = msg.add_pose();
-                    poseMsg->set_name("interactive");
-                    poseMsg->set_id(0);
-                    gazebo::msgs::Set(poseMsg, pose);
+                    gazebo::msgs::Pose *pose_msg = msg.add_pose();
+                    pose_msg->set_name("interactive");
+                    pose_msg->set_id(0);
+                    gazebo::msgs::Set(pose_msg, pose);
+
+                    for(auto const &child : interactive_node->get_children())
+                    {
+                        std::list<std::shared_ptr<gua::node::Node>> nodes;
+                        nodes.emplace_back(child);
+                        while(!nodes.empty())
+                        {
+                            auto child_node = nodes.front();
+                            // TODO: downcasting?
+                            nodes.pop_front();
+
+                            transform = child_node->get_transform();
+                            translation = gua::math::get_translation(transform);
+                            rot_quat = scm::math::quatd::from_matrix(gua::math::get_rotation(transform));
+                            rotation = euler_angles(rot_quat.x, rot_quat.y, rot_quat.z, rot_quat.w);
+
+                            pose.Set(translation.x, translation.y, translation.z, rotation[0], rotation[1], rotation[2]);
+
+                            pose_msg = msg.add_pose();
+                            pose_msg->set_name(child_node->get_name());
+                            pose_msg->set_id(0);
+                            gazebo::msgs::Set(pose_msg, pose);
+
+                            for(auto const &grand_child_node : child_node->get_children())
+                            {
+                                nodes.emplace_back(grand_child_node);
+                            }
+                        }
+                    }
 
                     if(pub_interactive && pub_interactive->HasConnections())
                     {
