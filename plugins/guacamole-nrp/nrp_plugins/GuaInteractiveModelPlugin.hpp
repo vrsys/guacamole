@@ -7,6 +7,8 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#define GUA_DEBUG 0
+
 namespace gazebo
 {
 class GuaInteractiveModelPlugin : public ModelPlugin
