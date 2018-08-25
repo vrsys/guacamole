@@ -145,6 +145,7 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
                                      //depth_pass_program_(nullptr),
                                      normalization_pass_program_(nullptr),
                                      forward_colored_triangles_pass_program_(nullptr),
+                                     forward_textured_triangles_pass_program_(nullptr),
                                      current_rendertarget_width_(0),
                                      current_rendertarget_height_(0)
                                     {
@@ -197,6 +198,11 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
       forward_colored_triangles_shader_stages_.clear();
       forward_colored_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/forward_colored_triangles.vert")));
       forward_colored_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/forward_colored_triangles.frag")));
+
+      forward_textured_triangles_shader_stages_.clear();
+      forward_textured_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles.vert")));
+      forward_textured_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles.frag")));
+
 /*
       shadow_pass_shader_stages_.clear();
       shadow_pass_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/p01_shadow.vert")));
@@ -257,6 +263,17 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
     assert(forward_colored_triangles_pass_program_);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  void SPointsRenderer::_initialize_forward_textured_triangles_pass_program() {
+    if(!forward_textured_triangles_pass_program_) {
+      auto new_program = std::make_shared<ShaderProgram>();
+
+      auto smap = global_substitution_map_;
+      new_program->set_shaders(forward_textured_triangles_shader_stages_ , std::list<std::string>(), false, smap);
+      forward_textured_triangles_pass_program_ = new_program;
+    }
+    assert(forward_textured_triangles_pass_program_);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   void SPointsRenderer::_initialize_shadow_pass_program() {
@@ -332,6 +349,7 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
   
     nearest_sampler_state_ = ctx.render_device
       ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+
 
     no_depth_test_depth_stencil_state_ = ctx.render_device
       ->create_depth_stencil_state(false, false, scm::gl::COMPARISON_ALWAYS);
@@ -497,6 +515,10 @@ void SPointsRenderer::render(Pipeline& pipe,
 
     if (!forward_colored_triangles_pass_program_) {
       _initialize_forward_colored_triangles_pass_program();
+    }
+
+    if (!forward_textured_triangles_pass_program_) {
+      _initialize_forward_textured_triangles_pass_program();
     }
 
     assert(/*log_to_lin_conversion_pass_program_ && depth_pass_program_ &&*/ normalization_pass_program_);
@@ -948,7 +970,6 @@ void SPointsRenderer::render(Pipeline& pipe,
    // TRI PASS1: COLORED TRI PASS:
    //////////////////////////////////////////////////////////////////////////
 
-  std::cout << "About to render TriMesh\n";
    {
      scm::gl::context_all_guard context_guard(ctx.render_context);
 
@@ -1015,15 +1036,77 @@ void SPointsRenderer::render(Pipeline& pipe,
 
   }
 
-  std::cout << "Done rendering TriMesh\n";
+
+
+    //////////////////////////////////////////////////////////////////////////
+     // TRI PASS2: TEXTURES TRI PASS:
+     //////////////////////////////////////////////////////////////////////////
+
+     {
+       scm::gl::context_all_guard context_guard(ctx.render_context);
+
+        bool write_depth = true;
+        target.bind(ctx, write_depth);
+
+        forward_textured_triangles_pass_program_->use(ctx);
+
+        ctx.render_context->set_depth_stencil_state(depth_test_with_writing_depth_stencil_state_);
+        ctx.render_context->set_blend_state(no_color_accumulation_state_);
+        ctx.render_context->apply();
+
+
+        for (auto& o : objects->second) {
+
+          auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+
+
+          auto spoints_desc(spoints_node->get_spoints_description());
+
+          if (!GeometryDatabase::instance()->contains(spoints_desc)) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+                                     << spoints_desc << ", " << std::endl;
+            continue;
+          }
+
+          auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+              GeometryDatabase::instance()->lookup(spoints_desc));
+          if (!spoints_resource) {
+            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                     << std::endl;
+            continue;
+          }
+
+          auto const& model_matrix(spoints_node->get_cached_world_transform());
+          auto normal_matrix(scm::math::transpose(
+              scm::math::inverse(spoints_node->get_cached_world_transform())));
+          auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+          scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+
+          scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+
+          scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
+
+          forward_textured_triangles_pass_program_->set_uniform(
+            ctx,
+            scm::math::mat4f(mv_matrix),
+            "kinect_mv_matrix");
+
+          forward_textured_triangles_pass_program_->set_uniform(
+            ctx,
+            scm::math::mat4f(mvp_matrix),
+            "kinect_mvp_matrix");
 
 
 
+          spoints_resource->draw_textured_triangle_soup(ctx);
+        }
+       
+         forward_textured_triangles_pass_program_->unuse(ctx);
 
+        target.unbind(ctx);
 
-
-
-
+    }
 
 
 

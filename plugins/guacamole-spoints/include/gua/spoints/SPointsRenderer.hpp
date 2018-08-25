@@ -75,6 +75,7 @@ private:
   void          _initialize_shadow_pass_program();
 
   void          _initialize_forward_colored_triangles_pass_program();
+  void          _initialize_forward_textured_triangles_pass_program();
 
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
@@ -103,6 +104,7 @@ private:
   scm::gl::rasterizer_state_ptr                backface_culling_rasterizer_state_;
 
   scm::gl::sampler_state_ptr                   nearest_sampler_state_;
+
 
   scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
   scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
@@ -142,7 +144,7 @@ private:
   std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
 
   std::vector<ShaderProgramStage>                                      forward_colored_triangles_shader_stages_;
-
+  std::vector<ShaderProgramStage>                                      forward_textured_triangles_shader_stages_;
   //additional GPU resources 
   //std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
   std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
@@ -150,6 +152,7 @@ private:
   std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 
   std::shared_ptr<ShaderProgram>                                       forward_colored_triangles_pass_program_;
+  std::shared_ptr<ShaderProgram>                                       forward_textured_triangles_pass_program_;
 
 
   std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
