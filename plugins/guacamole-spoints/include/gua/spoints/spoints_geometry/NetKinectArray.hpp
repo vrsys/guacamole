@@ -104,6 +104,10 @@ private:
   std::vector<uint8_t> m_buffer_;
   std::vector<uint8_t> m_buffer_back_;
 
+  std::vector<uint8_t> m_texture_buffer_;
+  std::vector<uint8_t> m_texture_buffer_back_;
+
+
   float m_voxel_size_ = 0.0;
   float m_voxel_size_back_ = 0.0;
 
@@ -143,6 +147,8 @@ private:
 
   unsigned int remote_server_screen_width_to_return_  = 800;
   unsigned int remote_server_screen_height_to_return_ = 800;
+
+  scm::gl::sampler_state_ptr                   linear_sampler_state_;
 /*
   std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
   camera_group_to_uuid_to_matrix_package_list;
@@ -158,6 +164,8 @@ private:
 
   mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
+  mutable std::unordered_map<std::size_t, scm::gl::texture_2d_ptr  > texture_atlas_per_context_;
+
 
   uint32_t m_received_vertex_colored_points_ = 0.0;
   uint32_t m_received_vertex_colored_points_back_ = 0.0;
@@ -166,6 +174,8 @@ private:
   uint32_t m_received_textured_tris_ = 0.0;
   uint32_t m_received_textured_tris_back_ = 0.0;
 
+  uint32_t m_texture_payload_size_in_byte_      = 0;
+  uint32_t m_texture_payload_size_in_byte_back_ = 0;
   mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
   mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
   mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;
@@ -173,6 +183,9 @@ private:
   mutable std::unordered_map<std::size_t, bool> is_vbo_created_per_context_;// = false;
 
   mutable std::unordered_map<std::size_t, std::size_t> encountered_frame_counts_per_context_;// = false;
+
+
+
 };
 
 

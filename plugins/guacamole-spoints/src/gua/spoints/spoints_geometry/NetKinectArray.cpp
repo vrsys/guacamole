@@ -72,7 +72,7 @@ NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx)
 
     size_t const& current_num_tri_vertices_to_draw = num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
     
-    std::cout << "ABOUT TO DRAW NUM VERTICES: " << current_num_tri_vertices_to_draw << "\n";
+    //std::cout << "ABOUT TO DRAW NUM VERTICES: " << current_num_tri_vertices_to_draw << "\n";
 
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
                                     vertex_offset,
@@ -88,9 +88,21 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx) {
   auto const& current_point_layout = point_layout_per_context_[ctx.id];
 
   if( current_point_layout != nullptr ) {
+
+    auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+
     scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
     ctx.render_context->bind_vertex_array(current_point_layout);
+    
+
+    if( nullptr == linear_sampler_state_ ) {
+      linear_sampler_state_ = ctx.render_device
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+    }
+
+    ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
+
     ctx.render_context->apply();
     
     size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id]
@@ -134,13 +146,14 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
     if(m_need_cpu_swap_.load()){
       //start of synchro point
       m_buffer_.swap(m_buffer_back_);
+      m_texture_buffer_.swap(m_texture_buffer_back_);
       //std::swap(m_voxel_size_, m_voxel_size_back_);
 
       std::swap(m_received_vertex_colored_points_back_, m_received_vertex_colored_points_);
       std::swap(m_received_vertex_colored_tris_back_, m_received_vertex_colored_tris_);
       std::swap(m_received_textured_tris_back_, m_received_textured_tris_);
 
-
+      std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
 
       //end of synchro point
       m_need_cpu_swap_.store(false);
@@ -169,10 +182,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
         auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
+        auto& current_texture_atlas = texture_atlas_per_context_[ctx.id];
         if(!current_is_vbo_created) {
           //std::cout << "CREATED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
           current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer_[0]);
-
+          current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(2048, 2048), scm::gl::FORMAT_RGB_8, 1, 1, 1);
 
         } else {
           in_out_bb = gua::math::BoundingBox<scm::math::vec3d>();
@@ -195,6 +209,23 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           remote_server_screen_height_to_return_ = remote_server_screen_height_;
 
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
+
+
+          uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
+
+          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / 2048) > 0) ?  2048 : total_num_pixels_to_upload;
+          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / 2048 == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/2048;
+
+
+          //uint32_t num_pixels_covered_
+
+          //update texture atlas
+          
+          auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
+
+
+          ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);
+          //current_texture_atlas->image_sub_data(*ctx.render_device->main_context(), region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);// = ctx.render_device->create_texture_2d(scm::math::vec2ui(2048, 2048), scm::gl::FORMAT_RGB_8, 1, 1, 1);
         }
 
         if(!current_is_vbo_created) {
@@ -275,7 +306,7 @@ void NetKinectArray::readloop() {
     //                                40 byte 
     // m_voxel_size                -> 4 byte
 
-    std::cout << "ABOUT TO READ: " << m_received_vertex_colored_points_back_ << "\n";
+   // std::cout << "ABOUT TO READ: " << m_received_vertex_colored_points_back_ << "\n";
 
     size_t header_data_offset = 0;
     memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[header_data_offset], sizeof(size_t) );
@@ -291,6 +322,11 @@ void NetKinectArray::readloop() {
     header_data_offset +=  sizeof(uint32_t);
     memcpy((unsigned char*) &m_received_textured_tris_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
     header_data_offset +=  sizeof(uint32_t);
+
+    memcpy((unsigned char*) &m_texture_payload_size_in_byte_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
+    header_data_offset +=  sizeof(uint32_t);
+
+
 /*
     memcpy((char*) &remote_server_screen_width_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);
@@ -300,9 +336,9 @@ void NetKinectArray::readloop() {
     memcpy((char*) &m_voxel_size_back_, (char*)&header_data[header_data_offset], sizeof(float));
     header_data_offset += sizeof(float);
   */  
-    std::cout << "NUM COL POINTS RECEIVED: " << m_received_vertex_colored_points_back_ << "\n";
-    std::cout << "NUM COL TRIS RECEIVED: " << m_received_vertex_colored_tris_back_ << "\n";
-    std::cout << "NUM TEXTURED TRIS RECEIVED: " << m_received_textured_tris_back_ << "\n";
+    //std::cout << "NUM COL POINTS RECEIVED: " << m_received_vertex_colored_points_back_ << "\n";
+    //std::cout << "NUM COL TRIS RECEIVED: " << m_received_vertex_colored_tris_back_ << "\n";
+    //std::cout << "NUM TEXTURED TRIS RECEIVED: " << m_received_textured_tris_back_ << "\n";
 
     size_t total_num_received_primitives = m_received_vertex_colored_points_back_ + m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_;
 
@@ -321,7 +357,9 @@ void NetKinectArray::readloop() {
 
     memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size, total_payload_byte_size);
 
-    std::cout << "COPYIING NUM BYTES TO BUFFER: " << total_payload_byte_size << "\n";
+    m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
+    memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+    //std::cout << "COPYIING NUM BYTES TO BUFFER: " << total_payload_byte_size << "\n";
   
     { // swap
       std::lock_guard<std::mutex> lock(m_mutex_);
