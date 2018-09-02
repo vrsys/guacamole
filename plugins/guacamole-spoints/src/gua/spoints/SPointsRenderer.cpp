@@ -819,10 +819,14 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
         scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+        scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
 
         spoints::matrix_package current_package;
-        memcpy((char*) &current_package, (char*) mv_matrix.data_array, 16 * sizeof(float) );
-        memcpy( ((char*) &current_package) +  16 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
+
+        memcpy((char*) &current_package, (char*) model_matrix.data_array, 16 * sizeof(float) );      
+        memcpy((char*) &current_package + 16 * sizeof(float), (char*) viewprojection_matrix.data_array, 16 * sizeof(float) );        
+        memcpy((char*) &current_package + 32 * sizeof(float), (char*) mv_matrix.data_array, 16 * sizeof(float) );
+        memcpy( ((char*) &current_package) +  48 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
         
 
 
@@ -1099,7 +1103,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-          spoints_resource->draw_textured_triangle_soup(ctx);
+          spoints_resource->draw_textured_triangle_soup(ctx, forward_textured_triangles_pass_program_);
         }
        
          forward_textured_triangles_pass_program_->unuse(ctx);

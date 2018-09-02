@@ -23,6 +23,8 @@ layout(binding=0) uniform sampler2D color_texture_atlas;
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
+
+uniform int texture_space_triangle_size;
 void main() {
 
   gua_color = vec3(0.0, 0.0, 0.0);//pass_color;
@@ -39,7 +41,6 @@ void main() {
 
   vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, gl_FragCoord.z, 1.0);
   gua_world_position = world_pos_h.xyz/world_pos_h.w;
-
 
 
   submit_fragment( gl_FragCoord.z );

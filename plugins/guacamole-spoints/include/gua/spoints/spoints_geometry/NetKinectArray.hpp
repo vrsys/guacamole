@@ -2,6 +2,8 @@
 #define SPOINTS_NETKINECTARRAY_HPP
 
 #include <gua/renderer/RenderContext.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+
 #include <gua/math/BoundingBox.hpp>
 #include <gua/math/math.hpp>
 
@@ -22,6 +24,8 @@ struct key_package {
 };
 
 struct matrix_package {
+  float model_matrix[16];
+  float viewprojection_matrix[16];
   float modelview_matrix[16];
   float projection_matrix[16];
   uint32_t res_xy[2];
@@ -78,7 +82,7 @@ public:
 
   void draw_vertex_colored_points(gua::RenderContext const& ctx);
   void draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx);
-  void draw_textured_triangle_soup(gua::RenderContext const& ctx);
+  void draw_textured_triangle_soup(gua::RenderContext const& ctx,  std::shared_ptr<gua::ShaderProgram>& shader_program);
   bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
   void update_feedback(gua::RenderContext const& ctx);
 
@@ -173,6 +177,9 @@ private:
   uint32_t m_received_vertex_colored_tris_back_ = 0.0;
   uint32_t m_received_textured_tris_ = 0.0;
   uint32_t m_received_textured_tris_back_ = 0.0;
+
+  int32_t m_triangle_texture_atlas_size_ = 0.0;
+  int32_t m_triangle_texture_atlas_size_back_ = 0.0;
 
   uint32_t m_texture_payload_size_in_byte_      = 0;
   uint32_t m_texture_payload_size_in_byte_back_ = 0;

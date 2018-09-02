@@ -10,6 +10,8 @@
 
 namespace spoints {
 
+#define ONE_D_TEXTURE_ATLAS_SIZE 1024
+
 NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
   : m_mutex_(),
@@ -83,7 +85,7 @@ NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx)
 }
 
 void 
-NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx) {
+NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
 
   auto const& current_point_layout = point_layout_per_context_[ctx.id];
 
@@ -102,6 +104,8 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx) {
     }
 
     ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
+
+    shader_program->set_uniform(ctx, int(m_triangle_texture_atlas_size_), "texture_space_triangle_size");
 
     ctx.render_context->apply();
     
@@ -154,7 +158,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_received_textured_tris_back_, m_received_textured_tris_);
 
       std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
-
+      std::swap(m_triangle_texture_atlas_size_back_, m_triangle_texture_atlas_size_);
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
@@ -186,7 +190,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         if(!current_is_vbo_created) {
           //std::cout << "CREATED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
           current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer_[0]);
-          current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(2048, 2048), scm::gl::FORMAT_RGB_8, 1, 1, 1);
+          current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_BGR_8, 1, 1, 1);
 
         } else {
           in_out_bb = gua::math::BoundingBox<scm::math::vec3d>();
@@ -213,8 +217,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
           uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
 
-          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / 2048) > 0) ?  2048 : total_num_pixels_to_upload;
-          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / 2048 == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/2048;
+          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / ONE_D_TEXTURE_ATLAS_SIZE) > 0) ?  ONE_D_TEXTURE_ATLAS_SIZE : total_num_pixels_to_upload;
+          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / ONE_D_TEXTURE_ATLAS_SIZE == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/ONE_D_TEXTURE_ATLAS_SIZE;
 
 
           //uint32_t num_pixels_covered_
@@ -224,8 +228,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
 
 
-          ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);
-          //current_texture_atlas->image_sub_data(*ctx.render_device->main_context(), region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);// = ctx.render_device->create_texture_2d(scm::math::vec2ui(2048, 2048), scm::gl::FORMAT_RGB_8, 1, 1, 1);
+          ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
+          //current_texture_atlas->image_sub_data(*ctx.render_device->main_context(), region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);// = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_RGB_8, 1, 1, 1);
         }
 
         if(!current_is_vbo_created) {
@@ -252,6 +256,10 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         }
 
 
+      } else {
+        num_vertex_colored_points_to_draw_per_context_[ctx.id] = 0;
+        num_vertex_colored_tris_to_draw_per_context_[ctx.id]   = 0;
+        num_textured_tris_to_draw_per_context_[ctx.id]         = 0;
       }
       
       m_need_gpu_swap_[ctx.id].store(false);
@@ -326,7 +334,8 @@ void NetKinectArray::readloop() {
     memcpy((unsigned char*) &m_texture_payload_size_in_byte_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
     header_data_offset +=  sizeof(uint32_t);
 
-
+    memcpy((unsigned char*) &m_triangle_texture_atlas_size_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
+    header_data_offset +=  sizeof(uint32_t);
 /*
     memcpy((char*) &remote_server_screen_width_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);
