@@ -42,6 +42,9 @@ const uvec2 uv_shift_vec = uvec2(12u, 0u);
 // main
 ///////////////////////////////////////////////////////////////////////////////
 
+#define ONE_D_TEXTURE_ATLAS_SIZE 1024
+
+uniform int texture_space_triangle_size;
 
 void main() {
   uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
@@ -50,8 +53,126 @@ void main() {
 
 
 
-  vec2 decoded_uvs =  (vec2(uvec2(pos_14_13_13qz_col_8_8_8qz.yy & uv_mask_vec ) >> uv_shift_vec) + vec2(0.5)) / vec2(2048);
+
+
+
+
+
+
+
+
+
+  // reserve unique id for the new face
+  uint triangle_write_index = gl_VertexID / 3;
+
+
+  uint triangle_vertex_base_offset = 3 * triangle_write_index;
+
+
+
+
+    uvec2 texture_atlas_size = uvec2(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE);
+    uvec2 triangle_size_in_pixel = uvec2(texture_space_triangle_size, texture_space_triangle_size);
+
+    uvec2 num_quads_per_axis = (texture_atlas_size / uvec2(triangle_size_in_pixel.x + 1, triangle_size_in_pixel.y) ) ;
+
+    // two consecutive indices should be pinned to the same position with two of its corners. the third corner needs to be flipped
+    // therefore the quad index is the same for two consecutie triangles
+    uint one_d_quad_index = triangle_write_index / 2;
+
+    uvec2 two_d_quad_index = uvec2(one_d_quad_index % num_quads_per_axis.x, one_d_quad_index / num_quads_per_axis.x );
+
+    //uvec2 tri_first_corner_row_col_quad_pos = uvec2(one_d_quad_index % (num_quads_per_axis.x * 2), one_d_quad_index / num_quads_per_axis.x );
+
+    //uvec2 triangle_corner_bias = uvec2(0, 0) * ((first_corner_row_col_quad_pos)); 
+    //uvec2 first_corner_offset  = uvec2(1, 1) * (triangle_write_index % 2);
+
+    uvec2 rasterization_offset = uvec2(1, 1);//first_corner_row_col_quad_pos;// + (triangle_write_index % 2);
+/*
+    vec2 uv_coords_uncompressed[3] = vec2[3](vec2( (first_corner_row_col_quad_pos + first_corner_offset ) * triangle_size_in_pixel + vec2(0.5, 0.5)) / vec2(texture_atlas_size),
+                                             vec2( (first_corner_row_col_quad_pos +   uvec2(1, 0) )       * triangle_size_in_pixel + vec2(0.5, 0.5)) / vec2(texture_atlas_size),
+                                             vec2( (first_corner_row_col_quad_pos +   uvec2(0, 1) )       * triangle_size_in_pixel + vec2(0.5, 0.5)) / vec2(texture_atlas_size)
+                                            );
+*/
+    uvec2 integer_uv_coords_uncompressed;
+/*
+     = uvec2[3]( (first_corner_row_col_quad_pos + first_corner_offset)  * (triangle_size_in_pixel ) + triangle_write_index * uvec2(5, 0),
+                                                        (first_corner_row_col_quad_pos +   uvec2(1, 0)      )  * (triangle_size_in_pixel  )  + triangle_write_index * uvec2(5, 0),// + triangle_write_index * uvec2(-1, 0),// * uvec2(0, -1), //+ triangle_write_index, // + first_corner_offset * rasterization_offset,
+                                                        (first_corner_row_col_quad_pos +   uvec2(0, 1)      )  * (triangle_size_in_pixel  ) + triangle_write_index * uvec2(5, 0)// + triangle_write_index// * uvec2(1, 0)//+ triangle_write_index // + first_corner_offset * rasterization_offset 
+                                                      );
+*/
+
+    bool is_even_triangle_index = ( 0 == triangle_write_index % 2 );
+
+
+
+/*
+    uint quad_pos_y_low = two_d_quad_index.y * triangle_size_in_pixel.y;
+    uint quad_pos_y_high = quad_pos_y_low + triangle_size_in_pixel.y - 1;
+
+    uint quad_pos_x_low_even = two_d_quad_index.x * (triangle_size_in_pixel.x + 1);
+    uint quad_pos_x_low_odd = quad_pos_x_low_even + 1;
+
+    uint quad_pos_x_high_even = quad_pos_x_low_even + triangle_size_in_pixel.x - 1;
+    uint quad_pos_x_high_odd = quad_pos_x_low_odd + triangle_size_in_pixel.x - 1;
+
+    if(is_even_triangle_index) {
+      if(gl_VertexID % 3 == 0) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_low_even, quad_pos_y_low);
+      }
+      else if(gl_VertexID % 3 == 1) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_high_even, quad_pos_y_low);
+      }
+      else if(gl_VertexID % 3 == 2) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_low_even, quad_pos_y_high);
+      } 
+    } else {
+      if(gl_VertexID % 3 == 0) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_high_odd, quad_pos_y_high);
+      } else if(gl_VertexID % 3 == 1) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_high_odd, quad_pos_y_low);
+      } else if(gl_VertexID % 3 == 2) {
+        integer_uv_coords_uncompressed = uvec2(quad_pos_x_low_odd,  quad_pos_y_high);
+      }
+    }
+
+
+
+  pass_uvs = (integer_uv_coords_uncompressed + vec2(0.5) ) / vec2(ONE_D_TEXTURE_ATLAS_SIZE);
+
+*/
+
+    vec2 uv_shift = vec2(0.5);
+    if(is_even_triangle_index) {
+    /*/  if(0 == gl_VertexID%3)  {
+        uv_shift = vec2(0.5, -0.5);
+      }*/
+      if(1 == gl_VertexID % 3)  {
+        //uv_shift = vec2(-1.0, 0.0);
+      }
+      if(2 == gl_VertexID%3)  {
+        //uv_shift = vec2(0.0, 1.0);
+      }  
+    } else {
+    /*  
+      if(0 == gl_VertexID%3)  {
+        uv_shift = vec2(-0.5, 0.5);
+      }
+      
+      if(1 == gl_VertexID%3)  {
+        uv_shift = vec2(-0.5, -1.0);
+      }
+      if(2 == gl_VertexID%3)  {
+        uv_shift = vec2(1.0, 0.5);
+      } */
+    }
+
+ vec2 decoded_uvs =  (vec2(uvec2(pos_14_13_13qz_col_8_8_8qz.yy & uv_mask_vec ) >> uv_shift_vec) ) / vec2(ONE_D_TEXTURE_ATLAS_SIZE) 
+                       + (uv_shift / vec2(ONE_D_TEXTURE_ATLAS_SIZE)) ;
   
+
+
+
   pass_uvs = decoded_uvs;
 
   //vec3 decoded_color = vec3( (pos_14_13_13qz_col_8_8_8qz.yyy & color_mask_vector) >> color_shift_vector)/255.0f;
