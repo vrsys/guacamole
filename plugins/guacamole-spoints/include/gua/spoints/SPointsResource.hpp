@@ -86,6 +86,18 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   float get_voxel_size() const;
 
+  spoints::SPointsStats get_latest_spoints_stats() const {  
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+    if(spointsdata_) {
+      if(spointsdata_->nka_) {
+        return spointsdata_->nka_->get_latest_spoints_stats();
+      }
+    }
+
+    return spoints::SPointsStats();
+  }
+
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 

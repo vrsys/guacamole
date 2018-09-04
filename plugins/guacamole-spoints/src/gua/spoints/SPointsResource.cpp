@@ -91,6 +91,7 @@ SPointsResource::get_voxel_size() const {
   return 0.0;
 }
 
+
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";

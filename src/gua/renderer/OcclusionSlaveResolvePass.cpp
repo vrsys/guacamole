@@ -404,3 +404,4 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 }
 
 }
+  

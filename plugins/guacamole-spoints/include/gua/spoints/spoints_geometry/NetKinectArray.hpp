@@ -71,7 +71,22 @@ struct camera_matrix_package {
   }
 };
 
+struct SPointsStats {
+  SPointsStats() : m_received_triangles(0),
+                   m_received_timestamp_ms(0.0f),
+                   m_received_reconstruction_time_ms(-1.0f) {}
+ 
+  SPointsStats(uint32_t in_received_tris, 
+               float in_received_timestamp, 
+               float in_received_recon_time) 
+               : m_received_triangles(in_received_tris),
+                 m_received_timestamp_ms(in_received_timestamp),
+                 m_received_reconstruction_time_ms(in_received_recon_time) {}
 
+  uint32_t m_received_triangles = 0;
+  float m_received_timestamp_ms = -1.0f;
+  float m_received_reconstruction_time_ms = 0.0f;
+};
 
 class NetKinectArray{
 
@@ -93,6 +108,20 @@ public:
 
   std::string get_socket_string() const;
   float       get_voxel_size() const;
+
+
+
+
+  SPointsStats get_latest_spoints_stats() {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+
+    return SPointsStats{m_received_vertex_colored_tris_ + m_received_textured_tris_,
+                        m_received_kinect_timestamp_,
+                        m_received_reconstruction_time_
+                        };
+  }
+
+
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
@@ -170,6 +199,7 @@ private:
   mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::texture_2d_ptr  > texture_atlas_per_context_;
 
+  mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
 
   uint32_t m_received_vertex_colored_points_ = 0.0;
   uint32_t m_received_vertex_colored_points_back_ = 0.0;
@@ -177,6 +207,12 @@ private:
   uint32_t m_received_vertex_colored_tris_back_ = 0.0;
   uint32_t m_received_textured_tris_ = 0.0;
   uint32_t m_received_textured_tris_back_ = 0.0;
+
+  float m_received_kinect_timestamp_ = 0.0;
+  float m_received_kinect_timestamp_back_ = 0.0;
+
+  float m_received_reconstruction_time_ = 0.0;
+  float m_received_reconstruction_time_back_ = 0.0;
 
   int32_t m_triangle_texture_atlas_size_ = 0.0;
   int32_t m_triangle_texture_atlas_size_back_ = 0.0;
