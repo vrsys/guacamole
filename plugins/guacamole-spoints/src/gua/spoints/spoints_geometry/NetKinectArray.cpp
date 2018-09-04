@@ -25,12 +25,7 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
     //m_feedback_need_swap_{false},
     m_recv_()
 {
- 
   m_recv_ = std::thread([this]() { readloop(); });
-
-  //m_send_feedback_ = std::thread([this]() {sendfeedbackloop();});
-
-  //std::cout << "CREATED A NETKINECTARRAY!\n";
 }
 
 NetKinectArray::~NetKinectArray()
@@ -71,10 +66,8 @@ NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx)
     ctx.render_context->apply();
     
     size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id];
-
     size_t const& current_num_tri_vertices_to_draw = num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
-    
-    //std::cout << "ABOUT TO DRAW NUM VERTICES: " << current_num_tri_vertices_to_draw << "\n";
+
 
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
                                     vertex_offset,
@@ -156,6 +149,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_received_vertex_colored_points_back_, m_received_vertex_colored_points_);
       std::swap(m_received_vertex_colored_tris_back_, m_received_vertex_colored_tris_);
       std::swap(m_received_textured_tris_back_, m_received_textured_tris_);
+      std::swap(m_received_kinect_timestamp_back_, m_received_kinect_timestamp_);
+      std::swap(m_received_reconstruction_time_back_, m_received_reconstruction_time_);
 
       std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
       std::swap(m_triangle_texture_atlas_size_back_, m_triangle_texture_atlas_size_);
@@ -187,33 +182,25 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
         auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
         auto& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+
+
+
         if(!current_is_vbo_created) {
-          //std::cout << "CREATED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
-          current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_bytes_to_copy, &m_buffer_[0]);
+          size_t initial_vbo_size = 10000000;
+
+          current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STREAM_DRAW, initial_vbo_size, 0);
           current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+        }
 
-        } else {
-          in_out_bb = gua::math::BoundingBox<scm::math::vec3d>();
-
-          //std::cout << "RESIZED BUFFER WITH NUM BYTES: " << total_num_bytes_to_copy << "\n";
-          ctx.render_device->resize_buffer(current_net_data_vbo, total_num_bytes_to_copy);
-
-          //size_t total_num_points_in_buffer = total_num_bytes_to_copy / sizeof_point;
           float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
           memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
-          //do not set bounding box to avoid culling problems during scene graph serialization
-/*
-          for(size_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
-            in_out_bb.min[dim_idx] = latest_received_bb_min[dim_idx];
-            in_out_bb.max[dim_idx] = latest_received_bb_max[dim_idx];
-          }
-*/
+
 
           remote_server_screen_width_to_return_ = remote_server_screen_width_;
           remote_server_screen_height_to_return_ = remote_server_screen_height_;
 
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
-
+          
 
           uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
 
@@ -221,28 +208,12 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / ONE_D_TEXTURE_ATLAS_SIZE == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/ONE_D_TEXTURE_ATLAS_SIZE;
 
 
-          //uint32_t num_pixels_covered_
-
-          //update texture atlas
-          
           auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
-
-
           ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
-          //current_texture_atlas->image_sub_data(*ctx.render_device->main_context(), region_to_update, 0, scm::gl::FORMAT_RGB_8, (void*) &m_texture_buffer_[0]);// = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_RGB_8, 1, 1, 1);
-        }
+
 
         if(!current_is_vbo_created) {
           auto& current_point_layout = point_layout_per_context_[ctx.id];
-          /*current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-                                                                      (0, 0, scm::gl::TYPE_VEC4F, sizeof_point),
-                                                                      boost::assign::list_of(current_net_data_vbo));
-          */
-          /*
-          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-                                                                                (0, 0, scm::gl::TYPE_VEC2UI, sizeof_point, scm::gl::INT_PURE),
-                                                                                boost::assign::list_of(current_net_data_vbo));
-          */
 
           
           size_t size_of_vertex = 2 * sizeof(uint32_t);
@@ -273,6 +244,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 float NetKinectArray::get_voxel_size() const {
   return m_voxel_size_;
 }
+
 
 void NetKinectArray::readloop() {
   // open multicast listening connection to server and port
@@ -336,6 +308,15 @@ void NetKinectArray::readloop() {
 
     memcpy((unsigned char*) &m_triangle_texture_atlas_size_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
     header_data_offset +=  sizeof(uint32_t);
+
+    memcpy((unsigned char*) &m_received_kinect_timestamp_back_, (unsigned char*) &header_data[header_data_offset], sizeof(float));
+    header_data_offset +=  sizeof(float);
+    
+    memcpy((unsigned char*) &m_received_reconstruction_time_back_, (unsigned char*) &header_data[header_data_offset], sizeof(float));
+    header_data_offset +=  sizeof(float);
+
+
+
 /*
     memcpy((char*) &remote_server_screen_width_, (char*)&header_data[header_data_offset], sizeof(unsigned));
     header_data_offset += sizeof(unsigned);

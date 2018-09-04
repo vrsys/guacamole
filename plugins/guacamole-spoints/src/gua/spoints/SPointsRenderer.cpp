@@ -426,7 +426,6 @@ void SPointsRenderer::render(Pipeline& pipe,
 
   auto const& ctx(pipe.get_context());
 
-
   int view_id(camera.config.get_view_id());
 
 
