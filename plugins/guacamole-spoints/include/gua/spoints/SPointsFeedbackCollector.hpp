@@ -50,7 +50,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   void push_feedback_matrix(RenderContext const& ctx, std::string const& socket_string, spoints::matrix_package const& pushed_feedback_matrix) {
 
-      std::unique_lock<std::mutex> lock(m_feedback_mutex_);
+      std::lock_guard<std::mutex> lock(m_feedback_mutex_);
 
         auto const& collected_feedback_matrices_for_socket = queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string];
         for (auto const& curr_matrix_package : collected_feedback_matrices_for_socket) {
@@ -59,7 +59,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
           }
         }
         queued_feedback_packages_per_context_per_socket_[ctx.id][socket_string].push_back(pushed_feedback_matrix);
-      
+        queued_new_feedback_for_context_[ctx.id] = true;
 
   }
 
@@ -71,11 +71,15 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
 
 
-    std::unique_lock<std::mutex> lock(m_feedback_mutex_);
+    std::lock_guard<std::mutex> lock(m_feedback_mutex_);
 
-    std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
-    queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
-
+    if(queued_new_feedback_for_context_[ctx.id]) {
+      std::swap(queued_feedback_packages_per_context_per_socket_[ctx.id], finalized_feedback_packages_per_context_per_socket_[ctx.id]);
+      queued_feedback_packages_per_context_per_socket_[ctx.id].clear();
+      queued_new_feedback_for_context_[ctx.id] = false;
+    } else {
+      return;
+    }
     std::map<std::string, std::vector<spoints::matrix_package>> serialized_matrices_per_socket; 
 
     for(auto const& all_feedback_per_socket_per_context : finalized_feedback_packages_per_context_per_socket_) {
@@ -115,12 +119,12 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         for( auto const& matrix_to_potentially_insert : matrix_packages_to_submit ) {
 
           bool already_inside = false;
-          for (auto const& curr_matrix_package_to_compare_to : matrix_collection_vector_for_socket_string) {
-            if (!memcmp ( &matrix_to_potentially_insert, &curr_matrix_package_to_compare_to, sizeof(curr_matrix_package_to_compare_to) ) ) {
-              already_inside = true;
-              break;
-            }
-          }
+          //for (auto const& curr_matrix_package_to_compare_to : matrix_collection_vector_for_socket_string) {
+          //  if (!memcmp ( &matrix_to_potentially_insert, &curr_matrix_package_to_compare_to, sizeof(curr_matrix_package_to_compare_to) ) ) {
+          //    already_inside = true;
+          //    break;
+          //  }
+         // }
 
           if(!already_inside) {
             matrix_collection_vector_for_socket_string.push_back(matrix_to_potentially_insert);
@@ -174,6 +178,9 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   std::map<size_t, 
   std::map<std::string, std::vector<spoints::matrix_package>>>                 queued_feedback_packages_per_context_per_socket_;
+
+  std::map<size_t, bool>                                                       queued_new_feedback_for_context_;
+
 
   bool                                                                         m_is_server_ = false;
 

@@ -36,7 +36,8 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
-  : PipelinePassDescription(),
+  : 
+    PipelinePassDescription(),
     last_rendered_view_id(std::numeric_limits<int>::max()),
     last_rendered_side(0),
     gbuffer_extraction_resolution_(scm::math::vec2ui{100, 100}),
@@ -63,7 +64,7 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
 
 void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const {
 
-
+/*
   auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
   //std::cout << "Writing depth buffer to: " << depth_buffer_shared_memory_name << "\n";
 
@@ -81,6 +82,7 @@ void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContex
   memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_FEEDBACK_SEMAPHOR");
   memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_FEEDBACK_SEMAPHOR", 2);
   std::cout << "Would signal now!\n";
+  */
 }
 
 
@@ -376,28 +378,28 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
 
-    
-
-
 
     std::cout << "\n";
     //std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
 
-    std::string depth_buffer_object = "DB_" + camera_uuid_string;
+    std::string const depth_buffer_object = "DB_" + camera_uuid_string;
 
     std::cout << "DEPTH BUFFER OBJECT: " << depth_buffer_object << "\n";
 
-    std::string memory_segment_label_prefix = "segment_for_" + depth_buffer_object;
+    std::string const memory_segment_label_prefix = "segment_for_" + depth_buffer_object;
 
 
     auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
-    memory_controller->add_memory_segment(memory_segment_label_prefix, gua::MemAllocSizes::KB64*2);
-    memory_controller
-      ->construct_named_object_on_segment<std::array<char, 
-                                          gua::MemAllocSizes::KB64> >
-                                            (memory_segment_label_prefix, 
-                                             depth_buffer_object);
+    
+    std::cout << "Before trying to lock the mutex\n";
+    memory_controller->lock_read_write();
+    std::cout << "After aquiring the mutex lock\n";
+    memory_controller->add_read_only_memory_segment(memory_segment_label_prefix);
+    memory_controller->register_remotely_constructed_object_on_segment(memory_segment_label_prefix, depth_buffer_object);
+
     memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64> >(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
+    memory_controller->unlock_read_write();
+    std::cout << "After unlocking the mutex\n";
   };
 
   return pass;

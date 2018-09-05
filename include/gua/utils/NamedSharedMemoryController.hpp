@@ -50,6 +50,16 @@ namespace gua
 
   public:
 
+    void lock_read_write() {
+      while(mMemoryAccessMutex.try_lock()) {
+
+      };
+    }
+
+    void unlock_read_write() {
+      mMemoryAccessMutex.unlock();
+    }
+
     bool check_memory_segment_exists(std::string const& segment_name) const;
 
     void add_memory_segment(std::string const& segment_name, uint64_t size_in_byte, bool enable_warning = false);
@@ -115,6 +125,9 @@ namespace gua
     friend class SharedPtrSingleton<NamedSharedMemoryController>;
 
   private:
+
+    std::mutex mMemoryAccessMutex;
+
     // maps segment name to actual segment
     std::map<std::string, std::shared_ptr<NamedSharedMemorySegment> > mNamedMemorySegments;
     

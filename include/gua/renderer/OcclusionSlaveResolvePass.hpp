@@ -58,7 +58,6 @@ class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescript
   scm::math::vec2ui gbuffer_extraction_resolution_;
 
 
-
   std::vector<ShaderProgramStage>                    control_monitor_shader_stages_;
   std::shared_ptr<ShaderProgram>                     control_monitor_shader_program_;
 
