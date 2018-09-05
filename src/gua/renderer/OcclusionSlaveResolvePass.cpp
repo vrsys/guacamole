@@ -365,7 +365,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
         last_rendered_side = (last_rendered_side + 1)%2;
         is_left_cam = (last_rendered_side == 0) ? true : false;
       } 
-      std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
+      //std::cout << "Camera ID: " << camera.config.view_id() << (is_left_cam ? "L" : "R")<< "\n";
 
       camera_uuid_string = std::to_string(camera.config.view_id()) + (is_left_cam ? "L" : "R");
     } else {
@@ -379,27 +379,27 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
 
 
-    std::cout << "\n";
+    //std::cout << "\n";
     //std::cout << "Going to write: " << to_write.size() * 4 << " bytes\n";
 
     std::string const depth_buffer_object = "DB_" + camera_uuid_string;
 
-    std::cout << "DEPTH BUFFER OBJECT: " << depth_buffer_object << "\n";
+    //std::cout << "DEPTH BUFFER OBJECT: " << depth_buffer_object << "\n";
 
     std::string const memory_segment_label_prefix = "segment_for_" + depth_buffer_object;
 
 
     auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
     
-    std::cout << "Before trying to lock the mutex\n";
+    //std::cout << "Before trying to lock the mutex\n";
     memory_controller->lock_read_write();
-    std::cout << "After aquiring the mutex lock\n";
-    memory_controller->add_read_only_memory_segment(memory_segment_label_prefix);
+    //std::cout << "After aquiring the mutex lock\n";
+    memory_controller->add_read_only_memory_segment(memory_segment_label_prefix, false);
     memory_controller->register_remotely_constructed_object_on_segment(memory_segment_label_prefix, depth_buffer_object);
 
     memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64> >(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
     memory_controller->unlock_read_write();
-    std::cout << "After unlocking the mutex\n";
+    //std::cout << "After unlocking the mutex\n";
   };
 
   return pass;

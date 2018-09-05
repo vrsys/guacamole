@@ -21,15 +21,15 @@ layout(location=0) out vec3 gua_out_color;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
-
-
+float linearize_depth(float in_depth) {
+  return (2.0 * gua_clip_near) / (gua_clip_far + gua_clip_near - in_depth * (gua_clip_far - gua_clip_near));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
   float retrieved_depth = texture(downsampled_depth_buffer, gua_quad_coords).r;
 
-  gua_out_color = vec3(pow(retrieved_depth,10));
+  gua_out_color = vec3(linearize_depth(retrieved_depth));
   //gua_out_color = vec3(1.0, 0.0, 0.0);
 }
 
