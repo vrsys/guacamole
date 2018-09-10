@@ -30,6 +30,12 @@
 #include <unordered_set>
 #include <memory>
 
+namespace lamure {
+namespace prov {
+  class aux;
+}
+}
+
 namespace gua {
 
 
@@ -41,11 +47,20 @@ class GUA_LOD_DLL Aux {
 
 public:
 
+  void load_aux_file(std::string const& filename);
+
   void test_wrapping() const;
+
+  const std::string   get_filename() const;
+
+  const uint32_t      get_num_views() const;
+  const uint64_t      get_num_sparse_points() const;
+  const uint32_t      get_num_atlas_tiles() const;
 
 private: // methods
 
 private: // member
+  std::shared_ptr<lamure::prov::aux> _aux;
 
 };
 
