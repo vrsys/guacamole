@@ -40,16 +40,32 @@ namespace gua {
 
 
 Aux::Aux() {
-
-
+  _aux = std::make_shared<lamure::prov::aux>();
 }
 
 void Aux::test_wrapping() const {
-  //TODO:call original
-  lamure::prov::aux aux("/home/senu8384/Desktop/master-thesis/data/salem.aux");
-  aux.test_wrapping();
-
   std::cout << "The wrapped function in gua has been called!" << std::endl;
+  _aux->test_wrapping();
+  
+}
+
+void Aux::load_aux_file(std::string const& filename) {
+  _aux->load_aux_file(filename);
+}
+
+const std::string Aux::get_filename() const {
+	return _aux->get_filename(); 
+}
+
+const uint32_t Aux::get_num_views() const {
+	return _aux->get_num_views(); 
+}
+
+const uint64_t Aux::get_num_sparse_points() const {
+  return _aux->get_num_sparse_points(); 
+}
+const uint32_t Aux::get_num_atlas_tiles() const { 
+	return _aux->get_num_atlas_tiles(); 
 }
 
 }
