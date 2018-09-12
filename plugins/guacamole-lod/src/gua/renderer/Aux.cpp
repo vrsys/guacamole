@@ -39,6 +39,9 @@
 namespace gua {
 
 
+
+
+
 Aux::Aux() {
   _aux = std::make_shared<lamure::prov::aux>();
 }
@@ -68,5 +71,99 @@ const uint32_t Aux::get_num_atlas_tiles() const {
 	return _aux->get_num_atlas_tiles(); 
 }
 
+
+
+std::shared_ptr<Aux::view> Aux::get_view(uint32_t id) const {
+	const auto& v = _aux->get_view(id);
+
+	Aux::view new_view(
+		v.camera_id_,
+		v.position_,
+		v.transform_, 
+    v.focal_length_, 
+    v.distortion_, 
+    v.image_width_,
+    v.image_height_,
+    v.atlas_tile_id_,
+    v.image_file_
+  );
+
+	return std::make_shared<Aux::view>(new_view);
 }
 
+
+std::shared_ptr<Aux::atlas_tile> Aux::get_atlas_tile(uint32_t id) const {
+	const auto& at = _aux->get_atlas_tile(id);
+
+	Aux::atlas_tile new_atlas_tile(
+		at.atlas_tile_id_, 
+		at.x_, 
+		at.y_, 
+		at.width_, 
+		at.height_
+	);
+
+	return std::make_shared<Aux::atlas_tile>(new_atlas_tile);
+}
+
+
+std::shared_ptr<Aux::sparse_point> Aux::get_sparse_point(uint64_t id) const {
+
+
+	const auto& sp = _aux->get_sparse_point(id);
+	std::vector<Aux::feature> new_features;
+	for(auto const& f: sp.features_){
+    Aux::feature new_feature(
+      f.camera_id_,
+      f.using_count_,
+      f.coords_,
+      f.error_
+    );
+    new_features.push_back(new_feature);
+	}
+	
+	Aux::sparse_point new_sparse_point(
+		sp.pos_,
+	  sp.r_,
+		sp.g_,
+		sp.b_, 
+		sp.a_,
+		new_features
+	);
+
+	return std::make_shared<Aux::sparse_point>(new_sparse_point);
+}
+
+
+
+std::shared_ptr<Aux::atlas> Aux::get_atlas() const {
+	const auto& a = _aux->get_atlas();
+
+	Aux::atlas new_atlas(
+		a.num_atlas_tiles_,
+		a.atlas_width_,
+		a.atlas_height_,
+		a.rotated_
+	);
+
+	return std::make_shared<Aux::atlas>(new_atlas);
+}
+
+}
+
+//moeglichkeit 1 old code  for get_atlas ... not working because no shared_ptr is returned
+// Aux::atlas Aux::get_atlas() const {
+// const Aux::atlas Aux::get_atlas() const {
+// const std::shared_ptr<Aux::atlas> Aux::get_atlas() const {
+	// const auto& a = _aux->get_atlas();
+
+	// Aux::atlas new_atlas(
+	// 	a.num_atlas_tiles_,
+	// 	a.atlas_width_,
+	// 	a.atlas_height_,
+	// 	a.rotated_
+	// );
+
+	// return std::shared_ptr<Aux::atlas>(&new_atlas);
+	// return new_atlas;
+// }
