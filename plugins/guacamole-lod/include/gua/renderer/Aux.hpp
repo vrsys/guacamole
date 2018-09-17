@@ -107,6 +107,14 @@ class GUA_LOD_DLL Aux {
         , a_(a)
         , features_(features)
       {};
+
+      std::shared_ptr<Aux::feature> getFeatureById(uint32_t id){
+        if (id < features_.size() && id >= 0){
+          return std::make_shared<Aux::feature>(features_.at(id));
+        } else {
+          return std::make_shared<Aux::feature>(Aux::feature());
+        }
+      }
     };
 
     struct view {
