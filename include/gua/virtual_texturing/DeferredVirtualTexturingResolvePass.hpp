@@ -19,28 +19,26 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_CONFIG_HPP
-#define GUA_CONFIG_HPP
+#ifndef GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP
+#define GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP
 
-#define GUACAMOLE_MAJOR @GUACAMOLE_MAJOR@
-#define GUACAMOLE_MINOR @GUACAMOLE_MINOR@
-#define GUACAMOLE_PATCH @GUACAMOLE_PATCH@
-#define GUACAMOLE_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@"
-#define GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH "@GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH@"
+#include <gua/renderer/PipelinePass.hpp>
 
-#cmakedefine GUACAMOLE_ENABLE_PHYSICS
-#cmakedefine GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-#cmakedefine GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-#cmakedefine GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+#include <memory>
 
-// NVIDIA 3D VISION currently only with linux hack
-#ifndef WIN32
-  #cmakedefine GUACAMOLE_ENABLE_NVIDIA_3D_VISION
-#endif
+namespace gua {
 
-#cmakedefine GUACAMOLE_GLFW3
-#cmakedefine GUACAMOLE_FBX
+class Pipeline;
 
-#define GUACAMOLE_GLSL_VERSION_STRING "#version 440\n"
+class GUA_DLL DeferredVirtualTexturingPassDescription : public PipelinePassDescription {
+ public:
+  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+  friend class Pipeline;
 
-#endif  // GUA_CONFIG_HPP
+ protected:
+  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+
+};
+}
+
+#endif  // GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP

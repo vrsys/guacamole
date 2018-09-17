@@ -19,28 +19,45 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_CONFIG_HPP
-#define GUA_CONFIG_HPP
+// class header
+#include <gua/virtual_texturing/DeferredVirtualTexturingPassDescription.hpp>
 
-#define GUACAMOLE_MAJOR @GUACAMOLE_MAJOR@
-#define GUACAMOLE_MINOR @GUACAMOLE_MINOR@
-#define GUACAMOLE_PATCH @GUACAMOLE_PATCH@
-#define GUACAMOLE_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@"
-#define GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH "@GUACAMOLE_NVIDIA_3D_VISION_FIRMWARE_PATH@"
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/Resources.hpp>
+#include <gua/utils/Logger.hpp>
 
-#cmakedefine GUACAMOLE_ENABLE_PHYSICS
-#cmakedefine GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-#cmakedefine GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-#cmakedefine GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+#include <boost/variant.hpp>
 
-// NVIDIA 3D VISION currently only with linux hack
-#ifndef WIN32
-  #cmakedefine GUACAMOLE_ENABLE_NVIDIA_3D_VISION
-#endif
+namespace gua {
 
-#cmakedefine GUACAMOLE_GLFW3
-#cmakedefine GUACAMOLE_FBX
+////////////////////////////////////////////////////////////////////////////////
+DeferredVirtualTexturingPassDescription::ResolvePassDescription()
+  : PipelinePassDescription()
+{
+  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+  fragment_shader_ = "shaders/resolve.frag";
+  name_ = "ResolvePass";
+  needs_color_buffer_as_input_ = true;
+  writes_only_color_buffer_ = true;
+  rendermode_ = RenderMode::Quad;
+  depth_stencil_state_ = boost::make_optional(
+    scm::gl::depth_stencil_state_desc(
+      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    )
+  );
 
-#define GUACAMOLE_GLSL_VERSION_STRING "#version 440\n"
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<PipelinePassDescription> DeferredVirtualTexturingPassDescription::make_copy() const {
+  return std::make_shared<ResolvePassDescription>(*this);
+}
 
-#endif  // GUA_CONFIG_HPP
+////////////////////////////////////////////////////////////////////////////////
+PipelinePass DeferredVirtualTexturingPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+  PipelinePass pass{*this, ctx, substitution_map};
+  return pass;
+}
+
+}
