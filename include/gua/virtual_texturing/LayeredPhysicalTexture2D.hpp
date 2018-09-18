@@ -40,7 +40,7 @@
 #include <memory>
 
 namespace gua {
-namespace vt {
+namespace virtual_texturing {
 
 /**
  * A class representing a texture.
@@ -63,7 +63,7 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
               scm::gl::sampler_state_desc const& state_descripton =
               scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                           scm::gl::WRAP_REPEAT,
-                                          scm::gl::WRAP_REPEAT));
+                                          scm::gl::WRAP_REPEAT)) {};
 
 
 
@@ -81,7 +81,7 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   unsigned width() const override { return width_; }
   unsigned height() const override { return height_; }
 
-  void upload_to(RenderContext const& context) const override;
+  void upload_to(RenderContext const& context) const override {};
   void initialize_physical_texture(RenderContext const& ctx) const;
 
   static scm::gl::data_format get_tex_format();

@@ -25,6 +25,9 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
+
+#include <gua/virtual_texturing/DeferredVirtualTexturingPass.hpp>
+
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -59,6 +62,7 @@ void mouse_button(gua::utils::Trackball& trackball,
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
@@ -68,28 +72,19 @@ int main(int argc, char** argv) {
 
   gua::TriMeshLoader loader;
 
-  auto teapot_mat(gua::MaterialShaderDatabase::instance()
-                  ->lookup("gua_default_material")
-                  ->make_new_material());
-
-  teapot_mat->set_render_wireframe(false);
-  teapot_mat->set_show_back_faces(false);
-
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file(
-      "teapot", "data/objects/teapot.obj",
-      teapot_mat,
+  auto plane(loader.create_geometry_from_file(
+      "plane", "data/objects/vive_controller.obj",
       gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE) );
+      gua::TriMeshLoader::NORMALIZE_SCALE |  
+      gua::TriMeshLoader::MAKE_PICKABLE)  );
+  graph.add_node("/transform", plane);
 
-  graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  scm::math::vec3d plane_translation(0.0, 0.0, -3.0);
 
-  auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-  portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-  portal->data.set_texture("portal");
-  portal->translate(0.5f, 0.f, -0.2f);
-  portal->rotate(-30, 0.f, 1.f, 0.f);
+  plane->set_draw_bounding_box(true);
+
+
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
@@ -101,11 +96,6 @@ int main(int argc, char** argv) {
   screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
   screen->translate(0, 0, 1.0);
 
-  auto portal_screen =
-      graph.add_node<gua::node::ScreenNode>("/", "portal_screen");
-  portal_screen->translate(0.0, 0.0, 5.0);
-  portal_screen->rotate(90, 0.0, 1.0, 0.0);
-  portal_screen->data.set_size(gua::math::vec2(1.2f, 0.8f));
 
   // add mouse interaction
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
@@ -113,46 +103,40 @@ int main(int argc, char** argv) {
   // setup rendering pipeline and window
   auto resolution = gua::math::vec2ui(1920, 1080);
 
-  auto portal_camera =
-      graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
-  portal_camera->translate(0, 0, 2.0);
-  portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
-  portal_camera->config.set_screen_path("/portal_screen");
-  portal_camera->config.set_scene_graph_name("main_scenegraph");
-  portal_camera->config.set_output_texture_name("portal");
-  portal_camera->config.set_enable_stereo(false);
-
-  auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-  portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  portal_pipe->add_pass(
-      std::make_shared<gua::LightVisibilityPassDescription>());
-
-  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-  resolve_pass->background_mode(
-      gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-  resolve_pass->tone_mapping_exposure(1.0f);
-
-  portal_pipe->add_pass(resolve_pass);
-  portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
-  portal_camera->set_pipeline_description(portal_pipe);
-
   auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
   camera->translate(0, 0, 2.0);
   camera->config.set_resolution(resolution);
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
+  camera->config.set_output_window_name("Virtual_Texturing_Example");
   camera->config.set_enable_stereo(false);
-  camera->set_pre_render_cameras({portal_camera});
 
-  camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(
-    1.0f);
   camera->get_pipeline_description()->add_pass(
     std::make_shared<gua::DebugViewPassDescription>());
 
+
+  auto pipe = std::make_shared<gua::PipelineDescription>();
+  pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
+  pipe->add_pass(std::make_shared<gua::virtual_texturing::DeferredVirtualTexturingPassDescription>());
+
+  pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+  auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+  resolve_pass->background_mode(
+      gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+  resolve_pass->tone_mapping_exposure(1.0f);
+  pipe->add_pass(resolve_pass);
+
+  camera->set_pipeline_description(pipe);
+
+
+
+
+
+
+
   auto window = std::make_shared<gua::GlfwWindow>();
-  gua::WindowDatabase::instance()->add("main_window", window);
+  gua::WindowDatabase::instance()->add("Virtual_Texturing_Example", window);
 
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
@@ -177,13 +161,15 @@ int main(int argc, char** argv) {
   gua::events::MainLoop loop;
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
+
   ticker.on_tick.connect([&]() {
 
     // apply trackball matrix to object
     gua::math::mat4 modelmatrix =
+        scm::math::make_translation(plane_translation[0], plane_translation[1], plane_translation[2]) * 
         scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
                                     trackball.distance()) *
-        gua::math::mat4(trackball.rotation());
+        gua::math::mat4(trackball.rotation()) * scm::math::make_rotation(90.0, 0.0, 0.0, 1.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0) ;
 
     transform->set_transform(modelmatrix);
 
@@ -192,7 +178,8 @@ int main(int argc, char** argv) {
       window->close();
       loop.stop();
     } else {
-      //renderer.queue_draw({&graph});
+
+      renderer.queue_draw({&graph});
     }
   });
 
