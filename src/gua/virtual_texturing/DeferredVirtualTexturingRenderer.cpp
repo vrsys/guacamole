@@ -152,15 +152,28 @@ namespace virtual_texturing {
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
-    std::cout << "Rendering The VT\n";
-    /*
+   // std::cout << "Rendering The VT\n";
+
+  /*  auto physical_texture = TextureDatabase::instance()->lookup("gua_physical_texture_2d");
+
+    if(physical_texture) {
+      std::cout << "Can work on physical texture\n";
+    } else {
+      std::cout << "Can NOT work on physical texture\n";      
+    }
+*/
+
+//vt_infos
+
+/*
+    
     RenderContext const& ctx(pipe.get_context());
     ctx.render_context->sync();
     apply_cut_update(ctx,0,0);
     collect_feedback(ctx);
     ctx.render_context->sync();
-
-
+*/
+    /*
     if(false) {
    
 

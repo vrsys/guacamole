@@ -49,24 +49,28 @@ class GUA_DLL VirtualTexture2D : public Texture {
  public:
   
   VirtualTexture2D(std::string const& file,
+                   std::size_t physical_texture_tile_slot_size,
                    scm::gl::sampler_state_desc const& state_descripton =
-                   scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                   scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                                scm::gl::WRAP_REPEAT,
-                                               scm::gl::WRAP_REPEAT)) {};
+                                               scm::gl::WRAP_REPEAT));
 
   unsigned width() const override { return width_; }
   unsigned height() const override { return height_; }
 
-  void upload_to(RenderContext const& context) const override {};
+  void upload_to(RenderContext const& context) const override;
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
 
 
  protected:
-  scm::gl::texture_image_data_ptr image_ = nullptr;
+
+  std::vector<scm::gl::texture_2d_ptr> index_texture_hierarchy_;
+
+  //scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned width_;
   unsigned height_;
-  unsigned layers_;
+  //unsigned layers_;
 
  private:
   std::string _file_config;

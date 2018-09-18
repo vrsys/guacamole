@@ -26,6 +26,10 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/InstanceCollection.hpp>
  
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/virtual_texturing/VTInfo.hpp>
+#endif
+
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>
@@ -179,6 +183,9 @@ struct GUA_DLL RenderContext {
   mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr> > texture_2d_arrays;
   mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr> > texture_3d_arrays;
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+//  mutable std::unordered_map<std::size_t, std::shared_ptr<virtual_texturing::VTInfo> > vt_infos;
+#endif
   /**
   * Resources associated with this context
   */
