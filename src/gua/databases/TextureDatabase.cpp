@@ -103,9 +103,12 @@ void TextureDatabase::load(std::string const& filename) {
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
     if(!occurrence_check) {
       instance()->add(filename, std::make_shared<virtual_texturing::VirtualTexture2D>(filename,
+                                                                                      256,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT)));
+
+      std::cout << "Registered " << filename << " as atlas texture\n";
     }
 
     auto existing_vt = TextureDatabase::instance()->lookup(filename);
