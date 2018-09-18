@@ -19,19 +19,22 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP
-#define GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP
+#ifndef GUA_DEFERREDVIRTUALTEXTURINGPASS_HPP
+#define GUA_DEFERREDVIRTUALTEXTURINGPASS_HPP
 
 #include <gua/renderer/PipelinePass.hpp>
 
 #include <memory>
 
 namespace gua {
+namespace vt {
 
 class Pipeline;
 
 class GUA_DLL DeferredVirtualTexturingPassDescription : public PipelinePassDescription {
  public:
+  DeferredVirtualTexturingPassDescription();
+
   std::shared_ptr<PipelinePassDescription> make_copy() const override;
   friend class Pipeline;
 
@@ -39,6 +42,8 @@ class GUA_DLL DeferredVirtualTexturingPassDescription : public PipelinePassDescr
   PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
 };
+
+}
 }
 
-#endif  // GUA_DEFERRED_VIRTUAL_TEXTURING_PASS_HPP
+#endif  // GUA_DEFERREDVIRTUALTEXTURINGPASS_HPP

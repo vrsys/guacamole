@@ -126,8 +126,8 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
   math::vec2ui viewport_size(depth_cube_map->get_viewport_size());
 
   auto orig_scene(pipe.current_viewstate().scene);
-  auto orig_shadow_mode(pipe.current_viewstate().shadow_mode);
-  auto orig_viewpoint_uuid(pipe.current_viewstate().viewpoint_uuid);
+  //auto orig_shadow_mode(pipe.current_viewstate().shadow_mode);
+  //auto orig_viewpoint_uuid(pipe.current_viewstate().viewpoint_uuid);
 
   // calculate screen transforms
   math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));

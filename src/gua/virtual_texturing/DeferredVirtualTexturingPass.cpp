@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/virtual_texturing/DeferredVirtualTexturingPassDescription.hpp>
+#include <gua/virtual_texturing/DeferredVirtualTexturingPass.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -30,14 +30,15 @@
 #include <boost/variant.hpp>
 
 namespace gua {
+namespace vt {
 
 ////////////////////////////////////////////////////////////////////////////////
-DeferredVirtualTexturingPassDescription::ResolvePassDescription()
+DeferredVirtualTexturingPassDescription::DeferredVirtualTexturingPassDescription()
   : PipelinePassDescription()
 {
   vertex_shader_ = "shaders/common/fullscreen_quad.vert";
   fragment_shader_ = "shaders/resolve.frag";
-  name_ = "ResolvePass";
+  name_ = "DeferredVirtualTexturingPass";
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
   rendermode_ = RenderMode::Quad;
@@ -47,10 +48,11 @@ DeferredVirtualTexturingPassDescription::ResolvePassDescription()
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<PipelinePassDescription> DeferredVirtualTexturingPassDescription::make_copy() const {
-  return std::make_shared<ResolvePassDescription>(*this);
+  return std::make_shared<DeferredVirtualTexturingPassDescription>(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,4 +62,5 @@ PipelinePass DeferredVirtualTexturingPassDescription::make_pass(RenderContext co
   return pass;
 }
 
+}
 }
