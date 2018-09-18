@@ -41,7 +41,7 @@
 
 
 namespace gua {
-namespace vt {
+namespace virtual_texturing {
   class MaterialShader;
   class ShaderProgram;
   //class plod_shared_resources;
@@ -50,8 +50,9 @@ namespace vt {
  
   public:
 
-    DeferredVirtualTexturingRenderer();
-    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    DeferredVirtualTexturingRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+    
+    void render(gua::Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap);
     void apply_cut_update(gua::RenderContext const& ctx, uint64_t cut_id, uint16_t ctx_id);
     void update_index_texture(gua::RenderContext const& ctx, uint64_t cut_id, uint32_t dataset_id, uint16_t context_id, const uint8_t *buf_cpu);

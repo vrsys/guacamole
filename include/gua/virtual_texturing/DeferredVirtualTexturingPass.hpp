@@ -27,7 +27,7 @@
 #include <memory>
 
 namespace gua {
-namespace vt {
+namespace virtual_texturing {
 
 class Pipeline;
 

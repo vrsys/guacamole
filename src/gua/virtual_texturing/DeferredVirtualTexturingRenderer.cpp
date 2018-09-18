@@ -66,12 +66,14 @@
 #include <typeinfo>
 
 namespace gua {
-namespace vt {
+namespace virtual_texturing {
 
 
   //////////////////////////////////////////////////////////////////////////////
-  DeferredVirtualTexturingRenderer::DeferredVirtualTexturingRenderer()
+  DeferredVirtualTexturingRenderer::DeferredVirtualTexturingRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
   {
+
+    //::vt::VTConfig::get_instance().define_size_physical_texture(128, 8192);
 
   }
 
@@ -84,65 +86,11 @@ namespace vt {
   void DeferredVirtualTexturingRenderer::set_global_substitution_map(SubstitutionMap const& smap) {}
   
   void DeferredVirtualTexturingRenderer::apply_cut_update(gua::RenderContext const& ctx, uint64_t cut_id, uint16_t ctx_id){
-      auto render_context = ctx.render_context;
-      ::vt::CutDatabase *cut_db = &::vt::CutDatabase::get_instance();
-      cut_db->start_reading();
 
-      for(vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map()))
-      {
-        if(cut_entry.first == 0 ){
-
-          vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
-
-          if(!cut->is_drawn())
-          {
-              cut_db->stop_reading_cut(cut_entry.first);
-              continue;
-          }
-          update_index_texture(ctx, cut_id, vt::Cut::get_dataset_id(cut_entry.first), ctx_id, cut->get_front()->get_index());
-
-          for(auto position_slot_updated : cut->get_front()->get_mem_slots_updated())
-          {
-            const vt::mem_slot_type *mem_slot_updated = &cut_db->get_front()->at(position_slot_updated.second);
-
-            if(mem_slot_updated == nullptr || !mem_slot_updated->updated || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr)
-            {
-                 if(mem_slot_updated == nullptr)
-                 {
-                     std::cerr << "Mem slot at " << position_slot_updated.second << " is null" << std::endl;
-                 }
-                 else
-                 {
-                  if(0 == mem_slot_updated->position) {
-                    std::cout << "Slot 0 was in apply cut update\n";
-                  }
-                  
-                     std::cerr << "Mem slot at " << position_slot_updated.second << std::endl;
-                     std::cerr << "Mem slot #" << mem_slot_updated->position << std::endl;
-                     std::cerr << "Tile id: " << mem_slot_updated->tile_id << std::endl;
-                     std::cerr << "Locked: " << mem_slot_updated->locked << std::endl;
-                     std::cerr << "Updated: " << mem_slot_updated->updated << std::endl;
-                     std::cerr << "Pointer valid: " << (mem_slot_updated->pointer != nullptr) << std::endl;
-                  
-                 }
-                 throw std::runtime_error("updated mem slot inconsistency");
-            } else {
-
-
-              update_physical_texture_blockwise(ctx, ctx_id, mem_slot_updated->pointer, mem_slot_updated->position);
-            }
-
-          }
-          cut_db->stop_reading_cut(cut_entry.first);
-          
-        }
-      }
-        cut_db->stop_reading();
-        render_context->sync();
   }
 
   void DeferredVirtualTexturingRenderer::update_index_texture(gua::RenderContext const& ctx,uint64_t cut_id, uint32_t dataset_id, uint16_t context_id, const uint8_t *buf_cpu) {
-    
+    /*
     uint32_t size_index_texture = (uint32_t)vt::QuadTree::get_tiles_per_row((*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1);
     
     auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
@@ -152,12 +100,13 @@ namespace vt {
       scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
 
       vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
-    }
+    }*/
 
   }
 
   void DeferredVirtualTexturingRenderer::update_physical_texture_blockwise(gua::RenderContext const& ctx, uint16_t context_id, const uint8_t *buf_texel, size_t slot_position) {
 
+  /*
     auto phy_tex_ptr = ctx.physical_texture;
 
     if(phy_tex_ptr == nullptr) {
@@ -176,10 +125,12 @@ namespace vt {
 
       ctx.render_context->update_sub_texture(phy_tex_ptr, scm::gl::texture_region(origin, dimensions), 0, PhysicalTexture2D::get_tex_format(), buf_texel);
     }
-
+    */
   }
 
   void DeferredVirtualTexturingRenderer::collect_feedback(gua::RenderContext const& ctx){
+
+    /*
     using namespace scm::math;
     using namespace scm::gl;
 
@@ -194,13 +145,15 @@ namespace vt {
 
     ctx.render_context->unmap_buffer(ctx.feedback_storage);
     ctx.render_context->clear_buffer_data(ctx.feedback_storage, FORMAT_R_32UI, nullptr);
+    */
   }
 
 
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
-
+    std::cout << "Rendering The VT\n";
+    /*
     RenderContext const& ctx(pipe.get_context());
     ctx.render_context->sync();
     apply_cut_update(ctx,0,0);
@@ -234,6 +187,8 @@ namespace vt {
         //controller->dispatch(controller->deduce_context_id(ctx.id), ctx.render_device);
       }
     }
+
+    */
   }
 
 

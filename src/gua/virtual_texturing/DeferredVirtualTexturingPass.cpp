@@ -21,6 +21,7 @@
 
 // class header
 #include <gua/virtual_texturing/DeferredVirtualTexturingPass.hpp>
+#include <gua/virtual_texturing/DeferredVirtualTexturingRenderer.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
@@ -30,21 +31,24 @@
 #include <boost/variant.hpp>
 
 namespace gua {
-namespace vt {
+namespace virtual_texturing {
 
 ////////////////////////////////////////////////////////////////////////////////
 DeferredVirtualTexturingPassDescription::DeferredVirtualTexturingPassDescription()
   : PipelinePassDescription()
 {
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = "shaders/resolve.frag";
+  vertex_shader_ = ""; // "shaders/tri_mesh_shader.vert";
+  fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
   name_ = "DeferredVirtualTexturingPass";
+
   needs_color_buffer_as_input_ = true;
   writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+  enable_for_shadows_ = false;
+  rendermode_ = RenderMode::Custom;
+
   depth_stencil_state_ = boost::make_optional(
     scm::gl::depth_stencil_state_desc(
-      false, false, scm::gl::COMPARISON_LESS, true, 1, 0,
+      false, false, scm::gl::COMPARISON_ALWAYS, true, 1, 0, 
       scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
     )
   );
@@ -59,6 +63,16 @@ std::shared_ptr<PipelinePassDescription> DeferredVirtualTexturingPassDescription
 PipelinePass DeferredVirtualTexturingPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
   PipelinePass pass{*this, ctx, substitution_map};
+
+  auto renderer = std::make_shared<DeferredVirtualTexturingRenderer>(ctx, substitution_map);
+
+  pass.process_ = [renderer](
+    PipelinePass& pass, PipelinePassDescription const& desc, gua::Pipeline & pipe) {
+
+    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
+    renderer->render(pipe, desc);
+  };
+
   return pass;
 }
 

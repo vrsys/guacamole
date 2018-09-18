@@ -43,6 +43,7 @@
 #include <memory>
 
 namespace gua {
+namespace virtual_texturing {
 
 class GUA_DLL VirtualTexture2D : public Texture {
  public:
@@ -51,12 +52,12 @@ class GUA_DLL VirtualTexture2D : public Texture {
                    scm::gl::sampler_state_desc const& state_descripton =
                    scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
                                                scm::gl::WRAP_REPEAT,
-                                               scm::gl::WRAP_REPEAT));
+                                               scm::gl::WRAP_REPEAT)) {};
 
   unsigned width() const override { return width_; }
   unsigned height() const override { return height_; }
 
-  void upload_to(RenderContext const& context) const override;
+  void upload_to(RenderContext const& context) const override {};
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
 
@@ -76,5 +77,6 @@ class GUA_DLL VirtualTexture2D : public Texture {
   scm::gl::sampler_state_ptr                                                        _filter_linear;
 };  
 
+}
 }
 #endif  // GUA_VIRTUALTEXTURE2D_HPP
