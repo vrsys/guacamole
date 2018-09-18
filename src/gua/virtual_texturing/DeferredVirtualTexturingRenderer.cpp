@@ -53,11 +53,11 @@
 // lamure headers
 
 #include <lamure/vt/VTConfig.h>
-/*
+
 #include <lamure/vt/common.h>
 #include <lamure/vt/ren/CutUpdate.h>
 #include <lamure/vt/ren/CutDatabase.h>
-*/
+
 
 
 
@@ -85,7 +85,7 @@ namespace vt {
   
   void DeferredVirtualTexturingRenderer::apply_cut_update(gua::RenderContext const& ctx, uint64_t cut_id, uint16_t ctx_id){
       auto render_context = ctx.render_context;
-      ::lamure::vt::CutDatabase *cut_db = &::lamure::vt::CutDatabase::get_instance();
+      ::vt::CutDatabase *cut_db = &::vt::CutDatabase::get_instance();
       cut_db->start_reading();
 
       for(vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map()))
