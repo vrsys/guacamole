@@ -57,6 +57,8 @@ namespace gua {
 
   friend class Singleton<TextureDatabase>;
 
+  std::vector<std::shared_ptr<Texture> > get_virtual_textures();
+
  private:
   // this class is a Singleton --- private c'tor and d'tor
   TextureDatabase() = default;

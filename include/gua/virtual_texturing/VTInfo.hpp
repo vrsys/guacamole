@@ -50,9 +50,6 @@ struct GUA_DLL VTInfo {
   uint64_t cut_id_;
   ::vt::CutUpdate *cut_update_;
 
-  std::vector<scm::gl::texture_2d_ptr> index_texture_hierarchy_;
-  scm::gl::texture_2d_ptr physical_texture_;
-
   scm::math::vec2ui physical_texture_size_;
   scm::math::vec2ui physical_texture_tile_size_;
   size_t size_feedback_;
