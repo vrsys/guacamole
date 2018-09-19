@@ -88,11 +88,8 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
 
  protected:
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
   mutable std::unordered_map<std::size_t, VTInfo> vt_infos;
-#endif
 
-  
   scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned width_;
   unsigned height_;
