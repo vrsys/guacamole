@@ -24,6 +24,7 @@
 
 #include <gua/platform.hpp>
 
+#include <unordered_map>
 //#include <lamure/vt/VTConfig.h>
 
 //#include <lamure/vt/common.h>
@@ -35,33 +36,15 @@
 #include <scm/gl_core/texture_objects/texture_2d.h>
 #include <scm/gl_util/data/imaging/texture_image_data.h>
 
-namespace vt {
-  class CutUpdate;
-}
-
 namespace gua {
 
 
 
 struct GUA_DLL VTInfo {
-  uint32_t texture_id_;
-  uint16_t view_id_;
+  //uint32_t texture_id_;
+  std::unordered_map<std::size_t, uint16_t> gua_view_id_to_lamure_view_id_;
   uint16_t context_id_;
-  uint64_t cut_id_;
-  ::vt::CutUpdate *cut_update_;
 
-  scm::math::vec2ui physical_texture_size_;
-  scm::math::vec2ui physical_texture_tile_size_;
-  size_t size_feedback_;
-
-  int32_t  *feedback_lod_cpu_buffer_;
-  uint32_t *feedback_count_cpu_buffer_;
-
-  scm::gl::buffer_ptr feedback_lod_storage_;
-  scm::gl::buffer_ptr feedback_count_storage_;
-
-  int toggle_visualization_;
-  bool enable_hierarchy_;
 };
 
 

@@ -105,13 +105,18 @@ namespace gua {
                                                 scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
     
 
-      screen_space_virtual_texturing_fbo_.reset();
-      
-
       virtually_textured_color_attachment_ = ctx.render_device
         ->create_texture_2d(render_target_dims,
-                            scm::gl::FORMAT_RGBA_8,
+                            scm::gl::FORMAT_RGBA_32F,
                             1, 1, 1);
+
+      screen_space_virtual_texturing_fbo_.reset();
+      
+      screen_space_virtual_texturing_fbo_ = ctx.render_device->create_frame_buffer();
+      screen_space_virtual_texturing_fbo_->clear_attachments();
+
+      screen_space_virtual_texturing_fbo_->attach_color_buffer(0,
+                                                               virtually_textured_color_attachment_);
 
     }
 
@@ -242,13 +247,30 @@ namespace gua {
 
 
 
-
     auto const& camera = pipe.current_viewstate().camera;
     scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
 
 
     _check_shader_programs(ctx);
     _create_gpu_resources(ctx, render_target_dims);
+
+
+    ctx.render_context
+      ->clear_color_buffer(screen_space_virtual_texturing_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+
+    // retrieve uv coordinates 
+    {
+      ctx.render_context->set_frame_buffer(screen_space_virtual_texturing_fbo_);
+      screen_space_virtual_texturing_shader_program_->use(ctx);
+      ctx.render_context->apply();
+
+      fullscreen_quad_->draw(ctx.render_context);
+
+      screen_space_virtual_texturing_shader_program_->unuse(ctx);
+    }
+
+
 
     auto& target = *pipe.current_viewstate().target;
 
