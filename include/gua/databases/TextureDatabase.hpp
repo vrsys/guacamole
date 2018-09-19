@@ -62,9 +62,11 @@ namespace gua {
   TextureDatabase() = default;
   ~TextureDatabase() = default;
 
-  std::vector<std::future<std::string>> textures_loading_;
-  std::mutex                            texture_request_mutex_;
-  std::set<std::string>                 texture_loading_;
+  std::vector<std::future<std::string>>        textures_loading_;
+  std::mutex                                   texture_request_mutex_;
+  std::set<std::string>                        texture_loading_;
+
+  std::unordered_map<std::size_t, std::string> vt_texture_names_;
 
 };
 

@@ -235,7 +235,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
         }
 
         float screen_space_line_width = line_strip_node->get_screen_space_line_width();
-        float screen_space_point_size = line_strip_node->get_screen_space_point_size();
+        //float screen_space_point_size = line_strip_node->get_screen_space_point_size();
 
         if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
           ctx.render_context->set_rasterizer_state(current_rasterizer_state, screen_space_line_width);

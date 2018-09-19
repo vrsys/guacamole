@@ -68,7 +68,7 @@ MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& js
 
     if (value["uniforms"] != Json::Value::null &&
         value["uniforms"].isArray()) {
-      for (int i(0); i < value["uniforms"].size(); ++i) {
+      for (unsigned int i = 0; i < value["uniforms"].size(); ++i) {
         auto uniform_string(value["uniforms"][i]);
         if (uniform_string["name"] != Json::Value::null &&
             uniform_string["type"] != Json::Value::null &&

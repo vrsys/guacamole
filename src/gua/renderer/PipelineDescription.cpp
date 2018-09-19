@@ -164,7 +164,7 @@ bool PipelineDescription::operator==(PipelineDescription const& other) const {
     return false;
   }
 
-  for (int i(0); i<passes_.size(); ++i) {
+  for (unsigned int i = 0; i<passes_.size(); ++i) {
     if (typeid(*passes_[i]) != typeid(*other.passes_[i])) {
       return false;
     }
