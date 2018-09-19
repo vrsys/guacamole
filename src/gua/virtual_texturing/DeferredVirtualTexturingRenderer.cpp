@@ -118,6 +118,9 @@ namespace gua {
       screen_space_virtual_texturing_fbo_->attach_color_buffer(0,
                                                                virtually_textured_color_attachment_);
 
+      nearest_sampler_state_ = ctx.render_device
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+
     }
 
 
@@ -282,6 +285,10 @@ namespace gua {
     blit_vt_color_to_gbuffer_program_->use(ctx);
 
     {
+
+    ctx.render_context->bind_texture(virtually_textured_color_attachment_, nearest_sampler_state_, 0);
+    blit_vt_color_to_gbuffer_program_->apply_uniform(ctx, "passed_vt_colors", 0);
+
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
     }

@@ -89,6 +89,9 @@ namespace gua {
 
 
     scm::gl::quad_geometry_ptr                                          fullscreen_quad_;
+
+    scm::gl::sampler_state_ptr      nearest_sampler_state_;
+
   };
 
 }
