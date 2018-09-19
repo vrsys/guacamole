@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
 
-  pipe->add_pass(std::make_shared<gua::virtual_texturing::DeferredVirtualTexturingPassDescription>());
+  pipe->add_pass(std::make_shared<gua::DeferredVirtualTexturingPassDescription>());
 
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();

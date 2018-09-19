@@ -40,7 +40,6 @@
 #include <memory>
 
 namespace gua {
-namespace virtual_texturing {
 
 /**
  * A class representing a texture.
@@ -102,6 +101,5 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   scm::gl::sampler_state_ptr                                                        _filter_linear;
 };  
 
-}
 }
 #endif // GUA_LAYEREDPHYSICALTEXTURE2D_HPP

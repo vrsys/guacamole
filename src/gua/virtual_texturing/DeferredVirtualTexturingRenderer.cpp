@@ -66,20 +66,56 @@
 #include <typeinfo>
 
 namespace gua {
-namespace virtual_texturing {
 
 
   //////////////////////////////////////////////////////////////////////////////
   DeferredVirtualTexturingRenderer::DeferredVirtualTexturingRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
+  : screen_space_virtual_texturing_shader_program_(nullptr),
+    blit_vt_color_to_gbuffer_program_(nullptr),
+    fullscreen_quad_(nullptr)
   {
 
-    //::vt::VTConfig::get_instance().define_size_physical_texture(128, 8192);
+#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+  ResourceFactory factory;
+  std::string v_shader_screen_space_virtual_texturing = factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert");
+  std::string f_shader_screen_space_virtual_texturing = factory.read_shader_file("resources/shaders/screen_space_virtual_texturing.frag");
 
+  std::string v_shader_blit_vt_color = factory.read_shader_file("resources/shaders/common/fullscreen_quad.vert");
+  std::string f_shader_blit_vt_color = factory.read_shader_file("resources/shaders/blit_virtual_texturing_colors.frag");
+#else  
+  std::string v_shader_screen_space_virtual_texturing = Resources::lookup_shader("shaders/common/fullscreen_quad.vert");
+  std::string f_shader_screen_space_virtual_texturing = Resources::lookup_shader("shaders/screen_space_virtual_texturing.frag");
+
+  std::string v_shader_blit_vt_color = Resources::lookup_shader("shaders/common/fullscreen_quad.vert");
+  std::string f_shader_blit_vt_color = Resources::lookup_shader("shaders/blit_virtual_texturing_colors.frag");
+#endif
+  screen_space_virtual_texturing_shader_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader_screen_space_virtual_texturing));
+  screen_space_virtual_texturing_shader_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader_screen_space_virtual_texturing));
+
+  blit_vt_color_to_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER,   v_shader_blit_vt_color));
+  blit_vt_color_to_gbuffer_program_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, f_shader_blit_vt_color));
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void DeferredVirtualTexturingRenderer::_create_gpu_resources(gua::RenderContext const& ctx/*, uint64_t cut_id,
-                                           scm::math::vec2ui const& render_target_dims*/) {}
+  void DeferredVirtualTexturingRenderer::_create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims) {
+
+
+    if(!fullscreen_quad_) {
+      fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
+                                                scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
+    
+      virtually_textured_color_attachment_ = ctx.render_device
+        ->create_texture_2d(render_target_dims,
+                            scm::gl::FORMAT_RGBA_8,
+                            1, 1, 1);
+
+    }
+
+
+
+
+
+}
 
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +164,7 @@ namespace virtual_texturing {
     */
   }
 
+  ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::collect_feedback(gua::RenderContext const& ctx){
 
     /*
@@ -149,9 +186,63 @@ namespace virtual_texturing {
   }
 
 
+  void DeferredVirtualTexturingRenderer::_initialize_shader_programs(gua::RenderContext const& ctx) {
+    {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(screen_space_virtual_texturing_shader_program_stages_);
+      screen_space_virtual_texturing_shader_program_ = new_program;
+    }
+       
+    {
+      auto new_program = std::make_shared<ShaderProgram>();
+      new_program->set_shaders(blit_vt_color_to_gbuffer_program_stages_);
+      blit_vt_color_to_gbuffer_program_ = new_program;
+    }
+ 
+  }
+
+  void DeferredVirtualTexturingRenderer::_check_shader_programs(gua::RenderContext const& ctx) {
+    if(   (!screen_space_virtual_texturing_shader_program_) 
+       || (!blit_vt_color_to_gbuffer_program_)) {
+      _initialize_shader_programs(ctx);
+    } 
+  }
+
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
+
+    RenderContext const& ctx(pipe.get_context());
+
+    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+
+
+    auto const& camera = pipe.current_viewstate().camera;
+    scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+
+
+    _check_shader_programs(ctx);
+    _create_gpu_resources(ctx, render_target_dims);
+
+    auto& target = *pipe.current_viewstate().target;
+
+    bool write_depth = true;
+    target.bind(ctx, write_depth);
+    target.set_viewport(ctx);
+    ctx.render_context->apply();
+
+
+
+    blit_vt_color_to_gbuffer_program_->use(ctx);
+
+    {
+    ctx.render_context->apply();
+    fullscreen_quad_->draw(ctx.render_context);
+    }
+
+    blit_vt_color_to_gbuffer_program_->unuse(ctx);
+    target.unbind(ctx);
    // std::cout << "Rendering The VT\n";
 
   /*  auto physical_texture = TextureDatabase::instance()->lookup("gua_physical_texture_2d");
@@ -204,6 +295,4 @@ namespace virtual_texturing {
     */
   }
 
-
-}
 }

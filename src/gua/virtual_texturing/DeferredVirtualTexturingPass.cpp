@@ -31,7 +31,6 @@
 #include <boost/variant.hpp>
 
 namespace gua {
-namespace virtual_texturing {
 
 ////////////////////////////////////////////////////////////////////////////////
 DeferredVirtualTexturingPassDescription::DeferredVirtualTexturingPassDescription()
@@ -76,5 +75,4 @@ PipelinePass DeferredVirtualTexturingPassDescription::make_pass(RenderContext co
   return pass;
 }
 
-}
 }

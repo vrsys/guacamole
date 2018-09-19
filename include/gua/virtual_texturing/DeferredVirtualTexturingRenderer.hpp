@@ -41,7 +41,6 @@
 
 
 namespace gua {
-namespace virtual_texturing {
   class MaterialShader;
   class ShaderProgram;
   //class plod_shared_resources;
@@ -62,20 +61,35 @@ namespace virtual_texturing {
 
   private:  //shader related auxiliary methods
 
-    void  _create_gpu_resources(gua::RenderContext const& ctx/*, uint64_t cut_id,
-                                        scm::math::vec2ui const& render_target_dims*/); 
+    void  _create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims);
+
     
     void  _check_for_resource_updates(gua::Pipeline const& pipe, RenderContext const& ctx);
 
+    void _check_shader_programs(gua::RenderContext const& ctx);
+    void _initialize_shader_programs(gua::RenderContext const& ctx);
   private:  
   
   private:
-    unsigned                                                                          previous_frame_count_;
-    SubstitutionMap                                                                   global_substitution_map_;
-    ResourceFactory                                                                   factory_;
+    unsigned                                                            previous_frame_count_;
+    SubstitutionMap                                                     global_substitution_map_;
+    ResourceFactory                                                     factory_;
+  
+    // perform virtual texturing into custom fbo based on gbuffer input
+    scm::gl::frame_buffer_ptr                                           screen_space_virtual_texturing_fbo_;
+    scm::gl::texture_2d_ptr                                             virtually_textured_color_attachment_;
+
+    std::vector<ShaderProgramStage>                                     screen_space_virtual_texturing_shader_program_stages_;
+    std::shared_ptr<ShaderProgram>                                      screen_space_virtual_texturing_shader_program_;
+
+    // uses custom fbo color attachment (= virtually textured) and writes it into gbuffer color attachment
+    std::vector<ShaderProgramStage>                                     blit_vt_color_to_gbuffer_program_stages_;
+    std::shared_ptr<ShaderProgram>                                      blit_vt_color_to_gbuffer_program_;
+
+
+    scm::gl::quad_geometry_ptr                                          fullscreen_quad_;
   };
 
-}
 }
 
 #endif // GUA_DEFERREDVIRTUALTEXTURINGRENDERER_HPP
