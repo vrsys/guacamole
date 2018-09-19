@@ -8,11 +8,7 @@ in vec2 gua_quad_coords;
 
 @include "common/gua_fragment_shader_input.glsl"
 
-
-
-@include "common/gua_fragment_shader_output.glsl"
-
-
+layout (location = 0) out vec3 out_accumulated_color;
 
 
 void main() {
