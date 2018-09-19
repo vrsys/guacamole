@@ -104,6 +104,10 @@ namespace gua {
       fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
                                                 scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
     
+
+      screen_space_virtual_texturing_fbo_.reset();
+      
+
       virtually_textured_color_attachment_ = ctx.render_device
         ->create_texture_2d(render_target_dims,
                             scm::gl::FORMAT_RGBA_8,
@@ -208,14 +212,35 @@ namespace gua {
     } 
   }
 
+  void DeferredVirtualTexturingRenderer::_update_index_texture_hierarchies(gua::RenderContext const& ctx) {
+
+    auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
+
+
+    for( auto const& vt_ptr : vector_of_vt_ptr ) {
+      //scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+      //scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+
+      std::cout << vt_ptr->uuid() << "\n";
+      // get buf_cpu
+
+      //vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
+    }
+  }
+
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
 
     RenderContext const& ctx(pipe.get_context());
 
-    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+    // update index texture hierarchies (~ pro texture atlas)
+    _update_index_texture_hierarchies(ctx);
+
+    // update physical texture
+
+
+
 
 
     auto const& camera = pipe.current_viewstate().camera;
@@ -243,56 +268,8 @@ namespace gua {
 
     blit_vt_color_to_gbuffer_program_->unuse(ctx);
     target.unbind(ctx);
-   // std::cout << "Rendering The VT\n";
 
-  /*  auto physical_texture = TextureDatabase::instance()->lookup("gua_physical_texture_2d");
 
-    if(physical_texture) {
-      std::cout << "Can work on physical texture\n";
-    } else {
-      std::cout << "Can NOT work on physical texture\n";      
-    }
-*/
-
-//vt_infos
-
-/*
-    
-    RenderContext const& ctx(pipe.get_context());
-    ctx.render_context->sync();
-    apply_cut_update(ctx,0,0);
-    collect_feedback(ctx);
-    ctx.render_context->sync();
-*/
-    /*
-    if(false) {
-   
-
-      auto scm_device = ctx.render_device;
-      auto scm_context = ctx.render_context;
-      //per frame
-      //_create_gpu_resources(ctx,cut_id);
-      //_cut_update = &(new vt::CutUpdate());
-      ///////////////////////////////////////////////////////////////////////////
-      //  retrieve current view state
-      ///////////////////////////////////////////////////////////////////////////
-      auto& scene = *pipe.current_viewstate().scene;
-      auto const& camera = pipe.current_viewstate().camera;
-      auto const& frustum = pipe.current_viewstate().frustum;
-      auto& target = *pipe.current_viewstate().target;
-
-      std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
-      pipe.begin_cpu_query(cpu_query_name_plod_total);
-      pipe.end_cpu_query(cpu_query_name_plod_total); 
-      
-      //dispatch cut updates
-      if (previous_frame_count_ != ctx.framecount) {
-        previous_frame_count_ = ctx.framecount;
-        //controller->dispatch(controller->deduce_context_id(ctx.id), ctx.render_device);
-      }
-    }
-
-    */
   }
 
 }

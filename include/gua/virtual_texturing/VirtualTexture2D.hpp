@@ -64,7 +64,8 @@ class GUA_DLL VirtualTexture2D : public Texture {
 
  protected:
 
-  std::vector<scm::gl::texture_2d_ptr> index_texture_hierarchy_;
+  std::map<std::size_t,
+    std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
 
   //scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned width_;

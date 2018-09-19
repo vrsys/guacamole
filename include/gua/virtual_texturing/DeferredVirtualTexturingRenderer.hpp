@@ -68,6 +68,9 @@ namespace gua {
 
     void _check_shader_programs(gua::RenderContext const& ctx);
     void _initialize_shader_programs(gua::RenderContext const& ctx);
+  
+    void _update_index_texture_hierarchies(gua::RenderContext const& ctx);
+
   private:  
   
   private:
