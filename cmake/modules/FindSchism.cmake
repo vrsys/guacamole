@@ -5,8 +5,7 @@ SET(SCHISM_INCLUDE_SEARCH_DIRS
   ${GLOBAL_EXT_DIR}/schism/include
   ${SCHISM_INCLUDE_SEARCH_DIR}
   /opt/schism/current
-  /home/ephtron/Projects/schism/include
-  /home/ephtron/Projects/schism
+  ../schism
 )
 
 SET(SCHISM_LIBRARY_SEARCH_DIRS
@@ -14,8 +13,7 @@ SET(SCHISM_LIBRARY_SEARCH_DIRS
   ${SCHISM_LIBRARY_SEARCH_DIR}
   ../
   /opt/schism/current/lib/linux_x86
-  /home/ephtron/Projects/schism/lib
-  /home/ephtron/Projects/schism/lib/linux_x86
+  ../schism/lib/linux_x86
 )
 
 ##############################################################################
