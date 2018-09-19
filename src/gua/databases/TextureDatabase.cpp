@@ -103,7 +103,7 @@ void TextureDatabase::load(std::string const& filename) {
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
     if(!occurrence_check) {
       instance()->add(filename, std::make_shared<VirtualTexture2D>(filename,
-                                                                                      256,
+                                                                   256,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT)));
@@ -128,5 +128,21 @@ void TextureDatabase::load(std::string const& filename) {
 
 
 }
+
+
+std::vector<std::shared_ptr<Texture> > TextureDatabase::get_virtual_textures() {
+  std::vector< std::shared_ptr<Texture> > virtual_texture_ptrs;
+
+  for(auto const& vt_name : vt_texture_names_) {
+    auto vt_exists = TextureDatabase::instance()->lookup(vt_name.second);
+    if (vt_exists) {
+      virtual_texture_ptrs.push_back(vt_exists);
+    }
+  }
+
+  return virtual_texture_ptrs;
+}
+
+
 
 }
