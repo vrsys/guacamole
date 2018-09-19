@@ -26,8 +26,6 @@
 #include <map>
 #include <unordered_map>
 
-// guacamole vt headers
-#include <gua/virtual_texturing/DeferredVirtualTexturingPass.hpp>
 
 // guacamole core headers
 #include <gua/renderer/Pipeline.hpp>
