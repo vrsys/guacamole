@@ -83,7 +83,7 @@ namespace gua {
     std::shared_ptr<ShaderProgram>                                      screen_space_virtual_texturing_shader_program_;
 
     // uses custom fbo color attachment (= virtually textured) and writes it into gbuffer color attachment
-    std::vector<ShaderProgramStage>                                     blit_vt_color_to_gbuffer_program_stages_;
+    std::vector<ShaderProgramStage>                                     blit_vt_color_to_gbuffer_program_stages_; // holds vertex and fragment shader
     std::shared_ptr<ShaderProgram>                                      blit_vt_color_to_gbuffer_program_;
 
 

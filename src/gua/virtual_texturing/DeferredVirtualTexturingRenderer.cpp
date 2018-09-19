@@ -225,14 +225,12 @@ namespace gua {
     _check_shader_programs(ctx);
     _create_gpu_resources(ctx, render_target_dims);
 
-    auto& target = *pipe.current_viewstate().target;
+    auto& target = *pipe.current_viewstate().target; //target is the gbuffer
 
-    bool write_depth = true;
+    bool write_depth = false;
     target.bind(ctx, write_depth);
     target.set_viewport(ctx);
-    ctx.render_context->apply();
-
-
+    //ctx.render_context->apply();
 
     blit_vt_color_to_gbuffer_program_->use(ctx);
 
