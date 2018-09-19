@@ -40,7 +40,6 @@ namespace vt {
 }
 
 namespace gua {
-namespace virtual_texturing {
 
 
 
@@ -70,7 +69,6 @@ struct GUA_DLL VTInfo {
 
 
 
-}
 }
 
 

@@ -94,7 +94,7 @@ void TextureDatabase::load(std::string const& filename) {
 
     if(!physical_texture_2d) {
       instance()->add(physical_texture_default_name, 
-                      std::make_shared<virtual_texturing::LayeredPhysicalTexture2D>(physical_texture_default_name,
+                      std::make_shared<LayeredPhysicalTexture2D>(physical_texture_default_name,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT)));
@@ -102,7 +102,7 @@ void TextureDatabase::load(std::string const& filename) {
 
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
     if(!occurrence_check) {
-      instance()->add(filename, std::make_shared<virtual_texturing::VirtualTexture2D>(filename,
+      instance()->add(filename, std::make_shared<VirtualTexture2D>(filename,
                                                                                       256,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                         scm::gl::WRAP_REPEAT,

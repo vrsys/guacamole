@@ -42,7 +42,6 @@
 #include <regex>
 
 namespace gua {
-namespace virtual_texturing {
 
 // trim from start (in place)
 static inline void ltrim(std::string &s) {
@@ -117,6 +116,4 @@ static inline std::string trim_copy(std::string s) {
   void VirtualTexture2D::initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const {
 
   }
-
-}
 }

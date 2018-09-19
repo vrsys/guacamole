@@ -27,8 +27,6 @@
 #include <memory>
 
 namespace gua {
-namespace virtual_texturing {
-
 class Pipeline;
 
 class GUA_DLL DeferredVirtualTexturingPassDescription : public PipelinePassDescription {
@@ -43,7 +41,6 @@ class GUA_DLL DeferredVirtualTexturingPassDescription : public PipelinePassDescr
 
 };
 
-}
 }
 
 #endif  // GUA_DEFERREDVIRTUALTEXTURINGPASS_HPP

@@ -43,7 +43,6 @@
 #include <memory>
 
 namespace gua {
-namespace virtual_texturing {
 
 class GUA_DLL VirtualTexture2D : public Texture {
  public:
@@ -81,6 +80,5 @@ class GUA_DLL VirtualTexture2D : public Texture {
   scm::gl::sampler_state_ptr                                                        _filter_linear;
 };  
 
-}
 }
 #endif  // GUA_VIRTUALTEXTURE2D_HPP
