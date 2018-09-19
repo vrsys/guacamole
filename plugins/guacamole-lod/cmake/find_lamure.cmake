@@ -2,7 +2,7 @@
 # search paths
 ##############################################################################
 SET(LAMURE_INCLUDE_SEARCH_DIRS
-  /home/senu8384/Desktop/master-thesis/lamure/install/include
+  /home/ephtron/Projects/lamure/install/include
   ${LAMURE_ROOT}/include
   ${GLOBAL_EXT_DIR}/lamure/include
   ${LAMURE_INCLUDE_SEARCH_DIR}
@@ -12,7 +12,7 @@ SET(LAMURE_INCLUDE_SEARCH_DIRS
 )
 
 SET(LAMURE_LIBRARY_SEARCH_DIRS
-  /home/senu8384/Desktop/master-thesis/lamure/install/lib
+  /home/ephtron/Projects/lamure/install/lib
   ${GLOBAL_EXT_DIR}/lamure/lib
   ${LAMURE_LIBRARY_SEARCH_DIR}
   ${LAMURE_ROOT}/lib
