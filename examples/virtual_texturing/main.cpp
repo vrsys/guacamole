@@ -86,7 +86,12 @@ int main(int argc, char** argv) {
 
   std::string const& texture_atlas_path = "data/objects/onepointfive_texture_2048_w2048_h2048.atlas";
 
+  // LOAD VIRTUAL TEXTURE
   gua::TextureDatabase::instance()->load(texture_atlas_path);
+
+
+
+
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);
