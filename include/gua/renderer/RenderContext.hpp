@@ -183,9 +183,6 @@ struct GUA_DLL RenderContext {
   mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr> > texture_2d_arrays;
   mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr> > texture_3d_arrays;
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
- // mutable std::unordered_map<std::size_t, VTInfo> vt_infos;
-#endif
   /**
   * Resources associated with this context
   */
