@@ -209,123 +209,123 @@ namespace gua {
   }
 
   void DeferredVirtualTexturingRenderer::_register_cuts(gua::RenderContext const& ctx) {
-  //   auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
-  //   auto& current_vt_info = vt_info_per_context[ctx.id];
-  //   uint16_t ctx_id = current_vt_info.context_id_;
-  //   for ( auto const& view_id : current_vt_info.gua_camera_id_to_lamure_view_id_){
+    auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
+    auto& current_vt_info = vt_info_per_context[ctx.id];
+    uint16_t ctx_id = current_vt_info.context_id_;
+    for ( auto const& view_entry : current_vt_info.gua_camera_id_to_lamure_view_id_){
+      uint16_t view_id = view_entry.second;
+      auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
+      for( auto const& vt_ptr : vector_of_vt_ptr ) {
+        
+        uint32_t tex_id = vt_ptr->get_lamure_texture_id();
+        // render
+        uint64_t cut_id = (((uint64_t) tex_id) << 32) | ((uint64_t) view_id << 16) | ((uint64_t) ctx_id);
+        auto cut_iter = current_vt_info.cut_id_to_lamure_triple_.find(cut_id);
 
-  //     auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
-  //     for( auto const& vt_ptr : vector_of_vt_ptr ) {
+        // check if cut got registered already
+        if (current_vt_info.cut_id_to_lamure_triple_.end() == cut_iter){
+          current_vt_info.cut_id_to_lamure_triple_[cut_id] = 
+              ::vt::CutDatabase::get_instance().register_cut(tex_id, view_id, ctx_id);
 
-  //       uint32_t tex_id = vt_ptr->get_lamure_texture_id();
-  //       // render
-  //       uint64_t cut_id = (((uint64_t) tex_id) << 32) | ((uint64_t) view_id << 16) | ((uint64_t) ctx_id);
-  //       auto cut_iter = current_vt_info.cut_id_to_lamure_triple_.find(cut_id);
-
-  //       // check if cut got registered already
-  //       if (current_vt_info.cut_id_to_lamure_triple_.end() == cut_iter){
-  //         current_vt_info.cut_id_to_lamure_triple_[cut_id] = 
-  //             ::vt::CutDatabase::get_instance().register_cut(tex_id, view_id, ctx_id);
-
-  //       }
-  //     }
-  //   }
+        }
+      }
+    }
   }
 
   void DeferredVirtualTexturingRenderer::_start_cut_update(gua::RenderContext const& ctx) {
-  //   auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
-  //   auto& current_vt_info = vt_info_per_context[ctx.id];
+    auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
+    auto& current_vt_info = vt_info_per_context[ctx.id];
 
-  //   if (!current_vt_info.cut_update_ && !current_vt_info.cut_updated_running_){
-  //     current_vt_info.cut_update_ = &::vt::CutUpdate::get_instance();
-  //     current_vt_info.cut_update_->start();
-  //     current_vt_info.cut_updated_running_ = true;
-  //   }
+    if (!current_vt_info.cut_update_ && !current_vt_info.cut_updated_running_){
+      current_vt_info.cut_update_ = &::vt::CutUpdate::get_instance();
+      current_vt_info.cut_update_->start();
+      current_vt_info.cut_updated_running_ = true;
+    }
   }
 
   void DeferredVirtualTexturingRenderer::_apply_cut_update(gua::RenderContext const& ctx) {
-  //   auto *cut_db = &::vt::CutDatabase::get_instance();
+    // auto *cut_db = &::vt::CutDatabase::get_instance();
 
 
-  //   for (::vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map())) {
-  //       ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
+    // for (::vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map())) {
+    //     ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
 
-  //       if (!cut->is_drawn()) {
-  //           cut_db->stop_reading_cut(cut_entry.first);
-  //           continue;
-  //       }
+    //     if (!cut->is_drawn()) {
+    //         cut_db->stop_reading_cut(cut_entry.first);
+    //         continue;
+    //     }
 
-  //       std::set<uint16_t> updated_levels;
+    //     std::set<uint16_t> updated_levels;
 
-  //       for (auto position_slot_updated : cut->get_front()->get_mem_slots_updated()) {
-  //           const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second);
+    //     for (auto position_slot_updated : cut->get_front()->get_mem_slots_updated()) {
+    //         const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second);
 
-  //           if (mem_slot_updated == nullptr || !mem_slot_updated->updated
-  //               || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr) {
-  //               if (mem_slot_updated == nullptr) {
-  //                   std::cerr << "Mem slot at " << position_slot_updated.second << " is null" << std::endl;
-  //               } else {
-  //                   std::cerr << "Mem slot at " << position_slot_updated.second << std::endl;
-  //                   std::cerr << "Mem slot #" << mem_slot_updated->position << std::endl;
-  //                   std::cerr << "Tile id: " << mem_slot_updated->tile_id << std::endl;
-  //                   std::cerr << "Locked: " << mem_slot_updated->locked << std::endl;
-  //                   std::cerr << "Updated: " << mem_slot_updated->updated << std::endl;
-  //                   std::cerr << "Pointer valid: " << (mem_slot_updated->pointer != nullptr) << std::endl;
-  //               }
+    //         if (mem_slot_updated == nullptr || !mem_slot_updated->updated
+    //             || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr) {
+    //             if (mem_slot_updated == nullptr) {
+    //                 std::cerr << "Mem slot at " << position_slot_updated.second << " is null" << std::endl;
+    //             } else {
+    //                 std::cerr << "Mem slot at " << position_slot_updated.second << std::endl;
+    //                 std::cerr << "Mem slot #" << mem_slot_updated->position << std::endl;
+    //                 std::cerr << "Tile id: " << mem_slot_updated->tile_id << std::endl;
+    //                 std::cerr << "Locked: " << mem_slot_updated->locked << std::endl;
+    //                 std::cerr << "Updated: " << mem_slot_updated->updated << std::endl;
+    //                 std::cerr << "Pointer valid: " << (mem_slot_updated->pointer != nullptr) << std::endl;
+    //             }
 
-  //               throw std::runtime_error("updated mem slot inconsistency");
-  //           }
+    //             throw std::runtime_error("updated mem slot inconsistency");
+    //         }
 
-  //           updated_levels.insert(vt::QuadTree::get_depth_of_node(mem_slot_updated->tile_id));
+    //         updated_levels.insert(vt::QuadTree::get_depth_of_node(mem_slot_updated->tile_id));
 
-  //           // update_physical_texture_blockwise
-  //           size_t slots_per_texture = ::vt::VTConfig::get_instance().get_phys_tex_tile_width() *
-  //                                      ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
-  //           size_t layer = mem_slot_updated->position / slots_per_texture;
-  //           size_t rel_slot_position = mem_slot_updated->position - layer * slots_per_texture;
+    //         // update_physical_texture_blockwise
+    //         size_t slots_per_texture = ::vt::VTConfig::get_instance().get_phys_tex_tile_width() *
+    //                                    ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+    //         size_t layer = mem_slot_updated->position / slots_per_texture;
+    //         size_t rel_slot_position = mem_slot_updated->position - layer * slots_per_texture;
 
-  //           size_t x_tile = rel_slot_position % ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
-  //           size_t y_tile = rel_slot_position / ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+    //         size_t x_tile = rel_slot_position % ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+    //         size_t y_tile = rel_slot_position / ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
 
-  //           scm::math::vec3ui origin = scm::math::vec3ui(
-  //                   (uint32_t) x_tile * ::vt::VTConfig::get_instance().get_size_tile(),
-  //                   (uint32_t) y_tile * ::vt::VTConfig::get_instance().get_size_tile(), (uint32_t) layer);
-  //           scm::math::vec3ui dimensions = scm::math::vec3ui(::vt::VTConfig::get_instance().get_size_tile(),
-  //                                                            ::vt::VTConfig::get_instance().get_size_tile(), 1);
-
-
-  //           auto physical_tex = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_ptr();
-
-  //           ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
-  //                                        scm::gl::FORMAT_RGB_8, mem_slot_updated->pointer);
-  //       }
+    //         scm::math::vec3ui origin = scm::math::vec3ui(
+    //                 (uint32_t) x_tile * ::vt::VTConfig::get_instance().get_size_tile(),
+    //                 (uint32_t) y_tile * ::vt::VTConfig::get_instance().get_size_tile(), (uint32_t) layer);
+    //         scm::math::vec3ui dimensions = scm::math::vec3ui(::vt::VTConfig::get_instance().get_size_tile(),
+    //                                                          ::vt::VTConfig::get_instance().get_size_tile(), 1);
 
 
-  //       for (auto position_slot_cleared : cut->get_front()->get_mem_slots_cleared()) {
-  //           const ::vt::mem_slot_type *mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second);
+    //         auto physical_tex = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_ptr();
 
-  //           if (mem_slot_cleared == nullptr) {
-  //               std::cerr << "Mem slot at " << position_slot_cleared.second << " is null" << std::endl;
-  //           }
+    //         ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
+    //                                      scm::gl::FORMAT_RGB_8, mem_slot_updated->pointer);
+    //     }
 
-  //           updated_levels.insert(vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
-  //       }
 
-  //       // update_index_texture
-  //       for (uint16_t updated_level : updated_levels) {
-  //           uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+    //     for (auto position_slot_cleared : cut->get_front()->get_mem_slots_cleared()) {
+    //         const ::vt::mem_slot_type *mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second);
 
-  //           scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-  //           scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
-  //           auto index_tex_hierarchy = 
-  //           ctx.render_context->update_sub_texture(vt_.index_texture_hierarchy_.at(updated_level),
-  //                                        scm::gl::texture_region(origin, dimensions), 0, scm::gl::FORMAT_RGBA_8UI,
-  //                                        cut->get_front()->get_index(updated_level));
+    //         if (mem_slot_cleared == nullptr) {
+    //             std::cerr << "Mem slot at " << position_slot_cleared.second << " is null" << std::endl;
+    //         }
 
-  //       }
-  //       cut_db->stop_reading_cut(cut_entry.first);
-  //   }
-  //   ctx.render_context->sync();
+    //         updated_levels.insert(vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
+    //     }
+
+    //     // update_index_texture
+    //     for (uint16_t updated_level : updated_levels) {
+    //         uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+
+    //         scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+    //         scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+    //         auto index_tex_hierarchy = 
+    //         ctx.render_context->update_sub_texture(vt_.index_texture_hierarchy_.at(updated_level),
+    //                                      scm::gl::texture_region(origin, dimensions), 0, scm::gl::FORMAT_RGBA_8UI,
+    //                                      cut->get_front()->get_index(updated_level));
+
+    //     }
+    //     cut_db->stop_reading_cut(cut_entry.first);
+    // }
+    // ctx.render_context->sync();
   }
 
   void DeferredVirtualTexturingRenderer::update_physical_texture_blockwise(gua::RenderContext const& ctx, uint16_t context_id, const uint8_t *buf_texel, size_t slot_position) {
