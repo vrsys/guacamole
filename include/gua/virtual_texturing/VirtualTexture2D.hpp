@@ -29,6 +29,7 @@
 #include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
 
+#include <gua/virtual_texturing/LayeredPhysicalTexture2D.hpp>
 
 //#include <lamure/vt/VTConfig.h>
 
@@ -61,10 +62,14 @@ class GUA_DLL VirtualTexture2D : public Texture {
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
 
+   static std::map<std::size_t,
+            std::shared_ptr<LayeredPhysicalTexture2D> > physical_texture_ptr_per_context_;
+
+   static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
  protected:
 
-  std::map<std::size_t,
+  mutable std::map<std::size_t,
     std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
 
   //scm::gl::texture_image_data_ptr image_ = nullptr;

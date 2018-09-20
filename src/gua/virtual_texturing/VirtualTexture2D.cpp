@@ -80,6 +80,12 @@ static inline std::string trim_copy(std::string s) {
 }
 
 
+  std::map<std::size_t,
+    std::shared_ptr<LayeredPhysicalTexture2D> > VirtualTexture2D::physical_texture_ptr_per_context_ 
+      = std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D> >();
+
+  std::map<std::size_t, VTInfo> VirtualTexture2D::vt_info_per_context_ 
+      = std::map<std::size_t, VTInfo>();
 
   VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename,
                                      std::size_t physical_texture_tile_slot_size,
@@ -109,8 +115,28 @@ static inline std::string trim_copy(std::string s) {
   }
 
 
-  void VirtualTexture2D::upload_to(RenderContext const& context) const {
+  void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
 
+    auto index_texture_hierarchy_context_iterator = index_texture_hierarchy_per_context_.find(ctx.id);
+
+
+    if(index_texture_hierarchy_context_iterator == index_texture_hierarchy_per_context_.end()) {
+      uint32_t depth = 12; // how do we get the real depth of the index texture hierarchy?
+
+      auto& new_index_texture_hierarchy = index_texture_hierarchy_per_context_[ctx.id];
+
+      for(uint curr_depth = 0; curr_depth < depth; ++curr_depth) {
+        uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
+
+        auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
+          scm::math::vec2ui(curr_num_tiles_per_dimension, curr_num_tiles_per_dimension), scm::gl::FORMAT_RGBA_8UI);
+
+        std::cout << "Creating Index Texture Level: " << curr_depth << "\n";
+
+        new_index_texture_hierarchy.push_back(index_texture_level_ptr);   
+      }
+
+    }
   }
 
   void VirtualTexture2D::initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const {
