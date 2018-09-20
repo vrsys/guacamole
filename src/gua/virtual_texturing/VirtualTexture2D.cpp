@@ -97,11 +97,13 @@ static inline std::string trim_copy(std::string s) {
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
     ::vt::VTConfig::CONFIG_PATH = ini_filename;
-    _tile_size = vt::VTConfig::get_instance().get_size_tile();
+    ::vt::VTConfig::get_instance().define_size_physical_texture(5, 8192);
+    _tile_size = ::vt::VTConfig::get_instance().get_size_tile();
 
     _lamure_texture_id = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
-    //vt::VTConfig::get_instance().define_size_physical_texture(128, 8192);
 
+
+    std::cout << "Defined physical_texture_siye\n";
 
 
     std::size_t tile_size = 0;
