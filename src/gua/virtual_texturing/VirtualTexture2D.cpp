@@ -131,6 +131,8 @@ static inline std::string trim_copy(std::string s) {
         auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
           scm::math::vec2ui(curr_num_tiles_per_dimension, curr_num_tiles_per_dimension), scm::gl::FORMAT_RGBA_8UI);
 
+        ctx.render_context->clear_image_data(index_texture_level_ptr, 0, scm::gl::FORMAT_RGBA_8UI, 0);
+
         std::cout << "Creating Index Texture Level: " << curr_depth << "\n";
 
         new_index_texture_hierarchy.push_back(index_texture_level_ptr);   

@@ -29,15 +29,50 @@ namespace gua {
 
   //}
 
+  LayeredPhysicalTexture2D::~LayeredPhysicalTexture2D(){
+    if(!feedback_lod_cpu_buffer_) {
+      delete[] feedback_lod_cpu_buffer_;
+    }
 
+    if(!feedback_count_cpu_buffer_) {
+      delete[] feedback_count_cpu_buffer_;
+    }    
+  }
 
   void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx) const {
     //TODO: get_actual sizes
-    scm::math::vec2ui const physical_texture_dimensions = scm::math::vec2ui(8192, 8192);
-    uint32_t const num_physical_texture_layers = 5;
+
+    width_ = 8192;
+    height_ = 8192;
+
+    scm::math::vec2ui physical_texture_dimensions(width_, height_);
+
+    num_layers_ = 5;
+
+    uint32_t tile_size = 256;
+
+    num_feedback_slots_ = (width_ / tile_size) * (height_ / tile_size) * num_layers_;
+
+
+
 
     physical_texture_ptr_ = ctx.render_device->create_texture_2d(physical_texture_dimensions, scm::gl::FORMAT_RGB_8, 1,
-                                                                 num_physical_texture_layers + 1);
+                                                                 num_layers_ + 1);
+
+    feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY,
+                                                             num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
+
+    feedback_count_storage_  = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY,
+                                                                num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32UI));
+
+    
+    ctx.render_context->bind_storage_buffer(feedback_lod_storage_, 0);
+    ctx.render_context->bind_storage_buffer(feedback_count_storage_, 1);
+
+    feedback_lod_cpu_buffer_   = new int32_t(num_feedback_slots_);
+    feedback_count_cpu_buffer_ = new uint32_t(num_feedback_slots_);
+
+
 
     std::cout << "Creating Physical Texture\n";
   }

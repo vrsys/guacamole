@@ -67,6 +67,10 @@ class GUA_DLL VirtualTexture2D : public Texture {
 
    static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
+  std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
+    return index_texture_hierarchy_per_context_[ctx.id];
+  }
+
  protected:
 
   mutable std::map<std::size_t,
