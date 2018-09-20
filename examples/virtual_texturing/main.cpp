@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
       gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
   pipe->add_pass(resolve_pass);
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   camera->set_pipeline_description(pipe);
 
 

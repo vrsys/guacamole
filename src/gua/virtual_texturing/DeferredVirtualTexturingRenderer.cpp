@@ -131,10 +131,6 @@ namespace gua {
   /////////////////////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::set_global_substitution_map(SubstitutionMap const& smap) {}
   
-  void DeferredVirtualTexturingRenderer::apply_cut_update(gua::RenderContext const& ctx, uint64_t cut_id, uint16_t ctx_id){
-
-  }
-
   void DeferredVirtualTexturingRenderer::update_index_texture(gua::RenderContext const& ctx,uint64_t cut_id, uint32_t dataset_id, uint16_t context_id, const uint8_t *buf_cpu) {
     /*
     uint32_t size_index_texture = (uint32_t)vt::QuadTree::get_tiles_per_row((*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1);
@@ -244,88 +240,108 @@ namespace gua {
   }
 
   void DeferredVirtualTexturingRenderer::_apply_cut_update(gua::RenderContext const& ctx) {
-    // auto *cut_db = &::vt::CutDatabase::get_instance();
+    auto *cut_db = &::vt::CutDatabase::get_instance();
 
 
-    // for (::vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map())) {
-    //     ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
-
-    //     if (!cut->is_drawn()) {
-    //         cut_db->stop_reading_cut(cut_entry.first);
-    //         continue;
-    //     }
-
-    //     std::set<uint16_t> updated_levels;
-
-    //     for (auto position_slot_updated : cut->get_front()->get_mem_slots_updated()) {
-    //         const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second);
-
-    //         if (mem_slot_updated == nullptr || !mem_slot_updated->updated
-    //             || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr) {
-    //             if (mem_slot_updated == nullptr) {
-    //                 std::cerr << "Mem slot at " << position_slot_updated.second << " is null" << std::endl;
-    //             } else {
-    //                 std::cerr << "Mem slot at " << position_slot_updated.second << std::endl;
-    //                 std::cerr << "Mem slot #" << mem_slot_updated->position << std::endl;
-    //                 std::cerr << "Tile id: " << mem_slot_updated->tile_id << std::endl;
-    //                 std::cerr << "Locked: " << mem_slot_updated->locked << std::endl;
-    //                 std::cerr << "Updated: " << mem_slot_updated->updated << std::endl;
-    //                 std::cerr << "Pointer valid: " << (mem_slot_updated->pointer != nullptr) << std::endl;
-    //             }
-
-    //             throw std::runtime_error("updated mem slot inconsistency");
-    //         }
-
-    //         updated_levels.insert(vt::QuadTree::get_depth_of_node(mem_slot_updated->tile_id));
-
-    //         // update_physical_texture_blockwise
-    //         size_t slots_per_texture = ::vt::VTConfig::get_instance().get_phys_tex_tile_width() *
-    //                                    ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
-    //         size_t layer = mem_slot_updated->position / slots_per_texture;
-    //         size_t rel_slot_position = mem_slot_updated->position - layer * slots_per_texture;
-
-    //         size_t x_tile = rel_slot_position % ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
-    //         size_t y_tile = rel_slot_position / ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
-
-    //         scm::math::vec3ui origin = scm::math::vec3ui(
-    //                 (uint32_t) x_tile * ::vt::VTConfig::get_instance().get_size_tile(),
-    //                 (uint32_t) y_tile * ::vt::VTConfig::get_instance().get_size_tile(), (uint32_t) layer);
-    //         scm::math::vec3ui dimensions = scm::math::vec3ui(::vt::VTConfig::get_instance().get_size_tile(),
-    //                                                          ::vt::VTConfig::get_instance().get_size_tile(), 1);
+    auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
+    for (::vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map())) {
 
 
-    //         auto physical_tex = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_ptr();
+        ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
 
-    //         ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
-    //                                      scm::gl::FORMAT_RGB_8, mem_slot_updated->pointer);
-    //     }
+        if (!cut->is_drawn()) {
+            cut_db->stop_reading_cut(cut_entry.first);
+            continue;
+        }
+        
+        //std::cout << "After cut is drawn\n";
+        
+        std::set<uint16_t> updated_levels;
+
+        for (auto position_slot_updated : cut->get_front()->get_mem_slots_updated()) {
+
+          //  std::cout << "Position slot to be updates\n";
+        
+
+            const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second);
+
+            if (mem_slot_updated == nullptr || !mem_slot_updated->updated
+                || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr) {
+                if (mem_slot_updated == nullptr) {
+                    std::cerr << "Mem slot at " << position_slot_updated.second << " is null" << std::endl;
+                } else {
+                    std::cerr << "Mem slot at " << position_slot_updated.second << std::endl;
+                    std::cerr << "Mem slot #" << mem_slot_updated->position << std::endl;
+                    std::cerr << "Tile id: " << mem_slot_updated->tile_id << std::endl;
+                    std::cerr << "Locked: " << mem_slot_updated->locked << std::endl;
+                    std::cerr << "Updated: " << mem_slot_updated->updated << std::endl;
+                    std::cerr << "Pointer valid: " << (mem_slot_updated->pointer != nullptr) << std::endl;
+                }
+
+                throw std::runtime_error("updated mem slot inconsistency");
+            }
+
+            updated_levels.insert(vt::QuadTree::get_depth_of_node(mem_slot_updated->tile_id));
+
+            // update_physical_texture_blockwise
+            size_t slots_per_texture = ::vt::VTConfig::get_instance().get_phys_tex_tile_width() *
+                                       ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+            size_t layer = mem_slot_updated->position / slots_per_texture;
+            size_t rel_slot_position = mem_slot_updated->position - layer * slots_per_texture;
+
+            size_t x_tile = rel_slot_position % ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+            size_t y_tile = rel_slot_position / ::vt::VTConfig::get_instance().get_phys_tex_tile_width();
+
+            scm::math::vec3ui origin = scm::math::vec3ui(
+                    (uint32_t) x_tile * ::vt::VTConfig::get_instance().get_size_tile(),
+                    (uint32_t) y_tile * ::vt::VTConfig::get_instance().get_size_tile(), (uint32_t) layer);
+            scm::math::vec3ui dimensions = scm::math::vec3ui(::vt::VTConfig::get_instance().get_size_tile(),
+                                                             ::vt::VTConfig::get_instance().get_size_tile(), 1);
 
 
-    //     for (auto position_slot_cleared : cut->get_front()->get_mem_slots_cleared()) {
-    //         const ::vt::mem_slot_type *mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second);
+            auto physical_tex = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_ptr();
 
-    //         if (mem_slot_cleared == nullptr) {
-    //             std::cerr << "Mem slot at " << position_slot_cleared.second << " is null" << std::endl;
-    //         }
+            ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
+                                         scm::gl::FORMAT_RGB_8, mem_slot_updated->pointer);
+            //std::cout << "Update physical tex\n";
+        }
 
-    //         updated_levels.insert(vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
-    //     }
 
-    //     // update_index_texture
-    //     for (uint16_t updated_level : updated_levels) {
-    //         uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+        for (auto position_slot_cleared : cut->get_front()->get_mem_slots_cleared()) {
+            const ::vt::mem_slot_type *mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second);
 
-    //         scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-    //         scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
-    //         auto index_tex_hierarchy = 
-    //         ctx.render_context->update_sub_texture(vt_.index_texture_hierarchy_.at(updated_level),
-    //                                      scm::gl::texture_region(origin, dimensions), 0, scm::gl::FORMAT_RGBA_8UI,
-    //                                      cut->get_front()->get_index(updated_level));
+            if (mem_slot_cleared == nullptr) {
+                std::cerr << "Mem slot at " << position_slot_cleared.second << " is null" << std::endl;
+            }
 
-    //     }
-    //     cut_db->stop_reading_cut(cut_entry.first);
-    // }
-    // ctx.render_context->sync();
+            updated_levels.insert(::vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
+        }
+
+        // update_index_texture
+        for (uint16_t updated_level : updated_levels) {
+          
+            uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+
+            scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+            scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+            //auto index_tex_hierarchy = 
+            
+
+
+            //auto current_tex_id = cut->get_dataset_id;
+
+            for( auto const& vt_ptr : vector_of_vt_ptr ) {
+              auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
+
+              ctx.render_context->update_sub_texture(current_index_texture_hierarchy.at(updated_level),
+                                           scm::gl::texture_region(origin, dimensions), 0, scm::gl::FORMAT_RGBA_8UI,
+                                           cut->get_front()->get_index(updated_level));
+            }
+          
+        }
+        cut_db->stop_reading_cut(cut_entry.first);
+    }
+    ctx.render_context->sync();
   }
 
   void DeferredVirtualTexturingRenderer::update_physical_texture_blockwise(gua::RenderContext const& ctx, uint16_t context_id, const uint8_t *buf_texel, size_t slot_position) {
@@ -386,18 +402,28 @@ namespace gua {
     ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);
 
 
-    //for(int i = 0; i < num_feedback_slots; ++i) {
-      //int32_t feedback_for_current_slot = feedback_lod_cpu_buffer_ptr[i];
+    for(int i = 0; i < num_feedback_slots; ++i) {
+      int32_t feedback_for_current_slot = feedback_lod_cpu_buffer_ptr[i];
 
-      //if(0 != feedback_for_current_slot) {
+      if(0 != feedback_for_current_slot) {
         //std::cout << "LOD Feedback for slot " << i << " = " << feedback_for_current_slot << "\n";
-      //}
-    //}
+      }
+    }
 
 
 
     // give feedback after merge
-    //vt_.cut_update_->feedback(vt_.feedback_lod_cpu_buffer_, vt_.feedback_count_cpu_buffer_);
+    //vt_.cut_update_->feedback(feedback_lod_cpu_buffer_ptr, feedback_count_cpu_buffer_ptr);
+
+
+    auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
+    auto& current_vt_info = vt_info_per_context[ctx.id];
+
+    if (current_vt_info.cut_update_){
+      current_vt_info.cut_update_->feedback(feedback_lod_cpu_buffer_ptr, feedback_count_cpu_buffer_ptr);
+      //std::cout << "Sending cut update feedback\n";
+    }
+
   }
 
 
@@ -428,9 +454,8 @@ namespace gua {
     /////////////////////// get data from lamure ///////////////////////////////
     ctx.render_context->sync();
 
-    //apply cut update
+    _apply_cut_update(ctx);
 
-    ctx.render_context->sync();
     /////////////////////////////render //////////////////////////////////////
 
     ctx.render_context

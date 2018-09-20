@@ -22,11 +22,11 @@ layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_
 uniform uint max_level = 14;
 
 uniform vec2 tile_size = uvec2(256, 256);
-uniform vec2 tile_padding = uvec2(2, 2);
+uniform vec2 tile_padding = uvec2(1, 1);
 uniform uvec2 physical_texture_dim = uvec2(8192, 8192);
 
-uniform bool enable_hierarchy = true;
-uniform int toggle_visualization = 1;
+uniform bool enable_hierarchy = false;
+uniform int toggle_visualization = 0;
 
 struct idx_tex_positions
 {
@@ -68,6 +68,9 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
 
     // outputting the calculated coordinate from our physical texture
     vec4 c = texture(layered_physical_texture, vec3(physical_texture_coordinates, index_quadruple.z));
+
+    //vec4 c = texture(layered_physical_texture, vec3(gua_quad_coords, index_quadruple.z));
+
 
     return c;
 }
@@ -262,10 +265,13 @@ void main() {
   vec2 sampled_uv_coords = uv_lambda_triple.rg;
   float lambda 			 = uv_lambda_triple.b;
 
-  vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
+  //vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
 
-
+  sampled_uv_coords.y = 1.0 - sampled_uv_coords.y;
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
 
-  out_vt_color = 1.0*virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
+  out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
+
+  //out_vt_color = texture(layered_physical_texture, vec3(gua_quad_coords,0) ).rgb;
+  //out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
 }
