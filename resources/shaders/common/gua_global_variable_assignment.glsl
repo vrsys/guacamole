@@ -9,3 +9,4 @@ gua_metalness         = gua_varying_metalness;
 gua_emissivity        = gua_varying_emissivity;
 gua_flags_passthrough = false;
 gua_alpha             = 1.0;
+gua_uvs               = vec4(gua_varying_texcoords, 0.0, 0.0);

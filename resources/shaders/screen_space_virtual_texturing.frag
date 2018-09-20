@@ -8,12 +8,12 @@ in vec2 gua_quad_coords;
 
 @include "common/gua_fragment_shader_input.glsl"
 
-layout (location = 0) out vec3 out_accumulated_color;
+layout (location = 0) out vec3 out_vt_color;
+
+uniform sampler2D gua_uv_buffer;
 
 
 void main() {
 
-  //gua_out_color = gua_get_color();
-  gua_out_color = vec3(1.0, 0.0, 0.0);
-  //submit_fragment(gl_FragCoord.z);
+  out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
 }
