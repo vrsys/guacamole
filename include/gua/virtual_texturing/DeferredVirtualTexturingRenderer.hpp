@@ -60,8 +60,10 @@ namespace gua {
   private:  //shader related auxiliary methods
 
     void  _create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims);
+    void  _init_vt(gua::RenderContext const& ctx);
+    void  _create_physical_texture(gua::RenderContext const& ctx);
+    void  _create_index_texture_hierarchy(gua::RenderContext const& ctx);
 
-    
     void  _check_for_resource_updates(gua::Pipeline const& pipe, RenderContext const& ctx);
 
     void _check_shader_programs(gua::RenderContext const& ctx);
@@ -90,8 +92,8 @@ namespace gua {
 
     scm::gl::quad_geometry_ptr                                          fullscreen_quad_;
 
-    scm::gl::sampler_state_ptr      nearest_sampler_state_;
-
+    scm::gl::sampler_state_ptr                                          nearest_sampler_state_;
+    scm::gl::sampler_state_ptr                                          linear_sampler_state_;
   };
 
 }

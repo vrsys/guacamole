@@ -89,16 +89,16 @@ void TextureDatabase::load(std::string const& filename) {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   } else if(".atlas" == extension) {
   #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    std::string const physical_texture_default_name = "gua_physical_texture_2d";
-    auto physical_texture_2d = TextureDatabase::instance()->lookup(physical_texture_default_name);
-
+    //std::string const physical_texture_default_name = "gua_physical_texture_2d";
+    //auto physical_texture_2d = TextureDatabase::instance()->lookup(physical_texture_default_name);
+/*
     if(!physical_texture_2d) {
       instance()->add(physical_texture_default_name, 
                       std::make_shared<LayeredPhysicalTexture2D>(physical_texture_default_name,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT)));
-    }
+    }*/
 
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
     if(!occurrence_check) {
