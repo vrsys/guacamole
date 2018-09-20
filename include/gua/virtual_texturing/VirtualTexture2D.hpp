@@ -55,17 +55,22 @@ class GUA_DLL VirtualTexture2D : public Texture {
                                                scm::gl::WRAP_REPEAT,
                                                scm::gl::WRAP_REPEAT));
 
-  unsigned width() const override { return width_; }
-  unsigned height() const override { return height_; }
+  unsigned width() const override { return _physical_texture_width; }
+  unsigned height() const override { return _physical_texture_height; }
+  unsigned get_physical_texture_width() const { return _physical_texture_width; }
+  unsigned get_physical_texture_height() const { return _physical_texture_height; }
+  uint32_t get_tile_size() const { return _tile_size; }
+  uint32_t get_lamure_texture_id() const { return _lamure_texture_id; }
 
   void upload_to(RenderContext const& context) const override;
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
-
-   static std::map<std::size_t,
+  // per render (gua) contexts
+  static std::map<std::size_t,
             std::shared_ptr<LayeredPhysicalTexture2D> > physical_texture_ptr_per_context_;
 
-   static std::map<std::size_t, VTInfo> vt_info_per_context_;
+  // per render (gua) contexts
+  static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
   std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
     return index_texture_hierarchy_per_context_[ctx.id];
@@ -77,13 +82,15 @@ class GUA_DLL VirtualTexture2D : public Texture {
     std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
 
   //scm::gl::texture_image_data_ptr image_ = nullptr;
-  unsigned width_;
-  unsigned height_;
+  unsigned _physical_texture_width;
+  unsigned _physical_texture_height;
+  uint16_t _tile_size;
   //unsigned layers_;
 
  private:
   std::string _file_config;
-  std::string _file_atlas;  
+  std::string _file_atlas;
+  uint32_t    _lamure_texture_id;
   scm::shared_ptr<scm::gl::render_device> _device;
   mutable scm::math::vec2ui                                                         _index_texture_dimension;
   scm::gl::sampler_state_ptr                                                        _filter_nearest;

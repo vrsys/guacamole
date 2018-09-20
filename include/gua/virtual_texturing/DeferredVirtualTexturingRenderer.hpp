@@ -60,9 +60,13 @@ namespace gua {
   private:  //shader related auxiliary methods
 
     void  _create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims);
-    void  _init_vt(gua::RenderContext const& ctx);
+    void  _init_vt(gua::RenderContext const& ctx, gua::node::SerializedCameraNode const& cam);
     void  _create_physical_texture(gua::RenderContext const& ctx);
     void  _create_index_texture_hierarchy(gua::RenderContext const& ctx);
+    void  _register_cuts(gua::RenderContext const& ctx);
+    void  _start_cut_update(gua::RenderContext const& ctx);
+
+    void  _apply_cut_update(gua::RenderContext const& ctx);
 
     void  _check_for_resource_updates(gua::Pipeline const& pipe, RenderContext const& ctx);
 

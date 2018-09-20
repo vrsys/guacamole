@@ -31,19 +31,27 @@
 //#include <lamure/vt/ren/CutUpdate.h>
 //#include <lamure/vt/ren/CutDatabase.h>
 
-
 #include <scm/gl_core/buffer_objects/buffer.h>
 #include <scm/gl_core/texture_objects/texture_2d.h>
 #include <scm/gl_util/data/imaging/texture_image_data.h>
+
+namespace vt{
+  class CutUpdate;
+}
 
 namespace gua {
 
 
 
 struct GUA_DLL VTInfo {
-  //uint32_t texture_id_;
-  std::unordered_map<std::size_t, uint16_t> gua_view_id_to_lamure_view_id_;
+  
   uint16_t context_id_;
+  std::unordered_map<std::size_t, uint16_t> gua_camera_id_to_lamure_view_id_;
+
+  // a lamure triple is a unique combination of lamure_view_id, lamure_context_id and lamure_texture_id
+  std::unordered_map<uint64_t, uint16_t> cut_id_to_lamure_triple_;
+  ::vt::CutUpdate *cut_update_;
+  bool cut_updated_running_ = false;
 
 };
 
