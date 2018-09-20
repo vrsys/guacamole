@@ -367,13 +367,13 @@ namespace gua {
 
     int32_t *feedback_lod = (int32_t *) ctx.render_context->map_buffer(feedback_lod_storage_ptr, scm::gl::ACCESS_READ_ONLY);
 
-    //memcpy(feedback_lod_cpu_buffer_ptr, feedback_lod, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32I));
+    memcpy(feedback_lod_cpu_buffer_ptr, feedback_lod, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32I));
     ctx.render_context->sync();
 
     ctx.render_context->unmap_buffer(feedback_lod_storage_ptr);
     ctx.render_context->clear_buffer_data(feedback_lod_storage_ptr, scm::gl::FORMAT_R_32I, nullptr);
 
-/*
+
     auto feedback_count_storage_ptr = gua_layered_physical_texture_for_context->get_feedback_count_storage_ptr();
     auto feedback_count_cpu_buffer_ptr = gua_layered_physical_texture_for_context->get_feedback_count_cpu_buffer();
 
@@ -386,7 +386,16 @@ namespace gua {
     ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);
 
 
-*/  
+    //for(int i = 0; i < num_feedback_slots; ++i) {
+      //int32_t feedback_for_current_slot = feedback_lod_cpu_buffer_ptr[i];
+
+      //if(0 != feedback_for_current_slot) {
+        //std::cout << "LOD Feedback for slot " << i << " = " << feedback_for_current_slot << "\n";
+      //}
+    //}
+
+
+
     // give feedback after merge
     //vt_.cut_update_->feedback(vt_.feedback_lod_cpu_buffer_, vt_.feedback_count_cpu_buffer_);
   }
@@ -419,8 +428,9 @@ namespace gua {
     /////////////////////// get data from lamure ///////////////////////////////
     ctx.render_context->sync();
 
+    //apply cut update
 
-
+    ctx.render_context->sync();
     /////////////////////////////render //////////////////////////////////////
 
     ctx.render_context
@@ -496,7 +506,6 @@ namespace gua {
 
     /////////////////////// send feedback data to lamure ///////////////////////////////
     ctx.render_context->sync();
-
     collect_feedback(ctx);
   }
 
