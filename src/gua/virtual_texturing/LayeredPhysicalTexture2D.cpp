@@ -69,8 +69,10 @@ namespace gua {
     ctx.render_context->bind_storage_buffer(feedback_lod_storage_, 0);
     ctx.render_context->bind_storage_buffer(feedback_count_storage_, 1);
 
-    feedback_lod_cpu_buffer_   = new int32_t(num_feedback_slots_);
-    feedback_count_cpu_buffer_ = new uint32_t(num_feedback_slots_);
+
+
+    feedback_lod_cpu_buffer_   = new int32_t[num_feedback_slots_];
+    feedback_count_cpu_buffer_ = new uint32_t[num_feedback_slots_];
 
 
 

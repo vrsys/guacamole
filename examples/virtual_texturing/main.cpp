@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
 
   // create simple untextured material shader
-  auto virtual_texture_mat_input_descriptor = std::make_shared<gua::MaterialShaderDescription>("./data/materials/VirtualTexturing.gmd");
+  auto virtual_texture_mat_input_descriptor = std::make_shared<gua::MaterialShaderDescription>("./data/materials/MinimalVirtualTexturing.gmd");
   auto virtual_texturing_preparation_shader(std::make_shared<gua::MaterialShader>("VirtualTexturing", virtual_texture_mat_input_descriptor));
   gua::MaterialShaderDatabase::instance()->add(virtual_texturing_preparation_shader);
 
