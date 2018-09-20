@@ -40,7 +40,7 @@ DeferredVirtualTexturingPassDescription::DeferredVirtualTexturingPassDescription
   fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
   name_ = "DeferredVirtualTexturingPass";
 
-  needs_color_buffer_as_input_ = true;
+  needs_color_buffer_as_input_ = false;
   writes_only_color_buffer_ = true;
   enable_for_shadows_ = false;
   rendermode_ = RenderMode::Custom;

@@ -73,8 +73,25 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+
+
+  // create simple untextured material shader
+  auto virtual_texture_mat_input_descriptor = std::make_shared<gua::MaterialShaderDescription>("./data/materials/VirtualTexturing.gmd");
+  auto virtual_texturing_preparation_shader(std::make_shared<gua::MaterialShader>("VirtualTexturing", virtual_texture_mat_input_descriptor));
+  gua::MaterialShaderDatabase::instance()->add(virtual_texturing_preparation_shader);
+
+  //create material for virtual_texturing
+  auto vt = virtual_texturing_preparation_shader->make_new_material();
+  vt->set_uniform("metalness", 0.0f);
+  vt->set_uniform("roughness", 1.0f);
+  vt->set_uniform("emissivity", 1.0f);
+
+
+
+
   auto plane(loader.create_geometry_from_file(
       "plane", "data/objects/vive_controller.obj",
+      vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |  
       gua::TriMeshLoader::MAKE_PICKABLE)  );
@@ -133,7 +150,7 @@ int main(int argc, char** argv) {
       gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
   resolve_pass->tone_mapping_exposure(1.0f);
   pipe->add_pass(resolve_pass);
-
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   camera->set_pipeline_description(pipe);
 
 

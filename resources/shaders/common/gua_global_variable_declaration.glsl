@@ -10,3 +10,4 @@ float gua_metalness;
 float gua_emissivity;
 bool  gua_flags_passthrough;
 float gua_alpha;
+vec4  gua_uvs;

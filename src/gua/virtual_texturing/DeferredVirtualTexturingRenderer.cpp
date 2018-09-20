@@ -265,6 +265,10 @@ namespace gua {
     {
       ctx.render_context->set_frame_buffer(screen_space_virtual_texturing_fbo_);
       screen_space_virtual_texturing_shader_program_->use(ctx);
+      
+      auto& gbuffer = *pipe.get_gbuffer();
+      ctx.render_context->bind_texture(gbuffer.get_uv_buffer(), nearest_sampler_state_, 0);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "gua_uv_buffer", 0);
       ctx.render_context->apply();
 
       fullscreen_quad_->draw(ctx.render_context);

@@ -10,11 +10,10 @@ in vec2 gua_quad_coords;
 
 layout (location = 0) out vec3 out_vt_color;
 
+uniform sampler2D gua_uv_buffer;
 
 
 void main() {
 
-  //gua_out_color = gua_get_color();
-  out_vt_color = vec3(1.0, 0.0, 1.0);//gua_get_normal();//vec3(1.0, 0.0, 0.0);
-  //submit_fragment(gl_FragCoord.z);
+  out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
 }
