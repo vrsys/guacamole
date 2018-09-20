@@ -31,6 +31,10 @@
 #include <mutex>
 #include <future>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/virtual_texturing/VirtualTexture2D.hpp>
+#endif
+
 namespace gua {
 
 /**
@@ -57,8 +61,10 @@ namespace gua {
 
   friend class Singleton<TextureDatabase>;
 
-  std::vector<std::shared_ptr<Texture> > get_virtual_textures();
-
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+  std::vector<std::shared_ptr<VirtualTexture2D> > get_virtual_textures();
+#endif
+  
  private:
   // this class is a Singleton --- private c'tor and d'tor
   TextureDatabase() = default;
@@ -68,7 +74,9 @@ namespace gua {
   std::mutex                                   texture_request_mutex_;
   std::set<std::string>                        texture_loading_;
 
-  std::unordered_map<std::size_t, std::string> vt_texture_names_;
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+  std::unordered_map<std::string, std::shared_ptr<VirtualTexture2D> > vt_textures_;
+#endif
 
 };
 

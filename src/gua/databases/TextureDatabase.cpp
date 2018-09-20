@@ -101,12 +101,15 @@ void TextureDatabase::load(std::string const& filename) {
     }*/
 
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
+ 
+    std::shared_ptr<VirtualTexture2D> vt_pointer = nullptr;
     if(!occurrence_check) {
-      instance()->add(filename, std::make_shared<VirtualTexture2D>(filename,
+      vt_pointer = std::make_shared<VirtualTexture2D>(filename,
                                                                    256,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                         scm::gl::WRAP_REPEAT,
-                                        scm::gl::WRAP_REPEAT)));
+                                        scm::gl::WRAP_REPEAT));
+      instance()->add(filename, vt_pointer);
 
       std::cout << "Registered " << filename << " as atlas texture\n";
     }
@@ -116,7 +119,7 @@ void TextureDatabase::load(std::string const& filename) {
     if(!existing_vt) {
       std::cout << "Failed to create Virtual Texture: " << filename << "\n";
     } else {
-      vt_texture_names_[existing_vt->uuid()] = filename;
+      vt_textures_[filename] = vt_pointer;
     }
 
 
@@ -129,19 +132,17 @@ void TextureDatabase::load(std::string const& filename) {
 
 }
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+std::vector<std::shared_ptr<VirtualTexture2D> > TextureDatabase::get_virtual_textures() {
+  std::vector< std::shared_ptr<VirtualTexture2D> > virtual_texture_ptrs;
 
-std::vector<std::shared_ptr<Texture> > TextureDatabase::get_virtual_textures() {
-  std::vector< std::shared_ptr<Texture> > virtual_texture_ptrs;
-
-  for(auto const& vt_name : vt_texture_names_) {
-    auto vt_exists = TextureDatabase::instance()->lookup(vt_name.second);
-    if (vt_exists) {
-      virtual_texture_ptrs.push_back(vt_exists);
-    }
+  for(auto const& vt : vt_textures_) {
+    virtual_texture_ptrs.push_back(vt.second);
   }
 
   return virtual_texture_ptrs;
 }
+#endif
 
 
 

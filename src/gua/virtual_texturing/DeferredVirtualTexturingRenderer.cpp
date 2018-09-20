@@ -208,8 +208,6 @@ namespace gua {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
-  void DeferredVirtualTexturingRenderer::collect_feedback(gua::RenderContext const& ctx){
-  }
 
 
   void DeferredVirtualTexturingRenderer::_initialize_shader_programs(gua::RenderContext const& ctx) {
@@ -234,6 +232,42 @@ namespace gua {
     } 
   }
 
+
+  void DeferredVirtualTexturingRenderer::collect_feedback(gua::RenderContext const& ctx) {
+    auto& gua_layered_physical_texture_for_context = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
+
+    auto feedback_lod_storage_ptr = gua_layered_physical_texture_for_context->get_feedback_lod_storage_ptr();
+    auto feedback_lod_cpu_buffer_ptr = gua_layered_physical_texture_for_context->get_feedback_lod_cpu_buffer();
+
+    std::size_t num_feedback_slots = gua_layered_physical_texture_for_context->get_num_feedback_slots();
+
+    int32_t *feedback_lod = (int32_t *) ctx.render_context->map_buffer(feedback_lod_storage_ptr, scm::gl::ACCESS_READ_ONLY);
+
+    //memcpy(feedback_lod_cpu_buffer_ptr, feedback_lod, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32I));
+    ctx.render_context->sync();
+
+    ctx.render_context->unmap_buffer(feedback_lod_storage_ptr);
+    ctx.render_context->clear_buffer_data(feedback_lod_storage_ptr, scm::gl::FORMAT_R_32I, nullptr);
+
+/*
+    auto feedback_count_storage_ptr = gua_layered_physical_texture_for_context->get_feedback_count_storage_ptr();
+    auto feedback_count_cpu_buffer_ptr = gua_layered_physical_texture_for_context->get_feedback_count_cpu_buffer();
+
+    uint32_t *feedback_count = (uint32_t *) ctx.render_context->map_buffer(feedback_count_storage_ptr,
+                                                                 scm::gl::ACCESS_READ_ONLY);
+    memcpy(feedback_count_cpu_buffer_ptr, feedback_count, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32UI));
+    ctx.render_context->sync();
+
+    ctx.render_context->unmap_buffer(feedback_count_storage_ptr);
+    ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);
+
+
+*/  
+    // give feedback after merge
+    //vt_.cut_update_->feedback(vt_.feedback_lod_cpu_buffer_, vt_.feedback_count_cpu_buffer_);
+  }
+
+
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
 
@@ -251,7 +285,7 @@ namespace gua {
 
 
     /////////////////////// get data from lamure ///////////////////////////////
-
+    ctx.render_context->sync();
 
 
 
@@ -273,9 +307,27 @@ namespace gua {
       auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
 
       ctx.render_context->bind_texture(current_physical_texture_ptr->get_physical_texture_ptr(), linear_sampler_state_, 1);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture", 1);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "layered_physical_texture", 1);
 
-      
+
+
+      auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
+
+      uint32_t global_texture_binding_idx = 2;
+
+      std::string const hierarchical_index_texture_uniform_name = "hierarchical_idx_textures";
+      for( auto const& vt_ptr : vector_of_vt_ptr ) {
+        auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
+
+        for(auto const& index_texture_layer : current_index_texture_hierarchy) {
+          ctx.render_context->bind_texture(index_texture_layer, linear_sampler_state_, global_texture_binding_idx);
+          screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, hierarchical_index_texture_uniform_name, 
+                                                                        int32_t(global_texture_binding_idx), int32_t(global_texture_binding_idx-2) );
+          //vt_ptr->upload_to(ctx);
+
+          ++global_texture_binding_idx;
+        }
+      }
 
 
       ctx.render_context->apply();
@@ -310,8 +362,10 @@ namespace gua {
     target.unbind(ctx);
 
 
-    /////////////////////// send data to lamure ///////////////////////////////
+    /////////////////////// send feedback data to lamure ///////////////////////////////
+    ctx.render_context->sync();
 
+    collect_feedback(ctx);
   }
 
 }

@@ -66,7 +66,7 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
                                           scm::gl::WRAP_REPEAT,
                                           scm::gl::WRAP_REPEAT));*/
 
-
+  ~LayeredPhysicalTexture2D();
 
 //Constructor 
 //get path to config file and atlas
@@ -86,16 +86,31 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   void upload_to(RenderContext const& context) const override;
 //  void initialize_physical_texture(RenderContext const& ctx) const;
 
+  void collect_feedback(gua::RenderContext const& ctx);
+
   scm::gl::texture_2d_ptr get_physical_texture_ptr() const { return physical_texture_ptr_; }
+  scm::gl::buffer_ptr     get_feedback_lod_storage_ptr() const    { return feedback_lod_storage_; }
+  scm::gl::buffer_ptr     get_feedback_count_storage_ptr() const  { return feedback_count_storage_; }
   //static scm::gl::data_format get_tex_format();
   ///@}
+  int32_t*  get_feedback_lod_cpu_buffer() const {return feedback_lod_cpu_buffer_;}
+  uint32_t* get_feedback_count_cpu_buffer() const {return feedback_count_cpu_buffer_;}
+
+  std::size_t get_num_feedback_slots() const {return num_feedback_slots_;}
 
  protected:
   mutable scm::gl::texture_2d_ptr physical_texture_ptr_ = nullptr;
-  unsigned width_;
-  unsigned height_;
-  unsigned num_layers_;
+  mutable scm::gl::buffer_ptr feedback_lod_storage_     = nullptr;
+  mutable scm::gl::buffer_ptr feedback_count_storage_   = nullptr;
 
+  mutable int32_t*  feedback_lod_cpu_buffer_    = nullptr;
+  mutable uint32_t* feedback_count_cpu_buffer_  = nullptr;
+
+  mutable unsigned width_;
+  mutable unsigned height_;
+  mutable unsigned num_layers_;
+
+  mutable std::size_t num_feedback_slots_;
  private:
   std::string file_config_;
   std::string file_atlas_;

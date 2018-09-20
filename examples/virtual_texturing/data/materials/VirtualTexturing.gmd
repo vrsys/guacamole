@@ -1,0 +1,41 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "CalculateDistortionForVT",
+      "source" : "
+
+
+        float dxdy()
+        {
+            vec2 c = gua_uvs.xy * 256;
+
+            float dFdxCx = dFdx(c.x);
+            float dFdxCy = dFdx(c.y);
+
+            float dFdyCx = dFdy(c.x);
+            float dFdyCy = dFdy(c.y);
+
+            float rho = max( sqrt( dFdxCx*dFdxCx + dFdxCy*dFdxCy ),
+                             sqrt( dFdyCx*dFdyCx + dFdyCy*dFdyCy ));
+
+            float lambda = log2(rho);
+
+            return lambda;
+        }
+
+        void CalculateDistortionForVT() {
+
+          float lambda = -dxdy();
+
+          gua_uvs.z = lambda;
+         }
+      "
+
+    }
+  ]
+
+}
