@@ -118,11 +118,20 @@ namespace gua {
       screen_space_virtual_texturing_fbo_->attach_color_buffer(0,
                                                                virtually_textured_color_attachment_);
 
+      nearest_sampler_state_ = ctx.render_device
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+
+      linear_sampler_state_ = ctx.render_device
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+
     }
 
 
+    // fill VTInfo
+    _init_vt(ctx);
 
-
+    _create_physical_texture(ctx);
+    _create_index_texture_hierarchy(ctx);
 
 }
 
@@ -145,53 +154,61 @@ namespace gua {
       scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
 
       vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
-    }*/
+    }
+    */
 
   }
 
-  void DeferredVirtualTexturingRenderer::update_physical_texture_blockwise(gua::RenderContext const& ctx, uint16_t context_id, const uint8_t *buf_texel, size_t slot_position) {
+  void DeferredVirtualTexturingRenderer::_init_vt(gua::RenderContext const& ctx) {
+    auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
 
-  /*
-    auto phy_tex_ptr = ctx.physical_texture;
+    auto current_vt_info_per_context_iterator = vt_info_per_context.find(ctx.id);
 
-    if(phy_tex_ptr == nullptr) {
-      std::cout << "physical_context is nullptr\n";
-    } 
-    else 
-    {
-      size_t slots_per_texture = vt::VTConfig::get_instance().get_phys_tex_tile_width() * vt::VTConfig::get_instance().get_phys_tex_tile_width();
-      size_t layer = slot_position / slots_per_texture;
-      size_t rel_slot_position = slot_position - layer * slots_per_texture;
-      size_t x_tile = rel_slot_position % vt::VTConfig::get_instance().get_phys_tex_tile_width();
-      size_t y_tile = rel_slot_position / vt::VTConfig::get_instance().get_phys_tex_tile_width();
+    if(vt_info_per_context.end() == current_vt_info_per_context_iterator ) {
+      auto& current_vt_info = vt_info_per_context[ctx.id];
 
-      scm::math::vec3ui origin = scm::math::vec3ui((uint32_t)x_tile * vt::VTConfig::get_instance().get_size_tile(), (uint32_t)y_tile * vt::VTConfig::get_instance().get_size_tile(), (uint32_t)layer);
-      scm::math::vec3ui dimensions = scm::math::vec3ui(vt::VTConfig::get_instance().get_size_tile(), vt::VTConfig::get_instance().get_size_tile(), 1);
+      current_vt_info.context_id_ = 0; //dummy
 
-      ctx.render_context->update_sub_texture(phy_tex_ptr, scm::gl::texture_region(origin, dimensions), 0, PhysicalTexture2D::get_tex_format(), buf_texel);
+      std::cout << "Filled VT info for context: " << ctx.id << "\n";
     }
-    */
+  }
+
+  void DeferredVirtualTexturingRenderer::_create_physical_texture(gua::RenderContext const& ctx) {
+    auto& physical_texture_ptrs_per_context = VirtualTexture2D::physical_texture_ptr_per_context_;
+
+    auto current_ctx_physical_texture_iterator = physical_texture_ptrs_per_context.find(ctx.id);
+
+    if(physical_texture_ptrs_per_context.end() == current_ctx_physical_texture_iterator ) {
+      auto& current_physical_texture_ptr = physical_texture_ptrs_per_context[ctx.id];
+
+      current_physical_texture_ptr = std::make_shared<LayeredPhysicalTexture2D>();
+
+      current_physical_texture_ptr->upload_to(ctx);
+    }
+  }
+
+  void DeferredVirtualTexturingRenderer::_create_index_texture_hierarchy(gua::RenderContext const& ctx) {
+
+    auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
+
+
+    for( auto const& vt_ptr : vector_of_vt_ptr ) {
+      //scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+      //scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+
+      //std::cout << vt_ptr->uuid() << "\n";
+      vt_ptr->upload_to(ctx);
+      // get buf_cpu
+
+      //vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
+    }
+  }
+
+  void DeferredVirtualTexturingRenderer::update_physical_texture_blockwise(gua::RenderContext const& ctx, uint16_t context_id, const uint8_t *buf_texel, size_t slot_position) {
   }
 
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::collect_feedback(gua::RenderContext const& ctx){
-
-    /*
-    using namespace scm::math;
-    using namespace scm::gl;
-
-    uint32_t *feedback = (uint32_t *)ctx.render_context->map_buffer(ctx.feedback_storage, ACCESS_READ_ONLY);
-
-    memcpy(ctx.feedback_cpu_buffer, feedback, ctx.size_feedback * size_of_format(FORMAT_R_32UI));
-
-    ctx.render_context->sync();
-
-    auto *_cut_update = &vt::CutUpdate::get_instance();
-    _cut_update->feedback(ctx.feedback_cpu_buffer);
-
-    ctx.render_context->unmap_buffer(ctx.feedback_storage);
-    ctx.render_context->clear_buffer_data(ctx.feedback_storage, FORMAT_R_32UI, nullptr);
-    */
   }
 
 
@@ -217,42 +234,28 @@ namespace gua {
     } 
   }
 
-  void DeferredVirtualTexturingRenderer::_update_index_texture_hierarchies(gua::RenderContext const& ctx) {
-
-    auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
-
-
-    for( auto const& vt_ptr : vector_of_vt_ptr ) {
-      //scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-      //scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
-
-      std::cout << vt_ptr->uuid() << "\n";
-      // get buf_cpu
-
-      //vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
-    }
-  }
-
   ///////////////////////////////////////////////////////////////////////////////
   void DeferredVirtualTexturingRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc) {
-
-
-    RenderContext const& ctx(pipe.get_context());
-
-    // update index texture hierarchies (~ pro texture atlas)
-    _update_index_texture_hierarchies(ctx);
-
-    // update physical texture
-
-
-
 
     auto const& camera = pipe.current_viewstate().camera;
     scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
 
+    RenderContext const& ctx(pipe.get_context());
+
+    /////////////////////// check and create gpu resources ///////////////////////
 
     _check_shader_programs(ctx);
+
+    // in here, index texture hierarchies and physical textures are created lazily
     _create_gpu_resources(ctx, render_target_dims);
+
+
+    /////////////////////// get data from lamure ///////////////////////////////
+
+
+
+
+    /////////////////////////////render //////////////////////////////////////
 
     ctx.render_context
       ->clear_color_buffer(screen_space_virtual_texturing_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
@@ -262,6 +265,19 @@ namespace gua {
     {
       ctx.render_context->set_frame_buffer(screen_space_virtual_texturing_fbo_);
       screen_space_virtual_texturing_shader_program_->use(ctx);
+      
+      auto& gbuffer = *pipe.get_gbuffer();
+      ctx.render_context->bind_texture(gbuffer.get_uv_buffer(), nearest_sampler_state_, 0);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "gua_uv_buffer", 0);
+
+      auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
+
+      ctx.render_context->bind_texture(current_physical_texture_ptr->get_physical_texture_ptr(), linear_sampler_state_, 1);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture", 1);
+
+      
+
+
       ctx.render_context->apply();
 
       fullscreen_quad_->draw(ctx.render_context);
@@ -282,6 +298,10 @@ namespace gua {
     blit_vt_color_to_gbuffer_program_->use(ctx);
 
     {
+
+    ctx.render_context->bind_texture(virtually_textured_color_attachment_, nearest_sampler_state_, 0);
+    blit_vt_color_to_gbuffer_program_->apply_uniform(ctx, "passed_vt_colors", 0);
+
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
     }
@@ -289,6 +309,8 @@ namespace gua {
     blit_vt_color_to_gbuffer_program_->unuse(ctx);
     target.unbind(ctx);
 
+
+    /////////////////////// send data to lamure ///////////////////////////////
 
   }
 
