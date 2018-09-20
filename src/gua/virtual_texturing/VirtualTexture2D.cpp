@@ -37,6 +37,9 @@
 #include <scm/gl_util/data/imaging/texture_loader.h>
 #include <scm/gl_util/data/imaging/texture_image_data.h>
 
+#include <lamure/vt/VTConfig.h>
+#include <lamure/vt/ren/CutDatabase.h>
+
 #include <iostream>
 #include <fstream>
 #include <regex>
@@ -93,6 +96,14 @@ static inline std::string trim_copy(std::string s) {
 
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
+    ::vt::VTConfig::CONFIG_PATH = ini_filename;
+    _tile_size = vt::VTConfig::get_instance().get_size_tile();
+
+    _lamure_texture_id = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
+    //vt::VTConfig::get_instance().define_size_physical_texture(128, 8192);
+
+
+
     std::size_t tile_size = 0;
     std::string line_buffer{""};
 
@@ -109,7 +120,7 @@ static inline std::string trim_copy(std::string s) {
     if(physical_texture_tile_slot_size == tile_size) {
       std::cout << "Tile size compatible\n";
     } else {
-      std::cout << "Tile size INcompatible\n";
+      std::cout << "Tile size Incompatible\n";
       //gua::Logger << "Warning: Ignoring VT because of unmatching tile size\n";
     }
   }
