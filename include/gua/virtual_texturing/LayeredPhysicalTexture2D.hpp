@@ -83,7 +83,10 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   unsigned height() const override { return height_; }
   unsigned num_layers() const {return num_layers_; }
 
-  void upload_to(RenderContext const& context) const override;
+  void upload_to(RenderContext const& context) const override {};
+
+  void upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const;
+
 //  void initialize_physical_texture(RenderContext const& ctx) const;
 
   void collect_feedback(gua::RenderContext const& ctx);
@@ -109,6 +112,7 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   mutable unsigned width_;
   mutable unsigned height_;
   mutable unsigned num_layers_;
+  mutable unsigned tile_size_;
 
   mutable std::size_t num_feedback_slots_;
  private:

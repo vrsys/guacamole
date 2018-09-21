@@ -39,19 +39,23 @@ namespace gua {
     }    
   }
 
-  void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx) const {
+  void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const {
     //TODO: get_actual sizes
 
-    width_ = 8192;
-    height_ = 8192;
+    width_ = width;
+    height_ = height;
+    num_layers_ = num_layers;
+    tile_size_ = tile_size;
+    num_feedback_slots_ = (width_ / tile_size_) * (height_ / tile_size_) * num_layers_;
+    //auto physical_texture_size = scm::math::vec2ui(),
+    //                                               );
+
 
     scm::math::vec2ui physical_texture_dimensions(width_, height_);
 
-    num_layers_ = 5;
 
-    uint32_t tile_size = 256;
 
-    num_feedback_slots_ = (width_ / tile_size) * (height_ / tile_size) * num_layers_;
+
 
 
 

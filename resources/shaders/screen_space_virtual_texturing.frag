@@ -19,14 +19,31 @@ layout(binding = 2) uniform usampler2D hierarchical_idx_textures[17];
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
 
-uniform uint max_level = 14;
+uniform int max_level = 0;
 
-uniform vec2 tile_size = uvec2(256, 256);
-uniform vec2 tile_padding = uvec2(1, 1);
-uniform uvec2 physical_texture_dim = uvec2(8192, 8192);
+uniform uvec2 tile_size = uvec2(0, 0);
+uniform uvec2 tile_padding = uvec2(0, 0);
+uniform uvec2 physical_texture_dim = uvec2(0, 0);
 
 uniform bool enable_hierarchy = false;
 uniform int toggle_visualization = 0;
+
+
+float rand(vec2 n) { 
+    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+}
+
+float noise(vec2 p){
+    vec2 ip = floor(p);
+    vec2 u = fract(p);
+    u = u*u*(3.0-2.0*u);
+    
+    float res = mix(
+        mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
+        mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
+    return res*res;
+}
+
 
 struct idx_tex_positions
 {
@@ -62,6 +79,7 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
     vec2 padding_scale = 1 - 2 * tile_padding / tile_size;
     vec2 padding_offset = tile_padding / tile_size;
 
+
     // adding the ratio for every texel to our base offset to get the right pixel in our tile
     // and dividing it by the dimension of the phy. tex.
     vec2 physical_texture_coordinates = (base_xy_offset.xy + physical_tile_ratio_xy * padding_scale + padding_offset) / physical_texture_dim;
@@ -69,6 +87,9 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
     // outputting the calculated coordinate from our physical texture
     vec4 c = texture(layered_physical_texture, vec3(physical_texture_coordinates, index_quadruple.z));
 
+    //return vec4(noise(physical_texture_coordinates.xy*1001));
+
+    //return vec4(physical_texture_coordinates.xy, 1.0, 1.0);
     //vec4 c = texture(layered_physical_texture, vec3(gua_quad_coords, index_quadruple.z));
 
 
@@ -196,6 +217,8 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
     float mix_ratio = fract(lambda);
     int desired_level = int(ceil(lambda))*3;
 
+   // desired_level = 0;
+
     idx_tex_positions positions;
 
     vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
@@ -207,6 +230,13 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         //return vec4(1.0, 0.0, 0.0, 0.0);
 
         uvec4 idx_pos = texture(hierarchical_idx_textures[0], texture_coordinates).rgba;
+/*
+        if (idx_pos.x == 0 && idx_pos.y == 0 && idx_pos.z == 0 && idx_pos.w == 1) {
+            return vec4(0.0, 1.0, 0.0, 1.0);
+        } else {
+            return vec4(1.0, 0.0, 0.0, 1.0);
+        }
+*/
         positions = idx_tex_positions(0, idx_pos, 0, idx_pos);
 
 
@@ -267,11 +297,16 @@ void main() {
 
   //vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
 
-  sampled_uv_coords.y = 1.0 - sampled_uv_coords.y;
+  sampled_uv_coords.y =  1.0 - sampled_uv_coords.y;
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
 
   out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
-
+  //out_vt_color = vec3(noise(sampled_uv_coords*1001));
   //out_vt_color = texture(layered_physical_texture, vec3(gua_quad_coords,0) ).rgb;
   //out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
+
+  //out_vt_color = texture(layered_physical_texture, 
+  //                          vec3(gua_quad_coords, 0.0)).rgb;
+
+  //return vec4(gua_quad_coords.xy, 1.0, 1.0);
 }
