@@ -123,7 +123,7 @@ namespace gua {
     }
 
     _create_physical_texture(ctx);
-    _create_index_texture_hierarchy(ctx);
+    //_create_index_texture_hierarchy(ctx);
 
 }
 
@@ -183,11 +183,24 @@ namespace gua {
 
       current_physical_texture_ptr = std::make_shared<LayeredPhysicalTexture2D>();
 
-      current_physical_texture_ptr->upload_to(ctx);
+
+
+      uint32_t phys_tex_creation_px_width  = ::vt::VTConfig::get_instance().get_phys_tex_px_width();
+      uint32_t phys_tex_creation_px_height = ::vt::VTConfig::get_instance().get_phys_tex_px_width();
+      uint32_t phys_tex_creation_num_layers = ::vt::VTConfig::get_instance().get_phys_tex_layers();;
+      uint32_t phys_tex_creation_tile_size = ::vt::VTConfig::get_instance().get_size_tile();
+
+
+      std::cout << phys_tex_creation_px_width << ", " << phys_tex_creation_px_height << ", "
+                << phys_tex_creation_num_layers << ", " << phys_tex_creation_tile_size << "\n";
+
+      current_physical_texture_ptr->upload_to(ctx, 
+                                              phys_tex_creation_px_width, phys_tex_creation_px_height,
+                                              phys_tex_creation_num_layers, phys_tex_creation_tile_size);
     }
   }
 
-  void DeferredVirtualTexturingRenderer::_create_index_texture_hierarchy(gua::RenderContext const& ctx) {
+  void DeferredVirtualTexturingRenderer::_create_index_texture_hierarchy(gua::RenderContext const& ctx, uint32_t max_depth_of_index_texture) {
 
     auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
 
@@ -197,7 +210,7 @@ namespace gua {
       //scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
 
       //std::cout << vt_ptr->uuid() << "\n";
-      vt_ptr->upload_to(ctx);
+      vt_ptr->upload_to(ctx, max_depth_of_index_texture);
       // get buf_cpu
 
       //vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
@@ -223,9 +236,25 @@ namespace gua {
           current_vt_info.cut_id_to_lamure_triple_[cut_id] = 
               ::vt::CutDatabase::get_instance().register_cut(tex_id, view_id, ctx_id);
 
+          uint32_t max_depth_of_index_texture = 
+                  (*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1;
+
+          //std::cout << "REGISTERED INDEX TEX WITH MAX DEPTH: " << max_depth_level_color << "\n";
+          _create_index_texture_hierarchy(ctx, max_depth_of_index_texture);
+
+          /*
+          uint32_t max_depth_level_color =
+                  (*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1;
+
+          std::cout << "REGISTERED INDEX TEX WITH MAX DEPTH: " << max_depth_level_color << "\n";
+
+          */
         }
       }
     }
+
+
+
   }
 
   void DeferredVirtualTexturingRenderer::_start_cut_update(gua::RenderContext const& ctx) {
@@ -317,9 +346,11 @@ namespace gua {
             updated_levels.insert(::vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
         }
 
+        std::cout << "Updating the index texture\n";
+
         // update_index_texture
         for (uint16_t updated_level : updated_levels) {
-          
+                 std::cout << "Updating level: " << updated_level << "\n"; 
             uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
 
             scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
@@ -339,6 +370,8 @@ namespace gua {
             }
           
         }
+        std::cout << "After Updating the index texture\n";
+
         cut_db->stop_reading_cut(cut_entry.first);
     }
     ctx.render_context->sync();
@@ -458,6 +491,8 @@ namespace gua {
 
     /////////////////////////////render //////////////////////////////////////
 
+    //std::cout <<  ::vt::VTConfig::get_instance().get_phys_tex_tile_width() << "\n";
+
     ctx.render_context
       ->clear_color_buffer(screen_space_virtual_texturing_fbo_, 0, scm::math::vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
@@ -482,9 +517,13 @@ namespace gua {
 
       uint32_t global_texture_binding_idx = 2;
 
+      int32_t last_known_index_tex_hierarchy_depth = 0;
+
       std::string const hierarchical_index_texture_uniform_name = "hierarchical_idx_textures";
       for( auto const& vt_ptr : vector_of_vt_ptr ) {
         auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
+
+        last_known_index_tex_hierarchy_depth = vt_ptr->get_max_depth();
 
         for(auto const& index_texture_layer : current_index_texture_hierarchy) {
           ctx.render_context->bind_texture(index_texture_layer, linear_sampler_state_, global_texture_binding_idx);
@@ -495,6 +534,21 @@ namespace gua {
           ++global_texture_binding_idx;
         }
       }
+
+      //auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
+
+      math::vec2ui physical_texture_size(current_physical_texture_ptr->width(), current_physical_texture_ptr->height());
+      math::vec2ui tile_size(::vt::VTConfig::get_instance().get_size_tile(), ::vt::VTConfig::get_instance().get_size_tile());
+      math::vec2ui tile_padding(::vt::VTConfig::get_instance().get_size_padding(), ::vt::VTConfig::get_instance().get_size_padding());
+
+      //screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", 1);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", physical_texture_size );
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "max_level", last_known_index_tex_hierarchy_depth);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_size", tile_size);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_padding", tile_padding);
+
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "enable_hierarchy", true);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "toggle_visualization", 1);
 
 
       ctx.render_context->apply();
