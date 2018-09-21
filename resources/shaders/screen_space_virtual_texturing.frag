@@ -25,8 +25,8 @@ uniform vec2 tile_size = uvec2(256, 256);
 uniform vec2 tile_padding = uvec2(1, 1);
 uniform uvec2 physical_texture_dim = uvec2(8192, 8192);
 
-uniform bool enable_hierarchy = false;
-uniform int toggle_visualization = 0;
+uniform bool enable_hierarchy = true;
+uniform int toggle_visualization = 1;
 
 struct idx_tex_positions
 {
