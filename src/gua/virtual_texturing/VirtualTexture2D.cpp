@@ -128,17 +128,17 @@ static inline std::string trim_copy(std::string s) {
   }
 
 
-  void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
+  void VirtualTexture2D::upload_to(RenderContext const& ctx, uint32_t num_hierarchy_levels) const {
 
     auto index_texture_hierarchy_context_iterator = index_texture_hierarchy_per_context_.find(ctx.id);
 
 
     if(index_texture_hierarchy_context_iterator == index_texture_hierarchy_per_context_.end()) {
-      uint32_t depth = 12; // how do we get the real depth of the index texture hierarchy?
+      max_depth_ = num_hierarchy_levels + 1; // how do we get the real depth of the index texture hierarchy?
 
       auto& new_index_texture_hierarchy = index_texture_hierarchy_per_context_[ctx.id];
 
-      for(uint curr_depth = 0; curr_depth < depth; ++curr_depth) {
+      for(uint curr_depth = 0; curr_depth < max_depth_; ++curr_depth) {
         uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
 
         auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
