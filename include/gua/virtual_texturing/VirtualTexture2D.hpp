@@ -62,7 +62,11 @@ class GUA_DLL VirtualTexture2D : public Texture {
   uint32_t get_tile_size() const { return _tile_size; }
   uint32_t get_lamure_texture_id() const { return _lamure_texture_id; }
 
-  void upload_to(RenderContext const& context) const override;
+  uint32_t get_max_depth() const {return max_depth_;}
+
+  void upload_to(RenderContext const& context) const override {};
+  void upload_to(RenderContext const& context, uint32_t num_hierarchy_levels) const;
+
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
   // per render (gua) contexts
@@ -85,6 +89,9 @@ class GUA_DLL VirtualTexture2D : public Texture {
   unsigned _physical_texture_width;
   unsigned _physical_texture_height;
   uint16_t _tile_size;
+
+  mutable uint32_t max_depth_;
+
   //unsigned layers_;
 
  private:
