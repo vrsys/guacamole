@@ -51,7 +51,6 @@
 #include <list>
 
 // lamure headers
-
 #include <lamure/vt/VTConfig.h>
 
 #include <lamure/vt/common.h>
@@ -122,7 +121,7 @@ namespace gua {
 
     }
 
-    _create_physical_texture(ctx);
+
     //_create_index_texture_hierarchy(ctx);
 
 }
@@ -253,7 +252,7 @@ namespace gua {
       }
     }
 
-
+    _create_physical_texture(ctx);
 
   }
 
@@ -330,8 +329,25 @@ namespace gua {
 
             auto physical_tex = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_ptr();
 
+
+
+            auto phys_tex_format = scm::gl::FORMAT_RGBA_8;
+            switch (::vt::VTConfig::get_instance().get_format_texture()) {
+                case ::vt::VTConfig::R8:
+                    phys_tex_format = scm::gl::FORMAT_R_8;
+                    break;
+                case ::vt::VTConfig::RGB8:
+                    phys_tex_format = scm::gl::FORMAT_RGB_8;
+                    break;
+                case ::vt::VTConfig::RGBA8:
+                default:
+                    phys_tex_format = scm::gl::FORMAT_RGBA_8;
+                    break;
+            }
+
+
             ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
-                                         scm::gl::FORMAT_RGB_8, mem_slot_updated->pointer);
+                                         phys_tex_format, mem_slot_updated->pointer);
             //std::cout << "Update physical tex\n";
         }
 
@@ -537,18 +553,18 @@ namespace gua {
 
       //auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
 
-      math::vec2ui physical_texture_size(current_physical_texture_ptr->width(), current_physical_texture_ptr->height());
-      math::vec2ui tile_size(::vt::VTConfig::get_instance().get_size_tile(), ::vt::VTConfig::get_instance().get_size_tile());
-      math::vec2ui tile_padding(::vt::VTConfig::get_instance().get_size_padding(), ::vt::VTConfig::get_instance().get_size_padding());
+      scm::math::vec2ui physical_texture_size(current_physical_texture_ptr->width() / 256.0, current_physical_texture_ptr->height() / 256.0);
+      scm::math::vec2 tile_size(::vt::VTConfig::get_instance().get_size_tile(), ::vt::VTConfig::get_instance().get_size_tile());
+      scm::math::vec2 tile_padding(::vt::VTConfig::get_instance().get_size_padding(), ::vt::VTConfig::get_instance().get_size_padding());
 
       //screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", 1);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", physical_texture_size );
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "max_level", last_known_index_tex_hierarchy_depth);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_size", tile_size);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_padding", tile_padding);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", scm::math::vec2ui(physical_texture_size) );
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "max_level", int32_t(last_known_index_tex_hierarchy_depth-1) );
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_size", scm::math::vec2(tile_size) );
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_padding", scm::math::vec2(tile_padding) );
 
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "enable_hierarchy", true);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "toggle_visualization", 1);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "toggle_visualization", 0);
 
 
       ctx.render_context->apply();

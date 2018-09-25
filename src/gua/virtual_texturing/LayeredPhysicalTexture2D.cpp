@@ -21,6 +21,8 @@
 // guacamole headers
 #include <gua/virtual_texturing/LayeredPhysicalTexture2D.hpp>
 
+// lamure headers
+#include <lamure/vt/VTConfig.h>
 
 namespace gua {
 
@@ -55,12 +57,24 @@ namespace gua {
 
 
 
+    auto phys_tex_format = scm::gl::FORMAT_RGBA_8;
+    switch (::vt::VTConfig::get_instance().get_format_texture()) {
+        case ::vt::VTConfig::R8:
+            phys_tex_format = scm::gl::FORMAT_R_8;
+            break;
+        case ::vt::VTConfig::RGB8:
+            phys_tex_format = scm::gl::FORMAT_RGB_8;
+            break;
+        case ::vt::VTConfig::RGBA8:
+        default:
+            phys_tex_format = scm::gl::FORMAT_RGBA_8;
+            break;
+    }
 
 
 
 
-
-    physical_texture_ptr_ = ctx.render_device->create_texture_2d(physical_texture_dimensions, scm::gl::FORMAT_RGB_8, 1,
+    physical_texture_ptr_ = ctx.render_device->create_texture_2d(physical_texture_dimensions, phys_tex_format, 1,
                                                                  num_layers_ + 1);
 
     feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY,

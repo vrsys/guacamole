@@ -139,16 +139,18 @@ static inline std::string trim_copy(std::string s) {
       auto& new_index_texture_hierarchy = index_texture_hierarchy_per_context_[ctx.id];
 
       for(uint curr_depth = 0; curr_depth < max_depth_; ++curr_depth) {
-        uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
+        //uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
+
+        uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(curr_depth);
 
         auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
-          scm::math::vec2ui(curr_num_tiles_per_dimension, curr_num_tiles_per_dimension), scm::gl::FORMAT_RGBA_8UI);
+          scm::math::vec2ui(size_index_texture, size_index_texture), scm::gl::FORMAT_RGBA_8UI);
 
         ctx.render_context->clear_image_data(index_texture_level_ptr, 0, scm::gl::FORMAT_RGBA_8UI, 0);
 
         std::cout << "Creating Index Texture Level: " << curr_depth << "\n";
 
-        new_index_texture_hierarchy.push_back(index_texture_level_ptr);   
+        new_index_texture_hierarchy.emplace_back(index_texture_level_ptr);   
       }
 
     }
