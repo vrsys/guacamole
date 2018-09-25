@@ -19,14 +19,14 @@ layout(binding = 2) uniform usampler2D hierarchical_idx_textures[17];
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
 
-uniform int max_level = 0;
+uniform int max_level;
 
-uniform uvec2 tile_size = uvec2(0, 0);
-uniform uvec2 tile_padding = uvec2(0, 0);
-uniform uvec2 physical_texture_dim = uvec2(0, 0);
+uniform vec2 tile_size;
+uniform vec2 tile_padding;
+uniform uvec2 physical_texture_dim;
 
-uniform bool enable_hierarchy = false;
-uniform int toggle_visualization = 0;
+uniform bool enable_hierarchy;
+uniform int toggle_visualization;
 
 
 float rand(vec2 n) { 
@@ -217,7 +217,7 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
     float mix_ratio = fract(lambda);
     int desired_level = int(ceil(lambda))*3;
 
-   // desired_level = 0;
+    //desired_level = 0;
 
     idx_tex_positions positions;
 
@@ -297,7 +297,7 @@ void main() {
 
   //vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
 
-  sampled_uv_coords.y =  1.0 - sampled_uv_coords.y;
+  sampled_uv_coords.y = 1.0 - sampled_uv_coords.y;
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
 
   out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;

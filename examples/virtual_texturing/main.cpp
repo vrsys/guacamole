@@ -90,10 +90,10 @@ int main(int argc, char** argv) {
 
 
   auto plane(loader.create_geometry_from_file(
-      "plane", "data/objects/vive_controller.obj",
+      "plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
-      gua::TriMeshLoader::NORMALIZE_SCALE |  
+      //gua::TriMeshLoader::NORMALIZE_SCALE |  
       gua::TriMeshLoader::MAKE_PICKABLE)  );
   graph.add_node("/transform", plane);
 
@@ -101,7 +101,9 @@ int main(int argc, char** argv) {
 
   plane->set_draw_bounding_box(true);
 
-  std::string const& texture_atlas_path = "data/objects/onepointfive_texture_2048_w2048_h2048.atlas";
+  //std::string const& texture_atlas_path = "data/objects/onepointfive_texture_2048_w2048_h2048.atlas";
+  std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
+
 
   // LOAD VIRTUAL TEXTURE
   gua::TextureDatabase::instance()->load(texture_atlas_path);
@@ -205,6 +207,12 @@ int main(int argc, char** argv) {
 
       renderer.queue_draw({&graph});
     }
+
+        std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() 
+                  << " ms, fps: "
+                  << window->get_rendering_fps() << ", app fps: "
+                  << renderer.get_application_fps() << std::endl;
+
   });
 
   loop.start();

@@ -177,10 +177,13 @@ void GBuffer::remove_buffers(RenderContext const& ctx) {
   if (depth_buffer_) {
     ctx.render_context->make_non_resident(depth_buffer_);
   }
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
   if (uv_buffer_) {
     ctx.render_context->make_non_resident(uv_buffer_);
   }
-
+#endif
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////

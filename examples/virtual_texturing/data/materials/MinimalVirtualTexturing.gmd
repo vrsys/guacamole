@@ -4,14 +4,17 @@
 
   "fragment_methods" :
   [
+
     {
       "name" : "CalculateDistortionForVT",
       "source" : "
 
 
+	const int tile_size = 256;
+
         float dxdy()
         {
-            vec2 c = gua_uvs.xy * 256;
+            vec2 c = gua_uvs.xy * tile_size;
 
             float dFdxCx = dFdx(c.x);
             float dFdxCy = dFdx(c.y);

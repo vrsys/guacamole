@@ -79,10 +79,7 @@ class GUA_DLL GBuffer : public RenderTarget {
   scm::gl::texture_2d_ptr flags_buffer_;
   scm::gl::texture_2d_ptr depth_buffer_;
 
-
   scm::gl::texture_2d_ptr uv_buffer_;
-
-
 };
 
 }
