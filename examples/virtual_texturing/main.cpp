@@ -83,14 +83,15 @@ int main(int argc, char** argv) {
   //create material for virtual_texturing
   auto vt = virtual_texturing_preparation_shader->make_new_material();
   vt->set_uniform("metalness", 0.0f);
-  vt->set_uniform("roughness", 1.0f);
+  vt->set_uniform("roughness", 0.0f);
   vt->set_uniform("emissivity", 1.0f);
 
 
 
 
   auto plane(loader.create_geometry_from_file(
-      "plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
+      //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
+      "plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       //gua::TriMeshLoader::NORMALIZE_SCALE |  
@@ -101,8 +102,8 @@ int main(int argc, char** argv) {
 
   plane->set_draw_bounding_box(true);
 
-  //std::string const& texture_atlas_path = "data/objects/onepointfive_texture_2048_w2048_h2048.atlas";
-  std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
+  //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
+  std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
 
 
   // LOAD VIRTUAL TEXTURE
@@ -135,7 +136,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("Virtual_Texturing_Example");
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
 
   camera->get_pipeline_description()->add_pass(
     std::make_shared<gua::DebugViewPassDescription>());
@@ -167,7 +168,7 @@ int main(int argc, char** argv) {
   window->config.set_enable_vsync(false);
   window->config.set_size(resolution);
   window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
+  window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
 
   window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
     window->config.set_resolution(new_size);
@@ -188,14 +189,17 @@ int main(int argc, char** argv) {
   gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
 
+  //auto plane_base_transformation = scm::math::mat4();
+
   ticker.on_tick.connect([&]() {
+
 
     // apply trackball matrix to object
     gua::math::mat4 modelmatrix =
         scm::math::make_translation(plane_translation[0], plane_translation[1], plane_translation[2]) * 
         scm::math::make_translation(trackball.shiftx(), trackball.shifty(),
-                                    trackball.distance()) *
-        gua::math::mat4(trackball.rotation()) * scm::math::make_rotation(90.0, 0.0, 0.0, 1.0) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0) ;
+                                    trackball.distance() * 0.15f) *
+        gua::math::mat4(trackball.rotation());
 
     transform->set_transform(modelmatrix);
 
@@ -210,7 +214,8 @@ int main(int argc, char** argv) {
 
         std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() 
                   << " ms, fps: "
-                  << window->get_rendering_fps() << ", app fps: "
+                  << 
+                  window->get_rendering_fps() << ", app fps: "
                   << renderer.get_application_fps() << std::endl;
 
   });

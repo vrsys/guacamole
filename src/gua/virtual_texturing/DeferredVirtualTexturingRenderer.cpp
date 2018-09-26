@@ -222,6 +222,7 @@ namespace gua {
     uint16_t ctx_id = current_vt_info.context_id_;
     for ( auto const& view_entry : current_vt_info.gua_camera_id_to_lamure_view_id_){
       uint16_t view_id = view_entry.second;
+      //std::cout << "View ids: " << view_id << "\n";
       auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
       for( auto const& vt_ptr : vector_of_vt_ptr ) {
         
@@ -234,6 +235,8 @@ namespace gua {
         if (current_vt_info.cut_id_to_lamure_triple_.end() == cut_iter){
           current_vt_info.cut_id_to_lamure_triple_[cut_id] = 
               ::vt::CutDatabase::get_instance().register_cut(tex_id, view_id, ctx_id);
+
+          //std::cout << "Register cut with tex id: " << tex_id << "; view_id: "<< view_id << "; ctx_id: " << ctx_id << "\n";
 
           uint32_t max_depth_of_index_texture = 
                   (*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1;
@@ -362,11 +365,11 @@ namespace gua {
             updated_levels.insert(::vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
         }
 
-        std::cout << "Updating the index texture\n";
+        //std::cout << "Updating the index texture\n";
 
         // update_index_texture
         for (uint16_t updated_level : updated_levels) {
-                 std::cout << "Updating level: " << updated_level << "\n"; 
+            //     std::cout << "Updating level: " << updated_level << "\n"; 
             uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
 
             scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
@@ -386,7 +389,7 @@ namespace gua {
             }
           
         }
-        std::cout << "After Updating the index texture\n";
+        //std::cout << "After Updating the index texture\n";
 
         cut_db->stop_reading_cut(cut_entry.first);
     }

@@ -279,8 +279,10 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         c = mix_colors(positions, desired_level, texture_coordinates, mix_ratio);
     }
 
-    int feedback_value = desired_level;
-    update_feedback(feedback_value, positions.child_idx);
+    if( int(gl_FragCoord.x) % 128 == 0 && int(gl_FragCoord.y) % 128 == 0 ) {
+    	int feedback_value = desired_level;
+    	update_feedback(feedback_value, positions.child_idx);
+	}
 
     return c;
 }
@@ -298,6 +300,7 @@ void main() {
   //vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
 
   sampled_uv_coords.y = 1.0 - sampled_uv_coords.y;
+
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
 
   out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
