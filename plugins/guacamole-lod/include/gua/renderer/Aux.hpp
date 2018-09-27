@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/renderer/Lod.hpp>
 #include <gua/scenegraph/PickResult.hpp>
+#include <gua/renderer/OctreeNode.hpp>
 // external headers
 #include <set>
 #include <unordered_set>
@@ -37,17 +38,9 @@ namespace prov {
   // namespace aux{
   struct feature;
   // }
+  class octree_node;
 }
 }
-
-// namespace lamure {
-// namespace prov {
-
-//   struct feature;
-
-// }
-// }
-
 
 
 
@@ -208,20 +201,24 @@ class GUA_LOD_DLL Aux {
 
 public:
 
-  void load_aux_file(std::string const& filename);
+    void load_aux_file(std::string const& filename);
 
-  void test_wrapping() const;
+    void test_wrapping() const;
 
-  const std::string   get_filename() const;   //done
+    const std::string   get_filename() const;   //done
 
-  const uint32_t      get_num_views() const; // done 
-  const uint64_t      get_num_sparse_points() const; // done
-  const uint32_t      get_num_atlas_tiles() const; //done
+    const uint32_t      get_num_views() const; // done
+    const uint64_t      get_num_sparse_points() const; // done
+    const uint32_t      get_num_atlas_tiles() const; //done
 
-  std::shared_ptr<view> get_view(uint32_t id) const;
-  std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; // done
-  std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;  // difficult 
-  std::shared_ptr<atlas> get_atlas() const; // done 
+    uint64_t            get_octree_query(const scm::math::vec3f& _pos);
+
+    std::shared_ptr<OctreeNode> get_octree_node(uint64_t _node_id);
+    std::shared_ptr<view> get_view(uint32_t id) const;
+    std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; // done
+    std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;  // difficult
+    std::shared_ptr<atlas> get_atlas() const; // done
+
 
 
   // Aux::atlas get_atlas() const;
