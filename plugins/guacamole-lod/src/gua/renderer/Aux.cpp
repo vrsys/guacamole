@@ -21,6 +21,7 @@
 
 // class header
 #include <gua/renderer/Aux.hpp>
+#include <gua/renderer/OctreeNode.hpp>
 
 // guacamole headers
 #include <gua/utils.hpp>
@@ -35,6 +36,7 @@
 #include <lamure/ren/dataset.h>
 
 #include <lamure/prov/aux.h>
+#include <lamure/prov/octree.h>
 
 namespace gua {
 
@@ -64,14 +66,33 @@ const uint32_t Aux::get_num_views() const {
 	return _aux->get_num_views(); 
 }
 
-const uint64_t Aux::get_num_sparse_points() const {
+const uint64_t
+Aux::get_num_sparse_points() const {
   return _aux->get_num_sparse_points(); 
 }
-const uint32_t Aux::get_num_atlas_tiles() const { 
+
+const uint32_t
+Aux::get_num_atlas_tiles() const {
 	return _aux->get_num_atlas_tiles(); 
 }
 
+uint64_t
+Aux::get_octree_query(const scm::math::vec3f& _pos){
+	return _aux->get_octree_query(_pos);
+}
 
+std::shared_ptr<OctreeNode>
+Aux::get_octree_node(uint64_t _node_id){
+    const auto& on = _aux->get_octree_node(_node_id);
+    gua::OctreeNode new_octree_node(
+        on.get_idx(),
+        on.get_child_mask(),
+        on.get_child_idx(),
+        on.get_min(),
+        on.get_max(),
+        on.get_fotos() );
+    return std::make_shared<OctreeNode>(new_octree_node);
+}
 
 std::shared_ptr<Aux::view> Aux::get_view(uint32_t id) const {
 	const auto& v = _aux->get_view(id);
@@ -114,21 +135,21 @@ std::shared_ptr<Aux::sparse_point> Aux::get_sparse_point(uint64_t id) const {
 	std::vector<Aux::feature> new_features;
 	for(auto const& f: sp.features_){
     Aux::feature new_feature(
-      f.camera_id_,
-      f.using_count_,
-      f.coords_,
-      f.error_
+        f.camera_id_,
+        f.using_count_,
+        f.coords_,
+        f.error_
     );
     new_features.push_back(new_feature);
 	}
 	
 	Aux::sparse_point new_sparse_point(
-		sp.pos_,
-	  sp.r_,
-		sp.g_,
-		sp.b_, 
-		sp.a_,
-		new_features
+        sp.pos_,
+        sp.r_,
+        sp.g_,
+        sp.b_,
+        sp.a_,
+        new_features
 	);
 
 	return std::make_shared<Aux::sparse_point>(new_sparse_point);
