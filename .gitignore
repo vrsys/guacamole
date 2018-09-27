@@ -1,5 +1,6 @@
 # Folders
 cmake_out/
+.idea/
 
 # Compiled Object files
 *.slo
