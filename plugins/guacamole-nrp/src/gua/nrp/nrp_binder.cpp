@@ -63,7 +63,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     sdf::setFindCallback(boost::bind(&gazebo::common::find_file, _1));
 
-    if(!gazebo::transport::init("invincible", 11345, 1))
+    if(!gazebo::transport::init("orpheus", 11345, 1))
     {
         log.e("Unable to initialize transport");
         throw std::runtime_error("Unable to initialize transport");
