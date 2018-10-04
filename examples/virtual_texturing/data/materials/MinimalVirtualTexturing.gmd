@@ -35,6 +35,8 @@
           float lambda = -dxdy();
 
           gua_uvs.z = lambda;
+
+          gua_roughness = 1.0;
          }
       "
 

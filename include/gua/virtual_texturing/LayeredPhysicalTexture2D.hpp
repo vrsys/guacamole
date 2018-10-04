@@ -87,6 +87,9 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
 
   void upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const;
 
+  math::vec2ui get_physical_texture_handle(RenderContext const& ctx) const;
+  void         upload_physical_texture_handle(RenderContext const& ctx) const;
+
 //  void initialize_physical_texture(RenderContext const& ctx) const;
 
   void collect_feedback(gua::RenderContext const& ctx);
@@ -118,6 +121,9 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
  private:
   std::string file_config_;
   std::string file_atlas_;
+
+  mutable scm::gl::sampler_state_ptr  nearest_sampler_state_;
+  mutable scm::gl::sampler_state_ptr  linear_sampler_state_;
 };  
 
 }

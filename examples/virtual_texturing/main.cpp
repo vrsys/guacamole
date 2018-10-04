@@ -63,6 +63,12 @@ void mouse_button(gua::utils::Trackball& trackball,
 }
 
 
+void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::math::vec2ui const& res) {
+  window->config.set_size(res);
+  window->config.set_resolution(res);
+  window->config.set_enable_vsync(true);
+}
+
 int main(int argc, char** argv) {
   // initialize guacamole
   gua::init(argc, argv);
@@ -83,7 +89,7 @@ int main(int argc, char** argv) {
   //create material for virtual_texturing
   auto vt = virtual_texturing_preparation_shader->make_new_material();
   vt->set_uniform("metalness", 0.0f);
-  vt->set_uniform("roughness", 0.0f);
+  vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
 
 
@@ -91,7 +97,8 @@ int main(int argc, char** argv) {
 
   auto plane(loader.create_geometry_from_file(
       //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
-      "plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
+      //"plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
+      "plane", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/100k_tris_8k_vt_pre_vt.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       //gua::TriMeshLoader::NORMALIZE_SCALE |  
@@ -103,7 +110,8 @@ int main(int argc, char** argv) {
   plane->set_draw_bounding_box(true);
 
   //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
-  std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
+  //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
+  std::string const& texture_atlas_path = "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas";
 
 
   // LOAD VIRTUAL TEXTURE
@@ -136,10 +144,9 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("Virtual_Texturing_Example");
-  camera->config.set_enable_stereo(true);
+  camera->config.set_enable_stereo(false);
 
-  camera->get_pipeline_description()->add_pass(
-    std::make_shared<gua::DebugViewPassDescription>());
+
 
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
@@ -158,10 +165,49 @@ int main(int argc, char** argv) {
 
 
 
+  auto camera2 = graph.add_node<gua::node::CameraNode>("/screen", "cam2");
+  camera2->translate(0, 0, 2.0);
+  camera2->config.set_resolution(resolution);
+  camera2->config.set_screen_path("/screen");
+  camera2->config.set_scene_graph_name("main_scenegraph");
+  camera2->config.set_output_window_name("Virtual_Texturing_Example");
+  camera2->config.set_enable_stereo(false);
+  camera2->set_pipeline_description(pipe);
 
 
+  unsigned window_count = 0;
+
+  std::shared_ptr<gua::GlfwWindow> main_window = nullptr;
+
+  auto add_window = [&](std::string const& window_name, 
+                       std::shared_ptr<gua::node::CameraNode> const& cam_node)
+  {
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add(window_name, window);
+    set_window_default(window, cam_node->config.get_resolution());
+    cam_node->config.set_output_window_name(window_name);
+
+    if(++window_count == 1) {
+      main_window = window;
+      window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+        window->config.set_resolution(new_size);
+        cam_node->config.set_resolution(new_size);
+        screen->data.set_size(
+            gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+      });
 
 
+      window->on_move_cursor.connect(
+          [&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+      window->on_button_press.connect(
+          std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
+                    std::placeholders::_2, std::placeholders::_3));      
+    }
+  };
+
+  add_window("Virtual_Texturing_Example_Window_1", camera);
+  //add_window("Virtual_Texturing_Example_Window_2", camera2);
+/*
   auto window = std::make_shared<gua::GlfwWindow>();
   gua::WindowDatabase::instance()->add("Virtual_Texturing_Example", window);
 
@@ -181,7 +227,7 @@ int main(int argc, char** argv) {
   window->on_button_press.connect(
       std::bind(mouse_button, std::ref(trackball), std::placeholders::_1,
                 std::placeholders::_2, std::placeholders::_3));
-
+*/
   gua::Renderer renderer;
 
   // application loop
@@ -203,19 +249,19 @@ int main(int argc, char** argv) {
 
     transform->set_transform(modelmatrix);
 
-    if (window->should_close()) {
+    if (main_window->should_close()) {
       renderer.stop();
-      window->close();
+      main_window->close();
       loop.stop();
     } else {
 
       renderer.queue_draw({&graph});
     }
 
-        std::cout << "Frame time: " << 1000.f / window->get_rendering_fps() 
+        std::cout << "Frame time: " << 1000.f / main_window->get_rendering_fps() 
                   << " ms, fps: "
                   << 
-                  window->get_rendering_fps() << ", app fps: "
+                  main_window->get_rendering_fps() << ", app fps: "
                   << renderer.get_application_fps() << std::endl;
 
   });
