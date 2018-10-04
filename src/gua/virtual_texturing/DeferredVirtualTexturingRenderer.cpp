@@ -527,8 +527,12 @@ namespace gua {
 
       auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
 
-      ctx.render_context->bind_texture(current_physical_texture_ptr->get_physical_texture_ptr(), linear_sampler_state_, 1);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "layered_physical_texture", 1);
+      auto physical_texture_handle = VirtualTexture2D::get_physical_texture_handle(ctx);
+
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_handle", scm::math::vec2ui(physical_texture_handle) );
+
+//      ctx.render_context->bind_texture(current_physical_texture_ptr->get_physical_texture_ptr(), linear_sampler_state_, 1);
+//      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "layered_physical_texture", 1);
 
 
 

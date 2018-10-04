@@ -11,7 +11,7 @@ in vec2 gua_quad_coords;
 layout (location = 0) out vec3 out_vt_color;
 
 layout(binding = 0) uniform sampler2D gua_uv_buffer;
-layout(binding = 1) uniform sampler2DArray layered_physical_texture;
+//layout(binding = 1) uniform sampler2DArray layered_physical_texture;
 
 layout(binding = 2) uniform usampler2D hierarchical_idx_textures[17];
 
@@ -24,6 +24,8 @@ uniform int max_level;
 uniform vec2 tile_size;
 uniform vec2 tile_padding;
 uniform uvec2 physical_texture_dim;
+
+uniform uvec2 physical_texture_handle;
 
 uniform bool enable_hierarchy;
 uniform int toggle_visualization;
@@ -85,7 +87,7 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
     vec2 physical_texture_coordinates = (base_xy_offset.xy + physical_tile_ratio_xy * padding_scale + padding_offset) / physical_texture_dim;
 
     // outputting the calculated coordinate from our physical texture
-    vec4 c = texture(layered_physical_texture, vec3(physical_texture_coordinates, index_quadruple.z));
+    vec4 c = texture(sampler2DArray(physical_texture_handle), vec3(physical_texture_coordinates, index_quadruple.z));
 
     //return vec4(noise(physical_texture_coordinates.xy*1001));
 
@@ -119,7 +121,7 @@ vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coo
         mix(parent_color, child_color, mix_ratio) : child_color;
 }
 
-
+/*
 vec4 illustrate_level(float lambda, idx_tex_positions positions) {
     float mix_ratio = fract(lambda);
     int desired_level = int(ceil(lambda));
@@ -211,7 +213,7 @@ vec4 illustrate_level(float lambda, idx_tex_positions positions) {
         mix(parent_color, child_color, mix_ratio) : child_color;
     //color = vec3(child_idx.x, child_idx.y, 0.5);
 }
-
+*/
 vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 {
     float mix_ratio = fract(lambda);
@@ -272,10 +274,10 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
     }
 
     
-    if (toggle_visualization == 1 || toggle_visualization == 2) {
+ /*   if (toggle_visualization == 1 || toggle_visualization == 2) {
         c = illustrate_level(lambda, positions);
         c = vec4(1.0, lambda, lambda, 1.0);
-    } else {
+    } else */{
         c = mix_colors(positions, desired_level, texture_coordinates, mix_ratio);
     }
 
