@@ -59,6 +59,8 @@ namespace gua {
    */
   void load(std::string const& id);
 
+  int32_t get_global_texture_id_by_path(std::string const& tex_path) const;
+
   friend class Singleton<TextureDatabase>;
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
@@ -74,8 +76,11 @@ namespace gua {
   std::mutex                                   texture_request_mutex_;
   std::set<std::string>                        texture_loading_;
 
+  std::unordered_map<std::string, uint32_t >   texture_path_to_global_id_mapping_;
+  uint32_t                                     num_loaded_textured_ = 0;
+
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-  std::unordered_map<std::string, std::shared_ptr<VirtualTexture2D> > vt_textures_;
+  std::unordered_map<std::string, std::shared_ptr<VirtualTexture2D> > virtual_textures_;
 #endif
 
 };

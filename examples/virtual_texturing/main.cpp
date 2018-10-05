@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   vt->set_uniform("metalness", 0.0f);
   vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
-
+  vt->set_uniform("wappen_vt", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas"));
 
 
 
@@ -115,10 +115,11 @@ int main(int argc, char** argv) {
   //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
   //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
   std::string const& texture_atlas_path = "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas";
+  std::string const& texture_atlas_path2 = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
 
-
-  // LOAD VIRTUAL TEXTURE
-  gua::TextureDatabase::instance()->load(texture_atlas_path);
+  // LOAD VIRTUAL TEXTURES
+  //gua::TextureDatabase::instance()->load(texture_atlas_path);
+  //gua::TextureDatabase::instance()->load(texture_atlas_path2);
 
 
 

@@ -201,24 +201,17 @@ namespace gua {
                                               phys_tex_creation_num_layers, phys_tex_creation_tile_size);
     }
   }
-
+/*
   void DeferredVirtualTexturingRenderer::_create_index_texture_hierarchy(gua::RenderContext const& ctx, uint32_t max_depth_of_index_texture) {
 
     auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
 
 
     for( auto const& vt_ptr : vector_of_vt_ptr ) {
-      //scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-      //scm::math::vec3ui _index_texture_dimension = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
-
-      //std::cout << vt_ptr->uuid() << "\n";
-      vt_ptr->upload_to(ctx, max_depth_of_index_texture);
-      // get buf_cpu
-
-      //vt_ptr->update_sub_data(ctx, scm::gl::texture_region(origin, _index_texture_dimension), 0, scm::gl::FORMAT_RGBA_8UI, buf_cpu);
+      vt_ptr->upload_to(ctx);
     }
   }
-
+*/
   void DeferredVirtualTexturingRenderer::_register_cuts(gua::RenderContext const& ctx) {
     auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
     auto& current_vt_info = vt_info_per_context[ctx.id];
@@ -245,7 +238,7 @@ namespace gua {
                   (*vt::CutDatabase::get_instance().get_cut_map())[cut_id]->get_atlas()->getDepth() - 1;
 
           //std::cout << "REGISTERED INDEX TEX WITH MAX DEPTH: " << max_depth_level_color << "\n";
-          _create_index_texture_hierarchy(ctx, max_depth_of_index_texture);
+          //_create_index_texture_hierarchy(ctx, max_depth_of_index_texture);
 
           /*
           uint32_t max_depth_level_color =
@@ -454,8 +447,6 @@ namespace gua {
     int32_t *feedback_lod = (int32_t *) ctx.render_context->map_buffer(feedback_lod_storage_ptr, scm::gl::ACCESS_READ_ONLY);
 
     memcpy(feedback_lod_cpu_buffer_ptr, feedback_lod, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32I));
-    ctx.render_context->sync();
-
     ctx.render_context->unmap_buffer(feedback_lod_storage_ptr);
     ctx.render_context->clear_buffer_data(feedback_lod_storage_ptr, scm::gl::FORMAT_R_32I, nullptr);
 
@@ -466,8 +457,6 @@ namespace gua {
     uint32_t *feedback_count = (uint32_t *) ctx.render_context->map_buffer(feedback_count_storage_ptr,
                                                                  scm::gl::ACCESS_READ_ONLY);
     memcpy(feedback_count_cpu_buffer_ptr, feedback_count, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32UI));
-    ctx.render_context->sync();
-
     ctx.render_context->unmap_buffer(feedback_count_storage_ptr);
     ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);
 
@@ -563,24 +552,6 @@ namespace gua {
       std::string const hierarchical_index_texture_uniform_name = "hierarchical_idx_textures";
 
 
-//###########
-/*
-      for( auto const& vt_ptr : vector_of_vt_ptr ) {
-        auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
-
-        last_known_index_tex_hierarchy_depth = vt_ptr->get_max_depth();
-
-        for(auto const& index_texture_layer : current_index_texture_hierarchy) {
-          ctx.render_context->bind_texture(index_texture_layer, linear_sampler_state_, global_texture_binding_idx);
-          screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, hierarchical_index_texture_uniform_name, 
-                                                                        int32_t(global_texture_binding_idx), int32_t(global_texture_binding_idx-2) );
-          //vt_ptr->upload_to(ctx);
-
-          ++global_texture_binding_idx;
-        }
-      }
-*/
-
       for( auto const& vt_ptr : vector_of_vt_ptr ) {
         auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
 
@@ -590,8 +561,6 @@ namespace gua {
           ctx.render_context->bind_texture(current_index_texture_hierarchy, nearest_mip_map_sampler_state_, global_texture_binding_idx);
           screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, hierarchical_index_texture_uniform_name, 
                                                                         int32_t(global_texture_binding_idx), int32_t(global_texture_binding_idx-2) );
-          //vt_ptr->upload_to(ctx);
-
           ++global_texture_binding_idx;
         //}
       }
@@ -608,8 +577,7 @@ namespace gua {
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_size", scm::math::vec2(tile_size) );
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_padding", scm::math::vec2(tile_padding) );
 
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "enable_hierarchy", true);
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "toggle_visualization", 0);
+      //screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "enable_hierarchy", true);
 
 
       ctx.render_context->apply();
@@ -620,7 +588,7 @@ namespace gua {
     }
 
 
-
+/*
     auto& target = *pipe.current_viewstate().target;
 
 
@@ -643,7 +611,7 @@ namespace gua {
     blit_vt_color_to_gbuffer_program_->unuse(ctx);
     target.unbind(ctx);
 
-
+*/
     /////////////////////// send feedback data to lamure ///////////////////////////////
     ctx.render_context->sync();
     collect_feedback(ctx);

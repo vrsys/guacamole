@@ -13,7 +13,7 @@ layout (location = 0) out vec3 out_vt_color;
 layout(binding = 0) uniform sampler2D gua_uv_buffer;
 //layout(binding = 1) uniform sampler2DArray layered_physical_texture;
 
-layout(binding = 2) uniform usampler2D hierarchical_idx_textures[17];
+layout(binding = 2) uniform usampler2D hierarchical_idx_textures;
 
 
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
@@ -32,8 +32,6 @@ uniform int max_level;
 uniform vec2 tile_size;
 uniform vec2 tile_padding;
 uniform uvec2 physical_texture_dim;
-
-uniform uvec2 physical_texture_handle;
 
 uniform bool enable_hierarchy;
 uniform int toggle_visualization;
@@ -129,99 +127,7 @@ vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coo
         mix(parent_color, child_color, mix_ratio) : child_color;
 }
 
-/*
-vec4 illustrate_level(float lambda, idx_tex_positions positions) {
-    float mix_ratio = fract(lambda);
-    int desired_level = int(ceil(lambda));
 
-    vec4 child_color = vec4(0,0,0,1);
-    vec4 parent_color = vec4(0,0,0,1);
-
-    if (toggle_visualization == 1) {
-        vec4 c0 = vec4(0,0,0,1); // black   - level 0 and below
-        vec4 c1 = vec4(0,0,1,1); // blue    - level 1, 8, 15
-        vec4 c2 = vec4(0,1,0,1); // green   - level 2, 9, 16
-        vec4 c3 = vec4(0,1,1,1); // cyan    - level 3, 10
-        vec4 c4 = vec4(1,0,0,1); // red     - level 4, 11
-        vec4 c5 = vec4(1,0,1,1); // magenta - level 5, 12
-        vec4 c6 = vec4(1,1,0,1); // yellow  - level 6, 13
-        vec4 c7 = vec4(1,1,1,1); // white   - level 7, 14
-
-        switch(desired_level) {
-            case -2:
-            case -1:
-            case 0:
-                parent_color = c0;
-                child_color = c0;
-                break;
-            case 1:
-                parent_color = c0;
-                child_color = c1;
-                break;
-            case 2:
-            case 9:
-            case 16:
-                parent_color = c1;
-                child_color = c2;
-                break;
-            case 3:
-            case 10:
-                parent_color = c2;
-                child_color = c3;
-                break;
-            case 4:
-            case 11:
-                parent_color = c3;
-                child_color = c4;
-                break;
-            case 5:
-            case 12:
-                parent_color = c4;
-                child_color = c5;
-                break;
-            case 6:
-            case 13:
-                parent_color = c5;
-                child_color = c6;
-                break;
-            case 7:
-            case 14:
-                parent_color = c6;
-                child_color = c7;
-                break;
-            case 8:
-            case 15:
-                parent_color = c7;
-                child_color = c1;
-        }
-
-        //return vec4(lambda / 16.0f, 0.0f, 0.0f, 1.0f);
-    } else {
-        vec4  child_idx = positions.child_idx;
-        float child_lvl = positions.child_lvl;
-        vec4  parent_idx = positions.parent_idx;
-        float parent_lvl = positions.parent_lvl;
-
-        float array_size = textureSize(layered_physical_texture, 0).z;
-
-        child_color = vec4(clamp((child_lvl/8.0) , 0.0, 1.0),
-                            (float(child_idx.x + child_idx.y + child_idx.z)/float(physical_texture_dim.x + physical_texture_dim.y + array_size)),
-                            clamp(((child_lvl - 8.0)/8.0), 0.0, 1.0),
-                            1);
-
-        parent_color = vec4(clamp((parent_lvl/8.0), 0.0, 1.0),
-                            (float(parent_idx.x + parent_idx.y + parent_idx.z)/float(physical_texture_dim.x + physical_texture_dim.y + array_size)),
-                            clamp(((parent_lvl - 8.0)/8.0), 0.0, 1.0),
-                            1);
-
-    }
-
-
-    return enable_hierarchy == true ?
-        mix(parent_color, child_color, mix_ratio) : child_color;
-    //color = vec3(child_idx.x, child_idx.y, 0.5);
-}
-*/
 vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 {
     float mix_ratio = fract(lambda);
@@ -239,7 +145,7 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
         //return vec4(1.0, 0.0, 0.0, 0.0);
 
-        uvec4 idx_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level- 0).rgba;
+        uvec4 idx_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level).rgba;
 /*
         if (idx_pos.x == 0 && idx_pos.y == 0 && idx_pos.z == 0 && idx_pos.w == 1) {
             return vec4(0.0, 1.0, 0.0, 1.0);
@@ -260,13 +166,13 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         for(int i = desired_level; i >= 0; --i)
         {
             c += vec4(0.1, 0.1, 0.1, 0.0);
-            uvec4 idx_child_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level-(i) ).rgba;
+            uvec4 idx_child_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level-(i) ).rgba;
 
             // check if the requested tile is loaded and if we are not at the root level
             // enables to mix (linearly interpolate) between hierarchy levels
             if(idx_child_pos.w == 1 && i >= 1)
             {
-                uvec4 idx_parent_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level-(i-1) ).rgba;
+                uvec4 idx_parent_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level-(i-1) ).rgba;
                 positions = idx_tex_positions(i-1, idx_parent_pos, i, idx_child_pos);
                 break;
             }
@@ -314,7 +220,7 @@ void main() {
 
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
 
-  out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
+  //out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
   //out_vt_color = vec3(noise(sampled_uv_coords*1001));
   //out_vt_color = texture(layered_physical_texture, vec3(gua_quad_coords,0) ).rgb;
   //out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
