@@ -49,7 +49,7 @@ namespace gua {
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class GUA_DLL LayeredPhysicalTexture2D : public Texture {
+class GUA_DLL LayeredPhysicalTexture2D {// : public Texture {
  public:
 
   /**
@@ -79,16 +79,16 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
    *
    * Returns the size of the Texture2D.
    */
-  unsigned width() const override { return width_; }
-  unsigned height() const override { return height_; }
+  unsigned width() const  { return width_; }
+  unsigned height() const { return height_; }
   unsigned num_layers() const {return num_layers_; }
 
-  void upload_to(RenderContext const& context) const override {};
+  void upload_to(RenderContext const& context) const {};
 
   void upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const;
 
-  math::vec2ui get_physical_texture_handle(RenderContext const& ctx) const;
-  void         upload_physical_texture_handle(RenderContext const& ctx) const;
+  //math::vec2ui get_physical_texture_handle(RenderContext const& ctx) const;
+  void         upload_physical_texture_handle_to_ubo(RenderContext const& ctx) const;
 
 //  void initialize_physical_texture(RenderContext const& ctx) const;
 
@@ -105,9 +105,11 @@ class GUA_DLL LayeredPhysicalTexture2D : public Texture {
   std::size_t get_num_feedback_slots() const {return num_feedback_slots_;}
 
  protected:
-  mutable scm::gl::texture_2d_ptr physical_texture_ptr_ = nullptr;
-  mutable scm::gl::buffer_ptr feedback_lod_storage_     = nullptr;
-  mutable scm::gl::buffer_ptr feedback_count_storage_   = nullptr;
+  mutable scm::gl::texture_2d_ptr physical_texture_ptr_     = nullptr;
+  mutable scm::gl::buffer_ptr feedback_lod_storage_         = nullptr;
+  mutable scm::gl::buffer_ptr feedback_count_storage_       = nullptr;
+
+  mutable scm::gl::buffer_ptr physical_texture_address_ubo_ = nullptr;
 
   mutable int32_t*  feedback_lod_cpu_buffer_    = nullptr;
   mutable uint32_t* feedback_count_cpu_buffer_  = nullptr;

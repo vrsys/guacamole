@@ -114,6 +114,9 @@ namespace gua {
                                                                virtually_textured_color_attachment_);
 
       nearest_sampler_state_ = ctx.render_device
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+
+      nearest_mip_map_sampler_state_ = ctx.render_device
         ->create_sampler_state(scm::gl::FILTER_MIN_MAG_MIP_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
       linear_sampler_state_ = ctx.render_device
@@ -469,7 +472,7 @@ namespace gua {
     ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);
 
 
-    for(int i = 0; i < num_feedback_slots; ++i) {
+    for(uint32_t i = 0; i < num_feedback_slots; ++i) {
       int32_t feedback_for_current_slot = feedback_lod_cpu_buffer_ptr[i];
 
       if(0 != feedback_for_current_slot) {
@@ -542,9 +545,9 @@ namespace gua {
 
       auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
 
-      auto physical_texture_handle = VirtualTexture2D::get_physical_texture_handle(ctx);
+      //auto physical_texture_handle = VirtualTexture2D::get_physical_texture_handle(ctx);
 
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_handle", scm::math::vec2ui(physical_texture_handle) );
+      //screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_handle", scm::math::vec2ui(physical_texture_handle) );
 
 //      ctx.render_context->bind_texture(current_physical_texture_ptr->get_physical_texture_ptr(), linear_sampler_state_, 1);
 //      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "layered_physical_texture", 1);
@@ -584,7 +587,7 @@ namespace gua {
         last_known_index_tex_hierarchy_depth = vt_ptr->get_max_depth();
 
         //for(auto const& index_texture_layer : current_index_texture_hierarchy) {
-          ctx.render_context->bind_texture(current_index_texture_hierarchy, nearest_sampler_state_, global_texture_binding_idx);
+          ctx.render_context->bind_texture(current_index_texture_hierarchy, nearest_mip_map_sampler_state_, global_texture_binding_idx);
           screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, hierarchical_index_texture_uniform_name, 
                                                                         int32_t(global_texture_binding_idx), int32_t(global_texture_binding_idx-2) );
           //vt_ptr->upload_to(ctx);

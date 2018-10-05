@@ -19,6 +19,14 @@ layout(binding = 2) uniform usampler2D hierarchical_idx_textures[17];
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
 
+layout(std140, binding = 2) uniform physical_texture_address { uvec2 pt_address; };
+
+/*
+layout(std140, binding=2) uniform physical_texture_address {
+    uvec2 pt_address;
+};*/
+
+
 uniform int max_level;
 
 uniform vec2 tile_size;
@@ -87,7 +95,7 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
     vec2 physical_texture_coordinates = (base_xy_offset.xy + physical_tile_ratio_xy * padding_scale + padding_offset) / physical_texture_dim;
 
     // outputting the calculated coordinate from our physical texture
-    vec4 c = texture(sampler2DArray(physical_texture_handle), vec3(physical_texture_coordinates, index_quadruple.z));
+    vec4 c = texture(sampler2DArray(pt_address), vec3(physical_texture_coordinates, index_quadruple.z));
 
     //return vec4(noise(physical_texture_coordinates.xy*1001));
 
