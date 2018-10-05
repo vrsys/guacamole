@@ -33,6 +33,9 @@ Material::Material(std::string const& shader_name):
   shader_cache_(nullptr),
   show_back_faces_(false),
   render_wireframe_(false)
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+  ,enable_virtual_texturing_(false)
+#endif
   {
     set_shader_name(shader_name_);
   }

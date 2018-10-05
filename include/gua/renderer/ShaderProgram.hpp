@@ -104,7 +104,9 @@ class GUA_DLL ShaderProgram {
                    std::list<std::string> const& interleaved_stream_capture =
                        std::list<std::string>(),
                    bool in_rasterization_discard = false,
-                   SubstitutionMap const& substitutions = SubstitutionMap());
+                   SubstitutionMap const& substitutions = SubstitutionMap(),
+                   bool enable_virtual_texturing = false
+                   );
 
   /**
    * Sets compile-time substitution map
