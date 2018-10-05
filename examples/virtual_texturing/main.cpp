@@ -96,6 +96,8 @@ int main(int argc, char** argv) {
   vt->set_enable_virtual_texturing(true);
 
 
+
+
   auto plane(loader.create_geometry_from_file(
       //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
       //"plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",

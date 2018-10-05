@@ -396,7 +396,6 @@ namespace gua {
                 ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
                                              scm::gl::texture_region(origin, dimensions), max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
                                              cut->get_front()->get_index(updated_level));
-              
             }
  
         }
@@ -514,6 +513,8 @@ namespace gua {
     ctx.render_context->sync();
 
     _apply_cut_update(ctx);
+
+
 
     /////////////////////////////render //////////////////////////////////////
 

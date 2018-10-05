@@ -17,15 +17,24 @@ layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_value
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
 
 layout(std140, binding = 2) uniform physical_texture_address { uvec2 pt_address; };
-layout(std140, binding = 3) uniform virtual_texture_addresses { uvec2 vt_addresses[]; };
+
+struct padded_vt_address{
+  uvec2 vt_address;
+  ivec2 max_level_and_padding;
+};
+
+layout(std140, binding = 3) uniform virtual_texture_addresses { padded_vt_address vts[1024]; };
 
     	const int tile_size = 256;
       const bool enable_hierarchy = true;
 
-      const int max_level = 9;
+      //const int max_level = 9;
       const vec2 tile_padding = vec2(1.0, 1.0);
       const uvec2 physical_texture_dim = uvec2(32, 32);
 
+
+
+uniform int gua_current_vt_idx;
 
 struct idx_tex_positions
 {
@@ -41,6 +50,9 @@ struct idx_tex_positions
 */
 vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint current_level)
 {
+
+    int max_level = vts[gua_current_vt_idx].max_level_and_padding.x;
+
     // exponent for calculating the occupied pixels in our index texture, based on which level the tile is in
     uint tile_occupation_exponent = (max_level-1) - current_level;
 
@@ -105,6 +117,9 @@ vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coo
 
 vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 {
+
+    int max_level = vts[gua_current_vt_idx].max_level_and_padding.x;
+
     float mix_ratio = fract(lambda);
     int desired_level = int(ceil(lambda))*3;
 
@@ -120,7 +135,7 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
         //return vec4(1.0, 0.0, 0.0, 0.0);
 
-        uvec4 idx_pos = textureLod(usampler2D(vt_addresses[0]), texture_coordinates, max_level).rgba;
+        uvec4 idx_pos = textureLod(usampler2D(vts[gua_current_vt_idx].vt_address), texture_coordinates, max_level).rgba;
         positions = idx_tex_positions(0, idx_pos, 0, idx_pos);
 
 
@@ -134,13 +149,13 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         for(int i = desired_level; i >= 0; --i)
         {
             c += vec4(0.1, 0.1, 0.1, 0.0);
-            uvec4 idx_child_pos = textureLod(usampler2D(vt_addresses[0]), texture_coordinates, max_level-(i) ).rgba;
+            uvec4 idx_child_pos = textureLod(usampler2D(vts[gua_current_vt_idx].vt_address), texture_coordinates, max_level-(i) ).rgba;
 
             // check if the requested tile is loaded and if we are not at the root level
             // enables to mix (linearly interpolate) between hierarchy levels
             if(idx_child_pos.w == 1 && i >= 1)
             {
-                uvec4 idx_parent_pos = textureLod(usampler2D(vt_addresses[0]), texture_coordinates, max_level-(i-1) ).rgba;
+                uvec4 idx_parent_pos = textureLod(usampler2D(vts[gua_current_vt_idx].vt_address), texture_coordinates, max_level-(i-1) ).rgba;
                 positions = idx_tex_positions(i-1, idx_parent_pos, i, idx_child_pos);
                 break;
             }
@@ -213,7 +228,6 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
 
 
-
          }
 
 
@@ -224,6 +238,11 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
           "name" : "wappen_vt",
           "type" : "sampler2D",
           "value" : "1"
+        },
+        {
+          "name" : "gua_enable_vt",
+          "type" : "bool",
+          "value": "true"
         }
       ]
     }
