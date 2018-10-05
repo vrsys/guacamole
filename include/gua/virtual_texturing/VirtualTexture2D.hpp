@@ -80,15 +80,21 @@ class GUA_DLL VirtualTexture2D : public Texture {
     return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
   }
 
-  std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
-    return index_texture_hierarchy_per_context_[ctx.id];
+  //std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
+  //  return index_texture_hierarchy_per_context_[ctx.id];
+  //}
+
+  scm::gl::texture_2d_ptr& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
+    return index_texture_mip_map_per_context_[ctx.id];
   }
 
  protected:
 
+  //mutable std::map<std::size_t,
+  //  std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
+  
   mutable std::map<std::size_t,
-    std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
-
+    scm::gl::texture_2d_ptr>               index_texture_mip_map_per_context_;
   //scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned _physical_texture_width;
   unsigned _physical_texture_height;

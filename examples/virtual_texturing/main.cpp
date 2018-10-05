@@ -109,6 +109,9 @@ int main(int argc, char** argv) {
 
   plane->set_draw_bounding_box(true);
 
+  plane->rotate(180.0f, 0.0f, 1.0f, 0.0f);
+  plane->rotate(180.0f, 0.0f, 0.0f, 1.0f);
+
   //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
   //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
   std::string const& texture_atlas_path = "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas";
