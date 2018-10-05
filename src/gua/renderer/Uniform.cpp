@@ -66,6 +66,7 @@ struct GUA_DLL ApplyUniform : public boost::static_visitor<> {
         texture = TextureDatabase::instance()->lookup(tex_name);
       }
       if (texture) {
+        int32_t global_tex_id = TextureDatabase::instance()->get_global_texture_id_by_path(tex_name);
         prog->uniform(name, location, texture->get_handle(ctx));
       }
     }

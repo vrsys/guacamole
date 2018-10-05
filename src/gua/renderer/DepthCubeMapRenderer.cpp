@@ -188,9 +188,9 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
   pipe.current_viewstate_ = new_view_state;
 
   // process all passes
-  for (int i(0); i < pipe.passes_.size(); ++i) {
-    if (pipe.passes_[i].enable_for_shadows()) {
-      pipe.passes_[i].process(*pipe.last_description_.get_passes()[i], pipe);
+  for (uint32_t pass_idx = 0; pass_idx < pipe.passes_.size(); ++pass_idx) {
+    if (pipe.passes_[pass_idx].enable_for_shadows()) {
+      pipe.passes_[pass_idx].process(*pipe.last_description_.get_passes()[pass_idx], pipe);
     }
   }
 

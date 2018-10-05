@@ -64,8 +64,8 @@ class GUA_DLL VirtualTexture2D : public Texture {
 
   uint32_t get_max_depth() const {return max_depth_;}
 
-  void upload_to(RenderContext const& context) const override {};
-  void upload_to(RenderContext const& context, uint32_t num_hierarchy_levels) const;
+  void upload_to(RenderContext const& context) const override;
+  //void upload_to(RenderContext const& context, uint32_t num_hierarchy_levels) const;
 
   void initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const;
 
@@ -84,6 +84,8 @@ class GUA_DLL VirtualTexture2D : public Texture {
   //  return index_texture_hierarchy_per_context_[ctx.id];
   //}
 
+  void upload_vt_handle_to_ubo(RenderContext const& ctx) const;
+
   scm::gl::texture_2d_ptr& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
     return index_texture_mip_map_per_context_[ctx.id];
   }
@@ -95,6 +97,10 @@ class GUA_DLL VirtualTexture2D : public Texture {
   
   mutable std::map<std::size_t,
     scm::gl::texture_2d_ptr>               index_texture_mip_map_per_context_;
+
+  mutable std::map<std::size_t, 
+                   scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
+
   //scm::gl::texture_image_data_ptr image_ = nullptr;
   unsigned _physical_texture_width;
   unsigned _physical_texture_height;
@@ -108,10 +114,8 @@ class GUA_DLL VirtualTexture2D : public Texture {
   std::string _file_config;
   std::string _file_atlas;
   uint32_t    _lamure_texture_id;
-  scm::shared_ptr<scm::gl::render_device> _device;
-  mutable scm::math::vec2ui                                                         _index_texture_dimension;
-  scm::gl::sampler_state_ptr                                                        _filter_nearest;
-  scm::gl::sampler_state_ptr                                                        _filter_linear;
+  mutable scm::gl::sampler_state_ptr  nearest_mip_map_sampler_state_ = nullptr;
+
 };  
 
 }
