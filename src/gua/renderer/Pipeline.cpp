@@ -55,11 +55,12 @@ namespace gua {
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : context_(ctx),
+    : 
+      current_viewstate_(),
+      context_(ctx),
       gbuffer_(new GBuffer(ctx, resolution)),
       camera_block_(ctx.render_device),
       light_table_(new LightTable),
-      current_viewstate_(),
       last_resolution_(0, 0),
       last_description_(),
       global_substitution_map_(),
@@ -70,6 +71,7 @@ Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
 
   const float th = last_description_.get_blending_termination_threshold();
   global_substitution_map_["enable_abuffer"] = "0";
+
   global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
   global_substitution_map_["abuf_blending_termination_threshold"] =
       std::to_string(th);
@@ -422,9 +424,9 @@ void Pipeline::render_shadow_map(LightTable::LightBlock& light_block,
     bind_camera_uniform_block(0);
 
     // process all passes
-    for (int i(0); i < passes_.size(); ++i) {
-      if (passes_[i].enable_for_shadows()) {
-        passes_[i].process(*last_description_.get_passes()[i], *this);
+    for (std::size_t pass_idx = 0; pass_idx < passes_.size(); ++pass_idx) {
+      if (passes_[pass_idx].enable_for_shadows()) {
+        passes_[pass_idx].process(*last_description_.get_passes()[pass_idx], *this);
       }
     }
   }
@@ -465,7 +467,7 @@ void Pipeline::generate_shadow_map_sunlight(
     };
   }
 
-  for (int cascade(0); cascade < splits.size() - 1; ++cascade) {
+  for (uint32_t cascade = 0; cascade < splits.size() - 1; ++cascade) {
 
     shadow_map->set_viewport_offset(math::vec2f(cascade, 0.f));
 

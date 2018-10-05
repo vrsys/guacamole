@@ -92,7 +92,8 @@ int main(int argc, char** argv) {
   vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
   vt->set_uniform("wappen_vt", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas"));
-
+  //vt->set_uniform("gua_enable_vt", false);
+  vt->set_enable_virtual_texturing(true);
 
 
   auto plane(loader.create_geometry_from_file(
