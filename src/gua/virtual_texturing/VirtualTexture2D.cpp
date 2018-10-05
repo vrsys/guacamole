@@ -44,45 +44,10 @@
 #include <fstream>
 #include <regex>
 
+#define PHYSICAL_TEXTURE_MAX_NUM_LAYERS 256
+#define PHYSICAL_TEXTURE_MAX_RES_PER_AXIS 8192
+
 namespace gua {
-
-// trim from start (in place)
-static inline void ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-static inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-}
-
-// trim from both ends (in place)
-static inline void trim(std::string &s) {
-    ltrim(s);
-    rtrim(s);
-}
-
-// trim from start (copying)
-static inline std::string ltrim_copy(std::string s) {
-    ltrim(s);
-    return s;
-}
-
-// trim from end (copying)
-static inline std::string rtrim_copy(std::string s) {
-    rtrim(s);
-    return s;
-}
-
-// trim from both ends (copying)
-static inline std::string trim_copy(std::string s) {
-    trim(s);
-    return s;
-}
-
-
   std::map<std::size_t,
     std::shared_ptr<LayeredPhysicalTexture2D> > VirtualTexture2D::physical_texture_ptr_per_context_ 
       = std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D> >();
@@ -97,11 +62,12 @@ static inline std::string trim_copy(std::string s) {
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
     ::vt::VTConfig::CONFIG_PATH = ini_filename;
-    ::vt::VTConfig::get_instance().define_size_physical_texture(5, 8192);
+    ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
     _tile_size = ::vt::VTConfig::get_instance().get_size_tile();
 
     _lamure_texture_id = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
 
+/*
 
     std::cout << "Defined physical_texture_siye\n";
 
@@ -123,38 +89,11 @@ static inline std::string trim_copy(std::string s) {
       std::cout << "Tile size compatible\n";
     } else {
       std::cout << "Tile size Incompatible\n";
-      //gua::Logger << "Warning: Ignoring VT because of unmatching tile size\n";
     }
+*/
   }
 
-/*
-  void VirtualTexture2D::upload_to(RenderContext const& ctx, uint32_t num_hierarchy_levels) const {
 
-    auto index_texture_hierarchy_context_iterator = index_texture_hierarchy_per_context_.find(ctx.id);
-
-
-    if(index_texture_hierarchy_context_iterator == index_texture_hierarchy_per_context_.end()) {
-      max_depth_ = num_hierarchy_levels + 1; // how do we get the real depth of the index texture hierarchy?
-
-      auto& new_index_texture_hierarchy = index_texture_hierarchy_per_context_[ctx.id];
-
-      for(uint curr_depth = 0; curr_depth < max_depth_; ++curr_depth) {
-        //uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
-
-        uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(curr_depth);
-
-        auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
-          scm::math::vec2ui(size_index_texture, size_index_texture), scm::gl::FORMAT_RGBA_8UI);
-
-        ctx.render_context->clear_image_data(index_texture_level_ptr, 0, scm::gl::FORMAT_RGBA_8UI, 0);
-
-        std::cout << "Creating Index Texture Level: " << curr_depth << "\n";
-
-        new_index_texture_hierarchy.emplace_back(index_texture_level_ptr);   
-      }
-
-    }
-  }*/
 
   void VirtualTexture2D::upload_to(RenderContext const& ctx, uint32_t num_hierarchy_levels) const {
 
@@ -162,12 +101,7 @@ static inline std::string trim_copy(std::string s) {
 
 
     if(index_texture_hierarchy_context_iterator == index_texture_mip_map_per_context_.end()) {
-      max_depth_ = num_hierarchy_levels + 1; // how do we get the real depth of the index texture hierarchy?
-
-      //auto& new_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
-
-      //for(uint curr_depth = 0; curr_depth < max_depth_; ++curr_depth) {
-        //uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
+      max_depth_ = num_hierarchy_levels + 1;
 
         uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(max_depth_);
 
@@ -177,14 +111,11 @@ static inline std::string trim_copy(std::string s) {
                                                                             max_depth_ + 1);
 
         
-        for(int i = 0; i < max_depth_ + 1; ++i) {
+        for(uint32_t i = 0; i < max_depth_ + 1; ++i) {
           ctx.render_context->clear_image_data(index_texture_level_ptr, i, scm::gl::FORMAT_RGBA_8UI, 0);
         }
 
-        std::cout << "Creating Index Texture Level: " << max_depth_ << "\n";
-
         index_texture_mip_map_per_context_[ctx.id] = index_texture_level_ptr;   
-      //}
 
     }
   }

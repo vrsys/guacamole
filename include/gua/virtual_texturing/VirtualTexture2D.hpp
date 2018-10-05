@@ -76,9 +76,9 @@ class GUA_DLL VirtualTexture2D : public Texture {
   // per render (gua) contexts
   static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
-  static scm::math::vec2ui get_physical_texture_handle(RenderContext const& ctx) {
-    return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
-  }
+  //static scm::math::vec2ui get_physical_texture_handle(RenderContext const& ctx) {
+  //  return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
+  //}
 
   //std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
   //  return index_texture_hierarchy_per_context_[ctx.id];
