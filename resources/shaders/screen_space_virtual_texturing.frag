@@ -62,7 +62,7 @@ struct idx_tex_positions
 vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint current_level)
 {
     // exponent for calculating the occupied pixels in our index texture, based on which level the tile is in
-    uint tile_occupation_exponent = max_level - current_level;
+    uint tile_occupation_exponent = (max_level-1) - current_level;
 
     // 2^tile_occupation_exponent defines how many pixel (of the index texture) are used by the given tile
     uint occupied_index_pixel_per_dimension = uint(1 << tile_occupation_exponent);
@@ -74,7 +74,7 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
 
     // base x,y coordinates * number of tiles / number of used index texture pixel
     // taking the factional part by modf
-    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << max_level) / vec2(occupied_index_pixel_per_dimension));
+    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << (max_level-1) ) / vec2(occupied_index_pixel_per_dimension));
 
     // Use only tile_size - 2*tile_padding pixels to render scene
     // Therefore, scale reduced tile size to full size and translate it
@@ -231,7 +231,7 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
         //return vec4(1.0, 0.0, 0.0, 0.0);
 
-        uvec4 idx_pos = texture(hierarchical_idx_textures[0], texture_coordinates).rgba;
+        uvec4 idx_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level- 0).rgba;
 /*
         if (idx_pos.x == 0 && idx_pos.y == 0 && idx_pos.z == 0 && idx_pos.w == 1) {
             return vec4(0.0, 1.0, 0.0, 1.0);
@@ -252,13 +252,13 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         for(int i = desired_level; i >= 0; --i)
         {
             c += vec4(0.1, 0.1, 0.1, 0.0);
-            uvec4 idx_child_pos = texture(hierarchical_idx_textures[i], texture_coordinates).rgba;
+            uvec4 idx_child_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level-(i) ).rgba;
 
             // check if the requested tile is loaded and if we are not at the root level
             // enables to mix (linearly interpolate) between hierarchy levels
             if(idx_child_pos.w == 1 && i >= 1)
             {
-                uvec4 idx_parent_pos = texture(hierarchical_idx_textures[i-1], texture_coordinates).rgba;
+                uvec4 idx_parent_pos = textureLod(hierarchical_idx_textures[0], texture_coordinates, max_level-(i-1) ).rgba;
                 positions = idx_tex_positions(i-1, idx_parent_pos, i, idx_child_pos);
                 break;
             }
@@ -277,7 +277,8 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
  /*   if (toggle_visualization == 1 || toggle_visualization == 2) {
         c = illustrate_level(lambda, positions);
         c = vec4(1.0, lambda, lambda, 1.0);
-    } else */{
+    } else */
+    {
         c = mix_colors(positions, desired_level, texture_coordinates, mix_ratio);
     }
 

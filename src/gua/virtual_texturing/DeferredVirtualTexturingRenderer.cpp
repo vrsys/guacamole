@@ -114,7 +114,7 @@ namespace gua {
                                                                virtually_textured_color_attachment_);
 
       nearest_sampler_state_ = ctx.render_device
-        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+        ->create_sampler_state(scm::gl::FILTER_MIN_MAG_MIP_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
       linear_sampler_state_ = ctx.render_device
         ->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
@@ -380,6 +380,9 @@ namespace gua {
 
             //auto current_tex_id = cut->get_dataset_id;
 
+
+//###################
+            /*
             for( auto const& vt_ptr : vector_of_vt_ptr ) {
               auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
 
@@ -387,7 +390,19 @@ namespace gua {
                                            scm::gl::texture_region(origin, dimensions), 0, scm::gl::FORMAT_RGBA_8UI,
                                            cut->get_front()->get_index(updated_level));
             }
-          
+            */
+
+            for( auto const& vt_ptr : vector_of_vt_ptr ) {
+              auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
+
+                uint32_t max_level = vt_ptr->get_max_depth();
+
+                ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
+                                             scm::gl::texture_region(origin, dimensions), max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
+                                             cut->get_front()->get_index(updated_level));
+              
+            }
+ 
         }
         //std::cout << "After Updating the index texture\n";
 
@@ -543,6 +558,10 @@ namespace gua {
       int32_t last_known_index_tex_hierarchy_depth = 0;
 
       std::string const hierarchical_index_texture_uniform_name = "hierarchical_idx_textures";
+
+
+//###########
+/*
       for( auto const& vt_ptr : vector_of_vt_ptr ) {
         auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
 
@@ -557,16 +576,32 @@ namespace gua {
           ++global_texture_binding_idx;
         }
       }
+*/
+
+      for( auto const& vt_ptr : vector_of_vt_ptr ) {
+        auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
+
+        last_known_index_tex_hierarchy_depth = vt_ptr->get_max_depth();
+
+        //for(auto const& index_texture_layer : current_index_texture_hierarchy) {
+          ctx.render_context->bind_texture(current_index_texture_hierarchy, nearest_sampler_state_, global_texture_binding_idx);
+          screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, hierarchical_index_texture_uniform_name, 
+                                                                        int32_t(global_texture_binding_idx), int32_t(global_texture_binding_idx-2) );
+          //vt_ptr->upload_to(ctx);
+
+          ++global_texture_binding_idx;
+        //}
+      }
 
       //auto& current_physical_texture_ptr = VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id];
 
-      scm::math::vec2ui physical_texture_size(current_physical_texture_ptr->width() / 256.0, current_physical_texture_ptr->height() / 256.0);
       scm::math::vec2 tile_size(::vt::VTConfig::get_instance().get_size_tile(), ::vt::VTConfig::get_instance().get_size_tile());
+      scm::math::vec2ui physical_texture_size(current_physical_texture_ptr->width() / tile_size[0], current_physical_texture_ptr->height() / tile_size[1]);
       scm::math::vec2 tile_padding(::vt::VTConfig::get_instance().get_size_padding(), ::vt::VTConfig::get_instance().get_size_padding());
 
       //screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", 1);
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "physical_texture_dim", scm::math::vec2ui(physical_texture_size) );
-      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "max_level", int32_t(last_known_index_tex_hierarchy_depth-1) );
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "max_level", int32_t(last_known_index_tex_hierarchy_depth) );
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_size", scm::math::vec2(tile_size) );
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "tile_padding", scm::math::vec2(tile_padding) );
 

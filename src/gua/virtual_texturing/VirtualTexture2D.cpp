@@ -127,7 +127,7 @@ static inline std::string trim_copy(std::string s) {
     }
   }
 
-
+/*
   void VirtualTexture2D::upload_to(RenderContext const& ctx, uint32_t num_hierarchy_levels) const {
 
     auto index_texture_hierarchy_context_iterator = index_texture_hierarchy_per_context_.find(ctx.id);
@@ -152,6 +152,39 @@ static inline std::string trim_copy(std::string s) {
 
         new_index_texture_hierarchy.emplace_back(index_texture_level_ptr);   
       }
+
+    }
+  }*/
+
+  void VirtualTexture2D::upload_to(RenderContext const& ctx, uint32_t num_hierarchy_levels) const {
+
+    auto index_texture_hierarchy_context_iterator = index_texture_mip_map_per_context_.find(ctx.id);
+
+
+    if(index_texture_hierarchy_context_iterator == index_texture_mip_map_per_context_.end()) {
+      max_depth_ = num_hierarchy_levels + 1; // how do we get the real depth of the index texture hierarchy?
+
+      //auto& new_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
+
+      //for(uint curr_depth = 0; curr_depth < max_depth_; ++curr_depth) {
+        //uint32_t curr_num_tiles_per_dimension = std::pow(2, curr_depth);
+
+        uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(max_depth_);
+
+        auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
+                                                                            scm::math::vec2ui(size_index_texture, size_index_texture), 
+                                                                            scm::gl::FORMAT_RGBA_8UI,
+                                                                            max_depth_ + 1);
+
+        
+        for(int i = 0; i < max_depth_ + 1; ++i) {
+          ctx.render_context->clear_image_data(index_texture_level_ptr, i, scm::gl::FORMAT_RGBA_8UI, 0);
+        }
+
+        std::cout << "Creating Index Texture Level: " << max_depth_ << "\n";
+
+        index_texture_mip_map_per_context_[ctx.id] = index_texture_level_ptr;   
+      //}
 
     }
   }
