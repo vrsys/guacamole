@@ -27,6 +27,8 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/math/math.hpp>
 
+#include <gua/databases/TextureDatabase.hpp>
+
 // external headers
 #include <boost/shared_ptr.hpp>
 #include <scm/gl_core/data_formats.h>
@@ -48,7 +50,7 @@
 #define PHYSICAL_TEXTURE_MAX_NUM_LAYERS 256
 #define PHYSICAL_TEXTURE_MAX_RES_PER_AXIS 8192
 
-#define MAX_VIRTUAL_TEXTURES 32
+#define MAX_TEXTURES 1024
 
 namespace gua {
   std::map<std::size_t,
@@ -58,47 +60,35 @@ namespace gua {
   std::map<std::size_t, VTInfo> VirtualTexture2D::vt_info_per_context_ 
       = std::map<std::size_t, VTInfo>();
 
+  std::map<std::size_t, scm::gl::buffer_ptr> VirtualTexture2D::vt_addresses_ubo_per_context_
+      = std::map<std::size_t, scm::gl::buffer_ptr>();
+
+  bool VirtualTexture2D::initialized_vt_system = false;
+
   VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename,
                                      std::size_t physical_texture_tile_slot_size,
                                      scm::gl::sampler_state_desc const& state_descripton) {
 
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
-    ::vt::VTConfig::CONFIG_PATH = ini_filename;
-    ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
-    _tile_size = ::vt::VTConfig::get_instance().get_size_tile();
+    if(!initialized_vt_system) {
+      ::vt::VTConfig::CONFIG_PATH = ini_filename;
+      ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
+    
+      initialized_vt_system = true;
+    }
 
-    _lamure_texture_id = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
+    tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
+
+    lamure_texture_id_ = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
+
+    atlas_file_path_ = atlas_filename;
+    ini_file_path_   = ini_filename;
 
     ::vt::pre::AtlasFile current_atlas_file(atlas_filename.c_str());
 
     max_depth_ = current_atlas_file.getDepth();
 
-    //std::cout << "MAX DEPTH AS DEFINED BY ATLAS FILE: " << max_depth_ << "\n";
-/*
-
-    std::cout << "Defined physical_texture_siye\n";
-
-
-    std::size_t tile_size = 0;
-    std::string line_buffer{""};
-
-    std::ifstream ini_filestream(ini_filename, std::ios::in);
-
-    while(std::getline(ini_filestream, line_buffer)) {
-      trim(line_buffer);
-      if(0 == line_buffer.find("TILE_SIZE=")) {
-        tile_size = std::stoi(line_buffer.substr(10));
-      }
-    }
-    ini_filestream.close();
-
-    if(physical_texture_tile_slot_size == tile_size) {
-      std::cout << "Tile size compatible\n";
-    } else {
-      std::cout << "Tile size Incompatible\n";
-    }
-*/
   }
 
 
@@ -137,7 +127,7 @@ namespace gua {
 
     if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
       vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
-                                                                               MAX_VIRTUAL_TEXTURES * sizeof(scm::math::vec2ui));
+                                                                               MAX_TEXTURES * sizeof(scm::math::vec2ui));
     }
 
     auto& current_vt_addresses_ubo = vt_addresses_ubo_per_context_[ctx.id];
@@ -151,7 +141,17 @@ namespace gua {
 
     uint64_t *mapped_physical_texture_address_ubo = (uint64_t *) ctx.render_context->map_buffer(current_vt_addresses_ubo,
                                                                                                 scm::gl::ACCESS_WRITE_ONLY);
-    memcpy(&mapped_physical_texture_address_ubo[0], &physical_texture_cpu_address, sizeof(uint64_t));
+    
+
+
+    std::cout << "SAVED ATLAS FILEPATH IS: " << atlas_file_path_ << "\n";
+
+    uint32_t current_global_texture_id = gua::TextureDatabase::instance()->get_global_texture_id_by_path(atlas_file_path_);
+
+    uint64_t current_handle_write_offset = 2 * current_global_texture_id;
+    memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset]), &physical_texture_cpu_address, sizeof(uint64_t));
+    
+    memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset + 1]), &max_depth_, sizeof(int32_t));
     ctx.render_context->unmap_buffer(current_vt_addresses_ubo);
 
 

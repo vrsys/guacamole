@@ -55,12 +55,12 @@ class GUA_DLL VirtualTexture2D : public Texture {
                                                scm::gl::WRAP_REPEAT,
                                                scm::gl::WRAP_REPEAT));
 
-  unsigned width() const override { return _physical_texture_width; }
-  unsigned height() const override { return _physical_texture_height; }
-  unsigned get_physical_texture_width() const { return _physical_texture_width; }
-  unsigned get_physical_texture_height() const { return _physical_texture_height; }
-  uint32_t get_tile_size() const { return _tile_size; }
-  uint32_t get_lamure_texture_id() const { return _lamure_texture_id; }
+  unsigned width() const override { return physical_texture_width_; }
+  unsigned height() const override { return physical_texture_height_; }
+  unsigned get_physical_texture_width() const { return physical_texture_width_; }
+  unsigned get_physical_texture_height() const { return physical_texture_height_; }
+  uint32_t get_tile_size() const { return tile_size_; }
+  uint32_t get_lamure_texture_id() const { return lamure_texture_id_; }
 
   uint32_t get_max_depth() const {return max_depth_;}
 
@@ -98,23 +98,25 @@ class GUA_DLL VirtualTexture2D : public Texture {
   mutable std::map<std::size_t,
     scm::gl::texture_2d_ptr>               index_texture_mip_map_per_context_;
 
-  mutable std::map<std::size_t, 
+  static std::map<std::size_t, 
                    scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
 
   //scm::gl::texture_image_data_ptr image_ = nullptr;
-  unsigned _physical_texture_width;
-  unsigned _physical_texture_height;
-  uint16_t _tile_size;
+  unsigned physical_texture_width_;
+  unsigned physical_texture_height_;
+  uint16_t tile_size_;
 
   mutable uint32_t max_depth_;
 
   //unsigned layers_;
 
  private:
-  std::string _file_config;
-  std::string _file_atlas;
-  uint32_t    _lamure_texture_id;
+  std::string ini_file_path_;
+  std::string atlas_file_path_;
+  uint32_t    lamure_texture_id_;
   mutable scm::gl::sampler_state_ptr  nearest_mip_map_sampler_state_ = nullptr;
+
+  static bool initialized_vt_system;
 
 };  
 
