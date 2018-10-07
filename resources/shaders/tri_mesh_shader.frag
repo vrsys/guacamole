@@ -31,5 +31,11 @@ void main() {
     @material_method_calls_frag@
   }
 
+  #if @enable_virtual_texturing@
+
+  #else
+  	gua_color = vec3(1.0, 0.0, 0.0);
+  #endif
+
   submit_fragment(gl_FragCoord.z);
 }
