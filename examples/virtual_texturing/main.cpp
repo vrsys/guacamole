@@ -86,22 +86,46 @@ int main(int argc, char** argv) {
   auto virtual_texturing_preparation_shader(std::make_shared<gua::MaterialShader>("VirtualTexturing", virtual_texture_mat_input_descriptor));
   gua::MaterialShaderDatabase::instance()->add(virtual_texturing_preparation_shader);
 
+
+  auto vt2 = virtual_texturing_preparation_shader->make_new_material();
+  vt2->set_uniform("metalness", 0.0f);
+  vt2->set_uniform("roughness", 1.0f);
+  vt2->set_uniform("emissivity", 1.0f);
+  vt2->set_uniform("my_vt_2", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/earth_colour_86400x43200_256x256_1_rgb.atlas"));
+  //vt->set_uniform("gua_enable_vt", false);
+  vt2->set_enable_virtual_texturing(true);
+
+
+  auto plane2(loader.create_geometry_from_file(
+      //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
+      "plane2", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/earth_86400x43200_smooth_normals.obj",
+      //"plane", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/100k_tris_8k_vt_pre_vt.obj",
+      vt2,
+      gua::TriMeshLoader::NORMALIZE_POSITION |
+      //gua::TriMeshLoader::NORMALIZE_SCALE |  
+      gua::TriMeshLoader::MAKE_PICKABLE)  );
+  graph.add_node("/transform", plane2);
+
+  plane2->translate(1.0, 0.0, 0.0);
+
+
+
+
+
   //create material for virtual_texturing
   auto vt = virtual_texturing_preparation_shader->make_new_material();
   vt->set_uniform("metalness", 0.0f);
   vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
-  vt->set_uniform("wappen_vt", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas"));
+  vt->set_uniform("my_vt_1", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas"));
   //vt->set_uniform("gua_enable_vt", false);
   vt->set_enable_virtual_texturing(true);
-
-
 
 
   auto plane(loader.create_geometry_from_file(
       //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
       //"plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
-      "plane", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/100k_tris_8k_vt_pre_vt.obj",
+      "plane", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/1m8k_vt_pre_vt.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       //gua::TriMeshLoader::NORMALIZE_SCALE |  
@@ -114,16 +138,7 @@ int main(int argc, char** argv) {
 
   plane->rotate(180.0f, 0.0f, 1.0f, 0.0f);
   plane->rotate(180.0f, 0.0f, 0.0f, 1.0f);
-
-  //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/montblanc/montblanc_w1202116_h304384.atlas";
-  //std::string const& texture_atlas_path = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
-  std::string const& texture_atlas_path = "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas";
-  std::string const& texture_atlas_path2 = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_colour_86400x43200_256x256_1_rgb.atlas";
-
-  // LOAD VIRTUAL TEXTURES
-  //gua::TextureDatabase::instance()->load(texture_atlas_path);
-  //gua::TextureDatabase::instance()->load(texture_atlas_path2);
-
+  plane->translate(-1.0, 0.0, 0.0);
 
 
 

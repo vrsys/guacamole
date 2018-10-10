@@ -89,11 +89,15 @@ namespace gua {
 
     max_depth_ = current_atlas_file.getDepth();
 
+
+    std::cout << "INITIALIZING INDEX TEXTURE WITH PATH: " << atlas_filename << "\n";
   }
 
 
 
   void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
+
+    std::cout << "UPLOAD TO CALL\n";
 
     auto index_texture_hierarchy_context_iterator = index_texture_mip_map_per_context_.find(ctx.id);
 
@@ -124,9 +128,10 @@ namespace gua {
   }
 
   void VirtualTexture2D::upload_vt_handle_to_ubo(RenderContext const& ctx) const {
+    std::cout << "Trying to upload handle\n";
 
     if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
-      vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
+      vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW,
                                                                                MAX_TEXTURES * sizeof(scm::math::vec2ui));
     }
 
@@ -149,13 +154,16 @@ namespace gua {
     uint32_t current_global_texture_id = gua::TextureDatabase::instance()->get_global_texture_id_by_path(atlas_file_path_);
 
     uint64_t current_handle_write_offset = 2 * current_global_texture_id;
+
+    std::cout << current_handle_write_offset << " UBO UPLOAD IDX\n";
+
     memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset]), &physical_texture_cpu_address, sizeof(uint64_t));
     
     memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset + 1]), &max_depth_, sizeof(int32_t));
+    
+
     ctx.render_context->unmap_buffer(current_vt_addresses_ubo);
-
-
-    ctx.render_context->bind_uniform_buffer(current_vt_addresses_ubo, 3);
+    ctx.render_context->bind_uniform_buffer(current_vt_addresses_ubo, 4);
   }
 
 

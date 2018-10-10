@@ -26,10 +26,7 @@
 
 namespace gua {
 
-  LayeredPhysicalTexture2D::LayeredPhysicalTexture2D(){}//std::string const& file,
-                                                     //scm::gl::sampler_state_desc const& state_descripton) {
-
-  //}
+  LayeredPhysicalTexture2D::LayeredPhysicalTexture2D(){}
 
   LayeredPhysicalTexture2D::~LayeredPhysicalTexture2D(){
     if(!feedback_lod_cpu_buffer_) {
@@ -42,20 +39,14 @@ namespace gua {
   }
 
   void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const {
-    //TODO: get_actual sizes
 
     width_ = width;
     height_ = height;
     num_layers_ = num_layers;
     tile_size_ = tile_size;
     num_feedback_slots_ = (width_ / tile_size_) * (height_ / tile_size_) * num_layers_;
-    //auto physical_texture_size = scm::math::vec2ui(),
-    //                                               );
-
 
     scm::math::vec2ui physical_texture_dimensions(width_, height_);
-
-
 
     auto phys_tex_format = scm::gl::FORMAT_RGBA_8;
     switch (::vt::VTConfig::get_instance().get_format_texture()) {
@@ -100,8 +91,6 @@ namespace gua {
     feedback_count_cpu_buffer_ = new uint32_t[num_feedback_slots_];
 
 
-
-    std::cout << "Creating Physical Texture\n";
   }
 
   void LayeredPhysicalTexture2D::upload_physical_texture_handle_to_ubo(RenderContext const& ctx) const {
@@ -134,6 +123,6 @@ namespace gua {
     ctx.render_context->unmap_buffer(physical_texture_address_ubo_);
 
 
-    ctx.render_context->bind_uniform_buffer(physical_texture_address_ubo_, 2);
+    ctx.render_context->bind_uniform_buffer(physical_texture_address_ubo_, 3);
   }
 }  
