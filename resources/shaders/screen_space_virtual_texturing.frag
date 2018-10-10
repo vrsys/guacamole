@@ -13,44 +13,25 @@ layout (location = 0) out vec3 out_vt_color;
 layout(binding = 0) uniform sampler2D gua_uv_buffer;
 //layout(binding = 1) uniform sampler2DArray layered_physical_texture;
 
-layout(binding = 2) uniform usampler2D hierarchical_idx_textures;
+//layout(binding = 2) uniform usampler2D hierarchical_idx_textures;
 
+struct padded_vt_address{
+  uvec2 vt_address;
+  ivec2 max_level_and_padding;
+};
+
+struct physical_texture_info_struct {
+  uvec2 address;
+  uvec2 tile_size;
+  vec2  tile_padding;
+  uvec2 dims;
+};
 
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
 
-layout(std140, binding = 2) uniform physical_texture_address { uvec2 pt_address; };
-
-/*
-layout(std140, binding=2) uniform physical_texture_address {
-    uvec2 pt_address;
-};*/
-
-
-uniform int max_level;
-
-uniform vec2 tile_size;
-uniform vec2 tile_padding;
-uniform uvec2 physical_texture_dim;
-
-uniform bool enable_hierarchy;
-uniform int toggle_visualization;
-
-
-float rand(vec2 n) { 
-    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
-}
-
-float noise(vec2 p){
-    vec2 ip = floor(p);
-    vec2 u = fract(p);
-    u = u*u*(3.0-2.0*u);
-    
-    float res = mix(
-        mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
-        mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
-    return res*res;
-}
+layout(std140, binding = 3) uniform physical_texture_address { physical_texture_info_struct pt; };
+layout(std140, binding = 4) uniform virtual_texture_addresses { padded_vt_address vts[1024]; };
 
 
 struct idx_tex_positions
@@ -61,14 +42,17 @@ struct idx_tex_positions
     uvec4 child_idx;
 };
 
-
+const vec2 tile_padding_by_tile_size = pt.tile_padding / pt.tile_size;
+const uint pt_slice_size = pt.dims.x * pt.dims.y;
 /*
 * Physical texture lookup
 */
-vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint current_level)
+vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint current_level, int max_level)
 {
     // exponent for calculating the occupied pixels in our index texture, based on which level the tile is in
-    uint tile_occupation_exponent = (max_level-1) - current_level;
+    int max_level_minus_1 = max_level - 1;
+
+    uint tile_occupation_exponent = (max_level_minus_1) - current_level;
 
     // 2^tile_occupation_exponent defines how many pixel (of the index texture) are used by the given tile
     uint occupied_index_pixel_per_dimension = uint(1 << tile_occupation_exponent);
@@ -80,26 +64,20 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
 
     // base x,y coordinates * number of tiles / number of used index texture pixel
     // taking the factional part by modf
-    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << (max_level-1) ) / vec2(occupied_index_pixel_per_dimension));
+    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << (max_level_minus_1) ) / vec2(occupied_index_pixel_per_dimension));
 
     // Use only tile_size - 2*tile_padding pixels to render scene
     // Therefore, scale reduced tile size to full size and translate it
-    vec2 padding_scale = 1 - 2 * tile_padding / tile_size;
-    vec2 padding_offset = tile_padding / tile_size;
+    vec2 padding_scale = 1 - 2 * tile_padding_by_tile_size;
+    vec2 padding_offset = tile_padding_by_tile_size;
 
 
     // adding the ratio for every texel to our base offset to get the right pixel in our tile
     // and dividing it by the dimension of the phy. tex.
-    vec2 physical_texture_coordinates = (base_xy_offset.xy + physical_tile_ratio_xy * padding_scale + padding_offset) / physical_texture_dim;
+    vec2 physical_texture_coordinates = (base_xy_offset.xy + physical_tile_ratio_xy * padding_scale + padding_offset) / pt.dims;
 
     // outputting the calculated coordinate from our physical texture
-    vec4 c = texture(sampler2DArray(pt_address), vec3(physical_texture_coordinates, index_quadruple.z));
-
-    //return vec4(noise(physical_texture_coordinates.xy*1001));
-
-    //return vec4(physical_texture_coordinates.xy, 1.0, 1.0);
-    //vec4 c = texture(layered_physical_texture, vec3(gua_quad_coords, index_quadruple.z));
-
+    vec4 c = texture(sampler2DArray(pt.address), vec3(physical_texture_coordinates, index_quadruple.z));
 
     return c;
 }
@@ -110,25 +88,23 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
 */
 void update_feedback(int feedback_value, uvec4 base_offset)
 {
-    uint one_d_feedback_ssbo_index = base_offset.x + base_offset.y * physical_texture_dim.x + base_offset.z * physical_texture_dim.x * physical_texture_dim.y;
+    uint one_d_feedback_ssbo_index = base_offset.x + base_offset.y * pt.dims.x + base_offset.z * pt_slice_size;
 
-    //atomicMax(out_lod_feedback_values[one_d_feedback_ssbo_index], feedback_value);
     int prev = out_lod_feedback_values[one_d_feedback_ssbo_index];
     out_lod_feedback_values[one_d_feedback_ssbo_index] = max(prev, feedback_value);
-    //atomicAdd(out_count_feedback_values[one_d_feedback_ssbo_index], 1);
 }
 
-vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coordinates, float mix_ratio)
+vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coordinates, float mix_ratio, int max_level)
 {
-    vec4 child_color = get_physical_texture_color(positions.child_idx, texture_coordinates, positions.child_lvl);
-    vec4 parent_color = get_physical_texture_color(positions.parent_idx, texture_coordinates, positions.parent_lvl);
+    vec4 child_color = get_physical_texture_color(positions.child_idx, texture_coordinates, positions.child_lvl, max_level);
+    vec4 parent_color = get_physical_texture_color(positions.parent_idx, texture_coordinates, positions.parent_lvl, max_level);
 
-    return enable_hierarchy == true ?
+    return true ?
         mix(parent_color, child_color, mix_ratio) : child_color;
 }
 
 
-vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
+vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates, usampler2D idx_tex_mm, int max_level)
 {
     float mix_ratio = fract(lambda);
     int desired_level = int(ceil(lambda))*3;
@@ -139,26 +115,11 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
     vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
  
-    // Desired level can be negative when the dxdy-fct requests a coarser representation as of the root tile size
-    if(desired_level <= 0)
-    {
 
-        //return vec4(1.0, 0.0, 0.0, 0.0);
-
-        uvec4 idx_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level).rgba;
-/*
-        if (idx_pos.x == 0 && idx_pos.y == 0 && idx_pos.z == 0 && idx_pos.w == 1) {
-            return vec4(0.0, 1.0, 0.0, 1.0);
-        } else {
-            return vec4(1.0, 0.0, 0.0, 1.0);
-        }
-*/
-        positions = idx_tex_positions(0, idx_pos, 0, idx_pos);
-
-
-
+    if(desired_level < 0) {
+        desired_level = 0;
     }
-    else
+
     {
 
         //return vec4(0.0, 1.0, 0.0, 0.0);
@@ -166,13 +127,13 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
         for(int i = desired_level; i >= 0; --i)
         {
             c += vec4(0.1, 0.1, 0.1, 0.0);
-            uvec4 idx_child_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level-(i) ).rgba;
+            uvec4 idx_child_pos = textureLod(idx_tex_mm, texture_coordinates, max_level-(i) ).rgba;
 
             // check if the requested tile is loaded and if we are not at the root level
             // enables to mix (linearly interpolate) between hierarchy levels
             if(idx_child_pos.w == 1 && i >= 1)
             {
-                uvec4 idx_parent_pos = textureLod(hierarchical_idx_textures, texture_coordinates, max_level-(i-1) ).rgba;
+                uvec4 idx_parent_pos = textureLod(idx_tex_mm, texture_coordinates, max_level-(i-1) ).rgba;
                 positions = idx_tex_positions(i-1, idx_parent_pos, i, idx_child_pos);
                 break;
             }
@@ -188,12 +149,8 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
     }
 
     
- /*   if (toggle_visualization == 1 || toggle_visualization == 2) {
-        c = illustrate_level(lambda, positions);
-        c = vec4(1.0, lambda, lambda, 1.0);
-    } else */
     {
-        c = mix_colors(positions, desired_level, texture_coordinates, mix_ratio);
+        c = mix_colors(positions, desired_level, texture_coordinates, mix_ratio, max_level);
     }
 
     if( int(gl_FragCoord.x) % 128 == 0 && int(gl_FragCoord.y) % 128 == 0 ) {
@@ -210,23 +167,15 @@ vec4 traverse_idx_hierarchy(float lambda, vec2 texture_coordinates)
 
 void main() {
 
-  vec3 uv_lambda_triple  = texture(gua_uv_buffer, gua_quad_coords).rgb;
-  vec2 sampled_uv_coords = uv_lambda_triple.rg;
-  float lambda 			 = uv_lambda_triple.b;
-
-  //vec3 physical_texture_color_lookup = texture(layered_physical_texture, vec3(sampled_uv_coords, 0)).rgb;
+  vec4 uv_lambda_vt_index_quadruple  = texture(gua_uv_buffer, gua_quad_coords).xyzw;
+  vec2 sampled_uv_coords = uv_lambda_vt_index_quadruple.xy;
+  float lambda 			 = uv_lambda_vt_index_quadruple.z;
+  int vt_index = int(round(uv_lambda_vt_index_quadruple.w));
 
   sampled_uv_coords.y = 1.0 - sampled_uv_coords.y;
 
-  vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords);
-
-  //out_vt_color = virtual_texturing_color.rgb;// + 0.5*texture(gua_uv_buffer, gua_quad_coords).rgb;
-  //out_vt_color = vec3(noise(sampled_uv_coords*1001));
-  //out_vt_color = texture(layered_physical_texture, vec3(gua_quad_coords,0) ).rgb;
-  //out_vt_color = texture(gua_uv_buffer, gua_quad_coords).rgb;
-
-  //out_vt_color = texture(layered_physical_texture, 
-  //                          vec3(gua_quad_coords, 0.0)).rgb;
-
-  //return vec4(gua_quad_coords.xy, 1.0, 1.0);
+  usampler2D index_texture_mip_map_to_sample = usampler2D(vts[vt_index].vt_address);
+  int max_level = vts[vt_index].max_level_and_padding.x;
+  vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords, index_texture_mip_map_to_sample, max_level);
+  out_vt_color = virtual_texturing_color.rgb;
 }

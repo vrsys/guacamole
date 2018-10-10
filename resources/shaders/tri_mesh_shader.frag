@@ -21,21 +21,34 @@ vec2 gua_get_quad_coords() {
 
 @material_method_declarations_frag@
 
+#if @enable_virtual_texturing@
+
+@include "common/virtual_texturing_functions.frag"
+#endif
+
 void main() {
 
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
 
+  #if @enable_virtual_texturing@
+    gua_color = vec3(0.0, 1.0, 0.0);
+    writeVTCoords();
+  #else
+    gua_emissivity = 1.0;
+    gua_metalness = 0.0;
+    gua_color = vec3(1.0, 0.0, 0.0);
+    
+    gua_uvs.z = 0.0;
+    gua_uvs.w = 0;
+  #endif
+
+    //gua_color = vec3(1.0, 1.0, 1.0);
   // normal mode or high fidelity shadows
+
   if (gua_rendering_mode != 1) {
     @material_method_calls_frag@
   }
-
-  #if @enable_virtual_texturing@
-
-  #else
-  	gua_color = vec3(1.0, 0.0, 0.0);
-  #endif
 
   submit_fragment(gl_FragCoord.z);
 }
