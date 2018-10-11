@@ -18,8 +18,6 @@ layout(binding = 1) uniform sampler2D passed_vt_colors;
 
 void main() {
 
-  //gua_out_color = gua_get_color();
-
   int screen_space_vt_index  = int(round(texture(gua_uv_buffer, gua_quad_coords).w));
 
   if( 0 != screen_space_vt_index ) {
@@ -27,9 +25,4 @@ void main() {
   } else {
   	discard;
   }
-  //gua_out_color = gua_get_color();
-  //vec2 uv_coords = gl_FragCoord.xy / gua_resolution.xy;
-  //gua_out_color =  gua_get_color(uv_coords);
-
-  //submit_fragment(gl_FragCoord.z);
 }
