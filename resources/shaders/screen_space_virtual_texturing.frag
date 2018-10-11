@@ -11,6 +11,7 @@ in vec2 gua_quad_coords;
 layout (location = 0) out vec3 out_vt_color;
 
 layout(binding = 0) uniform sampler2D gua_uv_buffer;
+layout(binding = 1) uniform sampler2D gua_color_buffer;
 //layout(binding = 1) uniform sampler2DArray layered_physical_texture;
 
 //layout(binding = 2) uniform usampler2D hierarchical_idx_textures;
@@ -178,4 +179,5 @@ void main() {
   int max_level = vts[vt_index].max_level_and_padding.x;
   vec4 virtual_texturing_color = traverse_idx_hierarchy(lambda, sampled_uv_coords, index_texture_mip_map_to_sample, max_level);
   out_vt_color = virtual_texturing_color.rgb;
+
 }
