@@ -141,7 +141,12 @@ int main(int argc, char** argv) {
   plane->translate(-1.0, 0.0, 0.0);
 
 
+  auto reference_mesh(loader.create_geometry_from_file("lion", "/opt/3d_models/50cent/50Cent.obj",
+                      gua::TriMeshLoader::LOAD_MATERIALS | 
+                      gua::TriMeshLoader::NORMALIZE_POSITION |
+                      gua::TriMeshLoader::NORMALIZE_SCALE  ) );
 
+  graph.add_node("/transform", reference_mesh);
 
   auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
   light2->data.set_type(gua::node::LightNode::Type::POINT);

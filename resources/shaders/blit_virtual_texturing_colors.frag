@@ -12,12 +12,21 @@ in vec2 gua_quad_coords;
 
 @include "common/gua_fragment_shader_output.glsl"
 
-uniform sampler2D passed_vt_colors;
+layout(binding = 0) uniform sampler2D gua_uv_buffer;
+layout(binding = 1) uniform sampler2D passed_vt_colors;
+
 
 void main() {
 
   //gua_out_color = gua_get_color();
-  gua_out_color = texture(passed_vt_colors, gua_quad_coords).rgb;//vec3(1.0, 0.0, 0.0);
+
+  int screen_space_vt_index  = int(round(texture(gua_uv_buffer, gua_quad_coords).w));
+
+  if( 0 != screen_space_vt_index ) {
+  	gua_out_color = texture(passed_vt_colors, gua_quad_coords).rgb;//vec3(1.0, 0.0, 0.0);
+  } else {
+  	discard;
+  }
   //gua_out_color = gua_get_color();
   //vec2 uv_coords = gl_FragCoord.xy / gua_resolution.xy;
   //gua_out_color =  gua_get_color(uv_coords);

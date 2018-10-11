@@ -470,6 +470,9 @@ namespace gua {
       ctx.render_context->bind_texture(gbuffer.get_uv_buffer(), nearest_sampler_state_, 0);
       screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "gua_uv_buffer", 0);
 
+      ctx.render_context->bind_texture(gbuffer.get_color_buffer(), nearest_sampler_state_, 1);
+      screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "gua_color_buffer", 1);
+
       ctx.render_context->apply();
 
       fullscreen_quad_->draw(ctx.render_context);
@@ -491,8 +494,12 @@ namespace gua {
 
     {
 
-    ctx.render_context->bind_texture(virtually_textured_color_attachment_, nearest_sampler_state_, 0);
-    blit_vt_color_to_gbuffer_program_->apply_uniform(ctx, "passed_vt_colors", 0);
+    auto& gbuffer = *pipe.get_gbuffer();
+    ctx.render_context->bind_texture(gbuffer.get_uv_buffer(), nearest_sampler_state_, 0);
+    screen_space_virtual_texturing_shader_program_->apply_uniform(ctx, "gua_uv_buffer", 0);
+    
+    ctx.render_context->bind_texture(virtually_textured_color_attachment_, nearest_sampler_state_, 1);
+    blit_vt_color_to_gbuffer_program_->apply_uniform(ctx, "passed_vt_colors", 1);
 
     ctx.render_context->apply();
     fullscreen_quad_->draw(ctx.render_context);
