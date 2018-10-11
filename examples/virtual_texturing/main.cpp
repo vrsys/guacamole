@@ -81,13 +81,9 @@ int main(int argc, char** argv) {
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
 
-  // create simple untextured material shader
-  auto virtual_texture_mat_input_descriptor = std::make_shared<gua::MaterialShaderDescription>("./data/materials/MinimalVirtualTexturing.gmd");
-  auto virtual_texturing_preparation_shader(std::make_shared<gua::MaterialShader>("VirtualTexturing", virtual_texture_mat_input_descriptor));
-  gua::MaterialShaderDatabase::instance()->add(virtual_texturing_preparation_shader);
 
 
-  auto vt2 = virtual_texturing_preparation_shader->make_new_material();
+  auto vt2 = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
   vt2->set_uniform("metalness", 0.0f);
   vt2->set_uniform("roughness", 1.0f);
   vt2->set_uniform("emissivity", 1.0f);
@@ -113,11 +109,12 @@ int main(int argc, char** argv) {
 
 
   //create material for virtual_texturing
-  auto vt = virtual_texturing_preparation_shader->make_new_material();
+  auto vt = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
+  vt2->set_uniform("metalness", 0.0f);
   vt->set_uniform("metalness", 0.0f);
   vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
-  vt->set_uniform("my_vt_1", std::string("/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/wappen.atlas"));
+  vt->set_uniform("my_vt_1", std::string("/media/wabi7015/181f248f-2a50-435a-99ab-4df90d41521e/loewe/loewe.atlas"));
   //vt->set_uniform("gua_enable_vt", false);
   vt->set_enable_virtual_texturing(true);
 
@@ -125,10 +122,10 @@ int main(int argc, char** argv) {
   auto plane(loader.create_geometry_from_file(
       //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
       //"plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
-      "plane", "/home/wabi7015/Philipp_HiWi/data/wappen/3_wappen_full/1m8k_vt_pre_vt.obj",
+      "plane", "/media/wabi7015/181f248f-2a50-435a-99ab-4df90d41521e/loewe/250k_hq_texture_loewe_quickfix_2_pre_vt.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
-      //gua::TriMeshLoader::NORMALIZE_SCALE |  
+      gua::TriMeshLoader::NORMALIZE_SCALE |  
       gua::TriMeshLoader::MAKE_PICKABLE)  );
   graph.add_node("/transform", plane);
 
@@ -136,8 +133,8 @@ int main(int argc, char** argv) {
 
   plane->set_draw_bounding_box(true);
 
-  plane->rotate(180.0f, 0.0f, 1.0f, 0.0f);
-  plane->rotate(180.0f, 0.0f, 0.0f, 1.0f);
+  plane->rotate(-90.0f, 0.0f, 1.0f, 0.0f);
+  //plane->rotate(180.0f, 0.0f, 0.0f, 1.0f);
   plane->translate(-1.0, 0.0, 0.0);
 
 

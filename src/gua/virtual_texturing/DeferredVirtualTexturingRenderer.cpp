@@ -236,7 +236,6 @@ namespace gua {
 
     for (::vt::cut_map_entry_type cut_entry : (*cut_db->get_cut_map())) {
 
-
         ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
 
         if (!cut->is_drawn()) {
@@ -310,7 +309,6 @@ namespace gua {
 
             ctx.render_context->update_sub_texture(physical_tex, scm::gl::texture_region(origin, dimensions), 0,
                                          phys_tex_format, mem_slot_updated->pointer);
-            //std::cout << "Update physical tex\n";
         }
 
 
@@ -324,34 +322,26 @@ namespace gua {
             updated_levels.insert(::vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
         }
 
-        std::cout << "Updating the index texture\n";
+        for( auto const& vt_ptr : vector_of_vt_ptr ) {
+          if( ::vt::Cut::get_dataset_id(cut_entry.first) == vt_ptr->get_lamure_texture_id()) {
+          // update_index_texture
+            for (uint16_t updated_level : updated_levels) {
+              //     std::cout << "Updating level: " << updated_level << "\n"; 
+              uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
 
-        // update_index_texture
-        for (uint16_t updated_level : updated_levels) {
-            //     std::cout << "Updating level: " << updated_level << "\n"; 
-            uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+              scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+              scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
 
-            scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-            scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+              auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
 
-            uint32_t current_vt = 0;
-            for( auto const& vt_ptr : vector_of_vt_ptr ) {
+              uint32_t max_level = vt_ptr->get_max_depth();
 
-              std::cout << "Index Texture idx: " << current_vt << "\n";
-
-              if(current_cut_idx != current_vt) {
-                std::cout << "Going into iteration: " << current_cut_idx << "\n";
-                auto& current_index_texture_hierarchy = vt_ptr->get_index_texture_ptrs_for_context(ctx);
-
-                  uint32_t max_level = vt_ptr->get_max_depth();
-
-                  ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
-                                               scm::gl::texture_region(origin, dimensions), max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
-                                               cut->get_front()->get_index(updated_level));
-              }
-              ++current_vt;
+              ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
+                                                     scm::gl::texture_region(origin, dimensions), max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
+                                                     cut->get_front()->get_index(updated_level));
             }
- 
+         
+          }
         }
         //std::cout << "After Updating the index texture\n";
 

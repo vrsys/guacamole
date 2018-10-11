@@ -69,7 +69,7 @@ namespace gua {
   
  private:
   // this class is a Singleton --- private c'tor and d'tor
-  TextureDatabase() = default;
+  TextureDatabase();
   ~TextureDatabase() = default;
 
   std::vector<std::future<std::string>>        textures_loading_;

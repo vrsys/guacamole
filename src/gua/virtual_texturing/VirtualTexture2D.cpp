@@ -88,17 +88,11 @@ namespace gua {
     ::vt::pre::AtlasFile current_atlas_file(atlas_filename.c_str());
 
     max_depth_ = current_atlas_file.getDepth();
-
-
-    std::cout << "INITIALIZING INDEX TEXTURE WITH PATH: " << atlas_filename << "\n";
   }
 
 
 
   void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
-
-    std::cout << "UPLOAD TO CALL\n";
-
     auto index_texture_hierarchy_context_iterator = index_texture_mip_map_per_context_.find(ctx.id);
 
     if(nullptr == nearest_mip_map_sampler_state_) {
@@ -106,8 +100,6 @@ namespace gua {
     }
 
     if(index_texture_hierarchy_context_iterator == index_texture_mip_map_per_context_.end()) {
-      //max_depth_ = num_hierarchy_levels + 1;
-
         uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(max_depth_);
 
         auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
@@ -131,7 +123,7 @@ namespace gua {
     std::cout << "Trying to upload handle\n";
 
     if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
-      vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW,
+      vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
                                                                                MAX_TEXTURES * sizeof(scm::math::vec2ui));
     }
 
@@ -146,16 +138,10 @@ namespace gua {
 
     uint64_t *mapped_physical_texture_address_ubo = (uint64_t *) ctx.render_context->map_buffer(current_vt_addresses_ubo,
                                                                                                 scm::gl::ACCESS_WRITE_ONLY);
-    
-
-
-    std::cout << "SAVED ATLAS FILEPATH IS: " << atlas_file_path_ << "\n";
 
     uint32_t current_global_texture_id = gua::TextureDatabase::instance()->get_global_texture_id_by_path(atlas_file_path_);
 
     uint64_t current_handle_write_offset = 2 * current_global_texture_id;
-
-    std::cout << current_handle_write_offset << " UBO UPLOAD IDX\n";
 
     memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset]), &physical_texture_cpu_address, sizeof(uint64_t));
     

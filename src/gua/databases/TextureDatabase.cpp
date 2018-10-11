@@ -44,6 +44,13 @@
 
 namespace gua {
 
+TextureDatabase::TextureDatabase() {
+  texture_path_to_global_id_mapping_["gua_loading_texture"] = 0;
+  texture_path_to_global_id_mapping_["gua_default_texture"] = 1;
+  texture_path_to_global_id_mapping_["gua_noise_texture"] = 2;
+  num_loaded_textured_ = 3;
+}
+
 void TextureDatabase::load(std::string const& filename) {
   boost::filesystem::path fp(filename);
   std::string extension(fp.extension().string());
@@ -121,13 +128,6 @@ void TextureDatabase::load(std::string const& filename) {
     return;
   }
 
-  if(0 == texture_path_to_global_id_mapping_.size()) {
-    texture_path_to_global_id_mapping_["gua_loading_texture"] = 0;
-    texture_path_to_global_id_mapping_["gua_default_texture"] = 1;
-    texture_path_to_global_id_mapping_["gua_noise_texture"] = 2;
-    num_loaded_textured_ += 3;
-  }
-
   auto texture_it = texture_path_to_global_id_mapping_.find(filename);
   if(texture_path_to_global_id_mapping_.end() == texture_it) {
     texture_path_to_global_id_mapping_[filename] = num_loaded_textured_++;
@@ -143,7 +143,7 @@ int32_t TextureDatabase::get_global_texture_id_by_path(std::string const& tex_pa
     return texture_it->second;
   }
 
-  Logger::LOG_ERROR << "Texture ID for \"" << tex_path << "\" was not registered." << std::endl;
+  //Logger::LOG_ERROR << "Texture ID for \"" << tex_path << "\" was not registered." << std::endl;
   return -1;
 }
 
