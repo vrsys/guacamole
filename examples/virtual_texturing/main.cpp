@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
   vt->set_uniform("metalness", 0.0f);
   vt->set_uniform("roughness", 1.0f);
   vt->set_uniform("emissivity", 1.0f);
-  vt->set_uniform("my_vt_1", std::string("/media/wabi7015/181f248f-2a50-435a-99ab-4df90d41521e/loewe/loewe.atlas"));
+  vt->set_uniform("my_vt_1", std::string("/home/wabi7015/Philipp_HiWi/data/loewe/loewe.atlas"));
   //vt->set_uniform("gua_enable_vt", false);
   vt->set_enable_virtual_texturing(true);
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
   auto plane(loader.create_geometry_from_file(
       //"plane", "/mnt/terabytes_of_textures/montblanc/montblanc_1202116x304384.obj",
       //"plane", "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/earth_86400x43200_smooth_normals.obj",
-      "plane", "/media/wabi7015/181f248f-2a50-435a-99ab-4df90d41521e/loewe/250k_hq_texture_loewe_quickfix_2_pre_vt.obj",
+      "plane", "/home/wabi7015/Philipp_HiWi/data/loewe/250k_hq_texture_loewe_quickfix_2_pre_vt.obj",
       vt,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::NORMALIZE_SCALE |  
