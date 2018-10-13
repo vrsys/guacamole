@@ -66,7 +66,7 @@ void mouse_button(gua::utils::Trackball& trackball,
 void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::math::vec2ui const& res) {
   window->config.set_size(res);
   window->config.set_resolution(res);
-  window->config.set_enable_vsync(true);
+  window->config.set_enable_vsync(false);
 }
 
 int main(int argc, char** argv) {
@@ -79,7 +79,6 @@ int main(int argc, char** argv) {
   gua::TriMeshLoader loader;
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-
 
 
 
@@ -105,7 +104,7 @@ int main(int argc, char** argv) {
   plane2->translate(1.0, 0.0, 0.0);
 
 
-
+  scm::math::vec3d plane_translation(0.0, 0.0, -3.0);
 
 
   //create material for virtual_texturing
@@ -129,7 +128,6 @@ int main(int argc, char** argv) {
       gua::TriMeshLoader::MAKE_PICKABLE)  );
   graph.add_node("/transform", plane);
 
-  scm::math::vec3d plane_translation(0.0, 0.0, -3.0);
 
   plane->set_draw_bounding_box(true);
 
