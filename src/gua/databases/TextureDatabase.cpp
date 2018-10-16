@@ -101,13 +101,11 @@ void TextureDatabase::load(std::string const& filename) {
     std::shared_ptr<VirtualTexture2D> vt_pointer = nullptr;
     if(!occurrence_check) {
       vt_pointer = std::make_shared<VirtualTexture2D>(filename,
-                                                                   256,
+                                                      256,
             scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
                                         scm::gl::WRAP_REPEAT,
                                         scm::gl::WRAP_REPEAT));
       instance()->add(filename, vt_pointer);
-
-      std::cout << "Registered " << filename << " as atlas texture\n";
     }
 
     auto existing_vt = TextureDatabase::instance()->lookup(filename);
