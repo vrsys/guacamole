@@ -143,8 +143,6 @@ namespace gua {
       auto& current_vt_info = vt_info_per_context[ctx.id];
 
       current_vt_info.context_id_ = ::vt::CutDatabase::get_instance().register_context();
-
-      //std::cout << "Filled VT info for context: " << ctx.id << " with " << current_vt_info.context_id_ <<  "\n";
     }
 
     auto& current_vt_info = vt_info_per_context[ctx.id];
@@ -154,7 +152,6 @@ namespace gua {
     if(current_vt_info.gua_camera_id_to_lamure_view_id_.end() == camera_iter ) { 
       uint16_t lamure_view_id = ::vt::CutDatabase::get_instance().register_view();
       current_vt_info.gua_camera_id_to_lamure_view_id_[cam.uuid] = lamure_view_id;
-      //std::cout << "Filled VT info for camera uuid: " << cam.uuid << " with " << lamure_view_id <<  "\n"; 
     }
 
 
@@ -177,10 +174,6 @@ namespace gua {
       uint32_t phys_tex_creation_num_layers = ::vt::VTConfig::get_instance().get_phys_tex_layers();;
       uint32_t phys_tex_creation_tile_size = ::vt::VTConfig::get_instance().get_size_tile();
 
-
-      std::cout << phys_tex_creation_px_width << ", " << phys_tex_creation_px_height << ", "
-                << phys_tex_creation_num_layers << ", " << phys_tex_creation_tile_size << "\n";
-
       current_physical_texture_ptr->upload_to(ctx, 
                                               phys_tex_creation_px_width, phys_tex_creation_px_height,
                                               phys_tex_creation_num_layers, phys_tex_creation_tile_size);
@@ -193,7 +186,6 @@ namespace gua {
     uint16_t ctx_id = current_vt_info.context_id_;
     for ( auto const& view_entry : current_vt_info.gua_camera_id_to_lamure_view_id_){
       uint16_t view_id = view_entry.second;
-      //std::cout << "View ids: " << view_id << "\n";
       auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
       for( auto const& vt_ptr : vector_of_vt_ptr ) {
         
@@ -243,15 +235,9 @@ namespace gua {
             continue;
         }
         
-        //std::cout << "After cut is drawn\n";
-        
         std::set<uint16_t> updated_levels;
 
         for (auto position_slot_updated : cut->get_front()->get_mem_slots_updated()) {
-
-          //  std::cout << "Position slot to be updates\n";
-        
-
             const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second);
 
             if (mem_slot_updated == nullptr || !mem_slot_updated->updated

@@ -133,6 +133,7 @@ namespace gua {
     }
   }
 
+// do not touch 
 //#define USE_PBO
 
   void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx, 
@@ -200,8 +201,6 @@ uint32_t max_level = max_depth_;
   }
 
   void VirtualTexture2D::upload_vt_handle_to_ubo(RenderContext const& ctx) const {
-    std::cout << "Trying to upload handle\n";
-
     if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
       vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
                                                                                MAX_TEXTURES * sizeof(scm::math::vec2ui));

@@ -104,6 +104,8 @@ int main(int argc, char** argv) {
   auto earth_2_transform = graph.add_node<gua::node::TransformNode>("/transform", "earth_2_transform");
 
   // VT STEP 4*/5: - load second earth with vt material
+
+  /*
   auto earth_geode_2(loader.create_geometry_from_file(
       "earth_geode_2", "/opt/3d_models/virtual_texturing/earth_86400x43200_smooth_normals.obj",
       earth_vt_mat,
@@ -113,6 +115,8 @@ int main(int argc, char** argv) {
   earth_2_transform->rotate(180.0,0.0, 1.0, 0.0);
   earth_2_transform->translate(-1.5, 0.0, 0.0);
   graph.add_node("/transform/earth_2_transform", earth_geode_2);
+
+  */
 
   auto money_transform = graph.add_node<gua::node::TransformNode>("/transform", "money_transform");
   auto money_geode(loader.create_geometry_from_file("money", "/opt/3d_models/50cent/50Cent.obj",
@@ -213,7 +217,7 @@ int main(int argc, char** argv) {
 
 
     earth_geode_1->set_transform(scm::math::make_rotation(extra_rotation, 0.0, 1.0, 0.0) );
-    earth_geode_2->set_transform(scm::math::make_rotation(extra_rotation, 1.0, 1.0, 0.0) );
+    //earth_geode_2->set_transform(scm::math::make_rotation(extra_rotation, 1.0, 1.0, 0.0) );
     money_transform->set_transform(scm::math::make_rotation(45*std::sin(extra_rotation*3.0), 1.0, 0.0, 0.0) );
 
 
@@ -227,13 +231,13 @@ int main(int argc, char** argv) {
 
       renderer.queue_draw({&graph});
     }
-
+/*
         std::cout << "Frame time: " << 1000.f / main_window->get_rendering_fps() 
                   << " ms, fps: "
                   << 
                   main_window->get_rendering_fps() << ", app fps: "
                   << renderer.get_application_fps() << std::endl;
-
+*/
   });
 
   loop.start();
