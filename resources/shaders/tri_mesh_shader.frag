@@ -31,10 +31,5 @@ void main() {
     @material_method_calls_frag@
   }
 
-  gua_emissivity = 1.0;
-  gua_roughness = 1.0;
-  gua_metalness = 0.0;
-
-
   submit_fragment(gl_FragCoord.z);
 }
