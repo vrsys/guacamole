@@ -76,8 +76,14 @@ Aux::get_num_atlas_tiles() const {
 	return _aux->get_num_atlas_tiles(); 
 }
 
+const uint64_t            
+Aux::get_num_nodes() const{
+	return _aux->get_num_nodes(); 
+}
+
 uint64_t
-Aux::get_octree_query(const scm::math::vec3f& _pos){
+Aux::get_octree_query(const scm::math::vec3f& _pos) {
+	std::cout << "The octree query function in gua has been called!" << std::endl;
 	return _aux->get_octree_query(_pos);
 }
 
