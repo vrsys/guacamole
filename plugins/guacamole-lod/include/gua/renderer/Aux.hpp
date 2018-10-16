@@ -214,6 +214,7 @@ public:
     uint64_t            get_octree_query(const scm::math::vec3f& _pos);
 
     std::shared_ptr<OctreeNode> get_octree_node(uint64_t _node_id);
+    const uint64_t            get_num_nodes() const;
     std::shared_ptr<view> get_view(uint32_t id) const;
     std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; // done
     std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;  // difficult
