@@ -43,7 +43,6 @@ namespace prov {
 }
 
 
-
 namespace gua {
 
 
@@ -203,8 +202,6 @@ public:
 
     void load_aux_file(std::string const& filename);
 
-    void test_wrapping() const;
-
     const std::string   get_filename() const;
 
     const uint32_t      get_num_views() const;
@@ -212,13 +209,13 @@ public:
     const uint32_t      get_num_atlas_tiles() const; 
     const uint64_t      get_num_nodes() const;
 
-    uint64_t            get_octree_query(const scm::math::vec3f& _pos) const;
+    const uint64_t      get_octree_query(const scm::math::vec3f& _pos) const;
 
-    std::shared_ptr<OctreeNode> get_octree_node(uint64_t node_id) const;
-    std::shared_ptr<view> get_view(uint32_t id) const;
-    std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; 
+    std::shared_ptr<OctreeNode>   get_octree_node(uint64_t node_id) const;
+    std::shared_ptr<view>         get_view(uint32_t id) const;
+    std::shared_ptr<atlas_tile>   get_atlas_tile(uint32_t id) const; 
     std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;
-    std::shared_ptr<atlas> get_atlas() const;
+    std::shared_ptr<atlas>        get_atlas() const;
 
 private: // methods
 

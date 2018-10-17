@@ -44,41 +44,45 @@ Aux::Aux() {
   _aux = std::make_shared<lamure::prov::aux>();
 }
 
-void Aux::test_wrapping() const {
-  _aux->test_wrapping();
-}
 
 void Aux::load_aux_file(std::string const& filename) {
   _aux->load_aux_file(filename);
 }
 
+
 const std::string Aux::get_filename() const {
 	return _aux->get_filename(); 
 }
 
+
 const uint32_t Aux::get_num_views() const {
 	return _aux->get_num_views(); 
 }
+
 
 const uint64_t
 Aux::get_num_sparse_points() const {
   return _aux->get_num_sparse_points(); 
 }
 
+
 const uint32_t
 Aux::get_num_atlas_tiles() const {
 	return _aux->get_num_atlas_tiles(); 
 }
+
 
 const uint64_t            
 Aux::get_num_nodes() const {
 	return _aux->get_num_nodes(); 
 }
 
-uint64_t
+
+const uint64_t
 Aux::get_octree_query(const scm::math::vec3f& _pos) const {
 	return _aux->get_octree_query(_pos);
 }
+
 
 std::shared_ptr<OctreeNode>
 Aux::get_octree_node(uint64_t node_id) const {
@@ -155,7 +159,6 @@ std::shared_ptr<Aux::sparse_point> Aux::get_sparse_point(uint64_t id) const {
 
 	return std::make_shared<Aux::sparse_point>(new_sparse_point);
 }
-
 
 
 std::shared_ptr<Aux::atlas> Aux::get_atlas() const {
