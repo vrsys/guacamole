@@ -40,18 +40,12 @@
 
 namespace gua {
 
-
-
-
-
 Aux::Aux() {
   _aux = std::make_shared<lamure::prov::aux>();
 }
 
 void Aux::test_wrapping() const {
-  std::cout << "The wrapped function in gua has been called!" << std::endl;
   _aux->test_wrapping();
-  
 }
 
 void Aux::load_aux_file(std::string const& filename) {
@@ -77,26 +71,28 @@ Aux::get_num_atlas_tiles() const {
 }
 
 const uint64_t            
-Aux::get_num_nodes() const{
+Aux::get_num_nodes() const {
 	return _aux->get_num_nodes(); 
 }
 
 uint64_t
-Aux::get_octree_query(const scm::math::vec3f& _pos) {
-	std::cout << "The octree query function in gua has been called!" << std::endl;
+Aux::get_octree_query(const scm::math::vec3f& _pos) const {
 	return _aux->get_octree_query(_pos);
 }
 
 std::shared_ptr<OctreeNode>
-Aux::get_octree_node(uint64_t _node_id){
-    const auto& on = _aux->get_octree_node(_node_id);
+Aux::get_octree_node(uint64_t node_id) const {
+    const auto& on = _aux->get_octree_node(node_id);
+
     gua::OctreeNode new_octree_node(
-        on.get_idx(),
-        on.get_child_mask(),
-        on.get_child_idx(),
-        on.get_min(),
-        on.get_max(),
-        on.get_fotos() );
+      on.get_idx(),
+      on.get_child_mask(),
+      on.get_child_idx(),
+      on.get_min(),
+      on.get_max(),
+      on.get_fotos() 
+    );
+
     return std::make_shared<OctreeNode>(new_octree_node);
 }
 
@@ -135,27 +131,26 @@ std::shared_ptr<Aux::atlas_tile> Aux::get_atlas_tile(uint32_t id) const {
 
 
 std::shared_ptr<Aux::sparse_point> Aux::get_sparse_point(uint64_t id) const {
-
-
 	const auto& sp = _aux->get_sparse_point(id);
+
 	std::vector<Aux::feature> new_features;
 	for(auto const& f: sp.features_){
     Aux::feature new_feature(
-        f.camera_id_,
-        f.using_count_,
-        f.coords_,
-        f.error_
+      f.camera_id_,
+      f.using_count_,
+      f.coords_,
+      f.error_
     );
     new_features.push_back(new_feature);
 	}
 	
 	Aux::sparse_point new_sparse_point(
-        sp.pos_,
-        sp.r_,
-        sp.g_,
-        sp.b_,
-        sp.a_,
-        new_features
+    sp.pos_,
+    sp.r_,
+    sp.g_,
+    sp.b_,
+    sp.a_,
+    new_features
 	);
 
 	return std::make_shared<Aux::sparse_point>(new_sparse_point);
@@ -176,21 +171,4 @@ std::shared_ptr<Aux::atlas> Aux::get_atlas() const {
 	return std::make_shared<Aux::atlas>(new_atlas);
 }
 
-}
-
-//moeglichkeit 1 old code  for get_atlas ... not working because no shared_ptr is returned
-// Aux::atlas Aux::get_atlas() const {
-// const Aux::atlas Aux::get_atlas() const {
-// const std::shared_ptr<Aux::atlas> Aux::get_atlas() const {
-	// const auto& a = _aux->get_atlas();
-
-	// Aux::atlas new_atlas(
-	// 	a.num_atlas_tiles_,
-	// 	a.atlas_width_,
-	// 	a.atlas_height_,
-	// 	a.rotated_
-	// );
-
-	// return std::shared_ptr<Aux::atlas>(&new_atlas);
-	// return new_atlas;
-// }
+} // namespace gua
