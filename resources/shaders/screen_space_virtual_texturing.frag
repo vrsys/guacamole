@@ -30,10 +30,8 @@ struct physical_texture_info_struct {
 
 layout(std430, binding = 0) buffer out_lod_feedback { int out_lod_feedback_values[]; };
 layout(std430, binding = 1) buffer out_count_feedback { uint out_count_feedback_values[]; };
-
 layout(std140, binding = 3) uniform physical_texture_address { physical_texture_info_struct pt; };
 layout(std140, binding = 4) uniform virtual_texture_addresses { padded_vt_address vts[1024]; };
-
 
 struct idx_tex_positions
 {
