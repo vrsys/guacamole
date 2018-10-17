@@ -205,26 +205,20 @@ public:
 
     void test_wrapping() const;
 
-    const std::string   get_filename() const;   //done
+    const std::string   get_filename() const;
 
-    const uint32_t      get_num_views() const; // done
-    const uint64_t      get_num_sparse_points() const; // done
-    const uint32_t      get_num_atlas_tiles() const; //done
+    const uint32_t      get_num_views() const;
+    const uint64_t      get_num_sparse_points() const; 
+    const uint32_t      get_num_atlas_tiles() const; 
+    const uint64_t      get_num_nodes() const;
 
-    uint64_t            get_octree_query(const scm::math::vec3f& _pos);
+    uint64_t            get_octree_query(const scm::math::vec3f& _pos) const;
 
-    std::shared_ptr<OctreeNode> get_octree_node(uint64_t _node_id);
-    const uint64_t            get_num_nodes() const;
+    std::shared_ptr<OctreeNode> get_octree_node(uint64_t node_id) const;
     std::shared_ptr<view> get_view(uint32_t id) const;
-    std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; // done
-    std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;  // difficult
-    std::shared_ptr<atlas> get_atlas() const; // done
-
-
-
-  // Aux::atlas get_atlas() const;
-  // const Aux::atlas get_atlas() const;
-  // const std::shared_ptr< Aux::atlas> get_atlas() const;
+    std::shared_ptr<atlas_tile> get_atlas_tile(uint32_t id) const; 
+    std::shared_ptr<sparse_point> get_sparse_point(uint64_t id) const;
+    std::shared_ptr<atlas> get_atlas() const;
 
 private: // methods
 
