@@ -107,6 +107,7 @@ void LineStripResource::upload_to(RenderContext& ctx) const {
     line_strip_to_update_ptr = &(line_strip_iterator->second);
   }
 
+                                            // = mode_;
   line_strip_to_update_ptr->vertex_topology = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
   line_strip_to_update_ptr->vertex_reservoir_size = line_strip_.vertex_reservoir_size;
   line_strip_to_update_ptr->num_occupied_vertex_slots = line_strip_.num_occupied_vertex_slots;

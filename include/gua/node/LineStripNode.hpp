@@ -86,6 +86,13 @@ public : // methods
   inline bool get_was_created_empty() const { return was_created_empty_; }
   inline void set_was_created_empty(bool was_created_empty) { was_created_empty_ = was_created_empty; }
 
+  // ephra
+  /* inline void set_line_strip_render_mode(scm::gl::primitive_topology const& mode) {
+      if
+      
+    }  
+  */
+
   void set_empty() {was_created_empty_ = true;}
 
   void compute_consistent_normals();

@@ -103,6 +103,9 @@ class LineStripResource : public GeometryResource {
 
   void clear_vertices();
 
+  //ephra
+  //void set_line_rendering_mode(scm::gl::primitive_topology const& lr_mode);
+
   void forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
                                std::vector<scm::math::vec4f> const& queued_colors,
                                std::vector<float> const& queued_thicknesses,
@@ -116,6 +119,10 @@ class LineStripResource : public GeometryResource {
 
   KDTree kd_tree_;
   LineStrip line_strip_;
+
+  // ephra
+  // scm::gl::primitive_topology line_rendering_mode_ = scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY;
+  //  alternativ muss es zu scm::gl::PRIMITIVE_LINE_LIST gesetzt werde koennen
 
 
   mutable std::mutex line_strip_update_mutex_;
