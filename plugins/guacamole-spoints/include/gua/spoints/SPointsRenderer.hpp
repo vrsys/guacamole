@@ -50,7 +50,7 @@ class GUA_SPOINTS_DLL SPointsRenderer {
  public:
 
   SPointsRenderer();
-  ~SPointsRenderer() {std::cout << "SPOINTSRENDERER DESTROYED\n";}
+  ~SPointsRenderer() {}
 
   void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
