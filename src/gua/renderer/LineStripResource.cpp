@@ -300,6 +300,7 @@ void LineStripResource::forward_queued_vertices(std::vector<scm::math::vec3f> co
                                       queued_colors,
                                       queued_thicknesses,
                                       queued_normals);
+  compute_bounding_box();
   make_clean_flags_dirty();
 }
 

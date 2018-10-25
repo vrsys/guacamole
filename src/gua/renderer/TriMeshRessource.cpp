@@ -62,7 +62,7 @@ void TriMeshRessource::upload_to(RenderContext& ctx) const {
   cmesh.indices_type = scm::gl::TYPE_UINT;
   cmesh.indices_count = mesh_.num_triangles * 3;
 
-  if (!mesh_.num_vertices > 0) {
+  if (!(mesh_.num_vertices > 0) ) {
     Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
     return;
   }

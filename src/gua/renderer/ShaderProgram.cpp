@@ -74,7 +74,9 @@ void ShaderProgram::set_shaders(
     std::vector<ShaderProgramStage> const & shaders,
     std::list<std::string> const & interleaved_stream_capture,
     bool in_rasterization_discard,
-                           SubstitutionMap const& substitutions) {
+    SubstitutionMap const& substitutions,
+    bool enable_virtual_texturing
+    ) {
   program_.reset();
   dirty_ = true;
 
@@ -84,6 +86,7 @@ void ShaderProgram::set_shaders(
   interleaved_stream_capture_ = interleaved_stream_capture;
   in_rasterization_discard_ = in_rasterization_discard;
   substitutions_ = substitutions;
+  substitutions_["enable_virtual_texturing"] = enable_virtual_texturing ? "1" : "0";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
