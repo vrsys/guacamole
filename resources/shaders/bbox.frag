@@ -37,7 +37,8 @@ void main() {
   float gua_metalness = 0.0;
   vec3 gua_normal = vec3(0.0);
   bool gua_flags_passthrough = true;
-
+  vec4 gua_uvs = vec4(0.0, 0.0, 0.0, 0.0);
+  
   @include "shaders/common/gua_write_gbuffer.glsl"
 }
 

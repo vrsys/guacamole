@@ -91,6 +91,18 @@ class GUA_DLL Material {
       return render_wireframe_;
     }
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    Material& set_enable_virtual_texturing(bool value) {
+      enable_virtual_texturing_ = value;
+      return *this;
+    }
+
+    bool get_enable_virtual_texturing() const {
+      return enable_virtual_texturing_;
+    }
+#endif
+
+
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
     std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
@@ -146,6 +158,10 @@ class GUA_DLL Material {
     std::map<std::string, ViewDependentUniform> uniforms_;
     bool show_back_faces_;
     bool render_wireframe_;
+
+    #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    bool enable_virtual_texturing_;
+    #endif
 
     mutable std::mutex mutex_;
 };

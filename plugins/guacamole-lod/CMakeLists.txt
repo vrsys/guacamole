@@ -60,7 +60,7 @@ IF (MSVC)
   target_link_libraries( guacamole-lod optimized ${LAMURE_RENDERING_LIBRARY}
                                         optimized ${LAMURE_COMMON_LIBRARY}
                                         debug ${LAMURE_RENDERING_LIBRARY_DEBUG}
-                                        debug ${LAMURE_COMMON_LIBRARY_DEBUG} 
+                                        debug ${LAMURE_COMMON_LIBRARY_DEBUG}
                                         general guacamole
                        )
 ELSEIF (UNIX)
