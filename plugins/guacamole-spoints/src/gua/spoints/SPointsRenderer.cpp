@@ -475,16 +475,6 @@ void SPointsRenderer::render(Pipeline& pipe,
     0,
     scm::math::vec3f(0.0f, 0.0f, 0.0f));
 
-  /*ctx.render_context
-    ->clear_color_buffer(accumulation_pass_result_fbo_,
-    1,
-    scm::math::vec3f(0.0f, 0.0f, 0.0f));
-
-  ctx.render_context
-    ->clear_color_buffer(accumulation_pass_result_fbo_,
-    2,
-    scm::math::vec3f(0.0f, 0.0f, 0.0f));
-  */
   ctx.render_context
     ->clear_color_buffer(accumulation_pass_result_fbo_,
     3,
@@ -494,46 +484,23 @@ void SPointsRenderer::render(Pipeline& pipe,
   // program initialization
   ///////////////////////////////////////////////////////////////////////////
   try {
-/*     if (!log_to_lin_conversion_pass_program_) {
-      _initialize_log_to_lin_conversion_pass_program();
-    }
-*/
     if (!depth_pass_program_) {
       _initialize_depth_pass_program();
-    }
-
-    
+    } 
     if (!normalization_pass_program_) {
       _initialize_normalization_pass_program();
     }
-/*
-    if (!shadow_pass_program_) {
-      _initialize_shadow_pass_program();
-    }
-    */
-
     if (!forward_colored_triangles_pass_program_) {
       _initialize_forward_colored_triangles_pass_program();
     }
-
     if (!forward_textured_triangles_pass_program_) {
       _initialize_forward_textured_triangles_pass_program();
     }
-
     assert(/*log_to_lin_conversion_pass_program_ && depth_pass_program_ &&*/ normalization_pass_program_);
   }
   catch (std::exception& e) {
     gua::Logger::LOG_ERROR << "Error: SPOINTSRenderer::render() : Failed to create programs. " << e.what() << std::endl;
   }
-
-
-
-
-
-
-
-
-
 
 
   float last_known_point_size = std::numeric_limits<float>::max();

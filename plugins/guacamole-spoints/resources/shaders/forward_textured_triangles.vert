@@ -42,7 +42,7 @@ const uvec2 uv_shift_vec = uvec2(12u, 0u);
 // main
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ONE_D_TEXTURE_ATLAS_SIZE 1024
+#define ONE_D_TEXTURE_ATLAS_SIZE 2048
 
 uniform int texture_space_triangle_size;
 
