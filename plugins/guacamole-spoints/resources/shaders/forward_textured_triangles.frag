@@ -8,18 +8,24 @@ in vec2 pass_uvs;
 ///////////////////////////////////////////////////////////////////////////////
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
+@include "common/gua_fragment_shader_input.glsl"
 @include "common/gua_camera_uniforms.glsl"
-@include "common/gua_global_variable_declaration.glsl"
 ///////////////////////////////////////////////////////////////////////////////
 
 layout(binding=0) uniform sampler2D color_texture_atlas;
+
+@material_uniforms@
 
 ///////////////////////////////////////////////////////////////////////////////
 // output
 ///////////////////////////////////////////////////////////////////////////////
 @include "common/gua_fragment_shader_output.glsl"
+@include "common/gua_global_variable_declaration.glsl"
 
 @include "common/gua_abuffer_collect.glsl"
+
+@material_method_declarations_frag@
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,8 +39,8 @@ void main() {
   gua_metalness  = 0.0;
   gua_roughness  = 1.0;
   gua_emissivity = 1.0;
-  gua_alpha      = 1.0;
-  gua_flags_passthrough = true;//(gua_emissivity > 0.99999);
+  gua_alpha      = 0.99;
+  gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
 
   //gua_color = texelFetch(color_texture_atlas, ivec2(gl_FragCoord.xy), 0).rgb;
   gua_color = texture(color_texture_atlas, pass_uvs).rgb;
@@ -42,6 +48,10 @@ void main() {
   vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, gl_FragCoord.z, 1.0);
   gua_world_position = world_pos_h.xyz/world_pos_h.w;
 
+
+  if (gua_rendering_mode != 1) {
+   @material_method_calls_frag@
+  }
 
   submit_fragment( gl_FragCoord.z );
   //gua_out_color = vec3(1.0, 0.0, 0.0);
