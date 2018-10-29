@@ -17,6 +17,10 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(volumetric_point_and_line_rendering)
   ENDIF (${GUACAMOLE_GLFW3})
 
+  IF (${PLUGIN_guacamole-spoints})
+    add_subdirectory(avatars_in_industry)
+  ENDIF (${PLUGIN_guacamole-spoints})
+  
   # skelanim example requires skelanim-plugin and the fbx sdk
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
     add_subdirectory(animation)

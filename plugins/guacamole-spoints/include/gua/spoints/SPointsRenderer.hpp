@@ -74,8 +74,8 @@ private:
   void          _initialize_normalization_pass_program();
   void          _initialize_shadow_pass_program();
 
-  void          _initialize_forward_colored_triangles_pass_program();
-  void          _initialize_forward_textured_triangles_pass_program();
+  void          _initialize_forward_colored_triangles_pass_program(MaterialShader* material);
+  void          _initialize_forward_textured_triangles_pass_program(MaterialShader* material);
 
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
@@ -151,8 +151,8 @@ private:
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
   std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 
-  std::shared_ptr<ShaderProgram>                                       forward_colored_triangles_pass_program_;
-  std::shared_ptr<ShaderProgram>                                       forward_textured_triangles_pass_program_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_colored_triangles_pass_programs_;
+  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_textured_triangles_pass_programs_;
 
 
   std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
