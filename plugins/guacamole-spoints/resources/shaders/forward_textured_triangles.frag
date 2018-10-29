@@ -33,26 +33,26 @@ layout(binding=0) uniform sampler2D color_texture_atlas;
 uniform int texture_space_triangle_size;
 void main() {
 
+  @material_input@
+  @include "common/gua_global_variable_assignment.glsl"
+
+
   gua_color = vec3(0.0, 0.0, 0.0);//pass_color;
   gua_normal = vec3(0.0, 0.0, 1.0);//normalized_normal;
 
   gua_metalness  = 0.0;
   gua_roughness  = 1.0;
   gua_emissivity = 1.0;
-  gua_alpha      = 0.99;
-  gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
+  gua_alpha      = 1.0;
+  //gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
 
-  //gua_color = texelFetch(color_texture_atlas, ivec2(gl_FragCoord.xy), 0).rgb;
   gua_color = texture(color_texture_atlas, pass_uvs).rgb;
-
-  vec4 world_pos_h = gua_inverse_projection_view_matrix * vec4(gl_FragCoord.xy, gl_FragCoord.z, 1.0);
-  gua_world_position = world_pos_h.xyz/world_pos_h.w;
-
 
   if (gua_rendering_mode != 1) {
    @material_method_calls_frag@
   }
 
+  gua_emissivity = 1.0;
   submit_fragment( gl_FragCoord.z );
   //gua_out_color = vec3(1.0, 0.0, 0.0);
 }
