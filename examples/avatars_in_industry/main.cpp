@@ -31,6 +31,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <functional>
 #include <iostream>
+#include <fstream>
 
 const bool SHOW_FRAME_RATE = true;
 
@@ -106,17 +107,18 @@ int main(int argc, char** argv) {
 
 
   if(argc < 3){
-    std::cout << "ERROR: please a *.sr file containing at least a 'serverport' attribute!" << std::endl;
+    std::cout << "ERROR: please provide two *.sr file containing at least a 'serverport' attribute!" << std::endl;
+    return -1;
   }
-  std::string spoints_luca_resource_string(argv[1]);
-  std::string spoints_pointer_resource_string(argv[2]);
+  std::string spoints_avatar_1_resource_string(argv[1]);
+  std::string spoints_avatar_2_resource_string(argv[2]);
 
 
   gua::SPointsLoader sloader;
-  auto luca_avatar(sloader.create_geometry_from_file("luca", spoints_luca_resource_string.c_str()));
-  auto steppo_avatar(sloader.create_geometry_from_file("steppo", spoints_pointer_resource_string.c_str()));
+  auto avatar_1_geode(sloader.create_geometry_from_file("avatar_1", spoints_avatar_1_resource_string.c_str()));
+  auto avatar_2_geode(sloader.create_geometry_from_file("avatar_2", spoints_avatar_2_resource_string.c_str()));
 
-  char* argv_tmp[] = {"./example-spoints", NULL};
+  char* argv_tmp[] = {argv[0], NULL};
   int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 2;
   // initialize guacamole
   gua::init(argc_tmp, argv_tmp);
@@ -135,8 +137,8 @@ int main(int argc, char** argv) {
   auto avatar_trans2 = graph.add_node<gua::node::TransformNode>("/", "avatar_trans2");
   avatar_trans2->rotate(180.0f, 0.0f, 1.0f, 0.0f);
   avatar_trans2->translate(0.0f, -1.0f, -0.8f);
-  graph.add_node("/avatar_trans", luca_avatar);
-  graph.add_node("/avatar_trans2", steppo_avatar);
+  graph.add_node("/avatar_trans", avatar_1_geode);
+  graph.add_node("/avatar_trans2", avatar_2_geode);
 
   avatar_trans->rotate(-225.0f, 0.0f, 1.0f, 0.0f);
   avatar_trans2->rotate(-225.0f, 0.0f, 1.0f, 0.0f);
@@ -180,13 +182,15 @@ int main(int argc, char** argv) {
     graph.add_node("/main_trans", part);
   }
 
-  auto mat = shader->make_new_material();
-  mat->set_uniform("style", 100);
-
+  auto vr_room_mat(gua::MaterialShaderDatabase::instance()
+                  ->lookup("gua_default_material")
+                  ->make_new_material());
+  vr_room_mat->set_uniform("Emissivity", 1.0f);
+  vr_room_mat->set_uniform("ColorMap", std::string("data/textures/grid.png"));
   auto vr_room(loader.create_geometry_from_file("cyberspace",
-                                                "/home/wabi7015/Desktop/cyberspace.obj",
-                                                mat,
-                                                gua::TriMeshLoader::LOAD_MATERIALS) );
+                                                "data/objects/cyberspace.obj",
+                                                vr_room_mat,
+                                                gua::TriMeshLoader::DEFAULTS) );
 
 
 
@@ -239,10 +243,36 @@ int main(int argc, char** argv) {
   pipe->set_blending_termination_threshold(0.99f);
   pipe->get_resolve_pass()->background_color(gua::utils::Color3f(0.7f,0.7f,0.7f))
                             .environment_lighting(gua::utils::Color3f(0.005f,0.005f,0.005f));
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-  //pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
-  //pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
 
+
+  std::string frag_shader_source = "";
+  std::string line_buffer = "";
+  std::ifstream in_shader_file("data/shaders/effect3.frag", std::ios::in);
+
+  while(std::getline(in_shader_file, line_buffer)) {
+    frag_shader_source += std::string(line_buffer + "\n");
+  }
+
+  in_shader_file.close();
+
+  std::ifstream in_shader_file2("data/shaders/effect4.frag", std::ios::in);
+  std::string frag_shader_source2 = "";
+  while(std::getline(in_shader_file2, line_buffer)) {
+    frag_shader_source2 += std::string(line_buffer + "\n");
+  }
+  in_shader_file2.close();
+
+  auto fullscreen_effect_pass = std::make_shared<gua::FullscreenPassDescription>();
+  fullscreen_effect_pass->source(frag_shader_source);    
+  pipe->add_pass(fullscreen_effect_pass);
+  auto fullscreen_effect_pass2 = std::make_shared<gua::FullscreenPassDescription>();
+  fullscreen_effect_pass2->source(frag_shader_source2);
+  fullscreen_effect_pass2->writes_only_color_buffer(true);
+  pipe->add_pass(fullscreen_effect_pass2);
+
+  pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+  pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   camera->set_pipeline_description(pipe);
 
 /*
@@ -473,8 +503,8 @@ int main(int argc, char** argv) {
           std::cout << "Model opacity mode" << std::endl;
         }
         if ('4' == key) {
-          steppo_avatar->translate(0.0f, -10.0f, 0.0);
-          luca_avatar->translate(0.0f, -10.0f, 0.0);
+          avatar_2_geode->translate(0.0f, -10.0f, 0.0);
+          avatar_1_geode->translate(0.0f, -10.0f, 0.0);
 
           for(const auto& p : part_names) {
             parts[p.name]->translate(0.0f, -10.0f, 0.0);
@@ -482,8 +512,8 @@ int main(int argc, char** argv) {
 
         }
         if ('5' == key) {
-          steppo_avatar->translate(0.0f, 10.0f, 0.0);
-          luca_avatar->translate(0.0f, 10.0f, 0.0);
+          avatar_2_geode->translate(0.0f, 10.0f, 0.0);
+          avatar_1_geode->translate(0.0f, 10.0f, 0.0);
 
           for(const auto& p : part_names) {
             parts[p.name]->translate(0.0f, 10.0f, 0.0);
