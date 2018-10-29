@@ -71,8 +71,20 @@ void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::mat
 }
 
 int main(int argc, char** argv) {
+  std::string vt_model_path   = "/opt/3d_models/virtual_texturing/earth_86400x43200_smooth_normals.obj";
+  std::string vt_texture_path = "/opt/3d_models/virtual_texturing/earth_colour_86400x43200_256x256_1_rgb.atlas";
+
+  if(argc < 3){
+    std::cout << "Did not provide object or vt-file. Using default files." << std::endl;
+  } else {
+    vt_model_path = argv[1];
+    vt_texture_path   = argv[2];
+  }
+
+  char* argv_tmp[] = {argv[0], NULL};
+  int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;;
   // initialize guacamole
-  gua::init(argc, argv);
+  gua::init(argc_tmp, argv_tmp);
 
   // setup scene
   gua::SceneGraph graph("main_scenegraph");
@@ -81,10 +93,11 @@ int main(int argc, char** argv) {
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
+
   // VT STEP 1/5: - create a material
   auto earth_vt_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
   // VT STEP 2/5: - load *.atlas-File as uniform
-  earth_vt_mat->set_uniform("earth_vt_mat", std::string("/opt/3d_models/virtual_texturing/earth_colour_86400x43200_256x256_1_rgb.atlas"));
+  earth_vt_mat->set_uniform("earth_vt_mat", vt_texture_path);
   // VT STEP 3/5: - enable virtual texturing for this material
   earth_vt_mat->set_enable_virtual_texturing(true);
 
@@ -93,7 +106,7 @@ int main(int argc, char** argv) {
 
   // VT STEP 4/5: - load earth with vt material
   auto earth_geode_1(loader.create_geometry_from_file(
-      "earth_geode", "/opt/3d_models/virtual_texturing/earth_86400x43200_smooth_normals.obj",
+      "earth_geode", vt_model_path,
       earth_vt_mat,
       gua::TriMeshLoader::NORMALIZE_POSITION |
       gua::TriMeshLoader::MAKE_PICKABLE)  );

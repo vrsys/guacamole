@@ -60,7 +60,7 @@ void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action
 int main(int argc, char** argv) {
 
   if(argc < 2){
-    std::cout << "ERROR: please a *.sr file containing at least a 'serverport' attribute!" << std::endl;
+    std::cout << "ERROR: please provide a *.sr file containing at least a 'serverport' attribute!" << std::endl;
   }
   std::string spoinst_resource_file_string(argv[1]);
 
