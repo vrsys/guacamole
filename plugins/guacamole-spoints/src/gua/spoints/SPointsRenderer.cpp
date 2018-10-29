@@ -41,6 +41,13 @@
 #include <scm/gl_core/render_device/context_guards.h>
 
 namespace {
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = 0;
+  if (tex) {
+    handle = tex->native_handle();
+  }
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
 
 struct VertexOnly {
   scm::math::vec3f pos;
@@ -617,7 +624,6 @@ void SPointsRenderer::render(Pipeline& pipe,
               voxel_half_size,
               "voxel_half_size");
 
-            bool write_depth = true;
             //target.bind(ctx, write_depth);
             target.set_viewport(ctx);
 
@@ -848,13 +854,6 @@ void SPointsRenderer::render(Pipeline& pipe,
         //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
 
 
-        bool is_camera = (!pipe.current_viewstate().shadow_mode);
-
-        bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
-
-        std::size_t view_uuid = camera_id;
-        
-
 
         auto spoints_resource = std::static_pointer_cast<SPointsResource>(
             GeometryDatabase::instance()->lookup(spoints_desc));
@@ -1057,7 +1056,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         bool write_depth = true;
         target.bind(ctx, write_depth);
-
+        target.set_viewport(ctx);
         //forward_textured_triangles_pass_program_->use(ctx);
 
         ctx.render_context->set_depth_stencil_state(depth_test_with_writing_depth_stencil_state_);
@@ -1125,6 +1124,7 @@ void SPointsRenderer::render(Pipeline& pipe,
               scm::math::inverse(spoints_node->get_cached_world_transform())));
           auto view_matrix(pipe.current_viewstate().frustum.get_view());
 
+
           scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
 
           scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
@@ -1133,18 +1133,34 @@ void SPointsRenderer::render(Pipeline& pipe,
 
           int rendering_mode = pipe.current_viewstate().shadow_mode ? (spoints_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-          current_shader->set_uniform(
-            ctx,
-            scm::math::mat4f(mv_matrix),
-            "kinect_mv_matrix");
 
-          current_shader->set_uniform(
-            ctx,
-            scm::math::mat4f(mvp_matrix),
-            "kinect_mvp_matrix");
-          
-          current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+          if(current_shader) {
+            current_shader->use(ctx);
+            current_shader->set_uniform(ctx, math::vec2ui(target.get_width(),
+                                                         target.get_height()),
+                                        "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
+            current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+            current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+            // hack
+            current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
+                                          "gua_gbuffer_depth");
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(model_matrix),
+              "kinect_model_matrix");
 
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(mv_matrix),
+              "kinect_mv_matrix");
+
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(mvp_matrix),
+              "kinect_mvp_matrix");
+            
+            current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+            }
 
           spoints_resource->draw_textured_triangle_soup(ctx, current_shader);
 

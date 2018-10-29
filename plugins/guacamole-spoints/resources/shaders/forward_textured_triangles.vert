@@ -17,6 +17,7 @@ out vec2 pass_uvs;
 //out vec3 pass_point_color;
 
 //uniform mat4 kinect_model_matrix;
+uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 
@@ -48,6 +49,9 @@ uniform int texture_space_triangle_size;
 
 
 void main() {
+
+  @material_input@
+  
   uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
   uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
   vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
@@ -104,6 +108,12 @@ void main() {
   
 
   pass_uvs = decoded_uvs;
+  gua_world_position = (kinect_model_matrix * vec4(unquantized_pos, 1.0)).xyz;
+  gua_view_position  = (kinect_mv_matrix * vec4(unquantized_pos, 1.0)).xyz;
+  
+  @material_method_calls_vert@
+  @include "common/gua_varyings_assignment.glsl"
+
   gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
 
 

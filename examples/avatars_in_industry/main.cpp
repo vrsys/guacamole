@@ -239,6 +239,7 @@ int main(int argc, char** argv) {
   pipe->set_blending_termination_threshold(0.99f);
   pipe->get_resolve_pass()->background_color(gua::utils::Color3f(0.7f,0.7f,0.7f))
                             .environment_lighting(gua::utils::Color3f(0.005f,0.005f,0.005f));
+  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
   //pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
   //pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
 
