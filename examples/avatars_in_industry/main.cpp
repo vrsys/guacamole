@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 #if WIN32
   const std::string engine_directory = "data/engine/";
 #else
-  const std::string engine_directory = "/opt/3d_models/engine/";
+  const std::string engine_directory = "data/engine/";
 #endif
   Mode mode{Mode::SeeThrough};
 
