@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(fullscreen_effect_pass);
   auto fullscreen_effect_pass2 = std::make_shared<gua::FullscreenPassDescription>();
   fullscreen_effect_pass2->source(frag_shader_source2);
-  fullscreen_effect_pass2->writes_only_color_buffer(true);
+  //fullscreen_effect_pass2->writes_only_color_buffer(true);
   pipe->add_pass(fullscreen_effect_pass2);
 
   pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
