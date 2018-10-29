@@ -41,6 +41,13 @@
 #include <scm/gl_core/render_device/context_guards.h>
 
 namespace {
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
+  uint64_t handle = 0;
+  if (tex) {
+    handle = tex->native_handle();
+  }
+  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
 
 struct VertexOnly {
   scm::math::vec3f pos;
@@ -144,8 +151,6 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
                                      gpu_resources_already_created_(false),
                                      //depth_pass_program_(nullptr),
                                      normalization_pass_program_(nullptr),
-                                     forward_colored_triangles_pass_program_(nullptr),
-                                     forward_textured_triangles_pass_program_(nullptr),
                                      current_rendertarget_width_(0),
                                      current_rendertarget_height_(0)
                                     {
@@ -252,27 +257,35 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void SPointsRenderer::_initialize_forward_colored_triangles_pass_program() {
-    if(!forward_colored_triangles_pass_program_) {
-      auto new_program = std::make_shared<ShaderProgram>();
+  void SPointsRenderer::_initialize_forward_colored_triangles_pass_program(MaterialShader* material) {
+    if(!forward_colored_triangles_pass_programs_.count(material)) {
+      auto program = std::make_shared<ShaderProgram>();
 
       auto smap = global_substitution_map_;
-      new_program->set_shaders(forward_colored_triangles_shader_stages_ , std::list<std::string>(), false, smap);
-      forward_colored_triangles_pass_program_ = new_program;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(forward_colored_triangles_shader_stages_, std::list<std::string>(), false, smap);
+      forward_colored_triangles_pass_programs_[material] = program;
     }
-    assert(forward_colored_triangles_pass_program_);
+    assert(forward_colored_triangles_pass_programs_.count(material));
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void SPointsRenderer::_initialize_forward_textured_triangles_pass_program() {
-    if(!forward_textured_triangles_pass_program_) {
-      auto new_program = std::make_shared<ShaderProgram>();
+  void SPointsRenderer::_initialize_forward_textured_triangles_pass_program(MaterialShader* material) {
+    if(!forward_textured_triangles_pass_programs_.count(material)) {
+      auto program = std::make_shared<ShaderProgram>();
 
       auto smap = global_substitution_map_;
-      new_program->set_shaders(forward_textured_triangles_shader_stages_ , std::list<std::string>(), false, smap);
-      forward_textured_triangles_pass_program_ = new_program;
+      for (const auto& i : material->generate_substitution_map()) {
+        smap[i.first] = i.second;
+      }
+
+      program->set_shaders(forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+      forward_textured_triangles_pass_programs_[material] = program;
     }
-    assert(forward_textured_triangles_pass_program_);
+    assert(forward_textured_triangles_pass_programs_.count(material));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -490,12 +503,15 @@ void SPointsRenderer::render(Pipeline& pipe,
     if (!normalization_pass_program_) {
       _initialize_normalization_pass_program();
     }
+
+/*
     if (!forward_colored_triangles_pass_program_) {
       _initialize_forward_colored_triangles_pass_program();
     }
     if (!forward_textured_triangles_pass_program_) {
       _initialize_forward_textured_triangles_pass_program();
     }
+*/
     assert(/*log_to_lin_conversion_pass_program_ && depth_pass_program_ &&*/ normalization_pass_program_);
   }
   catch (std::exception& e) {
@@ -608,7 +624,6 @@ void SPointsRenderer::render(Pipeline& pipe,
               voxel_half_size,
               "voxel_half_size");
 
-            bool write_depth = true;
             //target.bind(ctx, write_depth);
             target.set_viewport(ctx);
 
@@ -702,12 +717,7 @@ void SPointsRenderer::render(Pipeline& pipe,
             scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
             current_shader->use(ctx);
-          /*
-            current_shader->set_uniform(
-              ctx,
-              scm::math::mat4f(model_matrix),
-              "kinect_model_matrix");
-    */
+
             current_shader->set_uniform(
               ctx,
               scm::math::mat4f(mvp_matrix),
@@ -844,13 +854,6 @@ void SPointsRenderer::render(Pipeline& pipe,
         //std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
 
 
-        bool is_camera = (!pipe.current_viewstate().shadow_mode);
-
-        bool stereo_mode = (pipe.current_viewstate().camera.config.get_enable_stereo());
-
-        std::size_t view_uuid = camera_id;
-        
-
 
         auto spoints_resource = std::static_pointer_cast<SPointsResource>(
             GeometryDatabase::instance()->lookup(spoints_desc));
@@ -941,21 +944,53 @@ void SPointsRenderer::render(Pipeline& pipe,
    //////////////////////////////////////////////////////////////////////////
 
    {
-     scm::gl::context_all_guard context_guard(ctx.render_context);
 
-      bool write_depth = true;
-      target.bind(ctx, write_depth);
 
-      forward_colored_triangles_pass_program_->use(ctx);
-
-      ctx.render_context->set_depth_stencil_state(depth_test_with_writing_depth_stencil_state_);
-      ctx.render_context->set_blend_state(no_color_accumulation_state_);
-      ctx.render_context->apply();
 
 
       for (auto& o : objects->second) {
 
         auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+
+        // get material dependent shader
+        std::shared_ptr<ShaderProgram> current_shader;
+
+        MaterialShader* current_material =
+            spoints_node->get_material()->get_shader();
+        if (current_material) {
+
+          auto shader_iterator = forward_colored_triangles_pass_programs_.find(current_material);
+          if (shader_iterator != forward_colored_triangles_pass_programs_.end()) {
+            current_shader = shader_iterator->second;
+          } else {
+            auto smap = global_substitution_map_;
+            for (const auto& i : current_material->generate_substitution_map())
+              smap[i.first] = i.second;
+
+            current_shader = std::make_shared<ShaderProgram>();
+            current_shader->set_shaders(
+            
+            forward_colored_triangles_shader_stages_, std::list<std::string>(), false, smap);
+            forward_colored_triangles_pass_programs_[current_material] = current_shader;
+          }
+        } else {
+          Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+                              << spoints_node->get_material()->get_shader_name()
+                              << std::endl;
+        }
+
+        scm::gl::context_all_guard context_guard(ctx.render_context);
+
+        bool write_depth = true;
+        target.bind(ctx, write_depth);
+
+        current_shader->use(ctx);
+
+        ctx.render_context->set_depth_stencil_state(depth_test_with_writing_depth_stencil_state_);
+        ctx.render_context->set_blend_state(no_color_accumulation_state_);
+        ctx.render_context->apply();
+
+
 
 
         auto spoints_desc(spoints_node->get_spoints_description());
@@ -985,12 +1020,13 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
-        forward_colored_triangles_pass_program_->set_uniform(
+
+        current_shader->set_uniform(
           ctx,
           scm::math::mat4f(mv_matrix),
           "kinect_mv_matrix");
 
-        forward_colored_triangles_pass_program_->set_uniform(
+        current_shader->set_uniform(
           ctx,
           scm::math::mat4f(mvp_matrix),
           "kinect_mvp_matrix");
@@ -998,9 +1034,12 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
         spoints_resource->draw_vertex_colored_triangle_soup(ctx);
+
+       current_shader->unuse(ctx);
+
       }
      
-       forward_colored_triangles_pass_program_->unuse(ctx);
+
 
       target.unbind(ctx);
 
@@ -1017,8 +1056,8 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         bool write_depth = true;
         target.bind(ctx, write_depth);
-
-        forward_textured_triangles_pass_program_->use(ctx);
+        target.set_viewport(ctx);
+        //forward_textured_triangles_pass_program_->use(ctx);
 
         ctx.render_context->set_depth_stencil_state(depth_test_with_writing_depth_stencil_state_);
         ctx.render_context->set_blend_state(no_color_accumulation_state_);
@@ -1027,7 +1066,41 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         for (auto& o : objects->second) {
 
-          auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+        auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+
+        // get material dependent shader
+        std::shared_ptr<ShaderProgram> current_shader;
+
+        MaterialShader* current_material =
+            spoints_node->get_material()->get_shader();
+        if (current_material) {
+
+          auto shader_iterator = forward_textured_triangles_pass_programs_.find(current_material);
+          if (shader_iterator != forward_textured_triangles_pass_programs_.end()) {
+            current_shader = shader_iterator->second;
+          } else {
+            auto smap = global_substitution_map_;
+            for (const auto& i : current_material->generate_substitution_map())
+              smap[i.first] = i.second;
+
+            current_shader = std::make_shared<ShaderProgram>();
+            current_shader->set_shaders(
+            
+            forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+            forward_textured_triangles_pass_programs_[current_material] = current_shader;
+          }
+        } else {
+          Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+                              << spoints_node->get_material()->get_shader_name()
+                              << std::endl;
+        }
+
+        scm::gl::context_all_guard context_guard(ctx.render_context);
+
+        bool write_depth = true;
+        target.bind(ctx, write_depth);
+
+        current_shader->use(ctx);
 
 
           auto spoints_desc(spoints_node->get_spoints_description());
@@ -1051,28 +1124,51 @@ void SPointsRenderer::render(Pipeline& pipe,
               scm::math::inverse(spoints_node->get_cached_world_transform())));
           auto view_matrix(pipe.current_viewstate().frustum.get_view());
 
+
           scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
 
           scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
 
           scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
-          forward_textured_triangles_pass_program_->set_uniform(
-            ctx,
-            scm::math::mat4f(mv_matrix),
-            "kinect_mv_matrix");
-
-          forward_textured_triangles_pass_program_->set_uniform(
-            ctx,
-            scm::math::mat4f(mvp_matrix),
-            "kinect_mvp_matrix");
+          int rendering_mode = pipe.current_viewstate().shadow_mode ? (spoints_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
 
+          if(current_shader) {
+            current_shader->use(ctx);
+            current_shader->set_uniform(ctx, math::vec2ui(target.get_width(),
+                                                         target.get_height()),
+                                        "gua_resolution"); //TODO: pass gua_resolution. Probably should be somehow else implemented
+            current_shader->set_uniform(ctx, 1.0f / target.get_width(),  "gua_texel_width");
+            current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+            // hack
+            current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()),
+                                          "gua_gbuffer_depth");
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(model_matrix),
+              "kinect_model_matrix");
 
-          spoints_resource->draw_textured_triangle_soup(ctx, forward_textured_triangles_pass_program_);
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(mv_matrix),
+              "kinect_mv_matrix");
+
+            current_shader->set_uniform(
+              ctx,
+              scm::math::mat4f(mvp_matrix),
+              "kinect_mvp_matrix");
+            
+            current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+            }
+
+          spoints_resource->draw_textured_triangle_soup(ctx, current_shader);
+
+          current_shader->unuse(ctx);
+
         }
        
-         forward_textured_triangles_pass_program_->unuse(ctx);
+
 
         target.unbind(ctx);
 

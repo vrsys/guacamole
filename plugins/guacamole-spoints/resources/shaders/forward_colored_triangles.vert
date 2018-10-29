@@ -5,11 +5,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
 
-@include "shaders/common/gua_camera_uniforms.glsl"
-
-
-@include "shaders/common/gua_vertex_shader_output.glsl"
-@include "shaders/common/gua_global_variable_declaration.glsl"
+@include "common/gua_camera_uniforms.glsl"
+@material_uniforms@
+@include "common/gua_vertex_shader_output.glsl"
+@include "common/gua_global_variable_declaration.glsl"
+@material_method_declarations_vert@
 
 out vec3 pass_color;
 
