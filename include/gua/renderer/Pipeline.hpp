@@ -96,6 +96,8 @@ class GUA_DLL Pipeline {
       node::SerializedCameraNode const& camera,
       std::vector<std::unique_ptr<const SceneGraph> > const& scene_graphs);
 
+  void apply_post_render_actions(RenderContext const& ctx);
+
   void generate_shadow_map(node::LightNode& light,
                            LightTable::LightBlock& light_block);
 

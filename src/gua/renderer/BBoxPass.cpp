@@ -95,7 +95,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
       auto data = static_cast<math::vec3f*>(ctx.render_context->map_buffer(
           buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-      for (int i(0); i < count; ++i) {
+      for (unsigned int i = 0; i < count; ++i) {
         data[2 * i] = math::vec3f(scene.bounding_boxes[i].min);
         data[2 * i + 1] = math::vec3f(scene.bounding_boxes[i].max);
       }

@@ -90,6 +90,10 @@ ResolvePassDescription::ResolvePassDescription()
   uniforms["gua_tone_mapping_exposure"] = 1.0f;
 }
 
+void ResolvePassDescription::apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const {
+  /* Not used anymore */
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ResolvePassDescription& ResolvePassDescription::background_mode(BackgroundMode mode) {
   uniforms["gua_background_mode"] = static_cast<int>(mode);;

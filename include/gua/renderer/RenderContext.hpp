@@ -26,6 +26,10 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/InstanceCollection.hpp>
  
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/virtual_texturing/VTInfo.hpp>
+#endif
+
 // external headers
 #include <scm/gl_core/config.h>
 #include <scm/gl_core/data_formats.h>

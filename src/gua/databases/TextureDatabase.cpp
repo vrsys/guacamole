@@ -37,7 +37,19 @@
 
 #include <gua/renderer/Texture2D.hpp>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/virtual_texturing/VirtualTexture2D.hpp>
+#include <gua/virtual_texturing/LayeredPhysicalTexture2D.hpp>
+#endif
+
 namespace gua {
+
+TextureDatabase::TextureDatabase() {
+  texture_path_to_global_id_mapping_["gua_loading_texture"] = 0;
+  texture_path_to_global_id_mapping_["gua_default_texture"] = 1;
+  texture_path_to_global_id_mapping_["gua_noise_texture"] = 2;
+  num_loaded_textured_ = 3;
+}
 
 void TextureDatabase::load(std::string const& filename) {
   boost::filesystem::path fp(filename);
@@ -52,29 +64,99 @@ void TextureDatabase::load(std::string const& filename) {
       || extension == ".tif"
       || extension == ".tga") {
 
-    auto exists = TextureDatabase::instance()->lookup(filename);
-    if (exists)
-      return;
+    {
+      std::lock_guard<std::mutex> lock(texture_request_mutex_);
+      auto needs_to_be_loaded_it = texture_loading_.find(filename);
 
-    // else
-    textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
+      if(texture_loading_.end() != needs_to_be_loaded_it)
+        return;
 
-      auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
-      if (default_tex) {
-        gua::TextureDatabase::instance()->add(filename, default_tex);
-      }
+      texture_loading_.insert(filename);
+    }
 
-      auto image = gua::load_image_2d(filename, true);
+      // else
+      textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
 
-      instance()->add(filename, std::make_shared<Texture2D>(image, 1,
-            scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                        scm::gl::WRAP_REPEAT,
-                                        scm::gl::WRAP_REPEAT)));
-      return filename;
-    }));
+        auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
+        if (default_tex) {
+          gua::TextureDatabase::instance()->add(filename, default_tex);
+        }
+
+        auto image = gua::load_image_2d(filename, true);
+
+        instance()->add(filename, std::make_shared<Texture2D>(image, 1,
+              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                          scm::gl::WRAP_REPEAT,
+                                          scm::gl::WRAP_REPEAT)));
+        return filename;
+      }));
+
+
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
+  } else if(".atlas" == extension) {
+  #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    auto occurrence_check = TextureDatabase::instance()->lookup(filename);
+ 
+    std::shared_ptr<VirtualTexture2D> vt_pointer = nullptr;
+    if(!occurrence_check) {
+      vt_pointer = std::make_shared<VirtualTexture2D>(filename,
+                                                      256,
+            scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
+                                        scm::gl::WRAP_REPEAT,
+                                        scm::gl::WRAP_REPEAT));
+      instance()->add(filename, vt_pointer);
+    }
+
+    auto existing_vt = TextureDatabase::instance()->lookup(filename);
+
+    if(!existing_vt) {
+      std::cout << "Failed to create Virtual Texture: " << filename << "\n";
+    } else {
+      virtual_textures_[filename] = vt_pointer;
+    }
+
+
+
+  #else
+    Logger::LOG_ERROR << "Unable to load .atlas-Texture: Virtual Texturing plugin is not enabled!" << std::endl;
+  #endif
+  } else {
+    Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
+    return;
   }
+
+  auto texture_it = texture_path_to_global_id_mapping_.find(filename);
+  if(texture_path_to_global_id_mapping_.end() == texture_it) {
+    texture_path_to_global_id_mapping_[filename] = num_loaded_textured_++;
+  }
+
+
+
 }
+
+int32_t TextureDatabase::get_global_texture_id_by_path(std::string const& tex_path) const {
+  auto texture_it = texture_path_to_global_id_mapping_.find(tex_path);
+  if(texture_path_to_global_id_mapping_.end() != texture_it) {
+    return texture_it->second;
+  }
+
+  //Logger::LOG_ERROR << "Texture ID for \"" << tex_path << "\" was not registered." << std::endl;
+  return -1;
+}
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+std::vector<std::shared_ptr<VirtualTexture2D> > TextureDatabase::get_virtual_textures() {
+  std::vector< std::shared_ptr<VirtualTexture2D> > virtual_texture_ptrs;
+
+  for(auto const& vt : virtual_textures_) {
+    virtual_texture_ptrs.push_back(vt.second);
+  }
+
+  return virtual_texture_ptrs;
+}
+#endif
+
+
 
 }
