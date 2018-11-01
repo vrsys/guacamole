@@ -438,7 +438,7 @@ class GUA_DLL Node {
   */
   virtual std::shared_ptr<Node> copy() const = 0;
 
-  /**
+  virtual /**
   * Deep copies a Node with all its children.
   *
   * This function recursively generates new Nodes for the Node itself
