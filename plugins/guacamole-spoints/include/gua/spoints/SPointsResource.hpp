@@ -66,7 +66,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   /**
    * constructor.
    *
-   * Creates a new Video3D from a given spoints string.
+   * Creates a new SPoints from a given spoints string.
    * \param spoints      Holds information about kinect streams.
   */
    SPointsResource(std::string const& server_endpoint, 
@@ -78,7 +78,25 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
    */
    ~SPointsResource() {}
 
-  void draw(RenderContext const& ctx);
+  void draw_vertex_colored_points(RenderContext const& ctx);
+  void draw_vertex_colored_triangle_soup(RenderContext const& ctx);
+  void draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program);
+  
+  std::string get_socket_string() const;
+
+  float get_voxel_size() const;
+
+  spoints::SPointsStats get_latest_spoints_stats() const {  
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+    if(spointsdata_) {
+      if(spointsdata_->nka_) {
+        return spointsdata_->nka_->get_latest_spoints_stats();
+      }
+    }
+
+    return spoints::SPointsStats();
+  }
 
   //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
@@ -87,8 +105,11 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
+  unsigned get_remote_server_screen_width() const;
+  unsigned get_remote_server_screen_height() const;
+  
   /**
-   * Raytest for Video3D
+   * Raytest for SPoints
    *
    * Not implemented yet.
    *
@@ -109,7 +130,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
  private:
 
 
-  std::mutex                      m_push_matrix_package_mutex;
+  mutable std::mutex              m_push_matrix_package_mutex_;
   std::shared_ptr<SPointsData>    spointsdata_;
 
   std::string                     server_endpoint_;

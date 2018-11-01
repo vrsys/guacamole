@@ -2,6 +2,7 @@
 # search paths
 ##############################################################################
 SET(LAMURE_INCLUDE_SEARCH_DIRS
+  /home/ephtron/Projects/lamure/install/include
   ${LAMURE_ROOT}/include
   ${GLOBAL_EXT_DIR}/lamure/include
   ${LAMURE_INCLUDE_SEARCH_DIR}
@@ -11,6 +12,7 @@ SET(LAMURE_INCLUDE_SEARCH_DIRS
 )
 
 SET(LAMURE_LIBRARY_SEARCH_DIRS
+  /home/ephtron/Projects/lamure/install/lib
   ${GLOBAL_EXT_DIR}/lamure/lib
   ${LAMURE_LIBRARY_SEARCH_DIR}
   ${LAMURE_ROOT}/lib
@@ -59,5 +61,5 @@ find_package_handle_standard_args(LAMURE DEFAULT_MSG
     LAMURE_COMMON_INCLUDE_DIR LAMURE_RENDERING_INCLUDE_DIR)
 
 if(LAMURE_FOUND)
-   set(LAMURE_INCLUDE_DIRS ${LAMURE_COMMON_INCLUDE_DIR} ${LAMURE_RENDERING_INCLUDE_DIR})
+   set(LAMURE_INCLUDE_DIRS ${LAMURE_COMMON_INCLUDE_DIR} ${LAMURE_RENDERING_INCLUDE_DIR} ${LAMURE_PROVENANCE_INCLUDE_DIR})
 endif()

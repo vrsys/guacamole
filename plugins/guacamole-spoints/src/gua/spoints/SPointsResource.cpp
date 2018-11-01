@@ -65,11 +65,38 @@ SPointsResource::SPointsResource(std::string const& server_endpoint,
   init();
 }
 
+std::string 
+SPointsResource::get_socket_string() const {
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_socket_string();
+    }
+  }
+
+  return "";
+}
+
+float
+SPointsResource::get_voxel_size() const {
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_voxel_size();
+    }
+  }
+
+  return 0.0;
+}
+
+
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
 
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
 
   if(spointsdata_) {
     if(spointsdata_->nka_) {
@@ -84,7 +111,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
                                      Pipeline& pipe) {
 
   {
-    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex);
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
     // lazy resource initialization
     if (nullptr == spointsdata_) {
       spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
@@ -93,27 +120,48 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
 
     //std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
     // synchronize feedback
-    spointsdata_->nka_->update_feedback(ctx);
+    //spointsdata_->nka_->update_feedback(ctx);
   }
 
   // synchronize vertex data
-  spointsdata_->nka_->update(ctx);
+  spointsdata_->nka_->update(ctx, bounding_box_);
   
 }
 
-
-void SPointsResource::draw(RenderContext const& ctx) {
-  spointsdata_->nka_->draw(ctx);
+unsigned SPointsResource::get_remote_server_screen_width() const {
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_remote_server_screen_width();
+    }
+  }
+}
+unsigned SPointsResource::get_remote_server_screen_height() const {
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->get_remote_server_screen_height();
+    }
+  }
 }
 
 
+void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
+  spointsdata_->nka_->draw_vertex_colored_points(ctx);
+}
+
+void SPointsResource::draw_vertex_colored_triangle_soup(RenderContext const& ctx) {
+  spointsdata_->nka_->draw_vertex_colored_triangle_soup(ctx);
+}
+
+void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
+  spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 void SPointsResource::init() {
   // approximately local space - can be overwritten from .ks file
-  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-1.5, -0.1, -1.0),
-                                                math::vec3(1.5, 2.2, 1.5));
+  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-2.5, -2.5, -2.5),
+                                                math::vec3(2.5,   2.5,  2.5));
 
 }
 

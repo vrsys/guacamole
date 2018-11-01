@@ -351,6 +351,7 @@ namespace node {
       geometry_->forward_queued_vertices(queued_positions_, 
                                          queued_colors_, 
                                          queued_thicknesses_, queued_normals_);
+      update_bounding_box();
     }
   }
 

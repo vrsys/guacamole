@@ -17,6 +17,10 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(volumetric_point_and_line_rendering)
   ENDIF (${GUACAMOLE_GLFW3})
 
+  IF (${PLUGIN_guacamole-spoints})
+    add_subdirectory(avatars_in_industry)
+  ENDIF (${PLUGIN_guacamole-spoints})
+  
   # skelanim example requires skelanim-plugin and the fbx sdk
   if(${PLUGIN_guacamole-skelanim} AND ${GUACAMOLE_FBX})
     add_subdirectory(animation)
@@ -82,7 +86,6 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(spoints)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
 
-
   IF (GUACAMOLE_ENABLE_PHYSICS)
     add_subdirectory(physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
@@ -90,5 +93,10 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-nrp})
     add_subdirectory(gazebo_scene)
   ENDIF (${PLUGIN_guacamole-nrp})
+
+  IF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
+    add_subdirectory(virtual_texturing)
+  ENDIF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
+
 
 ENDIF (GUACAMOLE_EXAMPLES)

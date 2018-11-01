@@ -79,7 +79,6 @@ void Window::open() {
   int version_major = 4;
   int version_minor = 4;
   bool compatibility_profile = false;
-  bool debug = config.get_debug();
   bool forward_compatible = false;
   bool es_profile = false;
   scm::gl::wm::context::attribute_desc context_attribs(

@@ -18,6 +18,7 @@ set(GUACAMOLE_EXENAME "GUACAMOLE")
 set(GUACAMOLE_PACKAGENAME "GUACAMOLE")
 
 option (GUACAMOLE_ENABLE_PHYSICS "Set to enable physics support." OFF)
+option (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING "Set to enable virtual texturing support (requires lamure-vt)." OFF)
 option (GUACAMOLE_GLFW3 "Set to enable glfw3 support." ON)
 option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using per-pass time queries." OFF)
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
@@ -182,6 +183,10 @@ if (GUACAMOLE_TESTS)
   include(FindUnitTest++)
 endif()
 
+
+if(GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
+  find_package(LamureVT)
+endif(GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
 ## json ###################################################
 find_package(Json REQUIRED)
 
@@ -201,6 +206,7 @@ set(LIB_PATHS
     ${SCHISM_LIBRARY_DIRS}
     ${ZMQ_LIBRARY_DIRS}
     ${X11_LIBRARY_DIRS}
+    ${LAMURE_VT_LIBRARY_DIRS}
 )
 LINK_DIRECTORIES(${LIB_PATHS})
 
@@ -222,6 +228,7 @@ set(INCLUDE_PATHS_EXTERNAL
     ${FBX_INCLUDE_DIRS}
     ${ZMQ_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
+    ${LAMURE_VT_INCLUDE_DIRS}
 )
 
 if (GUACAMOLE_GLFW3)

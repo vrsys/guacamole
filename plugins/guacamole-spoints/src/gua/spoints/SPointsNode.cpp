@@ -47,7 +47,8 @@ SPointsNode::SPointsNode(std::string const& name,
 	  spoints_description_(spoints_description),
 	  spoints_changed_(true),
 	  material_(material),
-	  material_changed_(true)
+	  material_changed_(true),
+    is_server_resource_(false)
 {}
 
 /////////////////////////////////////////////////////////////////////////////
@@ -150,5 +151,21 @@ std::shared_ptr<Node> SPointsNode::copy() const {
 
   Node::update_cache();
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void SPointsNode::set_is_server_resource(bool is_server_resource) {
+  is_server_resource_ = is_server_resource;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool SPointsNode::get_is_server_resource() const {
+  return is_server_resource_;
+}
+
+
 }
 }

@@ -37,7 +37,12 @@ void main() {
   float g_channel = float(((packed_vertex_color >> 16) & 0xFF)) / 255.0;
   float b_channel = float(((packed_vertex_color >> 8) & 0xFF)) / 255.0;
 
+  vec3 separated_color = vec3(r_channel, g_channel, b_channel);
+
+
+
   gua_color = vec3(r_channel, g_channel, b_channel);
+
   //@material_method_calls_vert@
 
   @include "shaders/common/gua_varyings_assignment.glsl"
@@ -45,7 +50,7 @@ void main() {
 
   gl_Position = gua_projection_matrix * gua_view_matrix * kinect_model_matrix * vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
-  gl_PointSize = point_size;
+  gl_PointSize = 10.0f;//point_size;
   //gl_Position = vec4(gua_in_position_plus_packed_floatified_color.xyz, 1.0);
 
 }

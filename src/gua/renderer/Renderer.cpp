@@ -141,6 +141,9 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
 
         window->rendering_fps = fpsc.fps;
 
+
+
+
         if (cmd.serialized_cam->config.get_enable_stereo()) {
           if (window->config.get_stereo_mode() == StereoMode::NVIDIA_3D_VISION) {
             #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
@@ -159,7 +162,6 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
             //auto mode = window->config.get_is_left() ? CameraMode::LEFT : CameraMode::RIGHT;
             auto mode = is_left ? CameraMode::LEFT : CameraMode::RIGHT;
             auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs);
-
             if (img) {
               window->display(img, false);
             }
@@ -173,10 +175,13 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
         } else {
           auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(),
                   *cmd.serialized_cam, *cmd.scene_graphs));
+
+
           if (img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
         }
 
         pipe->clear_frame_cache();
+        pipe->apply_post_render_actions(*window->get_context());
 
         // swap buffers
         window->finish_frame();
@@ -184,6 +189,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name) {
         ++(window->get_context()->framecount);
 
         fpsc.step();
+
 
       }
     }
@@ -238,6 +244,8 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
       }
     }
   }
+
+
   application_fps_.step();
 }
 
@@ -312,6 +320,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
           }
 
           pipe->clear_frame_cache();
+          pipe->apply_post_render_actions(*window->get_context());
 
           // swap buffers
           window->finish_frame();

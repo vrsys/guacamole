@@ -7,4 +7,3 @@ gua_varying_color          = gua_color;
 gua_varying_roughness      = gua_roughness;
 gua_varying_metalness      = gua_metalness;
 gua_varying_emissivity     = gua_emissivity;
- 
