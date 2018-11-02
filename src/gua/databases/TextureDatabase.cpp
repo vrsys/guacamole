@@ -116,13 +116,11 @@ void TextureDatabase::load(std::string const& filename) {
       virtual_textures_[filename] = vt_pointer;
     }
 
-
-
   #else
     Logger::LOG_ERROR << "Unable to load .atlas-Texture: Virtual Texturing plugin is not enabled!" << std::endl;
   #endif
   } else {
-    Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
+    //Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
     return;
   }
 
