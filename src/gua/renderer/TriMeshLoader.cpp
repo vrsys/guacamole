@@ -359,7 +359,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const &importer, aiScene const *ai_scene, aiNode *ai_root, std::string const &file_name, unsigned flags,
                                                     unsigned &mesh_count)
 {
-    // std::cout << "get_tree, " << file_name.c_str() << std::endl;
+    //std::cout << "get_tree, " << file_name.c_str() << std::endl;
 
     // creates a geometry node and returns it
     auto load_geometry = [&](aiNode *ai_current, int i) {
@@ -367,7 +367,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
 
         // load material
-        std::shared_ptr<Material> material;
+        std::shared_ptr<Material> material = nullptr;
         unsigned material_index(ai_scene->mMeshes[ai_current->mMeshes[i]]->mMaterialIndex);
 
         if(flags & TriMeshLoader::LOAD_MATERIALS)
@@ -392,6 +392,9 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     auto gua_root = std::make_shared<node::TransformNode>();
     stack.push({ai_root, gua_root});
 
+    unsigned total_num_loaded_meshes = 0;
+    unsigned total_num_children = 0;
+    std::shared_ptr<node::Node> last_loaded_tri_mesh_node = nullptr;
     while(!stack.empty())
     {
         auto current = stack.top();
@@ -399,23 +402,29 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 
         apply_transformation(current.gua_node_, current.ai_node_->mTransformation);
 
-        for(int mesh_id = 0; mesh_id < current.ai_node_->mNumMeshes; ++mesh_id)
+        for(unsigned mesh_id = 0; mesh_id < current.ai_node_->mNumMeshes; ++mesh_id)
         {
-            current.gua_node_->add_child(load_geometry(current.ai_node_, mesh_id));
+            last_loaded_tri_mesh_node = load_geometry(current.ai_node_, mesh_id);
+            current.gua_node_->add_child(last_loaded_tri_mesh_node);
+            ++total_num_loaded_meshes;
         }
 
-        for(int child_id = 0; child_id < current.ai_node_->mNumChildren; ++child_id)
+        for(unsigned child_id = 0; child_id < current.ai_node_->mNumChildren; ++child_id)
         {
             auto ai_child = current.ai_node_->mChildren[child_id];
 
             auto gua_child = std::make_shared<node::TransformNode>();
             current.gua_node_->add_child(gua_child);
             stack.push({ai_child, gua_child});
-
+            ++total_num_children;
             // std::cout << current.ai_node_->mChildren[child_id]->mName.data << std::endl;
         }
     }
 
+    // gua backward compatability fix - do not create hierarchy, if it is only a simple object
+    if(1 == total_num_children && 1 == total_num_loaded_meshes){
+      return last_loaded_tri_mesh_node;
+    }
     return gua_root;
 
     //    // there is only one child -- skip it!
@@ -485,7 +494,7 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const &r
         apply_fallback_material(child, fallback_material, no_shared_materials);
     }
 }
-gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> transform_ai)
+gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const& transform_ai)
 {
     auto transform_scm = gua::math::mat4::identity();
 
@@ -511,7 +520,7 @@ gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> transf
     return transform_scm;
 }
 
-void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
+void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const& transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
