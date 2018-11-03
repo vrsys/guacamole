@@ -382,6 +382,22 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
     };
 
+    // there is only one child -- skip it!
+    if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
+    {
+      auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count);
+      node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
+      return node;
+    }
+    
+    // there is only one geometry --- return it!
+    if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
+    {
+      auto node = load_geometry(ai_root, 0);
+      // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
+      return node;
+    }
+
     struct ai_gua_node
     {
         aiNode *ai_node_;
@@ -391,10 +407,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     std::stack<ai_gua_node> stack;
     auto gua_root = std::make_shared<node::TransformNode>();
     stack.push({ai_root, gua_root});
-
-    unsigned total_num_loaded_meshes = 0;
-    unsigned total_num_children = 0;
-    std::shared_ptr<node::Node> last_loaded_tri_mesh_node = nullptr;
     while(!stack.empty())
     {
         auto current = stack.top();
@@ -404,9 +416,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 
         for(unsigned mesh_id = 0; mesh_id < current.ai_node_->mNumMeshes; ++mesh_id)
         {
-            last_loaded_tri_mesh_node = load_geometry(current.ai_node_, mesh_id);
-            current.gua_node_->add_child(last_loaded_tri_mesh_node);
-            ++total_num_loaded_meshes;
+            current.gua_node_->add_child(load_geometry(current.ai_node_, mesh_id));
         }
 
         for(unsigned child_id = 0; child_id < current.ai_node_->mNumChildren; ++child_id)
@@ -416,15 +426,10 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
             auto gua_child = std::make_shared<node::TransformNode>();
             current.gua_node_->add_child(gua_child);
             stack.push({ai_child, gua_child});
-            ++total_num_children;
-            // std::cout << current.ai_node_->mChildren[child_id]->mName.data << std::endl;
         }
     }
 
     // gua backward compatability fix - do not create hierarchy, if it is only a simple object
-    if(1 == total_num_children && 1 == total_num_loaded_meshes){
-      return last_loaded_tri_mesh_node;
-    }
     return gua_root;
 
     //    // there is only one child -- skip it!
