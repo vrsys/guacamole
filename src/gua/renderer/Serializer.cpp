@@ -66,7 +66,7 @@ void Serializer::check(SerializedScene& output,
   rendering_frustum_ = output.rendering_frustum;
   culling_frustum_ = output.culling_frustum;
 
-  for (auto plane: scene_graph.get_clipping_plane_nodes()) {
+  for (auto plane : scene_graph.get_clipping_plane_nodes()) {
     if (plane->is_visible(view_id) && render_mask_.check(plane->get_tags())) {
       data_->clipping_planes.push_back(plane->get_component_vector());
     }
