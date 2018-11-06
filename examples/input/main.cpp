@@ -25,6 +25,7 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
+#include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
@@ -54,8 +55,33 @@ void mouse_button(gua::utils::Trackball &trackball,
   trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
+void adjust_arguments(int& argc, char**& argv) {
+  char* argv_tmp[] = {argv[0], NULL};
+  int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
+  argc = argc_tmp;
+  argv = argv_tmp;
+}
+
+std::string parse_model_from_cmd_line(int argc, char** argv) {
+  std::string model_path   = "data/objects/teapot.obj";
+
+  std::string log_message_model_string = "";
+  if(argc < 2){
+    gua::Logger::LOG_MESSAGE << argv[0] << ": Did not provide any model file." << std::endl;
+    log_message_model_string = "Using default model path: " + model_path;
+  } else {
+    model_path = argv[1];
+    log_message_model_string = std::string(argv[0]) + ": Using provided model path:";
+  }
+  gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
+
+  return model_path;
+ }
+
 int main(int argc, char **argv) {
-  // initialize guacamole
+  std::string model_path = parse_model_from_cmd_line(argc, argv);
+
+  adjust_arguments(argc, argv);
   gua::init(argc, argv);
 
   // setup scene
@@ -63,22 +89,23 @@ int main(int argc, char **argv) {
 
   gua::TriMeshLoader loader;
 
-  auto teapot_mat(gua::MaterialShaderDatabase::instance()
+  auto model_mat(gua::MaterialShaderDatabase::instance()
                       ->lookup("gua_default_material")
                       ->make_new_material());
 
-  teapot_mat->set_render_wireframe(false);
-  teapot_mat->set_show_back_faces(false);
+  model_mat->set_render_wireframe(false);
+  model_mat->set_show_back_faces(false);
 
   auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-  auto teapot(loader.create_geometry_from_file(
-      "teapot", "data/objects/teapot.obj",
-      teapot_mat,
+  auto example_model(loader.create_geometry_from_file(
+      "example_model", model_path,
+      model_mat,
       gua::TriMeshLoader::NORMALIZE_POSITION |
-          gua::TriMeshLoader::NORMALIZE_SCALE));
+      gua::TriMeshLoader::NORMALIZE_SCALE |
+      gua::TriMeshLoader::LOAD_MATERIALS));
 
-  graph.add_node("/transform", teapot);
-  teapot->set_draw_bounding_box(true);
+  graph.add_node("/transform", example_model);
+  example_model->set_draw_bounding_box(true);
 
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
