@@ -62,7 +62,8 @@ class GUA_DLL TriMeshLoader {
      NORMALIZE_POSITION = 1 << 3,
      NORMALIZE_SCALE = 1 << 4,
      NO_SHARED_MATERIALS = 1 << 5,
-     OPTIMIZE_MATERIALS = 1 << 6
+     OPTIMIZE_MATERIALS = 1 << 6,
+     PARSE_HIERARCHY = 1 << 7
    };
 
 public:
@@ -101,7 +102,7 @@ public:
    * \param material_name    The material name that was set to the parent node
  */
   std::shared_ptr<node::Node> load(std::string const& file_name,
-                             unsigned flags);
+                                   unsigned flags);
 
   /**
    * Constructor from memory buffer.
@@ -125,7 +126,7 @@ public:
                 aiScene const* ai_scene,
                 aiNode* ai_root,
                 std::string const& file_name,
-                unsigned flags, unsigned& mesh_count);
+                unsigned flags, unsigned& mesh_count, bool enforce_hierarchy);
 
   static void apply_fallback_material(std::shared_ptr<node::Node> const& root,
                 std::shared_ptr<Material> const& fallback_material,

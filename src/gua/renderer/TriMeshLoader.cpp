@@ -236,7 +236,8 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
             if(scene->mRootNode)
             {
                 unsigned count = 0;
-                new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count);
+                bool enforce_hierarchy = flags & TriMeshLoader::PARSE_HIERARCHY;
+                new_node = get_tree(importer, scene, scene->mRootNode, file_name, flags, count, enforce_hierarchy);
             }
             else
             {
@@ -357,7 +358,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const &importer, aiScene const *ai_scene, aiNode *ai_root, std::string const &file_name, unsigned flags,
-                                                    unsigned &mesh_count)
+                                                    unsigned &mesh_count, bool enforce_hierarchy)
 {
     //std::cout << "get_tree, " << file_name.c_str() << std::endl;
 
@@ -382,20 +383,22 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
     };
 
-    // there is only one child -- skip it!
-    if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
-    {
-      auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count);
-      node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
-      return node;
-    }
-    
-    // there is only one geometry --- return it!
-    if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
-    {
-      auto node = load_geometry(ai_root, 0);
-      // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
-      return node;
+    if(!enforce_hierarchy) {
+        // there is only one child -- skip it!
+        if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
+        {
+          auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
+          node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
+          return node;
+        }
+        
+        // there is only one geometry --- return it!
+        if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
+        {
+          auto node = load_geometry(ai_root, 0);
+          // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
+          return node;
+        }
     }
 
     struct ai_gua_node
