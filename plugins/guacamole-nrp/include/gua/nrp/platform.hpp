@@ -1,8 +1,6 @@
 #ifndef GUA_INCLUDE_NRP_PLATFORM_HPP
 #define GUA_INCLUDE_NRP_PLATFORM_HPP
 
-#define GUA_DEBUG 0
-
 #if defined(_MSC_VER)
 #if defined(GUA_NRP_LIBRARY)
 #define GUA_NRP_DLL __declspec(dllexport)
