@@ -4,6 +4,8 @@
 #include <boost/assign/list_of.hpp>
 
 
+#include <gua/spoints/spoints_geometry/SGTP/SGTP.h>
+
 #include <zmq.hpp>
 #include <iostream>
 #include <mutex>
@@ -260,8 +262,8 @@ void NetKinectArray::readloop() {
 
   const unsigned message_size = sizeof(size_t);//(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size();
 
-  size_t header_byte_size = 100;
-  std::vector<uint8_t> header_data(header_byte_size, 0);
+  //size_t header_byte_size = 100;
+  //std::vector<uint8_t> header_data(header_byte_size, 0);
 
   while (m_running_) {
     
@@ -272,7 +274,12 @@ void NetKinectArray::readloop() {
       ;
     }
 
-    memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
+    SGTP::header_data_t message_header;
+
+    std::size_t const HEADER_SIZE = SGTP::HEADER_BYTE_SIZE;
+
+    memcpy((char*)&message_header, (unsigned char*) zmqm.data(), SGTP::HEADER_BYTE_SIZE);
+    //memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
 
     size_t num_voxels_received{0};
 
@@ -288,31 +295,23 @@ void NetKinectArray::readloop() {
    // std::cout << "ABOUT TO READ: " << m_received_vertex_colored_points_back_ << "\n";
 
     size_t header_data_offset = 0;
-    memcpy((unsigned char*) &num_voxels_received, (unsigned char*) &header_data[header_data_offset], sizeof(size_t) );
-    header_data_offset += sizeof(size_t);
-    memcpy((unsigned char*) &latest_received_bb_min[0], (unsigned char*) &header_data[header_data_offset], 3 * sizeof(float));
-    header_data_offset += 3 * sizeof(float);
-    memcpy((unsigned char*) &latest_received_bb_max[0], (unsigned char*) &header_data[header_data_offset], 3 * sizeof(float));
-    header_data_offset += 3 * sizeof(float);
-    
-    memcpy((unsigned char*) &m_received_vertex_colored_points_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
-    header_data_offset +=  sizeof(uint32_t);
-    memcpy((unsigned char*) &m_received_vertex_colored_tris_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
-    header_data_offset +=  sizeof(uint32_t);
-    memcpy((unsigned char*) &m_received_textured_tris_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
-    header_data_offset +=  sizeof(uint32_t);
 
-    memcpy((unsigned char*) &m_texture_payload_size_in_byte_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
-    header_data_offset +=  sizeof(uint32_t);
 
-    memcpy((unsigned char*) &m_triangle_texture_atlas_size_back_, (unsigned char*) &header_data[header_data_offset], sizeof(uint32_t));
-    header_data_offset +=  sizeof(uint32_t);
+    for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
+      latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
+      latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
+    }
 
-    memcpy((unsigned char*) &m_received_kinect_timestamp_back_, (unsigned char*) &header_data[header_data_offset], sizeof(float));
-    header_data_offset +=  sizeof(float);
-    
-    memcpy((unsigned char*) &m_received_reconstruction_time_back_, (unsigned char*) &header_data[header_data_offset], sizeof(float));
-    header_data_offset +=  sizeof(float);
+    num_voxels_received                    = message_header.num_points;
+    m_received_vertex_colored_points_back_ = message_header.num_vertex_col_points;
+    m_received_vertex_colored_tris_back_   = message_header.num_vertex_col_triangles;
+    m_received_textured_tris_back_         = message_header.num_textured_triangles;
+    m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
+
+    m_triangle_texture_atlas_size_back_  = message_header.texture_space_triangle_size;
+    m_received_kinect_timestamp_back_    = message_header.timestamp;
+    m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
+
 
 
 
@@ -337,17 +336,19 @@ void NetKinectArray::readloop() {
     //size_t data_points_byte_size = num_voxels_received * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
     //size_t data_points_byte_size = num_voxels_received * 3 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
 
-    size_t vertex_colored_points_byte_size = m_received_vertex_colored_points_back_ * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
-    size_t vertex_colored_tris_byte_size   = m_received_vertex_colored_tris_back_ * 3 * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
-    size_t textured_tris_byte_size         = m_received_textured_tris_back_       * 3 * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
+    size_t vertex_colored_points_byte_size = m_received_vertex_colored_points_back_ * SGTP::VERTEX_COL_POINT_SIZE ;//sizeof(gua::point_types::XYZ32_RGB8);
+    size_t vertex_colored_tris_byte_size   = m_received_vertex_colored_tris_back_   * SGTP::VERTEX_COL_TRIANGLE_SIZE;//sizeof(gua::point_types::XYZ32_RGB8);
+    size_t textured_tris_byte_size         = m_received_textured_tris_back_         * SGTP::TEXTURED_TRIANGLE_SIZE;//sizeof(gua::point_types::XYZ32_RGB8);
+
+    //std::cout << "RECEIVED TRIANGLES: " << m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_ << "\n";
 
     size_t total_payload_byte_size = vertex_colored_points_byte_size + vertex_colored_tris_byte_size + textured_tris_byte_size;
     m_buffer_back_.resize(total_payload_byte_size);
 
-    memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size, total_payload_byte_size);
+    memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_payload_byte_size);
 
     m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
-    memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + header_byte_size + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+    memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
     //std::cout << "COPYIING NUM BYTES TO BUFFER: " << total_payload_byte_size << "\n";
   
     { // swap
