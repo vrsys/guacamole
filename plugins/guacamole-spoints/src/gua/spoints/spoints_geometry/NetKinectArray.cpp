@@ -4,7 +4,7 @@
 #include <boost/assign/list_of.hpp>
 
 
-#include <gua/spoints/spoints_geometry/SGTP/SGTP.h>
+#include <gua/spoints/sgtp/SGTP.h>
 
 #include <zmq.hpp>
 #include <iostream>
@@ -283,20 +283,6 @@ void NetKinectArray::readloop() {
 
     size_t num_voxels_received{0};
 
-    // num points -> 8 byte
-    // bb_min     -> 3*4 byte
-    // bb_max     -> 3*4 byte
-    // remote_server_screen_width  -> 4  byte
-    // remote_server_screen_height -> 4  byte
-    //--------------------------------------
-    //                                40 byte 
-    // m_voxel_size                -> 4 byte
-
-   // std::cout << "ABOUT TO READ: " << m_received_vertex_colored_points_back_ << "\n";
-
-    size_t header_data_offset = 0;
-
-
     for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
       latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
       latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
@@ -313,20 +299,6 @@ void NetKinectArray::readloop() {
     m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
 
-
-
-/*
-    memcpy((char*) &remote_server_screen_width_, (char*)&header_data[header_data_offset], sizeof(unsigned));
-    header_data_offset += sizeof(unsigned);
-    memcpy((char*) &remote_server_screen_height_, (char*)&header_data[header_data_offset], sizeof(unsigned));
-    header_data_offset += sizeof(unsigned);
-
-    memcpy((char*) &m_voxel_size_back_, (char*)&header_data[header_data_offset], sizeof(float));
-    header_data_offset += sizeof(float);
-  */  
-    //std::cout << "NUM COL POINTS RECEIVED: " << m_received_vertex_colored_points_back_ << "\n";
-    //std::cout << "NUM COL TRIS RECEIVED: " << m_received_vertex_colored_tris_back_ << "\n";
-    //std::cout << "NUM TEXTURED TRIS RECEIVED: " << m_received_textured_tris_back_ << "\n";
 
     size_t total_num_received_primitives = m_received_vertex_colored_points_back_ + m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_;
 
@@ -349,7 +321,6 @@ void NetKinectArray::readloop() {
 
     m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
     memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
-    //std::cout << "COPYIING NUM BYTES TO BUFFER: " << total_payload_byte_size << "\n";
   
     { // swap
       std::lock_guard<std::mutex> lock(m_mutex_);
