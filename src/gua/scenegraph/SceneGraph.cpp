@@ -145,7 +145,7 @@ std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_nod
                           : find_node(path_to_start));
 
     for (auto const& node_name : parser.get_parsed_path()) {
-      for (auto child : to_be_found->get_children()) {
+      for (auto const& child : to_be_found->get_children()) {
             if (child->get_name() == node_name) {
                 to_be_found = child;
                 break;
@@ -165,9 +165,9 @@ std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_nod
 bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
                            std::string const & child_name) const {
 
-    auto children(parent->get_children());
+    auto const& children(parent->get_children());
 
-    for (auto child : children) {
+    for (auto const& child : children) {
         if (child->get_name() == child_name) {
             return true;
         }

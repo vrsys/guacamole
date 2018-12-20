@@ -17,13 +17,13 @@ namespace gua
 namespace nrp
 {
 NRPBinder::NRPBinder()
-    : _worker_mutex(), _scene(),
-
+    : _worker_mutex(), _scene()/*,
 #if GUA_DEBUG == 1
       _log("transport", NRPLog::LOG_LEVEL::DEBUG)
 #else
       _log("transport", NRPLog::LOG_LEVEL::ERROR)
 #endif
+*/
 
 {
     _worker_should_stop.store(false);
@@ -51,6 +51,7 @@ void NRPBinder::pre_render() { _scene.pre_render(); }
 
 void NRPBinder::_connect_to_transport_layer()
 {
+/*
 #if GUA_DEBUG == 1
     NRPLog log("worker", NRPLog::LOG_LEVEL::DEBUG);
 #else
@@ -58,29 +59,30 @@ void NRPBinder::_connect_to_transport_layer()
 #endif
 
     log.d("setup");
-
+*/
     gazebo::common::load();
 
     sdf::setFindCallback(boost::bind(&gazebo::common::find_file, _1));
 
     if(!gazebo::transport::init("orpheus", 11345, 1))
     {
-        log.e("Unable to initialize transport");
-        throw std::runtime_error("Unable to initialize transport");
+        std::string const error_message = "Unable to initialize transport";
+        //log.e(error_message);
+        throw std::runtime_error(error_message);
     }
 
-    log.d("starting the model database, fetching models immediately");
+    //log.d("starting the model database, fetching models immediately");
 
     gazebo::common::ModelDatabase::Instance()->Start(true);
 
     gazebo::transport::run();
 
-    log.d("init transport node");
+    //log.d("init transport node");
 
     gazebo::transport::NodePtr node = boost::make_shared<gazebo::transport::Node>();
     node->Init();
 
-    log.d("begin subscription");
+    //log.d("begin subscription");
 
     //    gazebo::transport::SubscriberPtr sub_scene = node->Subscribe("/gazebo/default/scene", &NRPBinder::callback_scene, this);
     //
@@ -97,13 +99,13 @@ void NRPBinder::_connect_to_transport_layer()
     gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
-    log.d("subscription done");
+    //log.d("subscription done");
 
     gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 120, 30);
 
     if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
     {
-        log.e("no interactive node subscribers available");
+        //log.e("no interactive node subscribers available");
 
         _publish_interactive.store(false);
         pub_interactive.reset();
@@ -111,7 +113,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     if(pub_request->WaitForConnection(gazebo::common::Time(5, 0)))
     {
-        log.d("connection established");
+        //log.d("connection established");
 
         std::unique_lock<std::mutex> lk(_worker_mutex);
         while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _worker_should_stop.load(); }))
@@ -238,7 +240,7 @@ void NRPBinder::_connect_to_transport_layer()
     }
     else
     {
-        log.e("connection not established");
+        //log.e("connection not established");
 
         throw std::runtime_error("connection not established");
     }
@@ -265,7 +267,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     gazebo::common::ModelDatabase::Instance()->Fini();
 
-    log.d("over");
+    //log.d("over");
 }
 void NRPBinder::_halt_transport_layer()
 {
@@ -278,8 +280,8 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
     auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-    _log.d("callback_response");
-    _log.d(ptr->request().c_str());
+    //_log.d("callback_response");
+    //_log.d(ptr->request().c_str());
 
     if(ptr->request() == "scene_info")
     {
@@ -287,10 +289,10 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
 
         if(scene_msg.ParseFromString(ptr->serialized_data()))
         {
-            _log.d(scene_msg.DebugString().c_str());
+            //_log.d(scene_msg.DebugString().c_str());
             _scene.on_scene_msg(boost::make_shared<const gazebo::msgs::Scene>(scene_msg));
 
-            _scene_initialized.store(true);
+            //_scene_initialized.store(true);
         }
     }
     else if(ptr->request() == "entity_list")
@@ -299,7 +301,7 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
 
         if(models_msg.ParseFromString(ptr->serialized_data()))
         {
-            _log.d(models_msg.DebugString().c_str());
+            //_log.d(models_msg.DebugString().c_str());
             for(uint32_t i = 0; i < models_msg.models().size(); i++)
             {
                 _scene.on_model_msg(boost::make_shared<const gazebo::msgs::Model>(models_msg.models(i)));
@@ -316,53 +318,53 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
 }
 void NRPBinder::callback_world(ConstWorldStatisticsPtr &_msg)
 {
-    _log.d("callback_world");
-    _log.d(_msg->DebugString().c_str());
+    //_log.d("callback_world");
+    //_log.d(_msg->DebugString().c_str());
 }
 void NRPBinder::callback_material(ConstMaterialPtr &_msg)
 {
-    _log.d("callback_material");
-    _log.d(_msg->DebugString().c_str());
+    //_log.d("callback_material");
+    //_log.d(_msg->DebugString().c_str());
 }
 void NRPBinder::callback_skeleton_pose_info(ConstPoseAnimationPtr &ptr)
 {
-    _log.d("callback_skeleton_pose_info");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_skeleton_pose_info");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_skeleton_pose_msg(ptr);
 }
 void NRPBinder::callback_model_info(ConstModelPtr &ptr)
 {
-    _log.d("callback_model_info");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_model_info");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_model_msg(ptr);
 }
 void NRPBinder::callback_pose_info(ConstPosesStampedPtr &ptr)
 {
-    _log.d("callback_pose_info");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_pose_info");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_pose_msg(ptr);
 }
 void NRPBinder::callback_scene(ConstScenePtr &ptr)
 {
-    _log.d("callback_scene");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_scene");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_scene_msg(ptr);
 }
 void NRPBinder::callback_factory_light(ConstLightPtr &ptr)
 {
-    _log.d("callback_factory_light");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_factory_light");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_light_factory_msg(ptr);
 }
 void NRPBinder::callback_modify_light(ConstLightPtr &ptr)
 {
-    _log.d("callback_modify_light");
-    _log.d(ptr->DebugString().c_str());
+    //_log.d("callback_modify_light");
+    //_log.d(ptr->DebugString().c_str());
 
     _scene.on_light_modify_msg(ptr);
 }

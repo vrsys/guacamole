@@ -446,7 +446,7 @@ class GUA_DLL Node {
   *
   * \return node     A pointer of the recently generated Node.
   */
-  std::shared_ptr<Node> deep_copy() const;
+  virtual std::shared_ptr<Node> deep_copy() const;
 
 
   SceneGraph* get_scenegraph() const {

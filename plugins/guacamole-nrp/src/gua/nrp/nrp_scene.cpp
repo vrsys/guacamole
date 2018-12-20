@@ -760,62 +760,75 @@ void NRPScene::pre_render()
                 }
                 model_msgs_copy.erase(model_msgs_iter++);
             }
-            else
+            else {
                 ++model_msgs_iter;
+            }
         }
     }
 
     // Process the light factory messages.
     for(auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
     {
-        if(this->process_light_factory_msg(*light_factory_iter))
+        if(this->process_light_factory_msg(*light_factory_iter)) {
             light_factory_msgs_copy.erase(light_factory_iter++);
-        else
+        }
+        else {
             ++light_factory_iter;
+        }
     }
 
     // Process the light modify messages.
     for(auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
     {
-        if(this->process_light_modify_msg(*light_modify_iter))
+        if(this->process_light_modify_msg(*light_modify_iter)) {
             light_modify_msgs_copy.erase(light_modify_iter++);
-        else
+        }
+        else {
             ++light_modify_iter;
+        }
     }
 
     for(auto model_visual_msgs_iter = model_visual_msgs_copy.begin(); model_visual_msgs_iter != model_visual_msgs_copy.end();)
     {
-        if(this->process_visual_msg(*model_visual_msgs_iter, NRPVisual::VT_MODEL))
+        if(this->process_visual_msg(*model_visual_msgs_iter, NRPVisual::VT_MODEL)) {
             model_visual_msgs_copy.erase(model_visual_msgs_iter++);
-        else
+        }
+        else {
             ++model_visual_msgs_iter;
+        }
     }
 
     for(auto link_visual_msgs_iter = link_visual_msgs_copy.begin(); link_visual_msgs_iter != link_visual_msgs_copy.end();)
     {
-        if(this->process_visual_msg(*link_visual_msgs_iter, NRPVisual::VT_LINK))
+        if(this->process_visual_msg(*link_visual_msgs_iter, NRPVisual::VT_LINK)) {
             link_visual_msgs_copy.erase(link_visual_msgs_iter++);
-        else
+        }
+        else {
             ++link_visual_msgs_iter;
+        }
     }
 
     for(auto visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
     {
         for(visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
         {
-            if(this->process_visual_msg(*visual_msgs_iter))
+            if(this->process_visual_msg(*visual_msgs_iter)) {
                 visual_msgs_copy.erase(visual_msgs_iter++);
-            else
+            }
+            else {
                 ++visual_msgs_iter;
+            }
         }
     }
 
     for(auto link_msgs_iter = link_msgs_copy.begin(); link_msgs_iter != link_msgs_copy.end();)
     {
-        if(this->process_link_msg(*link_msgs_iter))
+        if(this->process_link_msg(*link_msgs_iter)) {
             link_msgs_copy.erase(link_msgs_iter++);
-        else
+        }
+        else {
             ++link_msgs_iter;
+        }
     }
 
     {
@@ -838,11 +851,9 @@ void NRPScene::pre_render()
         // only when a corresponding visual exits. We may receive pose updates
         // over the wire before  we recieve the visual
         auto pose_msgs_iter = _msgs_pose.begin();
-        while(pose_msgs_iter != _msgs_pose.end())
-        {
+        while(pose_msgs_iter != _msgs_pose.end()) {
             auto iter = _visuals.find(pose_msgs_iter->first);
-            if(iter != _visuals.end() && iter->second)
-            {
+            if(iter != _visuals.end() && iter->second) {
                 ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msgs_iter->second);
                 iter->second->set_pose(pose);
 
@@ -878,8 +889,9 @@ void NRPScene::pre_render()
                 auto prev = skeleton_pose_iter++;
                 _msgs_skeleton_pose.erase(prev);
             }
-            else
+            else {
                 ++skeleton_pose_iter;
+            }
         }
     }
 
