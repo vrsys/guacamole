@@ -115,11 +115,13 @@
 
 // Linux, Apple
 #if GUA_PLATFORM == GUA_PLATFORM_LINUX || GUA_PLATFORM == GUA_PLATFORM_APPLE
-  #ifndef NDEBUG
+  /*#ifndef NDEBUG
     #define GUA_DEBUG 1
   #else
     #define GUA_DEBUG 0
   #endif
+  */
+  #define GUA_DEBUG 0
 #endif
 
 #endif  // namespace GUA_PLATFORM_HPP

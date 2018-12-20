@@ -116,13 +116,11 @@ void TextureDatabase::load(std::string const& filename) {
       virtual_textures_[filename] = vt_pointer;
     }
 
-
-
   #else
     Logger::LOG_ERROR << "Unable to load .atlas-Texture: Virtual Texturing plugin is not enabled!" << std::endl;
   #endif
   } else {
-    Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
+    //Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
     return;
   }
 
@@ -134,6 +132,30 @@ void TextureDatabase::load(std::string const& filename) {
 
 
 }
+
+int32_t TextureDatabase::get_global_texture_id_by_path(std::string const& tex_path) const {
+  auto texture_it = texture_path_to_global_id_mapping_.find(tex_path);
+  if(texture_path_to_global_id_mapping_.end() != texture_it) {
+    return texture_it->second;
+  }
+
+  //Logger::LOG_ERROR << "Texture ID for \"" << tex_path << "\" was not registered." << std::endl;
+  return -1;
+}
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+std::vector<std::shared_ptr<VirtualTexture2D> > TextureDatabase::get_virtual_textures() {
+  std::vector< std::shared_ptr<VirtualTexture2D> > virtual_texture_ptrs;
+
+  for(auto const& vt : virtual_textures_) {
+    virtual_texture_ptrs.push_back(vt.second);
+  }
+
+  return virtual_texture_ptrs;
+}
+#endif
+
+
 
 int32_t TextureDatabase::get_global_texture_id_by_path(std::string const& tex_path) const {
   auto texture_it = texture_path_to_global_id_mapping_.find(tex_path);

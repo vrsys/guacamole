@@ -79,7 +79,7 @@ class GUA_NRP_DLL NRPBinder
     std::mutex _worker_mutex;
     std::condition_variable _worker_cv;
 
-    NRPLog _log;
+    //NRPLog _log;
     NRPScene _scene;
 
     std::atomic_bool _scene_initialized;

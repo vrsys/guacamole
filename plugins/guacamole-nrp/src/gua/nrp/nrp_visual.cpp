@@ -229,7 +229,9 @@ bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, 
         generate_random_name();
     }
 
-    unsigned int flags = !normalize_shape ? gua::TriMeshLoader::LOAD_MATERIALS : gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION;
+    unsigned int flags = gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::PARSE_HIERARCHY;
+
+    flags |= (!normalize_shape ? 0 : gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION);
 
     std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(_mesh_random_name, mesh_name, flags);
 
