@@ -107,7 +107,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(std::string const &file
     return cached_node;
 }
 
-/////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, std::shared_ptr<Material> const &fallback_material, unsigned flags)
 {
@@ -126,8 +126,7 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string
     return std::make_shared<node::TransformNode>(node_name);
 }
 
-            importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-            importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
+////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, unsigned flags)
 {
@@ -147,9 +146,7 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string
     return std::make_shared<node::TransformNode>(node_name);
 }
 
-            return new_node;
-        }
-    }
+/////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, unsigned flags)
 {
@@ -250,34 +247,6 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
             return new_node;
         }
     }
-#endif
-    return importer.IsExtensionSupported(file_name.substr(point_pos + 1));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#ifdef GUACAMOLE_FBX
-std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::string const &file_name, unsigned flags, unsigned &mesh_count)
-{
-    // creates a geometry node and returns it
-    auto load_geometry = [&](FbxNode &fbx_node) {
-        FbxMesh *fbx_mesh = fbx_node.GetMesh();
-
-        GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
-        GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh}, flags & TriMeshLoader::MAKE_PICKABLE));
-
-        // load material
-        std::shared_ptr<Material> material;
-
-        if(fbx_node.GetMaterialCount() > 0 && flags & TriMeshLoader::LOAD_MATERIALS)
-        {
-            MaterialLoader material_loader;
-            if(fbx_node.GetMaterialCount() > 1)
-            {
-                Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
-            }
-            FbxSurfaceMaterial *mat = fbx_node.GetMaterial(0);
-            material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
-        }
 
     Logger::LOG_WARNING << "Failed to load object \"" << file_name << "\": File does not exist!" << std::endl;
 
@@ -415,50 +384,50 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     };
 
     if(!enforce_hierarchy) {
-       // there is only one child -- skip it!
-       if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
-       {
-           //std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
-    
-           auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
-           node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
-           return node;
-       }
-    
-       // there is only one geometry --- return it!
-       if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
-       {
-           //std::cout << "no children, one mesh" << std::endl;
-    
-           auto node = load_geometry(ai_root, 0);
-           // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
-           return node;
-       }
-    
-       //std::cout << "multiple children" << std::endl;
-    
-       // else: there are multiple children and meshes
-       auto group(std::make_shared<node::TransformNode>());
-    
-       apply_transformation(group, ai_root->mTransformation);
-    
-       for(unsigned i(0); i < ai_root->mNumMeshes; ++i)
-       {
-           group->add_child(load_geometry(ai_root, i));
-       }
-    
-       for(unsigned i(0); i < ai_root->mNumChildren; ++i)
-       {
-           //std::cout << ai_root->mChildren[i]->mName.data << std::endl;
-    
-           auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name, flags, mesh_count, enforce_hierarchy);
-           auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
-           apply_transformation(child, child_transform_ai);
-    
-           group->add_child(child);
-       }
-    
-       return group;
+        // there is only one child -- skip it!
+        if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
+        {
+            //std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
+
+            auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
+            node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
+            return node;
+        }
+
+        // there is only one geometry --- return it!
+        if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
+        {
+            //std::cout << "no children, one mesh" << std::endl;
+
+            auto node = load_geometry(ai_root, 0);
+            // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
+            return node;
+        }
+
+        //std::cout << "multiple children" << std::endl;
+
+        // else: there are multiple children and meshes
+        auto group(std::make_shared<node::TransformNode>());
+
+        apply_transformation(group, ai_root->mTransformation);
+
+        for(unsigned i(0); i < ai_root->mNumMeshes; ++i)
+        {
+            group->add_child(load_geometry(ai_root, i));
+        }
+
+        for(unsigned i(0); i < ai_root->mNumChildren; ++i)
+        {
+            //std::cout << ai_root->mChildren[i]->mName.data << std::endl;
+
+            auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name, flags, mesh_count, enforce_hierarchy);
+            auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
+            apply_transformation(child, child_transform_ai);
+
+            group->add_child(child);
+        }
+
+        return group;
     } else {
         struct ai_gua_node
         {
@@ -496,7 +465,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     }
 }
 
-void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
+////////////////////////////////////////////////////////////////////////////////
 
 void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const &root, std::shared_ptr<Material> const &fallback_material, bool no_shared_materials)
 {
