@@ -30,6 +30,8 @@ class GUA_NRP_DLL NRPLight
     void set_pose(const gazebo::math::Pose &pose);
     void set_direction(const gazebo::msgs::Vector3d &direction);
 
+    gua::TriMeshLoader _tml;
+
     std::shared_ptr<gua::node::LightNode> _node;
     double _scale;
     scm::math::mat4d _direction;

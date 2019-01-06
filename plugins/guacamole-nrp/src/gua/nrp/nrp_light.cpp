@@ -23,11 +23,11 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         if(msg->cast_shadows())
         {
             _node->data.set_shadow_map_size(4096);
-            _node->data.set_max_shadow_dist(1000);
-            _node->data.set_shadow_offset(0.00001f);
+            _node->data.set_max_shadow_dist(20.f);
+            _node->data.set_shadow_offset(0.005f);
             _node->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.f, 10.f});
             _node->data.set_shadow_near_clipping_in_sun_direction(0.f);
-            _node->data.set_shadow_far_clipping_in_sun_direction(10.f);
+            _node->data.set_shadow_far_clipping_in_sun_direction(20.f);
         }
     }
 
@@ -37,7 +37,6 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
     }
 
     // specular component predominantly weak
-    _node->data.set_enable_specular_shading(false);
 
     if(msg->has_specular())
     {
@@ -46,10 +45,10 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         // specular color not used if diffuse is given
         _node->data.set_color(gua::utils::Color3f(msg->specular().r(), msg->specular().g(), msg->specular().b()));
     }
-    // else
-    //{
-    //_node->data.set_enable_specular_shading(false);
-    //}
+    else
+    {
+        _node->data.set_enable_specular_shading(false);
+    }
 
     if(msg->has_diffuse())
     {
@@ -73,7 +72,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
             _node->data.set_falloff(2.f);
             _node->data.set_softness(2.f);
 
-            _node->data.set_brightness(20);
+            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
@@ -93,7 +92,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
                 set_direction(msg->direction());
             }
 
-            _node->data.set_brightness(10 * (msg->diffuse().r() + msg->diffuse().g() + msg->diffuse().b()) / 3.0f);
+            _node->data.set_brightness(10.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
@@ -104,7 +103,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
             _node->data.set_falloff(2.f);
             _node->data.set_softness(2.f);
 
-            _node->data.set_brightness(20);
+            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
@@ -115,6 +114,13 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
     {
         set_pose(gazebo::msgs::ConvertIgn(msg->pose()));
     }
+
+    // TODO: figure out proxy geometry
+
+     auto light_proxy_geometry(_tml.create_geometry_from_file("light_proxy", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj",
+                                                             gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+     light_proxy_geometry->scale(0.02);
+    _node->add_child(light_proxy_geometry);
 }
 void NRPLight::set_pose(const gazebo::math::Pose &pose)
 {

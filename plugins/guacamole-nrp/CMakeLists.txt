@@ -63,7 +63,8 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION resources
         PATTERN "*.teval"
         PATTERN "*.obj"
         PATTERN "*.mtl"
-        PATTERN "*.gmd")
+        PATTERN "*.gmd"
+        PATTERN "*.jpg")
 
 add_library(nrp_plugin_world SHARED nrp_plugins/GuaWorldPlugin.cpp nrp_plugins/GuaWorldPlugin.hpp)
 target_include_directories(nrp_plugin_world PUBLIC ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})

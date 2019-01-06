@@ -96,6 +96,7 @@ class GUA_NRP_DLL NRPBinder
     void callback_pose_info(ConstPosesStampedPtr &ptr);
     void callback_factory_light(ConstLightPtr &ptr);
     void callback_modify_light(ConstLightPtr &ptr);
+    void callback_sky(ConstSkyPtr &ptr);
     void callback_scene(ConstScenePtr &ptr);
     void callback_response(ConstResponsePtr &ptr);
 };

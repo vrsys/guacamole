@@ -24,6 +24,12 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
     void rotate(math::float_t angle, math::vec3 const &axis) override;
     void translate(math::float_t x, math::float_t y, math::float_t z) override;
     void translate(math::vec3 const &offset) override;
+
+    void accept(NodeVisitor &visitor) override;
+    void ray_test_impl(Ray const &ray, int options, Mask const &mask, std::set<PickResult> &hits) override;
+
+  private:
+    std::shared_ptr<node::Node> copy() const override;
 };
 }
 }

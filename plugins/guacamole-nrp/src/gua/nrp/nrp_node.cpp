@@ -21,8 +21,18 @@ NRPNode::NRPNode(const std::string &name, const math::mat4 &transform) : Transfo
 std::shared_ptr<node::Node> NRPNode::deep_copy() const
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
-    auto copied_node = node::Node::deep_copy();
+    auto copied_node = node::TransformNode::deep_copy();
     return copied_node;
+}
+void NRPNode::accept(NodeVisitor &visitor)
+{
+    std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    visitor.visit(this);
+}
+std::shared_ptr<node::Node> NRPNode::copy() const
+{
+    // std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    return std::make_shared<NRPNode>(*this);
 }
 void NRPNode::update_cache()
 {
@@ -68,6 +78,11 @@ void NRPNode::translate(math::vec3 const &offset)
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
     Node::translate(offset);
+}
+void NRPNode::ray_test_impl(Ray const &ray, int options, Mask const &mask, std::set<PickResult> &hits)
+{
+    std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    Node::ray_test_impl(ray, options, mask, hits);
 }
 }
 }
