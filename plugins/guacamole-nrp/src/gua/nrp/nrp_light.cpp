@@ -114,13 +114,6 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
     {
         set_pose(gazebo::msgs::ConvertIgn(msg->pose()));
     }
-
-    // TODO: figure out proxy geometry
-
-     auto light_proxy_geometry(_tml.create_geometry_from_file("light_proxy", std::string(GUACAMOLE_INSTALL_DIR) + "/resources/geometry/primitive_sphere.obj",
-                                                             gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-     light_proxy_geometry->scale(0.02);
-    _node->add_child(light_proxy_geometry);
 }
 void NRPLight::set_pose(const gazebo::math::Pose &pose)
 {
