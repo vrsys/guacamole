@@ -1,13 +1,14 @@
 #include <utility>
 
 #include <gua/nrp/nrp_scene.hpp>
+#include <gua/renderer/PBSMaterialFactory.hpp>
 namespace gua
 {
 namespace nrp
 {
 NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(name), _parent(), _node()
 {
-    std::shared_ptr<gua::node::TransformNode> node = root_node->add_child(std::make_shared<gua::node::TransformNode>("/transform/" + name));
+    std::shared_ptr<gua::node::TransformNode> node = root_node->add_child(std::make_shared<gua::node::TransformNode>(name));
     _node.reset(node.get());
 
     _node->set_transform(gua::math::mat4::identity());
@@ -15,8 +16,8 @@ NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(nam
 }
 NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node()
 {
-    auto node(std::make_shared<gua::node::TransformNode>(name));
-    _node.reset(parent->get_node()->add_child(node).get());
+    std::shared_ptr<gua::node::TransformNode> node = parent->get_node()->add_child(std::make_shared<gua::node::TransformNode>(name));
+    _node.reset(node.get());
 
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
@@ -207,6 +208,7 @@ void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual con
 
             set_material(ambient, diffuse, specular, emissive);
         }
+
     }
 #if GUA_DEBUG == 1
     auto end = std::chrono::high_resolution_clock::now();
@@ -229,7 +231,7 @@ bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, 
         generate_random_name();
     }
 
-    unsigned int flags = gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::PARSE_HIERARCHY;
+    unsigned int flags = gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::PARSE_HIERARCHY | gua::TriMeshLoader::MAKE_PICKABLE;
 
     flags |= (!normalize_shape ? 0 : gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION);
 
@@ -269,14 +271,30 @@ void NRPVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse,
             std::shared_ptr<gua::node::TriMeshNode> tm_candidate = std::dynamic_pointer_cast<gua::node::TriMeshNode>(top);
             if(tm_candidate)
             {
+                auto material(gua::PBSMaterialFactory::create_material(static_cast<gua::PBSMaterialFactory::Capabilities>(
+                    gua::PBSMaterialFactory::COLOR_VALUE | gua::PBSMaterialFactory::METALNESS_VALUE | gua::PBSMaterialFactory::ROUGHNESS_VALUE | gua::PBSMaterialFactory::EMISSIVITY_VALUE)));
+                material->set_uniform("Color", gua::math::vec4f((float)ambient.r, (float)ambient.g, (float)ambient.b, 1.f));
+
+                float max_spec = std::max(specular.r,std::max(specular.g,specular.b));
+                float max_diff = std::max(diffuse.r,std::max(diffuse.g,diffuse.b));
+                float mtro = (max_spec - max_diff + 1.f) / 2.f;
+
+                material->set_uniform("Metalness", mtro);
+                material->set_uniform("Roughness", 1.f - mtro);
+                material->set_uniform("Emissivity", (float)(emissive.r + emissive.g + emissive.b) / 3.f);
+
+                tm_candidate->set_material(material);
+
+#if 0
                 auto material = gua::MaterialShaderDatabase::instance()->lookup("overwrite_color")->make_new_material();
 
                 material->set_uniform("color", gua::math::vec3f((float)ambient.r, (float)ambient.g, (float)ambient.b));
                 material->set_uniform("metalness", (float)(specular.r + specular.g + specular.b) / 3.f);
-                material->set_uniform("roughness", (float)(diffuse.r + specular.g + specular.b) / 3.f);
+                material->set_uniform("roughness", (float)(diffuse.r + diffuse.g + diffuse.b) / 3.f);
                 material->set_uniform("emissivity", (float)(emissive.r + emissive.g + emissive.b) / 3.f);
 
                 tm_candidate->set_material(material);
+#endif
 
                 // std::cout << "Material set to: " << ambient << std::endl;
             }

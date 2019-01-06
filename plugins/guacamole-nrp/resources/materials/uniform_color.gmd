@@ -11,7 +11,7 @@
         {
           gua_color = color;
           gua_metalness = metalness;
-          gua_roughness = roughness; 
+          gua_roughness = roughness;
           gua_emissivity = emissivity;
         }
       ",
@@ -20,12 +20,12 @@
         {
           "name" : "metalness",
           "type" : "float",
-          "value" : "1.0"
+          "value" : "0.0"
         },
         {
           "name" : "roughness",
           "type" : "float",
-          "value" : "0.2"
+          "value" : "0.0"
         },
         {
           "name" : "emissivity",

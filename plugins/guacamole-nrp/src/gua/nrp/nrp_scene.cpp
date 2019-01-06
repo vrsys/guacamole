@@ -647,16 +647,20 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
     if(msg->has_ambient() && _cam_node != nullptr)
     {
         auto pipe = _cam_node->get_pipeline_description();
-        pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+
+        pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
         pipe->get_resolve_pass()->environment_lighting(gua::utils::Color3f(msg->ambient().r(), msg->ambient().g(), msg->ambient().b()));
+        pipe->get_resolve_pass()->environment_lighting_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/clouds.jpg");
         pipe->get_resolve_pass()->touch();
     }
 
     if(msg->has_background() && _cam_node != nullptr)
     {
         auto pipe = _cam_node->get_pipeline_description();
-        pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
+
         pipe->get_resolve_pass()->background_color(gua::utils::Color3f(msg->background().r(), msg->background().g(), msg->background().b()));
+        pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+        pipe->get_resolve_pass()->background_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/clouds.jpg");
         pipe->get_resolve_pass()->touch();
     }
 
@@ -684,6 +688,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
     {
         // ignore fog
     }
+
     return true;
 }
 void NRPScene::pre_render()
