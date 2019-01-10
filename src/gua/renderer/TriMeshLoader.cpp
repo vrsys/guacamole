@@ -38,6 +38,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/version.h>
 #ifdef GUACAMOLE_FBX
 #include <fbxsdk.h>
 #endif // GUACAMOLE_FBX
@@ -375,7 +376,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         {
             MaterialLoader material_loader;
             aiMaterial const *ai_material(ai_scene->mMaterials[material_index]);
-            material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
+            material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
         }
 
         // return std::make_shared<node::TriMeshNode>("", desc.unique_key(),

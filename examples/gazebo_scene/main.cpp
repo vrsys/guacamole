@@ -5,6 +5,7 @@
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <memory>
 
@@ -61,9 +62,20 @@ int main(int argc, char **argv)
 
     /// InteractiveNode subhierarchy: begin
 
-    auto teapot_1 = loader.create_geometry_from_file("teapot_1", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
+    // create material
+    auto uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/materials/uniform_color.gmd");
+    auto uniform_color_shader (std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
+    gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
+    auto rough_white = uniform_color_shader->make_new_material();
+
+    rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
+    rough_white->set_uniform("metalness", 0.0f);
+    rough_white->set_uniform("roughness", 1.0f);
+    rough_white->set_uniform("emissivity", 0.0f);
+
+    auto teapot_1 = loader.create_geometry_from_file("teapot_1", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
     teapot_1->translate(1., 0., 0.);
-    auto teapot_2 = loader.create_geometry_from_file("teapot_2", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
+    auto teapot_2 = loader.create_geometry_from_file("teapot_2", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
     teapot_1->add_child(teapot_2);
     teapot_2->translate(0., 1., 0.);
     nrp_interactive->add_child(teapot_1);
@@ -93,6 +105,7 @@ int main(int argc, char **argv)
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     // pipe->add_pass(std::make_shared<gua::SSAOPassDescription>());
     pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
+    pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
 
@@ -102,10 +115,9 @@ int main(int argc, char **argv)
     // pipe->get_resolve_pass()->ssao_radius(4.0);
 
     pipe->get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
-    pipe->get_ssaa_pass()->fxaa_quality_subpix(1.00f);
+    pipe->get_ssaa_pass()->fxaa_quality_subpix(1.f);
     pipe->get_ssaa_pass()->fxaa_edge_threshold(0.125f);
-    pipe->get_ssaa_pass()->fxaa_threshold_min(0.0312f);
-    pipe->get_ssaa_pass()->enable_pinhole_correction(true);
+    pipe->get_ssaa_pass()->fxaa_threshold_min(0.0625f);
 
     camera->set_pipeline_description(pipe);
 

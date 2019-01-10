@@ -302,6 +302,7 @@ void NRPScene::set_root_node(gua::nrp::NRPNode *root_node)
 {
     _mutex_scenegraph.lock();
     _root_node = root_node;
+    _is_root_not_initialized = true;
     _world_visual.reset(new NRPVisual("world_visual", _root_node));
     _mutex_scenegraph.unlock();
 }
@@ -650,7 +651,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 
         pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
         pipe->get_resolve_pass()->environment_lighting(gua::utils::Color3f(msg->ambient().r(), msg->ambient().g(), msg->ambient().b()));
-        pipe->get_resolve_pass()->environment_lighting_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/clouds.jpg");
+        pipe->get_resolve_pass()->environment_lighting_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/skyblur.jpg");
         pipe->get_resolve_pass()->touch();
     }
 
@@ -660,7 +661,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 
         pipe->get_resolve_pass()->background_color(gua::utils::Color3f(msg->background().r(), msg->background().g(), msg->background().b()));
         pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
-        pipe->get_resolve_pass()->background_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/clouds.jpg");
+        pipe->get_resolve_pass()->background_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/skyblur.jpg");
         pipe->get_resolve_pass()->touch();
     }
 
@@ -693,212 +694,245 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 }
 void NRPScene::pre_render()
 {
-    std::unique_lock<std::mutex> lock_scene(_mutex_scenegraph);
+    _root_node->callback_pre_pass();
+
+    bool contains_scene_message = !_msgs_scene.empty();
+
+    {
+        std::unique_lock<std::mutex> lock_scene(_mutex_scenegraph);
 
 #if GUA_DEBUG == 1
-    auto start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-    scene_msgs_list scene_msgs_copy;
-    model_msgs_list model_msgs_copy;
-    light_msgs_list light_factory_msgs_copy;
-    light_msgs_list light_modify_msgs_copy;
-    visual_msgs_list model_visual_msgs_copy;
-    visual_msgs_list link_visual_msgs_copy;
-    visual_msgs_list visual_msgs_copy;
-    link_msgs_list link_msgs_copy;
+        scene_msgs_list scene_msgs_copy;
+        model_msgs_list model_msgs_copy;
+        light_msgs_list light_factory_msgs_copy;
+        light_msgs_list light_modify_msgs_copy;
+        visual_msgs_list model_visual_msgs_copy;
+        visual_msgs_list link_visual_msgs_copy;
+        visual_msgs_list visual_msgs_copy;
+        link_msgs_list link_msgs_copy;
 
-    {
-        std::lock_guard<std::mutex> lock(_mutex_receive);
-
-        std::copy(_msgs_scene.begin(), _msgs_scene.end(), std::back_inserter(scene_msgs_copy));
-        _msgs_scene.clear();
-
-        std::copy(_msgs_model.begin(), _msgs_model.end(), std::back_inserter(model_msgs_copy));
-        _msgs_model.clear();
-
-        std::copy(_msgs_light_factory.begin(), _msgs_light_factory.end(), std::back_inserter(light_factory_msgs_copy));
-        _msgs_light_factory.clear();
-
-        std::copy(_msgs_light_modify.begin(), _msgs_light_modify.end(), std::back_inserter(light_modify_msgs_copy));
-        _msgs_light_modify.clear();
-
-        std::copy(_msgs_model_visual.begin(), _msgs_model_visual.end(), std::back_inserter(model_visual_msgs_copy));
-        _msgs_model_visual.clear();
-
-        std::copy(_msgs_link_visual.begin(), _msgs_link_visual.end(), std::back_inserter(link_visual_msgs_copy));
-        _msgs_link_visual.clear();
-
-        _msgs_visual.sort(VisualMessageLessOp);
-        std::copy(_msgs_visual.begin(), _msgs_visual.end(), std::back_inserter(visual_msgs_copy));
-        _msgs_visual.clear();
-
-        std::copy(_msgs_link.begin(), _msgs_link.end(), std::back_inserter(link_msgs_copy));
-        _msgs_link.clear();
-    }
-
-    for(auto scene_msgs_iter = scene_msgs_copy.begin(); scene_msgs_iter != scene_msgs_copy.end();)
-    {
-        if(this->process_scene_msg(*scene_msgs_iter))
         {
-            scene_msgs_copy.erase(scene_msgs_iter++);
+            std::lock_guard<std::mutex> lock(_mutex_receive);
+
+            std::copy(_msgs_scene.begin(), _msgs_scene.end(), std::back_inserter(scene_msgs_copy));
+            _msgs_scene.clear();
+
+            std::copy(_msgs_model.begin(), _msgs_model.end(), std::back_inserter(model_msgs_copy));
+            _msgs_model.clear();
+
+            std::copy(_msgs_light_factory.begin(), _msgs_light_factory.end(), std::back_inserter(light_factory_msgs_copy));
+            _msgs_light_factory.clear();
+
+            std::copy(_msgs_light_modify.begin(), _msgs_light_modify.end(), std::back_inserter(light_modify_msgs_copy));
+            _msgs_light_modify.clear();
+
+            std::copy(_msgs_model_visual.begin(), _msgs_model_visual.end(), std::back_inserter(model_visual_msgs_copy));
+            _msgs_model_visual.clear();
+
+            std::copy(_msgs_link_visual.begin(), _msgs_link_visual.end(), std::back_inserter(link_visual_msgs_copy));
+            _msgs_link_visual.clear();
+
+            _msgs_visual.sort(VisualMessageLessOp);
+            std::copy(_msgs_visual.begin(), _msgs_visual.end(), std::back_inserter(visual_msgs_copy));
+            _msgs_visual.clear();
+
+            std::copy(_msgs_link.begin(), _msgs_link.end(), std::back_inserter(link_msgs_copy));
+            _msgs_link.clear();
         }
-        else
-            ++scene_msgs_iter;
-    }
 
-    if(!model_msgs_copy.empty())
-    {
-        for(auto model_msgs_iter = model_msgs_copy.begin(); model_msgs_iter != model_msgs_copy.end();)
+        for(auto scene_msgs_iter = scene_msgs_copy.begin(); scene_msgs_iter != scene_msgs_copy.end();)
         {
-            if(this->process_model_msg(**model_msgs_iter))
+            if(this->process_scene_msg(*scene_msgs_iter))
             {
-                const gazebo::msgs::Model &modelMsg = **model_msgs_iter;
-                if(modelMsg.visual_size() > 0)
-                {
-                    for(int k = 0; k < modelMsg.visual_size(); k++)
-                    {
-                        boost::shared_ptr<gazebo::msgs::Visual> msgCopy;
-                        msgCopy.reset(new gazebo::msgs::Visual(modelMsg.visual(k)));
-                        visual_msgs_copy.emplace_back(msgCopy);
-                    }
-                }
-                model_msgs_copy.erase(model_msgs_iter++);
-            }
-            else {
-                ++model_msgs_iter;
-            }
-        }
-    }
-
-    // Process the light factory messages.
-    for(auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
-    {
-        if(this->process_light_factory_msg(*light_factory_iter)) {
-            light_factory_msgs_copy.erase(light_factory_iter++);
-        }
-        else {
-            ++light_factory_iter;
-        }
-    }
-
-    // Process the light modify messages.
-    for(auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
-    {
-        if(this->process_light_modify_msg(*light_modify_iter)) {
-            light_modify_msgs_copy.erase(light_modify_iter++);
-        }
-        else {
-            ++light_modify_iter;
-        }
-    }
-
-    for(auto model_visual_msgs_iter = model_visual_msgs_copy.begin(); model_visual_msgs_iter != model_visual_msgs_copy.end();)
-    {
-        if(this->process_visual_msg(*model_visual_msgs_iter, NRPVisual::VT_MODEL)) {
-            model_visual_msgs_copy.erase(model_visual_msgs_iter++);
-        }
-        else {
-            ++model_visual_msgs_iter;
-        }
-    }
-
-    for(auto link_visual_msgs_iter = link_visual_msgs_copy.begin(); link_visual_msgs_iter != link_visual_msgs_copy.end();)
-    {
-        if(this->process_visual_msg(*link_visual_msgs_iter, NRPVisual::VT_LINK)) {
-            link_visual_msgs_copy.erase(link_visual_msgs_iter++);
-        }
-        else {
-            ++link_visual_msgs_iter;
-        }
-    }
-
-    for(auto visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
-    {
-        for(visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
-        {
-            if(this->process_visual_msg(*visual_msgs_iter)) {
-                visual_msgs_copy.erase(visual_msgs_iter++);
-            }
-            else {
-                ++visual_msgs_iter;
-            }
-        }
-    }
-
-    for(auto link_msgs_iter = link_msgs_copy.begin(); link_msgs_iter != link_msgs_copy.end();)
-    {
-        if(this->process_link_msg(*link_msgs_iter)) {
-            link_msgs_copy.erase(link_msgs_iter++);
-        }
-        else {
-            ++link_msgs_iter;
-        }
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(_mutex_receive);
-
-        std::copy(scene_msgs_copy.begin(), scene_msgs_copy.end(), std::front_inserter(_msgs_scene));
-        std::copy(model_msgs_copy.begin(), model_msgs_copy.end(), std::front_inserter(_msgs_model));
-        std::copy(light_factory_msgs_copy.begin(), light_factory_msgs_copy.end(), std::front_inserter(_msgs_light_factory));
-        std::copy(light_modify_msgs_copy.begin(), light_modify_msgs_copy.end(), std::front_inserter(_msgs_light_modify));
-        std::copy(model_visual_msgs_copy.begin(), model_visual_msgs_copy.end(), std::front_inserter(_msgs_model_visual));
-        std::copy(link_visual_msgs_copy.begin(), link_visual_msgs_copy.end(), std::front_inserter(_msgs_link_visual));
-        std::copy(visual_msgs_copy.begin(), visual_msgs_copy.end(), std::front_inserter(_msgs_visual));
-        std::copy(link_msgs_copy.begin(), link_msgs_copy.end(), std::front_inserter(_msgs_link));
-    }
-
-    {
-        std::lock_guard<std::recursive_mutex> lock(_mutex_pose_msgs);
-
-        // Process all the model messages last. Remove pose message from the list
-        // only when a corresponding visual exits. We may receive pose updates
-        // over the wire before  we recieve the visual
-        auto pose_msgs_iter = _msgs_pose.begin();
-        while(pose_msgs_iter != _msgs_pose.end()) {
-            auto iter = _visuals.find(pose_msgs_iter->first);
-            if(iter != _visuals.end() && iter->second) {
-                ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msgs_iter->second);
-                iter->second->set_pose(pose);
-
-                auto prev = pose_msgs_iter++;
-                _msgs_pose.erase(prev);
+                scene_msgs_copy.erase(scene_msgs_iter++);
             }
             else
-                ++pose_msgs_iter;
+                ++scene_msgs_iter;
         }
 
-        auto skeleton_pose_iter = _msgs_skeleton_pose.begin();
-        while(skeleton_pose_iter != _msgs_skeleton_pose.end())
+        if(!model_msgs_copy.empty())
         {
-            auto iter = _visuals.find((*skeleton_pose_iter)->model_id());
-            for(int i = 0; i < (*skeleton_pose_iter)->pose_size(); ++i)
+            for(auto model_msgs_iter = model_msgs_copy.begin(); model_msgs_iter != model_msgs_copy.end();)
             {
-                const gazebo::msgs::Pose &pose_msg = (*skeleton_pose_iter)->pose(i);
-                if(pose_msg.has_id())
+                if(this->process_model_msg(**model_msgs_iter))
                 {
-                    auto iter2 = _visuals.find(pose_msg.id());
-                    if(iter2 != _visuals.end())
+                    const gazebo::msgs::Model &modelMsg = **model_msgs_iter;
+                    if(modelMsg.visual_size() > 0)
                     {
-                        ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msg);
-                        iter2->second->set_pose(pose);
+                        for(int k = 0; k < modelMsg.visual_size(); k++)
+                        {
+                            boost::shared_ptr<gazebo::msgs::Visual> msgCopy;
+                            msgCopy.reset(new gazebo::msgs::Visual(modelMsg.visual(k)));
+                            visual_msgs_copy.emplace_back(msgCopy);
+                        }
                     }
+                    model_msgs_copy.erase(model_msgs_iter++);
+                }
+                else
+                {
+                    ++model_msgs_iter;
                 }
             }
+        }
 
-            if(iter != _visuals.end())
+        // Process the light factory messages.
+        for(auto light_factory_iter = light_factory_msgs_copy.begin(); light_factory_iter != light_factory_msgs_copy.end();)
+        {
+            if(this->process_light_factory_msg(*light_factory_iter))
             {
-                // TODO: review the necessity of the method
-                // iter->second->set_skeleton_pose(**skeleton_pose_iter);
-                auto prev = skeleton_pose_iter++;
-                _msgs_skeleton_pose.erase(prev);
+                light_factory_msgs_copy.erase(light_factory_iter++);
             }
-            else {
-                ++skeleton_pose_iter;
+            else
+            {
+                ++light_factory_iter;
+            }
+        }
+
+        // Process the light modify messages.
+        for(auto light_modify_iter = light_modify_msgs_copy.begin(); light_modify_iter != light_modify_msgs_copy.end();)
+        {
+            if(this->process_light_modify_msg(*light_modify_iter))
+            {
+                light_modify_msgs_copy.erase(light_modify_iter++);
+            }
+            else
+            {
+                ++light_modify_iter;
+            }
+        }
+
+        for(auto model_visual_msgs_iter = model_visual_msgs_copy.begin(); model_visual_msgs_iter != model_visual_msgs_copy.end();)
+        {
+            if(this->process_visual_msg(*model_visual_msgs_iter, NRPVisual::VT_MODEL))
+            {
+                model_visual_msgs_copy.erase(model_visual_msgs_iter++);
+            }
+            else
+            {
+                ++model_visual_msgs_iter;
+            }
+        }
+
+        for(auto link_visual_msgs_iter = link_visual_msgs_copy.begin(); link_visual_msgs_iter != link_visual_msgs_copy.end();)
+        {
+            if(this->process_visual_msg(*link_visual_msgs_iter, NRPVisual::VT_LINK))
+            {
+                link_visual_msgs_copy.erase(link_visual_msgs_iter++);
+            }
+            else
+            {
+                ++link_visual_msgs_iter;
+            }
+        }
+
+        for(auto visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
+        {
+            for(visual_msgs_iter = visual_msgs_copy.begin(); visual_msgs_iter != visual_msgs_copy.end();)
+            {
+                if(this->process_visual_msg(*visual_msgs_iter))
+                {
+                    visual_msgs_copy.erase(visual_msgs_iter++);
+                }
+                else
+                {
+                    ++visual_msgs_iter;
+                }
+            }
+        }
+
+        for(auto link_msgs_iter = link_msgs_copy.begin(); link_msgs_iter != link_msgs_copy.end();)
+        {
+            if(this->process_link_msg(*link_msgs_iter))
+            {
+                link_msgs_copy.erase(link_msgs_iter++);
+            }
+            else
+            {
+                ++link_msgs_iter;
+            }
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(_mutex_receive);
+
+            std::copy(scene_msgs_copy.begin(), scene_msgs_copy.end(), std::front_inserter(_msgs_scene));
+            std::copy(model_msgs_copy.begin(), model_msgs_copy.end(), std::front_inserter(_msgs_model));
+            std::copy(light_factory_msgs_copy.begin(), light_factory_msgs_copy.end(), std::front_inserter(_msgs_light_factory));
+            std::copy(light_modify_msgs_copy.begin(), light_modify_msgs_copy.end(), std::front_inserter(_msgs_light_modify));
+            std::copy(model_visual_msgs_copy.begin(), model_visual_msgs_copy.end(), std::front_inserter(_msgs_model_visual));
+            std::copy(link_visual_msgs_copy.begin(), link_visual_msgs_copy.end(), std::front_inserter(_msgs_link_visual));
+            std::copy(visual_msgs_copy.begin(), visual_msgs_copy.end(), std::front_inserter(_msgs_visual));
+            std::copy(link_msgs_copy.begin(), link_msgs_copy.end(), std::front_inserter(_msgs_link));
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex_pose_msgs);
+
+            // Process all the model messages last. Remove pose message from the list
+            // only when a corresponding visual exits. We may receive pose updates
+            // over the wire before  we recieve the visual
+            auto pose_msgs_iter = _msgs_pose.begin();
+            while(pose_msgs_iter != _msgs_pose.end())
+            {
+                auto iter = _visuals.find(pose_msgs_iter->first);
+                if(iter != _visuals.end() && iter->second)
+                {
+                    ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msgs_iter->second);
+                    iter->second->set_pose(pose);
+
+                    auto prev = pose_msgs_iter++;
+                    _msgs_pose.erase(prev);
+                }
+                else
+                    ++pose_msgs_iter;
+            }
+
+            auto skeleton_pose_iter = _msgs_skeleton_pose.begin();
+            while(skeleton_pose_iter != _msgs_skeleton_pose.end())
+            {
+                auto iter = _visuals.find((*skeleton_pose_iter)->model_id());
+                for(int i = 0; i < (*skeleton_pose_iter)->pose_size(); ++i)
+                {
+                    const gazebo::msgs::Pose &pose_msg = (*skeleton_pose_iter)->pose(i);
+                    if(pose_msg.has_id())
+                    {
+                        auto iter2 = _visuals.find(pose_msg.id());
+                        if(iter2 != _visuals.end())
+                        {
+                            ignition::math::Pose3d pose = gazebo::msgs::ConvertIgn(pose_msg);
+                            iter2->second->set_pose(pose);
+                        }
+                    }
+                }
+
+                if(iter != _visuals.end())
+                {
+                    // TODO: review the necessity of the method
+                    // iter->second->set_skeleton_pose(**skeleton_pose_iter);
+                    auto prev = skeleton_pose_iter++;
+                    _msgs_skeleton_pose.erase(prev);
+                }
+                else
+                {
+                    ++skeleton_pose_iter;
+                }
             }
         }
     }
+
+    bool contains_hierarchy = !_world_visual->get_node()->get_children().empty();
+
+    if(_is_root_not_initialized && contains_scene_message && contains_hierarchy)
+    {
+        _root_node->set_should_update_avango(true);
+
+        _is_root_not_initialized = false;
+    }
+
+    _root_node->callback_post_pass();
 
 #if GUA_DEBUG == 1
     auto end = std::chrono::high_resolution_clock::now();

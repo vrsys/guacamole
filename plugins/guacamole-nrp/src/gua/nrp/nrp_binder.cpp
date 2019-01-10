@@ -36,7 +36,7 @@ NRPBinder::~NRPBinder()
     _halt_transport_layer();
     _worker.join();
 }
-void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_node(root_node); }
+void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) {_scene.set_root_node(root_node); }
 void NRPBinder::bind_interactive_node(NRPInteractiveNode *interactive_node)
 {
     _scene.set_interactive_node(interactive_node);
