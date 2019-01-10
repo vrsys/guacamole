@@ -114,6 +114,7 @@ class GUA_NRP_DLL NRPScene
     std::recursive_mutex _mutex_pose_msgs;
 
     std::mutex _mutex_scenegraph;
+    bool _is_root_not_initialized = true;
     NRPNode *_root_node;
     NRPInteractiveNode *_interactive_node;
     NRPCameraNode *_cam_node;

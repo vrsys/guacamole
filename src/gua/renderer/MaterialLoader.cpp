@@ -42,10 +42,18 @@ namespace gua {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 std::shared_ptr<Material> MaterialLoader::load_material(
     aiMaterial const* ai_material,
     std::string const& assets_directory,
-    bool optimize_material) const {
+    bool optimize_material, bool nrp) const {
 
 
   // helper lambdas ------------------------------------------------------------
@@ -82,11 +90,11 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   std::string uniform_color_map(      get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0)));
   std::string uniform_color(          get_color(    AI_MATKEY_COLOR_DIFFUSE));
-  std::string uniform_roughness_map(  get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_SHININESS, 0)));
+  std::string uniform_roughness_map(  get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_REFLECTION, 0)));
   std::string uniform_roughness(      get_float(    AI_MATKEY_SHININESS));
   std::string uniform_emit_map(       get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_EMISSIVE, 0)));
   std::string uniform_emit(           get_color(    AI_MATKEY_COLOR_EMISSIVE));
-  std::string uniform_reflection_map( get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_REFLECTION, 0)));
+  std::string uniform_reflection_map( get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_SHININESS, 0)));
   std::string ambient_map(            get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_AMBIENT, 0)));
   std::string ambient_color(          get_color(    AI_MATKEY_COLOR_AMBIENT));
   std::string uniform_metalness_map(  get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_SPECULAR, 0)));
@@ -98,8 +106,37 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   // obj bump and map_bump textures are imported as aiTextureType_HEIGHT
   std::string uniform_normal_map(     get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0)));
-  if (uniform_normal_map == "") {
+  if (uniform_normal_map.empty()) {
     uniform_normal_map =              get_sampler(  AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0));
+  }
+
+  if(nrp){
+
+      uniform_normal_map = std::string(uniform_color_map);
+      uniform_roughness_map = std::string(uniform_color_map);
+      uniform_metalness_map = std::string(uniform_color_map);
+
+      std::string base_color_string = "Base_Color";
+
+      replace(uniform_normal_map, base_color_string + ".jpg", "Normal.png");
+      replace(uniform_roughness_map, base_color_string,"Roughness");
+      replace(uniform_metalness_map, base_color_string,"Metallic");
+
+      if(access((assets + uniform_color_map).c_str(), F_OK ) == -1){
+          uniform_color_map = "";
+      }
+
+      if(access((assets + uniform_roughness_map).c_str(), F_OK ) == -1){
+          uniform_roughness_map = "";
+      }
+
+      if(access((assets + uniform_metalness_map).c_str(), F_OK ) == -1){
+          uniform_metalness_map = "";
+      }
+
+      if(access((assets + uniform_normal_map).c_str(), F_OK ) == -1){
+          uniform_normal_map = "";
+      }
   }
 
   unsigned capabilities = 0;
@@ -107,37 +144,37 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
   } else {
-    if (uniform_color_map != "" && uniform_color != "") {
+    if (!uniform_color_map.empty() && !uniform_color.empty()) {
       capabilities |= PBSMaterialFactory::COLOR_VALUE_AND_MAP;
-    } else if (uniform_color_map != "") {
+    } else if (!uniform_color_map.empty()) {
       capabilities |= PBSMaterialFactory::COLOR_MAP;
-    } else if (uniform_color != "") {
+    } else if (!uniform_color.empty()) {
       capabilities |= PBSMaterialFactory::COLOR_VALUE;
     }
 
-  #if 0
-    if (uniform_roughness_map != "") {
+  #if 1
+    if (!uniform_roughness_map.empty()) {
       capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
-    } else if (uniform_roughness != "" && uniform_roughness != "0") {
+    } else if (!uniform_roughness.empty() && uniform_roughness != "0") {
       capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
     }
   #endif
 
-  #if 0
-    if (uniform_metalness_map != "") {
+  #if 1
+    if (!uniform_metalness_map.empty()) {
       capabilities |= PBSMaterialFactory::METALNESS_MAP;
-    } else if (uniform_metalness != "") {
+    } else if (!uniform_metalness.empty()) {
       capabilities |= PBSMaterialFactory::METALNESS_VALUE;
     }
   #endif
 
-    if (uniform_emit_map != "") {
+    if (!uniform_emit_map.empty()) {
       capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
-    } else if (uniform_emit != "") {
+    } else if (!uniform_emit.empty()) {
       capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
     }
 
-    if (uniform_normal_map != "") {
+    if (!uniform_normal_map.empty()) {
       capabilities |= PBSMaterialFactory::NORMAL_MAP;
     }
 
@@ -151,56 +188,56 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     }
   #endif
 
-    if (ambient_map != "") {
+    if (!ambient_map.empty()) {
       Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient maps." << std::endl;
-    } else if (ambient_color != "") {
+    } else if (!ambient_color.empty()) {
       Logger::LOG_WARNING << "Material not fully supported: guacamole does not support ambient colors." << std::endl;
     }
   }
 
   auto new_mat(PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(capabilities)));
 
-  if (uniform_color_map != "") {
+  if (!uniform_color_map.empty()) {
     new_mat->set_uniform("ColorMap", assets + uniform_color_map);
     TextureDatabase::instance()->load(assets + uniform_color_map);
   }
 
-  if (uniform_color != "") {
+  if (!uniform_color.empty()) {
     auto c(string_utils::from_string<math::vec3>(uniform_color));
 
     float opacity_to_set = 1.0f;
-    if (uniform_opacity != "") {
+    if (!uniform_opacity.empty()) {
       opacity_to_set =  std::max(0.0f, std::min(1.0f,string_utils::from_string<float>(uniform_opacity)));
     }
 
     new_mat->set_uniform("Color", scm::math::vec4f(gua::math::float_t(c.x), gua::math::float_t(c.y), gua::math::float_t(c.z), opacity_to_set));
   }
 
-#if 0
-  if (uniform_roughness_map != "") {
+#if 1
+  if (!uniform_roughness_map.empty()) {
     new_mat->set_uniform("RoughnessMap", assets + uniform_roughness_map);
-  } else if (uniform_roughness != "" && uniform_roughness != "0") {
+  } else if (!uniform_roughness.empty() && uniform_roughness != "0") {
     // specular exponent is taken to the power of 0.02 in order to move it to the desired range
     new_mat->set_uniform("Roughness", float(std::min(1.f, std::pow(string_utils::from_string<float>(uniform_roughness), 0.02f)-1.f)));
   }
 #endif
 
-#if 0
-  if (uniform_metalness_map != "") {
+#if 1
+  if (!uniform_metalness_map.empty()) {
     new_mat->set_uniform("MetalnessMap", assets + uniform_metalness_map);
-  } else if (uniform_metalness != "") {
+  } else if (!uniform_metalness.empty()) {
     // multiplying with 0.5, since metalness of 1.0 is seldomly wanted but specularity of 1.0 often given
     new_mat->set_uniform("Metalness", scm::math::vec3f(string_utils::from_string<math::vec3>(uniform_metalness)[0] * 0.5f) );
   }
 #endif
 
-  if (uniform_emit_map != "") {
+  if (!uniform_emit_map.empty()) {
     new_mat->set_uniform("EmissivityMap", assets + uniform_emit_map);
-  } else if (uniform_emit != "") {
+  } else if (!uniform_emit.empty()) {
     new_mat->set_uniform("Emissivity", string_utils::from_string<scm::math::vec3f>(uniform_emit)[0]);
   }
 
-  if (uniform_normal_map != "") {
+  if (!uniform_normal_map.empty()) {
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
   }
 
@@ -214,7 +251,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 std::shared_ptr<Material> MaterialLoader::load_material(
     FbxSurfaceMaterial const& fbx_material,
     std::string const& assets_directory,
-    bool optimize_material) const {
+    bool optimize_material, bool nrp) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
@@ -230,7 +267,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if(file_exists(mat_name)) {
     return load_material(mat_name, assets_directory);
   }
-  
+
   //method to check if texture is set for an attribute
   auto get_sampler = [&](const char* attribute)->std::string {
     FbxProperty property = fbx_material.FindProperty(attribute);
@@ -241,7 +278,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
       }
       //texture could also be layered or procedural texture
       FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>(0);
-      if(texture) {        
+      if(texture) {
         return get_file_name(texture->GetFileName());
       }
       else {
@@ -336,7 +373,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 std::shared_ptr<Material> MaterialLoader::load_unreal(
     std::string const& file_name,
     std::string const& assets_directory,
-    bool optimize_material) const {
+    bool optimize_material, bool nrp) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
@@ -354,7 +391,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
 
         if(textures.find(name) == textures.end()) {
           textures.insert(name);
-        } 
+        }
       }
     }
 
@@ -444,7 +481,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(
 std::shared_ptr<Material> MaterialLoader::load_material(
     std::string const& file_name,
     std::string const& assets_directory,
-    bool optimize_material) const {
+    bool optimize_material, bool nrp) const {
   PathParser path;
   path.parse(assets_directory);
   std::string assets(path.get_path(true));
@@ -493,7 +530,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
 
   auto get_color = [&properties](std::string const& name)->scm::math::vec4f {
     if(properties[name] != Json::Value::null && properties[name].isArray()) {
-      size_t num_values = properties[name].size(); 
+      size_t num_values = properties[name].size();
       if(num_values == 4) {
         return scm::math::vec4f{ float(properties[name][0U].asDouble()), float(properties[name][1U].asDouble()), float(properties[name][2U].asDouble()), float(properties[name][3U].asDouble()) };
       }
@@ -519,7 +556,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   float uniform_metalness{get_float("metalness")};
   float uniform_emissivity{get_float("emissivity")};
   float uniform_opacity{get_float("opacity")};
-  
+
   if (!optimize_material) {
     capabilities |= PBSMaterialFactory::ALL;
   } else {
@@ -538,25 +575,25 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     // normals
     if (uniform_normal_map != "") {
       capabilities |= PBSMaterialFactory::NORMAL_MAP;
-    } 
+    }
     // roughness
     if (uniform_roughness_map != "") {
       capabilities |= PBSMaterialFactory::ROUGHNESS_MAP;
-    } 
+    }
     else if (!std::isnan(uniform_roughness)) {
       capabilities |= PBSMaterialFactory::ROUGHNESS_VALUE;
     }
     // metalness
     if (uniform_metalness_map != "") {
       capabilities |= PBSMaterialFactory::METALNESS_MAP;
-    } 
+    }
     else if (!std::isnan(uniform_metalness)) {
       capabilities |= PBSMaterialFactory::METALNESS_VALUE;
     }
     // emissivity
     if (uniform_emissivity_map != "") {
       capabilities |= PBSMaterialFactory::EMISSIVITY_MAP;
-    } 
+    }
     else if (!std::isnan(uniform_emissivity)) {
       capabilities |= PBSMaterialFactory::EMISSIVITY_VALUE;
     }
@@ -571,7 +608,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
     if (capabilities & PBSMaterialFactory::COLOR_VALUE_AND_MAP) {
       new_mat->set_uniform("Color", uniform_color);
     }
-  } 
+  }
   else if (capabilities & PBSMaterialFactory::COLOR_VALUE) {
     new_mat->set_uniform("Color", uniform_color);
   }
@@ -579,25 +616,25 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   // normals
   if (capabilities & PBSMaterialFactory::NORMAL_MAP) {
     new_mat->set_uniform("NormalMap", assets + uniform_normal_map);
-  } 
+  }
   // roughness
   if (capabilities & PBSMaterialFactory::ROUGHNESS_MAP) {
     new_mat->set_uniform("RoughtnessMap", assets + uniform_roughness_map);
-  } 
+  }
   else if (capabilities & PBSMaterialFactory::ROUGHNESS_VALUE) {
     new_mat->set_uniform("Roughness", uniform_roughness);
   }
   // metalness
   if (capabilities & PBSMaterialFactory::METALNESS_MAP) {
     new_mat->set_uniform("MetalnessMap", assets + uniform_metalness_map);
-  } 
+  }
   else if (capabilities & PBSMaterialFactory::METALNESS_VALUE) {
     new_mat->set_uniform("Metalness", uniform_metalness);
   }
   // emissivity
   if (capabilities & PBSMaterialFactory::EMISSIVITY_MAP) {
     new_mat->set_uniform("EmissivityMap", assets + uniform_emissivity_map);
-  } 
+  }
   else if (capabilities & PBSMaterialFactory::EMISSIVITY_VALUE) {
     new_mat->set_uniform("Emissivity", uniform_emissivity);
   }
@@ -605,7 +642,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(
   if (!std::isnan(uniform_opacity)) {
     new_mat->set_uniform("Opacity", uniform_opacity);
   }
-  //culling 
+  //culling
   if (properties["backface_culling"] != Json::Value::null && properties["backface_culling"].isBool()) {
     new_mat->set_show_back_faces(!properties["backface_culling"].asBool());
   }

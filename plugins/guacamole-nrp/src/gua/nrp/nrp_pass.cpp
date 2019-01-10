@@ -10,7 +10,7 @@ PipelinePass NRPPassDescription::make_pass(const RenderContext &ctx, Substitutio
 {
     PipelinePass pass{*this, ctx, substitution_map};
 
-    pass.process_ = [](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) { NRPBinder::get_instance().pre_render(); };
+    pass.process_ = [](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) {NRPBinder::get_instance().pre_render(); };
 
     return pass;
 }

@@ -72,20 +72,20 @@ class GUA_NRP_DLL NRPVisual
     std::string _name;
     VisualType _type;
 
-    std::string _mesh_random_name = "";
+    std::map<std::string, std::shared_ptr<gua::node::Node>> _attached_meshes;
 
     ptr_visual _parent;
-    std::vector<ptr_visual> _children;
+    // std::vector<ptr_visual> _children;
 
     ignition::math::Vector3d _scale;
 
     std::shared_ptr<gua::node::TransformNode> _node;
 
-    bool attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset);
+    bool attach_mesh(const std::string &mesh_file_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset);
     void detach_meshes();
     bool get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
                                                gazebo::common::Color &emissive);
-    void generate_random_name();
+    std::string generate_random_name();
 };
 }
 }
