@@ -17,14 +17,14 @@ NRPLight::NRPLight(const std::string &name, node::Node *root_node)
 NRPLight::~NRPLight() { _node.reset(); }
 void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> &msg)
 {
+    auto nrp_config = &NRPConfig::get_instance();
+
     if(msg->has_cast_shadows())
     {
         _node->data.set_enable_shadows(msg->cast_shadows());
 
         if(msg->cast_shadows())
         {
-            auto nrp_config = &NRPConfig::get_instance();
-
             _node->data.set_shadow_map_size(nrp_config->get_shadow_map_size());
             _node->data.set_max_shadow_dist(nrp_config->get_shadow_max_distance());
             _node->data.set_shadow_offset(nrp_config->get_shadow_offset());
@@ -72,10 +72,10 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         {
             _node->data.set_type(gua::node::LightNode::Type::POINT);
 
-            _node->data.set_falloff(2.f);
-            _node->data.set_softness(2.f);
+            _node->data.set_falloff(nrp_config->get_point_light_falloff());
+            _node->data.set_softness(nrp_config->get_point_light_softness());
 
-            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
+            _node->data.set_brightness(nrp_config->get_light_brightness_multiplier() * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
@@ -85,8 +85,8 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
 
             _scale = 1.0f;
 
-            _node->data.set_falloff(2.f);
-            _node->data.set_softness(2.f);
+            _node->data.set_falloff(nrp_config->get_point_light_falloff());
+            _node->data.set_softness(nrp_config->get_point_light_softness());
 
             if(msg->has_direction())
             {
@@ -95,7 +95,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
                 set_direction(msg->direction());
             }
 
-            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
+            _node->data.set_brightness(nrp_config->get_light_brightness_multiplier() * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
@@ -103,10 +103,10 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
         {
             _node->data.set_type(gua::node::LightNode::Type::SPOT);
 
-            _node->data.set_falloff(2.f);
-            _node->data.set_softness(2.f);
+            _node->data.set_falloff(nrp_config->get_point_light_falloff());
+            _node->data.set_softness(nrp_config->get_point_light_softness());
 
-            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
+            _node->data.set_brightness(nrp_config->get_light_brightness_multiplier() * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
