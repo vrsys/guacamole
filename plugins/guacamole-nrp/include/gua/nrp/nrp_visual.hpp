@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_VISUAL_H
-#define GUACAMOLE_PAGODA_VISUAL_H
+#ifndef GUACAMOLE_NRP_VISUAL_H
+#define GUACAMOLE_NRP_VISUAL_H
 
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/common.hh>
@@ -89,4 +89,4 @@ class GUA_NRP_DLL NRPVisual
 };
 }
 }
-#endif // GUACAMOLE_PAGODA_VISUAL_H
+#endif // GUACAMOLE_NRP_VISUAL_H

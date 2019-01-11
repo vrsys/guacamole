@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_LIGHT_H
-#define GUACAMOLE_PAGODA_LIGHT_H
+#ifndef GUACAMOLE_NRP_LIGHT_H
+#define GUACAMOLE_NRP_LIGHT_H
 
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/common.hh>
@@ -30,12 +30,10 @@ class GUA_NRP_DLL NRPLight
     void set_pose(const gazebo::math::Pose &pose);
     void set_direction(const gazebo::msgs::Vector3d &direction);
 
-    gua::TriMeshLoader _tml;
-
     std::shared_ptr<gua::node::LightNode> _node;
     double _scale;
     scm::math::mat4d _direction;
 };
 }
 }
-#endif // GUACAMOLE_PAGODA_LIGHT_H
+#endif // GUACAMOLE_NRP_LIGHT_H

@@ -1,4 +1,5 @@
 #include <gua/nrp/nrp_cam_node.hpp>
+#include <gua/nrp/nrp_config.hpp>
 #include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
 #include <gua/nrp/nrp_scene.hpp>
@@ -271,11 +272,11 @@ NRPScene::NRPScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
     Ogre::ScriptCompilerManager::getSingleton().clearTranslatorManagers();
     Ogre::ScriptCompilerManager::getSingleton().addTranslatorManager(mock_translator);
 
-    Ogre::DataStreamPtr ptr_ds_grid(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/opt/NRP/grid.material", std::fstream::in), false));
+    Ogre::DataStreamPtr ptr_ds_grid(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)(NRPConfig::get_instance().get_nrp_grid_material(), std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_grid, "General");
     ptr_ds_grid.setNull();
 
-    Ogre::DataStreamPtr ptr_ds_gazebo(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)("/opt/NRP/gazebo-copy.material", std::fstream::in), false));
+    Ogre::DataStreamPtr ptr_ds_gazebo(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)(NRPConfig::get_instance().get_nrp_gazebo_material(), std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_gazebo, "General");
     ptr_ds_gazebo.setNull();
 
@@ -651,7 +652,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 
         pipe->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
         pipe->get_resolve_pass()->environment_lighting(gua::utils::Color3f(msg->ambient().r(), msg->ambient().g(), msg->ambient().b()));
-        pipe->get_resolve_pass()->environment_lighting_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/skyblur.jpg");
+        pipe->get_resolve_pass()->environment_lighting_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/" + NRPConfig::get_instance().get_nrp_sky_map() + "-light.jpg");
         pipe->get_resolve_pass()->touch();
     }
 
@@ -661,7 +662,7 @@ bool NRPScene::process_scene_msg(ConstScenePtr &msg)
 
         pipe->get_resolve_pass()->background_color(gua::utils::Color3f(msg->background().r(), msg->background().g(), msg->background().b()));
         pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
-        pipe->get_resolve_pass()->background_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/skyblur.jpg");
+        pipe->get_resolve_pass()->background_texture(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/textures/" + NRPConfig::get_instance().get_nrp_sky_map() + ".jpg");
         pipe->get_resolve_pass()->touch();
     }
 

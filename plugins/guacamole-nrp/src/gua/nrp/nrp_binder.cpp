@@ -1,5 +1,6 @@
 #include <gua/nrp/nrp_binder.hpp>
 #include <gua/nrp/nrp_cam_node.hpp>
+#include <gua/nrp/nrp_config.hpp>
 #include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
 
@@ -36,7 +37,7 @@ NRPBinder::~NRPBinder()
     _halt_transport_layer();
     _worker.join();
 }
-void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) {_scene.set_root_node(root_node); }
+void NRPBinder::bind_root_node(gua::nrp::NRPNode *root_node) { _scene.set_root_node(root_node); }
 void NRPBinder::bind_interactive_node(NRPInteractiveNode *interactive_node)
 {
     _scene.set_interactive_node(interactive_node);
@@ -60,11 +61,14 @@ void NRPBinder::_connect_to_transport_layer()
 
         log.d("setup");
     */
+
+    auto nrp_config = &NRPConfig::get_instance();
+    
     gazebo::common::load();
 
     sdf::setFindCallback(boost::bind(&gazebo::common::find_file, _1));
 
-    if(!gazebo::transport::init("orpheus", 11345, 1))
+    if(!gazebo::transport::init(nrp_config->get_master_host(), nrp_config->get_master_port(), 1))
     {
         std::string const error_message = "Unable to initialize transport";
         // log.e(error_message);
@@ -93,18 +97,19 @@ void NRPBinder::_connect_to_transport_layer()
 
     gazebo::transport::SubscriberPtr sub_factory_light = node->Subscribe("/gazebo/default/factory/light", &NRPBinder::callback_factory_light, this);
     gazebo::transport::SubscriberPtr sub_modify_light = node->Subscribe("/gazebo/default/light/modify", &NRPBinder::callback_modify_light, this);
-    gazebo::transport::SubscriberPtr sub_sky = node->Subscribe("/gazebo/default/sky", &NRPBinder::callback_sky, this);
 
     //    gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("/gazebo/default/skeleton_pose/info", &NRPBinder::callback_skeleton_pose_info, this);
 
-    gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
+    gazebo::transport::PublisherPtr pub_request =
+        node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", nrp_config->get_request_queue_limit(), nrp_config->get_full_scene_update_frequency());
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
     // log.d("subscription done");
 
-    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 120, 30);
+    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", nrp_config->get_interactive_node_queue_limit(),
+                                                                                                  nrp_config->get_interactive_node_update_frequency());
 
-    if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
+    if(!pub_interactive->WaitForConnection(gazebo::common::Time(nrp_config->get_network_max_timeout(), 0)))
     {
         // log.e("no interactive node subscribers available");
 
@@ -112,16 +117,16 @@ void NRPBinder::_connect_to_transport_layer()
         pub_interactive.reset();
     }
 
-    if(pub_request->WaitForConnection(gazebo::common::Time(5, 0)))
+    if(pub_request->WaitForConnection(gazebo::common::Time(nrp_config->get_network_max_timeout(), 0)))
     {
         // log.d("connection established");
 
         std::unique_lock<std::mutex> lk(_worker_mutex);
-        while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _worker_should_stop.load(); }))
+        while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(nrp_config->get_worker_wait_milliseconds()), [&] { return _worker_should_stop.load(); }))
         {
             int_fast32_t scene_frame = _scene_frame.load();
 
-            if(!_scene_initialized.load() || scene_frame > 256)
+            if(!_scene_initialized.load() || scene_frame > nrp_config->get_max_scene_frames_till_update())
             {
                 auto request_scene = gazebo::msgs::CreateRequest("scene_info");
                 pub_request->Publish(*(request_scene), true);
@@ -164,7 +169,7 @@ void NRPBinder::_connect_to_transport_layer()
                     pose.Set(translation.x, translation.y, translation.z, rotation[0], rotation[1], rotation[2]);
 
                     gazebo::msgs::Pose *pose_msg = msg.add_pose();
-                    pose_msg->set_name("interactive_transform");
+                    pose_msg->set_name(nrp_config->get_interactive_transform_name());
                     pose_msg->set_id(0);
                     gazebo::msgs::Set(pose_msg, pose);
 
@@ -254,8 +259,6 @@ void NRPBinder::_connect_to_transport_layer()
     sub_model.reset();
     sub_pose_info.reset();
     sub_material.reset();
-
-    sub_sky.reset();
 
     sub_factory_light.reset();
     sub_modify_light.reset();
@@ -370,13 +373,6 @@ void NRPBinder::callback_modify_light(ConstLightPtr &ptr)
     //_log.d(ptr->DebugString().c_str());
 
     _scene.on_light_modify_msg(ptr);
-}
-void NRPBinder::callback_sky(ConstSkyPtr &ptr)
-{
-    //_log.d("callback_sky");
-    //_log.d(ptr->DebugString().c_str());
-
-    std::cout << "callback_sky" << std::endl;
 }
 std::mutex &NRPBinder::get_scene_mutex() { return _scene.get_mutex_scenegraph(); }
 }

@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_SCENE_H
-#define GUACAMOLE_PAGODA_SCENE_H
+#ifndef GUACAMOLE_NRP_SCENE_H
+#define GUACAMOLE_NRP_SCENE_H
 
 #include <functional>
 #include <list>
@@ -128,4 +128,4 @@ class GUA_NRP_DLL NRPScene
 }
 }
 
-#endif // GUACAMOLE_PAGODA_SCENE_H
+#endif // GUACAMOLE_NRP_SCENE_H

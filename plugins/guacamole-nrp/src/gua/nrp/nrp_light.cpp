@@ -1,5 +1,6 @@
 #include <gua/nrp/nrp_light.hpp>
 #include <gua/scenegraph.hpp>
+#include <gua/nrp/nrp_config.hpp>
 namespace gua
 {
 namespace nrp
@@ -22,12 +23,14 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
 
         if(msg->cast_shadows())
         {
-            _node->data.set_shadow_map_size(4096);
-            _node->data.set_max_shadow_dist(20.f);
-            _node->data.set_shadow_offset(0.005f);
-            _node->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.f, 10.f});
-            _node->data.set_shadow_near_clipping_in_sun_direction(0.f);
-            _node->data.set_shadow_far_clipping_in_sun_direction(20.f);
+            auto nrp_config = &NRPConfig::get_instance();
+
+            _node->data.set_shadow_map_size(nrp_config->get_shadow_map_size());
+            _node->data.set_max_shadow_dist(nrp_config->get_shadow_max_distance());
+            _node->data.set_shadow_offset(nrp_config->get_shadow_offset());
+            _node->data.set_shadow_cascaded_splits(nrp_config->get_shadow_cascaded_splits());
+            _node->data.set_shadow_near_clipping_in_sun_direction(nrp_config->get_shadow_near_clipping());
+            _node->data.set_shadow_far_clipping_in_sun_direction(nrp_config->get_shadow_far_clipping());
         }
     }
 
@@ -40,7 +43,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
 
     if(msg->has_specular())
     {
-        //_node->data.set_enable_specular_shading(true);
+        _node->data.set_enable_specular_shading(true);
 
         // specular color not used if diffuse is given
         _node->data.set_color(gua::utils::Color3f(msg->specular().r(), msg->specular().g(), msg->specular().b()));
@@ -92,7 +95,7 @@ void NRPLight::load_from_msg(const boost::shared_ptr<const gazebo::msgs::Light> 
                 set_direction(msg->direction());
             }
 
-            _node->data.set_brightness(10.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
+            _node->data.set_brightness(20.f * std::max(msg->diffuse().r(), std::max(msg->diffuse().g(), msg->diffuse().b())));
 
             break;
         }
