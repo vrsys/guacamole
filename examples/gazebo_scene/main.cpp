@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <gua/nrp.hpp>
+#include <gua/nrp/nrp_config.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
 {
@@ -58,27 +59,14 @@ int main(int argc, char **argv)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
 
-    auto nrp_interactive = graph.add_node<gua::nrp::NRPInteractiveNode>("/screen", "interactive_transform");
+    auto nrp_interactive = graph.add_node<gua::nrp::NRPInteractiveNode>("/screen", gua::nrp::NRPConfig::get_instance().get_interactive_transform_name());
 
     /// InteractiveNode subhierarchy: begin
 
-    // create material
-    auto uniform_color_desc = std::make_shared<gua::MaterialShaderDescription>(std::string(GUACAMOLE_INSTALL_DIR) + "/resources/materials/uniform_color.gmd");
-    auto uniform_color_shader (std::make_shared<gua::MaterialShader>("overwrite_color", uniform_color_desc));
-    gua::MaterialShaderDatabase::instance()->add(uniform_color_shader);
-    auto rough_white = uniform_color_shader->make_new_material();
+    auto baseball = std::make_shared<gua::node::TransformNode>("baseball");
 
-    rough_white->set_uniform("color", gua::math::vec3f(1.0f, 1.0f, 1.0f));
-    rough_white->set_uniform("metalness", 0.0f);
-    rough_white->set_uniform("roughness", 1.0f);
-    rough_white->set_uniform("emissivity", 0.0f);
-
-    auto teapot_1 = loader.create_geometry_from_file("teapot_1", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
-    teapot_1->translate(1., 0., 0.);
-    auto teapot_2 = loader.create_geometry_from_file("teapot_2", "data/objects/teapot.obj", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE);
-    teapot_1->add_child(teapot_2);
-    teapot_2->translate(0., 1., 0.);
-    nrp_interactive->add_child(teapot_1);
+    baseball->translate(0., 0., -1.);
+    nrp_interactive->add_child(baseball);
 
     /// InteractiveNode subhierarchy: end
 

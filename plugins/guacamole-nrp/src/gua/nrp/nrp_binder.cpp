@@ -182,8 +182,6 @@ void NRPBinder::_connect_to_transport_layer()
                             auto child_node = nodes.front();
                             nodes.pop_front();
 
-                            // TODO: downcasting?
-
                             if(child_node->get_name().empty())
                             {
                                 continue;
@@ -298,7 +296,7 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
             //_log.d(scene_msg.DebugString().c_str());
             _scene.on_scene_msg(boost::make_shared<const gazebo::msgs::Scene>(scene_msg));
 
-            //_scene_initialized.store(true);
+            _scene_initialized.store(true);
         }
     }
     else if(ptr->request() == "entity_list")
