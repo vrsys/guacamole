@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
     /// InteractiveNode subhierarchy: begin
 
-    auto baseball = std::make_shared<gua::node::TransformNode>("baseball");
+    auto baseball = std::make_shared<gua::node::TransformNode>("interactive_baseball");
 
     baseball->translate(0., 0., -1.);
     nrp_interactive->add_child(baseball);
