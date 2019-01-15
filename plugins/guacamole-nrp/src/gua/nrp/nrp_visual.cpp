@@ -13,6 +13,11 @@ NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(nam
 
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
+
+    if(_name.find("interactive") != std::string::npos)
+    {
+        _node->get_tags().add_tag("invisible");
+    }
 }
 NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node(), _attached_meshes()
 {
@@ -21,6 +26,11 @@ NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), 
 
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
+
+    if(_name.find("interactive") != std::string::npos)
+    {
+        _node->get_tags().add_tag("invisible");
+    }
 }
 NRPVisual::~NRPVisual() { _node.reset(); }
 
@@ -33,6 +43,11 @@ void NRPVisual::set_type(NRPVisual::VisualType type) { _type = type; }
 
 void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
 {
+    if(_name.find("interactive") != std::string::npos)
+    {
+        return;
+    }
+
 #if GUA_DEBUG == 1
     auto start = std::chrono::high_resolution_clock::now();
 #endif
