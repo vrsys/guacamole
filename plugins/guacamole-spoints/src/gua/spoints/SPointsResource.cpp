@@ -142,7 +142,15 @@ unsigned SPointsResource::get_remote_server_screen_height() const {
     }
   }
 }
+bool SPointsResource::has_calibration(RenderContext const& ctx) const {
+  if(spointsdata_) {
+    if(spointsdata_->nka_) {
+      return spointsdata_->nka_->has_calibration(ctx);
+    }
+  }
 
+  return false;
+}
 
 void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
   spointsdata_->nka_->draw_vertex_colored_points(ctx);

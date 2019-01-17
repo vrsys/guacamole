@@ -867,7 +867,12 @@ void SPointsRenderer::render(Pipeline& pipe,
         std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
 
 
-
+        if(!spoints_resource->has_calibration(ctx) ) {
+          std::cout << "NEEDS CALIBRATION\n";
+          current_package.calibration_request = true;
+        } else {
+          current_package.calibration_request = false;
+        }
 
         if ("" != feedback_socket_string_of_resource) {
           SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);

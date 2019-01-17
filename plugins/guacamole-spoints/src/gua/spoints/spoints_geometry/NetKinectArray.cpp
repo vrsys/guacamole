@@ -336,13 +336,9 @@ void NetKinectArray::readloop() {
       latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
     }
 
-    num_voxels_received                    = message_header.num_points;
-    m_received_vertex_colored_points_back_ = message_header.num_vertex_col_points;
-    m_received_vertex_colored_tris_back_   = message_header.num_vertex_col_triangles;
     m_received_textured_tris_back_         = message_header.num_textured_triangles;
     m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
 
-    m_triangle_texture_atlas_size_back_  = message_header.texture_space_triangle_size;
     m_received_kinect_timestamp_back_    = message_header.timestamp;
     m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
