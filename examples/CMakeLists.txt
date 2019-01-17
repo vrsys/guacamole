@@ -91,7 +91,7 @@ IF (GUACAMOLE_EXAMPLES)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
   IF (${PLUGIN_guacamole-nrp})
-    add_subdirectory(gazebo_scene)
+    add_subdirectory(nrp_scene)
   ENDIF (${PLUGIN_guacamole-nrp})
 
   IF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
