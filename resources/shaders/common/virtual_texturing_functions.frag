@@ -26,12 +26,12 @@ float dxdy()
     return lambda;
 }
 
-void writeVTCoords() {
+void writeVTCoords(int vt_idx = gua_current_vt_idx) {
 
   float lambda = -dxdy();
 
   gua_uvs.z = lambda;
-  gua_uvs.w = gua_current_vt_idx;
+  gua_uvs.w = vt_idx;
 
   vec3 uv_lambda_triple  = vec3(gua_uvs.xy, lambda);
   vec2 sampled_uv_coords = uv_lambda_triple.rg;
