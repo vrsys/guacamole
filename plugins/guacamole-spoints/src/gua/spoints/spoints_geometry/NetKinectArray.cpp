@@ -258,9 +258,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           auto& current_point_layout = point_layout_per_context_[ctx.id];
 
           size_t size_of_vertex = 3 * sizeof(float);
-/*          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-                                                                       (0, 0, scm::gl::TYPE_VEC3F, size_of_vertex),
-                                                                        boost::assign::list_of(current_net_data_vbo));*/
 
           current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
                                                                        (0, 0, scm::gl::TYPE_VEC3F, 0),
@@ -276,8 +273,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
 
       } else {
-        num_vertex_colored_points_to_draw_per_context_[ctx.id] = 0;
-        num_vertex_colored_tris_to_draw_per_context_[ctx.id]   = 0;
         num_textured_tris_to_draw_per_context_[ctx.id]         = 0;
       }
       
@@ -349,22 +344,13 @@ void NetKinectArray::readloop() {
     if(total_num_received_primitives > 50000000) {
       return;
     }
-    //size_t data_points_byte_size = num_voxels_received * 2 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
-    //size_t data_points_byte_size = num_voxels_received * 3 * sizeof(uint32_t);//sizeof(gua::point_types::XYZ32_RGB8);
-    /*
-    size_t vertex_colored_points_byte_size = m_received_vertex_colored_points_back_ * SGTP::VERTEX_COL_POINT_SIZE ;//sizeof(gua::point_types::XYZ32_RGB8);
-    size_t vertex_colored_tris_byte_size   = m_received_vertex_colored_tris_back_   * SGTP::VERTEX_COL_TRIANGLE_SIZE;//sizeof(gua::point_types::XYZ32_RGB8);
-    size_t textured_tris_byte_size         = m_received_textured_tris_back_         * SGTP::TEXTURED_TRIANGLE_SIZE;//sizeof(gua::point_types::XYZ32_RGB8);
-    */
 
-    size_t vertex_colored_points_byte_size = m_received_vertex_colored_points_back_ * 3*3*sizeof(float); //sizeof(gua::point_types::XYZ32_RGB8);
-    size_t vertex_colored_tris_byte_size   = m_received_vertex_colored_tris_back_   * 3*3*sizeof(float);//sizeof(gua::point_types::XYZ32_RGB8);
     size_t textured_tris_byte_size         = m_received_textured_tris_back_         * 3*3*sizeof(float);//sizeof(gua::point_types::XYZ32_RGB8);
 
 
     std::cout << "RECEIVED TRIANGLES: " << m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_ << "\n";
 
-    size_t total_payload_byte_size = vertex_colored_points_byte_size + vertex_colored_tris_byte_size + textured_tris_byte_size;
+    size_t total_payload_byte_size = textured_tris_byte_size;
     m_buffer_back_.resize(total_payload_byte_size);
 
     memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_payload_byte_size);
