@@ -47,8 +47,8 @@ void main() {
   //gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
 
   //gua_color = texture(color_texture_atlas, pass_uvs).rgb;
-  
-  gua_color = vec3(0.0);//texture(color_texture_atlas, pass_uvs).rgb; 
+  gua_color = texelFetch(color_texture_atlas, ivec2(gl_FragCoord.xy*2), 0 ).rgb; 
+  //gua_color = vec3(0.0);//texture(color_texture_atlas, pass_uvs).rgb; 
   
   if (gua_rendering_mode != 1) {
    @material_method_calls_frag@

@@ -212,8 +212,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, initial_vbo_size, 0);
           
 
+          size_t texture_width = 1280*2;
+          size_t texture_height = 720*2;
 
-          current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+          current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+          //current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_BGR_8, 1, 1, 1);
         }
 
           size_t initial_vbo_size = 10000000;
@@ -240,8 +243,12 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
           uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
 
-          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / ONE_D_TEXTURE_ATLAS_SIZE) > 0) ?  ONE_D_TEXTURE_ATLAS_SIZE : total_num_pixels_to_upload;
-          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / ONE_D_TEXTURE_ATLAS_SIZE == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/ONE_D_TEXTURE_ATLAS_SIZE;
+//          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / ONE_D_TEXTURE_ATLAS_SIZE) > 0) ?  ONE_D_TEXTURE_ATLAS_SIZE : total_num_pixels_to_upload;
+//          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / ONE_D_TEXTURE_ATLAS_SIZE == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/ONE_D_TEXTURE_ATLAS_SIZE;
+
+          uint32_t num_pixels_u_direction = 1280*2;
+          uint32_t num_pixels_v_direction = 720*2;
+
 
           auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
           ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
