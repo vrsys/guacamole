@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
+//layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
+//layout(location=0) in vec3 pos_3x32f;
 
 @include "common/gua_camera_uniforms.glsl"
 @material_uniforms@
@@ -48,73 +49,32 @@ const uvec2 uv_shift_vec = uvec2(12u, 0u);
 uniform int texture_space_triangle_size;
 
 
+layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
+  float[] in_sorted_vertex_pos_data;
+};
+
+
+vec3 tri_positions[3] = {{0.0, 0.0, 0.0}, {0.5, 1.0, 0.0}, {1.0,0.0, 0.0}};
+
 void main() {
 
   @material_input@
   
-  uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
-  uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
-  vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
+  pass_uvs = vec2(0.0, 0.0);
 
-  // reserve unique id for the new face
-  uint triangle_write_index = gl_VertexID / 3;
+  vec4 extracted_vertex_pos = vec4(in_sorted_vertex_pos_data[3*(gl_VertexID ) + 0],
+                                   in_sorted_vertex_pos_data[3*(gl_VertexID ) + 1],
+                                   in_sorted_vertex_pos_data[3*(gl_VertexID ) + 2],
+                                   1.0);
+  //vec4 extracted_vertex_pos = vec4(tri_positions[gl_VertexID % 3], 1.0);
 
-
-  uint triangle_vertex_base_offset = 3 * triangle_write_index;
-
-
-
-
-    uvec2 texture_atlas_size = uvec2(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE);
-    uvec2 triangle_size_in_pixel = uvec2(texture_space_triangle_size, texture_space_triangle_size);
-
-    uvec2 num_quads_per_axis = (texture_atlas_size / uvec2(triangle_size_in_pixel.x + 1, triangle_size_in_pixel.y) ) ;
-
-    // two consecutive indices should be pinned to the same position with two of its corners. the third corner needs to be flipped
-    // therefore the quad index is the same for two consecutie triangles
-    uint one_d_quad_index = triangle_write_index / 2;
-
-    uvec2 two_d_quad_index = uvec2(one_d_quad_index % num_quads_per_axis.x, one_d_quad_index / num_quads_per_axis.x );
-
-    //uvec2 tri_first_corner_row_col_quad_pos = uvec2(one_d_quad_index % (num_quads_per_axis.x * 2), one_d_quad_index / num_quads_per_axis.x );
-
-    //uvec2 triangle_corner_bias = uvec2(0, 0) * ((first_corner_row_col_quad_pos)); 
-    //uvec2 first_corner_offset  = uvec2(1, 1) * (triangle_write_index % 2);
-
-    uvec2 rasterization_offset = uvec2(1, 1);//first_corner_row_col_quad_pos;// + (triangle_write_index % 2);
-
-    uvec2 integer_uv_coords_uncompressed;
-
-    bool is_even_triangle_index = ( 0 == triangle_write_index % 2 );
-
-
-    vec2 uv_shift = vec2(0.5);
-    if(is_even_triangle_index) {
-    /*/  if(0 == gl_VertexID%3)  {
-        uv_shift = vec2(0.5, -0.5);
-      }*/
-      if(1 == gl_VertexID % 3)  {
-        //uv_shift = vec2(-1.0, 0.0);
-      }
-      if(2 == gl_VertexID%3)  {
-        //uv_shift = vec2(0.0, 1.0);
-      }  
-    } else {
-
-    }
-
- vec2 decoded_uvs =  (vec2(uvec2(pos_14_13_13qz_col_8_8_8qz.yy & uv_mask_vec ) >> uv_shift_vec) ) / vec2(ONE_D_TEXTURE_ATLAS_SIZE) 
-                       + (uv_shift / vec2(ONE_D_TEXTURE_ATLAS_SIZE)) ;
-  
-
-  pass_uvs = decoded_uvs;
-  gua_world_position = (kinect_model_matrix * vec4(unquantized_pos, 1.0)).xyz;
-  gua_view_position  = (kinect_mv_matrix * vec4(unquantized_pos, 1.0)).xyz;
+  gua_world_position = (kinect_model_matrix * extracted_vertex_pos).xyz;
+  gua_view_position  = (kinect_mv_matrix * extracted_vertex_pos).xyz;
   
   @material_method_calls_vert@
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
-
+  gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
+  //gl_Position = vec4(tri_positions[gl_VertexID % 3], 0.0, 1.0);
 
 }

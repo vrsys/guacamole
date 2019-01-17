@@ -1102,6 +1102,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         current_shader->use(ctx);
 
+          ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
 
           auto spoints_desc(spoints_node->get_spoints_description());
 

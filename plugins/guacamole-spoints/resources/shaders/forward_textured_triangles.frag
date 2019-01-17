@@ -46,8 +46,10 @@ void main() {
   gua_alpha      = 1.0;
   //gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
 
-  gua_color = texture(color_texture_atlas, pass_uvs).rgb;
-
+  //gua_color = texture(color_texture_atlas, pass_uvs).rgb;
+  
+  gua_color = vec3(0.0);//texture(color_texture_atlas, pass_uvs).rgb; 
+  
   if (gua_rendering_mode != 1) {
    @material_method_calls_frag@
   }

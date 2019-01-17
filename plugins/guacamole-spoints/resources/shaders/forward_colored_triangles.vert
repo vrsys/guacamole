@@ -3,7 +3,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // input
 ///////////////////////////////////////////////////////////////////////////////
-layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
+//layout(location=0) in uvec2 pos_14_13_13qz_col_8_8_8qz;
+layout(location=0) in vec3 pos_3x32f;
 
 @include "common/gua_camera_uniforms.glsl"
 @material_uniforms@
@@ -40,15 +41,17 @@ const uvec3 color_shift_vector = uvec3(16, 8, 0);
 
 
 void main() {
-  uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
-  uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
-  vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
+  //uvec4 masked_and_shifted_pos = (uvec4(pos_14_13_13qz_col_8_8_8qz.xxx, pos_14_13_13qz_col_8_8_8qz.y) >> shift_vector) & mask_vector;
+  //uvec3 decoded_quantized_pos  = uvec3(masked_and_shifted_pos.xy, masked_and_shifted_pos.z | (masked_and_shifted_pos.w << 5) );
+  //vec3 unquantized_pos = conservative_bb_limit_min + decoded_quantized_pos * quant_steps;
 
-  vec3 decoded_color = vec3( (pos_14_13_13qz_col_8_8_8qz.yyy & color_mask_vector) >> color_shift_vector)/255.0f;
+  //vec3 decoded_color = vec3( (pos_14_13_13qz_col_8_8_8qz.yyy & color_mask_vector) >> color_shift_vector)/255.0f;
 
-  pass_color  = decoded_color;
+  //pass_color  = decoded_color;
+  //gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
 
-  gl_Position = kinect_mvp_matrix * vec4(unquantized_pos, 1.0);
+  pass_color = vec3(1.0, 0.0, 0.0);
+  gl_Position = kinect_mvp_matrix * vec4(pos_3x32f, 1.0);
 
 
 }

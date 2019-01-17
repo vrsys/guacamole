@@ -197,6 +197,8 @@ private:
 
   mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
+  //used for attributeless rendering
+  mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> empty_vbo_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::texture_2d_ptr  > texture_atlas_per_context_;
 
   mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
