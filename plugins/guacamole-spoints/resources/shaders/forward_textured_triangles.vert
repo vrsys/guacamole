@@ -75,6 +75,5 @@ void main() {
   @include "common/gua_varyings_assignment.glsl"
 
   gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
-  //gl_Position = vec4(tri_positions[gl_VertexID % 3], 0.0, 1.0);
 
 }

@@ -68,7 +68,6 @@ NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx)
     ctx.render_context->apply();
     
     size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id];
-    //size_t const current_num_tri_vertices_to_draw = num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
     size_t const current_num_tri_vertices_to_draw = num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
 
     std::cout << "DRAWING VERTEX COLORED_TRIANGLE SOUP\n";
@@ -83,8 +82,6 @@ NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx)
 
 void 
 NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
-
-    //std::lock_guard<std::mutex> lock(m_mutex_);
 
   auto const& current_point_layout = point_layout_per_context_[ctx.id];
 
@@ -122,7 +119,6 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
     size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id]
                            + num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
 
-    //size_t const current_num_tri_vertices_to_draw = num_textured_tris_to_draw_per_context_[ctx.id] * 3;
     size_t const current_num_tri_vertices_to_draw = num_textured_tris_to_draw_per_context_[ctx.id] * 3;
 
 
@@ -131,7 +127,6 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
                                     current_num_tri_vertices_to_draw);
 
     ctx.render_context->reset_vertex_input();
-
   }
 }
 
@@ -193,6 +188,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         size_t sizeof_vertex_colored_point = 3*sizeof(float);
         size_t sizeof_vertex_colored_tri   = 3*3*sizeof(float);
         size_t sizeof_textured_tri         = 3*3*sizeof(float);
+
   
 
         num_vertex_colored_points_to_draw_per_context_[ctx.id] = m_received_vertex_colored_points_;
@@ -267,8 +263,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           //current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
           //                                                             (0, 0, scm::gl::TYPE_VEC2UI, size_of_vertex, scm::gl::INT_PURE),
           //                                                              boost::assign::list_of(current_net_data_vbo));
-          
-
           current_is_vbo_created = true;
 
         }
@@ -329,6 +323,7 @@ void NetKinectArray::readloop() {
 
     size_t num_voxels_received{0};
     std::cout << "Received Data\n";
+    
     for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
       latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
       latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
@@ -374,8 +369,6 @@ void NetKinectArray::readloop() {
     m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
     memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
   
-
-
     { // swap
       std::lock_guard<std::mutex> lock(m_mutex_);
       m_need_cpu_swap_.store(true);
