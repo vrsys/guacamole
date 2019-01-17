@@ -326,6 +326,13 @@ void NetKinectArray::readloop() {
     size_t num_voxels_received{0};
     std::cout << "Received Data\n";
     
+    if(message_header.is_calibration_data) {
+      std::cout << "ISSSSSSSSSSSSSSSS CALIBRATION DATA\n";
+
+    }
+    //std::cout <<  message_header.total_payload << "\n";
+    continue;
+
     for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
       latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
       latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
