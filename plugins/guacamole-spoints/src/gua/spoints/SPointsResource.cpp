@@ -78,7 +78,7 @@ SPointsResource::get_socket_string() const {
   return "";
 }
 
-float
+/*float
 SPointsResource::get_voxel_size() const {
   std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
 
@@ -89,7 +89,7 @@ SPointsResource::get_voxel_size() const {
   }
 
   return 0.0;
-}
+}*/
 
 
 void

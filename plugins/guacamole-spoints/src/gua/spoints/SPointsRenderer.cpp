@@ -617,7 +617,7 @@ void SPointsRenderer::render(Pipeline& pipe,
               "point_size");
 
 
-            float voxel_half_size = spoints_resource->get_voxel_size();
+            float voxel_half_size = 0.0;//spoints_resource->get_voxel_size();
 
             depth_pass_program_->set_uniform(
               ctx,
@@ -729,7 +729,7 @@ void SPointsRenderer::render(Pipeline& pipe,
               "kinect_mv_matrix");
 
 
-            float voxel_half_size = spoints_resource->get_voxel_size();
+            float voxel_half_size = 0.0;//spoints_resource->get_voxel_size();
 
             current_shader->set_uniform(
               ctx,

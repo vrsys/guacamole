@@ -17,6 +17,9 @@
 out vec2 pass_uvs;
 //out vec3 pass_point_color;
 
+layout(binding=1) uniform sampler3D inv_xyz_volumes[4];
+layout(binding=5) uniform sampler3D uv_volumes[4];
+
 //uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_mv_matrix;
@@ -37,6 +40,11 @@ const uvec3 color_shift_vector = uvec3(16, 8, 0);
 
 const uvec2 uv_mask_vec  = uvec2(0xFFF000u, 0x000FFFu);
 const uvec2 uv_shift_vec = uvec2(12u, 0u);
+
+const mat4 inv_vol_to_world = mat4(vec4(0.5, 0.0, 0.0, 0.0), 
+                                   vec4(0.0, 0.5, 0.0, 0.0),
+                                   vec4(0.0, 0.0, 0.5, 0.0),
+                                   vec4(0.5, 0.0, 0.5, 1.0) );
 
 //const uvec3 normal_shift_vector = uvec3(16, 1, 0);
 //const uvec3 normal_mask_vector  = uvec3(0xFFFF, 0x7FFF, 0x1);
@@ -60,7 +68,7 @@ void main() {
 
   @material_input@
   
-  pass_uvs = vec2(0.0, 0.0);
+
 
   vec4 extracted_vertex_pos = vec4(in_sorted_vertex_pos_data[3*(gl_VertexID ) + 0],
                                    in_sorted_vertex_pos_data[3*(gl_VertexID ) + 1],
@@ -76,4 +84,10 @@ void main() {
 
   gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
 
+  vec3 calib_sample_pos = (inv_vol_to_world * extracted_vertex_pos).xyz;
+
+  vec3 pos_calib = texture(inv_xyz_volumes[0], calib_sample_pos.xyz ).rgb;
+  vec2 pos_color = texture(uv_volumes[0], pos_calib).xy;
+
+  pass_uvs = pos_color / 2.0;
 }

@@ -102,7 +102,7 @@ public:
   unsigned get_remote_server_screen_height() const {return remote_server_screen_height_to_return_;}
 
   std::string get_socket_string() const;
-  float       get_voxel_size() const;
+  //float       get_voxel_size() const;
 
 
 
@@ -139,12 +139,20 @@ private:
   std::vector<uint8_t> m_texture_buffer_;
   std::vector<uint8_t> m_texture_buffer_back_;
 
+  std::vector<uint8_t> m_calibration_;
+  std::vector<uint8_t> m_calibration_back_;
 
-  float m_voxel_size_ = 0.0;
-  float m_voxel_size_back_ = 0.0;
-
-  std::atomic<bool> m_received_calibration;
+  std::atomic<bool> m_need_calibration_cpu_swap_;
+  mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_calibration_gpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_received_calibration_;
+
+  uint32_t m_num_sensors_ = 0;
+  uint32_t m_num_sensors_back_ = 0;
+  std::array<uint32_t, 3> m_inv_xyz_calibration_res_;
+  std::array<uint32_t, 3> m_inv_xyz_calibration_res_back_;
+  std::array<uint32_t, 3> m_uv_calibration_res_;
+  std::array<uint32_t, 3> m_uv_calibration_res_back_;
+
 
   std::atomic<bool> m_need_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_gpu_swap_;
@@ -202,6 +210,9 @@ private:
   //used for attributeless rendering
   mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> empty_vbo_per_context_;
   mutable std::unordered_map<std::size_t, scm::gl::texture_2d_ptr  > texture_atlas_per_context_;
+
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>  > inv_xyz_calibs_per_context_;
+  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>  > uv_calibs_per_context_;
 
   mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
 
