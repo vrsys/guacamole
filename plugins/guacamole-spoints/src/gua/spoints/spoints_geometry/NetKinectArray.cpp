@@ -127,17 +127,27 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
     shader_program->set_uniform(ctx, int(m_triangle_texture_atlas_size_), "texture_space_triangle_size");
     //shader_program->set_uniform(ctx, 10, "Out_Sorted_Vertex_Tri_Data");
 
-    ctx.render_context->apply();
-    
-    size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id]
-                           + num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
+    uint32_t triangle_offset_for_current_layer = 0;
+    uint32_t num_triangles_to_draw_for_current_layer = 0;
 
-    size_t const current_num_tri_vertices_to_draw = num_textured_tris_to_draw_per_context_[ctx.id] * 3;
+    for(int layer_idx = 0; layer_idx < 4; ++layer_idx) {
+      num_triangles_to_draw_for_current_layer = m_num_best_triangles_for_sensor_layer_[layer_idx];
+
+      shader_program->set_uniform(ctx, int(layer_idx), "current_sensor_layer");
+
+      ctx.render_context->apply();
+      
+      size_t vertex_offset = triangle_offset_for_current_layer * 3;
+      size_t num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
+      size_t const current_num_tri_vertices_to_draw = num_textured_tris_to_draw_per_context_[ctx.id] * 3;
 
 
-    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
-                                    vertex_offset,
-                                    current_num_tri_vertices_to_draw);
+      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
+                                      vertex_offset,
+                                      num_vertices_to_draw);
+
+      triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
+    }
 
     ctx.render_context->reset_vertex_input();
   }
@@ -251,6 +261,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
       std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
       std::swap(m_triangle_texture_atlas_size_back_, m_triangle_texture_atlas_size_);
+
+      std::swap(m_num_best_triangles_for_sensor_layer_, 
+                m_num_best_triangles_for_sensor_layer_back_);
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
@@ -450,6 +463,11 @@ void NetKinectArray::readloop() {
         m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
 
+        uint16_t const MAX_LAYER_IDX = 16;
+        for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
+          m_num_best_triangles_for_sensor_layer_back_[layer_idx] =
+            message_header.num_best_triangles_per_sensor[layer_idx];
+        }
 
         size_t total_num_received_primitives = m_received_vertex_colored_points_back_ + m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_;
 

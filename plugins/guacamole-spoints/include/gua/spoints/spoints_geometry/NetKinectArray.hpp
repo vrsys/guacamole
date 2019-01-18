@@ -152,7 +152,8 @@ private:
   std::array<uint32_t, 3> m_inv_xyz_calibration_res_back_;
   std::array<uint32_t, 3> m_uv_calibration_res_;
   std::array<uint32_t, 3> m_uv_calibration_res_back_;
-
+  std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
+  std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_; 
 
   std::atomic<bool> m_need_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_gpu_swap_;

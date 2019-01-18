@@ -25,6 +25,8 @@ uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 
+uniform int current_sensor_layer;
+
 const vec3 conservative_bb_limit_min = vec3(-1.5, -0.5, -1.5);
 const vec3 conservative_bb_limit_max = vec3( 1.5,  2.5,  1.5);
 const vec3 quant_steps               = vec3( (conservative_bb_limit_max.x - conservative_bb_limit_min.x) / (1<<14),
@@ -64,6 +66,8 @@ layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
 
 vec3 tri_positions[3] = {{0.0, 0.0, 0.0}, {0.5, 1.0, 0.0}, {1.0,0.0, 0.0}};
 
+vec2 viewport_offsets[4] = {{0.0, 0.0}, {0.5, 0.0}, {0.0, 0.5}, {0.5, 0.5}};
+
 void main() {
 
   @material_input@
@@ -86,8 +90,8 @@ void main() {
 
   vec3 calib_sample_pos = (inv_vol_to_world * extracted_vertex_pos).xyz;
 
-  vec3 pos_calib = texture(inv_xyz_volumes[0], calib_sample_pos.xyz ).rgb;
-  vec2 pos_color = texture(uv_volumes[0], pos_calib).xy;
+  vec3 pos_calib = texture(inv_xyz_volumes[current_sensor_layer], calib_sample_pos.xyz ).rgb;
+  vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy;
 
-  pass_uvs = pos_color / 2.0;
+  pass_uvs = pos_color / 2.0 + viewport_offsets[current_sensor_layer];
 }
