@@ -152,13 +152,13 @@ bool SPointsResource::has_calibration(RenderContext const& ctx) const {
   return false;
 }
 
-void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
+/*void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
   spointsdata_->nka_->draw_vertex_colored_points(ctx);
 }
 
 void SPointsResource::draw_vertex_colored_triangle_soup(RenderContext const& ctx) {
   spointsdata_->nka_->draw_vertex_colored_triangle_soup(ctx);
-}
+}*/
 
 void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
   spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);

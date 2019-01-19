@@ -632,7 +632,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-            spoints_resource->draw_vertex_colored_points(ctx);
+            //spoints_resource->draw_vertex_colored_points(ctx);
           }
         }
       }
@@ -773,7 +773,7 @@ void SPointsRenderer::render(Pipeline& pipe,
             ctx.render_context->apply();
 
             //if(!spoints_node->get_is_server_resource()) {
-              spoints_resource->draw_vertex_colored_points(ctx);
+              //spoints_resource->draw_vertex_colored_points(ctx);
             //}
 
 
@@ -1038,7 +1038,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
 
-        spoints_resource->draw_vertex_colored_triangle_soup(ctx);
+        //spoints_resource->draw_vertex_colored_triangle_soup(ctx);
 
        current_shader->unuse(ctx);
 

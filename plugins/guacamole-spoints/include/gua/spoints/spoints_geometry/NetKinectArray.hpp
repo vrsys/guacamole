@@ -110,7 +110,7 @@ public:
   SPointsStats get_latest_spoints_stats() {
     std::lock_guard<std::mutex> lock(m_mutex_);
 
-    return SPointsStats{m_received_vertex_colored_tris_ + m_received_textured_tris_,
+    return SPointsStats{m_received_textured_tris_,
                         m_received_kinect_timestamp_,
                         m_received_reconstruction_time_
                         };
@@ -136,8 +136,8 @@ private:
   std::vector<uint8_t> m_buffer_;
   std::vector<uint8_t> m_buffer_back_;
 
-  std::vector<uint8_t> m_texture_buffer_;
-  std::vector<uint8_t> m_texture_buffer_back_;
+  std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
+  std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
 
   std::vector<uint8_t> m_calibration_;
   std::vector<uint8_t> m_calibration_back_;
@@ -145,6 +145,8 @@ private:
   std::atomic<bool> m_need_calibration_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_calibration_gpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_received_calibration_;
+
+  mutable std::unordered_map<std::size_t, bool> m_bound_calibration_data_;
 
   uint32_t m_num_sensors_ = 0;
   uint32_t m_num_sensors_back_ = 0;
@@ -154,6 +156,12 @@ private:
   std::array<uint32_t, 3> m_uv_calibration_res_back_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_; 
+
+  scm::math::mat4f m_inverse_vol_to_world_mat_;
+  scm::math::mat4f m_inverse_vol_to_world_mat_back_;
+
+  float m_lod_scaling_ = 1.0f;
+  float m_lod_scaling_back_ = 1.0f;
 
   std::atomic<bool> m_need_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_gpu_swap_;
@@ -217,10 +225,6 @@ private:
 
   mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
 
-  uint32_t m_received_vertex_colored_points_ = 0.0;
-  uint32_t m_received_vertex_colored_points_back_ = 0.0;
-  uint32_t m_received_vertex_colored_tris_ = 0.0;
-  uint32_t m_received_vertex_colored_tris_back_ = 0.0;
   uint32_t m_received_textured_tris_ = 0.0;
   uint32_t m_received_textured_tris_back_ = 0.0;
 

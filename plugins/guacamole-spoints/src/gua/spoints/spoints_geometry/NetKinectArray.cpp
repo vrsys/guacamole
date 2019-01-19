@@ -37,49 +37,6 @@ NetKinectArray::~NetKinectArray()
   m_recv_.join();
 }
 
-void 
-NetKinectArray::draw_vertex_colored_points(gua::RenderContext const& ctx) {
-
-  auto const& current_point_layout = point_layout_per_context_[ctx.id];
-
-  if( current_point_layout != nullptr ) {
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-    ctx.render_context->bind_vertex_array(current_point_layout);
-    ctx.render_context->apply();
-    
-    size_t const& current_num_points_to_draw = num_vertex_colored_points_to_draw_per_context_[ctx.id];
-    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST,
-                                    0,
-                                    current_num_points_to_draw);
-
-    ctx.render_context->reset_vertex_input();
-  }
-}
-
-void 
-NetKinectArray::draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx) {
-
-  auto const& current_point_layout = point_layout_per_context_[ctx.id];
-
-  if( current_point_layout != nullptr ) {
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-    ctx.render_context->bind_vertex_array(current_point_layout);
-    ctx.render_context->apply();
-    
-    size_t vertex_offset =   num_vertex_colored_points_to_draw_per_context_[ctx.id];
-    size_t const current_num_tri_vertices_to_draw = num_vertex_colored_tris_to_draw_per_context_[ctx.id] * 3;
-
-    std::cout << "DRAWING VERTEX COLORED_TRIANGLE SOUP\n";
-
-    ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
-                                    vertex_offset,
-                                    current_num_tri_vertices_to_draw);
-
-    ctx.render_context->reset_vertex_input();
-  }
-}
 
 void 
 NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
@@ -105,16 +62,23 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
     auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
     
+
+
     ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
 
-    for(uint32_t sensor_idx = 0; sensor_idx < m_num_sensors_; ++sensor_idx) {
-      auto const& current_individual_inv_xyz_texture = current_inv_xyz_pointers[sensor_idx];
-      ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
-      
-      //shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");     
-      auto const& current_individual_uv_texture = current_uv_pointers[sensor_idx];
-      ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_num_sensors_ + sensor_idx + 1); 
-    }
+    //if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
+      for(uint32_t sensor_idx = 0; sensor_idx < m_num_sensors_; ++sensor_idx) {
+        auto const& current_individual_inv_xyz_texture = current_inv_xyz_pointers[sensor_idx];
+        ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
+        
+        //shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");     
+        auto const& current_individual_uv_texture = current_uv_pointers[sensor_idx];
+        ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_num_sensors_ + sensor_idx + 1); 
+      }
+      //m_bound_calibration_data_[ctx.id] = true;
+    //}
+    shader_program->set_uniform(ctx, m_inverse_vol_to_world_mat_, "inv_vol_to_world_matrix");    
+    shader_program->set_uniform(ctx, m_lod_scaling_, "scaling_factor");
 
     size_t initial_vbo_size = 10000000;
     
@@ -184,6 +148,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_inv_xyz_calibration_res_, m_inv_xyz_calibration_res_back_); 
       std::swap(m_uv_calibration_res_, m_uv_calibration_res_back_);
       std::swap(m_num_sensors_, m_num_sensors_back_);
+      std::swap(m_inverse_vol_to_world_mat_back_, m_inverse_vol_to_world_mat_);
 
       m_need_calibration_cpu_swap_.store(false);
     }
@@ -239,9 +204,10 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
       }
 
-      std::cout << "Loaded Volume Textures\n";
+      //std::cout << "Loaded Volume Textures\n";
       //current_texture_atlas = ctx.render_device->create_texture_3d(scm::math::vec3ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
       m_need_calibration_gpu_swap_[ctx.id].store(false);
+      m_received_calibration_[ctx.id].store(true);
       return true;
     }
 
@@ -253,8 +219,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       m_texture_buffer_.swap(m_texture_buffer_back_);
       //std::swap(m_voxel_size_, m_voxel_size_back_);
 
-      std::swap(m_received_vertex_colored_points_back_, m_received_vertex_colored_points_);
-      std::swap(m_received_vertex_colored_tris_back_, m_received_vertex_colored_tris_);
+
       std::swap(m_received_textured_tris_back_, m_received_textured_tris_);
       std::swap(m_received_kinect_timestamp_back_, m_received_kinect_timestamp_);
       std::swap(m_received_reconstruction_time_back_, m_received_reconstruction_time_);
@@ -264,6 +229,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
       std::swap(m_num_best_triangles_for_sensor_layer_, 
                 m_num_best_triangles_for_sensor_layer_back_);
+
+      std::swap(m_lod_scaling_back_, m_lod_scaling_);
+
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
@@ -284,10 +252,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         size_t sizeof_vertex_colored_tri   = 3*3*sizeof(float);
         size_t sizeof_textured_tri         = 3*3*sizeof(float);
 
-  
-
-        num_vertex_colored_points_to_draw_per_context_[ctx.id] = m_received_vertex_colored_points_;
-        num_vertex_colored_tris_to_draw_per_context_[ctx.id]   = m_received_vertex_colored_tris_;
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
 
         //num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
@@ -419,12 +383,12 @@ void NetKinectArray::readloop() {
     //memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
 
     //size_t num_voxels_received{0};
-    std::cout << "Received Data\n";
+    //std::cout << "Received Data\n";
     
     if(message_header.is_calibration_data) {
-      std::cout << "ISSSSSSSSSSSSSSSS CALIBRATION DATA\n";
+      //std::cout << "ISSSSSSSSSSSSSSSS CALIBRATION DATA\n";
 
-        std::cout << "Total Calibration payload: " << message_header.total_payload << "\n";
+        //std::cout << "Total Calibration payload: " << message_header.total_payload << "\n";
 
         for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
           m_inv_xyz_calibration_res_back_[dim_idx] = message_header.inv_xyz_volume_res[dim_idx];
@@ -435,7 +399,13 @@ void NetKinectArray::readloop() {
 
         m_calibration_back_.resize(message_header.total_payload);
 
-        memcpy((unsigned char*) &m_calibration_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, message_header.total_payload);
+        memcpy((char*) &m_calibration_back_[0], ((char*) zmqm.data()) + HEADER_SIZE, message_header.total_payload);
+
+        // memcpy inv_model_to_world_mat
+
+        memcpy((char*) &m_inverse_vol_to_world_mat_back_[0], 
+               (char*)message_header.inv_vol_to_world_mat,
+                16 * sizeof(float));
 
         { // swap
           std::lock_guard<std::mutex> lock(m_mutex_);
@@ -449,7 +419,7 @@ void NetKinectArray::readloop() {
 
 
     } else {
-      std::cout << "ISSSSSSSSSSSSSSSS AVATAR DATA\n";
+      //std::cout << "ISSSSSSSSSSSSSSSS AVATAR DATA\n";
 
         for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
           latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
@@ -462,6 +432,7 @@ void NetKinectArray::readloop() {
         m_received_kinect_timestamp_back_    = message_header.timestamp;
         m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
+        m_lod_scaling_back_                  = message_header.lod_scaling;
 
         uint16_t const MAX_LAYER_IDX = 16;
         for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
@@ -469,23 +440,29 @@ void NetKinectArray::readloop() {
             message_header.num_best_triangles_per_sensor[layer_idx];
         }
 
-        size_t total_num_received_primitives = m_received_vertex_colored_points_back_ + m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_;
+        size_t total_num_received_primitives = m_received_textured_tris_back_;
 
         if(total_num_received_primitives > 50000000) {
           return;
         }
 
-        size_t textured_tris_byte_size         = m_received_textured_tris_back_         * 3*3*sizeof(float);//sizeof(gua::point_types::XYZ32_RGB8);
+        size_t textured_tris_byte_size  = m_received_textured_tris_back_         * 3*3*sizeof(float);//sizeof(gua::point_types::XYZ32_RGB8);
 
 
-        std::cout << "RECEIVED TRIANGLES: " << m_received_vertex_colored_tris_back_ + m_received_textured_tris_back_ << "\n";
+        //std::cout << "RECEIVED TRIANGLES: " << m_received_textured_tris_back_ << "\n";
+
+        //std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
+        
 
         size_t total_payload_byte_size = textured_tris_byte_size;
+
+        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
+
         m_buffer_back_.resize(total_payload_byte_size);
 
         memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_payload_byte_size);
 
-        m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
+        //m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
         memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
       
         { // swap

@@ -25,6 +25,10 @@ uniform mat4 kinect_model_matrix;
 uniform mat4 kinect_mv_matrix;
 uniform mat4 kinect_mvp_matrix;
 
+uniform mat4 inv_vol_to_world_matrix;
+
+uniform float scaling_factor;
+
 uniform int current_sensor_layer;
 
 const vec3 conservative_bb_limit_min = vec3(-1.5, -0.5, -1.5);
@@ -43,18 +47,16 @@ const uvec3 color_shift_vector = uvec3(16, 8, 0);
 const uvec2 uv_mask_vec  = uvec2(0xFFF000u, 0x000FFFu);
 const uvec2 uv_shift_vec = uvec2(12u, 0u);
 
-const mat4 inv_vol_to_world = mat4(vec4(0.5, 0.0, 0.0, 0.0), 
+/* const mat4 inv_vol_to_world = mat4(vec4(0.5, 0.0, 0.0, 0.0), 
                                    vec4(0.0, 0.5, 0.0, 0.0),
                                    vec4(0.0, 0.0, 0.5, 0.0),
-                                   vec4(0.5, 0.0, 0.5, 1.0) );
+                                   vec4(0.5, 0.0, 0.5, 1.0) ); */
 
 //const uvec3 normal_shift_vector = uvec3(16, 1, 0);
 //const uvec3 normal_mask_vector  = uvec3(0xFFFF, 0x7FFF, 0x1);
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
-
-#define ONE_D_TEXTURE_ATLAS_SIZE 2048
 
 uniform int texture_space_triangle_size;
 
@@ -63,8 +65,6 @@ layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
   float[] in_sorted_vertex_pos_data;
 };
 
-
-vec3 tri_positions[3] = {{0.0, 0.0, 0.0}, {0.5, 1.0, 0.0}, {1.0,0.0, 0.0}};
 
 vec2 viewport_offsets[4] = {{0.0, 0.0}, {0.5, 0.0}, {0.0, 0.5}, {0.5, 0.5}};
 
@@ -88,10 +88,10 @@ void main() {
 
   gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
 
-  vec3 calib_sample_pos = (inv_vol_to_world * extracted_vertex_pos).xyz;
+  vec3 calib_sample_pos = (inv_vol_to_world_matrix * extracted_vertex_pos).xyz;
 
   vec3 pos_calib = texture(inv_xyz_volumes[current_sensor_layer], calib_sample_pos.xyz ).rgb;
-  vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy;
+  vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy * scaling_factor;
 
   pass_uvs = pos_color / 2.0 + viewport_offsets[current_sensor_layer];
 }
