@@ -10,6 +10,8 @@
 #include <iostream>
 #include <mutex>
 
+#include <turbojpeg.h>
+
 namespace spoints {
 
 #define ONE_D_TEXTURE_ATLAS_SIZE 2048
@@ -232,6 +234,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
       std::swap(m_lod_scaling_back_, m_lod_scaling_);
 
+      std::swap(m_texture_space_bounding_boxes_back_,
+                m_texture_space_bounding_boxes_);
+
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
@@ -308,9 +313,68 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           uint32_t num_pixels_u_direction = 1280*2;
           uint32_t num_pixels_v_direction = 720*2;
 
+          uint32_t byte_offset_per_texture_data_for_layers[16];
+          std::vector<scm::gl::texture_region> regions_to_update(16);
 
-          auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
-          ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
+
+          for(uint32_t layer_to_update_idx = 0; layer_to_update_idx < 16; ++layer_to_update_idx) {
+              //initialize offset with 0 or value of last region and update incrementally
+              if(0 == layer_to_update_idx) {
+                byte_offset_per_texture_data_for_layers[layer_to_update_idx] = 0;
+              } else {
+                byte_offset_per_texture_data_for_layers[layer_to_update_idx] = byte_offset_per_texture_data_for_layers[layer_to_update_idx-1];
+              
+                if(m_num_best_triangles_for_sensor_layer_[layer_to_update_idx]) {
+                  uint32_t layer_offset = 4 * (layer_to_update_idx-1);
+                  uint32_t prev_bb_pixel_coverage =   (1 + m_texture_space_bounding_boxes_[layer_offset + 2] - m_texture_space_bounding_boxes_[layer_offset + 0])
+                                                    * (1 + m_texture_space_bounding_boxes_[layer_offset + 3] - m_texture_space_bounding_boxes_[layer_offset + 1]);
+
+
+                  byte_offset_per_texture_data_for_layers[layer_to_update_idx] += prev_bb_pixel_coverage * 3;
+                }
+              }
+
+
+              if(m_num_best_triangles_for_sensor_layer_[layer_to_update_idx] > 0) {
+                uint32_t current_layer_offset = 4 * (layer_to_update_idx);
+                //uint32_t prev_bb_pixel_coverage =   (1 + m_texture_space_bounding_boxes_[layer_offset + 2] - m_texture_space_bounding_boxes_[layer_offset + 0])
+                //                                    * (1 + m_texture_space_bounding_boxes_[layer_offset + 3] - m_texture_space_bounding_boxes_[layer_offset + 1]);
+
+
+                auto current_region_to_update = 
+                  scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0]    , 
+                                                            m_texture_space_bounding_boxes_[current_layer_offset + 1]
+                                                            ,     0), 
+                                          scm::math::vec3ui((m_texture_space_bounding_boxes_[current_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 0]), 
+                                                             (m_texture_space_bounding_boxes_[current_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 1])
+                                                             , 1));
+              
+                size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
+
+                std::cout << "Trying to update the following region: " << "\n";
+                std::cout      << m_texture_space_bounding_boxes_[current_layer_offset + 0] << ", " << m_texture_space_bounding_boxes_[current_layer_offset + 1] <<
+                          ", " << m_texture_space_bounding_boxes_[current_layer_offset + 2] << ", " << m_texture_space_bounding_boxes_[current_layer_offset + 3] << "\n";
+
+                std::cout << "Trying to read with offset: " << byte_offset_per_texture_data_for_layers[layer_to_update_idx] << " / " 
+                                                            << m_texture_payload_size_in_byte_ << "\n";
+
+                ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
+                                                                      current_region_to_update, 0, scm::gl::FORMAT_BGR_8, 
+                                                                      (void*) &m_texture_buffer_[current_read_offset] );
+                                                                      //(void*) &m_texture_buffer_[0] );
+          
+              }
+
+
+          }
+
+          //auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
+          
+
+
+          std::cout << "Pixels to upload: " << total_num_pixels_to_upload << "\n";
+          //to replace
+          //ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
 
 
         if(!current_is_vbo_created) {
@@ -347,6 +411,26 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
   return m_voxel_size_;
 }*/
 
+
+void NetKinectArray::_decompress_and_rewrite_message() {
+  //std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
+  //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+  
+  // allocate 50 mb for compressed data 
+  uint8_t* compressed_image_buffer = tjAlloc(1024*1024 * 50);
+
+  int header_width, header_height, header_subsamp,;
+
+  auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[kinect_layer_idx];
+  tjDecompressHeader2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx],
+                      &header_width, &header_height, &header_subsamp);
+
+  tjDecompress2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx], &texture_write_pos[byte_offset_to_current_image],
+                header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
+
+  tjFree(compressed_image_buffer);
+
+}
 
 void NetKinectArray::readloop() {
   // open multicast listening connection to server and port
@@ -438,7 +522,21 @@ void NetKinectArray::readloop() {
         for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
           m_num_best_triangles_for_sensor_layer_back_[layer_idx] =
             message_header.num_best_triangles_per_sensor[layer_idx];
+
+
+          m_texture_space_bounding_boxes_back_[4*layer_idx + 0]
+            = message_header.tex_bounding_box[layer_idx].min.u;
+          m_texture_space_bounding_boxes_back_[4*layer_idx + 1]
+            = message_header.tex_bounding_box[layer_idx].min.v;
+          m_texture_space_bounding_boxes_back_[4*layer_idx + 2]
+            = message_header.tex_bounding_box[layer_idx].max.u;
+          m_texture_space_bounding_boxes_back_[4*layer_idx + 3]
+            = message_header.tex_bounding_box[layer_idx].max.v;
+            //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
+          
         }
+        
+
 
         size_t total_num_received_primitives = m_received_textured_tris_back_;
 
@@ -463,8 +561,12 @@ void NetKinectArray::readloop() {
         memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_payload_byte_size);
 
         //m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
+
+        std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
         memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
       
+        _decompress_and_rewrite_message();
+
         { // swap
           std::lock_guard<std::mutex> lock(m_mutex_);
           m_need_cpu_swap_.store(true);

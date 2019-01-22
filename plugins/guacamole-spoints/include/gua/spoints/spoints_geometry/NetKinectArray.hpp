@@ -125,6 +125,7 @@ public:
   }
 
 private:
+  void _decompress_and_rewrite_message();
   void readloop();
   //void sendfeedbackloop();
 
@@ -156,6 +157,9 @@ private:
   std::array<uint32_t, 3> m_uv_calibration_res_back_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_; 
+
+  std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_; 
+  std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_back_; 
 
   scm::math::mat4f m_inverse_vol_to_world_mat_;
   scm::math::mat4f m_inverse_vol_to_world_mat_back_;
