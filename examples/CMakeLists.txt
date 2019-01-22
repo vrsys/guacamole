@@ -90,9 +90,9 @@ IF (GUACAMOLE_EXAMPLES)
     add_subdirectory(physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
-  IF (${PLUGIN_guacamole-nrp})
+  IF (${PLUGIN_guacamole-nrp} AND ${PLUGIN_guacamole-video3d})
     add_subdirectory(nrp_scene)
-  ENDIF (${PLUGIN_guacamole-nrp})
+  ENDIF (${PLUGIN_guacamole-nrp} AND ${PLUGIN_guacamole-video3d})
 
   IF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
     add_subdirectory(virtual_texturing)

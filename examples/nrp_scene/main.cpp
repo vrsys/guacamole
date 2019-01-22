@@ -2,15 +2,19 @@
 
 #include <gua/guacamole.hpp>
 
-#include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
+#include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/SSAAPass.hpp>
 #include <gua/utils/Trackball.hpp>
 #include <memory>
 
+#include <gua/node/PLodNode.hpp>
 #include <gua/nrp.hpp>
 #include <gua/nrp/nrp_config.hpp>
+#include <gua/renderer/LodLoader.hpp>
+#include <gua/renderer/PLodPass.hpp>
+#include <gua/video3d.hpp>
 
 void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action, int mods)
 {
@@ -45,13 +49,22 @@ void mouse_button(gua::utils::Trackball &trackball, int mousebutton, int action,
 
 int main(int argc, char **argv)
 {
+    if(argc != 2)
+    {
+        std::cout << "ERROR: please specify kinect file to load" << std::endl;
+    }
+    std::string kinect_file(argv[1]);
+
+    char *argv_tmp[] = {"./example-nrp_scene", nullptr};
+    int argc_tmp = sizeof(argv_tmp) / sizeof(char *) - 1;
+
     bool should_close = false;
 
-    gua::init(argc, argv);
+    gua::init(argc_tmp, argv_tmp);
     gua::SceneGraph graph("main_scenegraph");
     gua::TriMeshLoader loader;
 
-    scm::gl::sampler_state_desc const& sampler_state_desc = scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
+    scm::gl::sampler_state_desc const &sampler_state_desc = scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
 
     auto nrp_root = graph.add_node<gua::nrp::NRPNode>("/", "nrp_root");
 
@@ -63,7 +76,7 @@ int main(int argc, char **argv)
 
     /// InteractiveNode subhierarchy: begin
 
-    auto baseball = std::make_shared<gua::node::TransformNode>("interactive_baseball");
+    auto baseball = std::make_shared<gua::node::TransformNode>("interactive_baseball_1");
 
     baseball->translate(0., 0., -1.);
     nrp_interactive->add_child(baseball);
@@ -85,9 +98,38 @@ int main(int argc, char **argv)
     camera->config.set_near_clip(0.1f);
     camera->config.set_far_clip(1000.0f);
 
+    /// Lod interoperability
+
+    auto lod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
+    auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
+    gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
+
+    auto lod_rough = lod_keep_color_shader->make_new_material();
+    lod_rough->set_uniform("metalness", 0.0f);
+    lod_rough->set_uniform("roughness", 0.3f);
+    lod_rough->set_uniform("emissivity", 0.0f);
+
+    gua::LodLoader lod_loader;
+    lod_loader.set_out_of_core_budget_in_mb(4096);
+    lod_loader.set_render_budget_in_mb(1024);
+    lod_loader.set_upload_budget_in_mb(30);
+
+    auto plod_node = lod_loader.load_lod_pointcloud("pointcloud", "/opt/3d_models/lamure/plod/pig_pr.bvh", lod_rough,
+                                                    gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+
+    graph.add_node("/", plod_node);
+
+    /// Video 3D interoperability
+
+    gua::Video3DLoader vloader;
+    auto avatar(vloader.create_geometry_from_file("kinect", kinect_file.c_str()));
+    graph.add_node("/", avatar);
+
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::nrp::NRPPassDescription>());
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    pipe->add_pass(std::make_shared<gua::PLodPassDescription>());
+    pipe->add_pass(std::make_shared<gua::Video3DPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
@@ -96,6 +138,9 @@ int main(int argc, char **argv)
     pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
+
+    std::shared_ptr<gua::PLodPassDescription> pass = pipe->get_pass_by_type<gua::PLodPassDescription>();
+    pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS);
 
     // pipe->get_resolve_pass()->ssao_intensity(1.0);
     // pipe->get_resolve_pass()->ssao_enable(true);
@@ -170,6 +215,8 @@ int main(int argc, char **argv)
         {
             gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
             nrp_root->set_transform(modelmatrix);
+            plod_node->set_transform(modelmatrix * scm::math::make_translation(0., 0., 4.) * scm::math::make_rotation(90., 1., 0., 0.));
+            avatar->set_transform(modelmatrix * scm::math::make_rotation(90., 1., 0., 0.));
 
 #ifdef RAYTEST
             auto pick_results = graph.ray_test(ray_from_camera_position,
