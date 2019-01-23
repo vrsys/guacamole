@@ -213,7 +213,9 @@ int main(int argc, char** argv) {
 
   camera4->set_pre_render_cameras({portal_camera});
 
-  auto add_window = [](std::string const& window_name, 
+  std::shared_ptr<gua::GlfwWindow> window_handle = nullptr;
+
+  auto add_window = [&](std::string const& window_name, 
                        std::shared_ptr<gua::node::CameraNode> const& cam_node)
   {
     auto window = std::make_shared<gua::GlfwWindow>();
@@ -222,13 +224,17 @@ int main(int argc, char** argv) {
     cam_node->config.set_output_window_name(window_name);
 
     window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_enable_vsync(false);
 
     //if("window3" == window_name) {
       //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     //}
+
+    window_handle = window;
   };
 
   add_window("window1", camera);
+
 
   //add_window("window3", camera3);
   //add_window("window4", camera4);
@@ -262,7 +268,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+  gua::events::Ticker ticker(loop, 1.0/10000.0);
 
   unsigned framecount = 0;
 
@@ -293,6 +299,8 @@ int main(int argc, char** argv) {
       if(150 == framecount) {
         add_window("window4", camera4);
       }*/
+
+      std::cout << window_handle->get_rendering_fps() << "\n";
       ++framecount;
     }
   });

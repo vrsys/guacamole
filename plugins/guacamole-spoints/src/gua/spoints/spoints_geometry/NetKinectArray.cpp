@@ -342,11 +342,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
                 std::cout << "Trying to read with offset: " << byte_offset_per_texture_data_for_layers[layer_to_update_idx] << " / " 
                                                             << m_texture_payload_size_in_byte_ << "\n";
 
-/*                ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
+                ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
                                                                       current_region_to_update, 0, scm::gl::FORMAT_BGR_8, 
                                                                       (void*) &m_texture_buffer_[current_read_offset] );
                                                                       //(void*) &m_texture_buffer_[0] );
-          */
+          
               }
 
 
@@ -557,7 +557,7 @@ void NetKinectArray::readloop() {
         //m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
 
         std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
-        //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
       
         _decompress_and_rewrite_message();
 
