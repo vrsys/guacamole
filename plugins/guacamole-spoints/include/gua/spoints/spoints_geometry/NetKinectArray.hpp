@@ -158,6 +158,11 @@ private:
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_; 
 
+  scm::math::vec3 m_tight_geometry_bb_min_back_;
+  scm::math::vec3 m_tight_geometry_bb_min_;
+  scm::math::vec3 m_tight_geometry_bb_max_back_;
+  scm::math::vec3 m_tight_geometry_bb_max_;
+
   std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_; 
   std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_back_; 
 

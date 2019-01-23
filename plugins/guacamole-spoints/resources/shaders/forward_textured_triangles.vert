@@ -33,9 +33,13 @@ uniform int current_sensor_layer;
 
 const vec3 conservative_bb_limit_min = vec3(-1.5, -0.5, -1.5);
 const vec3 conservative_bb_limit_max = vec3( 1.5,  2.5,  1.5);
-const vec3 quant_steps               = vec3( (conservative_bb_limit_max.x - conservative_bb_limit_min.x) / (1<<14),
-                                             (conservative_bb_limit_max.y - conservative_bb_limit_min.y) / (1<<13),
-                                             (conservative_bb_limit_max.z - conservative_bb_limit_min.z) / (1<<13));
+
+uniform vec3 tight_bb_min;
+uniform vec3 tight_bb_max;
+
+const vec3 quant_steps  = vec3(tight_bb_max - tight_bb_min) / (1<<16);
+
+
 
 
 const uvec4 shift_vector = uvec4(18, 5, 0, 24);
@@ -47,37 +51,91 @@ const uvec3 color_shift_vector = uvec3(16, 8, 0);
 const uvec2 uv_mask_vec  = uvec2(0xFFF000u, 0x000FFFu);
 const uvec2 uv_shift_vec = uvec2(12u, 0u);
 
-/* const mat4 inv_vol_to_world = mat4(vec4(0.5, 0.0, 0.0, 0.0), 
-                                   vec4(0.0, 0.5, 0.0, 0.0),
-                                   vec4(0.0, 0.0, 0.5, 0.0),
-                                   vec4(0.5, 0.0, 0.5, 1.0) ); */
 
-//const uvec3 normal_shift_vector = uvec3(16, 1, 0);
-//const uvec3 normal_mask_vector  = uvec3(0xFFFF, 0x7FFF, 0x1);
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
 
 uniform int texture_space_triangle_size;
 
+//#define VERTEX_COMPRESSION_TYPE_NONE
+#define VERTEX_COMPRESSION_TYPE_QUANTIZED
 
-layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
-  float[] in_sorted_vertex_pos_data;
-};
+#define VERTEX_COMPRESSION_TYPE_16BIT_INTS
+
+#ifdef VERTEX_COMPRESSION_TYPE_NONE
+  layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
+    float[] in_sorted_vertex_pos_data;
+  };
+#else
+  layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
+    uint[] in_sorted_vertex_pos_data;
+  };
+#endif
 
 
 vec2 viewport_offsets[4] = {{0.0, 0.0}, {0.5, 0.0}, {0.0, 0.5}, {0.5, 0.5}};
+
+#ifdef VERTEX_COMPRESSION_TYPE_16BIT_INTS
+
+
+vec3 unquantize_uvec3_16u_to_vec3_32f(in uvec3 quantized_pos) {
+  uvec3 compressed_pos = quantized_pos;
+
+  vec3 bb_min = tight_bb_min;
+  vec3 bb_max = tight_bb_max;
+         
+  vec3 bb_ranges = vec3(bb_max - bb_min);
+  vec3 step_sizes = bb_ranges / (1<<16);
+  vec3 unquantized_32_bit_pos = vec3(bb_min + (compressed_pos ) * step_sizes);
+
+  return unquantized_32_bit_pos;
+}
+
+vec3 get_unquantized_vertex_pos(in uint vertex_id) {
+  const uint bit_size_of_vertex = 48;
+  uint start_bit = bit_size_of_vertex * vertex_id;
+  uint end_bit = start_bit + bit_size_of_vertex;
+
+  bool is_even_index = (vertex_id % 2 == 0);
+
+  
+  uint first_int_read_idx = start_bit / 32;
+  uint second_int_read_idx = (end_bit - 1) / 32;
+  uint first_read_int = in_sorted_vertex_pos_data[first_int_read_idx];
+  uint second_read_int = in_sorted_vertex_pos_data[second_int_read_idx];
+  
+
+  uvec3 quantized_pos = uvec3(0x00);
+  if(is_even_index) {
+    quantized_pos = uvec3(first_read_int >> 16, first_read_int & 0xFFFF, second_read_int >> 16);                                //0xFF00
+  } else {
+    quantized_pos = uvec3(first_read_int & 0xFFFF, second_read_int >> 16, second_read_int & 0xFFFF);  
+  }
+ 
+
+  vec3 unquantized_pos = unquantize_uvec3_16u_to_vec3_32f(quantized_pos);
+  return unquantized_pos;
+}
+
+
+#endif
 
 void main() {
 
   @material_input@
   
 
-
+#ifdef VERTEX_COMPRESSION_TYPE_NONE
   vec4 extracted_vertex_pos = vec4(in_sorted_vertex_pos_data[3*(gl_VertexID ) + 0],
                                    in_sorted_vertex_pos_data[3*(gl_VertexID ) + 1],
                                    in_sorted_vertex_pos_data[3*(gl_VertexID ) + 2],
                                    1.0);
+#else
+  vec3 unquantized_position = get_unquantized_vertex_pos(gl_VertexID);
+  vec4 extracted_vertex_pos = vec4(unquantized_position,
+                                   1.0);
+#endif
   //vec4 extracted_vertex_pos = vec4(tri_positions[gl_VertexID % 3], 1.0);
 
   gua_world_position = (kinect_model_matrix * extracted_vertex_pos).xyz;

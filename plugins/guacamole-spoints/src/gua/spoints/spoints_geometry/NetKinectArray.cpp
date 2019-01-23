@@ -84,14 +84,15 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
     size_t initial_vbo_size = 10000000;
     
-    //compressed_LQ_one_pass_program_->storage_buffer("bvh_auxiliary_struct", 1);
+    shader_program->set_uniform(ctx, m_tight_geometry_bb_min_, "tight_bb_min");
+    shader_program->set_uniform(ctx, m_tight_geometry_bb_max_, "tight_bb_max");
+
     shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
     ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, initial_vbo_size);
     //ctx.render_device->main_context()->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
     
     ctx.render_device->main_context()->apply_storage_buffer_bindings();
-    shader_program->set_uniform(ctx, int(m_triangle_texture_atlas_size_), "texture_space_triangle_size");
-    //shader_program->set_uniform(ctx, 10, "Out_Sorted_Vertex_Tri_Data");
+
 
     uint32_t triangle_offset_for_current_layer = 0;
     uint32_t num_triangles_to_draw_for_current_layer = 0;
@@ -237,6 +238,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_texture_space_bounding_boxes_back_,
                 m_texture_space_bounding_boxes_);
 
+      std::swap(m_tight_geometry_bb_min_, m_tight_geometry_bb_min_back_);
+      std::swap(m_tight_geometry_bb_max_, m_tight_geometry_bb_max_back_);
+
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
@@ -253,9 +257,13 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         size_t sizeof_vertex_colored_tri   = 3*sizeof_vertex_colored_point;
         size_t sizeof_textured_tri         = 3*sizeof_vertex_colored_point;
 */
-        size_t sizeof_vertex_colored_point = 3*sizeof(float);
+/*        size_t sizeof_vertex_colored_point = 3*sizeof(float);
         size_t sizeof_vertex_colored_tri   = 3*3*sizeof(float);
-        size_t sizeof_textured_tri         = 3*3*sizeof(float);
+        size_t sizeof_textured_tri         = 3*3*sizeof(float);*/
+
+        size_t sizeof_vertex_colored_point = 3*sizeof(uint16_t);
+        size_t sizeof_vertex_colored_tri   = 3*3*sizeof(uint16_t);
+        size_t sizeof_textured_tri         = 3*3*sizeof(uint16_t);
 
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
 
@@ -358,11 +366,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
                 std::cout << "Trying to read with offset: " << byte_offset_per_texture_data_for_layers[layer_to_update_idx] << " / " 
                                                             << m_texture_payload_size_in_byte_ << "\n";
 
-                ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
+/*                ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
                                                                       current_region_to_update, 0, scm::gl::FORMAT_BGR_8, 
                                                                       (void*) &m_texture_buffer_[current_read_offset] );
                                                                       //(void*) &m_texture_buffer_[0] );
-          
+          */
               }
 
 
@@ -380,7 +388,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         if(!current_is_vbo_created) {
           auto& current_point_layout = point_layout_per_context_[ctx.id];
 
-          size_t size_of_vertex = 3 * sizeof(float);
+          size_t size_of_vertex = 3 * sizeof(uint16_t);
 
           current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
                                                                        (0, 0, scm::gl::TYPE_VEC3F, 0),
@@ -417,9 +425,10 @@ void NetKinectArray::_decompress_and_rewrite_message() {
   //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
   
   // allocate 50 mb for compressed data 
+/*
   uint8_t* compressed_image_buffer = tjAlloc(1024*1024 * 50);
 
-  int header_width, header_height, header_subsamp,;
+  int header_width, header_height, header_subsamp;
 
   auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[kinect_layer_idx];
   tjDecompressHeader2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx],
@@ -428,7 +437,8 @@ void NetKinectArray::_decompress_and_rewrite_message() {
   tjDecompress2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx], &texture_write_pos[byte_offset_to_current_image],
                 header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
 
-  tjFree(compressed_image_buffer);
+  tjFree(compressed_image_buffer);*/
+  
 
 }
 
@@ -503,12 +513,17 @@ void NetKinectArray::readloop() {
 
 
     } else {
+
+      message_header.fill_texture_byte_offsets_to_bounding_boxes();
+
       //std::cout << "ISSSSSSSSSSSSSSSS AVATAR DATA\n";
 
         for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
-          latest_received_bb_min[dim_idx] = message_header.global_bb_min[dim_idx];
-          latest_received_bb_max[dim_idx] = message_header.global_bb_max[dim_idx];
+          m_tight_geometry_bb_min_back_[dim_idx] = message_header.global_bb_min[dim_idx];
+          m_tight_geometry_bb_max_back_[dim_idx] = message_header.global_bb_max[dim_idx];
         }
+
+        //std::cout << "Received min x: " << m_tight_geometry_bb_min_back_[0] << "\n";
 
         m_received_textured_tris_back_         = message_header.num_textured_triangles;
         m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
@@ -544,7 +559,10 @@ void NetKinectArray::readloop() {
           return;
         }
 
-        size_t textured_tris_byte_size  = m_received_textured_tris_back_         * 3*3*sizeof(float);//sizeof(gua::point_types::XYZ32_RGB8);
+        size_t textured_tris_byte_size  =  (m_received_textured_tris_back_ % 2 == 0 
+                                            ? m_received_textured_tris_ 
+                                            : (m_received_textured_tris_+1) )
+                                              * 3 * 3 * sizeof(uint16_t);
 
 
         //std::cout << "RECEIVED TRIANGLES: " << m_received_textured_tris_back_ << "\n";
@@ -563,7 +581,7 @@ void NetKinectArray::readloop() {
         //m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
 
         std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
-        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+        //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
       
         _decompress_and_rewrite_message();
 
