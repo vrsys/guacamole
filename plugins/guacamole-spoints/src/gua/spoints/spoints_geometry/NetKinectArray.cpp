@@ -111,7 +111,7 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
                                       vertex_offset,
-                                      num_vertices_to_draw);
+                                      num_vertices_to_draw - 1);
 
       triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
     }
@@ -249,22 +249,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       size_t total_num_bytes_to_copy = m_buffer_.size();
 
       if(0 != total_num_bytes_to_copy) {
-
-        //size_t sizeof_point = 4*sizeof(float);
-        //size_t sizeof_point = 2*sizeof(uint32_t);
-
-/*        size_t sizeof_vertex_colored_point = 2*sizeof(uint32_t);
-        size_t sizeof_vertex_colored_tri   = 3*sizeof_vertex_colored_point;
-        size_t sizeof_textured_tri         = 3*sizeof_vertex_colored_point;
-*/
-/*        size_t sizeof_vertex_colored_point = 3*sizeof(float);
-        size_t sizeof_vertex_colored_tri   = 3*3*sizeof(float);
-        size_t sizeof_textured_tri         = 3*3*sizeof(float);*/
-
-        size_t sizeof_vertex_colored_point = 3*sizeof(uint16_t);
-        size_t sizeof_vertex_colored_tri   = 3*3*sizeof(uint16_t);
-        size_t sizeof_textured_tri         = 3*3*sizeof(uint16_t);
-
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
 
         //num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
@@ -296,16 +280,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
           ctx.render_device->main_context()->apply_storage_buffer_bindings();
 
-          float dummy_data[9] = {0.0, 0.0, 0.0, 0.5, 1.0, 0.0, 1.0, 0.0, 0.0};
-          //float dummy_data[9] = {0.0, 0.0, 0.5, 0.5, 0.0, 0.5, 0.5, 1.0, 0.5};
-
-
           float* mapped_net_data_vbo_ = (float*) ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
           memcpy((char*) mapped_net_data_vbo_, (char*) &m_buffer_[0], total_num_bytes_to_copy);
-          //memcpy((char*) mapped_net_data_vbo_, (char*) &dummy_data[0], 9*sizeof(float));
-
-
-          //std::cout << ""
 
           remote_server_screen_width_to_return_ = remote_server_screen_width_;
           remote_server_screen_height_to_return_ = remote_server_screen_height_;
@@ -390,14 +366,12 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
           size_t size_of_vertex = 3 * sizeof(uint16_t);
 
-          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-                                                                       (0, 0, scm::gl::TYPE_VEC3F, 0),
-                                                                        boost::assign::list_of(current_empty_vbo));
-          //deprecated
+
           //size_t size_of_vertex = 2 * sizeof(uint32_t);
-          //current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
-          //                                                             (0, 0, scm::gl::TYPE_VEC2UI, size_of_vertex, scm::gl::INT_PURE),
-          //                                                              boost::assign::list_of(current_net_data_vbo));
+          current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format
+                                                                       (0, 0, scm::gl::TYPE_UINT, 0),
+                                                                        boost::assign::list_of(current_empty_vbo));
+
           current_is_vbo_created = true;
 
         }
@@ -559,18 +533,20 @@ void NetKinectArray::readloop() {
           return;
         }
 
-        size_t textured_tris_byte_size  =  (m_received_textured_tris_back_ % 2 == 0 
-                                            ? m_received_textured_tris_ 
-                                            : (m_received_textured_tris_+1) )
-                                              * 3 * 3 * sizeof(uint16_t);
+
+        std::size_t constexpr size_of_vertex = sizeof(uint16_t);
+
+        size_t textured_tris_byte_size  = total_num_received_primitives * 3 * 3 * size_of_vertex;
 
 
         //std::cout << "RECEIVED TRIANGLES: " << m_received_textured_tris_back_ << "\n";
 
-        //std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
-        
+
 
         size_t total_payload_byte_size = textured_tris_byte_size;
+
+        std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
+        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_payload_byte_size << "\n";
 
         //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
 
