@@ -74,3 +74,7 @@ target_link_libraries(nrp_plugin_world PUBLIC ${GAZEBO_LIBRARIES})
 add_library(nrp_plugin_model SHARED nrp_plugins/GuaInteractiveModelPlugin.cpp nrp_plugins/GuaInteractiveModelPlugin.hpp)
 target_include_directories(nrp_plugin_model PUBLIC ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})
 target_link_libraries(nrp_plugin_model PUBLIC ${GAZEBO_LIBRARIES})
+
+add_library(nrp_plugin_dyngeo SHARED nrp_plugins/GuaDynGeoVisualPlugin.cpp nrp_plugins/GuaDynGeoVisualPlugin.hpp)
+target_include_directories(nrp_plugin_dyngeo PUBLIC ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})
+target_link_libraries(nrp_plugin_dyngeo PUBLIC ${GAZEBO_LIBRARIES})
