@@ -37,7 +37,7 @@ const vec3 conservative_bb_limit_max = vec3( 1.5,  2.5,  1.5);
 uniform vec3 tight_bb_min;
 uniform vec3 tight_bb_max;
 
-const vec3 quant_steps  = vec3(tight_bb_max - tight_bb_min) / (1<<16);
+const vec3 quant_steps  = vec3(tight_bb_max - tight_bb_min) / (1<<16 - 1);
 
 
 
@@ -86,8 +86,8 @@ vec3 unquantize_uvec3_16u_to_vec3_32f(in uvec3 quantized_pos) {
   vec3 bb_max = tight_bb_max;
          
   vec3 bb_ranges = vec3(bb_max - bb_min);
-  vec3 step_sizes = bb_ranges / (1<<16);
-  vec3 unquantized_32_bit_pos = vec3(bb_min + (compressed_pos ) * step_sizes);
+  vec3 step_sizes = bb_ranges / ( (1<<16) - 1);
+  vec3 unquantized_32_bit_pos = vec3(bb_min + (compressed_pos + vec3(0.5) ) * step_sizes);
 
   return unquantized_32_bit_pos;
 }

@@ -111,7 +111,7 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
                                       vertex_offset,
-                                      num_vertices_to_draw - 1);
+                                      num_vertices_to_draw - 3);
 
       triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
     }
