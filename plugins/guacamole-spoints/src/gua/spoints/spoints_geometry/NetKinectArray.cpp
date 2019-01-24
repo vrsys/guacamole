@@ -79,13 +79,19 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
       }
       //m_bound_calibration_data_[ctx.id] = true;
     //}
+
+    float lod_scaling_for_context = m_current_lod_scaling_per_context_[ctx.id];
+
     shader_program->set_uniform(ctx, m_inverse_vol_to_world_mat_, "inv_vol_to_world_matrix");    
-    shader_program->set_uniform(ctx, m_lod_scaling_, "scaling_factor");
+    shader_program->set_uniform(ctx, lod_scaling_for_context, "scaling_factor");
 
     size_t initial_vbo_size = 10000000;
     
-    shader_program->set_uniform(ctx, m_tight_geometry_bb_min_, "tight_bb_min");
-    shader_program->set_uniform(ctx, m_tight_geometry_bb_max_, "tight_bb_max");
+    scm::math::vec3 tight_geometry_bb_min_for_context = m_current_tight_geometry_bb_min_per_context_[ctx.id];
+    scm::math::vec3 tight_geometry_bb_max_for_context = m_current_tight_geometry_bb_max_per_context_[ctx.id];
+
+    shader_program->set_uniform(ctx, tight_geometry_bb_min_for_context, "tight_bb_min");
+    shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
 
     shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
     ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, initial_vbo_size);
@@ -97,21 +103,22 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
     uint32_t triangle_offset_for_current_layer = 0;
     uint32_t num_triangles_to_draw_for_current_layer = 0;
 
+    auto& num_best_triangles_for_sensor_layer_for_context = m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id];
+
     for(int layer_idx = 0; layer_idx < 4; ++layer_idx) {
-      num_triangles_to_draw_for_current_layer = m_num_best_triangles_for_sensor_layer_[layer_idx];
+      num_triangles_to_draw_for_current_layer = num_best_triangles_for_sensor_layer_for_context[layer_idx];
 
       shader_program->set_uniform(ctx, int(layer_idx), "current_sensor_layer");
 
       ctx.render_context->apply();
       
-      size_t vertex_offset = triangle_offset_for_current_layer * 3;
-      size_t num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
-      size_t const current_num_tri_vertices_to_draw = num_textured_tris_to_draw_per_context_[ctx.id] * 3;
+      size_t const vertex_offset = triangle_offset_for_current_layer * 3;
+      size_t const num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
 
 
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
                                       vertex_offset,
-                                      num_vertices_to_draw - 3);
+                                      num_vertices_to_draw);
 
       triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
     }
@@ -228,7 +235,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_received_reconstruction_time_back_, m_received_reconstruction_time_);
 
       std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
-      std::swap(m_triangle_texture_atlas_size_back_, m_triangle_texture_atlas_size_);
 
       std::swap(m_num_best_triangles_for_sensor_layer_, 
                 m_num_best_triangles_for_sensor_layer_back_);
@@ -251,7 +257,8 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       if(0 != total_num_bytes_to_copy) {
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
 
-        //num_points_to_draw_per_context_[ctx.id] = total_num_bytes_to_copy / sizeof_point;
+        m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id] = m_num_best_triangles_for_sensor_layer_;
+
 
         auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
@@ -288,17 +295,15 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
           ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
           
+	        m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
+
+          m_current_tight_geometry_bb_min_per_context_[ctx.id] = m_tight_geometry_bb_min_;
+	        m_current_tight_geometry_bb_max_per_context_[ctx.id] = m_tight_geometry_bb_max_;
+
 
           uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
 
-//          uint32_t num_pixels_u_direction = ( (total_num_pixels_to_upload / ONE_D_TEXTURE_ATLAS_SIZE) > 0) ?  ONE_D_TEXTURE_ATLAS_SIZE : total_num_pixels_to_upload;
-//          uint32_t num_pixels_v_direction = ( (total_num_pixels_to_upload) / ONE_D_TEXTURE_ATLAS_SIZE == 0) ? total_num_pixels_to_upload : total_num_pixels_to_upload/ONE_D_TEXTURE_ATLAS_SIZE;
-
-          uint32_t num_pixels_u_direction = 1280*2;
-          uint32_t num_pixels_v_direction = 720*2;
-
           uint32_t byte_offset_per_texture_data_for_layers[16];
-          std::vector<scm::gl::texture_region> regions_to_update(16);
 
 
           for(uint32_t layer_to_update_idx = 0; layer_to_update_idx < 16; ++layer_to_update_idx) {
@@ -321,9 +326,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
               if(m_num_best_triangles_for_sensor_layer_[layer_to_update_idx] > 0) {
                 uint32_t current_layer_offset = 4 * (layer_to_update_idx);
-                //uint32_t prev_bb_pixel_coverage =   (1 + m_texture_space_bounding_boxes_[layer_offset + 2] - m_texture_space_bounding_boxes_[layer_offset + 0])
-                //                                    * (1 + m_texture_space_bounding_boxes_[layer_offset + 3] - m_texture_space_bounding_boxes_[layer_offset + 1]);
-
 
                 auto current_region_to_update = 
                   scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0]    , 
@@ -364,7 +366,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
         if(!current_is_vbo_created) {
           auto& current_point_layout = point_layout_per_context_[ctx.id];
 
-          size_t size_of_vertex = 3 * sizeof(uint16_t);
+
 
 
           //size_t size_of_vertex = 2 * sizeof(uint32_t);
@@ -497,7 +499,7 @@ void NetKinectArray::readloop() {
           m_tight_geometry_bb_max_back_[dim_idx] = message_header.global_bb_max[dim_idx];
         }
 
-        //std::cout << "Received min x: " << m_tight_geometry_bb_min_back_[0] << "\n";
+
 
         m_received_textured_tris_back_         = message_header.num_textured_triangles;
         m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;

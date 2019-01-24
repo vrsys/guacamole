@@ -158,10 +158,15 @@ private:
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
   std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_; 
 
+  std::unordered_map<std::size_t, std::array<uint32_t, 16> > m_current_num_best_triangles_for_sensor_layer_per_context_;
+
   scm::math::vec3 m_tight_geometry_bb_min_back_;
   scm::math::vec3 m_tight_geometry_bb_min_;
   scm::math::vec3 m_tight_geometry_bb_max_back_;
   scm::math::vec3 m_tight_geometry_bb_max_;
+
+  std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_;
+  std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_;
 
   std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_; 
   std::array<uint32_t, 4*16> m_texture_space_bounding_boxes_back_; 
@@ -171,6 +176,9 @@ private:
 
   float m_lod_scaling_ = 1.0f;
   float m_lod_scaling_back_ = 1.0f;
+
+  mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_;
+
 
   std::atomic<bool> m_need_cpu_swap_;
   mutable std::unordered_map<std::size_t,std::atomic<bool> > m_need_gpu_swap_;
