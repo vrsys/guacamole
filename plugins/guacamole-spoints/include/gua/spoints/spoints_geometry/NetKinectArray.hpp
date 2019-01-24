@@ -11,6 +11,10 @@
 #include <mutex>
 #include <thread>
 #include <unordered_set>
+#include <unordered_map>
+
+#include <gua/spoints/sgtp/SGTP.h>
+#include <turbojpeg.h>
 
 namespace spoints{
 
@@ -104,7 +108,7 @@ public:
   std::string get_socket_string() const;
   //float       get_voxel_size() const;
 
-
+  std::unordered_map<uint32_t, tjhandle> m_jpeg_decompressor_per_layer;
 
 
   SPointsStats get_latest_spoints_stats() {
@@ -125,7 +129,7 @@ public:
   }
 
 private:
-  void _decompress_and_rewrite_message();
+  void _decompress_and_rewrite_message(SGTP::header_data_t& header_data);
   void readloop();
   //void sendfeedbackloop();
 
@@ -139,6 +143,9 @@ private:
 
   std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
   std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
+
+  uint8_t* m_tj_compressed_image_buffer_ = nullptr;
+  std::array<uint8_t, 1024*1024*50> m_decompressed_image_buffer_;
 
   std::vector<uint8_t> m_calibration_;
   std::vector<uint8_t> m_calibration_back_;

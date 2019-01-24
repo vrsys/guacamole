@@ -4,13 +4,11 @@
 #include <boost/assign/list_of.hpp>
 
 
-#include <gua/spoints/sgtp/SGTP.h>
-
 #include <zmq.hpp>
 #include <iostream>
 #include <mutex>
 
-#include <turbojpeg.h>
+
 
 namespace spoints {
 
@@ -396,25 +394,68 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 }*/
 
 
-void NetKinectArray::_decompress_and_rewrite_message() {
+void NetKinectArray::_decompress_and_rewrite_message(SGTP::header_data_t& header_data) {
   //std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
   //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
   
   // allocate 50 mb for compressed data 
-/*
-  uint8_t* compressed_image_buffer = tjAlloc(1024*1024 * 50);
 
-  int header_width, header_height, header_subsamp;
+  if(nullptr == m_tj_compressed_image_buffer_) {
+    m_tj_compressed_image_buffer_ = tjAlloc(1024*1024*50);
+  }
 
-  auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[kinect_layer_idx];
-  tjDecompressHeader2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx],
-                      &header_width, &header_height, &header_subsamp);
 
-  tjDecompress2(current_decompressor_handle, compressed_image[kinect_layer_idx], _jpegSize[kinect_layer_idx], &texture_write_pos[byte_offset_to_current_image],
-                header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
 
-  tjFree(compressed_image_buffer);*/
-  
+
+  std::size_t byte_offset_to_current_image = 0;
+
+  std::size_t total_image_byte_size = 0;
+
+  std::size_t decompressed_image_offset = 0;
+
+  for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
+    total_image_byte_size += header_data.byte_offset_to_texture_window_data[sensor_layer_idx];
+  }
+
+  for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
+    if(m_jpeg_decompressor_per_layer.end() == m_jpeg_decompressor_per_layer.find(sensor_layer_idx)) {
+      m_jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
+      if(m_jpeg_decompressor_per_layer[sensor_layer_idx] == NULL) {
+        std::cout << "ERROR INITIALIZING DECOMPRESSOR\n";
+      }
+    }
+
+    long unsigned int jpeg_size = header_data.byte_offset_to_texture_window_data[sensor_layer_idx];
+
+    memcpy((char*) &m_tj_compressed_image_buffer_[byte_offset_to_current_image],
+           (char*) &m_texture_buffer_back_[byte_offset_to_current_image],
+           jpeg_size );
+    
+    int header_width, header_height, header_subsamp;
+
+    auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
+
+
+    int error_handle = tjDecompressHeader2(current_decompressor_handle, &m_tj_compressed_image_buffer_[byte_offset_to_current_image], jpeg_size,
+                        &header_width, &header_height, &header_subsamp);
+
+    if(-1 == error_handle) {
+      std::cout << "ERROR DECOMPRESSING JPEG\n";
+      std::cout << "Error was: " << tjGetErrorStr() << "\n";
+    }
+
+    tjDecompress2(current_decompressor_handle, &m_tj_compressed_image_buffer_[byte_offset_to_current_image], jpeg_size, &m_decompressed_image_buffer_[decompressed_image_offset],
+                  header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
+
+    uint32_t copied_image_byte = header_height * header_width * 3;
+
+    byte_offset_to_current_image += jpeg_size;
+    decompressed_image_offset += copied_image_byte;
+  }
+
+  memcpy( (char*) m_texture_buffer_back_.data(),
+          (char*) m_decompressed_image_buffer_.data(),
+          decompressed_image_offset );
 
 }
 
@@ -545,23 +586,33 @@ void NetKinectArray::readloop() {
 
 
 
-        size_t total_payload_byte_size = textured_tris_byte_size;
+        size_t total_geometry_payload_byte_size = textured_tris_byte_size;
 
         std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
-        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_payload_byte_size << "\n";
+        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_geometry_payload_byte_size << "\n";
 
-        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
+        std::cout << "Mbit extrapolation @ 30 Hz: " << zmqm.size() * 8 * 30 / (1024*1024) << "\n";
 
-        m_buffer_back_.resize(total_payload_byte_size);
+        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
 
-        memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_payload_byte_size);
+        m_buffer_back_.resize(total_geometry_payload_byte_size);
 
-        //m_texture_buffer_back_.resize(m_texture_payload_size_in_byte_back_);
+        memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_geometry_payload_byte_size);
+
 
         std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
-        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
+        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_geometry_payload_byte_size, m_texture_payload_size_in_byte_back_);
       
-        _decompress_and_rewrite_message();
+        std::cout << "Starting to read texture data at byte: " << HEADER_SIZE + total_geometry_payload_byte_size << "\n";
+
+        std::cout << "Copied " << m_texture_payload_size_in_byte_back_ << " byte of texture payload\n";
+
+        std::cout << "Trying to work til " << HEADER_SIZE + total_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << " / " 
+                  << zmqm.size() << "\n";
+
+        if(message_header.is_image_data_compressed) {
+          _decompress_and_rewrite_message(message_header);
+        }
 
         { // swap
           std::lock_guard<std::mutex> lock(m_mutex_);
