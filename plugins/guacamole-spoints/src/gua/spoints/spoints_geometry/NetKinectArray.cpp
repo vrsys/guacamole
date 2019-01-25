@@ -119,8 +119,8 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
 
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
-                                      3 + vertex_offset,
-                                      num_vertices_to_draw - 3);
+                                      vertex_offset,
+                                      num_vertices_to_draw);
 
       triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
     }
@@ -254,7 +254,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
     }
 
     if(m_need_gpu_swap_[ctx.id].load()) {
-      size_t total_num_bytes_to_copy = m_buffer_.size();
+      size_t total_num_bytes_to_copy = m_received_textured_tris_ * 3 * 3 * sizeof(uint16_t);
 
       if(0 != total_num_bytes_to_copy) {
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
@@ -338,13 +338,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
               
                 size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
 
-                std::cout << "Trying to update the following region: " << "\n";
-                std::cout      << m_texture_space_bounding_boxes_[current_layer_offset + 0] << ", " << m_texture_space_bounding_boxes_[current_layer_offset + 1] <<
-                          ", " << m_texture_space_bounding_boxes_[current_layer_offset + 2] << ", " << m_texture_space_bounding_boxes_[current_layer_offset + 3] << "\n";
-
-                std::cout << "Trying to read with offset: " << byte_offset_per_texture_data_for_layers[layer_to_update_idx] << " / " 
-                                                            << m_texture_payload_size_in_byte_ << "\n";
-
                 ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
                                                                       current_region_to_update, 0, scm::gl::FORMAT_BGR_8, 
                                                                       (void*) &m_texture_buffer_[current_read_offset] );
@@ -354,14 +347,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
 
           }
-
-          //auto region_to_update = scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(num_pixels_u_direction, num_pixels_v_direction, 1));
-          
-
-
-          std::cout << "Pixels to upload: " << total_num_pixels_to_upload << "\n";
-          //to replace
-          //ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*) &m_texture_buffer_[0]);
 
 
         if(!current_is_vbo_created) {
@@ -398,24 +383,12 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
 
 void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows) {
-  //std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
-  //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
-  
-
-  // allocate 50 mb for compressed data 
-
 
 
   std::size_t num_decompressed_bytes = LZ4_decompress_safe( (const char*)&m_buffer_back_compressed_[0], (char*) &m_buffer_back_[0],
                                           m_buffer_back_compressed_.size(), m_buffer_back_.size());
 
   std::cout << "num_decompressed_bytes: " << num_decompressed_bytes << "\n";
-/*
-  int error_handle = fastlz_decompress(&m_buffer_back_compressed_[0], m_buffer_back_compressed_.size(),
-                                       &m_buffer_back_[0], m_buffer_back_.size());*/
-
-/*  memcpy((unsigned char*) &m_buffer_back_compressed_[0], m_buffer_back_compressed_.size(),
-        ((unsigned char*) zmqm.data()) + HEADER_SIZE, m_buffer_back_.size());*/
 
 
   if(nullptr == m_tj_compressed_image_buffer_) {
@@ -568,11 +541,15 @@ void NetKinectArray::readloop() {
 
         m_lod_scaling_back_                  = message_header.lod_scaling;
 
+        m_received_textured_tris_back_ = 0;
+
         uint16_t const MAX_LAYER_IDX = 16;
         for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
           m_num_best_triangles_for_sensor_layer_back_[layer_idx] =
             message_header.num_best_triangles_per_sensor[layer_idx];
 
+          m_received_textured_tris_back_ 
+            += message_header.num_best_triangles_per_sensor[layer_idx];
 
           m_texture_space_bounding_boxes_back_[4*layer_idx + 0]
             = message_header.tex_bounding_box[layer_idx].min.u;
@@ -600,21 +577,11 @@ void NetKinectArray::readloop() {
         size_t textured_tris_byte_size  = total_num_received_primitives * 3 * 3 * size_of_vertex;
 
 
-        //std::cout << "RECEIVED TRIANGLES: " << m_received_textured_tris_back_ << "\n";
-
-
 
         size_t total_uncompressed_geometry_payload_byte_size = textured_tris_byte_size;
 
-        std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
-        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_uncompressed_geometry_payload_byte_size << "\n";
-
-        std::cout << "Mbit extrapolation @ 30 Hz: " << zmqm.size() * 8 * 30 / (1024*1024) << "\n";
-
-        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_uncompressed_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
 
 
-        std::cout << "Trying to resize back buffer to " << total_uncompressed_geometry_payload_byte_size << " Bytes\n";
         m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size); 
 
         size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
@@ -626,20 +593,14 @@ void NetKinectArray::readloop() {
           memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
         }
 
-        std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
         memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_texture_payload_size_in_byte_back_);
       
-        std::cout << "Starting to read texture data at byte: " << HEADER_SIZE + total_encoded_geometry_byte_size << "\n";
-
-        std::cout << "Copied " << m_texture_payload_size_in_byte_back_ << " byte of texture payload\n";
-
-        std::cout << "Trying to work til " << HEADER_SIZE + total_encoded_geometry_byte_size + m_texture_payload_size_in_byte_back_ << " / " 
-                  << zmqm.size() << "\n";
+  
 
         std::vector<std::size_t> byte_offset_to_jpeg_windows(16, 0);
 
         for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
-          byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.byte_offset_to_texture_window_data[sensor_layer_idx];
+          byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
         }
 
         if(message_header.is_image_data_compressed) {

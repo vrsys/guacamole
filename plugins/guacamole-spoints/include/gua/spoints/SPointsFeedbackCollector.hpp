@@ -135,7 +135,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
       for( auto const& collected_feedback_pair_per_socket : serialized_matrices_per_socket) {
 
-        size_t feedback_header_byte = 100;
+        size_t feedback_header_byte = 8;
 
         uint32_t num_recorded_matrix_packages = 0;
 
@@ -155,7 +155,10 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
       
         zmq::message_t zmqm(feedback_header_byte + num_recorded_matrix_packages * sizeof(spoints::matrix_package) );
 
-        memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));     
+        int32_t request_package_id = ctx.framecount;
+
+        memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));
+        memcpy((char*)zmqm.data() + sizeof(uint32_t), (char*)&(request_package_id), sizeof(int32_t));
         memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(collected_matrices[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
 
         //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
