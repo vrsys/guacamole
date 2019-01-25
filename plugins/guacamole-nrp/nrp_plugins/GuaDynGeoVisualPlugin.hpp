@@ -12,6 +12,7 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/rendering/Visual.hh>
 #include <gazebo/transport/Node.hh>
+#include <Ogre.h>
 
 typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStampedPtr;
 
