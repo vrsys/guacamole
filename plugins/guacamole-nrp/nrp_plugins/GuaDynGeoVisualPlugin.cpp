@@ -59,7 +59,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     // test access to scene
     const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
     scene_manager->setAmbientLight(ambient);
-    scene_manager->setDisplaySceneNodes(true);
+    scene_manager->setDisplaySceneNodes(false);
 
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
