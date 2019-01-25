@@ -30,13 +30,13 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     gzerr << "DynGeo: update connection created" << std::endl;
     std::cerr << "DynGeo: update connection created" << std::endl;
 
-    Ogre::SceneNode *scene_node = _visual->GetSceneNode();
-    Ogre::SceneManager *scene_manager = scene_node->getCreator();
+    _scene_node = _visual->GetSceneNode();
+    _scene_manager = _scene_node->getCreator();
 
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
-    Ogre::ManualObject *man = scene_manager->createManualObject("test");
+    Ogre::ManualObject *man = _scene_manager->createManualObject("test");
     man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
     man->position(-2, 2, 2);
     man->normal(0, 0, 1);
@@ -58,13 +58,13 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     // test access to scene
     const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
-    scene_manager->setAmbientLight(ambient);
-    scene_manager->setDisplaySceneNodes(false);
+    _scene_manager->setAmbientLight(ambient);
+    _scene_manager->setDisplaySceneNodes(false);
 
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
 
-    scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
+    _scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
 
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
@@ -73,21 +73,15 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 /////////////////////////////////////////////////
 void GuaDynGeoVisualPlugin::Update()
 {
-    // gzerr << "DynGeo: pre-render update before" << std::endl;
-    // std::cerr << "DynGeo: pre-render update before" << std::endl;
+    gzerr << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << "DynGeo: pre-render update before" << std::endl;
 
-    if(!_visual)
-    {
-        gzerr << "The visual is null." << std::endl;
-        return;
-    }
+    // test access to scene
+    const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
+    _scene_manager->setAmbientLight(ambient);
+    _scene_manager->setDisplaySceneNodes(false);
 
-    common::Color color(1., 0., 0., 1.);
-
-    _visual->SetDiffuse(color);
-    _visual->SetAmbient(color);
-
-    // gzerr << "DynGeo: pre-render update before" << std::endl;
-    // std::cerr << "DynGeo: pre-render update before" << std::endl;
+    gzerr << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << "DynGeo: pre-render update before" << std::endl;
 }
 }
