@@ -27,27 +27,44 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     _visual = visual;
     _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
+    gzerr << "DynGeo: update connection created" << std::endl;
+    std::cerr << "DynGeo: update connection created" << std::endl;
+
     Ogre::SceneNode *scene_node = _visual->GetSceneNode();
     Ogre::SceneManager *scene_manager = scene_node->getCreator();
 
+    gzerr << "DynGeo: scene manager acquired" << std::endl;
+    std::cerr << "DynGeo: scene manager acquired" << std::endl;
+
     Ogre::ManualObject *man = scene_manager->createManualObject("test");
     man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
-    man->position(-20, 20, 20);
+    man->position(-2, 2, 2);
     man->normal(0, 0, 1);
     man->textureCoord(0, 0);
-    man->position(-20, -20, 20);
+    man->position(-2, -2, 2);
     man->normal(0, 0, 1);
     man->textureCoord(0, 1);
-    man->position(20, -20, 20);
+    man->position(2, -2, 2);
     man->normal(0, 0, 1);
     man->textureCoord(1, 1);
-    man->position(20, 20, 20);
+    man->position(2, 2, 2);
     man->normal(0, 0, 1);
     man->textureCoord(1, 0);
     man->quad(0, 1, 2, 3);
     man->end();
 
-    scene_node->attachObject(man);
+    gzerr << "DynGeo: quad added" << std::endl;
+    std::cerr << "DynGeo: quad added" << std::endl;
+
+    // test access to scene
+    const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
+    scene_manager->setAmbientLight(ambient);
+    scene_manager->setDisplaySceneNodes(true);
+
+    gzerr << "DynGeo: test values written" << std::endl;
+    std::cerr << "DynGeo: test values written" << std::endl;
+
+    scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
 
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
