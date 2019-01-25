@@ -81,7 +81,7 @@ void GuaDynGeoVisualPlugin::Update()
     _scene_manager->setAmbientLight(ambient);
     _scene_manager->setDisplaySceneNodes(false);
 
-    gzerr << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << "DynGeo: pre-render update before" << std::endl;
+    gzerr << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << "DynGeo: pre-render update after" << std::endl;
 }
 }
