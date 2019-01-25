@@ -8,11 +8,11 @@
 #include <iostream>
 #include <mutex>
 
-
+#include <gua/spoints/sgtp/SGTP.h>
+// fastlz for inflation of geometry data
+#include <lz4/lz4.h>
 
 namespace spoints {
-
-#define ONE_D_TEXTURE_ATLAS_SIZE 2048
 
 NetKinectArray::NetKinectArray(const std::string& server_endpoint,
                                const std::string& feedback_endpoint)
@@ -33,6 +33,10 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint,
 
 NetKinectArray::~NetKinectArray()
 {
+  if(nullptr != m_tj_compressed_image_buffer_) {
+    tjFree(m_tj_compressed_image_buffer_);
+  }
+
   m_running_ = false;
   m_recv_.join();
 }
@@ -115,8 +119,8 @@ NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::
 
 
       ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST,
-                                      vertex_offset,
-                                      num_vertices_to_draw);
+                                      3 + vertex_offset,
+                                      num_vertices_to_draw - 3);
 
       triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
     }
@@ -277,7 +281,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           size_t texture_height = 720*2;
 
           current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
-          //current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(ONE_D_TEXTURE_ATLAS_SIZE, ONE_D_TEXTURE_ATLAS_SIZE), scm::gl::FORMAT_BGR_8, 1, 1, 1);
         }
 
           size_t initial_vbo_size = 10000000;
@@ -394,11 +397,26 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 }*/
 
 
-void NetKinectArray::_decompress_and_rewrite_message(SGTP::header_data_t& header_data) {
+void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows) {
   //std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
   //memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_payload_byte_size, m_texture_payload_size_in_byte_back_);
   
+
   // allocate 50 mb for compressed data 
+
+
+
+  std::size_t num_decompressed_bytes = LZ4_decompress_safe( (const char*)&m_buffer_back_compressed_[0], (char*) &m_buffer_back_[0],
+                                          m_buffer_back_compressed_.size(), m_buffer_back_.size());
+
+  std::cout << "num_decompressed_bytes: " << num_decompressed_bytes << "\n";
+/*
+  int error_handle = fastlz_decompress(&m_buffer_back_compressed_[0], m_buffer_back_compressed_.size(),
+                                       &m_buffer_back_[0], m_buffer_back_.size());*/
+
+/*  memcpy((unsigned char*) &m_buffer_back_compressed_[0], m_buffer_back_compressed_.size(),
+        ((unsigned char*) zmqm.data()) + HEADER_SIZE, m_buffer_back_.size());*/
+
 
   if(nullptr == m_tj_compressed_image_buffer_) {
     m_tj_compressed_image_buffer_ = tjAlloc(1024*1024*50);
@@ -414,7 +432,7 @@ void NetKinectArray::_decompress_and_rewrite_message(SGTP::header_data_t& header
   std::size_t decompressed_image_offset = 0;
 
   for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
-    total_image_byte_size += header_data.byte_offset_to_texture_window_data[sensor_layer_idx];
+    total_image_byte_size += byte_offset_to_jpeg_windows[sensor_layer_idx];
   }
 
   for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
@@ -425,7 +443,7 @@ void NetKinectArray::_decompress_and_rewrite_message(SGTP::header_data_t& header
       }
     }
 
-    long unsigned int jpeg_size = header_data.byte_offset_to_texture_window_data[sensor_layer_idx];
+    long unsigned int jpeg_size = byte_offset_to_jpeg_windows[sensor_layer_idx];
 
     memcpy((char*) &m_tj_compressed_image_buffer_[byte_offset_to_current_image],
            (char*) &m_texture_buffer_back_[byte_offset_to_current_image],
@@ -586,32 +604,46 @@ void NetKinectArray::readloop() {
 
 
 
-        size_t total_geometry_payload_byte_size = textured_tris_byte_size;
+        size_t total_uncompressed_geometry_payload_byte_size = textured_tris_byte_size;
 
         std::cout << "ZMQ MESSAGE SIZE: " << zmqm.size() << "\n";
-        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_geometry_payload_byte_size << "\n";
+        std::cout << "OFFSET + READ: " << HEADER_SIZE + total_uncompressed_geometry_payload_byte_size << "\n";
 
         std::cout << "Mbit extrapolation @ 30 Hz: " << zmqm.size() * 8 * 30 / (1024*1024) << "\n";
 
-        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
+        //std::cout << "BYTES TO COPY   : " << HEADER_SIZE + total_uncompressed_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << "\n";
 
-        m_buffer_back_.resize(total_geometry_payload_byte_size);
 
-        memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_geometry_payload_byte_size);
+        std::cout << "Trying to resize back buffer to " << total_uncompressed_geometry_payload_byte_size << " Bytes\n";
+        m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size); 
 
+        size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
+
+        if(message_header.is_image_data_compressed) {
+          m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
+          memcpy((unsigned char*) &m_buffer_back_compressed_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);          
+        } else {
+          memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
+        }
 
         std::cout << "COPYING " << m_texture_payload_size_in_byte_back_ << " byte into texture source\n";
-        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_geometry_payload_byte_size, m_texture_payload_size_in_byte_back_);
+        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_texture_payload_size_in_byte_back_);
       
-        std::cout << "Starting to read texture data at byte: " << HEADER_SIZE + total_geometry_payload_byte_size << "\n";
+        std::cout << "Starting to read texture data at byte: " << HEADER_SIZE + total_encoded_geometry_byte_size << "\n";
 
         std::cout << "Copied " << m_texture_payload_size_in_byte_back_ << " byte of texture payload\n";
 
-        std::cout << "Trying to work til " << HEADER_SIZE + total_geometry_payload_byte_size + m_texture_payload_size_in_byte_back_ << " / " 
+        std::cout << "Trying to work til " << HEADER_SIZE + total_encoded_geometry_byte_size + m_texture_payload_size_in_byte_back_ << " / " 
                   << zmqm.size() << "\n";
 
+        std::vector<std::size_t> byte_offset_to_jpeg_windows(16, 0);
+
+        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
+          byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.byte_offset_to_texture_window_data[sensor_layer_idx];
+        }
+
         if(message_header.is_image_data_compressed) {
-          _decompress_and_rewrite_message(message_header);
+          _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
         }
 
         { // swap

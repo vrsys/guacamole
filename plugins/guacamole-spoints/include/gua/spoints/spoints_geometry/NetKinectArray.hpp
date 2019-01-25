@@ -13,7 +13,8 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include <gua/spoints/sgtp/SGTP.h>
+
+
 #include <turbojpeg.h>
 
 namespace spoints{
@@ -129,7 +130,7 @@ public:
   }
 
 private:
-  void _decompress_and_rewrite_message(SGTP::header_data_t& header_data);
+  void _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
   void readloop();
   //void sendfeedbackloop();
 
@@ -140,6 +141,7 @@ private:
   const std::string m_feedback_endpoint_;
   std::vector<uint8_t> m_buffer_;
   std::vector<uint8_t> m_buffer_back_;
+  std::vector<uint8_t> m_buffer_back_compressed_;
 
   std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
   std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
