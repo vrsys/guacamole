@@ -29,9 +29,10 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     virtual void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf);
 
   private:
+
+    rendering::VisualPtr _visual;
+    event::ConnectionPtr _update_connection;
     void Update();
-    void OnInfo(ConstPosesStampedPtr &_msg);
-    std::unique_ptr<GuaDynGeoVisualPluginPrivate> dataPtr;
 };
 }
 
