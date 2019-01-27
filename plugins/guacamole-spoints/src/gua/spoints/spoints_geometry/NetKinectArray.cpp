@@ -385,9 +385,11 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows) {
 
 
-  std::size_t num_decompressed_bytes = LZ4_decompress_safe( (const char*)&m_buffer_back_compressed_[0], (char*) &m_buffer_back_[0],
+  int num_decompressed_bytes = LZ4_decompress_safe( (const char*)&m_buffer_back_compressed_[0], (char*) &m_buffer_back_[0],
                                           m_buffer_back_compressed_.size(), m_buffer_back_.size());
 
+
+  std::cout << "num expected decompressed bytes: " << m_buffer_back_.size() << "\n";  
   std::cout << "num_decompressed_bytes: " << num_decompressed_bytes << "\n";
 
 
@@ -567,6 +569,8 @@ void NetKinectArray::readloop() {
 
         size_t total_num_received_primitives = m_received_textured_tris_back_;
 
+        std::cout << "Num tris received: " << m_received_textured_tris_back_ << "\n";
+
         if(total_num_received_primitives > 50000000) {
           return;
         }
@@ -587,6 +591,7 @@ void NetKinectArray::readloop() {
         size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
 
         if(message_header.is_image_data_compressed) {
+          std::cout << "Total amount compressed bytes: " << total_encoded_geometry_byte_size << "\n";
           m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
           memcpy((unsigned char*) &m_buffer_back_compressed_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);          
         } else {
