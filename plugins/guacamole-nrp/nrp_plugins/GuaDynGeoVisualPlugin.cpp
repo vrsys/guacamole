@@ -45,10 +45,20 @@ void GuaDynGeoVisualPlugin::AddTriangle()
 
     Ogre::ManualObject *man = _scene_manager->createManualObject("test");
 
-    man->begin("Gazebo/Green", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+    man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+
     man->position(-2, 2, 2);
+    man->normal(0, 0, 1);
+    man->textureCoord(0, 0);
+
     man->position(-2, -2, 2);
-    man->position(2, -2, 2);
+    man->normal(0, 0, 1);
+    man->textureCoord(0, 1);
+
+    man->position(2, -2, -2);
+    man->normal(0, 0, 1);
+    man->textureCoord(1, 0);
+
     man->triangle(0, 1, 2);
     man->triangle(1, 0, 2);
     man->end();
@@ -61,8 +71,12 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     gzerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
     std::cerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
 
+    float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
     // test access to scene
-    const Ogre::ColourValue ambient(1.f, 0.f, 0.f, 1.f);
+    const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
 
     gzerr << "DynGeo: test values written" << std::endl;
