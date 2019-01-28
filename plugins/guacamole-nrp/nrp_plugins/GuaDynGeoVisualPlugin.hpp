@@ -35,6 +35,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneNode *_scene_node;
     Ogre::SceneManager *_scene_manager;
     void Update();
+    void AddTriangle();
 };
 }
 
