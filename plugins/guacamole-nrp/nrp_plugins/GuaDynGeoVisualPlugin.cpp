@@ -46,30 +46,34 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
 
     man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
+    man->setDynamic(true);
 
-    man->position(-2, 2, 2);
-    man->normal(0, 0, 1);
+    man->position(-2.f, 2.f, 2.f);
+    man->normal(0, 0, 1.f);
     man->textureCoord(0, 0);
 
-    man->position(-2, -2, 2);
-    man->normal(0, 0, 1);
-    man->textureCoord(0, 1);
+    man->position(-2.f, -2.f, 2.f);
+    man->normal(0, 0, 1.f);
+    man->textureCoord(0, 1.f);
 
-    man->position(2, -2, -2);
-    man->normal(0, 0, 1);
-    man->textureCoord(1, 0);
-
-    man->triangle(0, 1, 2);
-    man->triangle(1, 0, 2);
-    man->end();
-
-    man->setVisible(true);
-
-    gzerr << "DynGeo: triangle added" << std::endl;
-    std::cerr << "DynGeo: triangle added" << std::endl;
+    man->position(2.f, -2.f, -2.f);
+    man->normal(0, 0, 1.f);
+    man->textureCoord(1.f, 0);
 
     gzerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
     std::cerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
+
+    man->triangle(0, 1, 2);
+    man->triangle(1, 0, 2);
+    auto section_ptr = man->end();
+
+    gzerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
+    std::cerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
+
+    man->setVisible(true);
+
+    gzerr << "DynGeo: triangles added" << std::endl;
+    std::cerr << "DynGeo: triangles added" << std::endl;
 
     float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
@@ -82,7 +86,7 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
 
-    _scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
+    _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(man);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
