@@ -43,7 +43,7 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
-    Ogre::ManualObject *man = _scene_manager->createManualObject("test");
+    Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
 
     man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
 
