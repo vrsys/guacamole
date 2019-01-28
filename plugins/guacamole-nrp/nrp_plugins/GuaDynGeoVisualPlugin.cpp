@@ -43,33 +43,35 @@ void GuaDynGeoVisualPlugin::AddTriangle(){
 
     man->position(-2, 2, 2);
     man->normal(0, 0, 1);
-    man->textureCoord(0, 0);
-
     man->position(-2, -2, 2);
     man->normal(0, 0, 1);
-    man->textureCoord(0, 1);
-
     man->position(2, -2, 2);
     man->normal(0, 0, 1);
-    man->textureCoord(1, 1);
-
     man->triangle(0, 1, 2);
     man->end();
 
     gzerr << "DynGeo: quad added" << std::endl;
     std::cerr << "DynGeo: quad added" << std::endl;
 
+    // test access to scene
+    const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
+    _scene_manager->setAmbientLight(ambient);
+
+    gzerr << "DynGeo: test values written" << std::endl;
+    std::cerr << "DynGeo: test values written" << std::endl;
+
     _scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
 }
 /////////////////////////////////////////////////
 void GuaDynGeoVisualPlugin::Update()
 {
-    //gzerr << "DynGeo: pre-render update before" << std::endl;
-    //std::cerr << "DynGeo: pre-render update before" << std::endl;
-
+    
     AddTriangle();
 
-    //gzerr << "DynGeo: pre-render update after" << std::endl;
-    //std::cerr << "DynGeo: pre-render update after" << std::endl;
+    /*gzerr << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << "DynGeo: pre-render update before" << std::endl;
+
+    gzerr << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << "DynGeo: pre-render update after" << std::endl;*/
 }
 }
