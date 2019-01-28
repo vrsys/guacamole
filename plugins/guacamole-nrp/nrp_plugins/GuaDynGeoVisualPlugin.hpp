@@ -34,6 +34,8 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     event::ConnectionPtr _update_connection;
     Ogre::SceneNode *_scene_node;
     Ogre::SceneManager *_scene_manager;
+    int _callback_count = 0;
+
     void Update();
     void AddTriangle();
 };

@@ -12,7 +12,6 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
 
 GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin() {}
 
-/////////////////////////////////////////////////
 void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sdf)
 {
     gzerr << "DynGeo: load before" << std::endl;
@@ -31,30 +30,33 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << "DynGeo: load after" << std::endl;
 }
 
-void GuaDynGeoVisualPlugin::AddTriangle(){
+void GuaDynGeoVisualPlugin::AddTriangle()
+{
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
+
+    if(!_scene_node || !_scene_manager)
+    {
+        return;
+    }
 
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
     Ogre::ManualObject *man = _scene_manager->createManualObject("test");
-    man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
 
+    man->begin("Gazebo/Green", Ogre::RenderOperation::OT_TRIANGLE_LIST);
     man->position(-2, 2, 2);
-    man->normal(0, 0, 1);
     man->position(-2, -2, 2);
-    man->normal(0, 0, 1);
     man->position(2, -2, 2);
-    man->normal(0, 0, 1);
     man->triangle(0, 1, 2);
     man->end();
 
-    gzerr << "DynGeo: quad added" << std::endl;
-    std::cerr << "DynGeo: quad added" << std::endl;
+    gzerr << "DynGeo: triangle added" << std::endl;
+    std::cerr << "DynGeo: triangle added" << std::endl;
 
     // test access to scene
-    const Ogre::ColourValue ambient(1.f,0.f,0.f,1.f);
+    const Ogre::ColourValue ambient(1.f, 0.f, 0.f, 1.f);
     _scene_manager->setAmbientLight(ambient);
 
     gzerr << "DynGeo: test values written" << std::endl;
@@ -62,11 +64,14 @@ void GuaDynGeoVisualPlugin::AddTriangle(){
 
     _scene_node->createChildSceneNode("dyngeochild")->attachObject(man);
 }
-/////////////////////////////////////////////////
 void GuaDynGeoVisualPlugin::Update()
 {
-    
-    AddTriangle();
+    if(_callback_count == 500)
+    {
+        AddTriangle();
+    }
+
+    _callback_count++;
 
     /*gzerr << "DynGeo: pre-render update before" << std::endl;
     std::cerr << "DynGeo: pre-render update before" << std::endl;
