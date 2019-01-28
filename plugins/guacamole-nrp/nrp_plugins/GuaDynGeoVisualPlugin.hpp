@@ -24,10 +24,10 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 {
   public:
     GuaDynGeoVisualPlugin();
-    ~GuaDynGeoVisualPlugin();
+    ~GuaDynGeoVisualPlugin() override;
 
   public:
-    virtual void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf);
+    void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf) override;
 
   private:
     rendering::VisualPtr _visual;

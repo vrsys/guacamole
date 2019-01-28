@@ -50,10 +50,16 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     man->position(-2, -2, 2);
     man->position(2, -2, 2);
     man->triangle(0, 1, 2);
+    man->triangle(1, 0, 2);
     man->end();
+
+    man->setVisible(true);
 
     gzerr << "DynGeo: triangle added" << std::endl;
     std::cerr << "DynGeo: triangle added" << std::endl;
+
+    gzerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
+    std::cerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
 
     // test access to scene
     const Ogre::ColourValue ambient(1.f, 0.f, 0.f, 1.f);
@@ -66,7 +72,7 @@ void GuaDynGeoVisualPlugin::AddTriangle()
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-    if(_callback_count == 500)
+    if(_callback_count % 1000 == 0)
     {
         AddTriangle();
     }
