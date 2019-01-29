@@ -129,6 +129,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->sharedVertexData = new Ogre::VertexData();
     mesh->sharedVertexData->vertexCount = num_vertices;
+
     Ogre::VertexDeclaration *decl = mesh->sharedVertexData->vertexDeclaration;
     Ogre::VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
 
@@ -141,7 +142,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
-    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+
+    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
 
     Ogre::SubMesh *sub = mesh->createSubMesh();
@@ -155,39 +157,6 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     Ogre::Entity *mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     mesh_avatar->setMaterialName("Examples/OgreLogo");
     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
-
-    /// Manual Object
-    /*Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
-
-    man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
-    man->setDynamic(true);
-
-    man->position(-2.f, 2.f, 2.f);
-    man->normal(0, 0, 1.f);
-    man->textureCoord(0, 0);
-
-    man->position(-2.f, -2.f, 2.f);
-    man->normal(0, 0, 1.f);
-    man->textureCoord(0, 1.f);
-
-    man->position(2.f, -2.f, -2.f);
-    man->normal(0, 0, 1.f);
-    man->textureCoord(1.f, 0);
-
-    gzerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
-    std::cerr << "DynGeo: vertex count " << man->getCurrentVertexCount() << std::endl;
-
-    man->triangle(0, 1, 2);
-    man->triangle(1, 0, 2);
-    auto section_ptr = man->end();
-
-
-    gzerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
-    std::cerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
-
-    man->setVisible(true);
-     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(man);
-     */
 
     gzerr << "DynGeo: triangles added" << std::endl;
     std::cerr << "DynGeo: triangles added" << std::endl;
