@@ -113,7 +113,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     gzerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
     std::cerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 
-    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(std::to_string(rand()), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    std::string meshname = std::to_string(rand());
+
+    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], _bb_min[2]}, {_bb_max[0], _bb_max[1], _bb_max[2]}));
     mesh->_setBoundingSphereRadius(1.73f);
 
@@ -142,7 +144,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->load();
 
-    // _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh);
+    Ogre::Entity* mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname);
+    mesh_avatar->setMaterialName("Examples/OgreLogo");
+    _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
 
     /// Manual Object
     /*Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
@@ -192,6 +196,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << "DynGeo: test values written" << std::endl;
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup() {
+    _scene_node->removeAllChildren();
     // TODO: remove meshes
 }
 void GuaDynGeoVisualPlugin::Update()
