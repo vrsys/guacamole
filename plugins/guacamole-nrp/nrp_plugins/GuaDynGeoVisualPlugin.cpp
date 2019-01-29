@@ -1,5 +1,4 @@
 #include "GuaDynGeoVisualPlugin.hpp"
-#include "sgtp/SGTP.h"
 
 namespace gazebo
 {
