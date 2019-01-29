@@ -33,7 +33,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
 
-    std::generate(_faces.begin(), _faces.end(), [n = 0]() mutable { return n++; });
+    std::iota(_faces.begin(), _faces.end(), 0);
 
     _thread_recv = std::thread([&]() { _ReadLoop(); });
 }
