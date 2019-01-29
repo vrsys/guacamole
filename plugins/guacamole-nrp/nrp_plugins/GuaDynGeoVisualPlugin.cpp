@@ -115,6 +115,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(std::to_string(rand()), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], _bb_min[2]}, {_bb_max[0], _bb_max[1], _bb_max[2]}));
+    mesh->_setBoundingSphereRadius(1.73f);
 
     mesh->sharedVertexData = new Ogre::VertexData();
     mesh->sharedVertexData->vertexCount = num_vertices;
@@ -138,6 +139,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     sub->indexData->indexBuffer = ibuf;
     sub->indexData->indexCount = faces;
     sub->indexData->indexStart = 0;
+
+    mesh->load();
 
     // _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh);
 
