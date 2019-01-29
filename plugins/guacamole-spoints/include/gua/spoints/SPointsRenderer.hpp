@@ -88,11 +88,9 @@ private:
 
   scm::gl::sampler_state_ptr                   nearest_sampler_state_;
 
-
   scm::gl::depth_stencil_state_ptr             depth_test_with_writing_depth_stencil_state_;
 
   scm::gl::blend_state_ptr                     no_color_accumulation_state_;
-  scm::gl::blend_state_ptr                     color_accumulation_state_;
 
   bool initialized_;
 
@@ -110,28 +108,11 @@ private:
   mutable int last_rendered_side = 0;
 
 
-  std::vector<ShaderProgramStage> program_stages_;
-
-  //CPU resources
-  //std::vector<ShaderProgramStage>                                      log_to_lin_conversion_shader_stages_;
-  std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
-  std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
-  std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
-
   std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
-
-  std::vector<ShaderProgramStage>                                      forward_colored_triangles_shader_stages_;
-
 
   std::vector<ShaderProgramStage>                                      forward_textured_triangles_shader_stages_;
   std::vector<ShaderProgramStage>                                      forward_textured_triangles_shader_stages_quantized_;
-  //additional GPU resources 
-  //std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
-  std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
-  std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
 
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_colored_triangles_pass_programs_;
 
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_textured_triangles_pass_programs_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_textured_triangles_pass_programs_quantized_;
@@ -142,10 +123,6 @@ private:
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
       programs_;
   SubstitutionMap global_substitution_map_;
-
-
-
-  scm::gl::rasterizer_state_ptr points_rasterizer_state_;
 
 
 };

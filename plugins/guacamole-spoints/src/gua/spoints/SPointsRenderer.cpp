@@ -149,23 +149,9 @@ namespace gua {
 SPointsRenderer::SPointsRenderer() : initialized_(false),
                                      shaders_loaded_(false),
                                      gpu_resources_already_created_(false),
-                                     //depth_pass_program_(nullptr),
-                                     normalization_pass_program_(nullptr),
                                      current_rendertarget_width_(0),
                                      current_rendertarget_height_(0)
                                     {
-/*  ResourceFactory factory;
-
-
-  // create final shader description
-  program_stages_.push_back(ShaderProgramStage(
-      scm::gl::STAGE_VERTEX_SHADER,
-      factory.read_shader_file("resources/shaders/forward_point_rendering.vert")));
-  program_stages_.push_back(ShaderProgramStage(
-      scm::gl::STAGE_FRAGMENT_SHADER,
-      factory.read_shader_file("resources/shaders/forward_point_rendering.frag")));
-
-*/
   _load_shaders();
 
 }
@@ -240,7 +226,7 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
     backface_culling_rasterizer_state_ = ctx.render_device
       ->create_rasterizer_state(scm::gl::FILL_SOLID,
                                 scm::gl::CULL_FRONT,
-                                scm::gl::ORIENT_CCW);
+                                scm::gl::ORIENT_CW);
 
     fullscreen_quad_.reset(new scm::gl::quad_geometry(ctx.render_device, 
                                                       scm::math::vec2(-1.0f, -1.0f), scm::math::vec2(1.0f, 1.0f )));
@@ -283,21 +269,9 @@ void SPointsRenderer::render(Pipeline& pipe,
   if (objects != scene.nodes.end() && objects->second.size() > 0) {
 
 
-    if (!initialized_) {
-      initialized_ = true;
-      points_rasterizer_state_ = ctx.render_device
-        ->create_rasterizer_state(scm::gl::FILL_SOLID,
-                                  scm::gl::CULL_NONE,
-                                  scm::gl::ORIENT_CCW,
-                                  false,
-                                  false,
-                                  0.0,
-                                  false,
-                                  false,
-                                  scm::gl::point_raster_state(true));
-    }
-
-
+  if (!initialized_) {
+    initialized_ = true;
+  }
 
   scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
 
@@ -396,7 +370,6 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
           if(!spoints_resource->has_calibration(ctx) ) {
-            std::cout << "NEEDS CALIBRATION\n";
             current_package.calibration_request = true;
           } else {
             current_package.calibration_request = false;
@@ -459,8 +432,8 @@ void SPointsRenderer::render(Pipeline& pipe,
 
 
         if(! (spoints_resource->is_vertex_data_fully_encoded()) ) {
-        //is_vertex_data_fully_encoded
-          std::cout << "IS NOT FULLY ENCODED\n";
+          //is_vertex_data_fully_encoded
+          //std::cout << "IS NOT FULLY ENCODED\n";
           MaterialShader* current_material =
               spoints_node->get_material()->get_shader();
           if (current_material) {
@@ -485,7 +458,7 @@ void SPointsRenderer::render(Pipeline& pipe,
                                 << std::endl;
           }
         } else {
-          std::cout << "IS FULLY ENCODED\n";
+          //std::cout << "IS FULLY ENCODED\n";
           MaterialShader* current_material =
               spoints_node->get_material()->get_shader();
           if (current_material) {
@@ -518,7 +491,7 @@ void SPointsRenderer::render(Pipeline& pipe,
 
           current_shader->use(ctx);
 
-          ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+          ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
 
 
 

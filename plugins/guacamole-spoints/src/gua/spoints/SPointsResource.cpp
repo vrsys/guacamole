@@ -78,20 +78,6 @@ SPointsResource::get_socket_string() const {
   return "";
 }
 
-/*float
-SPointsResource::get_voxel_size() const {
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
-
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      return spointsdata_->nka_->get_voxel_size();
-    }
-  }
-
-  return 0.0;
-}*/
-
-
 void
 SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
   //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
@@ -116,16 +102,10 @@ void SPointsResource::update_buffers(RenderContext const& ctx,
     if (nullptr == spointsdata_) {
       spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
     }
-  
-
-    //std::cout << "PRECONDITION CONTEXT: " << ctx.id << "\n";
-    // synchronize feedback
-    //spointsdata_->nka_->update_feedback(ctx);
   }
 
   // synchronize vertex data
   spointsdata_->nka_->update(ctx, bounding_box_);
-  
 }
 
 unsigned SPointsResource::get_remote_server_screen_width() const {
@@ -162,14 +142,6 @@ bool SPointsResource::is_vertex_data_fully_encoded()
 
     return false;
 }
-
-/*void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
-  spointsdata_->nka_->draw_vertex_colored_points(ctx);
-}
-
-void SPointsResource::draw_vertex_colored_triangle_soup(RenderContext const& ctx) {
-  spointsdata_->nka_->draw_vertex_colored_triangle_soup(ctx);
-}*/
 
 void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
   if(spointsdata_) {

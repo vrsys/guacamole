@@ -82,14 +82,10 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   bool is_vertex_data_fully_encoded();
 
-
-  //void draw_vertex_colored_points(RenderContext const& ctx);
-  //void draw_vertex_colored_triangle_soup(RenderContext const& ctx);
   void draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program);
   
   std::string get_socket_string() const;
 
-  //sfloat get_voxel_size() const;
 
   spoints::SPointsStats get_latest_spoints_stats() const {  
     std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
@@ -103,10 +99,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
     return spoints::SPointsStats();
   }
 
-  //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
   void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
-
-
 
   void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
@@ -133,8 +126,6 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
   bool                            is_pickable() const { return is_pickable_; }
 
  private:
-
-
   mutable std::mutex              m_push_matrix_package_mutex_;
   std::shared_ptr<SPointsData>    spointsdata_;
 

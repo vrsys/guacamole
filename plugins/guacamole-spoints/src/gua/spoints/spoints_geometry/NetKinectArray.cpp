@@ -238,6 +238,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_received_kinect_timestamp_back_, m_received_kinect_timestamp_);
       std::swap(m_received_reconstruction_time_back_, m_received_reconstruction_time_);
 
+      std::swap(m_request_reply_latency_ms_back_, m_request_reply_latency_ms_);
+      std::swap(m_total_message_payload_in_byte_back_, m_total_message_payload_in_byte_);
+
       std::swap(m_texture_payload_size_in_byte_back_, m_texture_payload_size_in_byte_);
 
       std::swap(m_num_best_triangles_for_sensor_layer_, 
@@ -313,11 +316,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
           m_current_tight_geometry_bb_min_per_context_[ctx.id] = m_tight_geometry_bb_min_;
 	        m_current_tight_geometry_bb_max_per_context_[ctx.id] = m_tight_geometry_bb_max_;
 
-
-          uint32_t total_num_pixels_to_upload = m_texture_payload_size_in_byte_ / 3;
-
           uint32_t byte_offset_per_texture_data_for_layers[16];
-
 
           for(uint32_t layer_to_update_idx = 0; layer_to_update_idx < 16; ++layer_to_update_idx) {
               //initialize offset with 0 or value of last region and update incrementally
@@ -400,10 +399,10 @@ void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> co
                                           m_buffer_back_compressed_.size(), m_buffer_back_.size());
 
 
-  std::cout << "num expected decompressed bytes: " << m_buffer_back_.size() << "\n";  
+/*  std::cout << "num expected decompressed bytes: " << m_buffer_back_.size() << "\n";  
   std::cout << "num_decompressed_bytes: " << num_decompressed_bytes << "\n";
 
-
+*/
   if(nullptr == m_tj_compressed_image_buffer_) {
     m_tj_compressed_image_buffer_ = tjAlloc(1024*1024*50);
   }
@@ -495,177 +494,157 @@ void NetKinectArray::readloop() {
     std::size_t const HEADER_SIZE = SGTP::HEADER_BYTE_SIZE;
 
     memcpy((char*)&message_header, (unsigned char*) zmqm.data(), SGTP::HEADER_BYTE_SIZE);
-    //memcpy((unsigned char*) &header_data[0], (unsigned char*) zmqm.data(), header_byte_size);
 
-    //size_t num_voxels_received{0};
-    //std::cout << "Received Data\n";
-    
     if(message_header.is_calibration_data) {
-      //std::cout << "ISSSSSSSSSSSSSSSS CALIBRATION DATA\n";
+      for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+        m_inv_xyz_calibration_res_back_[dim_idx] = message_header.inv_xyz_volume_res[dim_idx];
+        m_uv_calibration_res_back_[dim_idx]      = message_header.uv_volume_res[dim_idx];
+      }
 
-        //std::cout << "Total Calibration payload: " << message_header.total_payload << "\n";
+      m_num_sensors_back_ = message_header.num_sensors;
 
-        for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-          m_inv_xyz_calibration_res_back_[dim_idx] = message_header.inv_xyz_volume_res[dim_idx];
-          m_uv_calibration_res_back_[dim_idx]      = message_header.uv_volume_res[dim_idx];
+      m_calibration_back_.resize(message_header.total_payload);
+
+      memcpy((char*) &m_calibration_back_[0], ((char*) zmqm.data()) + HEADER_SIZE, message_header.total_payload);
+
+      // memcpy inv_model_to_world_mat
+
+      memcpy((char*) &m_inverse_vol_to_world_mat_back_[0], 
+             (char*)message_header.inv_vol_to_world_mat,
+              16 * sizeof(float));
+
+      { // swap
+        std::lock_guard<std::mutex> lock(m_mutex_);
+        m_need_calibration_cpu_swap_.store(true);
+
+        for( auto& entry : m_need_calibration_gpu_swap_) {
+          entry.second.store(true);
         }
-
-        m_num_sensors_back_ = message_header.num_sensors;
-
-        m_calibration_back_.resize(message_header.total_payload);
-
-        memcpy((char*) &m_calibration_back_[0], ((char*) zmqm.data()) + HEADER_SIZE, message_header.total_payload);
-
-        // memcpy inv_model_to_world_mat
-
-        memcpy((char*) &m_inverse_vol_to_world_mat_back_[0], 
-               (char*)message_header.inv_vol_to_world_mat,
-                16 * sizeof(float));
-
-        { // swap
-          std::lock_guard<std::mutex> lock(m_mutex_);
-          m_need_calibration_cpu_swap_.store(true);
-
-          for( auto& entry : m_need_calibration_gpu_swap_) {
-            entry.second.store(true);
-          }
-          //mutable std::unordered_map<std::size_t,
-        }
+        //mutable std::unordered_map<std::size_t,
+      }
 
 
     } else {
-
       message_header.fill_texture_byte_offsets_to_bounding_boxes();
 
-      //std::cout << "ISSSSSSSSSSSSSSSS AVATAR DATA\n";
-
-        for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
-          m_tight_geometry_bb_min_back_[dim_idx] = message_header.global_bb_min[dim_idx];
-          m_tight_geometry_bb_max_back_[dim_idx] = message_header.global_bb_max[dim_idx];
-        }
+      for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx) {
+        m_tight_geometry_bb_min_back_[dim_idx] = message_header.global_bb_min[dim_idx];
+        m_tight_geometry_bb_max_back_[dim_idx] = message_header.global_bb_max[dim_idx];
+      }
 
 
-        m_is_fully_encoded_vertex_data_back_ = message_header.is_fully_encoded_vertex_data;
-        m_received_textured_tris_back_         = message_header.num_textured_triangles;
-        m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
+      m_is_fully_encoded_vertex_data_back_ = message_header.is_fully_encoded_vertex_data;
+      m_received_textured_tris_back_         = message_header.num_textured_triangles;
+      m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
 
-        m_received_kinect_timestamp_back_    = message_header.timestamp;
-        m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
+      m_received_kinect_timestamp_back_    = message_header.timestamp;
+      m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
-        std::cout << "Kinect timestamp: " << m_received_kinect_timestamp_back_ << "\n";
-        std::cout << "Recon time: " << m_received_reconstruction_time_back_ << "\n";
+      m_total_message_payload_in_byte_back_ = zmqm.size();
 
-        std::cout << "Package Reply Roundtrip ID: " << message_header.package_reply_id << "\n";
+      auto passed_microseconds_to_request = message_header.passed_microseconds_since_request;
 
-        auto passed_microseconds_to_request = message_header.passed_microseconds_since_request;
+      auto timestamp_during_reception = std::chrono::system_clock::now();
+      auto reference_timestamp = ::gua::SPointsFeedbackCollector::instance()->get_reference_timestamp();
 
-        auto timestamp_during_reception = std::chrono::system_clock::now();
-        auto reference_timestamp = ::gua::SPointsFeedbackCollector::instance()->get_reference_timestamp();
+      auto start_to_reply_diff = timestamp_during_reception - reference_timestamp;
 
-        auto start_to_reply_diff = timestamp_during_reception - reference_timestamp;
+      int64_t passed_microseconds_to_reply = std::chrono::duration<double>(start_to_reply_diff).count() * 1000000;
 
-        int64_t passed_microseconds_to_reply = std::chrono::duration<double>(start_to_reply_diff).count() * 1000000;
+      int64_t total_latency_in_microseconds = passed_microseconds_to_reply - passed_microseconds_to_request;
 
-        std::cout << passed_microseconds_to_reply << " microseconds\n";
-
-        std::cout << "TOTAL LATENCY: " << passed_microseconds_to_reply - passed_microseconds_to_request << "microseconds\n";
-        //std::chrono::duration<double> measured_latency = current_timestamp - request_timestamp;
-        //auto latency_count = measured_latency.count();
+      m_request_reply_latency_ms_back_ = total_latency_in_microseconds / 1000.0f;
 
 
-        //std::cout << "Latency: " \
-        //  <<latency_count/ 1000000.0f << "\n"; 
+      m_lod_scaling_back_                  = message_header.lod_scaling;
 
+      m_received_textured_tris_back_ = 0;
 
-        m_lod_scaling_back_                  = message_header.lod_scaling;
+      uint16_t const MAX_LAYER_IDX = 16;
+      for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
+        m_num_best_triangles_for_sensor_layer_back_[layer_idx] =
+          message_header.num_best_triangles_per_sensor[layer_idx];
 
-        m_received_textured_tris_back_ = 0;
+        m_received_textured_tris_back_ 
+          += message_header.num_best_triangles_per_sensor[layer_idx];
 
-        uint16_t const MAX_LAYER_IDX = 16;
-        for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
-          m_num_best_triangles_for_sensor_layer_back_[layer_idx] =
-            message_header.num_best_triangles_per_sensor[layer_idx];
-
-          m_received_textured_tris_back_ 
-            += message_header.num_best_triangles_per_sensor[layer_idx];
-
-          m_texture_space_bounding_boxes_back_[4*layer_idx + 0]
-            = message_header.tex_bounding_box[layer_idx].min.u;
-          m_texture_space_bounding_boxes_back_[4*layer_idx + 1]
-            = message_header.tex_bounding_box[layer_idx].min.v;
-          m_texture_space_bounding_boxes_back_[4*layer_idx + 2]
-            = message_header.tex_bounding_box[layer_idx].max.u;
-          m_texture_space_bounding_boxes_back_[4*layer_idx + 3]
-            = message_header.tex_bounding_box[layer_idx].max.v;
-            //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
-          
-        }
+        m_texture_space_bounding_boxes_back_[4*layer_idx + 0]
+          = message_header.tex_bounding_box[layer_idx].min.u;
+        m_texture_space_bounding_boxes_back_[4*layer_idx + 1]
+          = message_header.tex_bounding_box[layer_idx].min.v;
+        m_texture_space_bounding_boxes_back_[4*layer_idx + 2]
+          = message_header.tex_bounding_box[layer_idx].max.u;
+        m_texture_space_bounding_boxes_back_[4*layer_idx + 3]
+          = message_header.tex_bounding_box[layer_idx].max.v;
+          //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
         
-
-
-        size_t total_num_received_primitives = m_received_textured_tris_back_;
-
-        std::cout << "Num tris received: " << m_received_textured_tris_back_ << "\n";
-
-        if(total_num_received_primitives > 50000000) {
-          return;
-        }
-
-
-
-
-        std::size_t  size_of_vertex = 0;
-
-        if(false == m_is_fully_encoded_vertex_data_back_) {
-          size_of_vertex = 3 * sizeof(uint16_t);
-        } else {
-          size_of_vertex = 5 * sizeof(float);          
-        }
-
-
-        size_t textured_tris_byte_size  = total_num_received_primitives * 3 * size_of_vertex;
-
-
-
-        size_t total_uncompressed_geometry_payload_byte_size = textured_tris_byte_size;
-
-
-
-        m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size); 
-
-        size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
-
-        if(message_header.is_data_compressed) {
-          std::cout << "Total amount compressed bytes: " << total_encoded_geometry_byte_size << "\n";
-          m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
-          memcpy((unsigned char*) &m_buffer_back_compressed_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);          
-        } else {
-          memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
-        }
-
-        memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_texture_payload_size_in_byte_back_);
+      }
       
-  
 
-        std::vector<std::size_t> byte_offset_to_jpeg_windows(16, 0);
 
-        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
-          byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
+      size_t total_num_received_primitives = m_received_textured_tris_back_;
+
+      //std::cout << "Num tris received: " << m_received_textured_tris_back_ << "\n";
+
+      if(total_num_received_primitives > 50000000) {
+        return;
+      }
+
+
+
+
+      std::size_t  size_of_vertex = 0;
+
+      if(false == m_is_fully_encoded_vertex_data_back_) {
+        size_of_vertex = 3 * sizeof(uint16_t);
+      } else {
+        size_of_vertex = 5 * sizeof(float);          
+      }
+
+
+      size_t textured_tris_byte_size  = total_num_received_primitives * 3 * size_of_vertex;
+
+
+
+      size_t total_uncompressed_geometry_payload_byte_size = textured_tris_byte_size;
+
+
+
+      m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size); 
+
+      size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
+
+      if(message_header.is_data_compressed) {
+        //std::cout << "Total amount compressed bytes: " << total_encoded_geometry_byte_size << "\n";
+        m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
+        memcpy((unsigned char*) &m_buffer_back_compressed_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);          
+      } else {
+        memcpy((unsigned char*) &m_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
+      }
+
+      memcpy((unsigned char*) &m_texture_buffer_back_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_texture_payload_size_in_byte_back_);
+    
+
+
+      std::vector<std::size_t> byte_offset_to_jpeg_windows(16, 0);
+
+      for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
+        byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
+      }
+
+      if(message_header.is_data_compressed) {
+        _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
+      }
+
+      { // swap
+        std::lock_guard<std::mutex> lock(m_mutex_);
+        m_need_cpu_swap_.store(true);
+
+        for( auto& entry : m_need_gpu_swap_) {
+          entry.second.store(true);
         }
-
-        if(message_header.is_data_compressed) {
-          _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
-        }
-
-        { // swap
-          std::lock_guard<std::mutex> lock(m_mutex_);
-          m_need_cpu_swap_.store(true);
-
-          for( auto& entry : m_need_gpu_swap_) {
-            entry.second.store(true);
-          }
-          //mutable std::unordered_map<std::size_t,
-        }
+        //mutable std::unordered_map<std::size_t,
+      }
 
 
     }

@@ -75,21 +75,25 @@ struct SPointsStats {
   SPointsStats() : m_received_triangles(0),
                    m_received_timestamp_ms(0.0f),
                    m_received_reconstruction_time_ms(-1.0f),
-                   m_request_reply_latency_ms(-1.0f) {}
+                   m_request_reply_latency_ms(-1.0f),
+                   m_total_message_payload_in_byte(0) {}
  
   SPointsStats(uint32_t in_received_tris, 
                float in_received_timestamp, 
                float in_received_recon_time,
-               float in_request_reply_latency_ms) 
+               float in_request_reply_latency_ms,
+               uint32_t in_total_message_payload_in_byte) 
                : m_received_triangles(in_received_tris),
                  m_received_timestamp_ms(in_received_timestamp),
                  m_received_reconstruction_time_ms(in_received_recon_time),
-                 m_request_reply_latency_ms(in_request_reply_latency_ms) {}
+                 m_request_reply_latency_ms(in_request_reply_latency_ms),
+                 m_total_message_payload_in_byte(in_total_message_payload_in_byte) {}
 
   uint32_t m_received_triangles = 0;
   float m_received_timestamp_ms = -1.0f;
   float m_received_reconstruction_time_ms = 0.0f;
   float m_request_reply_latency_ms = -1.0f;
+  uint32_t m_total_message_payload_in_byte = 0;
 };
 
 class NetKinectArray{
@@ -126,7 +130,8 @@ public:
     return SPointsStats{m_received_textured_tris_,
                         m_received_kinect_timestamp_,
                         m_received_reconstruction_time_,
-                        m_request_reply_latency_ms_
+                        m_request_reply_latency_ms_,
+                        m_total_message_payload_in_byte_
                         };
   }
 
@@ -240,15 +245,6 @@ private:
   unsigned int remote_server_screen_height_to_return_ = 800;
 
   scm::gl::sampler_state_ptr                   linear_sampler_state_;
-/*
-  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > >
-  camera_group_to_uuid_to_matrix_package_list;
-  std::map<bool, std::map<size_t, std::map<bool, std::vector<matrix_package>> > > 
-  camera_group_to_uuid_to_matrix_package_list_back;
-*/
-
-  //std::atomic<bool> m_feedback_need_swap_;
-  //std::thread m_send_feedback_;
 
   //mutable std::unordered_set<std::size_t> known_context_ids_;
   mutable std::unordered_set<std::size_t> encountered_context_ids_for_feedback_frame_;
@@ -281,6 +277,10 @@ private:
 
   uint32_t m_texture_payload_size_in_byte_      = 0;
   uint32_t m_texture_payload_size_in_byte_back_ = 0;
+
+  uint32_t m_total_message_payload_in_byte_      = 0;
+  uint32_t m_total_message_payload_in_byte_back_ = 0;
+
   mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
   mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
   mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;

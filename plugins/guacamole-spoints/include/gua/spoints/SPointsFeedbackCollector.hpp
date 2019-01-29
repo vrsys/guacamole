@@ -53,7 +53,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
   chrono_timestamp get_reference_timestamp() {
     return m_reference_timestamp_;
   }
-  
+
   void push_feedback_matrix(RenderContext const& ctx, std::string const& socket_string, spoints::matrix_package const& pushed_feedback_matrix) {
 
       std::lock_guard<std::mutex> lock(m_feedback_mutex_);
@@ -173,7 +173,7 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
         auto start_to_request_diff = timestamp_during_request - m_reference_timestamp_;
 
         int64_t request_time_stamp = std::chrono::duration<double>(start_to_request_diff).count() * 1000000;
-        std::cout << request_time_stamp << " microseconds\n";
+        //std::cout << request_time_stamp << " microseconds\n";
         memcpy((char*)zmqm.data() + byte_before_timestamp, (char*)&(request_time_stamp), sizeof(int64_t));
 
         memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(collected_matrices[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
