@@ -36,7 +36,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     std::generate(_faces.begin(), _faces.end(), [n = 0]() mutable { return n++; });
 
-    // TODO _thread_recv = std::thread([&]() { _ReadLoop(); });
+    _thread_recv = std::thread([&]() { _ReadLoop(); });
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
