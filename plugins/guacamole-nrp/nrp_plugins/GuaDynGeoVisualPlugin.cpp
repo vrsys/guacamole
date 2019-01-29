@@ -96,7 +96,11 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 }
 void GuaDynGeoVisualPlugin::AddTriangleSoup()
 {
-    if(!_visual){
+    gzerr << std::endl << "DynGeo: AddTriangleSoup" << std::endl;
+    std::cerr << std::endl << "DynGeo: AddTriangleSoup" << std::endl;
+
+    if(!_visual)
+    {
         return;
     }
 
@@ -148,7 +152,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->load();
 
-    Ogre::Entity* mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    Ogre::Entity *mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     mesh_avatar->setMaterialName("Examples/OgreLogo");
     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
 
@@ -199,7 +203,16 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
 }
-void GuaDynGeoVisualPlugin::RemoveTriangleSoup() {
+void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
+{
+    gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+    std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+
+    if(!_scene_node)
+    {
+        return;
+    }
+
     _scene_node->removeAllChildren();
     // TODO: remove meshes
 }
