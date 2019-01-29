@@ -40,6 +40,9 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
+    gzerr << "DynGeo: _ReadLoop" << std::endl;
+    std::cerr << "DynGeo: _ReadLoop" << std::endl;
+
     zmq::context_t ctx(1);
     zmq::socket_t socket(ctx, ZMQ_SUB);
 
@@ -60,6 +63,9 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         zmq::message_t zmqm;
         socket.recv(&zmqm);
 
+        gzerr << std::endl << "DynGeo: socket.recv" << std::endl;
+        std::cerr << std::endl << "DynGeo: socket.recv" << std::endl;
+
         while(true)
         {
             std::lock_guard<std::mutex> lock(_mutex_swap);
@@ -69,6 +75,9 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 break;
             }
         }
+
+        gzerr << std::endl << "DynGeo: memcpy" << std::endl;
+        std::cerr << std::endl << "DynGeo: memcpy" << std::endl;
 
         SGTP::header_data_t header;
         memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
@@ -158,6 +167,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     man->triangle(1, 0, 2);
     auto section_ptr = man->end();
 
+
     gzerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
     std::cerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
 
@@ -184,8 +194,8 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup() {
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-    gzerr << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << "DynGeo: pre-render update before" << std::endl;
+    /*gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;*/
 
     {
         std::lock_guard<std::mutex> lock(_mutex_swap);
@@ -197,7 +207,7 @@ void GuaDynGeoVisualPlugin::Update()
         }
     }
 
-    gzerr << "DynGeo: pre-render update after" << std::endl;
-    std::cerr << "DynGeo: pre-render update after" << std::endl;
+    /*gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;*/
 }
 }
