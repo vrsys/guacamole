@@ -83,10 +83,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
         // TODO: textures
 
-        _num_geometry_bytes = SGTP::get_num_geometry_bytes(header);
+        _num_geometry_bytes = header.geometry_payload_size;
         memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
         memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
-        memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::get_geometry_read_offset(header), SGTP::get_num_geometry_bytes(header));
+        memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
 
         {
             std::lock_guard<std::mutex> lock(_mutex_swap);
