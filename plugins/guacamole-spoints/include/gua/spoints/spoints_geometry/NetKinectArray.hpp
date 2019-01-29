@@ -105,6 +105,10 @@ public:
   bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
   void update_feedback(gua::RenderContext const& ctx);
 
+  bool is_vertex_data_fully_encoded() {
+    return m_is_fully_encoded_vertex_data_;
+  }
+
   inline unsigned char* getBuffer() { return m_buffer_.data(); }
 
   unsigned get_remote_server_screen_width() const {return remote_server_screen_width_to_return_;}
@@ -140,6 +144,10 @@ private:
   //void sendfeedbackloop();
 
   //receiving geometry
+
+  bool m_is_fully_encoded_vertex_data_ = false;
+  bool m_is_fully_encoded_vertex_data_back_ = false;
+
   std::mutex m_mutex_;
   std::atomic<bool>           m_running_;
   const std::string m_server_endpoint_;

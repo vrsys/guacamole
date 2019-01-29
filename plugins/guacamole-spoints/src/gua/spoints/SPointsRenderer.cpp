@@ -204,9 +204,14 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
       forward_colored_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/forward_colored_triangles.vert")));
       forward_colored_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/forward_colored_triangles.frag")));
 
+
       forward_textured_triangles_shader_stages_.clear();
       forward_textured_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles.vert")));
       forward_textured_triangles_shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles.frag")));
+
+      forward_textured_triangles_shader_stages_quantized_.clear();
+      forward_textured_triangles_shader_stages_quantized_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles_quantized.vert")));
+      forward_textured_triangles_shader_stages_quantized_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/forward_textured_triangles.frag")));
 
 /*
       shadow_pass_shader_stages_.clear();
@@ -273,7 +278,7 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  void SPointsRenderer::_initialize_forward_textured_triangles_pass_program(MaterialShader* material) {
+/*  void SPointsRenderer::_initialize_forward_textured_triangles_pass_program(MaterialShader* material) {
     if(!forward_textured_triangles_pass_programs_.count(material)) {
       auto program = std::make_shared<ShaderProgram>();
 
@@ -286,7 +291,7 @@ SPointsRenderer::SPointsRenderer() : initialized_(false),
       forward_textured_triangles_pass_programs_[material] = program;
     }
     assert(forward_textured_triangles_pass_programs_.count(material));
-  }
+  }*/
 
   //////////////////////////////////////////////////////////////////////////////
   void SPointsRenderer::_initialize_shadow_pass_program() {
@@ -1073,31 +1078,78 @@ void SPointsRenderer::render(Pipeline& pipe,
 
         auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
 
+        auto spoints_desc(spoints_node->get_spoints_description());
+
+        if (!GeometryDatabase::instance()->contains(spoints_desc)) {
+          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
+                                   << spoints_desc << ", " << std::endl;
+          continue;
+        }
+
+
+        auto spoints_resource = std::static_pointer_cast<SPointsResource>(
+            GeometryDatabase::instance()->lookup(spoints_desc));
+        if (!spoints_resource) {
+          gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
+                                   << std::endl;
+          continue;
+        }
+
         // get material dependent shader
         std::shared_ptr<ShaderProgram> current_shader;
 
-        MaterialShader* current_material =
-            spoints_node->get_material()->get_shader();
-        if (current_material) {
 
-          auto shader_iterator = forward_textured_triangles_pass_programs_.find(current_material);
-          if (shader_iterator != forward_textured_triangles_pass_programs_.end()) {
-            current_shader = shader_iterator->second;
+        if(! (spoints_resource->is_vertex_data_fully_encoded()) ) {
+        //is_vertex_data_fully_encoded
+          std::cout << "IS NOT FULLY ENCODED\n";
+          MaterialShader* current_material =
+              spoints_node->get_material()->get_shader();
+          if (current_material) {
+
+            auto shader_iterator = forward_textured_triangles_pass_programs_quantized_.find(current_material);
+            if (shader_iterator != forward_textured_triangles_pass_programs_quantized_.end()) {
+              current_shader = shader_iterator->second;
+            } else {
+              auto smap = global_substitution_map_;
+              for (const auto& i : current_material->generate_substitution_map())
+                smap[i.first] = i.second;
+
+              current_shader = std::make_shared<ShaderProgram>();
+              current_shader->set_shaders(
+              
+              forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
+              forward_textured_triangles_pass_programs_quantized_[current_material] = current_shader;
+            }
           } else {
-            auto smap = global_substitution_map_;
-            for (const auto& i : current_material->generate_substitution_map())
-              smap[i.first] = i.second;
-
-            current_shader = std::make_shared<ShaderProgram>();
-            current_shader->set_shaders(
-            
-            forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
-            forward_textured_triangles_pass_programs_[current_material] = current_shader;
+            Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+                                << spoints_node->get_material()->get_shader_name()
+                                << std::endl;
           }
         } else {
-          Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
-                              << spoints_node->get_material()->get_shader_name()
-                              << std::endl;
+          std::cout << "IS FULLY ENCODED\n";
+          MaterialShader* current_material =
+              spoints_node->get_material()->get_shader();
+          if (current_material) {
+
+            auto shader_iterator = forward_textured_triangles_pass_programs_.find(current_material);
+            if (shader_iterator != forward_textured_triangles_pass_programs_.end()) {
+              current_shader = shader_iterator->second;
+            } else {
+              auto smap = global_substitution_map_;
+              for (const auto& i : current_material->generate_substitution_map())
+                smap[i.first] = i.second;
+
+              current_shader = std::make_shared<ShaderProgram>();
+              current_shader->set_shaders(
+              
+              forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+              forward_textured_triangles_pass_programs_[current_material] = current_shader;
+            }
+          } else {
+            Logger::LOG_WARNING << "SPointsPass::render(): Cannot find material: "
+                                << spoints_node->get_material()->get_shader_name()
+                                << std::endl;
+          }
         }
 
         scm::gl::context_all_guard context_guard(ctx.render_context);
@@ -1109,21 +1161,8 @@ void SPointsRenderer::render(Pipeline& pipe,
 
           ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
 
-          auto spoints_desc(spoints_node->get_spoints_description());
 
-          if (!GeometryDatabase::instance()->contains(spoints_desc)) {
-            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints."
-                                     << spoints_desc << ", " << std::endl;
-            continue;
-          }
 
-          auto spoints_resource = std::static_pointer_cast<SPointsResource>(
-              GeometryDatabase::instance()->lookup(spoints_desc));
-          if (!spoints_resource) {
-            gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints."
-                                     << std::endl;
-            continue;
-          }
 
           auto const& model_matrix(spoints_node->get_cached_world_transform());
           auto normal_matrix(scm::math::transpose(

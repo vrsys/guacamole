@@ -80,6 +80,9 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
 
   bool has_calibration(RenderContext const& ctx) const;
 
+  bool is_vertex_data_fully_encoded();
+
+
   //void draw_vertex_colored_points(RenderContext const& ctx);
   //void draw_vertex_colored_triangle_soup(RenderContext const& ctx);
   void draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program);

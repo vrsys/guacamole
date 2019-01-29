@@ -152,6 +152,17 @@ bool SPointsResource::has_calibration(RenderContext const& ctx) const {
   return false;
 }
 
+bool SPointsResource::is_vertex_data_fully_encoded()
+{
+    if(spointsdata_) {
+      if(spointsdata_->nka_) {
+        return spointsdata_->nka_->is_vertex_data_fully_encoded();
+      }
+    }
+
+    return false;
+}
+
 /*void SPointsResource::draw_vertex_colored_points(RenderContext const& ctx) {
   spointsdata_->nka_->draw_vertex_colored_points(ctx);
 }

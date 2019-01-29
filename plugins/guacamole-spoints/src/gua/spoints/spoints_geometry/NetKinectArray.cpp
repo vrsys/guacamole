@@ -251,12 +251,22 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       std::swap(m_tight_geometry_bb_min_, m_tight_geometry_bb_min_back_);
       std::swap(m_tight_geometry_bb_max_, m_tight_geometry_bb_max_back_);
 
+      std::swap(m_is_fully_encoded_vertex_data_back_, m_is_fully_encoded_vertex_data_);
+
       //end of synchro point
       m_need_cpu_swap_.store(false);
     }
 
     if(m_need_gpu_swap_[ctx.id].load()) {
-      size_t total_num_bytes_to_copy = m_received_textured_tris_ * 3 * 3 * sizeof(uint16_t);
+
+
+      size_t total_num_bytes_to_copy = 0;
+
+      if(false == m_is_fully_encoded_vertex_data_) {
+        total_num_bytes_to_copy = m_received_textured_tris_ * 3 * 3 * sizeof(uint16_t);
+      } else {
+        total_num_bytes_to_copy = m_received_textured_tris_ * 3 * 5 * sizeof(float);        
+      }
 
       if(0 != total_num_bytes_to_copy) {
         num_textured_tris_to_draw_per_context_[ctx.id]         = m_received_textured_tris_;
@@ -535,7 +545,7 @@ void NetKinectArray::readloop() {
         }
 
 
-
+        m_is_fully_encoded_vertex_data_back_ = message_header.is_fully_encoded_vertex_data;
         m_received_textured_tris_back_         = message_header.num_textured_triangles;
         m_texture_payload_size_in_byte_back_   = message_header.texture_payload_size;
 
@@ -602,9 +612,18 @@ void NetKinectArray::readloop() {
         }
 
 
-        std::size_t constexpr size_of_vertex = sizeof(uint16_t);
 
-        size_t textured_tris_byte_size  = total_num_received_primitives * 3 * 3 * size_of_vertex;
+
+        std::size_t  size_of_vertex = 0;
+
+        if(false == m_is_fully_encoded_vertex_data_back_) {
+          size_of_vertex = 3 * sizeof(uint16_t);
+        } else {
+          size_of_vertex = 5 * sizeof(float);          
+        }
+
+
+        size_t textured_tris_byte_size  = total_num_received_primitives * 3 * size_of_vertex;
 
 
 
