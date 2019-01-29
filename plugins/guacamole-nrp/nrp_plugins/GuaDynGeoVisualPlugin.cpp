@@ -96,6 +96,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 }
 void GuaDynGeoVisualPlugin::AddTriangleSoup()
 {
+    if(!_visual){
+        return;
+    }
+
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
 
@@ -107,7 +111,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
-    size_t num_vertices = _num_geometry_bytes / sizeof(float) / 5;
+    size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
     size_t faces = num_vertices / 3;
 
     gzerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
@@ -144,7 +148,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->load();
 
-    Ogre::Entity* mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname);
+    Ogre::Entity* mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     mesh_avatar->setMaterialName("Examples/OgreLogo");
     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
 
@@ -201,8 +205,8 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup() {
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-    /*gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;*/
+    gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
 
     {
         std::lock_guard<std::mutex> lock(_mutex_swap);
@@ -214,7 +218,7 @@ void GuaDynGeoVisualPlugin::Update()
         }
     }
 
-    /*gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-    std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;*/
+    gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
 }
 }
