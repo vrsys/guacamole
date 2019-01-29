@@ -69,34 +69,17 @@ class GUA_SPOINTS_DLL SPointsRenderer {
 private:
   void          _load_shaders();
   //void          _initialize_log_to_lin_conversion_pass_program();
-  void          _initialize_depth_pass_program();
-  void          _initialize_accumulation_pass_program(MaterialShader* material);
-  void          _initialize_normalization_pass_program();
   void          _initialize_shadow_pass_program();
-
-  void          _initialize_forward_colored_triangles_pass_program(MaterialShader* material);
-  //void          _initialize_forward_textured_triangles_pass_program(MaterialShader* material);
 
   std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
                                                        std::shared_ptr<ShaderProgram> const& current_program,
                                                        bool& program_changed);
 
   void          _create_gpu_resources(gua::RenderContext const& ctx,
-                                    scm::math::vec2ui const& render_target_dims,
-            bool resize_resource_containers); 
+                                      scm::math::vec2ui const& render_target_dims,
+                                      bool resize_resource_containers); 
 
  private:  // attributes
-
-  //depth pass FBO & attachments
-  scm::gl::texture_2d_ptr                      depth_pass_log_depth_result_;
-  scm::gl::texture_2d_ptr                      depth_pass_linear_depth_result_;
-
-  scm::gl::frame_buffer_ptr                    depth_pass_result_fbo_;
-
-  //accumulation pass FBO & attachments
-  scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
-  scm::gl::texture_2d_ptr                      accumulation_pass_weight_and_depth_result_;
-  scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
 
   //schism-GL states:
   //////////////////////////////////////////////////////////////////////////////////////
@@ -105,12 +88,6 @@ private:
 
   scm::gl::sampler_state_ptr                   nearest_sampler_state_;
 
-
-  scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
-  scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
-  scm::gl::depth_stencil_state_ptr             no_depth_test_with_writing_depth_stencil_state_;
-
-  scm::gl::depth_stencil_state_ptr             default_depth_stencil_state_;
 
   scm::gl::depth_stencil_state_ptr             depth_test_with_writing_depth_stencil_state_;
 

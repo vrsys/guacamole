@@ -172,7 +172,9 @@ void SPointsResource::draw_vertex_colored_triangle_soup(RenderContext const& ctx
 }*/
 
 void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
-  spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);
+  if(spointsdata_) {
+    spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);
+  }
 }
 
 
