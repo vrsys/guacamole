@@ -14,6 +14,13 @@
 #include <gazebo/rendering/Visual.hh>
 #include <gazebo/transport/Node.hh>
 
+
+#include <zmq.hpp>
+
+#include <iostream>
+#include <atomic>
+#include <thread>
+
 typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStampedPtr;
 
 namespace gazebo
@@ -32,12 +39,22 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
   private:
     rendering::VisualPtr _visual;
     event::ConnectionPtr _update_connection;
+    std::atomic<bool> _is_recv_running;
+    std::atomic<bool> _is_need_swap;
+    std::mutex _mutex_swap;
+    std::thread _thread_recv;
     Ogre::SceneNode *_scene_node;
     Ogre::SceneManager *_scene_manager;
-    int _callback_count = 0;
+
+    std::vector<unsigned char> _buffer_rcv;
+    size_t _num_geometry_bytes = 0;
+    float _bb_min[3];
+    float _bb_max[3];
 
     void Update();
-    void AddTriangle();
+    void AddTriangleSoup(float *vertices, int *faces);
+    void RemoveTriangleSoup();
+    void _ReadLoop();
 };
 }
 

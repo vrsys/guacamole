@@ -1,16 +1,21 @@
 #include "GuaDynGeoVisualPlugin.hpp"
+#include "sgtp/SGTP.h"
 
 namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _is_need_swap(true), _is_recv_running(true), _mutex_swap()
 {
     gzerr << "DynGeo: constructor" << std::endl;
     std::cerr << "DynGeo: constructor" << std::endl;
 }
 
-GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin() {}
+GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
+{
+    _is_recv_running.store(false);
+    _thread_recv.join();
+}
 
 void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sdf)
 {
@@ -28,9 +33,59 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
-}
 
-void GuaDynGeoVisualPlugin::AddTriangle()
+    _thread_recv = std::thread([&]() { _ReadLoop(); });
+}
+void GuaDynGeoVisualPlugin::_ReadLoop()
+{
+    // open multicast listening connection to server and port
+    zmq::context_t ctx(1);              // means single threaded
+    zmq::socket_t socket(ctx, ZMQ_SUB); // means a subscriber
+
+    socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+#if ZMQ_VERSION_MAJOR < 3
+    int64_t hwm = 1;
+    socket.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+#else
+    int hwm = 1;
+    socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
+#endif
+
+    std::string endpoint("tcp://141.54.147.29:7050");
+    socket.connect(endpoint.c_str());
+
+    while(_is_recv_running.load())
+    {
+        zmq::message_t zmqm;
+        socket.recv(&zmqm);
+
+        while(true)
+        {
+            std::lock_guard<std::mutex> lock(_mutex_swap);
+
+            if(!_is_need_swap.load() || !_is_recv_running.load())
+            {
+                break;
+            }
+        }
+
+        SGTP::header_data_t header;
+        memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
+
+        // TODO: textures
+
+        _num_geometry_bytes = SGTP::get_num_geometry_bytes(header);
+        memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
+        memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
+        memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::get_geometry_read_offset(header), SGTP::get_num_geometry_bytes(header));
+
+        {
+            std::lock_guard<std::mutex> lock(_mutex_swap);
+            _is_need_swap.store(true);
+        }
+    }
+}
+void GuaDynGeoVisualPlugin::AddTriangleSoup(float *vertices, int *faces)
 {
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
@@ -43,7 +98,36 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
-    Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
+    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(std::to_string(rand()), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    mesh->_setBounds(Ogre::AxisAlignedBox({-100, -100, 0}, {100, 100, 0}));
+
+    mesh->sharedVertexData = new Ogre::VertexData();
+    mesh->sharedVertexData->vertexCount = 4;
+    Ogre::VertexDeclaration *decl = mesh->sharedVertexData->vertexDeclaration;
+    Ogre::VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
+
+    size_t offset = 0;
+    decl->addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+    offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
+    decl->addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES, 0);
+    offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT2);
+
+    Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(offset, 4, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    vbuf->writeData(0, vbuf->getSizeInBytes(), vertices, true);
+    bind->setBinding(0, vbuf);
+    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 6, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    ibuf->writeData(0, ibuf->getSizeInBytes(), faces, true);
+
+    Ogre::SubMesh *sub = mesh->createSubMesh();
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = ibuf;
+    sub->indexData->indexCount = 6;
+    sub->indexData->indexStart = 0;
+
+    // _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh);
+
+    /// Manual Object
+    /*Ogre::ManualObject *man = _scene_manager->createManualObject(std::to_string(rand()));
 
     man->begin("Examples/OgreLogo", Ogre::RenderOperation::OT_TRIANGLE_LIST);
     man->setDynamic(true);
@@ -71,13 +155,15 @@ void GuaDynGeoVisualPlugin::AddTriangle()
     std::cerr << "DynGeo: section ptr is null " << (section_ptr == nullptr) << std::endl;
 
     man->setVisible(true);
+     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(man);
+     */
 
     gzerr << "DynGeo: triangles added" << std::endl;
     std::cerr << "DynGeo: triangles added" << std::endl;
 
-    float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-    float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
     // test access to scene
     const Ogre::ColourValue ambient(r, g, b, 1.f);
@@ -85,22 +171,30 @@ void GuaDynGeoVisualPlugin::AddTriangle()
 
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
-
-    _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(man);
 }
+void GuaDynGeoVisualPlugin::RemoveTriangleSoup() { _scene_node->removeAllChildren(); }
 void GuaDynGeoVisualPlugin::Update()
 {
-    if(_callback_count % 1000 == 0)
+    /*gzerr << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << "DynGeo: pre-render update before" << std::endl;*/
+
     {
-        AddTriangle();
+        std::lock_guard<std::mutex> lock(_mutex_swap);
+        if(_is_need_swap.load())
+        {
+            // TODOm_buffer.swap(m_buffer_back);
+            _is_need_swap.store(false);
+
+            RemoveTriangleSoup();
+
+            float vertices[32] = {-100, -100, 0, 0, 1, 100, -100, 0, 1, 1, 100, 100, 0, 1, 0, -100, 100, 0, 0, 0};
+            int faces[6] = {0, 1, 2, 0, 2, 3};
+
+            AddTriangleSoup(vertices, faces);
+        }
     }
 
-    _callback_count++;
-
-    /*gzerr << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << "DynGeo: pre-render update before" << std::endl;
-
-    gzerr << "DynGeo: pre-render update after" << std::endl;
+    /*gzerr << "DynGeo: pre-render update after" << std::endl;
     std::cerr << "DynGeo: pre-render update after" << std::endl;*/
 }
 }
