@@ -47,12 +47,13 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneManager *_scene_manager;
 
     std::vector<unsigned char> _buffer_rcv;
+    std::vector<int> _faces;
     size_t _num_geometry_bytes = 0;
     float _bb_min[3];
     float _bb_max[3];
 
     void Update();
-    void AddTriangleSoup(float *vertices, int *faces);
+    void AddTriangleSoup();
     void RemoveTriangleSoup();
     void _ReadLoop();
 };

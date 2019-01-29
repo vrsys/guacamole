@@ -5,7 +5,7 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _is_need_swap(true), _is_recv_running(true), _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(1000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
     gzerr << "DynGeo: constructor" << std::endl;
     std::cerr << "DynGeo: constructor" << std::endl;
@@ -34,13 +34,14 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
 
-    _thread_recv = std::thread([&]() { _ReadLoop(); });
+    std::generate(_faces.begin(), _faces.end(), [n = 0]() mutable { return n++; });
+
+    // TODO _thread_recv = std::thread([&]() { _ReadLoop(); });
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
-    // open multicast listening connection to server and port
-    zmq::context_t ctx(1);              // means single threaded
-    zmq::socket_t socket(ctx, ZMQ_SUB); // means a subscriber
+    zmq::context_t ctx(1);
+    zmq::socket_t socket(ctx, ZMQ_SUB);
 
     socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 #if ZMQ_VERSION_MAJOR < 3
@@ -85,7 +86,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         }
     }
 }
-void GuaDynGeoVisualPlugin::AddTriangleSoup(float *vertices, int *faces)
+void GuaDynGeoVisualPlugin::AddTriangleSoup()
 {
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
@@ -98,11 +99,17 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup(float *vertices, int *faces)
     gzerr << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << "DynGeo: scene manager acquired" << std::endl;
 
+    size_t num_vertices = _num_geometry_bytes / sizeof(float) / 5;
+    size_t faces = num_vertices / 3;
+
+    gzerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+    std::cerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+
     Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(std::to_string(rand()), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    mesh->_setBounds(Ogre::AxisAlignedBox({-100, -100, 0}, {100, 100, 0}));
+    mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], _bb_min[2]}, {_bb_max[0], _bb_max[1], _bb_max[2]}));
 
     mesh->sharedVertexData = new Ogre::VertexData();
-    mesh->sharedVertexData->vertexCount = 4;
+    mesh->sharedVertexData->vertexCount = num_vertices;
     Ogre::VertexDeclaration *decl = mesh->sharedVertexData->vertexDeclaration;
     Ogre::VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
 
@@ -112,16 +119,16 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup(float *vertices, int *faces)
     decl->addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES, 0);
     offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT2);
 
-    Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(offset, 4, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-    vbuf->writeData(0, vbuf->getSizeInBytes(), vertices, true);
+    Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
-    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, 6, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-    ibuf->writeData(0, ibuf->getSizeInBytes(), faces, true);
+    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_16BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
 
     Ogre::SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = ibuf;
-    sub->indexData->indexCount = 6;
+    sub->indexData->indexCount = faces;
     sub->indexData->indexStart = 0;
 
     // _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh);
@@ -172,29 +179,25 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup(float *vertices, int *faces)
     gzerr << "DynGeo: test values written" << std::endl;
     std::cerr << "DynGeo: test values written" << std::endl;
 }
-void GuaDynGeoVisualPlugin::RemoveTriangleSoup() { _scene_node->removeAllChildren(); }
+void GuaDynGeoVisualPlugin::RemoveTriangleSoup() {
+    // TODO: remove meshes
+}
 void GuaDynGeoVisualPlugin::Update()
 {
-    /*gzerr << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << "DynGeo: pre-render update before" << std::endl;*/
+    gzerr << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << "DynGeo: pre-render update before" << std::endl;
 
     {
         std::lock_guard<std::mutex> lock(_mutex_swap);
         if(_is_need_swap.load())
         {
-            // TODOm_buffer.swap(m_buffer_back);
-            _is_need_swap.store(false);
-
             RemoveTriangleSoup();
-
-            float vertices[32] = {-100, -100, 0, 0, 1, 100, -100, 0, 1, 1, 100, 100, 0, 1, 0, -100, 100, 0, 0, 0};
-            int faces[6] = {0, 1, 2, 0, 2, 3};
-
-            AddTriangleSoup(vertices, faces);
+            AddTriangleSoup();
+            _is_need_swap.store(false);
         }
     }
 
-    /*gzerr << "DynGeo: pre-render update after" << std::endl;
-    std::cerr << "DynGeo: pre-render update after" << std::endl;*/
+    gzerr << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << "DynGeo: pre-render update after" << std::endl;
 }
 }
