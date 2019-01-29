@@ -74,18 +74,22 @@ struct camera_matrix_package {
 struct SPointsStats {
   SPointsStats() : m_received_triangles(0),
                    m_received_timestamp_ms(0.0f),
-                   m_received_reconstruction_time_ms(-1.0f) {}
+                   m_received_reconstruction_time_ms(-1.0f),
+                   m_request_reply_latency_ms(-1.0f) {}
  
   SPointsStats(uint32_t in_received_tris, 
                float in_received_timestamp, 
-               float in_received_recon_time) 
+               float in_received_recon_time,
+               float in_request_reply_latency_ms) 
                : m_received_triangles(in_received_tris),
                  m_received_timestamp_ms(in_received_timestamp),
-                 m_received_reconstruction_time_ms(in_received_recon_time) {}
+                 m_received_reconstruction_time_ms(in_received_recon_time),
+                 m_request_reply_latency_ms(in_request_reply_latency_ms) {}
 
   uint32_t m_received_triangles = 0;
   float m_received_timestamp_ms = -1.0f;
   float m_received_reconstruction_time_ms = 0.0f;
+  float m_request_reply_latency_ms = -1.0f;
 };
 
 class NetKinectArray{
@@ -117,7 +121,8 @@ public:
 
     return SPointsStats{m_received_textured_tris_,
                         m_received_kinect_timestamp_,
-                        m_received_reconstruction_time_
+                        m_received_reconstruction_time_,
+                        m_request_reply_latency_ms_
                         };
   }
 
@@ -136,7 +141,7 @@ private:
 
   //receiving geometry
   std::mutex m_mutex_;
-  bool           m_running_;
+  std::atomic<bool>           m_running_;
   const std::string m_server_endpoint_;
   const std::string m_feedback_endpoint_;
   std::vector<uint8_t> m_buffer_;
@@ -259,6 +264,9 @@ private:
 
   float m_received_reconstruction_time_ = 0.0;
   float m_received_reconstruction_time_back_ = 0.0;
+
+  float m_request_reply_latency_ms_ = -1.0;
+  float m_request_reply_latency_ms_back_ = -1.0;
 
   int32_t m_triangle_texture_atlas_size_ = 0.0;
   int32_t m_triangle_texture_atlas_size_back_ = 0.0;

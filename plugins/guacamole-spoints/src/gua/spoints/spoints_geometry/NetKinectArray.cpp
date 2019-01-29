@@ -1,5 +1,7 @@
+
 #include <gua/spoints/spoints_geometry/NetKinectArray.hpp>
 #include <gua/spoints/spoints_geometry/codec/point_types.h>
+#include <gua/spoints/SPointsFeedbackCollector.hpp>
 
 #include <boost/assign/list_of.hpp>
 
@@ -329,7 +331,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
                 uint32_t current_layer_offset = 4 * (layer_to_update_idx);
 
                 auto current_region_to_update = 
-                  scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0]    , 
+                  scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0], 
                                                             m_texture_space_bounding_boxes_[current_layer_offset + 1]
                                                             ,     0), 
                                           scm::math::vec3ui((m_texture_space_bounding_boxes_[current_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 0]), 
@@ -341,7 +343,6 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
                 ctx.render_device->main_context()->update_sub_texture(current_texture_atlas, 
                                                                       current_region_to_update, 0, scm::gl::FORMAT_BGR_8, 
                                                                       (void*) &m_texture_buffer_[current_read_offset] );
-                                                                      //(void*) &m_texture_buffer_[0] );
           
               }
 
@@ -541,6 +542,31 @@ void NetKinectArray::readloop() {
         m_received_kinect_timestamp_back_    = message_header.timestamp;
         m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
 
+        std::cout << "Kinect timestamp: " << m_received_kinect_timestamp_back_ << "\n";
+        std::cout << "Recon time: " << m_received_reconstruction_time_back_ << "\n";
+
+        std::cout << "Package Reply Roundtrip ID: " << message_header.package_reply_id << "\n";
+
+        auto passed_microseconds_to_request = message_header.passed_microseconds_since_request;
+
+        auto timestamp_during_reception = std::chrono::system_clock::now();
+        auto reference_timestamp = ::gua::SPointsFeedbackCollector::instance()->get_reference_timestamp();
+
+        auto start_to_reply_diff = timestamp_during_reception - reference_timestamp;
+
+        int64_t passed_microseconds_to_reply = std::chrono::duration<double>(start_to_reply_diff).count() * 1000000;
+
+        std::cout << passed_microseconds_to_reply << " microseconds\n";
+
+        std::cout << "TOTAL LATENCY: " << passed_microseconds_to_reply - passed_microseconds_to_request << "microseconds\n";
+        //std::chrono::duration<double> measured_latency = current_timestamp - request_timestamp;
+        //auto latency_count = measured_latency.count();
+
+
+        //std::cout << "Latency: " \
+        //  <<latency_count/ 1000000.0f << "\n"; 
+
+
         m_lod_scaling_back_                  = message_header.lod_scaling;
 
         m_received_textured_tris_back_ = 0;
@@ -590,7 +616,7 @@ void NetKinectArray::readloop() {
 
         size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
 
-        if(message_header.is_image_data_compressed) {
+        if(message_header.is_data_compressed) {
           std::cout << "Total amount compressed bytes: " << total_encoded_geometry_byte_size << "\n";
           m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
           memcpy((unsigned char*) &m_buffer_back_compressed_[0], ((unsigned char*) zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);          
@@ -608,7 +634,7 @@ void NetKinectArray::readloop() {
           byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
         }
 
-        if(message_header.is_image_data_compressed) {
+        if(message_header.is_data_compressed) {
           _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
         }
 

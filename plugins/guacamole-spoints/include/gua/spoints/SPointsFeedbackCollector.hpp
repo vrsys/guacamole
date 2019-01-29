@@ -34,9 +34,11 @@
 #include <memory>
 #include <unordered_set>
 #include <unordered_map>
+#include <chrono>
 
 namespace gua {
 
+using chrono_timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbackCollector> {
  public:
@@ -44,10 +46,14 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
   SPointsFeedbackCollector() {
     feedback_zmq_context_ = std::make_shared<zmq::context_t>(1); // means single threaded
+    m_reference_timestamp_ = std::chrono::system_clock::now();
   };
   ~SPointsFeedbackCollector() = default;
 
-
+  chrono_timestamp get_reference_timestamp() {
+    return m_reference_timestamp_;
+  }
+  
   void push_feedback_matrix(RenderContext const& ctx, std::string const& socket_string, spoints::matrix_package const& pushed_feedback_matrix) {
 
       std::lock_guard<std::mutex> lock(m_feedback_mutex_);
@@ -135,7 +141,9 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
       for( auto const& collected_feedback_pair_per_socket : serialized_matrices_per_socket) {
 
-        size_t feedback_header_byte = 8;
+        size_t byte_before_timestamp = 8;
+
+        size_t feedback_header_byte = byte_before_timestamp + sizeof(int64_t);
 
         uint32_t num_recorded_matrix_packages = 0;
 
@@ -159,6 +167,15 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
         memcpy((char*)zmqm.data(), (char*)&(num_recorded_matrix_packages), sizeof(uint32_t));
         memcpy((char*)zmqm.data() + sizeof(uint32_t), (char*)&(request_package_id), sizeof(int32_t));
+
+        chrono_timestamp timestamp_during_request = std::chrono::system_clock::now();
+
+        auto start_to_request_diff = timestamp_during_request - m_reference_timestamp_;
+
+        int64_t request_time_stamp = std::chrono::duration<double>(start_to_request_diff).count() * 1000000;
+        std::cout << request_time_stamp << " microseconds\n";
+        memcpy((char*)zmqm.data() + byte_before_timestamp, (char*)&(request_time_stamp), sizeof(int64_t));
+
         memcpy( ((char*)zmqm.data()) + (feedback_header_byte), (char*)&(collected_matrices[0]), (num_recorded_matrix_packages) *  sizeof(spoints::matrix_package) );
 
         //std::cout << "actually recorded matrices: " << num_recorded_matrix_packages << "\n";
@@ -170,6 +187,8 @@ class GUA_SPOINTS_DLL SPointsFeedbackCollector : public Singleton<SPointsFeedbac
 
     }
   }
+
+  chrono_timestamp                                                             m_reference_timestamp_;
 
   std::mutex                                                                   m_feedback_mutex_;
 
