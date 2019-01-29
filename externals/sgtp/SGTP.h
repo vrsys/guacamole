@@ -2,7 +2,7 @@
 #define SGTP_PROTOCOL_HEADER
 // compatability header of the streaming geometry transmission protocol
 
-#include "./versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_2_3.h"
+#include "sgtp/versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_2_3.h"
 
 namespace SGTP {
 

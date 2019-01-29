@@ -14,12 +14,13 @@
 #include <gazebo/rendering/Visual.hh>
 #include <gazebo/transport/Node.hh>
 
-
 #include <zmq.hpp>
 
 #include <iostream>
 #include <atomic>
 #include <thread>
+
+#include <sgtp/SGTP.h>
 
 typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStampedPtr;
 

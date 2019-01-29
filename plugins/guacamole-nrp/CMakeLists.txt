@@ -75,6 +75,6 @@ add_library(nrp_plugin_model SHARED nrp_plugins/GuaInteractiveModelPlugin.cpp nr
 target_include_directories(nrp_plugin_model PUBLIC ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})
 target_link_libraries(nrp_plugin_model PUBLIC guacamole ${GAZEBO_LIBRARIES} pthread)
 
-add_library(nrp_plugin_dyngeo SHARED nrp_plugins/GuaDynGeoVisualPlugin.cpp nrp_plugins/GuaDynGeoVisualPlugin.hpp nrp_plugins/sgtp/SGTP.h nrp_plugins/sgtp/versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_1_0.h nrp_plugins/sgtp/versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_2_3.h)
+add_library(nrp_plugin_dyngeo SHARED nrp_plugins/GuaDynGeoVisualPlugin.cpp nrp_plugins/GuaDynGeoVisualPlugin.hpp ../../externals/sgtp/SGTP.h ../../externals/sgtp/versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_1_0.h ../../externals/sgtp/versions/v0.x.x/streaming_geometry_transmission_protocol_v_0_2_3.h)
 target_include_directories(nrp_plugin_dyngeo PUBLIC ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GUACAMOLE_NRP_INCLUDE_DIR})
 target_link_libraries(nrp_plugin_dyngeo PUBLIC guacamole ${GAZEBO_LIBRARIES} pthread)
