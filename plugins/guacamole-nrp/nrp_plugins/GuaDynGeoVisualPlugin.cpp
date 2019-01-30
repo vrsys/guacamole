@@ -127,13 +127,15 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         return;
     }
 
+    _scene_node = _visual->GetSceneNode();
+    _scene_manager = _scene_node->getCreator();
+
     if(!_scene_node || !_scene_manager)
     {
         return;
     }
 
-    _scene_node = _visual->GetSceneNode();
-    _scene_manager = _scene_node->getCreator();
+    _scene_node->setVisible(false, false);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
@@ -219,6 +221,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     _entity->setMaterialName("Examples/OgreLogo");
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
     _avatar_node->attachObject(_entity);
+
+    _avatar_node->setVisible(true, true);
 
     while(!_entity->isAttached())
     {
