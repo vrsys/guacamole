@@ -233,7 +233,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: triangles added" << std::endl;
 #endif
 
-//#if GUA_DEBUG == 1
+#if GUA_DEBUG == 1
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -241,7 +241,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     // test access to scene
     const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
-//#endif
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: test colors written" << std::endl;
