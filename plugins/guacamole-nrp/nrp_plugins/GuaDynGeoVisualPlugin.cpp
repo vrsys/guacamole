@@ -209,12 +209,20 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->load();
 
+    while(!mesh->isLoaded())
+    {
+    }
+
     _entity_name = std::to_string(rand());
 
-    Ogre::Entity *mesh_avatar = _scene_manager->createEntity(_entity_name, meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    mesh_avatar->setMaterialName("Examples/OgreLogo");
+    _entity = _scene_manager->createEntity(_entity_name, meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setMaterialName("Examples/OgreLogo");
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
-    _avatar_node->attachObject(mesh_avatar);
+    _avatar_node->attachObject(_entity);
+
+    while(!_entity->isAttached())
+    {
+    }
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: triangles added" << std::endl;
@@ -246,21 +254,24 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
         return;
     }
 
-    _avatar_node->removeAllChildren();
-
     if(!_scene_node)
     {
         return;
     }
 
-    _scene_node->removeAllChildren();
-
-    if(!_scene_manager || _entity_name.empty())
+    if(!_scene_manager || !_entity)
     {
         return;
     }
 
-    _scene_manager->destroyEntity(_entity_name);
+    _avatar_node->removeAllChildren();
+    _scene_node->removeAllChildren();
+
+    while(_entity->isAttached())
+    {
+    }
+
+    _scene_manager->destroyEntity(_entity);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
