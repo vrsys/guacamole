@@ -4,7 +4,7 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _entity_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << "DynGeo: constructor" << std::endl;
@@ -253,7 +253,7 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 
     _avatar_node->removeAllChildren();
 
-    if(!_scene_manager)
+    if(!_scene_manager || _entity_name.empty())
     {
         return;
     }
