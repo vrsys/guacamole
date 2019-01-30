@@ -16,8 +16,8 @@
 
 #include <zmq.hpp>
 
-#include <iostream>
 #include <atomic>
+#include <iostream>
 #include <thread>
 
 #include <sgtp/SGTP.h>
@@ -40,12 +40,15 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
   private:
     rendering::VisualPtr _visual;
     event::ConnectionPtr _update_connection;
+
     std::atomic<bool> _is_recv_running;
     std::atomic<bool> _is_need_swap;
     std::mutex _mutex_swap;
     std::thread _thread_recv;
-    Ogre::SceneNode *_scene_node;
+
+    Ogre::SceneNode *_scene_node, *_avatar_node;
     Ogre::SceneManager *_scene_manager;
+    std::string _entity_name;
 
     std::vector<unsigned char> _buffer_rcv;
     std::vector<int32_t> _faces;

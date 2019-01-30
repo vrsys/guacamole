@@ -6,8 +6,10 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
+#if GUA_DEBUG == 1
     gzerr << "DynGeo: constructor" << std::endl;
     std::cerr << "DynGeo: constructor" << std::endl;
+#endif
 }
 
 GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
@@ -18,8 +20,10 @@ GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
 
 void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sdf)
 {
+#if GUA_DEBUG == 1
     gzerr << "DynGeo: load before" << std::endl;
     std::cerr << "DynGeo: load before" << std::endl;
+#endif
 
     if(!visual || !sdf)
     {
@@ -30,8 +34,10 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     _visual = visual;
     _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
+#if GUA_DEBUG == 1
     gzerr << "DynGeo: load after" << std::endl;
     std::cerr << "DynGeo: load after" << std::endl;
+#endif
 
     std::iota(_faces.begin(), _faces.end(), 0);
 
@@ -39,8 +45,10 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
+#if GUA_DEBUG == 1
     gzerr << "DynGeo: _ReadLoop" << std::endl;
     std::cerr << "DynGeo: _ReadLoop" << std::endl;
+#endif
 
     zmq::context_t ctx(1);
     zmq::socket_t socket(ctx, ZMQ_SUB);
@@ -62,8 +70,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         zmq::message_t zmqm;
         socket.recv(&zmqm);
 
+#if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: socket.recv" << std::endl;
         std::cerr << std::endl << "DynGeo: socket.recv" << std::endl;
+#endif
 
         while(true)
         {
@@ -75,8 +85,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             }
         }
 
+#if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: memcpy" << std::endl;
         std::cerr << std::endl << "DynGeo: memcpy" << std::endl;
+#endif
 
         SGTP::header_data_t header;
         memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
@@ -96,8 +108,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 }
 void GuaDynGeoVisualPlugin::AddTriangleSoup()
 {
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: AddTriangleSoup" << std::endl;
     std::cerr << std::endl << "DynGeo: AddTriangleSoup" << std::endl;
+#endif
 
     if(!_visual)
     {
@@ -112,14 +126,18 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         return;
     }
 
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
+#endif
 
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
     size_t faces = num_vertices / 3;
 
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+#endif
 
     std::string meshname = std::to_string(rand());
 
@@ -143,6 +161,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
 
+#if GUA_DEBUG == 1
     float vx[3];
     float tx[2];
 
@@ -154,6 +173,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
     std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+#endif
 
     Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
@@ -166,12 +186,17 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     mesh->load();
 
-    Ogre::Entity *mesh_avatar = _scene_manager->createEntity(std::to_string(rand()), meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    mesh_avatar->setMaterialName("Examples/OgreLogo");
-    _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
+    _entity_name = std::to_string(rand());
 
+    Ogre::Entity *mesh_avatar = _scene_manager->createEntity(_entity_name, meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    mesh_avatar->setMaterialName("Examples/OgreLogo");
+    _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
+    _avatar_node->attachObject(mesh_avatar);
+
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: triangles added" << std::endl;
     std::cerr << std::endl << "DynGeo: triangles added" << std::endl;
+#endif
 
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -181,13 +206,17 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
 
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: test values written" << std::endl;
     std::cerr << std::endl << "DynGeo: test values written" << std::endl;
+#endif
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
     std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+#endif
 
     if(!_scene_node)
     {
@@ -195,12 +224,27 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     }
 
     _scene_node->removeAllChildren();
-    // TODO: remove meshes
+
+    if(!_avatar_node)
+    {
+        return;
+    }
+
+    _avatar_node->removeAllChildren();
+
+    if(!_scene_manager)
+    {
+        return;
+    }
+
+    _scene_manager->destroyEntity(_entity_name);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
     std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+#endif
 
     {
         std::lock_guard<std::mutex> lock(_mutex_swap);
@@ -212,7 +256,9 @@ void GuaDynGeoVisualPlugin::Update()
         }
     }
 
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
     std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+#endif
 }
 }
