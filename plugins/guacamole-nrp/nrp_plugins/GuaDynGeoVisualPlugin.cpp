@@ -142,7 +142,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::string meshname = std::to_string(rand());
 
     Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], _bb_min[2]}, {_bb_max[0], _bb_max[1], _bb_max[2]}));
+
+    // "-" for Z axis - NOT A MISTAKE!
+    mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_min[2]}, {_bb_max[0], _bb_max[1], -_bb_max[2]}));
     mesh->_setBoundingSphereRadius(1.73f);
 
     mesh->sharedVertexData = new Ogre::VertexData();
@@ -161,6 +163,28 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
 
+    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
+
+    const Ogre::VertexElement *posElem = decl->findElementBySemantic(Ogre::VES_POSITION);
+    auto *vertex = static_cast<unsigned char *>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+    float *pReal;
+    for(size_t j = 0; j < mesh->sharedVertexData->vertexCount; j++, vertex += vbuf->getVertexSize())
+    {
+        posElem->baseVertexPointerToElement(vertex, &pReal);
+        pReal[2] = -pReal[2];
+    }
+    vbuf->unlock();
+
+    auto *pLong = static_cast<unsigned long *>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+    for(size_t k = 0; k < faces * 3; k += 3)
+    {
+        unsigned long swapSpace = pLong[k + 2];
+        pLong[k + 2] = pLong[k + 1];
+        pLong[k + 1] = swapSpace;
+    }
+    ibuf->unlock();
+
 #if GUA_DEBUG == 1
     float vx[3];
     float tx[2];
@@ -175,16 +199,11 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
 #endif
 
-    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-    ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
-
     Ogre::SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = ibuf;
     sub->indexData->indexCount = faces;
     sub->indexData->indexStart = 0;
-
-    InvertZ(mesh);
 
     mesh->load();
 
@@ -240,65 +259,6 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     }
 
     _scene_manager->destroyEntity(_entity_name);
-}
-void GuaDynGeoVisualPlugin::InvertZ(Ogre::MeshPtr mesh)
-{
-    bool added_shared = false;
-    size_t next_offset = 0;
-    for(unsigned short i = 0; i < mesh->getNumSubMeshes(); i++)
-    {
-        Ogre::SubMesh *submesh = mesh->getSubMesh(i);
-        Ogre::VertexData *vertex_data = submesh->useSharedVertices ? mesh->sharedVertexData : submesh->vertexData;
-        if((!submesh->useSharedVertices) || (submesh->useSharedVertices && !added_shared))
-        {
-            if(submesh->useSharedVertices)
-            {
-                added_shared = true;
-            }
-            const Ogre::VertexElement *posElem = vertex_data->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
-            Ogre::HardwareVertexBufferSharedPtr vbuf = vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
-            unsigned char *vertex = static_cast<unsigned char *>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-            float *pReal;
-            for(size_t j = 0; j < vertex_data->vertexCount; j++, vertex += vbuf->getVertexSize())
-            {
-                posElem->baseVertexPointerToElement(vertex, &pReal);
-                pReal[2] = -pReal[2];
-            }
-            vbuf->unlock();
-            next_offset += vertex_data->vertexCount;
-        }
-        Ogre::IndexData *index_data = submesh->indexData;
-        size_t numTris = index_data->indexCount / 3;
-        Ogre::HardwareIndexBufferSharedPtr ibuf = index_data->indexBuffer;
-        bool use32bitindexes = (ibuf->getType() == Ogre::HardwareIndexBuffer::IT_32BIT);
-        unsigned long *pLong = static_cast<unsigned long *>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-        unsigned short *pShort = reinterpret_cast<unsigned short *>(pLong);
-        if(use32bitindexes)
-        {
-            for(size_t k = 0; k < numTris * 3; k += 3)
-            {
-                unsigned long swapSpace = pLong[k + 2];
-                pLong[k + 2] = pLong[k + 1];
-                pLong[k + 1] = swapSpace;
-            }
-        }
-        else
-        {
-            for(size_t k = 0; k < numTris * 3; k += 3)
-            {
-                unsigned short swapSpace = pShort[k + 2];
-                pShort[k + 2] = pShort[k + 1];
-                pShort[k + 1] = swapSpace;
-            }
-        }
-        ibuf->unlock();
-    }
-    Ogre::AxisAlignedBox box = mesh->getBounds();
-    Ogre::Vector3 min = box.getMinimum();
-    Ogre::Vector3 max = box.getMaximum();
-    box.setExtents(min.x, min.y, -max.z, max.x, max.y, -min.z);
-    mesh->_setBounds(box);
-    mesh->removeLodLevels();
 }
 void GuaDynGeoVisualPlugin::Update()
 {
