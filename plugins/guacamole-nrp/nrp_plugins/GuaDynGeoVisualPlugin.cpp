@@ -265,13 +265,19 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     std::cerr << std::endl << "DynGeo: null check passed" << std::endl;
 #endif
 
-    _avatar_node->removeAllChildren();
-    _scene_node->removeAllChildren();
     _entity->detachFromParent();
 
     while(_entity->isAttached())
     {
     }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: entity detached" << std::endl;
+    std::cerr << std::endl << "DynGeo: entity detached" << std::endl;
+#endif
+
+    _avatar_node->removeAllChildren();
+    _scene_node->removeAllChildren();
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: destroying entity" << std::endl;
