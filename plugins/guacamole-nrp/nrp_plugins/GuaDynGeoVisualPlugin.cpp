@@ -4,7 +4,7 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(1000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
     gzerr << "DynGeo: constructor" << std::endl;
     std::cerr << "DynGeo: constructor" << std::endl;
@@ -112,14 +112,14 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         return;
     }
 
-    gzerr << "DynGeo: scene manager acquired" << std::endl;
-    std::cerr << "DynGeo: scene manager acquired" << std::endl;
+    gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
+    std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
 
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
     size_t faces = num_vertices / 3;
 
-    gzerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
-    std::cerr << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+    gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+    std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 
     std::string meshname = std::to_string(rand());
 
@@ -143,6 +143,18 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
 
+    float vx[3];
+    float tx[2];
+
+    memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
+    memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
+
+    gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+    std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+
+    gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+    std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+
     Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
 
@@ -158,8 +170,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     mesh_avatar->setMaterialName("Examples/OgreLogo");
     _scene_node->createChildSceneNode(std::to_string(rand()))->attachObject(mesh_avatar);
 
-    gzerr << "DynGeo: triangles added" << std::endl;
-    std::cerr << "DynGeo: triangles added" << std::endl;
+    gzerr << std::endl << "DynGeo: triangles added" << std::endl;
+    std::cerr << std::endl << "DynGeo: triangles added" << std::endl;
 
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -169,8 +181,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
 
-    gzerr << "DynGeo: test values written" << std::endl;
-    std::cerr << "DynGeo: test values written" << std::endl;
+    gzerr << std::endl << "DynGeo: test values written" << std::endl;
+    std::cerr << std::endl << "DynGeo: test values written" << std::endl;
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
