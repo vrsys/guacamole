@@ -186,7 +186,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
 
-    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_buffer_index[0], true);
 
 #if GUA_DEBUG == 1
@@ -206,7 +206,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     Ogre::SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = ibuf;
-    sub->indexData->indexCount = faces;
+    sub->indexData->indexCount = num_vertices;
     sub->indexData->indexStart = 0;
 
     mesh->load();
