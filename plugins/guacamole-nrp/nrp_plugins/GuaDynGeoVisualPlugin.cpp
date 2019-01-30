@@ -4,9 +4,9 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-#define GUA_DEBUG 1
+#define GUA_DEBUG 0
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _entity_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _entity_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << "DynGeo: constructor" << std::endl;
@@ -41,7 +41,14 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << "DynGeo: load after" << std::endl;
 #endif
 
-    std::iota(_faces.begin(), _faces.end(), 0);
+    std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
+
+    for(size_t i = 0; i < _buffer_index.size() - 2; i += 3)
+    {
+        int32_t swapSpace = _buffer_index[i + 2];
+        _buffer_index[i + 2] = _buffer_index[i + 1];
+        _buffer_index[i + 1] = swapSpace;
+    }
 
     _thread_recv = std::thread([&]() { _ReadLoop(); });
 }
@@ -136,6 +143,18 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
     size_t faces = num_vertices / 3;
 
+    float z = 0;
+    for(size_t i = 0; i < num_vertices; i++)
+    {
+        size_t z_offset = i * 5 * sizeof(float) + 2 * sizeof(float);
+
+        memcpy(&z, &_buffer_rcv[z_offset], sizeof(float));
+
+        z = -z;
+
+        memcpy(&_buffer_rcv[z_offset], &z, sizeof(float));
+    }
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
@@ -166,26 +185,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     bind->setBinding(0, vbuf);
 
     Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, faces, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-    ibuf->writeData(0, ibuf->getSizeInBytes(), &_faces[0], true);
-
-    const Ogre::VertexElement *posElem = decl->findElementBySemantic(Ogre::VES_POSITION);
-    auto *vertex = static_cast<unsigned char *>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-    float *pReal;
-    for(size_t j = 0; j < mesh->sharedVertexData->vertexCount; j++, vertex += vbuf->getVertexSize())
-    {
-        posElem->baseVertexPointerToElement(vertex, &pReal);
-        pReal[2] = -pReal[2];
-    }
-    vbuf->unlock();
-
-    auto *pLong = static_cast<unsigned long *>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-    for(size_t k = 0; k < faces * 3; k += 3)
-    {
-        unsigned long swapSpace = pLong[k + 2];
-        pLong[k + 2] = pLong[k + 1];
-        pLong[k + 1] = swapSpace;
-    }
-    ibuf->unlock();
+    ibuf->writeData(0, ibuf->getSizeInBytes(), &_buffer_index[0], true);
 
 #if GUA_DEBUG == 1
     float vx[3];
