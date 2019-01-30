@@ -4,6 +4,8 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
+#define GUA_DEBUG 1
+
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _entity_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _faces(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
