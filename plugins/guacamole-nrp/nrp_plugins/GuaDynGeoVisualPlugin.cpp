@@ -237,10 +237,12 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     // test access to scene
     const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
+//#endif
 
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: test colors written" << std::endl;
     std::cerr << std::endl << "DynGeo: test colors written" << std::endl;
-//#endif
+#endif
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
