@@ -127,13 +127,13 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         return;
     }
 
-    _scene_node = _visual->GetSceneNode();
-    _scene_manager = _scene_node->getCreator();
-
     if(!_scene_node || !_scene_manager)
     {
         return;
     }
+
+    _scene_node = _visual->GetSceneNode();
+    _scene_manager = _scene_node->getCreator();
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
