@@ -241,19 +241,19 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
 #endif
 
-    if(!_scene_node)
-    {
-        return;
-    }
-
-    _scene_node->removeAllChildren();
-
     if(!_avatar_node)
     {
         return;
     }
 
     _avatar_node->removeAllChildren();
+
+    if(!_scene_node)
+    {
+        return;
+    }
+
+    _scene_node->removeAllChildren();
 
     if(!_scene_manager || _entity_name.empty())
     {
