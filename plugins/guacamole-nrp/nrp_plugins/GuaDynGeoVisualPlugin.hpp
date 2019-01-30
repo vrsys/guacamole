@@ -59,6 +59,8 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     void Update();
     void AddTriangleSoup();
     void RemoveTriangleSoup();
+    void InvertZ(Ogre::MeshPtr mesh);
+
     void _ReadLoop();
 };
 }
