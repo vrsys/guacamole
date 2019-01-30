@@ -215,6 +215,11 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     {
     }
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
+    std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
+#endif
+
     _entity_name = std::to_string(rand());
 
     _entity = _scene_manager->createEntity(_entity_name, meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
