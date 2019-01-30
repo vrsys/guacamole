@@ -204,7 +204,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #endif
 
     Ogre::SubMesh *sub = mesh->createSubMesh();
-    sub->useSharedVertices = false;
+    sub->useSharedVertices = true;
     sub->indexData->indexBuffer = ibuf;
     sub->indexData->indexCount = num_vertices;
     sub->indexData->indexStart = 0;
