@@ -164,8 +164,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
-    // "-" for Z axis - NOT A MISTAKE!
-    mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_min[2]}, {_bb_max[0], _bb_max[1], -_bb_max[2]}));
+    // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
+    mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
     mesh->_setBoundingSphereRadius(1.73f);
 
     mesh->sharedVertexData = new Ogre::VertexData();
