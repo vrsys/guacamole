@@ -229,7 +229,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: triangles added" << std::endl;
 #endif
 
-#if GUA_DEBUG == 1
+//#if GUA_DEBUG == 1
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -240,7 +240,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     gzerr << std::endl << "DynGeo: test colors written" << std::endl;
     std::cerr << std::endl << "DynGeo: test colors written" << std::endl;
-#endif
+//#endif
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
