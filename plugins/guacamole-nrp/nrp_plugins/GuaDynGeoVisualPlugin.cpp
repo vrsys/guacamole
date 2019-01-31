@@ -7,7 +7,7 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 #define GUA_DEBUG 1
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
-    : _entity_name(""), _mesh_name(""), _material_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+    : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << "DynGeo: constructor" << std::endl;
@@ -71,6 +71,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     int hwm = 1;
     socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
 #endif
+
+    /// CONFLATE
+    bool conflate = true;
+    socket.setsockopt(ZMQ_CONFLATE, &conflate, sizeof(conflate));
 
     std::string endpoint("tcp://141.54.147.29:7050");
     socket.connect(endpoint.c_str());
@@ -172,11 +176,39 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 #endif
 
+    _texture_name = std::to_string(rand());
+
+    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D_RECT,
+                                                                                 SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
+
+    Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
+
+    pixel_buffer->lock(Ogre::Image::Box(0, 0, SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y), Ogre::HardwareBuffer::HBL_DISCARD);
+    const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
+
+    auto *pixel = static_cast<uint8_t *>(pixel_box.data);
+
+    for(size_t j = 0; j < SGTP::TEXTURE_DIMENSION_Y; j++)
+    {
+        for(size_t i = 0; i < SGTP::TEXTURE_DIMENSION_X; i++)
+        {
+            *pixel++ = 255; // B
+            *pixel++ = 0;   // G
+            *pixel++ = 0;   // R
+        }
+
+        pixel += pixel_box.getRowSkip() * Ogre::PixelUtil::getNumElemBytes(pixel_box.format);
+    }
+
+    pixel_buffer->unlock();
+
     _material_name = std::to_string(rand());
 
     Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(_material_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, true);
 
-    material->setAmbient(1.f, 0.f, 0.f);
+    material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
+    material->getTechnique(0)->getPass(0)->createTextureUnitState(_texture_name);
+    material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_ADD);
 
     _mesh_name = std::to_string(rand());
 
@@ -313,13 +345,14 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
 #endif
 
-    if(_mesh_name.empty() || _material_name.empty())
+    if(_mesh_name.empty() || _material_name.empty() || _texture_name.empty())
     {
         return;
     }
 
     Ogre::MeshManager::getSingleton().remove(_mesh_name);
     Ogre::MaterialManager::getSingleton().remove(_material_name);
+    Ogre::TextureManager::getSingleton().remove(_texture_name);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
