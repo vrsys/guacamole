@@ -6,7 +6,8 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _entity_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
+    : _entity_name(""), _mesh_name(""), _material_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << "DynGeo: constructor" << std::endl;
@@ -109,15 +110,15 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
         memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
 
-#if GUA_DEBUG == 1
-        gzerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
-        std::cerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
-#endif
+        /*#if GUA_DEBUG == 1
+                gzerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
+                std::cerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
+        #endif
 
-#if GUA_DEBUG == 1
-        gzerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
-        std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
-#endif
+        #if GUA_DEBUG == 1
+                gzerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
+                std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
+        #endif*/
 
         {
             std::lock_guard<std::mutex> lock(_mutex_swap);
@@ -153,7 +154,6 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #endif
 
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
-    size_t faces = num_vertices / 3;
 
     float z = 0;
     for(size_t i = 0; i < num_vertices; i++)
@@ -172,9 +172,15 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 #endif
 
-    std::string meshname = std::to_string(rand());
+    _material_name = std::to_string(rand());
 
-    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create(_material_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, true);
+
+    material->setAmbient(1.f, 0.f, 0.f);
+
+    _mesh_name = std::to_string(rand());
+
+    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(_mesh_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
     // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
     mesh->_setBounds(Ogre::AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
@@ -196,7 +202,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     vbuf->writeData(0, vbuf->getSizeInBytes(), &_buffer_rcv[0], true);
     bind->setBinding(0, vbuf);
 
-    Ogre::HardwareIndexBufferSharedPtr ibuf = Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    Ogre::HardwareIndexBufferSharedPtr ibuf =
+        Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_buffer_index[0], true);
 
 #if GUA_DEBUG == 1
@@ -232,8 +239,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     _entity_name = std::to_string(rand());
 
-    _entity = _scene_manager->createEntity(_entity_name, meshname, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    _entity->setMaterialName("Examples/OgreLogo");
+    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setMaterial(material);
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
     _avatar_node->attachObject(_entity);
 
@@ -248,7 +255,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: triangles added" << std::endl;
 #endif
 
-#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -256,7 +263,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     // test access to scene
     const Ogre::ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
-#endif
+#endif*/
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: test colors written" << std::endl;
@@ -305,6 +312,14 @@ void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
     gzerr << std::endl << "DynGeo: entity destroyed" << std::endl;
     std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
 #endif
+
+    if(_mesh_name.empty() || _material_name.empty())
+    {
+        return;
+    }
+
+    Ogre::MeshManager::getSingleton().remove(_mesh_name);
+    Ogre::MaterialManager::getSingleton().remove(_material_name);
 }
 void GuaDynGeoVisualPlugin::Update()
 {

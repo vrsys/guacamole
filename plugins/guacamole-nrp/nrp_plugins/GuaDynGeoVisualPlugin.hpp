@@ -49,6 +49,8 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneNode *_scene_node, *_avatar_node;
     Ogre::SceneManager *_scene_manager;
     Ogre::Entity * _entity;
+    std::string _material_name;
+    std::string _mesh_name;
     std::string _entity_name;
 
     std::vector<unsigned char> _buffer_rcv;
