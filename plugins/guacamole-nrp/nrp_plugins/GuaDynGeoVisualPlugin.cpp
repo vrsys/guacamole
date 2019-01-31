@@ -95,7 +95,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
     material->getTechnique(0)->getPass(0)->createTextureUnitState(_texture_name);
-    material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_ADD);
+    material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_REPLACE);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: material set" << std::endl;
