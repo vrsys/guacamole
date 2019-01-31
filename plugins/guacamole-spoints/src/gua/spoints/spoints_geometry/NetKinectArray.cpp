@@ -155,8 +155,9 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
       return false;
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex_);
+
     if(m_need_calibration_cpu_swap_.load()) {
+      std::lock_guard<std::mutex> lock(m_mutex_);
       m_calibration_.swap(m_calibration_back_);
 
       std::swap(m_inv_xyz_calibration_res_, m_inv_xyz_calibration_res_back_); 
@@ -228,6 +229,7 @@ NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua
 
 
     if(m_need_cpu_swap_.load()){
+      std::lock_guard<std::mutex> lock(m_mutex_);
       //start of synchro point
       m_buffer_.swap(m_buffer_back_);
       m_texture_buffer_.swap(m_texture_buffer_back_);
