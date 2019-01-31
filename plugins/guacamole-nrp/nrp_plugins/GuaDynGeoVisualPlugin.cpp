@@ -222,16 +222,16 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         switch(i)
         {
         case 0:
-            Ogre::PixelUtil::packColour(Ogre::ColourValue::Red, Ogre::PF_B8G8R8, pixel_box.data);
+            memset(pixel_box.data, 0x00, pixel_box.getConsecutiveSize());
             break;
         case 1:
-            Ogre::PixelUtil::packColour(Ogre::ColourValue::Blue, Ogre::PF_B8G8R8, pixel_box.data);
+            memset(pixel_box.data, 0x40, pixel_box.getConsecutiveSize());
             break;
         case 2:
-            Ogre::PixelUtil::packColour(Ogre::ColourValue::Green, Ogre::PF_B8G8R8, pixel_box.data);
+            memset(pixel_box.data, 0x80, pixel_box.getConsecutiveSize());
             break;
         case 3:
-            Ogre::PixelUtil::packColour(Ogre::ColourValue::Black, Ogre::PF_B8G8R8, pixel_box.data);
+            memset(pixel_box.data, 0xB0, pixel_box.getConsecutiveSize());
             break;
         default:
             break;
