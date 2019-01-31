@@ -51,8 +51,9 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _texture_name = std::to_string(rand());
 
-    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D_RECT,
-                                                                                 SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
+    Ogre::TexturePtr texture =
+        Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D_RECT, 2 * 1280 /*SGTP::TEXTURE_DIMENSION_X*/,
+                                                          2 * 720 /*SGTP::TEXTURE_DIMENSION_Y*/, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture created" << std::endl;
@@ -61,7 +62,8 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
 
-    pixel_buffer->lock(Ogre::Image::Box(0, 0, SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y), Ogre::HardwareBuffer::HBL_DISCARD);
+    // Ogre::Image::Box(0, 0, SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y)
+    pixel_buffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
     const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
     auto *pixel = static_cast<uint8_t *>(pixel_box.data);
