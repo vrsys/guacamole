@@ -68,19 +68,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     pixel_buffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
     const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-    auto *pixel = static_cast<uint8_t *>(pixel_box.data);
-
-    for(size_t j = 0; j < texture_width; j++)
-    {
-        for(size_t i = 0; i < texture_width; i++)
-        {
-            *pixel++ = 255; // B
-            *pixel++ = 0;   // G
-            *pixel++ = 0;   // R
-        }
-
-        pixel += pixel_box.getRowSkip() * Ogre::PixelUtil::getNumElemBytes(pixel_box.format);
-    }
+    memset(pixel_box.data, 0xFF, texture_width * texture_width * 3 * sizeof(char));
 
     pixel_buffer->unlock();
 
