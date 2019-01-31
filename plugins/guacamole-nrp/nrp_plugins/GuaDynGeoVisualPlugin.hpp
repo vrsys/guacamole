@@ -49,12 +49,15 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneNode *_scene_node, *_avatar_node;
     Ogre::SceneManager *_scene_manager;
     Ogre::Entity * _entity;
+    unsigned int _texture_width;
     std::string _texture_name;
     std::string _material_name;
     std::string _mesh_name;
     std::string _entity_name;
 
+    SGTP::texture_bounding_box_t _texture_bounding_boxes[16];
     std::vector<unsigned char> _buffer_rcv;
+    std::vector<unsigned char> _buffer_rcv_texture;
     std::vector<int32_t> _buffer_index;
     size_t _num_geometry_bytes = 0;
     float _bb_min[3];
