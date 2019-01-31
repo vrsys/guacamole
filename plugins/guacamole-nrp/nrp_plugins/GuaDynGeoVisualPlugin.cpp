@@ -70,9 +70,9 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     auto *pixel = static_cast<uint8_t *>(pixel_box.data);
 
-    for(size_t j = 0; j < SGTP::TEXTURE_DIMENSION_Y; j++)
+    for(size_t j = 0; j < texture_width; j++)
     {
-        for(size_t i = 0; i < SGTP::TEXTURE_DIMENSION_X; i++)
+        for(size_t i = 0; i < texture_width; i++)
         {
             *pixel++ = 255; // B
             *pixel++ = 0;   // G
