@@ -203,8 +203,10 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     size_t texture_offset = 0;
 
-    for(auto &texture_bounding_box : _texture_bounding_boxes)
+    for(unsigned int i = 0; i < SGTP::_MAX_NUM_SENSORS; i++)
     {
+        auto texture_bounding_box = _texture_bounding_boxes[i];
+
         if(texture_bounding_box.min.u == texture_bounding_box.max.u)
         {
             continue;
@@ -212,10 +214,28 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
         Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
-        pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.max.v, texture_bounding_box.max.u, texture_bounding_box.min.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+        pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
         const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-        memcpy(pixel_box.data, &_buffer_rcv_texture[texture_offset], pixel_box.getConsecutiveSize());
+        // memcpy(pixel_box.data, &_buffer_rcv_texture[texture_offset], pixel_box.getConsecutiveSize());
+
+        switch(i)
+        {
+        case 0:
+            Ogre::PixelUtil::packColour(Ogre::ColourValue::Red, Ogre::PF_B8G8R8, pixel_box.data);
+            break;
+        case 1:
+            Ogre::PixelUtil::packColour(Ogre::ColourValue::Blue, Ogre::PF_B8G8R8, pixel_box.data);
+            break;
+        case 2:
+            Ogre::PixelUtil::packColour(Ogre::ColourValue::Green, Ogre::PF_B8G8R8, pixel_box.data);
+            break;
+        case 3:
+            Ogre::PixelUtil::packColour(Ogre::ColourValue::Black, Ogre::PF_B8G8R8, pixel_box.data);
+            break;
+        default:
+            break;
+        }
 
         texture_offset += pixel_box.getConsecutiveSize();
 
