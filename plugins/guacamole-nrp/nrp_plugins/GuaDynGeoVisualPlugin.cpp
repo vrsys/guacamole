@@ -73,7 +73,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 #endif
 
     /// CONFLATE
-    bool conflate = true;
+    int conflate = 1;
     socket.setsockopt(ZMQ_CONFLATE, &conflate, sizeof(conflate));
 
     std::string endpoint("tcp://141.54.147.29:7050");
