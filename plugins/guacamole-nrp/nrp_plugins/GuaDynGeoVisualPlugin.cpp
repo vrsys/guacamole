@@ -7,7 +7,8 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 #define GUA_DEBUG 1
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
-    : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+    : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
+      _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: constructor" << std::endl;
@@ -51,11 +52,11 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _texture_name = std::to_string(rand());
 
-    unsigned int texture_width = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_X) / log(2)));
-    unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
+    _texture_width = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_X) / log(2)));
+    // unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
-    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, texture_width,
-                                                                                 texture_width, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
+    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, _texture_width,
+                                                                                 _texture_width, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture created" << std::endl;
@@ -64,11 +65,10 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
 
-    // Ogre::Image::Box(0, 0, SGTP::TEXTURE_DIMENSION_X, SGTP::TEXTURE_DIMENSION_Y)
     pixel_buffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
     const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-    memset(pixel_box.data, 0xFF, texture_width * texture_width * 3 * sizeof(char));
+    memset(pixel_box.data, 0xFF, _texture_width * _texture_width * 3 * sizeof(char));
 
     pixel_buffer->unlock();
 
@@ -150,13 +150,13 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
         SGTP::header_data_t header;
         memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
-
-        // TODO: textures
+        memcpy(&_texture_bounding_boxes, (unsigned char *)header.tex_bounding_box, sizeof(header.tex_bounding_box));
 
         _num_geometry_bytes = header.geometry_payload_size;
         memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
         memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
         memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
+        memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
 
         /*#if GUA_DEBUG == 1
                 gzerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
@@ -199,6 +199,32 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
+#endif
+
+    size_t texture_offset = 0;
+
+    for(auto &texture_bounding_box : _texture_bounding_boxes)
+    {
+        if(texture_bounding_box.min.u == texture_bounding_box.max.u)
+        {
+            continue;
+        }
+
+        Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
+
+        pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+        const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
+
+        memcpy(pixel_box.data, &_buffer_rcv_texture[texture_offset], pixel_box.getConsecutiveSize());
+
+        texture_offset += pixel_box.getConsecutiveSize();
+
+        pixel_buffer->unlock();
+    }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: texture updated" << std::endl;
+    std::cerr << std::endl << "DynGeo: texture updated" << std::endl;
 #endif
 
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
@@ -248,19 +274,19 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &_buffer_index[0], true);
 
-#if GUA_DEBUG == 1
-    float vx[3];
-    float tx[2];
+    /*#if GUA_DEBUG == 1
+        float vx[3];
+        float tx[2];
 
-    memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
-    memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
+        memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
+        memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
 
-    gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
-    std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+        gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+        std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
 
-    gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-    std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-#endif
+        gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+        std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+    #endif*/
 
     Ogre::SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = true;
