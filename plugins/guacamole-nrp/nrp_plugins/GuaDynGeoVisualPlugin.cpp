@@ -212,6 +212,16 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             continue;
         }
 
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+        std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+#endif
+
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+        std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+#endif
+
         Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
         pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
