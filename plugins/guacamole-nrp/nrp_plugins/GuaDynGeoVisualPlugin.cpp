@@ -54,8 +54,8 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     unsigned int texture_width = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_X) / log(2)));
     unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
-    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D_RECT, texture_width,
-                                                                                 texture_height, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
+    Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, texture_width,
+                                                                                 texture_width, 0, Ogre::PF_B8G8R8, Ogre::TU_DYNAMIC_WRITE_ONLY);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture created" << std::endl;
