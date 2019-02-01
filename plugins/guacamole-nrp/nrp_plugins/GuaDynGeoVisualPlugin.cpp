@@ -5,7 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
-#define TEX_DEBUG 1
+#define TEX_DEBUG 0
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
     : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
