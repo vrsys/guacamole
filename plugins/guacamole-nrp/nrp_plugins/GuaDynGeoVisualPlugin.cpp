@@ -5,7 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
-#define TEX_DEBUG 0
+#define TEX_DEBUG 1
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
     : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
@@ -64,7 +64,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << std::endl << "DynGeo: texture created" << std::endl;
 #endif
 
-//#if TEX_DEBUG == 1
+#if TEX_DEBUG == 1
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
 
@@ -88,7 +88,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
-//#endif
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
@@ -220,7 +220,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
 #endif
 
-//#if TEX_DEBUG == 1
+#if TEX_DEBUG == 1
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
@@ -244,11 +244,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
-//#endif
+#endif
 
-    // TODO
-
-    /*size_t texture_offset = 0;
+    size_t texture_offset = 0;
 
     for(unsigned int i = 0; i < SGTP::_MAX_NUM_SENSORS; i++)
     {
@@ -259,7 +257,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             continue;
         }
 
-*/ /*#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
         std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
 #endif
@@ -267,37 +265,21 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
         std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-#endif*/ /*
+#endif*/
 
          Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
          pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
          const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-         // memcpy(pixel_box.data, &_buffer_rcv_texture[texture_offset], pixel_box.getConsecutiveSize());
+         // memcpy(pixel_box.data, &_buffer_rcv_texture[texture_offset], pixel_buffer->getSizeInBytes());
 
-         switch(i)
-         {
-         case 0:
-             memset(pixel_box.data, 0x00, pixel_box.getConsecutiveSize());
-             break;
-         case 1:
-             memset(pixel_box.data, 0x40, pixel_box.getConsecutiveSize());
-             break;
-         case 2:
-             memset(pixel_box.data, 0x80, pixel_box.getConsecutiveSize());
-             break;
-         case 3:
-             memset(pixel_box.data, 0xB0, pixel_box.getConsecutiveSize());
-             break;
-         default:
-             break;
-         }
+         memset(pixel_box.data, 0x00, pixel_buffer->getSizeInBytes());
 
-         texture_offset += pixel_box.getConsecutiveSize();
+         texture_offset += pixel_buffer->getSizeInBytes();
 
          pixel_buffer->unlock();
-     }*/
+     }
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture updated" << std::endl;
