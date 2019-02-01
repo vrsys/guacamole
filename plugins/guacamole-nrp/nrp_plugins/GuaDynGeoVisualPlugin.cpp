@@ -87,17 +87,41 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     pixel_buffer->lock(Ogre::Image::Box(0, 720, 1280, 1440), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_2.getTopLeftFrontPixelPtr(), 0x80, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    // memset(pixel_box_2.getTopLeftFrontPixelPtr(), 0x80, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    data = static_cast<uint32_t *>(pixel_box_2.data);
+    for(int y = 0; y < pixel_box_2.getHeight(); ++y)
+    {
+        for(int x = 0; x < pixel_box_2.getWidth(); ++x)
+        {
+            data[pixel_box_2.rowPitch * y + x] = 0x80808080;
+        }
+    }
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(1280, 0, 2560, 720), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_3 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_3.getTopLeftFrontPixelPtr(), 0xC0, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    // memset(pixel_box_3.getTopLeftFrontPixelPtr(), 0xC0, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    data = static_cast<uint32_t *>(pixel_box_3.data);
+    for(int y = 0; y < pixel_box_3.getHeight(); ++y)
+    {
+        for(int x = 0; x < pixel_box_3.getWidth(); ++x)
+        {
+            data[pixel_box_3.rowPitch * y + x] = 0xC0C0C0C0;
+        }
+    }
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(1280, 720, 2560, 1440), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_4 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_4.getTopLeftFrontPixelPtr(), 0xFF, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    // memset(pixel_box_4.getTopLeftFrontPixelPtr(), 0xFF, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    data = static_cast<uint32_t *>(pixel_box_4.data);
+    for(int y = 0; y < pixel_box_4.getHeight(); ++y)
+    {
+        for(int x = 0; x < pixel_box_4.getWidth(); ++x)
+        {
+            data[pixel_box_4.rowPitch * y + x] = 0xFFFFFFFF;
+        }
+    }
     pixel_buffer->unlock();
 
 #endif
@@ -224,7 +248,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
 #endif
 
-    /*size_t texture_offset = 0;
+    size_t texture_offset = 0;
 
     for(unsigned int i = 0; i < SGTP::_MAX_NUM_SENSORS; i++)
     {
@@ -235,30 +259,37 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             continue;
         }
 
-        */ /*#if GUA_DEBUG == 1
-                gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
-                std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
-        #endif
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+        std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+#endif
 
-        #if GUA_DEBUG == 1
-                gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-                std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-        #endif*/ /*
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+        std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+#endif
 
-         auto box = Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v);
+        Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
-         Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
+        pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+        const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-         pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
-         const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
+        uint32_t *data = static_cast<uint32_t *>(pixel_box.data);
+        unsigned char px[4];
+        px[0] = 0xFF;
+        for(int y = 0; y < pixel_box.getHeight(); ++y)
+        {
+            for(int x = 0; x < pixel_box.getWidth(); ++x)
+            {
+                memcpy(&px[1], &_buffer_rcv_texture[texture_offset + pixel_box.getWidth() * y + x], 3);
+                data[pixel_box.rowPitch * y + x] = *(uint32_t *)&px[0];
+            }
 
-         Ogre::PixelUtil::bulkPixelConversion(&_buffer_rcv_texture[texture_offset], Ogre::PixelFormat::PF_B8G8R8, pixel_box.data, pixel_buffer->getFormat(),
-                                              pixel_box.getWidth() * pixel_box.getHeight());
+            texture_offset += 3;
+        }
 
-         texture_offset += box.getWidth() * box.getHeight() * 3;
-
-         pixel_buffer->unlock();
-     }*/
+        pixel_buffer->unlock();
+    }
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture updated" << std::endl;
