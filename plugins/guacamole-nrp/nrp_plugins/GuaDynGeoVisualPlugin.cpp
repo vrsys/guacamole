@@ -69,7 +69,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
 
-    memset(pixel_box_1.data, 0x20, 1280 * 1280 * 3);
+    memset(pixel_box_1.data, 0x20, pixel_buffer->getSizeInBytes());
 
     pixel_buffer->unlock();
 
