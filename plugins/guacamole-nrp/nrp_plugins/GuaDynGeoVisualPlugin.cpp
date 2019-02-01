@@ -105,6 +105,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     material->getTechnique(0)->getPass(0)->setLightingEnabled(false);
     material->getTechnique(0)->getPass(0)->createTextureUnitState(_texture_name);
     material->getTechnique(0)->getPass(0)->setSceneBlending(Ogre::SBT_REPLACE);
+    material->getTechnique(0)->getPass(0)->setCullingMode(Ogre::CullingMode::CULL_NONE);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: material set" << std::endl;
@@ -337,7 +338,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             break;
         }
 
-        memcpy(&buffer_quad[0], &vx[0], sizeof(float) * 5);
+        memcpy(&buffer_quad[i * sizeof(float) * 5], &vx[0], sizeof(float) * 5);
     }
 
     std::vector<int32_t> buffer_quad_index(num_vertices);
