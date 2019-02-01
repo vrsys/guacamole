@@ -64,6 +64,8 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << std::endl << "DynGeo: texture created" << std::endl;
 #endif
 
+#if TEX_DEBUG == 1
+
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
 
     pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
@@ -73,18 +75,20 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_2.data, 0x40, pixel_buffer->getSizeInBytes());
+    memset(pixel_box_2.data, 0x80, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(1280, 0, 2560, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_3 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_3.data, 0x60, pixel_buffer->getSizeInBytes());
+    memset(pixel_box_3.data, 0xC0, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(1280, 1280, 2560, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_4 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_4.data, 0x80, pixel_buffer->getSizeInBytes());
+    memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
+
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
@@ -214,6 +218,32 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
+#endif
+
+#if TEX_DEBUG == 1
+
+    Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
+
+    pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+    const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
+    memset(pixel_box_1.data, 0x20, pixel_buffer->getSizeInBytes());
+    pixel_buffer->unlock();
+
+    pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+    const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
+    memset(pixel_box_2.data, 0x80, pixel_buffer->getSizeInBytes());
+    pixel_buffer->unlock();
+
+    pixel_buffer->lock(Ogre::Image::Box(1280, 0, 2560, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+    const Ogre::PixelBox &pixel_box_3 = pixel_buffer->getCurrentLock();
+    memset(pixel_box_3.data, 0xC0, pixel_buffer->getSizeInBytes());
+    pixel_buffer->unlock();
+
+    pixel_buffer->lock(Ogre::Image::Box(1280, 1280, 2560, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+    const Ogre::PixelBox &pixel_box_4 = pixel_buffer->getCurrentLock();
+    memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
+    pixel_buffer->unlock();
+
 #endif
 
     // TODO
