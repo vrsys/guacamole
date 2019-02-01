@@ -277,7 +277,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         pixel_buffer->lock(Ogre::Image::Box(texture_bounding_box.min.u, texture_bounding_box.min.v, texture_bounding_box.max.u, texture_bounding_box.max.v), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
         const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
-        Ogre::PixelUtil::bulkPixelConversion(&_buffer_rcv_texture[texture_offset],Ogre::PixelFormat::PF_B8G8R8,pixel_box.data,pixel_buffer->getFormat(), );
+        Ogre::PixelUtil::bulkPixelConversion(&_buffer_rcv_texture[texture_offset], Ogre::PixelFormat::PF_B8G8R8, pixel_box.data, pixel_buffer->getFormat(),
+                                             pixel_box.getWidth() * pixel_box.getHeight());
 
         texture_offset += pixel_box.getWidth() * pixel_box.getHeight() * 3;
 
