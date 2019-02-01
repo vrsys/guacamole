@@ -74,7 +74,15 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 720), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_1.getTopLeftFrontPixelPtr(), 0x20, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    // memset(pixel_box_1.getTopLeftFrontPixelPtr(), 0x20, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
+    uint32_t *data = static_cast<uint32_t *>(pixel_box_1.data);
+    for(int y = 0; y < pixel_box_1.getHeight(); ++y)
+    {
+        for(int x = 0; x < pixel_box_1.getWidth(); ++x)
+        {
+            data[pixel_box_1.rowPitch * y + x] = 0x20202020;
+        }
+    }
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(0, 720, 1280, 1440), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
@@ -214,37 +222,6 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
-#endif
-
-#if TEX_DEBUG == 1
-
-    Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
-
-    /*
-    gzerr << std::endl << "DynGeo: format " << std::to_string(pixel_buffer->getFormat()) << std::endl;
-    std::cerr << std::endl << "DynGeo: format " << std::to_string(pixel_buffer->getFormat()) << std::endl;
-    */
-
-    pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 720), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
-    const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_1.getTopLeftFrontPixelPtr(), 0x20, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
-    pixel_buffer->unlock();
-
-    pixel_buffer->lock(Ogre::Image::Box(0, 720, 1280, 1440), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
-    const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_2.getTopLeftFrontPixelPtr(), 0x80, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
-    pixel_buffer->unlock();
-
-    pixel_buffer->lock(Ogre::Image::Box(1280, 0, 2560, 720), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
-    const Ogre::PixelBox &pixel_box_3 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_3.getTopLeftFrontPixelPtr(), 0xC0, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
-    pixel_buffer->unlock();
-
-    pixel_buffer->lock(Ogre::Image::Box(1280, 720, 2560, 1440), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
-    const Ogre::PixelBox &pixel_box_4 = pixel_buffer->getCurrentLock();
-    memset(pixel_box_4.getTopLeftFrontPixelPtr(), 0xFF, Ogre::PixelUtil::getMemorySize(1280, 720, 1, pixel_buffer->getFormat()));
-    pixel_buffer->unlock();
-
 #endif
 
     /*size_t texture_offset = 0;
