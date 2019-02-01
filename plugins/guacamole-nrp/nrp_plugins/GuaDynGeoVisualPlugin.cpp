@@ -527,42 +527,50 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
-    std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
-#endif
-
-    if(!_avatar_node || !_scene_node || !_scene_manager || !_entity)
+    try
     {
-        return;
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+        std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+#endif
+
+        if(!_avatar_node || !_scene_node || !_scene_manager || !_entity)
+        {
+            return;
+        }
+
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: null check passed" << std::endl;
+        std::cerr << std::endl << "DynGeo: null check passed" << std::endl;
+#endif
+
+        _avatar_node->removeAllChildren();
+        _scene_node->removeAllChildren();
+
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: destroying entity" << std::endl;
+        std::cerr << std::endl << "DynGeo: destroying entity" << std::endl;
+#endif
+
+        _scene_manager->destroyEntity(_entity);
+
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: entity destroyed" << std::endl;
+        std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
+#endif
+
+        if(_mesh_name.empty())
+        {
+            return;
+        }
+
+        Ogre::MeshManager::getSingleton().remove(_mesh_name);
     }
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: null check passed" << std::endl;
-    std::cerr << std::endl << "DynGeo: null check passed" << std::endl;
-#endif
-
-    _avatar_node->removeAllChildren();
-    _scene_node->removeAllChildren();
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: destroying entity" << std::endl;
-    std::cerr << std::endl << "DynGeo: destroying entity" << std::endl;
-#endif
-
-    _scene_manager->destroyEntity(_entity);
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: entity destroyed" << std::endl;
-    std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
-#endif
-
-    if(_mesh_name.empty())
+    catch(std::exception &e)
     {
-        return;
+        gzerr << std::endl << "DynGeo: exception " << e.what() << std::endl;
+        std::cerr << std::endl << "DynGeo: exception " << e.what() << std::endl;
     }
-
-    Ogre::MeshManager::getSingleton().remove(_mesh_name);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
