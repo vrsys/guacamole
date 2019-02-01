@@ -68,30 +68,23 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
-
     memset(pixel_box_1.data, 0x20, pixel_buffer->getSizeInBytes());
-
     pixel_buffer->unlock();
 
-   /* pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+    pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
-
-    memset(pixel_box_2.data, 0x40, 1280 * 1280 * 3);
-
+    memset(pixel_box_2.data, 0x40, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
+
     pixel_buffer->lock(Ogre::Image::Box(1280, 0, 2560, 1280), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_3 = pixel_buffer->getCurrentLock();
-
-    memset(pixel_box_3.data, 0x60, 1280 * 1280 * 3);
-
+    memset(pixel_box_3.data, 0x60, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
     pixel_buffer->lock(Ogre::Image::Box(1280, 1280, 2560, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_4 = pixel_buffer->getCurrentLock();
-
-    memset(pixel_box_4.data, 0x80, 1280 * 1280 * 3);
-
-    pixel_buffer->unlock();*/
+    memset(pixel_box_4.data, 0x80, pixel_buffer->getSizeInBytes());
+    pixel_buffer->unlock();
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
