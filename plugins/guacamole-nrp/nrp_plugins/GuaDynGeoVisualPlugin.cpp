@@ -259,7 +259,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             continue;
         }
 
-#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
         std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
 #endif
@@ -267,7 +267,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
         std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-#endif
+#endif*/
 
         Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
@@ -283,9 +283,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             {
                 memcpy(&px[1], &_buffer_rcv_texture[texture_offset + pixel_box.getWidth() * y + x], 3);
                 data[pixel_box.rowPitch * y + x] = *(uint32_t *)&px[0];
-            }
 
-            texture_offset += 3;
+                texture_offset += 3;
+            }
         }
 
         pixel_buffer->unlock();
