@@ -5,7 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
-#define TEX_DEBUG 1
+#define TEX_DEBUG 0
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
     : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
@@ -64,7 +64,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << std::endl << "DynGeo: texture created" << std::endl;
 #endif
 
-#if TEX_DEBUG == 1
+//#if TEX_DEBUG == 1
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = texture->getBuffer();
 
@@ -88,7 +88,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
-#endif
+//#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
@@ -220,7 +220,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: scene manager acquired" << std::endl;
 #endif
 
-#if TEX_DEBUG == 1
+//#if TEX_DEBUG == 1
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
@@ -244,7 +244,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     memset(pixel_box_4.data, 0xFF, pixel_buffer->getSizeInBytes());
     pixel_buffer->unlock();
 
-#endif
+//#endif
 
     // TODO
 
