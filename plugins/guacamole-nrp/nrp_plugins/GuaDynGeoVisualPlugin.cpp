@@ -5,6 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
+#define TEX_DEBUG 1
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
     : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
@@ -279,6 +280,136 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: texture updated" << std::endl;
 #endif
 
+#if TEX_DEBUG == 1
+
+    size_t num_vertices = 6;
+
+    std::vector<unsigned char> buffer_quad(num_vertices * sizeof(float) * 5);
+
+    for(unsigned int i = 0; i < num_vertices; i++)
+    {
+        float vx[5];
+        vx[0] = 0.f;
+
+        switch(i)
+        {
+        case 0:
+            vx[1] = 0.f;
+            vx[2] = 0.f;
+
+            vx[3] = 0.f;
+            vx[4] = 0.f;
+            break;
+        case 1:
+            vx[1] = 0.f;
+            vx[2] = 1.f;
+
+            vx[3] = 0.f;
+            vx[4] = 1.f;
+            break;
+        case 2:
+            vx[1] = 1.f;
+            vx[2] = 0.f;
+
+            vx[3] = 1.f;
+            vx[4] = 0.f;
+            break;
+        case 3:
+            vx[1] = 1.f;
+            vx[2] = 0.f;
+
+            vx[3] = 1.f;
+            vx[4] = 0.f;
+            break;
+        case 4:
+            vx[1] = 1.f;
+            vx[2] = 1.f;
+
+            vx[3] = 1.f;
+            vx[4] = 1.f;
+            break;
+        case 5:
+            vx[1] = 0.f;
+            vx[2] = 1.f;
+
+            vx[3] = 0.f;
+            vx[4] = 1.f;
+            break;
+        }
+    }
+
+    std::vector<int32_t> buffer_quad_index(num_vertices);
+
+    std::iota(buffer_quad_index.begin(), buffer_quad_index.end(), 0);
+
+    for(size_t i = 0; i < buffer_quad_index.size() - 2; i += 3)
+    {
+        int32_t swapSpace = buffer_quad_index[i + 2];
+        buffer_quad_index[i + 2] = buffer_quad_index[i + 1];
+        buffer_quad_index[i + 1] = swapSpace;
+    }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+    std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
+#endif
+
+    _mesh_name = std::to_string(rand());
+
+    Ogre::MeshPtr mesh = Ogre::MeshManager::getSingleton().createManual(_mesh_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+
+    // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
+    mesh->_setBounds(Ogre::AxisAlignedBox::BOX_INFINITE);
+    mesh->_setBoundingSphereRadius(10.f);
+
+    mesh->sharedVertexData = new Ogre::VertexData();
+    mesh->sharedVertexData->vertexCount = num_vertices;
+
+    Ogre::VertexDeclaration *decl = mesh->sharedVertexData->vertexDeclaration;
+    Ogre::VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
+
+    size_t offset = 0;
+    decl->addElement(0, offset, Ogre::VET_FLOAT3, Ogre::VES_POSITION);
+    offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT3);
+    decl->addElement(0, offset, Ogre::VET_FLOAT2, Ogre::VES_TEXTURE_COORDINATES, 0);
+    offset += Ogre::VertexElement::getTypeSize(Ogre::VET_FLOAT2);
+
+    Ogre::HardwareVertexBufferSharedPtr vbuf = Ogre::HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    vbuf->writeData(0, vbuf->getSizeInBytes(), &buffer_quad[0], true);
+    bind->setBinding(0, vbuf);
+
+    Ogre::HardwareIndexBufferSharedPtr ibuf =
+        Ogre::HardwareBufferManager::getSingleton().createIndexBuffer(Ogre::HardwareIndexBuffer::IT_32BIT, num_vertices, Ogre::HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    ibuf->writeData(0, ibuf->getSizeInBytes(), &buffer_quad_index[0], true);
+
+    /*#if GUA_DEBUG == 1
+        float vx[3];
+        float tx[2];
+
+        memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
+        memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
+
+        gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+        std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+
+        gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+        std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+    #endif*/
+
+    Ogre::SubMesh *sub = mesh->createSubMesh();
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = ibuf;
+    sub->indexData->indexCount = num_vertices;
+    sub->indexData->indexStart = 0;
+
+    mesh->load();
+
+    while(!mesh->isLoaded())
+    {
+    }
+
+#else
+
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
 
     float z = 0;
@@ -351,6 +482,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     while(!mesh->isLoaded())
     {
     }
+
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
