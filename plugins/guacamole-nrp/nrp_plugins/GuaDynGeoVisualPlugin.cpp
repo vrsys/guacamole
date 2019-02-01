@@ -40,6 +40,10 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     }
 
     _visual = visual;
+
+    _scene_node = _visual->GetSceneNode();
+    _scene_manager = _scene_node->getCreator();
+
     _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
     std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
@@ -200,15 +204,7 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
     std::cerr << std::endl << "DynGeo: AddTriangleSoup" << std::endl;
 #endif
 
-    if(!_visual)
-    {
-        return;
-    }
-
-    _scene_node = _visual->GetSceneNode();
-    _scene_manager = _scene_node->getCreator();
-
-    if(!_scene_node || !_scene_manager)
+    if(!_visual || !_scene_node || !_scene_manager)
     {
         return;
     }
@@ -539,50 +535,55 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 }
 void GuaDynGeoVisualPlugin::RemoveTriangleSoup()
 {
-    try
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+    std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
+#endif
+
+    if(!_avatar_node || !_scene_node || !_scene_manager || !_entity)
     {
-#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
-        std::cerr << std::endl << "DynGeo: RemoveTriangleSoup" << std::endl;
-#endif
-
-        if(!_avatar_node || !_scene_node || !_scene_manager || !_entity)
-        {
-            return;
-        }
-
-#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: null check passed" << std::endl;
-        std::cerr << std::endl << "DynGeo: null check passed" << std::endl;
-#endif
-
-        _avatar_node->removeAllChildren();
-        _scene_node->removeAllChildren();
-
-#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: destroying entity" << std::endl;
-        std::cerr << std::endl << "DynGeo: destroying entity" << std::endl;
-#endif
-
-        _scene_manager->destroyEntity(_entity);
-
-#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: entity destroyed" << std::endl;
-        std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
-#endif
-
-        if(_mesh_name.empty())
-        {
-            return;
-        }
-
-        Ogre::MeshManager::getSingleton().remove(_mesh_name);
+        return;
     }
-    catch(std::exception &e)
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: null check passed" << std::endl;
+    std::cerr << std::endl << "DynGeo: null check passed" << std::endl;
+#endif
+
+    if(!_avatar_node->isInSceneGraph())
     {
-        gzerr << std::endl << "DynGeo: exception " << e.what() << std::endl;
-        std::cerr << std::endl << "DynGeo: exception " << e.what() << std::endl;
+        return;
     }
+
+    _avatar_node->removeAllChildren();
+    while(_avatar_node->numChildren() != 0)
+    {
+    }
+
+    _scene_node->removeAllChildren();
+
+    while(_scene_node->numChildren() != 0)
+    {
+    }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: destroying entity" << std::endl;
+    std::cerr << std::endl << "DynGeo: destroying entity" << std::endl;
+#endif
+
+    _scene_manager->destroyEntity(_entity);
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: entity destroyed" << std::endl;
+    std::cerr << std::endl << "DynGeo: entity destroyed" << std::endl;
+#endif
+
+    if(_mesh_name.empty())
+    {
+        return;
+    }
+
+    Ogre::MeshManager::getSingleton().remove(_mesh_name);
 }
 void GuaDynGeoVisualPlugin::Update()
 {
