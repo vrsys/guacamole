@@ -336,6 +336,8 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             vx[4] = 1.f;
             break;
         }
+
+        memcpy(&buffer_quad[0], &vx[0], sizeof(float) * 5);
     }
 
     std::vector<int32_t> buffer_quad_index(num_vertices);
