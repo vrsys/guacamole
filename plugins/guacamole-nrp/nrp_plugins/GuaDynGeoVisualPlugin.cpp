@@ -53,7 +53,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _texture_name = std::to_string(rand());
 
-    _texture_width = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_X) / log(2)));
+    _texture_width = 4096;
     // unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
     Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, Ogre::TEX_TYPE_2D, _texture_width,
