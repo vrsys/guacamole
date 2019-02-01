@@ -259,15 +259,15 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
             continue;
         }
 
-/*#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
-        std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
-#endif
+        /*#if GUA_DEBUG == 1
+                gzerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+                std::cerr << std::endl << "DynGeo: min x" << texture_bounding_box.min.u << " y " << texture_bounding_box.min.v << std::endl;
+        #endif
 
-#if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-        std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
-#endif*/
+        #if GUA_DEBUG == 1
+                gzerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+                std::cerr << std::endl << "DynGeo: max x" << texture_bounding_box.max.u << " y " << texture_bounding_box.max.v << std::endl;
+        #endif*/
 
         Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
@@ -275,18 +275,17 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         const Ogre::PixelBox &pixel_box = pixel_buffer->getCurrentLock();
 
         uint32_t *data = static_cast<uint32_t *>(pixel_box.data);
-        unsigned char px[4];
-        px[0] = 0xFF;
         for(int y = 0; y < pixel_box.getHeight(); ++y)
         {
             for(int x = 0; x < pixel_box.getWidth(); ++x)
             {
-                memcpy(&px[1], &_buffer_rcv_texture[texture_offset + pixel_box.getWidth() * y + x], 3);
-                data[pixel_box.rowPitch * y + x] = *(uint32_t *)&px[0];
-
-                texture_offset += 3;
+                data[pixel_box.rowPitch * y + x] = (uint32_t)0xFF << 24 | (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 0] << 16 |
+                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 1] << 8 |
+                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 2];
             }
         }
+
+        texture_offset += pixel_box.getWidth() * pixel_box.getHeight() * 3;
 
         pixel_buffer->unlock();
     }
