@@ -224,6 +224,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
 
     Ogre::HardwarePixelBufferSharedPtr pixel_buffer = Ogre::TextureManager::getSingleton().getByName(_texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME)->getBuffer();
 
+    gzerr << std::endl << "DynGeo: format " << std::to_string(pixel_buffer->getFormat()) << std::endl;
+    std::cerr << std::endl << "DynGeo: format " << std::to_string(pixel_buffer->getFormat()) << std::endl;
+
     pixel_buffer->lock(Ogre::Image::Box(0, 0, 1280, 720), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_1 = pixel_buffer->getCurrentLock();
     memset(pixel_box_1.data, 0x20, 1280 * 720 * 3);
