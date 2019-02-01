@@ -280,9 +280,9 @@ void GuaDynGeoVisualPlugin::AddTriangleSoup()
         {
             for(int x = 0; x < pixel_box.getWidth(); ++x)
             {
-                data[pixel_box.rowPitch * y + x] = (uint32_t)0xFF << 24 | (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 0] << 16 |
+                data[pixel_box.rowPitch * y + x] = (uint32_t)0xFF << 24 | (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 2] << 16 |
                                                    (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 1] << 8 |
-                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 2];
+                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 0];
             }
         }
 
