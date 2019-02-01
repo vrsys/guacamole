@@ -73,7 +73,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     pixel_buffer->unlock();
 
-    pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
+   /* pixel_buffer->lock(Ogre::Image::Box(0, 1280, 1280, 2560), Ogre::HardwareBuffer::HBL_WRITE_ONLY);
     const Ogre::PixelBox &pixel_box_2 = pixel_buffer->getCurrentLock();
 
     memset(pixel_box_2.data, 0x40, 1280 * 1280 * 3);
@@ -91,7 +91,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     memset(pixel_box_4.data, 0x80, 1280 * 1280 * 3);
 
-    pixel_buffer->unlock();
+    pixel_buffer->unlock();*/
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
