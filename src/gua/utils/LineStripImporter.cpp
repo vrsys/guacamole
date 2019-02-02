@@ -40,6 +40,8 @@ read_file(std::string const& file_name) {
 
   NamedLineObject* current_line_object = nullptr;
 
+  std::vector<scm::math::vec3f> line_strip_positions;
+
   while(std::getline(in_lob_file, line_buffer)) {
     
     //trim whitespace to the left of the string
@@ -117,10 +119,44 @@ read_file(std::string const& file_name) {
           Logger::LOG_WARNING << "*.lob-parser option 's' is not implemented yet" << std::endl;
           break;
 
+        case 'g':
+          //Ignore g-tag for now
+          break;
+        //lines to be interpreted as GL_LINES and need to duplicate_vertices
+        case 'l':
+          {
+          int currently_read_idx = 0;
+
+          std::vector<int> parsed_indices;
+          while(!in_sstream.eof()) {
+            in_sstream >> currently_read_idx;
+            parsed_indices.push_back(currently_read_idx - 1);
+          }
+
+          for(unsigned int vertex_idx = 0; vertex_idx < parsed_indices.size() - 2; ++vertex_idx) {
+            int read_index_start = parsed_indices[vertex_idx];
+            int read_index_end   = parsed_indices[vertex_idx + 1];
+            auto read_vertex_pos_start =  current_line_object
+            ->second.vertex_position_database[read_index_start];
+            line_strip_positions.push_back(read_vertex_pos_start);
+            auto read_vertex_pos_end =  current_line_object
+            ->second.vertex_position_database[read_index_end];
+            line_strip_positions.push_back(read_vertex_pos_end);
+          }
+          break;
+
+          break;
+        }
         default:
-          Logger::LOG_WARNING << "Unknown *.lob-parser option " << line_prefix << std::endl;
+          Logger::LOG_WARNING << "Unknown *.line-parser option " << line_prefix << std::endl;
       }
     }
+  }
+
+  if(!line_strip_positions.empty()) {
+    std::swap(line_strip_positions, current_line_object
+                                    ->second.vertex_position_database );
+    line_strip_positions.clear();
   }
 
   for(auto& current_line_object : parsed_line_objects_) {
@@ -129,7 +165,7 @@ read_file(std::string const& file_name) {
        current_line_object.second.vertex_color_database.size()) {
       current_line_object.second.vertex_color_database.resize(
          current_line_object.second.vertex_position_database.size(),
-          scm::math::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+          scm::math::vec4(1.0f, 0.0f, 0.0f, 1.0f)
         );
     }
 

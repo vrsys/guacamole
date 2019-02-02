@@ -69,8 +69,11 @@ std::shared_ptr<node::Node> LineStripLoader::load_geometry(
     int topology_type = is_supported(file_name);
 
     if (topology_type) {
-      bool create_lines = (topology_type == 1);
-      cached_node = load(file_name, flags, create_lines, create_empty);
+/*    bool create_lines =    (1 == topology_type) 
+                          || (3 == topology_type);*/
+
+
+      cached_node = load(file_name, flags, topology_type, create_empty);
       cached_node->update_cache();
 
       loaded_files_.insert(std::make_pair(key, cached_node));
@@ -200,7 +203,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string c
 std::shared_ptr<node::Node> LineStripLoader::load(
     std::string const& file_name,
     unsigned flags,
-    bool create_lines,
+    int topology_type,
     bool create_empty) {
   TextFile file(file_name);
 
@@ -242,12 +245,20 @@ std::shared_ptr<node::Node> LineStripLoader::load(
       node_to_return->set_empty();
     }
 
-    if(create_lines) {
+    if(1 == topology_type) {
       node_to_return->set_render_vertices_as_points(false);
       node_to_return->set_render_volumetric(true);
-    } else {
+      node_to_return->set_render_lines_as_strip(true);
+    } else if (2 == topology_type) { 
       node_to_return->set_render_vertices_as_points(true);
       node_to_return->set_render_volumetric(true);
+      node_to_return->set_render_lines_as_strip(true);
+    } else if (3 == topology_type) {
+      node_to_return->set_render_vertices_as_points(false);
+      node_to_return->set_render_volumetric(false);
+      node_to_return->set_render_lines_as_strip(false);
+    } else {
+
     }
 
     return node_to_return;
@@ -317,6 +328,10 @@ int LineStripLoader::is_supported(std::string const& file_name) const {
 
   if (file_name.substr(point_pos + 1) == "pob") {
     return 2;
+  }
+
+  if (file_name.substr(point_pos + 1) == "obj") {
+    return 3;
   }
 
   return 0;//importer.IsExtensionSupported(file_name.substr(point_pos + 1));
