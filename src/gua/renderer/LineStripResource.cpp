@@ -150,7 +150,7 @@ void LineStripResource::draw(RenderContext& ctx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points) const {
+void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points, bool render_lines_as_strip) const {
 
   auto iter = ctx.line_strips.find(uuid());
 
@@ -177,8 +177,13 @@ void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points)
   
   if(!render_vertices_as_points) {
     //ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LOOP, 0, iter->second.num_occupied_vertex_slots+2);
-    ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
-  } else {
+    if(render_lines_as_strip) {
+      ctx.render_context->draw_arrays(iter->second.vertex_topology, 0, iter->second.num_occupied_vertex_slots+3);
+    } else {
+      ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_LINE_LIST, 1, iter->second.num_occupied_vertex_slots);
+    }
+  } 
+  else {
     ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 1, iter->second.num_occupied_vertex_slots);
   }
 
