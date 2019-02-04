@@ -517,11 +517,16 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
     _mesh->_setBoundingSphereRadius(1.73f);
 
-    _mesh->sharedVertexData->vertexCount = num_vertices;
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: bounds set" << std::endl;
     std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
+#endif
+
+    _mesh->sharedVertexData->vertexCount = num_vertices;
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
+    std::cerr << std::endl << "DynGeo: vertex count set" << std::endl;
 #endif
 
     {
