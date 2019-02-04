@@ -4,7 +4,7 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-#define GUA_DEBUG 0
+#define GUA_DEBUG 1
 #define TEX_DEBUG 0
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
