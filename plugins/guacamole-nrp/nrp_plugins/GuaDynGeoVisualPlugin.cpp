@@ -163,6 +163,7 @@ void GuaDynGeoVisualPlugin::Init()
     std::cerr << std::endl << "DynGeo: material set" << std::endl;
 #endif
 
+    _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
 
     _is_initialized.store(true);
