@@ -36,7 +36,6 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
   public:
     void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf) override;
-    void Init() override;
     void Reset() override;
 
   private:
@@ -51,7 +50,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
     Ogre::SceneNode *_scene_node, *_avatar_node;
     Ogre::SceneManager *_scene_manager;
-    Ogre::Entity * _entity;
+    Ogre::Entity *_entity;
     unsigned int _texture_width;
     std::string _texture_name;
     std::string _material_name;
