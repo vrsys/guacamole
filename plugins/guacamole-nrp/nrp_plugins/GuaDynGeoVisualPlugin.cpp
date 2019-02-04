@@ -46,13 +46,6 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: load after" << std::endl;
-    std::cerr << std::endl << "DynGeo: load after" << std::endl;
-#endif
-}
-void GuaDynGeoVisualPlugin::Init()
-{
     std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
 
     for(size_t i = 0; i < _buffer_index.size() - 2; i += 3)
@@ -60,6 +53,22 @@ void GuaDynGeoVisualPlugin::Init()
         int32_t swapSpace = _buffer_index[i + 2];
         _buffer_index[i + 2] = _buffer_index[i + 1];
         _buffer_index[i + 1] = swapSpace;
+    }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: load after" << std::endl;
+    std::cerr << std::endl << "DynGeo: load after" << std::endl;
+#endif
+}
+void GuaDynGeoVisualPlugin::Reset()
+{
+    if(_is_initialized.load())
+    {
+        _is_recv_running.store(false);
+        _thread_recv.join();
+
+        Ogre::MaterialManager::getSingleton().remove(_material_name);
+        Ogre::TextureManager::getSingleton().remove(_texture_name);
     }
 
     _texture_name = std::to_string(rand());
@@ -131,11 +140,11 @@ void GuaDynGeoVisualPlugin::Init()
     }
     pixel_buffer->unlock();
 
-#endif
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: PB updated" << std::endl;
     std::cerr << std::endl << "DynGeo: PB updated" << std::endl;
+#endif
+
 #endif
 
     _material_name = std::to_string(rand());
@@ -155,20 +164,6 @@ void GuaDynGeoVisualPlugin::Init()
     _thread_recv = std::thread([&]() { _ReadLoop(); });
 
     _is_initialized.store(true);
-}
-void GuaDynGeoVisualPlugin::Reset()
-{
-    if(_is_initialized.load())
-    {
-        _is_recv_running.store(false);
-        _thread_recv.join();
-
-        Ogre::MaterialManager::getSingleton().remove(_material_name);
-        Ogre::TextureManager::getSingleton().remove(_texture_name);
-
-        _is_recv_running.store(true);
-    }
-    Init();
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
