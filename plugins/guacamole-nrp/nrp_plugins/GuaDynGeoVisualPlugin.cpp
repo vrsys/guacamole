@@ -522,13 +522,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
 #endif
 
-    _mesh->sharedVertexData->vertexCount = num_vertices;
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
-    std::cerr << std::endl << "DynGeo: vertex count set" << std::endl;
-#endif
-
     {
         HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         // _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
@@ -549,6 +542,13 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
+#endif
+
+    _mesh->sharedVertexData->vertexCount = num_vertices;
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
+    std::cerr << std::endl << "DynGeo: vertex count set" << std::endl;
 #endif
 
     SubMesh *sub = _mesh->getSubMesh(_submesh_name);
@@ -598,7 +598,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::lock_guard<std::mutex> lock(_mutex_swap);
         if(_is_need_swap.load())
         {
-            // UpdateTriangleSoup();
+            UpdateTriangleSoup();
             _is_need_swap.store(false);
         }
     }
