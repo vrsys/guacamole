@@ -69,6 +69,8 @@ void GuaDynGeoVisualPlugin::Reset()
 
         Ogre::MaterialManager::getSingleton().remove(_material_name);
         Ogre::TextureManager::getSingleton().remove(_texture_name);
+
+        _is_initialized.store(false);
     }
 
     _texture_name = std::to_string(rand());
