@@ -36,11 +36,14 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
   public:
     void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf) override;
+    void Init() override;
+    void Reset() override;
 
   private:
     rendering::VisualPtr _visual;
     event::ConnectionPtr _update_connection;
 
+    std::atomic<bool> _is_initialized;
     std::atomic<bool> _is_recv_running;
     std::atomic<bool> _is_need_swap;
     std::mutex _mutex_swap;
