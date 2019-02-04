@@ -59,7 +59,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
 
-    _update_connection = event::Events::ConnectBeforePhysicsUpdate(std::bind(&GuaDynGeoVisualPlugin::Update, this));
+    _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
     std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
 
