@@ -59,7 +59,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
 
-    _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
+    _update_connection = event::Events::ConnectBeforePhysicsUpdate(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
     std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
 
@@ -182,6 +182,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     _mesh->sharedVertexData = new VertexData();
     _mesh->sharedVertexData->vertexCount = 0;
+    _mesh->sharedVertexData->vertexStart = 0;
 
     size_t offset = 0;
 
@@ -516,18 +517,23 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
     _mesh->_setBoundingSphereRadius(1.73f);
 
+    _mesh->sharedVertexData->vertexCount = num_vertices;
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: bounds set" << std::endl;
     std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
 #endif
-
-    _mesh->sharedVertexData->vertexCount = num_vertices;
 
     {
         HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         // _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
         memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
+    std::cerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
+#endif
 
     {
         HardwareIndexBufferLockGuard lockGuard(_ibuf, 0, num_vertices * sizeof(int32_t), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
@@ -536,8 +542,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     }
 
 #if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: HW buffers written" << std::endl;
-    std::cerr << std::endl << "DynGeo: HW buffers written" << std::endl;
+    gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
+    std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
     SubMesh *sub = _mesh->getSubMesh(_submesh_name);
