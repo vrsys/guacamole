@@ -79,13 +79,7 @@ void GuaDynGeoVisualPlugin::Init()
 {
     if(_is_initialized.load())
     {
-        _is_recv_running.store(false);
-        _thread_recv.join();
-
-        MaterialManager::getSingleton().remove(_material_name);
-        TextureManager::getSingleton().remove(_texture_name);
-
-        _is_initialized.store(false);
+        return;
     }
 
     _texture_name = std::to_string(rand());
@@ -522,16 +516,31 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
     _mesh->_setBoundingSphereRadius(1.73f);
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: bounds set" << std::endl;
+    std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
+#endif
+
     _mesh->sharedVertexData->vertexCount = num_vertices;
 
     _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
     _ibuf->writeData(0, num_vertices * sizeof(uint32_t), &_buffer_index[0], true);
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: HW buffers written" << std::endl;
+    std::cerr << std::endl << "DynGeo: HW buffers written" << std::endl;
+#endif
 
     SubMesh *sub = _mesh->getSubMesh(_submesh_name);
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = _ibuf;
     sub->indexData->indexCount = num_vertices;
     sub->indexData->indexStart = 0;
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: submesh redefined" << std::endl;
+    std::cerr << std::endl << "DynGeo: submesh redefined" << std::endl;
+#endif
 
     _mesh->reload();
 
