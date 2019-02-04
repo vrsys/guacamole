@@ -158,13 +158,16 @@ void GuaDynGeoVisualPlugin::Init()
 }
 void GuaDynGeoVisualPlugin::Reset()
 {
-    _is_recv_running.store(false);
-    _thread_recv.join();
+    if(_is_initialized.load())
+    {
+        _is_recv_running.store(false);
+        _thread_recv.join();
 
-    Ogre::MaterialManager::getSingleton().remove(_material_name);
-    Ogre::TextureManager::getSingleton().remove(_texture_name);
+        Ogre::MaterialManager::getSingleton().remove(_material_name);
+        Ogre::TextureManager::getSingleton().remove(_texture_name);
 
-    _is_recv_running.store(true);
+        _is_recv_running.store(true);
+    }
     Init();
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
