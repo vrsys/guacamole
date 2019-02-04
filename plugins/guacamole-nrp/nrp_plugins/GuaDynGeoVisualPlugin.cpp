@@ -88,7 +88,7 @@ void GuaDynGeoVisualPlugin::Init()
     // unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
     TexturePtr texture = TextureManager::getSingleton().createManual(_texture_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, TEX_TYPE_2D, _texture_width, _texture_width, 0, PF_BYTE_BGR,
-                                                                     TU_DYNAMIC_WRITE_ONLY);
+                                                                     TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture created" << std::endl;
@@ -191,8 +191,8 @@ void GuaDynGeoVisualPlugin::Init()
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
     offset += VertexElement::getTypeSize(VET_FLOAT2);
 
-    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
+    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
 
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
@@ -524,7 +524,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _mesh->sharedVertexData->vertexCount = num_vertices;
 
     _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
-    _ibuf->writeData(0, num_vertices * sizeof(uint32_t), &_buffer_index[0], true);
+    _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW buffers written" << std::endl;
