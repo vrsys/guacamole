@@ -51,10 +51,16 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneNode *_scene_node, *_avatar_node;
     Ogre::SceneManager *_scene_manager;
     Ogre::Entity *_entity;
+
+    Ogre::MeshPtr _mesh;
+    Ogre::HardwareVertexBufferSharedPtr _vbuf;
+    Ogre::HardwareIndexBufferSharedPtr _ibuf;
+
     unsigned int _texture_width;
     std::string _texture_name;
     std::string _material_name;
     std::string _mesh_name;
+    std::string _submesh_name;
     std::string _entity_name;
 
     SGTP::texture_bounding_box_t _texture_bounding_boxes[16];
@@ -66,8 +72,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     float _bb_max[3];
 
     void Update();
-    void AddTriangleSoup();
-    void RemoveTriangleSoup();
+    void UpdateTriangleSoup();
 
     void _ReadLoop();
 };
