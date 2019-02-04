@@ -36,7 +36,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
   public:
     void Load(rendering::VisualPtr _visual, sdf::ElementPtr _sdf) override;
-    void Reset() override;
+    void Init() override;
 
   private:
     rendering::VisualPtr _visual;

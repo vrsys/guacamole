@@ -60,7 +60,7 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << std::endl << "DynGeo: load after" << std::endl;
 #endif
 }
-void GuaDynGeoVisualPlugin::Reset()
+void GuaDynGeoVisualPlugin::Init()
 {
     if(_is_initialized.load())
     {
