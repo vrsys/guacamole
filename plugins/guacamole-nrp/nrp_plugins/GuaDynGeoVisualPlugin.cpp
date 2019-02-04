@@ -598,7 +598,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::lock_guard<std::mutex> lock(_mutex_swap);
         if(_is_need_swap.load())
         {
-            UpdateTriangleSoup();
+            // UpdateTriangleSoup();
             _is_need_swap.store(false);
         }
     }
