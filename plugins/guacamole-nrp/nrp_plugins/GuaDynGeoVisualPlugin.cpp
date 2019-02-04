@@ -4,12 +4,12 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-#define GUA_DEBUG 1
+#define GUA_DEBUG 0
 #define TEX_DEBUG 0
 
 GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin()
     : _entity_name(""), _mesh_name(""), _material_name(""), _texture_name(""), _buffer_rcv(SGTP::MAX_MESSAGE_SIZE), _buffer_rcv_texture(SGTP::MAX_MESSAGE_SIZE), _buffer_index(10000000),
-      _is_need_swap(false), _is_recv_running(true), _mutex_swap()
+      _is_initialized(false), _is_need_swap(false), _is_recv_running(true), _mutex_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: constructor" << std::endl;
@@ -33,9 +33,9 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
     std::cerr << std::endl << "DynGeo: load before" << std::endl;
 #endif
 
-    if(!visual || !sdf)
+    if(!visual)
     {
-        gzerr << std::endl << "No visual or SDF element specified. Plugin won't load." << std::endl;
+        gzerr << std::endl << "No visual element specified. Plugin won't load." << std::endl;
         return;
     }
 
@@ -46,6 +46,13 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _update_connection = event::Events::ConnectPreRender(std::bind(&GuaDynGeoVisualPlugin::Update, this));
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: load after" << std::endl;
+    std::cerr << std::endl << "DynGeo: load after" << std::endl;
+#endif
+}
+void GuaDynGeoVisualPlugin::Init()
+{
     std::iota(_buffer_index.begin(), _buffer_index.end(), 0);
 
     for(size_t i = 0; i < _buffer_index.size() - 2; i += 3)
@@ -147,10 +154,18 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _thread_recv = std::thread([&]() { _ReadLoop(); });
 
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: load after" << std::endl;
-    std::cerr << std::endl << "DynGeo: load after" << std::endl;
-#endif
+    _is_initialized.store(true);
+}
+void GuaDynGeoVisualPlugin::Reset()
+{
+    _is_recv_running.store(false);
+    _thread_recv.join();
+
+    Ogre::MaterialManager::getSingleton().remove(_material_name);
+    Ogre::TextureManager::getSingleton().remove(_texture_name);
+
+    _is_recv_running.store(true);
+    Init();
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
@@ -600,6 +615,7 @@ void GuaDynGeoVisualPlugin::Update()
     std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
 #endif
 
+    if(_is_initialized.load())
     {
         std::lock_guard<std::mutex> lock(_mutex_swap);
         if(_is_need_swap.load())
