@@ -523,8 +523,15 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _mesh->sharedVertexData->vertexCount = num_vertices;
 
-    _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
-    _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
+    {
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
+    }
+
+    {
+        HardwareIndexBufferLockGuard lockGuard(_ibuf, 0, num_vertices * sizeof(int32_t), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
+    }
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW buffers written" << std::endl;
