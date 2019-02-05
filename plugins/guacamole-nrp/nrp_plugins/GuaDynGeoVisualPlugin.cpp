@@ -544,7 +544,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
-    _mesh->sharedVertexData->vertexCount = num_vertices;
+    // TODO: fix this access, something is wrong
+    // _mesh->sharedVertexData->vertexCount = num_vertices;
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
