@@ -553,7 +553,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
 #endif
 
-    _avatar_node->detachAllObjects();
+    /*_avatar_node->detachAllObjects();
 
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -565,7 +565,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: entity attached" << std::endl;
     std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
-#endif
+#endif*/
 
     /*#if GUA_DEBUG == 1
         float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -605,7 +605,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        // UpdateTriangleSoup();
+        UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
