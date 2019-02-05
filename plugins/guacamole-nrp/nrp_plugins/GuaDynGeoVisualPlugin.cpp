@@ -198,14 +198,6 @@ void GuaDynGeoVisualPlugin::Init()
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
-    _submesh_name = std::to_string(rand());
-
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
-    sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = 0;
-    sub->indexData->indexStart = 0;
-
     _mesh->reload();
 
     _entity_name = std::to_string(rand());
@@ -552,7 +544,9 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: vertex count set" << std::endl;
 #endif
 
-    SubMesh *sub = _mesh->getSubMesh(_submesh_name);
+    _submesh_name = std::to_string(rand());
+
+    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = _ibuf;
     sub->indexData->indexCount = num_vertices;
