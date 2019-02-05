@@ -572,24 +572,21 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-    #if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-        std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-    #endif
+/*#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+#endif*/
 
-    if(_is_initialized.load())
+    if(_is_initialized.load() && _is_need_swap.load())
     {
-        if(_is_need_swap.load())
-        {
-            std::lock_guard<std::mutex> lock(_mutex_swap);
-            // UpdateTriangleSoup();
-            _is_need_swap.store(false);
-        }
+        std::unique_lock<std::mutex> lk_swap(_mutex_swap);
+        // UpdateTriangleSoup();
+        _is_need_swap.store(false);
     }
 
-    #if GUA_DEBUG == 1
-        gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-        std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-    #endif
+/*#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+    std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+#endif*/
 }
 }
