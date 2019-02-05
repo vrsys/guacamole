@@ -42,7 +42,7 @@ GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
     _is_recv_running.store(false);
     _cv_recv.notify_one();
     _cv_recv_swap.notify_one();
-    _thread_recv.join();
+    // _thread_recv.join();
 
     MaterialManager::getSingleton().remove(_material_name);
     TextureManager::getSingleton().remove(_texture_name);
@@ -215,6 +215,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
+    _thread_recv.detach();
 
     _is_initialized.store(true);
 }
