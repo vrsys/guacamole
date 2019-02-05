@@ -10,7 +10,7 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 using namespace Ogre;
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _cv_recv(), _cv_recv_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: constructor" << std::endl;
