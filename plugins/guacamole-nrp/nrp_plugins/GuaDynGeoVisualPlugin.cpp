@@ -182,8 +182,8 @@ void GuaDynGeoVisualPlugin::Init()
 
     _mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
-    _mesh->_setBounds(AxisAlignedBox::BOX_NULL);
-    _mesh->_setBoundingSphereRadius(0.f);
+    _mesh->_setBounds(AxisAlignedBox::BOX_INFINITE);
+    _mesh->_setBoundingSphereRadius(1.73f);
 
     _mesh->sharedVertexData = new VertexData();
     _mesh->sharedVertexData->vertexCount = MAX_VERTS;
@@ -200,34 +200,32 @@ void GuaDynGeoVisualPlugin::Init()
     _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
     _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
 
+    {
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memset(lockGuard.pData, 0, MAX_VERTS * sizeof(float) * 5);
+    }
+
+    {
+        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memset(lockGuard.pData, 0, MAX_VERTS * sizeof(int32_t));
+    }
+
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
     _mesh->reload();
 
-    ///
-
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
-
-    _avatar_node->detachAllObjects();
-
-    while(_avatar_node->numAttachedObjects() > 0)
-    {
-    }
 
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+
     _avatar_node->attachObject(_entity);
 
-    while(_avatar_node->numAttachedObjects() == 0)
-    {
-    }
-
+    _scene_node->setVisible(false, false);
     _avatar_node->setVisible(true, true);
     _avatar_node->showBoundingBox(true);
-
-    ///
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: entity attached" << std::endl;
@@ -331,8 +329,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     {
         return;
     }
-
-    _scene_node->setVisible(false, false);
 
     size_t texture_offset = 0;
 
