@@ -181,7 +181,7 @@ void GuaDynGeoVisualPlugin::Init()
     _mesh->_setBoundingSphereRadius(0.f);
 
     _mesh->sharedVertexData = new VertexData();
-    _mesh->sharedVertexData->vertexCount = 0;
+    _mesh->sharedVertexData->vertexCount = MAX_VERTS;
     _mesh->sharedVertexData->vertexStart = 0;
 
     size_t offset = 0;
@@ -536,13 +536,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
-#endif
-
-    _mesh->sharedVertexData->vertexCount = num_vertices;
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
-    std::cerr << std::endl << "DynGeo: vertex count set" << std::endl;
 #endif
 
     _submesh_name = std::to_string(rand());
