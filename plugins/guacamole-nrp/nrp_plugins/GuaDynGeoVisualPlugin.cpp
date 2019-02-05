@@ -202,12 +202,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     _entity_name = std::to_string(rand());
 
-    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
-    _avatar_node->attachObject(_entity);
-
-    _avatar_node->setVisible(true, true);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh created" << std::endl;
@@ -547,8 +542,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     sub->indexData->indexStart = 0;
 
 #if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: submesh redefined" << std::endl;
-    std::cerr << std::endl << "DynGeo: submesh redefined" << std::endl;
+    gzerr << std::endl << "DynGeo: submesh created" << std::endl;
+    std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
 #endif
 
     _mesh->load();
@@ -560,6 +555,14 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
 #endif
 
+    _avatar_node->detachAllObjects();
+
+    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _avatar_node->attachObject(_entity);
+
+    _avatar_node->setVisible(true, true);
+
 /*#if GUA_DEBUG == 1
     float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -568,12 +571,12 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     // test access to scene
     const ColourValue ambient(r, g, b, 1.f);
     _scene_manager->setAmbientLight(ambient);
-#endif*/
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: test colors written" << std::endl;
     std::cerr << std::endl << "DynGeo: test colors written" << std::endl;
-#endif
+#endif*/
 }
 void GuaDynGeoVisualPlugin::Update()
 {
