@@ -10,7 +10,7 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 using namespace Ogre;
 
-GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _cv_recv(), _cv_recv_swap()
+GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _mutex_recv_swap(), _cv_recv(), _cv_recv_swap()
 {
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: constructor" << std::endl;
@@ -250,7 +250,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 #endif
 
         {
-            _cv_recv_swap.wait(lk, [&]() { return !_is_need_swap.load() || !_is_recv_running.load(); });
+            std::unique_lock<std::mutex> lk_recv_swap(_mutex_recv_swap);
+            _cv_recv_swap.wait(lk_recv_swap, [&]() { return !_is_need_swap.load() || !_is_recv_running.load(); });
         }
 
 #if GUA_DEBUG == 1

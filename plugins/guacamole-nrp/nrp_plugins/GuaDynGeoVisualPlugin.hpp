@@ -48,6 +48,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     std::atomic<bool> _is_need_swap;
     std::mutex _mutex_swap;
     std::mutex _mutex_recv;
+    std::mutex _mutex_recv_swap;
     std::condition_variable _cv_recv;
     std::condition_variable _cv_recv_swap;
     std::thread _thread_recv;
