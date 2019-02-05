@@ -42,7 +42,6 @@ GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
     _is_recv_running.store(false);
     _cv_recv.notify_one();
     _cv_recv_swap.notify_one();
-    // _thread_recv.join();
 
     MaterialManager::getSingleton().remove(_material_name);
     TextureManager::getSingleton().remove(_texture_name);
@@ -63,6 +62,18 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
 
     _visual = visual;
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: load after" << std::endl;
+    std::cerr << std::endl << "DynGeo: load after" << std::endl;
+#endif
+}
+void GuaDynGeoVisualPlugin::Init()
+{
+    if(_is_initialized.load())
+    {
+        return;
+    }
+
     _scene_node = _visual->GetSceneNode();
     _scene_manager = _scene_node->getCreator();
 
@@ -75,18 +86,6 @@ void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sd
         int32_t swapSpace = _buffer_index[i + 2];
         _buffer_index[i + 2] = _buffer_index[i + 1];
         _buffer_index[i + 1] = swapSpace;
-    }
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: load after" << std::endl;
-    std::cerr << std::endl << "DynGeo: load after" << std::endl;
-#endif
-}
-void GuaDynGeoVisualPlugin::Init()
-{
-    if(_is_initialized.load())
-    {
-        return;
     }
 
     _texture_name = std::to_string(rand());
@@ -227,7 +226,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     std::cerr << std::endl << "DynGeo: _ReadLoop" << std::endl;
 #endif
 
-    zmq::context_t ctx(10, 10);
+    zmq::context_t ctx(1, 1);
     zmq::socket_t socket(ctx, ZMQ_SUB);
 
     socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
@@ -606,7 +605,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        UpdateTriangleSoup();
+        // UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
