@@ -594,6 +594,7 @@ void GuaDynGeoVisualPlugin::Update()
 
         // UpdateTriangleSoup();
         _is_need_swap.store(false);
+        _cv_recv_swap.notify_one();
     }
 
 /*#if GUA_DEBUG == 1
