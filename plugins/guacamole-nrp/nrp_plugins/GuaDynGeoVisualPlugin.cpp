@@ -292,8 +292,6 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
         #endif*/
     }
-
-    zmq_ctx_destroy(ctx);
 }
 void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 {
