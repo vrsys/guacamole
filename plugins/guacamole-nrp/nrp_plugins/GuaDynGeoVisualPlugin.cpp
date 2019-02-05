@@ -238,7 +238,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     std::string endpoint("tcp://141.54.147.29:7050");
     socket.connect(endpoint.c_str());
 
-    while(_is_recv_running.load())
+    std::unique_lock<std::mutex> lk(_mutex_recv);
+    while(!_cv_recv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _is_recv_running.load(); }))
     {
         zmq::message_t zmqm;
         socket.recv(&zmqm);
@@ -248,15 +249,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         std::cerr << std::endl << "DynGeo: socket.recv" << std::endl;
 #endif
 
-        while(true)
-        {
-            std::lock_guard<std::mutex> lock(_mutex_swap);
-
-            if(!_is_need_swap.load() || !_is_recv_running.load())
-            {
-                break;
-            }
-        }
+        std::unique_lock<std::mutex> lk_swap(_mutex_swap);
+        _cv_recv_swap.wait(lk_swap, [&](){return !_is_need_swap.load() || !_is_recv_running.load();});
 
 #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: memcpy" << std::endl;
@@ -510,9 +504,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        // _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
-        memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
+        _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
     }
 
 #if GUA_DEBUG == 1
@@ -521,9 +513,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        HardwareIndexBufferLockGuard lockGuard(_ibuf, 0, num_vertices * sizeof(int32_t), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        // _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
-        memcpy(lockGuard.pData, &_buffer_index[0], num_vertices * sizeof(int32_t));
+        _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
     }
 
 #if GUA_DEBUG == 1
@@ -562,20 +552,20 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _avatar_node->setVisible(true, true);
 
-/*#if GUA_DEBUG == 1
-    float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    /*#if GUA_DEBUG == 1
+        float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float b = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-    // test access to scene
-    const ColourValue ambient(r, g, b, 1.f);
-    _scene_manager->setAmbientLight(ambient);
-#endif
+        // test access to scene
+        const ColourValue ambient(r, g, b, 1.f);
+        _scene_manager->setAmbientLight(ambient);
+    #endif
 
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: test colors written" << std::endl;
-    std::cerr << std::endl << "DynGeo: test colors written" << std::endl;
-#endif*/
+    #if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: test colors written" << std::endl;
+        std::cerr << std::endl << "DynGeo: test colors written" << std::endl;
+    #endif*/
 }
 void GuaDynGeoVisualPlugin::Update()
 {
@@ -589,7 +579,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::lock_guard<std::mutex> lock(_mutex_swap);
         if(_is_need_swap.load())
         {
-            UpdateTriangleSoup();
+            // UpdateTriangleSoup();
             _is_need_swap.store(false);
         }
     }

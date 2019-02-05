@@ -21,6 +21,7 @@
 #include <thread>
 
 #include <sgtp/SGTP.h>
+#include <condition_variable>
 
 typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStampedPtr;
 
@@ -46,6 +47,9 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     std::atomic<bool> _is_recv_running;
     std::atomic<bool> _is_need_swap;
     std::mutex _mutex_swap;
+    std::mutex _mutex_recv;
+    std::condition_variable _cv_recv;
+    std::condition_variable _cv_recv_swap;
     std::thread _thread_recv;
 
     Ogre::SceneNode *_scene_node, *_avatar_node;
