@@ -555,7 +555,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _avatar_node->detachAllObjects();
 
-    while(_avatar_node->numChildren() > 0)
+    while(_avatar_node->numAttachedObjects() > 0)
     {
     }
 
@@ -564,7 +564,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _avatar_node->attachObject(_entity);
 
-    while(_avatar_node->numChildren() == 0)
+    while(_avatar_node->numAttachedObjects() == 0)
     {
     }
 
