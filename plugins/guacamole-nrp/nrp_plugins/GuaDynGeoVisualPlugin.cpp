@@ -576,6 +576,13 @@ void GuaDynGeoVisualPlugin::Update()
     std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
 #endif*/
 
+#if GUA_DEBUG == 1
+    std::thread::id this_id = std::this_thread::get_id();
+
+    gzerr << std::endl << "DynGeo: Update thread " << this_id << std::endl;
+    std::cerr << std::endl << "DynGeo: Update thread " << this_id << std::endl;
+#endif
+
     if(_is_initialized.load() && _is_need_swap.load())
     {
         std::unique_lock<std::mutex> lk_swap(_mutex_swap);
