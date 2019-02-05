@@ -572,10 +572,10 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-    /*#if GUA_DEBUG == 1
+    #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
         std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-    #endif*/
+    #endif
 
     if(_is_initialized.load())
     {
@@ -587,9 +587,9 @@ void GuaDynGeoVisualPlugin::Update()
         }
     }
 
-    /*#if GUA_DEBUG == 1
+    #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
         std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-    #endif*/
+    #endif
 }
 }
