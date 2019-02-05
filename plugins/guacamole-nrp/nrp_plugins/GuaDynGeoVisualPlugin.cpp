@@ -563,6 +563,11 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _avatar_node->setVisible(true, true);
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: entity attached" << std::endl;
+    std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
+#endif
+
     /*#if GUA_DEBUG == 1
         float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float g = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);

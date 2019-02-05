@@ -27,8 +27,6 @@ typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStam
 
 namespace gazebo
 {
-class GuaDynGeoVisualPluginPrivate;
-
 class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 {
   public:
