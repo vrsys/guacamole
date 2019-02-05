@@ -215,12 +215,13 @@ void GuaDynGeoVisualPlugin::Init()
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
-    _thread_recv.detach();
 
     _is_initialized.store(true);
 }
 void GuaDynGeoVisualPlugin::_ReadLoop()
 {
+    _thread_recv.detach();
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: _ReadLoop" << std::endl;
     std::cerr << std::endl << "DynGeo: _ReadLoop" << std::endl;
