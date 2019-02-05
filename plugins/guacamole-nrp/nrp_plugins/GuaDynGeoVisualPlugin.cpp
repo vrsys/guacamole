@@ -271,6 +271,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
             memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
             memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
+
+            _is_need_swap.store(true);
         }
 
         /*#if GUA_DEBUG == 1
@@ -282,8 +284,6 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 gzerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
                 std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
         #endif*/
-
-        _is_need_swap.store(true);
     }
 }
 void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
