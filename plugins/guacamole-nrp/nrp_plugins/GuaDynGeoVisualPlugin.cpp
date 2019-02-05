@@ -200,8 +200,6 @@ void GuaDynGeoVisualPlugin::Init()
 
     _mesh->reload();
 
-    _entity_name = std::to_string(rand());
-
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
 
 #if GUA_DEBUG == 1
@@ -557,6 +555,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _avatar_node->detachAllObjects();
 
+    _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _avatar_node->attachObject(_entity);
