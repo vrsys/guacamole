@@ -571,35 +571,35 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 }
 void GuaDynGeoVisualPlugin::Update()
 {
-/*#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-    std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
-#endif*/
+    /*#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+        std::cerr << std::endl << "DynGeo: pre-render update before" << std::endl;
+    #endif*/
 
     if(_is_initialized.load() && _is_need_swap.load())
     {
         std::unique_lock<std::mutex> lk_swap(_mutex_swap);
 
-#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
         std::thread::id this_id = std::this_thread::get_id();
 
         gzerr << std::endl << "DynGeo: Update thread " << this_id << std::endl;
         std::cerr << std::endl << "DynGeo: Update thread " << this_id << std::endl;
-#endif
+#endif*/
 
 #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: swap" << std::endl;
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        // UpdateTriangleSoup();
+        UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
 
-/*#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-    std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
-#endif*/
+    /*#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+        std::cerr << std::endl << "DynGeo: pre-render update after" << std::endl;
+    #endif*/
 }
 }
