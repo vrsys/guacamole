@@ -176,7 +176,6 @@ void GuaDynGeoVisualPlugin::Init()
 
     _mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
-    // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
     _mesh->_setBounds(AxisAlignedBox::BOX_NULL);
     _mesh->_setBoundingSphereRadius(0.f);
 
@@ -580,6 +579,12 @@ void GuaDynGeoVisualPlugin::Update()
     if(_is_initialized.load() && _is_need_swap.load())
     {
         std::unique_lock<std::mutex> lk_swap(_mutex_swap);
+
+#if GUA_DEBUG == 1
+        gzerr << std::endl << "DynGeo: swap" << std::endl;
+        std::cerr << std::endl << "DynGeo: swap" << std::endl;
+#endif
+
         // UpdateTriangleSoup();
         _is_need_swap.store(false);
     }
