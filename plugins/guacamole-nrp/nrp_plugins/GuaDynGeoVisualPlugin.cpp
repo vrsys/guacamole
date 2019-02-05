@@ -250,8 +250,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 #endif
 
         {
-            std::unique_lock<std::mutex> lk_swap(_mutex_swap);
-            _cv_recv_swap.wait(lk_swap, [&]() { return !_is_need_swap.load() || !_is_recv_running.load(); });
+            _cv_recv_swap.wait(lk, [&]() { return !_is_need_swap.load() || !_is_recv_running.load(); });
         }
 
 #if GUA_DEBUG == 1
@@ -259,15 +258,19 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         std::cerr << std::endl << "DynGeo: memcpy" << std::endl;
 #endif
 
-        SGTP::header_data_t header;
-        memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
-        memcpy(&_texture_bounding_boxes, (unsigned char *)header.tex_bounding_box, sizeof(header.tex_bounding_box));
+        {
+            std::unique_lock<std::mutex> lk_swap(_mutex_swap);
 
-        _num_geometry_bytes = header.geometry_payload_size;
-        memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
-        memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
-        memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
-        memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
+            SGTP::header_data_t header;
+            memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
+            memcpy(&_texture_bounding_boxes, (unsigned char *)header.tex_bounding_box, sizeof(header.tex_bounding_box));
+
+            _num_geometry_bytes = header.geometry_payload_size;
+            memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
+            memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
+            memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
+            memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
+        }
 
         /*#if GUA_DEBUG == 1
                 gzerr << "DynGeo: geometry bytes " << header.geometry_payload_size << std::endl;
@@ -279,10 +282,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
         #endif*/
 
-        {
-            std::lock_guard<std::mutex> lock(_mutex_swap);
-            _is_need_swap.store(true);
-        }
+        _is_need_swap.store(true);
     }
 }
 void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
