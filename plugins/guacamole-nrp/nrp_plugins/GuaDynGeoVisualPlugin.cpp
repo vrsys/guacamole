@@ -249,8 +249,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
         std::cerr << std::endl << "DynGeo: socket.recv" << std::endl;
 #endif
 
-        std::unique_lock<std::mutex> lk_swap(_mutex_swap);
-        _cv_recv_swap.wait(lk_swap, [&](){return !_is_need_swap.load() || !_is_recv_running.load();});
+        {
+            std::unique_lock<std::mutex> lk_swap(_mutex_swap);
+            _cv_recv_swap.wait(lk_swap, [&]() { return !_is_need_swap.load() || !_is_recv_running.load(); });
+        }
 
 #if GUA_DEBUG == 1
         gzerr << std::endl << "DynGeo: memcpy" << std::endl;
