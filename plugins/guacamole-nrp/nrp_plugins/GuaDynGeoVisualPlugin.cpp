@@ -34,6 +34,11 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
 
 GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
 {
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: destructor" << std::endl;
+    std::cerr << std::endl << "DynGeo: destructor" << std::endl;
+#endif
+
     _is_recv_running.store(false);
     _thread_recv.join();
 
