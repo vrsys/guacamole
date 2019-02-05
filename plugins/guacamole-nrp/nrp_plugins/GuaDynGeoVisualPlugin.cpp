@@ -227,7 +227,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     std::cerr << std::endl << "DynGeo: _ReadLoop" << std::endl;
 #endif
 
-    zmq::context_t ctx(1, 1);
+    zmq::context_t ctx(10, 10);
     zmq::socket_t socket(ctx, ZMQ_SUB);
 
     socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
