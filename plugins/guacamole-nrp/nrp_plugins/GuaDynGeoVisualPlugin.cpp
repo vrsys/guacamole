@@ -500,6 +500,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         memcpy(&_buffer_rcv[z_offset], &z, sizeof(float));
     }
 
+    _mesh->unload();
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
@@ -536,8 +538,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
-    // TODO: fix this access, something is wrong
-    // _mesh->sharedVertexData->vertexCount = num_vertices;
+    _mesh->sharedVertexData->vertexCount = num_vertices;
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertex count set" << std::endl;
@@ -557,7 +558,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: submesh redefined" << std::endl;
 #endif
 
-    _mesh->reload();
+    _mesh->load();
 
 #endif
 
