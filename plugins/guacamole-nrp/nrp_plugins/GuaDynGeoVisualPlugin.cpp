@@ -40,6 +40,8 @@ GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
 #endif
 
     _is_recv_running.store(false);
+    _cv_recv.notify_one();
+    _cv_recv_swap.notify_one();
     _thread_recv.join();
 
     MaterialManager::getSingleton().remove(_material_name);
