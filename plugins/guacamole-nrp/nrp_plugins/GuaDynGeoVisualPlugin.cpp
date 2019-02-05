@@ -239,7 +239,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     socket.connect(endpoint.c_str());
 
     std::unique_lock<std::mutex> lk(_mutex_recv);
-    while(!_cv_recv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _is_recv_running.load(); }))
+    while(_cv_recv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _is_recv_running.load(); }))
     {
         zmq::message_t zmqm;
         socket.recv(&zmqm);
