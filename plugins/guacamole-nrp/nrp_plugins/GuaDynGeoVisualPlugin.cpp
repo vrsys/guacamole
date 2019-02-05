@@ -205,7 +205,34 @@ void GuaDynGeoVisualPlugin::Init()
 
     _mesh->reload();
 
+    ///
+
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
+
+    _avatar_node->detachAllObjects();
+
+    while(_avatar_node->numAttachedObjects() > 0)
+    {
+    }
+
+    _entity_name = std::to_string(rand());
+    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _avatar_node->attachObject(_entity);
+
+    while(_avatar_node->numAttachedObjects() == 0)
+    {
+    }
+
+    _avatar_node->setVisible(true, true);
+    _avatar_node->showBoundingBox(true);
+
+    ///
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: entity attached" << std::endl;
+    std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh created" << std::endl;
@@ -551,29 +578,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
-#endif
-
-    _avatar_node->detachAllObjects();
-
-    while(_avatar_node->numAttachedObjects() > 0)
-    {
-    }
-
-    _entity_name = std::to_string(rand());
-    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    _avatar_node->attachObject(_entity);
-
-    while(_avatar_node->numAttachedObjects() == 0)
-    {
-    }
-
-    _avatar_node->setVisible(true, true);
-    _avatar_node->showBoundingBox(true);
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: entity attached" << std::endl;
-    std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
 #endif
 
     /*#if GUA_DEBUG == 1
