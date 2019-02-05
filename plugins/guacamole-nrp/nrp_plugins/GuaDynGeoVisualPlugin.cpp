@@ -537,7 +537,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], true);
+        _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], false);
     }
 
 #if GUA_DEBUG == 1
@@ -546,7 +546,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], true);
+        _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], false);
     }
 
 #if GUA_DEBUG == 1
@@ -614,7 +614,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        // UpdateTriangleSoup();
+        UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
