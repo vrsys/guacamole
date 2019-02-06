@@ -191,12 +191,12 @@ void GuaDynGeoVisualPlugin::Init()
     _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_DISCARD);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memset(lockGuard.pData, 0, MAX_VERTS * sizeof(float) * 5);
     }
 
     {
-        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_DISCARD);
+        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
     }
 
@@ -509,7 +509,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_DISCARD);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
 
