@@ -95,7 +95,7 @@ void GuaDynGeoVisualPlugin::Init()
     // unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
     TexturePtr texture = TextureManager::getSingleton().createManual(_texture_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, TEX_TYPE_2D, _texture_width, _texture_width, 0, PF_BYTE_BGR,
-                                                                     TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
+                                                                     TU_DYNAMIC_WRITE_ONLY);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: texture created" << std::endl;
@@ -187,16 +187,16 @@ void GuaDynGeoVisualPlugin::Init()
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
     offset += VertexElement::getTypeSize(VET_FLOAT2);
 
-    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
-    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
+    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_DISCARD);
         memset(lockGuard.pData, 0, MAX_VERTS * sizeof(float) * 5);
     }
 
     {
-        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_DISCARD);
         memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
     }
 
@@ -509,7 +509,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_DISCARD);
         memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
 
