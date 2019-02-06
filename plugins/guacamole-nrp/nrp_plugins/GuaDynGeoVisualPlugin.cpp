@@ -213,6 +213,19 @@ void GuaDynGeoVisualPlugin::Init()
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
+    _submesh_name = std::to_string(rand());
+
+    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = _ibuf;
+    sub->indexData->indexCount = MAX_VERTS;
+    sub->indexData->indexStart = 0;
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: submesh created" << std::endl;
+    std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
+#endif
+
     _mesh->reload();
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
@@ -552,19 +565,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
-#endif
-
-    _submesh_name = std::to_string(rand());
-
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
-    sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = MAX_VERTS;
-    sub->indexData->indexStart = 0;
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: submesh created" << std::endl;
-    std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
 #endif
 
     _mesh->load();
