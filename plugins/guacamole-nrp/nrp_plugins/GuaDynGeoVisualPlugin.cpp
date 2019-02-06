@@ -213,14 +213,6 @@ void GuaDynGeoVisualPlugin::Init()
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
-    _submesh_name = std::to_string(rand());
-
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
-    sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = MAX_VERTS;
-    sub->indexData->indexStart = 0;
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: submesh created" << std::endl;
     std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
@@ -568,6 +560,14 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     {
         _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], false);
     }
+
+    _submesh_name = std::to_string(rand());
+
+    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = _ibuf;
+    sub->indexData->indexCount = num_vertices;
+    sub->indexData->indexStart = 0;
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
