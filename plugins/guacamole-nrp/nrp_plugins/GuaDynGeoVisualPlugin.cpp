@@ -343,6 +343,13 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         return;
     }
 
+    _scene_manager->sceneGraphMutex.lock();
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: lock acquired" << std::endl;
+    std::cerr << std::endl << "DynGeo: lock acquired" << std::endl;
+#endif
+
     size_t texture_offset = 0;
 
     for(auto texture_bounding_box : _texture_bounding_boxes)
@@ -574,6 +581,13 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
+#endif
+
+    _scene_manager->sceneGraphMutex.unlock();
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: lock released" << std::endl;
+    std::cerr << std::endl << "DynGeo: lock released" << std::endl;
 #endif
 
     /*#if GUA_DEBUG == 1
