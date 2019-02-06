@@ -4,9 +4,9 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-#define GUA_DEBUG 1
+#define GUA_DEBUG 0
 #define TEX_DEBUG 0
-#define MAX_VERTS 1000000
+#define MAX_VERTS 100000
 
 using namespace Ogre;
 
@@ -562,6 +562,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setVisible(true);
 
     _avatar_node->attachObject(_entity);
 
@@ -571,8 +572,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
 #endif
-
-    _avatar_node->setVisible(true, true);
 
     _scene_manager->sceneGraphMutex.unlock();
 
