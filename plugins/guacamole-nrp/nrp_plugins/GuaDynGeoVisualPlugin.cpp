@@ -181,7 +181,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     size_t offset = 0;
 
-    VertexDeclaration *decl = _mesh->sharedVertexData->vertexDeclaration;
+    VertexDeclaration *decl =  HardwareBufferManager::getSingleton().createVertexDeclaration();
     decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
     offset += VertexElement::getTypeSize(VET_FLOAT3);
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
