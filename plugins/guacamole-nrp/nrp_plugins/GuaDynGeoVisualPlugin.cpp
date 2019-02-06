@@ -528,6 +528,20 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     }
 
 #if GUA_DEBUG == 1
+    float vx[3];
+    float tx[2];
+
+    memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
+    memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
+
+    gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+    std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
+
+    gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+    std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
+#endif
+
+#if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
 #endif
