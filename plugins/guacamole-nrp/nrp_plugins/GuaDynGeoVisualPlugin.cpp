@@ -17,9 +17,9 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
     std::cerr << std::endl << "DynGeo: constructor" << std::endl;
 #endif
 
-    _buffer_rcv = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
+    _buffer_rcv = std::vector<unsigned char>(MAX_VERTS * sizeof(float) * 5);
     _buffer_rcv_texture = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
-    _buffer_index = std::vector<int32_t>(1000000);
+    _buffer_index = std::vector<int32_t>(MAX_VERTS);
 
     _is_initialized.store(false);
     _is_need_swap.store(false);
@@ -197,7 +197,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     {
         HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memset(lockGuard.pData, 0, MAX_VERTS * sizeof(int32_t));
+        memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
     }
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
@@ -530,16 +530,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
-#endif
-
-    {
-        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_index[0], num_vertices * sizeof(int32_t));
-    }
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
-    std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
     mesh->sharedVertexData = new VertexData();
