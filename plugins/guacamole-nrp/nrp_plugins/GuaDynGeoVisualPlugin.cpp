@@ -187,8 +187,8 @@ void GuaDynGeoVisualPlugin::Init()
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
     offset += VertexElement::getTypeSize(VET_FLOAT2);
 
-    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
-    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
+    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
+    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
 
     {
         HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
@@ -454,20 +454,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
     ibuf->writeData(0, ibuf->getSizeInBytes(), &buffer_quad_index[0], true);
 
-    /*#if GUA_DEBUG == 1
-        float vx[3];
-        float tx[2];
-
-        memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
-        memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
-
-        gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
-        std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
-
-        gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-        std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-    #endif*/
-
     SubMesh *sub = mesh->createSubMesh();
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = ibuf;
@@ -527,7 +513,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
 
-#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
     float vx[3];
     float tx[2];
 
@@ -539,7 +525,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
     std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-#endif
+#endif*/
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
