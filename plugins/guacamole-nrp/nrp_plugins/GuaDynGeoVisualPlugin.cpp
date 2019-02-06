@@ -6,7 +6,7 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 1
 #define TEX_DEBUG 0
-#define MAX_VERTS 10000000
+#define MAX_VERTS 1000000
 
 using namespace Ogre;
 
@@ -19,7 +19,7 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
 
     _buffer_rcv = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_rcv_texture = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
-    _buffer_index = std::vector<int32_t>(10000000);
+    _buffer_index = std::vector<int32_t>(1000000);
 
     _is_initialized.store(false);
     _is_need_swap.store(false);
@@ -181,7 +181,7 @@ void GuaDynGeoVisualPlugin::Init()
 
     size_t offset = 0;
 
-    VertexDeclaration *decl =  HardwareBufferManager::getSingleton().createVertexDeclaration();
+    VertexDeclaration *decl = HardwareBufferManager::getSingleton().createVertexDeclaration();
     decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
     offset += VertexElement::getTypeSize(VET_FLOAT3);
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
@@ -523,7 +523,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        _vbuf->writeData(0, _num_geometry_bytes, &_buffer_rcv[0], false);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
 
 #if GUA_DEBUG == 1
@@ -532,7 +533,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], false);
+        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_index[0], num_vertices * sizeof(int32_t));
     }
 
 #if GUA_DEBUG == 1
@@ -579,6 +581,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
 #endif
+
+    _avatar_node->setVisible(true, true);
 
     _scene_manager->sceneGraphMutex.unlock();
 
