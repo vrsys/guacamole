@@ -178,17 +178,6 @@ void GuaDynGeoVisualPlugin::Init()
     std::cerr << std::endl << "DynGeo: material set" << std::endl;
 #endif
 
-    _mesh_name = std::to_string(rand());
-
-    _mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-    _mesh->_setBounds(AxisAlignedBox::BOX_INFINITE);
-    _mesh->_setBoundingSphereRadius(1.73f);
-
-    _mesh->sharedVertexData = new VertexData();
-    _mesh->sharedVertexData->vertexCount = MAX_VERTS;
-    _mesh->sharedVertexData->vertexStart = 0;
-
     size_t offset = 0;
 
     VertexDeclaration *decl = _mesh->sharedVertexData->vertexDeclaration;
@@ -210,23 +199,10 @@ void GuaDynGeoVisualPlugin::Init()
         memset(lockGuard.pData, 0, MAX_VERTS * sizeof(int32_t));
     }
 
-    VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
-    bind->setBinding(0, _vbuf);
-
-    _submesh_name = std::to_string(rand());
-
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
-    sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = MAX_VERTS;
-    sub->indexData->indexStart = 0;
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: submesh created" << std::endl;
     std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
 #endif
-
-    _mesh->reload();
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
 
@@ -534,12 +510,25 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         memcpy(&_buffer_rcv[z_offset], &z, sizeof(float));
     }
 
-    _mesh->unload();
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 #endif
+
+    if(_avatar_node->numAttachedObjects() != 0)
+    {
+        _avatar_node->detachAllObjects();
+        _scene_manager->destroyEntity(_entity);
+    }
+
+    if(!_mesh.isNull())
+    {
+        _mesh->unload();
+    }
+
+    _mesh_name = std::to_string(rand());
+
+    _mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
     // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
     _mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
@@ -568,13 +557,22 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
-    _mesh->load();
+    _mesh->sharedVertexData = new VertexData();
+    _mesh->sharedVertexData->vertexCount = num_vertices;
+    _mesh->sharedVertexData->vertexStart = 0;
 
-    if(_avatar_node->numAttachedObjects() != 0)
-    {
-        _avatar_node->detachAllObjects();
-        _scene_manager->destroyEntity(_entity);
-    }
+    VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
+    bind->setBinding(0, _vbuf);
+
+    _submesh_name = std::to_string(rand());
+
+    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = _ibuf;
+    sub->indexData->indexCount = num_vertices;
+    sub->indexData->indexStart = 0;
+
+    _mesh->load();
 
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
