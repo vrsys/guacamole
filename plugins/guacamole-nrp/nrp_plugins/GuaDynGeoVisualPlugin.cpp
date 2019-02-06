@@ -45,6 +45,7 @@ GuaDynGeoVisualPlugin::~GuaDynGeoVisualPlugin()
 
     MaterialManager::getSingleton().remove(_material_name);
     TextureManager::getSingleton().remove(_texture_name);
+    MeshManager::getSingleton().remove(_mesh_name);
 }
 
 void GuaDynGeoVisualPlugin::Load(rendering::VisualPtr visual, sdf::ElementPtr sdf)
@@ -199,26 +200,11 @@ void GuaDynGeoVisualPlugin::Init()
         memset(lockGuard.pData, 0, MAX_VERTS * sizeof(int32_t));
     }
 
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: submesh created" << std::endl;
-    std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
-#endif
-
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
 
     _scene_node->setVisible(false, false);
     _avatar_node->setVisible(true, true);
     _avatar_node->showBoundingBox(true);
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: entity attached" << std::endl;
-    std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
-#endif
-
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: mesh created" << std::endl;
-    std::cerr << std::endl << "DynGeo: mesh created" << std::endl;
-#endif
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
@@ -519,20 +505,17 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     {
         _avatar_node->detachAllObjects();
         _scene_manager->destroyEntity(_entity);
-    }
 
-    if(!_mesh.isNull())
-    {
-        _mesh->unload();
+        MeshManager::getSingleton().remove(_mesh_name);
     }
 
     _mesh_name = std::to_string(rand());
 
-    _mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    MeshPtr mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
     // "-" for Z axis and min <-> max flip is NOT A MISTAKE!
-    _mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
-    _mesh->_setBoundingSphereRadius(1.73f);
+    mesh->_setBounds(AxisAlignedBox({_bb_min[0], _bb_min[1], -_bb_max[2]}, {_bb_max[0], _bb_max[1], -_bb_min[2]}));
+    mesh->_setBoundingSphereRadius(1.73f);
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: bounds set" << std::endl;
@@ -557,22 +540,32 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
-    _mesh->sharedVertexData = new VertexData();
-    _mesh->sharedVertexData->vertexCount = num_vertices;
-    _mesh->sharedVertexData->vertexStart = 0;
+    mesh->sharedVertexData = new VertexData();
+    mesh->sharedVertexData->vertexCount = num_vertices;
+    mesh->sharedVertexData->vertexStart = 0;
 
-    VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
+    VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
     _submesh_name = std::to_string(rand());
 
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
+    SubMesh *sub = mesh->createSubMesh(_submesh_name);
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = _ibuf;
     sub->indexData->indexCount = num_vertices;
     sub->indexData->indexStart = 0;
 
-    _mesh->load();
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: submesh created" << std::endl;
+    std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
+#endif
+
+    mesh->load();
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
+    std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
+#endif
 
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -580,11 +573,11 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     _avatar_node->attachObject(_entity);
 
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: entity attached" << std::endl;
+    std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
 #endif
 
-#if GUA_DEBUG == 1
-    gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
-    std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
 #endif
 
     _scene_manager->sceneGraphMutex.unlock();
