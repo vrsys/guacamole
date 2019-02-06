@@ -213,6 +213,14 @@ void GuaDynGeoVisualPlugin::Init()
     VertexBufferBinding *bind = _mesh->sharedVertexData->vertexBufferBinding;
     bind->setBinding(0, _vbuf);
 
+    _submesh_name = std::to_string(rand());
+
+    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = _ibuf;
+    sub->indexData->indexCount = MAX_VERTS;
+    sub->indexData->indexStart = 0;
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: submesh created" << std::endl;
     std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
@@ -221,12 +229,6 @@ void GuaDynGeoVisualPlugin::Init()
     _mesh->reload();
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
-
-    _entity_name = std::to_string(rand());
-    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-    _avatar_node->attachObject(_entity);
 
     _scene_node->setVisible(false, false);
     _avatar_node->setVisible(true, true);
@@ -561,20 +563,24 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         _ibuf->writeData(0, num_vertices * sizeof(int32_t), &_buffer_index[0], false);
     }
 
-    _submesh_name = std::to_string(rand());
-
-    SubMesh *sub = _mesh->createSubMesh(_submesh_name);
-    sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = num_vertices;
-    sub->indexData->indexStart = 0;
-
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
     _mesh->load();
+
+    if(_avatar_node->numAttachedObjects() != 0)
+    {
+        _avatar_node->detachAllObjects();
+        _scene_manager->destroyEntity(_entity);
+    }
+
+    _entity_name = std::to_string(rand());
+    _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+
+    _avatar_node->attachObject(_entity);
 
 #endif
 
