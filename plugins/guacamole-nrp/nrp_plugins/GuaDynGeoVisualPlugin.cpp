@@ -554,20 +554,18 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: HW index buffer written" << std::endl;
 #endif
 
-    ///
-
-    /*_submesh_name = std::to_string(rand());
+    _submesh_name = std::to_string(rand());
 
     SubMesh *sub = _mesh->createSubMesh(_submesh_name);
     sub->useSharedVertices = true;
     sub->indexData->indexBuffer = _ibuf;
-    sub->indexData->indexCount = num_vertices;
+    sub->indexData->indexCount = MAX_VERTS;
     sub->indexData->indexStart = 0;
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: submesh created" << std::endl;
     std::cerr << std::endl << "DynGeo: submesh created" << std::endl;
-#endif*/
+#endif
 
     _mesh->load();
 
