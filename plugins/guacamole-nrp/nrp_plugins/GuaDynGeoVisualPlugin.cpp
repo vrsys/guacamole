@@ -265,7 +265,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
             if(_tj_compressed_image_buffer == nullptr)
             {
-                _tj_compressed_image_buffer = tjAlloc(1024 * 1024 * 50);
+                _tj_compressed_image_buffer = tjAlloc(SGTP::MAX_MESSAGE_SIZE);
             }
 
             std::size_t byte_offset_to_current_image = 0;
@@ -311,7 +311,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 tjDecompress2(current_decompressor_handle, &_tj_compressed_image_buffer[byte_offset_to_current_image], jpeg_size, &_buffer_rcv_texture_decompressed[decompressed_image_offset],
                               header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
 
-                uint32_t copied_image_byte = static_cast<uint32_t>(header_height * header_width * 3);
+                auto copied_image_byte = static_cast<uint32_t>(header_height * header_width * 3);
 
                 byte_offset_to_current_image += jpeg_size;
                 decompressed_image_offset += copied_image_byte;
