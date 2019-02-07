@@ -263,13 +263,13 @@ void GuaDynGeoVisualPlugin::Init()
 
     _vbuf_binding = HardwareBufferManager::getSingleton().createVertexBufferBinding();
     _vbuf_binding->setBinding(0, _vbuf);
+#endif
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
 
     _scene_node->setVisible(false, false);
     _avatar_node->setVisible(true, true);
     _avatar_node->showBoundingBox(true);
-#endif
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
