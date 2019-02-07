@@ -509,7 +509,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
     }
 
