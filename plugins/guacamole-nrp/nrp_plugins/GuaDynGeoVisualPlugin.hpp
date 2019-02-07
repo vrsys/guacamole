@@ -55,9 +55,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     Ogre::SceneManager *_scene_manager;
     Ogre::Entity *_entity;
 
-    Ogre::HardwareVertexBufferSharedPtr _vbuf;
     Ogre::HardwareIndexBufferSharedPtr _ibuf;
-    Ogre::VertexBufferBinding *_vbuf_binding;
 
     unsigned int _texture_width;
     std::string _texture_name;

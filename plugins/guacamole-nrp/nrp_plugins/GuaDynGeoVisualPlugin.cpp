@@ -5,7 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 0
-#define TEX_DEBUG 1
+#define TEX_DEBUG 0
 #define MAX_VERTS 100000
 
 using namespace Ogre;
@@ -180,89 +180,14 @@ void GuaDynGeoVisualPlugin::Init()
 #endif
 
 #if TEX_DEBUG != 1
-    size_t offset = 0;
 
-    VertexDeclaration *decl = HardwareBufferManager::getSingleton().createVertexDeclaration();
-    decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
-    offset += VertexElement::getTypeSize(VET_FLOAT3);
-    decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
-    offset += VertexElement::getTypeSize(VET_FLOAT2);
-
-    _vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, MAX_VERTS, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY, true);
     _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-
-    {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memset(lockGuard.pData, 0, MAX_VERTS * sizeof(float) * 5);
-
-        size_t num_vertices = 6;
-
-        std::vector<unsigned char> buffer_quad(num_vertices * sizeof(float) * 5);
-
-        for(unsigned int i = 0; i < num_vertices; i++)
-        {
-            float vx[5];
-            vx[0] = 0.f;
-
-            switch(i)
-            {
-            case 0:
-                vx[1] = 0.f;
-                vx[2] = 0.f;
-
-                vx[3] = 0.f;
-                vx[4] = 0.f;
-                break;
-            case 1:
-                vx[1] = 0.f;
-                vx[2] = 1.f;
-
-                vx[3] = 0.f;
-                vx[4] = 1.f;
-                break;
-            case 2:
-                vx[1] = 1.f;
-                vx[2] = 0.f;
-
-                vx[3] = 1.f;
-                vx[4] = 0.f;
-                break;
-            case 3:
-                vx[1] = 1.f;
-                vx[2] = 0.f;
-
-                vx[3] = 1.f;
-                vx[4] = 0.f;
-                break;
-            case 4:
-                vx[1] = 1.f;
-                vx[2] = 1.f;
-
-                vx[3] = 1.f;
-                vx[4] = 1.f;
-                break;
-            case 5:
-                vx[1] = 0.f;
-                vx[2] = 1.f;
-
-                vx[3] = 0.f;
-                vx[4] = 1.f;
-                break;
-            }
-
-            memcpy(&buffer_quad[i * sizeof(float) * 5], &vx[0], sizeof(float) * 5);
-        }
-
-        memcpy(lockGuard.pData, &buffer_quad[0], num_vertices * sizeof(float) * 5);
-    }
 
     {
         HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
     }
 
-    _vbuf_binding = HardwareBufferManager::getSingleton().createVertexBufferBinding();
-    _vbuf_binding->setBinding(0, _vbuf);
 #endif
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
@@ -573,11 +498,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
 #endif
 
-    {
-        HardwareVertexBufferLockGuard lockGuard(_vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
-    }
-
 /*#if GUA_DEBUG == 1
     float vx[3];
     float tx[2];
@@ -601,7 +521,22 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     mesh->sharedVertexData->vertexCount = num_vertices;
     mesh->sharedVertexData->vertexStart = 0;
 
-    mesh->sharedVertexData->vertexBufferBinding = _vbuf_binding;
+    size_t offset = 0;
+
+    VertexDeclaration *decl = HardwareBufferManager::getSingleton().createVertexDeclaration();
+    decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
+    offset += VertexElement::getTypeSize(VET_FLOAT3);
+    decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
+    offset += VertexElement::getTypeSize(VET_FLOAT2);
+
+    HardwareVertexBufferSharedPtr vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
+
+    {
+        HardwareVertexBufferLockGuard lockGuard(vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
+    }
+
+    mesh->sharedVertexData->vertexBufferBinding->setBinding(0, vbuf);
 
     _submesh_name = std::to_string(rand());
 
