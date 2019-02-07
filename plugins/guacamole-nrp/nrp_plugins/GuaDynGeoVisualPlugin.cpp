@@ -449,10 +449,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     mesh->load();
 
-    while(!mesh->isLoaded())
-    {
-    }
-
 #else
 
     size_t num_vertices = _num_geometry_bytes / (sizeof(float) * 5);
@@ -518,18 +514,18 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
     offset += VertexElement::getTypeSize(VET_FLOAT2);
 
-    HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
     {
-        HardwareIndexBufferLockGuard lockGuard(ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_index[0], num_vertices * sizeof(int32_t));
+        HardwareIndexBufferLockGuard lockGuard(ibuf, 0, ibuf->getSizeInBytes(), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_index[0], ibuf->getSizeInBytes());
     }
 
     HardwareVertexBufferSharedPtr vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
 
     {
-        HardwareVertexBufferLockGuard lockGuard(vbuf, 0, _num_geometry_bytes, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_rcv[0], _num_geometry_bytes);
+        HardwareVertexBufferLockGuard lockGuard(vbuf, 0, vbuf->getSizeInBytes(), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_rcv[0], vbuf->getSizeInBytes());
     }
 
     mesh->sharedVertexData->vertexBufferBinding->setBinding(0, vbuf);
@@ -548,10 +544,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #endif
 
     mesh->load();
-
-    while(!mesh->isLoaded())
-    {
-    }
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
