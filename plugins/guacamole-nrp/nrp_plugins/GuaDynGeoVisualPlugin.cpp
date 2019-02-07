@@ -5,7 +5,7 @@ namespace gazebo
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 0
-#define TEX_DEBUG 0
+#define TEX_DEBUG 1
 #define MAX_VERTS 100000
 
 using namespace Ogre;
