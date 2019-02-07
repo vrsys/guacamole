@@ -193,6 +193,66 @@ void GuaDynGeoVisualPlugin::Init()
     {
         HardwareVertexBufferLockGuard lockGuard(_vbuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
         memset(lockGuard.pData, 0, MAX_VERTS * sizeof(float) * 5);
+
+        size_t num_vertices = 6;
+
+        std::vector<unsigned char> buffer_quad(num_vertices * sizeof(float) * 5);
+
+        for(unsigned int i = 0; i < num_vertices; i++)
+        {
+            float vx[5];
+            vx[0] = 0.f;
+
+            switch(i)
+            {
+            case 0:
+                vx[1] = 0.f;
+                vx[2] = 0.f;
+
+                vx[3] = 0.f;
+                vx[4] = 0.f;
+                break;
+            case 1:
+                vx[1] = 0.f;
+                vx[2] = 1.f;
+
+                vx[3] = 0.f;
+                vx[4] = 1.f;
+                break;
+            case 2:
+                vx[1] = 1.f;
+                vx[2] = 0.f;
+
+                vx[3] = 1.f;
+                vx[4] = 0.f;
+                break;
+            case 3:
+                vx[1] = 1.f;
+                vx[2] = 0.f;
+
+                vx[3] = 1.f;
+                vx[4] = 0.f;
+                break;
+            case 4:
+                vx[1] = 1.f;
+                vx[2] = 1.f;
+
+                vx[3] = 1.f;
+                vx[4] = 1.f;
+                break;
+            case 5:
+                vx[1] = 0.f;
+                vx[2] = 1.f;
+
+                vx[3] = 0.f;
+                vx[4] = 1.f;
+                break;
+            }
+
+            memcpy(&buffer_quad[i * sizeof(float) * 5], &vx[0], sizeof(float) * 5);
+        }
+
+        memcpy(lockGuard.pData, &buffer_quad[0], num_vertices * sizeof(float) * 5);
     }
 
     {
