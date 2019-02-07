@@ -260,6 +260,9 @@ void GuaDynGeoVisualPlugin::Init()
         memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
     }
 
+    _vbuf_binding = HardwareBufferManager::getSingleton().createVertexBufferBinding();
+    _vbuf_binding->setBinding(0, _vbuf);
+
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
 
     _scene_node->setVisible(false, false);
@@ -596,8 +599,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     mesh->sharedVertexData->vertexCount = num_vertices;
     mesh->sharedVertexData->vertexStart = 0;
 
-    VertexBufferBinding *bind = mesh->sharedVertexData->vertexBufferBinding;
-    bind->setBinding(0, _vbuf);
+    mesh->sharedVertexData->vertexBufferBinding = _vbuf_binding;
 
     _submesh_name = std::to_string(rand());
 
