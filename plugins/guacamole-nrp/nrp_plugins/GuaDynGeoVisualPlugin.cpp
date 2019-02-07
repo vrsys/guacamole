@@ -179,6 +179,7 @@ void GuaDynGeoVisualPlugin::Init()
     std::cerr << std::endl << "DynGeo: material set" << std::endl;
 #endif
 
+#if TEX_DEBUG != 1
     size_t offset = 0;
 
     VertexDeclaration *decl = HardwareBufferManager::getSingleton().createVertexDeclaration();
@@ -268,6 +269,7 @@ void GuaDynGeoVisualPlugin::Init()
     _scene_node->setVisible(false, false);
     _avatar_node->setVisible(true, true);
     _avatar_node->showBoundingBox(true);
+#endif
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
@@ -414,6 +416,14 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: texture updated" << std::endl;
 #endif
 
+    if(_avatar_node->numAttachedObjects() != 0)
+    {
+        _avatar_node->detachAllObjects();
+        _scene_manager->destroyEntity(_entity);
+
+        MeshManager::getSingleton().remove(_mesh_name);
+    }
+
 #if TEX_DEBUG == 1
 
     size_t num_vertices = 6;
@@ -550,14 +560,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: vertices in buffer " << std::to_string(num_vertices) << std::endl;
 #endif
 
-    if(_avatar_node->numAttachedObjects() != 0)
-    {
-        _avatar_node->detachAllObjects();
-        _scene_manager->destroyEntity(_entity);
-
-        MeshManager::getSingleton().remove(_mesh_name);
-    }
-
     _mesh_name = std::to_string(rand());
 
     MeshPtr mesh = MeshManager::getSingleton().createManual(_mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -621,6 +623,8 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
 #endif
 
+#endif
+
     _entity_name = std::to_string(rand());
     _entity = _scene_manager->createEntity(_entity_name, _mesh_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
     _entity->setMaterialName(_material_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -631,8 +635,6 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: entity attached" << std::endl;
     std::cerr << std::endl << "DynGeo: entity attached" << std::endl;
-#endif
-
 #endif
 
     _scene_manager->sceneGraphMutex.unlock();
