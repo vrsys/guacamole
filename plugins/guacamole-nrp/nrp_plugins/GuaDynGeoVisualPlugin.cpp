@@ -6,7 +6,7 @@ GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
 #define GUA_DEBUG 0
 #define TEX_DEBUG 0
-#define MAX_VERTS 100000
+#define MAX_VERTS 1000000
 
 using namespace Ogre;
 
@@ -177,17 +177,6 @@ void GuaDynGeoVisualPlugin::Init()
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: material set" << std::endl;
     std::cerr << std::endl << "DynGeo: material set" << std::endl;
-#endif
-
-#if TEX_DEBUG != 1
-
-    _ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-
-    {
-        HardwareIndexBufferLockGuard lockGuard(_ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_index[0], MAX_VERTS * sizeof(int32_t));
-    }
-
 #endif
 
     _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
@@ -529,6 +518,13 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
     offset += VertexElement::getTypeSize(VET_FLOAT2);
 
+    HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().createIndexBuffer(HardwareIndexBuffer::IT_32BIT, MAX_VERTS, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+
+    {
+        HardwareIndexBufferLockGuard lockGuard(ibuf, HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
+        memcpy(lockGuard.pData, &_buffer_index[0], num_vertices * sizeof(int32_t));
+    }
+
     HardwareVertexBufferSharedPtr vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
 
     {
@@ -542,7 +538,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     SubMesh *sub = mesh->createSubMesh(_submesh_name);
     sub->useSharedVertices = true;
-    sub->indexData->indexBuffer = _ibuf;
+    sub->indexData->indexBuffer = ibuf;
     sub->indexData->indexCount = num_vertices;
     sub->indexData->indexStart = 0;
 
