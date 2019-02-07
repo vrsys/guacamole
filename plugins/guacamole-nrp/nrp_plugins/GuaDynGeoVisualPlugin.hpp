@@ -23,6 +23,10 @@
 #include <sgtp/SGTP.h>
 #include <condition_variable>
 
+#include <lz4.h>
+#include <turbojpeg.h>
+#include <unordered_map>
+
 typedef const boost::shared_ptr<gazebo::msgs::PosesStamped const> ConstPosesStampedPtr;
 
 namespace gazebo
@@ -64,11 +68,16 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
     SGTP::texture_bounding_box_t _texture_bounding_boxes[16];
     std::vector<unsigned char> _buffer_rcv;
+    std::vector<unsigned char> _buffer_rcv_inflated;
     std::vector<unsigned char> _buffer_rcv_texture;
+    std::vector<unsigned char> _buffer_rcv_texture_decompressed;
     std::vector<int32_t> _buffer_index;
     size_t _num_geometry_bytes = 0;
     float _bb_min[3];
     float _bb_max[3];
+
+    unsigned char* _tj_compressed_image_buffer;
+    std::unordered_map<uint32_t, tjhandle> _jpeg_decompressor_per_layer;
 
     void Update();
     void UpdateTriangleSoup();
