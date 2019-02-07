@@ -23,6 +23,8 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
     _buffer_rcv_texture_decompressed = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_index = std::vector<int32_t>(MAX_VERTS);
 
+    _jpeg_decompressor_per_layer = std::unordered_map<uint32_t, tjhandle>();
+
     _is_initialized.store(false);
     _is_need_swap.store(false);
     _is_recv_running.store(true);
