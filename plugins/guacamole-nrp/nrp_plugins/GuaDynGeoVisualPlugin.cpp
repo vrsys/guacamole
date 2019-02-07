@@ -4,7 +4,7 @@ namespace gazebo
 {
 GZ_REGISTER_VISUAL_PLUGIN(GuaDynGeoVisualPlugin)
 
-#define GUA_DEBUG 0
+#define GUA_DEBUG 1
 #define TEX_DEBUG 0
 #define MAX_VERTS 1000000
 
@@ -18,7 +18,9 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
 #endif
 
     _buffer_rcv = std::vector<unsigned char>(MAX_VERTS * sizeof(float) * 5);
+    _buffer_rcv_inflated = std::vector<unsigned char>(MAX_VERTS * sizeof(float) * 5);
     _buffer_rcv_texture = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
+    _buffer_rcv_texture_decompressed = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_index = std::vector<int32_t>(MAX_VERTS);
 
     _is_initialized.store(false);
@@ -252,6 +254,72 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
             memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
 
+            LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
+
+#if GUA_DEBUG == 1
+            gzerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
+            std::cerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
+#endif
+
+            if(_tj_compressed_image_buffer == nullptr)
+            {
+                _tj_compressed_image_buffer = tjAlloc(1024 * 1024 * 50);
+            }
+
+            std::size_t byte_offset_to_current_image = 0;
+            std::size_t total_image_byte_size = 0;
+            std::size_t decompressed_image_offset = 0;
+
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+            {
+                total_image_byte_size += header.jpeg_bytes_per_sensor[sensor_layer_idx];
+            }
+
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+            {
+                if(_jpeg_decompressor_per_layer.find(sensor_layer_idx) == _jpeg_decompressor_per_layer.end())
+                {
+                    _jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
+                    if(_jpeg_decompressor_per_layer[sensor_layer_idx] == nullptr)
+                    {
+                        gzerr << std::endl << "DynGeo: ERROR INITIALIZING DECOMPRESSOR" << std::endl;
+                        std::cerr << std::endl << "DynGeo: ERROR INITIALIZING DECOMPRESSOR" << std::endl;
+                    }
+                }
+
+                long unsigned int jpeg_size = header.jpeg_bytes_per_sensor[sensor_layer_idx];
+
+                memcpy((char *)&_tj_compressed_image_buffer[byte_offset_to_current_image], (char *)&_buffer_rcv_texture[byte_offset_to_current_image], jpeg_size);
+
+                int header_width, header_height, header_subsamp;
+
+                auto &current_decompressor_handle = _jpeg_decompressor_per_layer[sensor_layer_idx];
+
+                int error_handle =
+                    tjDecompressHeader2(current_decompressor_handle, &_tj_compressed_image_buffer[byte_offset_to_current_image], jpeg_size, &header_width, &header_height, &header_subsamp);
+
+                if(-1 == error_handle)
+                {
+#if GUA_DEBUG == 1
+                    gzerr << std::endl << "DynGeo: ERROR DECOMPRESSING JPEG: " << tjGetErrorStr() << std::endl;
+                    std::cerr << std::endl << "DynGeo: ERROR DECOMPRESSING JPEG: " << tjGetErrorStr() << std::endl;
+#endif
+                }
+
+                tjDecompress2(current_decompressor_handle, &_tj_compressed_image_buffer[byte_offset_to_current_image], jpeg_size, &_buffer_rcv_texture_decompressed[decompressed_image_offset],
+                              header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
+
+                uint32_t copied_image_byte = static_cast<uint32_t>(header_height * header_width * 3);
+
+                byte_offset_to_current_image += jpeg_size;
+                decompressed_image_offset += copied_image_byte;
+            }
+
+#if GUA_DEBUG == 1
+            gzerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
+            std::cerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
+#endif
+
             _is_need_swap.store(true);
         }
 
@@ -314,9 +382,9 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         {
             for(unsigned int x = 0; x < pixel_box.getWidth(); ++x)
             {
-                data[pixel_box.rowPitch * y + x] = (uint32_t)0xFF << 24 | (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 2] << 16 |
-                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 1] << 8 |
-                                                   (uint32_t)_buffer_rcv_texture[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 0];
+                data[pixel_box.rowPitch * y + x] = (uint32_t)0xFF << 24 | (uint32_t)_buffer_rcv_texture_decompressed[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 2] << 16 |
+                                                   (uint32_t)_buffer_rcv_texture_decompressed[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 1] << 8 |
+                                                   (uint32_t)_buffer_rcv_texture_decompressed[texture_offset + (pixel_box.getWidth() * y + x) * 3 + 0];
             }
         }
 
@@ -458,11 +526,11 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     {
         size_t z_offset = i * 5 * sizeof(float) + 2 * sizeof(float);
 
-        memcpy(&z, &_buffer_rcv[z_offset], sizeof(float));
+        memcpy(&z, &_buffer_rcv_inflated[z_offset], sizeof(float));
 
         z = -z;
 
-        memcpy(&_buffer_rcv[z_offset], &z, sizeof(float));
+        memcpy(&_buffer_rcv_inflated[z_offset], &z, sizeof(float));
     }
 
 #if GUA_DEBUG == 1
@@ -483,19 +551,19 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
     std::cerr << std::endl << "DynGeo: bounds set" << std::endl;
 #endif
 
-/*#if GUA_DEBUG == 1
+#if GUA_DEBUG == 1
     float vx[3];
     float tx[2];
 
-    memcpy(&vx[0], &_buffer_rcv[100 * 5 * sizeof(float)], 3 * sizeof(float));
-    memcpy(&tx[0], &_buffer_rcv[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
+    memcpy(&vx[0], &_buffer_rcv_inflated[100 * 5 * sizeof(float)], 3 * sizeof(float));
+    memcpy(&tx[0], &_buffer_rcv_inflated[100 * 5 * sizeof(float) + 3 * sizeof(float)], 2 * sizeof(float));
 
     gzerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
     std::cerr << std::endl << "DynGeo: vx 500 " << vx[0] << " " << vx[1] << " " << vx[2] << std::endl;
 
     gzerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
     std::cerr << std::endl << "DynGeo: tx 500 " << tx[0] << " " << tx[1] << std::endl;
-#endif*/
+#endif
 
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: HW vertex buffer written" << std::endl;
@@ -524,7 +592,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     {
         HardwareVertexBufferLockGuard lockGuard(vbuf, 0, vbuf->getSizeInBytes(), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
-        memcpy(lockGuard.pData, &_buffer_rcv[0], vbuf->getSizeInBytes());
+        memcpy(lockGuard.pData, &_buffer_rcv_inflated[0], vbuf->getSizeInBytes());
     }
 
     mesh->sharedVertexData->vertexBufferBinding->setBinding(0, vbuf);
