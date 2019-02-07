@@ -549,6 +549,10 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     mesh->load();
 
+    while(!mesh->isLoaded())
+    {
+    }
+
 #if GUA_DEBUG == 1
     gzerr << std::endl << "DynGeo: mesh loaded" << std::endl;
     std::cerr << std::endl << "DynGeo: mesh loaded" << std::endl;
