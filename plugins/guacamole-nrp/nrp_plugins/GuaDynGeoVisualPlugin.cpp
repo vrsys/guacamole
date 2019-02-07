@@ -263,7 +263,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             std::cerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
 #endif
 
-            if(_tj_compressed_image_buffer == nullptr)
+            /*if(_tj_compressed_image_buffer == nullptr)
             {
                 _tj_compressed_image_buffer = tjAlloc(SGTP::MAX_MESSAGE_SIZE);
             }
@@ -315,7 +315,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
                 byte_offset_to_current_image += jpeg_size;
                 decompressed_image_offset += copied_image_byte;
-            }
+            }*/
 
 #if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
