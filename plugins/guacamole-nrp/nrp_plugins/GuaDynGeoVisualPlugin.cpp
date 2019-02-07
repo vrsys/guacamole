@@ -504,11 +504,10 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 
     mesh->sharedVertexData = new VertexData();
     mesh->sharedVertexData->vertexCount = num_vertices;
-    mesh->sharedVertexData->vertexStart = 0;
 
     size_t offset = 0;
 
-    VertexDeclaration *decl = HardwareBufferManager::getSingleton().createVertexDeclaration();
+    VertexDeclaration *decl = mesh->sharedVertexData->vertexDeclaration;
     decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
     offset += VertexElement::getTypeSize(VET_FLOAT3);
     decl->addElement(0, offset, VET_FLOAT2, VES_TEXTURE_COORDINATES, 0);
@@ -521,7 +520,7 @@ void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
         memcpy(lockGuard.pData, &_buffer_index[0], ibuf->getSizeInBytes());
     }
 
-    HardwareVertexBufferSharedPtr vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY, false);
+    HardwareVertexBufferSharedPtr vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(offset, num_vertices, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
     {
         HardwareVertexBufferLockGuard lockGuard(vbuf, 0, vbuf->getSizeInBytes(), HardwareBuffer::LockOptions::HBL_WRITE_ONLY);
