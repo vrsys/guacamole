@@ -23,7 +23,7 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
     _buffer_rcv_texture_decompressed = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_index = std::vector<int32_t>(MAX_VERTS);
 
-    //_jpeg_decompressor_per_layer = std::unordered_map<uint32_t, tjhandle>();
+    _jpeg_decompressor_per_layer = std::unordered_map<uint32_t, tjhandle>();
 
     _is_initialized.store(false);
     _is_need_swap.store(false);
@@ -96,7 +96,6 @@ void GuaDynGeoVisualPlugin::Init()
     _texture_name = std::to_string(rand());
 
     _texture_width = 4096;
-    // unsigned int texture_height = (unsigned int)pow(2, ceil(log(SGTP::TEXTURE_DIMENSION_Y) / log(2)));
 
     TexturePtr texture = TextureManager::getSingleton().createManual(_texture_name, ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, TEX_TYPE_2D, _texture_width, _texture_width, 0, PF_BYTE_BGR,
                                                                      TU_DYNAMIC_WRITE_ONLY);
@@ -256,10 +255,17 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             memcpy(&header, (unsigned char *)zmqm.data(), SGTP::HEADER_BYTE_SIZE);
             memcpy(&_texture_bounding_boxes, (unsigned char *)header.tex_bounding_box, sizeof(header.tex_bounding_box));
 
+            size_t geometry_payload = zmqm.size() - SGTP::HEADER_BYTE_SIZE - header.texture_payload_size;
+
+#if GUA_DEBUG == 1
+            gzerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
+            std::cerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
+#endif
+
             memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
             memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
-            memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
-            memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
+            memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, geometry_payload);
+            memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + geometry_payload, header.texture_payload_size);
 
             /*_num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
 
