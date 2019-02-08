@@ -257,10 +257,10 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
             size_t geometry_payload = zmqm.size() - SGTP::HEADER_BYTE_SIZE - header.texture_payload_size;
 
-/*#if GUA_DEBUG == 1
-            gzerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
-            std::cerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
-#endif*/
+            /*#if GUA_DEBUG == 1
+                        gzerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
+                        std::cerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
+            #endif*/
 
             memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
             memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
@@ -276,20 +276,24 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
             if(_tj_compressed_image_buffer == nullptr)
             {
-                _tj_compressed_image_buffer = tjAlloc(SGTP::MAX_MESSAGE_SIZE);
+                _tj_compressed_image_buffer = tjAlloc(_texture_width * _texture_width * 50);
+
+#if GUA_DEBUG == 1
+                gzerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
+                std::cerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
+#endif
             }
 
             std::size_t byte_offset_to_current_image = 0;
-            std::size_t total_image_byte_size = 0;
             std::size_t decompressed_image_offset = 0;
 
-            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; sensor_layer_idx++)
             {
-                total_image_byte_size += header.jpeg_bytes_per_sensor[sensor_layer_idx];
-            }
+#if GUA_DEBUG == 1
+                gzerr << std::endl << "DynGeo: sensor_layer_idx" << std::to_string(sensor_layer_idx) << std::endl;
+                std::cerr << std::endl << "DynGeo: sensor_layer_idx" << std::to_string(sensor_layer_idx) << std::endl;
+#endif
 
-            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
-            {
                 if(_jpeg_decompressor_per_layer.find(sensor_layer_idx) == _jpeg_decompressor_per_layer.end())
                 {
                     _jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
@@ -300,7 +304,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                     }
                 }
 
-                long unsigned int jpeg_size = header.jpeg_bytes_per_sensor[sensor_layer_idx];
+                uint32_t jpeg_size = header.jpeg_bytes_per_sensor[sensor_layer_idx];
 
                 memcpy((char *)&_tj_compressed_image_buffer[byte_offset_to_current_image], (char *)&_buffer_rcv_texture[byte_offset_to_current_image], jpeg_size);
 
@@ -322,7 +326,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 tjDecompress2(current_decompressor_handle, &_tj_compressed_image_buffer[byte_offset_to_current_image], jpeg_size, &_buffer_rcv_texture_decompressed[decompressed_image_offset],
                               header_width, 0, header_height, TJPF_BGR, TJFLAG_FASTDCT);
 
-                auto copied_image_byte = static_cast<uint32_t>(header_height * header_width * 3);
+                uint32_t copied_image_byte = (uint32_t)(header_height * header_width * 3);
 
                 byte_offset_to_current_image += jpeg_size;
                 decompressed_image_offset += copied_image_byte;
@@ -689,7 +693,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-         UpdateTriangleSoup();
+        UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
