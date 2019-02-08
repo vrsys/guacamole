@@ -227,6 +227,13 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
     std::string endpoint("tcp://141.54.147.29:7050");
     socket.connect(endpoint.c_str());
 
+    _tj_compressed_image_buffer = tjAlloc(_texture_width * _texture_width * 50);
+
+#if GUA_DEBUG == 1
+    gzerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
+    std::cerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
+#endif
+
     std::unique_lock<std::mutex> lk(_mutex_recv);
     while(_cv_recv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _is_recv_running.load(); }))
     {
@@ -273,16 +280,6 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             gzerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
             std::cerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
 #endif
-
-            if(_tj_compressed_image_buffer == nullptr)
-            {
-                _tj_compressed_image_buffer = tjAlloc(_texture_width * _texture_width * 50);
-
-#if GUA_DEBUG == 1
-                gzerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
-                std::cerr << std::endl << "DynGeo: tjAlloc complete" << std::endl;
-#endif
-            }
 
             std::size_t byte_offset_to_current_image = 0;
             std::size_t decompressed_image_offset = 0;
