@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_H
-#define GUACAMOLE_PAGODA_H
+#ifndef GUACAMOLE_NRP_H
+#define GUACAMOLE_NRP_H
 
 #include <functional>
 #include <list>
@@ -102,4 +102,4 @@ class GUA_NRP_DLL NRPBinder
 }
 }
 
-#endif // GUACAMOLE_PAGODA_H
+#endif // GUACAMOLE_NRP_H

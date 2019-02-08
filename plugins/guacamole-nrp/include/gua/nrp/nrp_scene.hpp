@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_SCENE_H
-#define GUACAMOLE_PAGODA_SCENE_H
+#ifndef GUACAMOLE_NRP_SCENE_H
+#define GUACAMOLE_NRP_SCENE_H
 
 #include <functional>
 #include <list>
@@ -114,6 +114,7 @@ class GUA_NRP_DLL NRPScene
     std::recursive_mutex _mutex_pose_msgs;
 
     std::mutex _mutex_scenegraph;
+    bool _is_root_not_initialized = true;
     NRPNode *_root_node;
     NRPInteractiveNode *_interactive_node;
     NRPCameraNode *_cam_node;
@@ -127,4 +128,4 @@ class GUA_NRP_DLL NRPScene
 }
 }
 
-#endif // GUACAMOLE_PAGODA_SCENE_H
+#endif // GUACAMOLE_NRP_SCENE_H
