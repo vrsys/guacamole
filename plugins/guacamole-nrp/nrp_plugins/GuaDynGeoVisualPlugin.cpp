@@ -189,7 +189,7 @@ void GuaDynGeoVisualPlugin::Init()
 
         _scene_node->setVisible(false, false);
         _avatar_node->setVisible(true, true);
-        _avatar_node->showBoundingBox(true);
+        // _avatar_node->showBoundingBox(true);
 
         _scene_manager->sceneGraphMutex.unlock();
     }
