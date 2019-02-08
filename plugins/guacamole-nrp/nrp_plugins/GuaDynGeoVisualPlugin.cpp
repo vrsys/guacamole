@@ -692,7 +692,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        // UpdateTriangleSoup();
+        UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
