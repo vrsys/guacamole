@@ -17,7 +17,7 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
     std::cerr << std::endl << "DynGeo: constructor" << std::endl;
 #endif
 
-    _buffer_rcv = std::vector<unsigned char>(MAX_VERTS * sizeof(float) * 5);
+    _buffer_rcv = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_rcv_inflated = std::vector<unsigned char>(MAX_VERTS * sizeof(float) * 5);
     _buffer_rcv_texture = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_rcv_texture_decompressed = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
@@ -254,6 +254,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
             memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
             memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
+
+            _num_geometry_bytes = 0;
 
             /*_num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
 
