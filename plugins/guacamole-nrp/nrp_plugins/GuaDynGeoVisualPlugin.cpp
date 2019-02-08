@@ -255,7 +255,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, header.geometry_payload_size);
             memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + header.geometry_payload_size, header.texture_payload_size);
 
-            _num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
+            /*_num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
 
 #if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
@@ -319,7 +319,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 #if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
             std::cerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
-#endif
+#endif*/
 
             _is_need_swap.store(true);
         }
