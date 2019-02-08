@@ -32,7 +32,7 @@ Scheduler::~Scheduler() {}
 
 void Scheduler::execute_delayed(MainLoop& mainloop, std::function<void()> callback, double delay) {
 
-  boost::asio::deadline_timer* timer = new boost::asio::deadline_timer(mainloop.io_service, boost::posix_time::microseconds(1000000.0 * delay));
+  boost::asio::deadline_timer* timer = new boost::asio::deadline_timer(mainloop.io_service, boost::posix_time::microseconds( int(1000000.0 * delay) ));
 
   tasks_.insert(std::make_pair(timer, callback));
   timer->async_wait(boost::bind(&Scheduler::self_callback, this, timer, 0));

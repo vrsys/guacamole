@@ -78,10 +78,13 @@ int main(int argc, char** argv) {
   auto steppo(vloader.create_geometry_from_file("steppo", spoinst_resource_file_string.c_str()));
   graph.add_node("/transform", steppo);
   
+  steppo->rotate(180.0, 0.0, 1.0, 0.0);
+  steppo->translate(0.0, -1.0, -3.0);
+
   gua::TriMeshLoader mloader;
-  auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
-  plane->scale(10);
-  plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
+  //auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
+  //plane->scale(10);
+  //plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
   //graph.add_node("/transform", plane);
 
   transform->translate(0.0f, 0.0f, -10.0f);
@@ -102,7 +105,7 @@ int main(int argc, char** argv) {
 
   auto portal_placeholder_plane(mloader.create_geometry_from_file("portal_placeholder_plane", "data/objects/plane.obj"));
   portal_placeholder_plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
-
+  portal_placeholder_plane->translate(0.0f, 0.0f, -10.0f);
   // Portal
   auto portal = graph.add_node<gua::node::TexturedQuadNode>("/transform", "portal");
   portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -133,7 +136,8 @@ int main(int argc, char** argv) {
   gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
   // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(800, 800);
+  //auto resolution = gua::math::vec2ui(800, 800);
+  auto resolution = gua::math::vec2ui(3840, 2160);
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
@@ -141,7 +145,7 @@ int main(int argc, char** argv) {
   pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-  pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+  //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
   auto portal_screen = graph.add_node<gua::node::ScreenNode>("/transform", "portal_screen");
   portal_screen->data.set_size(gua::math::vec2(1.2f, 1.2f));
@@ -171,7 +175,7 @@ int main(int argc, char** argv) {
   camera->config.set_screen_path("/screen");
   camera->config.set_scene_graph_name("main_scenegraph");
   camera->config.set_output_window_name("window1");
-  camera->config.set_enable_stereo(false);
+  camera->config.set_enable_stereo(true);
   //camera->config.set_enable_stereo(true);
   camera->set_pipeline_description(pipe);
 
@@ -183,7 +187,7 @@ int main(int argc, char** argv) {
   camera2->config.set_screen_path("/screen2");
   camera2->config.set_scene_graph_name("main_scenegraph");
   camera2->config.set_output_window_name("window2");
-  camera->config.set_enable_stereo(false);
+  camera2->config.set_enable_stereo(true);
   //camera2->config.set_enable_stereo(true);
   camera2->set_pipeline_description(pipe);
 
@@ -195,7 +199,7 @@ int main(int argc, char** argv) {
   camera3->config.set_screen_path("/screen3");
   camera3->config.set_scene_graph_name("main_scenegraph");
   camera3->config.set_output_window_name("window3");
-  camera->config.set_enable_stereo(false);
+  camera3->config.set_enable_stereo(true);
   //camera3->config.set_enable_stereo(true);
   camera3->set_pipeline_description(pipe);
 
@@ -207,13 +211,15 @@ int main(int argc, char** argv) {
   camera4->config.set_screen_path("/screen4");
   camera4->config.set_scene_graph_name("main_scenegraph");
   camera4->config.set_output_window_name("window4");
-  camera->config.set_enable_stereo(false);
+  camera4->config.set_enable_stereo(true);
   //camera4->config.set_enable_stereo(true);
   camera4->set_pipeline_description(pipe);
 
   camera4->set_pre_render_cameras({portal_camera});
 
-  auto add_window = [](std::string const& window_name, 
+  std::shared_ptr<gua::GlfwWindow> window_handle = nullptr;
+
+  auto add_window = [&](std::string const& window_name, 
                        std::shared_ptr<gua::node::CameraNode> const& cam_node)
   {
     auto window = std::make_shared<gua::GlfwWindow>();
@@ -221,14 +227,18 @@ int main(int argc, char** argv) {
     set_window_default(window, cam_node->config.get_resolution());
     cam_node->config.set_output_window_name(window_name);
 
-    window->config.set_stereo_mode(gua::StereoMode::MONO);
+    //window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_enable_vsync(false);
 
     //if("window3" == window_name) {
-      //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
     //}
+
+    window_handle = window;
   };
 
   add_window("window1", camera);
+
 
   //add_window("window3", camera3);
   //add_window("window4", camera4);
@@ -262,7 +272,7 @@ int main(int argc, char** argv) {
 
   // application loop
   gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+  gua::events::Ticker ticker(loop, 1.0/10000.0);
 
   unsigned framecount = 0;
 
@@ -293,6 +303,8 @@ int main(int argc, char** argv) {
       if(150 == framecount) {
         add_window("window4", camera4);
       }*/
+
+      std::cout << window_handle->get_rendering_fps() << "\n";
       ++framecount;
     }
   });

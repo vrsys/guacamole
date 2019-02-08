@@ -33,7 +33,7 @@ void main() {
 
   #if @enable_virtual_texturing@
     gua_color = vec3(0.0, 1.0, 0.0);
-    writeVTCoords();
+    gua_uvs.w = gua_current_vt_idx;
   #else
     gua_emissivity = 1.0;
     gua_metalness = 0.0;
@@ -49,6 +49,11 @@ void main() {
   if (gua_rendering_mode != 1) {
     @material_method_calls_frag@
   }
+
+  #if @enable_virtual_texturing@
+    writeVTCoords( int(gua_uvs.w) );
+  #else
+  #endif
 
   submit_fragment(gl_FragCoord.z);
 }

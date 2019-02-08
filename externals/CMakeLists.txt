@@ -7,3 +7,5 @@ if (UNIX)
   add_subdirectory(sgtp)
   endif(PLUGIN_guacamole-nrp)
 endif(UNIX)
+
+add_subdirectory(lz4)
