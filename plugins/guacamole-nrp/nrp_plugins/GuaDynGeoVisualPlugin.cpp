@@ -257,17 +257,17 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 
             size_t geometry_payload = zmqm.size() - SGTP::HEADER_BYTE_SIZE - header.texture_payload_size;
 
-#if GUA_DEBUG == 1
+/*#if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
             std::cerr << std::endl << "DynGeo: geometry_payload " << std::to_string(geometry_payload) << " header.geometry_payload_size " << header.geometry_payload_size << std::endl;
-#endif
+#endif*/
 
             memcpy(&_bb_min, &header.global_bb_min, sizeof(float) * 3);
             memcpy(&_bb_max, &header.global_bb_max, sizeof(float) * 3);
             memcpy(&_buffer_rcv[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE, geometry_payload);
             memcpy(&_buffer_rcv_texture[0], (unsigned char *)zmqm.data() + SGTP::HEADER_BYTE_SIZE + geometry_payload, header.texture_payload_size);
 
-            /*_num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
+            _num_geometry_bytes = (size_t)LZ4_decompress_safe((const char *)_buffer_rcv.data(), (char *)&_buffer_rcv_inflated[0], header.geometry_payload_size, MAX_VERTS * sizeof(float) * 5);
 
 #if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: decompressed LZ4" << std::endl;
@@ -331,7 +331,7 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
 #if GUA_DEBUG == 1
             gzerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
             std::cerr << std::endl << "DynGeo: decompressed JPEG" << std::endl;
-#endif*/
+#endif
 
             _is_need_swap.store(true);
         }
@@ -689,7 +689,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        // UpdateTriangleSoup();
+         UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
