@@ -38,6 +38,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/version.h>
 #ifdef GUACAMOLE_FBX
 #include <fbxsdk.h>
 #endif // GUACAMOLE_FBX
@@ -375,7 +376,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         {
             MaterialLoader material_loader;
             aiMaterial const *ai_material(ai_scene->mMaterials[material_index]);
-            material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
+            material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
         }
 
         // return std::make_shared<node::TriMeshNode>("", desc.unique_key(),
@@ -384,50 +385,50 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     };
 
     if(!enforce_hierarchy) {
-       // there is only one child -- skip it!
-       if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
-       {
-           //std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
-    
-           auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
-           node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
-           return node;
-       }
-    
-       // there is only one geometry --- return it!
-       if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
-       {
-           //std::cout << "no children, one mesh" << std::endl;
-    
-           auto node = load_geometry(ai_root, 0);
-           // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
-           return node;
-       }
-    
-       //std::cout << "multiple children" << std::endl;
-    
-       // else: there are multiple children and meshes
-       auto group(std::make_shared<node::TransformNode>());
-    
-       apply_transformation(group, ai_root->mTransformation);
-    
-       for(unsigned i(0); i < ai_root->mNumMeshes; ++i)
-       {
-           group->add_child(load_geometry(ai_root, i));
-       }
-    
-       for(unsigned i(0); i < ai_root->mNumChildren; ++i)
-       {
-           //std::cout << ai_root->mChildren[i]->mName.data << std::endl;
-    
-           auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name, flags, mesh_count, enforce_hierarchy);
-           auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
-           apply_transformation(child, child_transform_ai);
-    
-           group->add_child(child);
-       }
-    
-       return group;
+        // there is only one child -- skip it!
+        if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
+        {
+            //std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
+
+            auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
+            node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
+            return node;
+        }
+
+        // there is only one geometry --- return it!
+        if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
+        {
+            //std::cout << "no children, one mesh" << std::endl;
+
+            auto node = load_geometry(ai_root, 0);
+            // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
+            return node;
+        }
+
+        //std::cout << "multiple children" << std::endl;
+
+        // else: there are multiple children and meshes
+        auto group(std::make_shared<node::TransformNode>());
+
+        apply_transformation(group, ai_root->mTransformation);
+
+        for(unsigned i(0); i < ai_root->mNumMeshes; ++i)
+        {
+            group->add_child(load_geometry(ai_root, i));
+        }
+
+        for(unsigned i(0); i < ai_root->mNumChildren; ++i)
+        {
+            //std::cout << ai_root->mChildren[i]->mName.data << std::endl;
+
+            auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name, flags, mesh_count, enforce_hierarchy);
+            auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
+            apply_transformation(child, child_transform_ai);
+
+            group->add_child(child);
+        }
+
+        return group;
     } else {
         struct ai_gua_node
         {

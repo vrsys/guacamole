@@ -1,5 +1,6 @@
 #include <gua/nrp/nrp_binder.hpp>
 #include <gua/nrp/nrp_cam_node.hpp>
+#include <gua/nrp/nrp_config.hpp>
 #include <gua/nrp/nrp_interactive_node.hpp>
 #include <gua/nrp/nrp_node.hpp>
 
@@ -17,13 +18,13 @@ namespace gua
 namespace nrp
 {
 NRPBinder::NRPBinder()
-    : _worker_mutex(), _scene()/*,
-#if GUA_DEBUG == 1
-      _log("transport", NRPLog::LOG_LEVEL::DEBUG)
-#else
-      _log("transport", NRPLog::LOG_LEVEL::ERROR)
-#endif
-*/
+    : _worker_mutex(), _scene() /*,
+ #if GUA_DEBUG == 1
+       _log("transport", NRPLog::LOG_LEVEL::DEBUG)
+ #else
+       _log("transport", NRPLog::LOG_LEVEL::ERROR)
+ #endif
+ */
 
 {
     _worker_should_stop.store(false);
@@ -51,38 +52,41 @@ void NRPBinder::pre_render() { _scene.pre_render(); }
 
 void NRPBinder::_connect_to_transport_layer()
 {
-/*
-#if GUA_DEBUG == 1
-    NRPLog log("worker", NRPLog::LOG_LEVEL::DEBUG);
-#else
-    NRPLog log("worker", NRPLog::LOG_LEVEL::ERROR);
-#endif
+    /*
+    #if GUA_DEBUG == 1
+        NRPLog log("worker", NRPLog::LOG_LEVEL::DEBUG);
+    #else
+        NRPLog log("worker", NRPLog::LOG_LEVEL::ERROR);
+    #endif
 
-    log.d("setup");
-*/
+        log.d("setup");
+    */
+
+    auto nrp_config = &NRPConfig::get_instance();
+    
     gazebo::common::load();
 
     sdf::setFindCallback(boost::bind(&gazebo::common::find_file, _1));
 
-    if(!gazebo::transport::init("orpheus", 11345, 1))
+    if(!gazebo::transport::init(nrp_config->get_master_host(), nrp_config->get_master_port(), 1))
     {
         std::string const error_message = "Unable to initialize transport";
-        //log.e(error_message);
+        // log.e(error_message);
         throw std::runtime_error(error_message);
     }
 
-    //log.d("starting the model database, fetching models immediately");
+    // log.d("starting the model database, fetching models immediately");
 
     gazebo::common::ModelDatabase::Instance()->Start(true);
 
     gazebo::transport::run();
 
-    //log.d("init transport node");
+    // log.d("init transport node");
 
     gazebo::transport::NodePtr node = boost::make_shared<gazebo::transport::Node>();
     node->Init();
 
-    //log.d("begin subscription");
+    // log.d("begin subscription");
 
     //    gazebo::transport::SubscriberPtr sub_scene = node->Subscribe("/gazebo/default/scene", &NRPBinder::callback_scene, this);
     //
@@ -96,31 +100,33 @@ void NRPBinder::_connect_to_transport_layer()
 
     //    gazebo::transport::SubscriberPtr sub_skeleton_pose_info = node->Subscribe("/gazebo/default/skeleton_pose/info", &NRPBinder::callback_skeleton_pose_info, this);
 
-    gazebo::transport::PublisherPtr pub_request = node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", 1, 0.25);
+    gazebo::transport::PublisherPtr pub_request =
+        node->Advertise<gazebo::msgs::Request>("/gazebo/default/request", nrp_config->get_request_queue_limit(), nrp_config->get_full_scene_update_frequency());
     gazebo::transport::SubscriberPtr sub_response = node->Subscribe("/gazebo/default/response", &NRPBinder::callback_response, this);
 
-    //log.d("subscription done");
+    // log.d("subscription done");
 
-    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", 120, 30);
+    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", nrp_config->get_interactive_node_queue_limit(),
+                                                                                                  nrp_config->get_interactive_node_update_frequency());
 
-    if(!pub_interactive->WaitForConnection(gazebo::common::Time(5, 0)))
+    if(!pub_interactive->WaitForConnection(gazebo::common::Time(nrp_config->get_network_max_timeout(), 0)))
     {
-        //log.e("no interactive node subscribers available");
+        // log.e("no interactive node subscribers available");
 
         _publish_interactive.store(false);
         pub_interactive.reset();
     }
 
-    if(pub_request->WaitForConnection(gazebo::common::Time(5, 0)))
+    if(pub_request->WaitForConnection(gazebo::common::Time(nrp_config->get_network_max_timeout(), 0)))
     {
-        //log.d("connection established");
+        // log.d("connection established");
 
         std::unique_lock<std::mutex> lk(_worker_mutex);
-        while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(16), [&] { return _worker_should_stop.load(); }))
+        while(!_worker_cv.wait_for(lk, std::chrono::milliseconds(nrp_config->get_worker_wait_milliseconds()), [&] { return _worker_should_stop.load(); }))
         {
             int_fast32_t scene_frame = _scene_frame.load();
 
-            if(!_scene_initialized.load() || scene_frame > 256)
+            if(!_scene_initialized.load() || scene_frame > nrp_config->get_max_scene_frames_till_update())
             {
                 auto request_scene = gazebo::msgs::CreateRequest("scene_info");
                 pub_request->Publish(*(request_scene), true);
@@ -163,7 +169,7 @@ void NRPBinder::_connect_to_transport_layer()
                     pose.Set(translation.x, translation.y, translation.z, rotation[0], rotation[1], rotation[2]);
 
                     gazebo::msgs::Pose *pose_msg = msg.add_pose();
-                    pose_msg->set_name("interactive_transform");
+                    pose_msg->set_name(nrp_config->get_interactive_transform_name());
                     pose_msg->set_id(0);
                     gazebo::msgs::Set(pose_msg, pose);
 
@@ -175,8 +181,6 @@ void NRPBinder::_connect_to_transport_layer()
                         {
                             auto child_node = nodes.front();
                             nodes.pop_front();
-
-                            // TODO: downcasting?
 
                             if(child_node->get_name().empty())
                             {
@@ -240,24 +244,24 @@ void NRPBinder::_connect_to_transport_layer()
     }
     else
     {
-        //log.e("connection not established");
+        // log.e("connection not established");
 
         throw std::runtime_error("connection not established");
     }
 
     pub_interactive.reset();
 
-    //    sub_scene.reset();
-    //
-    //    sub_world.reset();
-    //    sub_model.reset();
+    // sub_scene.reset();
+
+    // sub_world.reset();
+    sub_model.reset();
     sub_pose_info.reset();
-    //    sub_material.reset();
-    //
-    //    sub_factory_light.reset();
-    //    sub_modify_light.reset();
-    //
-    //    sub_skeleton_pose_info.reset();
+    sub_material.reset();
+
+    sub_factory_light.reset();
+    sub_modify_light.reset();
+
+    // sub_skeleton_pose_info.reset();
 
     node->Fini();
     node.reset();
@@ -267,7 +271,7 @@ void NRPBinder::_connect_to_transport_layer()
 
     gazebo::common::ModelDatabase::Instance()->Fini();
 
-    //log.d("over");
+    // log.d("over");
 }
 void NRPBinder::_halt_transport_layer()
 {
@@ -292,7 +296,7 @@ void NRPBinder::callback_response(ConstResponsePtr &ptr)
             //_log.d(scene_msg.DebugString().c_str());
             _scene.on_scene_msg(boost::make_shared<const gazebo::msgs::Scene>(scene_msg));
 
-            //_scene_initialized.store(true);
+            _scene_initialized.store(true);
         }
     }
     else if(ptr->request() == "entity_list")

@@ -74,8 +74,8 @@ void TextureDatabase::load(std::string const& filename) {
       texture_loading_.insert(filename);
     }
 
-      // else
-      textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
+    // else
+    textures_loading_.push_back(std::async(std::launch::async, [filename]() -> std::string {
 
         auto default_tex = TextureDatabase::instance()->lookup("gua_default_texture");
         if (default_tex) {
@@ -85,17 +85,17 @@ void TextureDatabase::load(std::string const& filename) {
         auto image = gua::load_image_2d(filename, true);
 
         instance()->add(filename, std::make_shared<Texture2D>(image, 1,
-              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
-                                          scm::gl::WRAP_REPEAT,
-                                          scm::gl::WRAP_REPEAT)));
+                                                              scm::gl::sampler_state_desc(scm::gl::FILTER_ANISOTROPIC,
+                                                                                          scm::gl::WRAP_REPEAT,
+                                                                                          scm::gl::WRAP_REPEAT)));
         return filename;
-      }));
+    }));
 
 
   } else if (extension == ".vol") {
     instance()->add(filename, std::make_shared<Texture3D>(filename, true));
   } else if(".atlas" == extension) {
-  #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     auto occurrence_check = TextureDatabase::instance()->lookup(filename);
  
     std::shared_ptr<VirtualTexture2D> vt_pointer = nullptr;
@@ -116,9 +116,9 @@ void TextureDatabase::load(std::string const& filename) {
       virtual_textures_[filename] = vt_pointer;
     }
 
-  #else
+#else
     Logger::LOG_ERROR << "Unable to load .atlas-Texture: Virtual Texturing plugin is not enabled!" << std::endl;
-  #endif
+#endif
   } else {
     //Logger::LOG_ERROR << "Unable to load texture: \"" << filename <<"\": Unknown File Format.";
     return;

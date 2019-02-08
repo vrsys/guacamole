@@ -52,19 +52,19 @@ class GUA_DLL MaterialLoader {
 
   std::shared_ptr<Material> load_material(aiMaterial const* material,
                                 std::string const& assets_directory,
-                                bool optimize_material = true) const;
+                                bool optimize_material = true, bool nrp = false) const;
 #ifdef GUACAMOLE_FBX
   std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
                                 std::string const& assets_directory,
-                                bool optimize_material = true) const;
+                                bool optimize_material = true, bool nrp = false) const;
 
 	std::shared_ptr<Material> load_unreal(std::string const& file_name,
 															 	std::string const& assets_directory,
-															 	bool optimize_material = true) const;
+															 	bool optimize_material = true, bool nrp = false) const;
 #endif
   std::shared_ptr<Material> load_material(std::string const& file_name,
                                 std::string const& assets_directory,
-                                bool optimize_material = true) const;
+                                bool optimize_material = true, bool nrp = false) const;
 
   static std::string get_file_name(std::string const& path);
   inline static bool file_exists(std::string const& path);
