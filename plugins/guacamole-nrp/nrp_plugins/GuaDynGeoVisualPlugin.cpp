@@ -290,8 +290,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; sensor_layer_idx++)
             {
 #if GUA_DEBUG == 1
-                gzerr << std::endl << "DynGeo: sensor_layer_idx" << std::to_string(sensor_layer_idx) << std::endl;
-                std::cerr << std::endl << "DynGeo: sensor_layer_idx" << std::to_string(sensor_layer_idx) << std::endl;
+                gzerr << std::endl << "DynGeo: sensor_layer_idx " << std::to_string(sensor_layer_idx) << std::endl;
+                std::cerr << std::endl << "DynGeo: sensor_layer_idx " << std::to_string(sensor_layer_idx) << std::endl;
 #endif
 
                 if(_jpeg_decompressor_per_layer.find(sensor_layer_idx) == _jpeg_decompressor_per_layer.end())
@@ -350,6 +350,8 @@ void GuaDynGeoVisualPlugin::_ReadLoop()
                 std::cerr << "DynGeo: texture payload " << header.texture_payload_size << std::endl;
         #endif*/
     }
+
+    tjFree(_tj_compressed_image_buffer);
 }
 void GuaDynGeoVisualPlugin::UpdateTriangleSoup()
 {
@@ -693,7 +695,7 @@ void GuaDynGeoVisualPlugin::Update()
         std::cerr << std::endl << "DynGeo: swap" << std::endl;
 #endif
 
-        UpdateTriangleSoup();
+        // UpdateTriangleSoup();
         _is_need_swap.store(false);
         _cv_recv_swap.notify_one();
     }
