@@ -28,7 +28,7 @@ namespace events {
 
 Ticker::Ticker(MainLoop& mainloop, double tick_time)
   : timer_(mainloop.io_service,
-      boost::posix_time::microseconds(1000000.0*tick_time)),
+      boost::posix_time::microseconds(int(1000000.0*tick_time) )),
     tick_time_(tick_time) {
   async_wait();
 }
@@ -48,7 +48,7 @@ void Ticker::self_callback(int revents) {
 
 void Ticker::async_wait() {
   timer_.expires_from_now(
-      boost::posix_time::microseconds(1000000.0*tick_time_));
+      boost::posix_time::microseconds(int(1000000.0*tick_time_) ));
   timer_.async_wait(boost::bind(&Ticker::self_callback, this, 0));
 }
 
