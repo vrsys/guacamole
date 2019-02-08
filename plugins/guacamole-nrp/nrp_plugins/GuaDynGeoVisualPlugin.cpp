@@ -23,7 +23,7 @@ GuaDynGeoVisualPlugin::GuaDynGeoVisualPlugin() : _mutex_swap(), _mutex_recv(), _
     _buffer_rcv_texture_decompressed = std::vector<unsigned char>(SGTP::MAX_MESSAGE_SIZE);
     _buffer_index = std::vector<int32_t>(MAX_VERTS);
 
-    _jpeg_decompressor_per_layer = std::unordered_map<uint32_t, tjhandle>();
+    //_jpeg_decompressor_per_layer = std::unordered_map<uint32_t, tjhandle>();
 
     _is_initialized.store(false);
     _is_need_swap.store(false);
@@ -183,11 +183,17 @@ void GuaDynGeoVisualPlugin::Init()
     std::cerr << std::endl << "DynGeo: material set" << std::endl;
 #endif
 
-    _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
+    {
+        _scene_manager->sceneGraphMutex.lock();
 
-    _scene_node->setVisible(false, false);
-    _avatar_node->setVisible(true, true);
-    _avatar_node->showBoundingBox(true);
+        _avatar_node = _scene_node->createChildSceneNode(std::to_string(rand()));
+
+        _scene_node->setVisible(false, false);
+        _avatar_node->setVisible(true, true);
+        _avatar_node->showBoundingBox(true);
+
+        _scene_manager->sceneGraphMutex.unlock();
+    }
 
     _is_recv_running.store(true);
     _thread_recv = std::thread([&]() { _ReadLoop(); });
