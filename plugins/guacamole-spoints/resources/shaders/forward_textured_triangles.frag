@@ -13,7 +13,6 @@ in vec2 pass_uvs;
 ///////////////////////////////////////////////////////////////////////////////
 
 layout(binding=0) uniform sampler2D color_texture_atlas;
-
 @material_uniforms@
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,7 +46,12 @@ void main() {
   //gua_flags_passthrough = false;//(gua_emissivity > 0.99999);
 
   gua_color = texture(color_texture_atlas, pass_uvs).rgb;
+  //gua_color = vec3(pass_uvs, 1.0);
 
+  //gua_color = texelFetch(color_texture_atlas, ivec2(gl_FragCoord.xy), 0 ).rgb;
+  //gua_color = pass_color;
+  //gua_color = vec3(0.0);//texture(color_texture_atlas, pass_uvs).rgb; 
+  
   if (gua_rendering_mode != 1) {
    @material_method_calls_frag@
   }

@@ -16,6 +16,8 @@ SOURCE_GROUP("resources" FILES ${GUA_SPOINTS_SHADERS})
 
 SET(GUACAMOLE_SPOINTS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-spoints includes.")
 
+find_package(TurboJPEG REQUIRED)
+
 add_library( guacamole-spoints SHARED
     ${GUA_SPOINTS_INC}
     ${GUA_SPOINTS_SRC}
@@ -24,9 +26,9 @@ add_library( guacamole-spoints SHARED
     ${GUA_SPOINTS_SHADERS}
 )
 
-target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR})
+target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR} ${TurboJPEG_INCLUDE_DIRS} ${FASTLZ_INC})
 
-target_link_libraries( guacamole-spoints guacamole)
+target_link_libraries(guacamole-spoints guacamole ${TurboJPEG_LIBRARIES} lz4)
 
 IF (MSVC)
 	set_target_properties(guacamole-spoints PROPERTIES COMPILE_FLAGS "-D GUA_SPOINTS_LIBRARY")
