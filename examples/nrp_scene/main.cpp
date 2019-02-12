@@ -122,8 +122,8 @@ int main(int argc, char **argv)
     /// Video 3D interoperability
 
     gua::Video3DLoader vloader;
-    auto avatar(vloader.create_geometry_from_file("kinect", kinect_file.c_str()));
-    graph.add_node("/", avatar);
+    auto avatar(vloader.create_geometry_from_file("dyngeo", kinect_file.c_str()));
+    nrp_interactive->add_child(avatar);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::nrp::NRPPassDescription>());
