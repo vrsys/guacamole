@@ -244,7 +244,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
         ctx.render_context->apply_program();
 
-        line_strip_node->get_geometry()->draw(pipe.get_context(), line_strip_node->get_render_vertices_as_points());
+        line_strip_node->get_geometry()->draw(pipe.get_context(), line_strip_node->get_render_vertices_as_points(), line_strip_node->get_render_lines_as_strip());
       }
     }
 

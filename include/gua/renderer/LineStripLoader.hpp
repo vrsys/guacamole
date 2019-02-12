@@ -53,7 +53,6 @@ class GeometryNode;
 class GUA_DLL LineStripLoader {
 
  public: // typedefs, enums
-
    enum Flags {
      DEFAULTS = 0,
      MAKE_PICKABLE = 1 << 2,
@@ -114,7 +113,7 @@ public:
  */
   std::shared_ptr<node::Node> load(std::string const& file_name,
                                   unsigned flags,
-                                  bool create_lines,
+                                  int topology_type,
                                   bool create_empty);
 
   /**
