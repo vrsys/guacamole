@@ -62,9 +62,11 @@ namespace gua
 
     bool check_memory_segment_exists(std::string const& segment_name) const;
 
+    #if not defined(__WIN32__) && not defined(_WIN32) && not defined(_WIN64)
     void add_memory_segment(std::string const& segment_name, uint64_t size_in_byte, bool enable_warning = false);
 
     void add_read_only_memory_segment(std::string const& segment_name, bool enable_warning = false);
+	#endif
 
     void write_to_segment(std::string const& segment_name, 
                           char* const data, std::size_t byte_length, std::size_t byte_offset = 0x0) {
@@ -78,6 +80,7 @@ namespace gua
       mNamedMemorySegments[segment_name]->read(data, byte_length, byte_offset);
     }
 
+	#if not defined(__WIN32__) && not defined(_WIN32) && not defined(_WIN64)
     template <typename INTERNAL_TYPE>
     void construct_named_object_on_segment(std::string const& segment_name, std::string const& object_name) {
       if (!check_constructed_object_exists(object_name)) {
@@ -85,6 +88,7 @@ namespace gua
         mNamedObjects[object_name]->construct_named_object<INTERNAL_TYPE>(object_name);
       }
     }
+	#endif
 
     template <typename INTERNAL_TYPE, typename EXTERNAL_TYPE>
     void set_value_for_named_object(std::string const& object_name, EXTERNAL_TYPE const& value){
