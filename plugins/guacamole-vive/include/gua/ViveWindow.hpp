@@ -114,9 +114,8 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
     //needs to be called in order to update controller buttons and senor orientations
     void update_sensor_orientations();
 
-
-
     void display(scm::gl::texture_2d_ptr const& texture, bool is_left) override;
+    void trigger_haptic_pulse(unsigned int controller_id, float strength) const;
 
     void open() override;
     void init_context() override;
