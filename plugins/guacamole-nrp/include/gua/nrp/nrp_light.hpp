@@ -1,5 +1,5 @@
-#ifndef GUACAMOLE_PAGODA_LIGHT_H
-#define GUACAMOLE_PAGODA_LIGHT_H
+#ifndef GUACAMOLE_NRP_LIGHT_H
+#define GUACAMOLE_NRP_LIGHT_H
 
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/common.hh>
@@ -36,4 +36,4 @@ class GUA_NRP_DLL NRPLight
 };
 }
 }
-#endif // GUACAMOLE_PAGODA_LIGHT_H
+#endif // GUACAMOLE_NRP_LIGHT_H

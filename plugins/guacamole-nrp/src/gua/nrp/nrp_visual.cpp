@@ -1,25 +1,36 @@
 #include <utility>
 
 #include <gua/nrp/nrp_scene.hpp>
+#include <gua/renderer/PBSMaterialFactory.hpp>
 namespace gua
 {
 namespace nrp
 {
-NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(name), _parent(), _node()
+NRPVisual::NRPVisual(const std::string &name, node::Node *root_node) : _name(name), _parent(), _node(), _attached_meshes()
 {
-    std::shared_ptr<gua::node::TransformNode> node = root_node->add_child(std::make_shared<gua::node::TransformNode>("/transform/" + name));
+    std::shared_ptr<gua::node::TransformNode> node = root_node->add_child(std::make_shared<gua::node::TransformNode>(name));
     _node.reset(node.get());
 
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
+
+    if(_name.find("interactive") != std::string::npos)
+    {
+        _node->get_tags().add_tag("invisible");
+    }
 }
-NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node()
+NRPVisual::NRPVisual(const std::string &name, ptr_visual parent) : _name(name), _parent(parent.get()), _node(), _attached_meshes()
 {
-    auto node(std::make_shared<gua::node::TransformNode>(name));
-    _node.reset(parent->get_node()->add_child(node).get());
+    std::shared_ptr<gua::node::TransformNode> node = parent->get_node()->add_child(std::make_shared<gua::node::TransformNode>(name));
+    _node.reset(node.get());
 
     _node->set_transform(gua::math::mat4::identity());
     _scale = gazebo::math::Vector3::One.Ign();
+
+    if(_name.find("interactive") != std::string::npos)
+    {
+        _node->get_tags().add_tag("invisible");
+    }
 }
 NRPVisual::~NRPVisual() { _node.reset(); }
 
@@ -32,6 +43,11 @@ void NRPVisual::set_type(NRPVisual::VisualType type) { _type = type; }
 
 void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual const> &msg)
 {
+    if(_name.find("interactive") != std::string::npos)
+    {
+        return;
+    }
+
 #if GUA_DEBUG == 1
     auto start = std::chrono::high_resolution_clock::now();
 #endif
@@ -51,9 +67,9 @@ void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual con
         set_scale(gazebo::msgs::ConvertIgn(msg->scale()));
     }
 
-    if(_mesh_random_name.empty() && msg->has_geometry() && msg->geometry().has_type())
+    if(msg->has_geometry() && msg->geometry().has_type())
     {
-        detach_meshes();
+        // detach_meshes();
 
         gazebo::math::Vector3 geom_scale(1, 1, 1);
 
@@ -219,27 +235,38 @@ void NRPVisual::update_from_msg(const boost::shared_ptr<gazebo::msgs::Visual con
 #endif
 }
 
-bool NRPVisual::attach_mesh(const std::string &mesh_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
+bool NRPVisual::attach_mesh(const std::string &mesh_file_name, bool normalize_shape, gazebo::math::Vector3 &scale, scm::math::mat4d offset)
 {
-    if(mesh_name.empty())
+    if(mesh_file_name.empty())
         return false;
 
-    if(_mesh_random_name.empty())
+    std::shared_ptr<gua::node::Node> geometry_node = _node->add_child(std::make_shared<gua::node::TransformNode>());
+
+    auto attached_trimesh = _attached_meshes.find(mesh_file_name);
+
+    if(attached_trimesh == _attached_meshes.cend())
     {
-        generate_random_name();
+        unsigned int flags = gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::PARSE_HIERARCHY | gua::TriMeshLoader::MAKE_PICKABLE;
+
+        flags |= (!normalize_shape ? 0 : gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION);
+
+        auto mesh = _tml.create_geometry_from_file(generate_random_name(), mesh_file_name, flags);
+        geometry_node->add_child(mesh);
+
+        // geometry_node->set_draw_bounding_box(true);
+
+        // std::cout << "attach_mesh(" << mesh_file_name << " , " << mesh_random_name << ")" << std::endl;
+
+        _node->add_child(geometry_node);
+
+        std::pair<std::string, std::shared_ptr<gua::node::Node>> entry(mesh_file_name, geometry_node);
+        _attached_meshes.insert(entry);
     }
-
-    unsigned int flags = gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::PARSE_HIERARCHY;
-
-    flags |= (!normalize_shape ? 0 : gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION);
-
-    std::shared_ptr<node::Node> geometry_node = _tml.create_geometry_from_file(_mesh_random_name, mesh_name, flags);
-
-    // geometry_node->set_draw_bounding_box(true);
-
-    // std::cout << "attach_mesh(" << mesh_name << " , " << mesh_random_name << ")" << std::endl;
-
-    _node->add_child(geometry_node);
+    else
+    {
+        geometry_node = attached_trimesh->second;
+        geometry_node->set_transform(scm::math::mat4d::identity());
+    }
 
     geometry_node->scale(scale.x, scale.y, scale.z);
     geometry_node->set_transform(flip_transform(geometry_node->get_transform()) * offset);
@@ -269,14 +296,30 @@ void NRPVisual::set_material(gua::math::vec4 &ambient, gua::math::vec4 &diffuse,
             std::shared_ptr<gua::node::TriMeshNode> tm_candidate = std::dynamic_pointer_cast<gua::node::TriMeshNode>(top);
             if(tm_candidate)
             {
+                auto material(gua::PBSMaterialFactory::create_material(static_cast<gua::PBSMaterialFactory::Capabilities>(
+                    gua::PBSMaterialFactory::COLOR_VALUE | gua::PBSMaterialFactory::METALNESS_VALUE | gua::PBSMaterialFactory::ROUGHNESS_VALUE | gua::PBSMaterialFactory::EMISSIVITY_VALUE)));
+                material->set_uniform("Color", gua::math::vec4f((float)ambient.r, (float)ambient.g, (float)ambient.b, 1.f));
+
+                float max_spec = std::max(specular.r, std::max(specular.g, specular.b));
+                float max_diff = std::max(diffuse.r, std::max(diffuse.g, diffuse.b));
+                float mtro = (max_spec - max_diff + 1.f) / 2.f;
+
+                material->set_uniform("Metalness", mtro);
+                material->set_uniform("Roughness", 1.f - mtro);
+                material->set_uniform("Emissivity", (float)(emissive.r + emissive.g + emissive.b) / 3.f);
+
+                tm_candidate->set_material(material);
+
+#if 0
                 auto material = gua::MaterialShaderDatabase::instance()->lookup("overwrite_color")->make_new_material();
 
                 material->set_uniform("color", gua::math::vec3f((float)ambient.r, (float)ambient.g, (float)ambient.b));
                 material->set_uniform("metalness", (float)(specular.r + specular.g + specular.b) / 3.f);
-                material->set_uniform("roughness", (float)(diffuse.r + specular.g + specular.b) / 3.f);
+                material->set_uniform("roughness", (float)(diffuse.r + diffuse.g + diffuse.b) / 3.f);
                 material->set_uniform("emissivity", (float)(emissive.r + emissive.g + emissive.b) / 3.f);
 
                 tm_candidate->set_material(material);
+#endif
 
                 // std::cout << "Material set to: " << ambient << std::endl;
             }
@@ -315,7 +358,11 @@ const scm::math::mat4d NRPVisual::flip_transform(const scm::math::mat4d &transfo
 }
 const gazebo::math::Vector3 &NRPVisual::get_scale() const { return _scale; }
 const ptr_visual NRPVisual::get_parent() const { return _parent; }
-void NRPVisual::detach_meshes() { _node->clear_children(); }
+void NRPVisual::detach_meshes()
+{
+    _node->clear_children();
+    _attached_meshes.clear();
+}
 const std::shared_ptr<gua::node::TransformNode> NRPVisual::get_node() const { return _node; }
 bool NRPVisual::get_material_colors_for_material_name(const std::string &material_name, gazebo::common::Color &ambient, gazebo::common::Color &diffuse, gazebo::common::Color &specular,
                                                       gazebo::common::Color &emissive)
@@ -346,7 +393,7 @@ bool NRPVisual::get_material_colors_for_material_name(const std::string &materia
 
     return false;
 }
-void NRPVisual::generate_random_name()
+std::string NRPVisual::generate_random_name()
 {
     static auto &chrs = "0123456789"
                         "abcdefghijklmnopqrstuvwxyz"
@@ -363,6 +410,8 @@ void NRPVisual::generate_random_name()
 
     while(length--)
         mesh_random_name += chrs[pick(rg)];
+
+    return mesh_random_name;
 }
 }
 }

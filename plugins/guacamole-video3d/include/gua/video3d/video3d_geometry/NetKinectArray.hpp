@@ -24,7 +24,7 @@ private:
   void readloop();
 
   std::mutex m_mutex;
-  bool           m_running;
+  std::atomic<bool> m_running;
   const std::string m_server_endpoint;
   std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
   unsigned m_colorsize_byte;
