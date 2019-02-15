@@ -169,6 +169,7 @@ TARGET_LINK_LIBRARIES( guacamole
 # link static libraries,
 IF (MSVC)
   TARGET_LINK_LIBRARIES( guacamole debug ${ASSIMP_LIBRARY_DEBUG} optimized ${ASSIMP_LIBRARY_RELEASE})
+  TARGET_LINK_LIBRARIES( guacamole general bcrypt)
 ELSEIF (UNIX)
   TARGET_LINK_LIBRARIES( guacamole general -lpthread -ldl)
   TARGET_LINK_LIBRARIES( guacamole general ${GL_LIBRARIES})
