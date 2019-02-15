@@ -51,11 +51,10 @@
 #include <list>
 
 // lamure headers
-#include <lamure/vt/VTConfig.h>
-
 #include <lamure/vt/common.h>
-#include <lamure/vt/ren/CutUpdate.h>
+#include <lamure/vt/VTConfig.h>
 #include <lamure/vt/ren/CutDatabase.h>
+#include <lamure/vt/ren/CutUpdate.h>
 
 #include <boost/assign/list_of.hpp>
 #include <typeinfo>
@@ -386,7 +385,7 @@ namespace gua {
     auto& current_vt_info = vt_info_per_context[ctx.id];
 
     if (current_vt_info.cut_update_){
-      current_vt_info.cut_update_->feedback(feedback_lod_cpu_buffer_ptr, feedback_count_cpu_buffer_ptr);
+      current_vt_info.cut_update_->feedback(current_vt_info.context_id_, feedback_lod_cpu_buffer_ptr, feedback_count_cpu_buffer_ptr);
     }
 
   }
