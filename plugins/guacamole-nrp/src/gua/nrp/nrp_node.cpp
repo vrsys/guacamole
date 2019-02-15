@@ -12,17 +12,29 @@ NRPNode::NRPNode() : TransformNode()
     binder->bind_root_node(this);
     binder->bind_transport_layer();
 }
-NRPNode::NRPNode(const std::string &name, const math::mat4 &transform) : TransformNode(name, transform)
+NRPNode::NRPNode(const std::string &name, const math::mat4 &transform, std::function<void(void)> pre_pass, std::function<void(void)> post_pass)
 {
     auto *binder = &NRPBinder::get_instance();
     binder->bind_root_node(this);
     binder->bind_transport_layer();
+    this->_pre_pass = std::move(pre_pass);
+    this->_post_pass = std::move(post_pass);
 }
 std::shared_ptr<node::Node> NRPNode::deep_copy() const
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
-    auto copied_node = node::Node::deep_copy();
+    auto copied_node = node::TransformNode::deep_copy();
     return copied_node;
+}
+void NRPNode::accept(NodeVisitor &visitor)
+{
+    std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    visitor.visit(this);
+}
+std::shared_ptr<node::Node> NRPNode::copy() const
+{
+    // std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    return std::make_shared<NRPNode>(*this);
 }
 void NRPNode::update_cache()
 {
@@ -68,6 +80,35 @@ void NRPNode::translate(math::vec3 const &offset)
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
     Node::translate(offset);
+}
+void NRPNode::ray_test_impl(Ray const &ray, int options, Mask const &mask, std::set<PickResult> &hits)
+{
+    std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
+    Node::ray_test_impl(ray, options, mask, hits);
+}
+void NRPNode::callback_pre_pass()
+{
+    _pre_pass();
+}
+void NRPNode::callback_post_pass()
+{
+    _post_pass();
+}
+void NRPNode::set_pre_pass(const std::function<void()> pre_pass)
+{
+    this->_pre_pass = std::move(pre_pass);
+}
+void NRPNode::set_post_pass(const std::function<void()> post_pass)
+{
+    this->_post_pass = std::move(post_pass);
+}
+bool NRPNode::get_should_update_avango()
+{
+    return _should_update_avango;
+}
+void NRPNode::set_should_update_avango(bool should_update_avango)
+{
+    this->_should_update_avango = should_update_avango;
 }
 }
 }
