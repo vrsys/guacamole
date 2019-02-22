@@ -310,12 +310,12 @@ void SPointsRenderer::render(Pipeline& pipe,
         if (true) {
           //std::cout << "IS SERVER RESOURCE\n";
 
-          auto const& model_matrix(spoints_node->get_cached_world_transform());
+          auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
           auto normal_matrix(scm::math::transpose(
               scm::math::inverse(spoints_node->get_cached_world_transform())));
           auto view_matrix(pipe.current_viewstate().frustum.get_view());
 
-
+          scm::math::mat4f model_matrix = scm::math::mat4f(cached_model_matrix);
           scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
           scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
           scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
@@ -325,7 +325,7 @@ void SPointsRenderer::render(Pipeline& pipe,
           memcpy((char*) &current_package, (char*) model_matrix.data_array, 16 * sizeof(float) );      
           memcpy((char*) &current_package + 16 * sizeof(float), (char*) viewprojection_matrix.data_array, 16 * sizeof(float) );        
           memcpy((char*) &current_package + 32 * sizeof(float), (char*) mv_matrix.data_array, 16 * sizeof(float) );
-          memcpy( ((char*) &current_package) +  48 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
+          memcpy(((char*) &current_package) +  48 * sizeof(float), (char*) projection_matrix.data_array, 16 * sizeof(float) );
           
 
           current_package.res_xy[0] = render_target_dims.x;
