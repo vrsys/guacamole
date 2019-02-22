@@ -231,8 +231,4 @@ uint32_t max_level = max_depth_;
     ctx.render_context->bind_uniform_buffer(current_vt_addresses_ubo, 4);
   }
 
-
-  void VirtualTexture2D::initialize_index_texture(RenderContext const& ctx, uint64_t cut_id) const {
-
-  }
 }
