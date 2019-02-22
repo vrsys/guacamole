@@ -26,8 +26,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/utils/Trackball.hpp>
-
-#include <gua/virtual_texturing/DeferredVirtualTexturingPass.hpp>
+#include <gua/virtual_texturing/VTBackend.hpp>
 
 // forward mouse interaction to trackball
 void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -115,8 +114,6 @@ int main(int argc, char** argv) {
 
   auto pipe = std::make_shared<gua::PipelineDescription>();
   pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-  // VT STEP 5/5: - add DeferredVirtualTexturingPassDescription
-  pipe->add_pass(std::make_shared<gua::DeferredVirtualTexturingPassDescription>()); // <- ONLY USE THIS PASS IF YOU LOAD VT MODELS
   pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
   auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
   resolve_pass->background_mode(
@@ -160,6 +157,11 @@ int main(int argc, char** argv) {
 
   window->open();
 
+
+  auto vt_backend = &gua::VTBackend::get_instance();
+  vt_backend->add_camera(camera);
+  vt_backend->start_backend();
+
   gua::Renderer renderer;
 
   // application loop
@@ -192,6 +194,7 @@ int main(int argc, char** argv) {
       renderer.stop();
       window->close();
       loop.stop();
+      vt_backend->stop_backend();
     } else {
       renderer.queue_draw({&graph});
     }

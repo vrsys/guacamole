@@ -54,6 +54,10 @@ class TriMeshRenderer {
   std::vector<ShaderProgramStage>                                     program_stages_;
   std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
   SubstitutionMap                                                     global_substitution_map_;
+
+  void _create_physical_texture(const RenderContext &ctx);
+  void _apply_cut_update(const RenderContext &ctx);
+  void _collect_feedback(const RenderContext &ctx);
 };
 
 }

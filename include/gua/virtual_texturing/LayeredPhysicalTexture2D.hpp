@@ -84,15 +84,9 @@ class GUA_DLL LayeredPhysicalTexture2D {// : public Texture {
   unsigned num_layers() const {return num_layers_; }
 
   void upload_to(RenderContext const& context) const {};
-
   void upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const;
 
-  //math::vec2ui get_physical_texture_handle(RenderContext const& ctx) const;
-  void         upload_physical_texture_handle_to_ubo(RenderContext const& ctx) const;
-
-//  void initialize_physical_texture(RenderContext const& ctx) const;
-
-  void collect_feedback(gua::RenderContext const& ctx);
+  void upload_physical_texture_handle_to_ubo(RenderContext const& ctx) const;
 
   scm::gl::texture_2d_ptr get_physical_texture_ptr() const { return physical_texture_ptr_; }
   scm::gl::buffer_ptr     get_feedback_lod_storage_ptr() const    { return feedback_lod_storage_; }
