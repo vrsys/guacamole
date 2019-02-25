@@ -68,10 +68,9 @@ namespace gua {
     physical_texture_ptr_ = ctx.render_device->create_texture_2d(physical_texture_dimensions, phys_tex_format, 1,
                                                                  num_layers_ + 1);
 
-    nearest_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
-    linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+    auto linear_sampler_state = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
 
-    ctx.render_context->make_resident(physical_texture_ptr_, linear_sampler_state_);
+    ctx.render_context->make_resident(physical_texture_ptr_, linear_sampler_state);
     feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY,
                                                              num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
 

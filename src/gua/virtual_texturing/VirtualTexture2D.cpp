@@ -93,13 +93,8 @@ namespace gua {
 
 
   void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
-    auto index_texture_hierarchy_context_iterator = index_texture_mip_map_per_context_.find(ctx.id);
+    if(index_texture_mip_map_per_context_[ctx.id] == nullptr) {
 
-    if(nullptr == nearest_mip_map_sampler_state_) {
-      nearest_mip_map_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_MIP_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
-    }
-
-    if(index_texture_hierarchy_context_iterator == index_texture_mip_map_per_context_.end()) {
         uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(max_depth_);
         auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
                                                                             scm::math::vec2ui(size_index_texture, size_index_texture), 
@@ -108,42 +103,21 @@ namespace gua {
 
         for(uint32_t i = 0; i < max_depth_ + 1; ++i) {
           ctx.render_context->clear_image_data(index_texture_level_ptr, i, scm::gl::FORMAT_RGBA_8UI, 0);
-          pbo_sizes_ += std::pow(std::pow(2, i),2);
-
         }
 
-        pbo_sizes_ *= 4;
-        index_texture_pbo_front_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER,
-                                                                                        scm::gl::USAGE_DYNAMIC_DRAW,
-                                                                                        pbo_sizes_,
-                                                                                        0);
+        index_texture_mip_map_per_context_[ctx.id] = index_texture_level_ptr;
 
-        index_texture_pbo_back_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER,
-                                                                                        scm::gl::USAGE_DYNAMIC_DRAW,
-                                                                                        pbo_sizes_,
-                                                                                        0);
+        auto nearest_mip_map_sampler_state = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_MIP_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
-        mapped_pbos_back_per_context_[ctx.id] = ctx.render_context->map_buffer_range(index_texture_pbo_back_per_context_[ctx.id], 0, pbo_sizes_, scm::gl::ACCESS_WRITE_INVALIDATE_RANGE);
-
-        index_texture_mip_map_per_context_[ctx.id] = index_texture_level_ptr;   
-
-        ctx.render_context->make_resident(index_texture_level_ptr, nearest_mip_map_sampler_state_);
+        ctx.render_context->make_resident(index_texture_level_ptr, nearest_mip_map_sampler_state);
 
         upload_vt_handle_to_ubo(ctx);
     }
   }
 
-// do not touch 
-//#define USE_PBO
-
-  void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx, 
+  void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx,
                                                         std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs) {
     
-#ifdef USE_PBO
-    ctx.render_context->unmap_buffer(index_texture_pbo_back_per_context_[ctx.id]);
-    std::swap(index_texture_pbo_back_per_context_[ctx.id], index_texture_pbo_front_per_context_[ctx.id]);
-    mapped_pbos_back_per_context_[ctx.id] = ctx.render_context->map_buffer_range(index_texture_pbo_back_per_context_[ctx.id], 0, pbo_sizes_, scm::gl::ACCESS_WRITE_INVALIDATE_RANGE);
-#endif
     for(auto const& update_pair : level_update_pairs) {
       uint32_t updated_level = update_pair.first;
       uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
@@ -153,57 +127,27 @@ namespace gua {
 
       auto& current_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
 
-uint32_t max_level = max_depth_;
-#ifndef USE_PBO
+      uint32_t max_level = max_depth_;
+
+        /*std::cout << "Index " << update_pair.first << "for context" << VirtualTexture2D::vt_info_per_context_[ctx.id].context_id_ << std::endl;
+
+        for(int i = 0; i < dimensions.x * dimensions.y; i ++){
+            std::cout << std::to_string(update_pair.second[i]);
+        }
+
+        std::cout << std::endl;*/
+
       ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
                                              scm::gl::texture_region(origin, dimensions), 
                                              max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
                                              update_pair.second );
-#endif
-
-#ifdef USE_PBO
-
-      uint64_t current_write_offset = 0;
-
-      uint64_t current_amount_bytes_to_write = size_index_texture*size_index_texture * 4;
-
-      memcpy( ((char*) mapped_pbos_back_per_context_[ctx.id]) + current_write_offset,
-              update_pair.second, current_amount_bytes_to_write);
-
-      pbo_level_mapping_back_per_context_[ctx.id].emplace_back(updated_level, current_write_offset);
-
-      current_write_offset += current_amount_bytes_to_write;
-#endif
     }
-
-#ifdef USE_PBO
-    ctx.render_context->bind_unpack_buffer(index_texture_pbo_front_per_context_[ctx.id]);
-    auto& current_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
-    
-    for(auto const& write_entry : pbo_level_mapping_front_per_context_[ctx.id]) {
-
-      uint32_t updated_level = write_entry.first;
-      uint64_t read_offset = write_entry.second;
-      uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
-
-      scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-      scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
-
-      ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
-                                             scm::gl::texture_region(origin, dimensions), 
-                                             max_depth_-updated_level, scm::gl::FORMAT_RGBA_8UI,
-                                             //,
-                                              (char*) (0) /*+ read_offset*/ );
-    }
-    ctx.render_context->bind_unpack_buffer(0);
-#endif
-    std::swap(pbo_level_mapping_back_per_context_[ctx.id], pbo_level_mapping_front_per_context_[ctx.id]);
   }
 
   void VirtualTexture2D::upload_vt_handle_to_ubo(RenderContext const& ctx) const {
     if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
       vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
-                                                                               MAX_TEXTURES * sizeof(scm::math::vec2ui));
+                                                                               MAX_TEXTURES * sizeof(scm::math::vec4ui));
     }
 
     auto& current_vt_addresses_ubo = vt_addresses_ubo_per_context_[ctx.id];

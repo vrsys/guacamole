@@ -98,19 +98,6 @@ class GUA_DLL VirtualTexture2D : public Texture {
   mutable std::map<std::size_t,
     scm::gl::texture_2d_ptr>               index_texture_mip_map_per_context_;
 
-  mutable std::map<std::size_t,
-    scm::gl::buffer_ptr>                   index_texture_pbo_front_per_context_;
-
-  mutable std::map<std::size_t,
-    scm::gl::buffer_ptr>                   index_texture_pbo_back_per_context_;
-
-  mutable std::map<std::size_t,
-    void*>                                 mapped_pbos_back_per_context_;
-  mutable std::map<std::size_t,
-    std::vector<std::pair<uint16_t, uint64_t>>>    pbo_level_mapping_back_per_context_;
-  mutable std::map<std::size_t,
-    std::vector<std::pair<uint16_t, uint64_t>>>    pbo_level_mapping_front_per_context_;
-
   static std::map<std::size_t, 
                    scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
 
@@ -121,14 +108,12 @@ class GUA_DLL VirtualTexture2D : public Texture {
   uint16_t tile_size_;
 
   mutable uint32_t max_depth_;
-  mutable uint64_t pbo_sizes_ = 0;
   //unsigned layers_;
 
  private:
   std::string ini_file_path_;
   std::string atlas_file_path_;
   uint32_t    lamure_texture_id_;
-  mutable scm::gl::sampler_state_ptr  nearest_mip_map_sampler_state_ = nullptr;
 
   static bool initialized_vt_system;
 

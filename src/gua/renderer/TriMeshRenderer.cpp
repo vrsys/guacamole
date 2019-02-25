@@ -235,7 +235,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     if(gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid)){
-    _collect_feedback(ctx);
+        _collect_feedback(ctx);
     }
 #endif
   }
@@ -396,6 +396,15 @@ void TriMeshRenderer::_collect_feedback(gua::RenderContext const &ctx) {
   auto& current_vt_info = vt_info_per_context[ctx.id];
 
   if (current_vt_info.cut_update_){
+
+    /*std::cout << "Context " << current_vt_info.context_id_ << std::endl;
+
+    for(int i = 0; i < num_feedback_slots; i ++){
+      std::cout << feedback_lod_cpu_buffer_ptr[i];
+    }
+
+    std::cout << std::endl;*/
+
     current_vt_info.cut_update_->feedback(current_vt_info.context_id_, feedback_lod_cpu_buffer_ptr, feedback_count_cpu_buffer_ptr);
   }
 
