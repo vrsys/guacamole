@@ -15,10 +15,10 @@ class GUA_DLL VTBackend {
 
   ~VTBackend() { stop_backend(); }
 
-  void add_camera(std::shared_ptr<gua::node::CameraNode> camera);
+  void add_camera(const std::shared_ptr<gua::node::CameraNode>& camera);
   void start_backend();
   void stop_backend();
-  bool has_camera(size_t uuid);
+  const bool has_camera(size_t uuid) const;
 
  private:
   VTBackend() : _camera_contexts() {}
