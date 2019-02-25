@@ -117,10 +117,7 @@ class GUA_DLL LayeredPhysicalTexture2D {// : public Texture {
  private:
   std::string file_config_;
   std::string file_atlas_;
-
-  mutable scm::gl::sampler_state_ptr  nearest_sampler_state_;
-  mutable scm::gl::sampler_state_ptr  linear_sampler_state_;
-};  
+};
 
 }
 #endif // GUA_LAYEREDPHYSICALTEXTURE2D_HPP
