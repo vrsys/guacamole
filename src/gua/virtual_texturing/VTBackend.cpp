@@ -15,13 +15,13 @@
 #include <gua/virtual_texturing/VTBackend.hpp>
 
 void gua::VTBackend::add_context(uint16_t ctx_id,
-                                 gua::node::CameraNode& camera) {
+                                       gua::node::CameraNode& camera){
   init_vt(ctx_id, camera);
   register_cuts(ctx_id);
 
   _camera_contexts.insert({&camera, ctx_id});
 }
-void gua::VTBackend::start_backend() {
+void gua::VTBackend::start_backend(){
   auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
   for (auto cam_ctx : _camera_contexts) {
     auto& current_vt_info = vt_info_per_context[cam_ctx.second];
@@ -32,11 +32,11 @@ void gua::VTBackend::start_backend() {
 
   ::vt::CutUpdate::get_instance().start();
 }
-void gua::VTBackend::stop_backend() {
+void gua::VTBackend::stop_backend(){
   ::vt::CutUpdate::get_instance().stop();
 }
 void gua::VTBackend::init_vt(uint16_t ctx_id,
-                             gua::node::CameraNode const& cam) {
+                                   gua::node::CameraNode const& cam){
   auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
   auto current_vt_info_per_context_iterator = vt_info_per_context.find(ctx_id);
 
@@ -84,10 +84,11 @@ void gua::VTBackend::register_cuts(uint16_t ctx_id) {
     }
   }
 }
-void gua::VTBackend::add_camera(std::shared_ptr<gua::node::CameraNode> camera) {
+void gua::VTBackend::add_camera(
+    const std::shared_ptr<gua::node::CameraNode>& camera) {
   add_context((uint16_t)(_camera_contexts.size()), *camera);
 }
-bool gua::VTBackend::has_camera(size_t uuid) {
+const bool gua::VTBackend::has_camera(size_t uuid) const {
   for (auto camera : _camera_contexts) {
     if (camera.first->uuid() == uuid) {
       return true;
