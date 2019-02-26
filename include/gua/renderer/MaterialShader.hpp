@@ -34,34 +34,33 @@
 
 #define MATERIAL_SHADER_PROGRAMS 0
 
-namespace gua {
-
+namespace gua
+{
 class ShaderProgram;
 
-class GUA_DLL MaterialShader {
- public:
+class GUA_DLL MaterialShader
+{
+  public:
+    MaterialShader(std::string const& name, std::shared_ptr<MaterialShaderDescription> const& desc);
 
-  MaterialShader(std::string const& name, std::shared_ptr<MaterialShaderDescription> const& desc);
+    std::shared_ptr<MaterialShaderDescription> const& get_description() const;
 
-  std::shared_ptr<MaterialShaderDescription> const& get_description() const;
+    std::string const& get_name() const;
+    std::shared_ptr<Material> make_new_material() const;
+    std::map<std::string, ViewDependentUniform> const& get_default_uniforms() const;
 
-  std::string const&                     get_name()             const;
-  std::shared_ptr<Material>              make_new_material()    const;
-  std::map<std::string, ViewDependentUniform> const&       get_default_uniforms() const;
+    std::list<std::shared_ptr<MaterialShaderMethod>> const& get_vertex_methods() const;
+    std::list<std::shared_ptr<MaterialShaderMethod>> const& get_fragment_methods() const;
 
-  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_vertex_methods() const;
-  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_fragment_methods() const;
+    SubstitutionMap generate_substitution_map() const;
 
-  SubstitutionMap                        generate_substitution_map() const;
+  private:
+    std::shared_ptr<MaterialShaderDescription> desc_;
 
- private:
-
-  std::shared_ptr<MaterialShaderDescription> desc_;
-
-  std::map<std::string, ViewDependentUniform> default_uniforms_;
-  std::string name_;
+    std::map<std::string, ViewDependentUniform> default_uniforms_;
+    std::string name_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_MATERIAL_SHADER_HPP
+#endif // GUA_MATERIAL_SHADER_HPP

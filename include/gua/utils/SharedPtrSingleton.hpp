@@ -31,54 +31,53 @@
  * Singletons are classes, which are only instanciated once.
  */
 
-namespace gua {
+namespace gua
+{
+template <typename T>
+class SharedPtrSingleton
+{
+  public:
+    /**
+     * Gets the instance.
+     *
+     * Singletons are classes, which are only instanciated once. This
+     * method will create this instance if necessary and return a pointer
+     * to it.
+     *
+     * \return The instance of this singleton.
+     */
+    static std::shared_ptr<T> instance_shared_ptr()
+    {
+        static std::shared_ptr<T> shared_instance_ptr(new T);
+        return shared_instance_ptr;
+    };
+    /*
+      static T* instance_shared_ptr() {
+        static T instance;
+        return &instance;
+      };
+    */
 
-template <typename T> class SharedPtrSingleton {
- public:
+  protected:
+    /**
+     * Constructor.
+     *
+     * Has to be private in derived classe.
+     */
+    SharedPtrSingleton(){};
 
-  /**
-   * Gets the instance.
-   *
-   * Singletons are classes, which are only instanciated once. This
-   * method will create this instance if necessary and return a pointer
-   * to it.
-   *
-   * \return The instance of this singleton.
-  */ 
-  static std::shared_ptr<T> instance_shared_ptr() {
-    static std::shared_ptr<T> shared_instance_ptr(new T);
-    return shared_instance_ptr;
-  };
-/*
-  static T* instance_shared_ptr() {
-    static T instance;
-    return &instance;
-  };
-*/
+    /**
+     * Destructor.
+     *
+     * Has to be private in derived classe.
+     */
+    virtual ~SharedPtrSingleton(){};
 
- protected:
-
-  /**
-   * Constructor.
-   *
-   * Has to be private in derived classe.
-   */
-  SharedPtrSingleton() {};
-
-  /**
-   * Destructor.
-   *
-   * Has to be private in derived classe.
-   */
-  virtual ~SharedPtrSingleton() {};
-
- private:
-
-  SharedPtrSingleton(SharedPtrSingleton const& copy) = delete;
-  SharedPtrSingleton& operator= (SharedPtrSingleton const&) = delete;
-
+  private:
+    SharedPtrSingleton(SharedPtrSingleton const& copy) = delete;
+    SharedPtrSingleton& operator=(SharedPtrSingleton const&) = delete;
 };
 
-}
+} // namespace gua
 
-#endif  //GUA_SHARED_PTR_SINGLETON_HPP
+#endif // GUA_SHARED_PTR_SINGLETON_HPP

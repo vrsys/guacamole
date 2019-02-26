@@ -32,31 +32,29 @@
 
 #include <vector>
 
-
-namespace gua {
-
-
+namespace gua
+{
 class TransformNode;
 
-using IndexTriplet = std::tuple<int,int,int>;
+using IndexTriplet = std::tuple<int, int, int>;
 
-struct LineObject {
+struct LineObject
+{
+    LineObject(unsigned int max_line_vertices = 10000)
+    {
+        vertex_position_database.reserve(max_line_vertices);
+        vertex_color_database.reserve(max_line_vertices);
+        vertex_thickness_database.reserve(max_line_vertices);
+        vertex_normal_database.reserve(max_line_vertices);
+    }
 
-  LineObject(unsigned int max_line_vertices = 10000) {
-    vertex_position_database.reserve(max_line_vertices);
-    vertex_color_database.reserve(max_line_vertices);
-    vertex_thickness_database.reserve(max_line_vertices);
-    vertex_normal_database.reserve(max_line_vertices);
+    std::vector<scm::math::vec3f> vertex_position_database;
+    std::vector<scm::math::vec4f> vertex_color_database;
+    std::vector<float> vertex_thickness_database;
+    std::vector<scm::math::vec3f> vertex_normal_database;
 
-  }
-
-  std::vector<scm::math::vec3f> vertex_position_database;
-  std::vector<scm::math::vec4f> vertex_color_database;
-  std::vector<float> 			vertex_thickness_database;
-  std::vector<scm::math::vec3f> vertex_normal_database;
-
-  //not used in the first version of the importer
-  std::vector<IndexTriplet> vertex_attribute_ids;
+    // not used in the first version of the importer
+    std::vector<IndexTriplet> vertex_attribute_ids;
 };
 
 using NamedLineObject = std::pair<std::string, LineObject>;
@@ -64,35 +62,29 @@ using NamedLineObject = std::pair<std::string, LineObject>;
 /**
  * @brief holds vertex information of one line strip
  */
-class GUA_DLL LineStripImporter {
+class GUA_DLL LineStripImporter
+{
+    friend class LineStrip;
 
-  friend class LineStrip;
-  
   public:
-
     void create_empty_line(std::string const& empty_line_name);
 
-    bool parsing_successful() const;	
-    
+    bool parsing_successful() const;
+
     void read_file(std::string const& file_name);
 
     int num_parsed_line_strips() const;
 
-	NamedLineObject parsed_line_object_at(int line_object_index) const;
+    NamedLineObject parsed_line_object_at(int line_object_index) const;
 
   private:
+    bool parsing_successful_ = false;
 
-  	bool parsing_successful_ = false;
+    int num_parsed_line_strips_ = 0;
 
-  	int num_parsed_line_strips_ = 0;
-
-  	std::vector<NamedLineObject> parsed_line_objects_;
-
-
-
+    std::vector<NamedLineObject> parsed_line_objects_;
 };
 
+} // namespace gua
 
-}
-
-#endif //GUA_MESH_HPP
+#endif // GUA_MESH_HPP

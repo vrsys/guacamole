@@ -26,10 +26,10 @@
 #include <gua/platform.hpp>
 #include <gua/math/math.hpp>
 
-
-namespace gua {
-
-namespace node {
+namespace gua
+{
+namespace node
+{
 class Node;
 }
 
@@ -45,126 +45,121 @@ class Node;
  * \ingroup gua_scenegraph
  */
 
-struct GUA_DLL PickResult {
+struct GUA_DLL PickResult
+{
+    /**
+     * These options are used by SceneGraph::ray_test() to configure the
+     * intersection.
+     */
+    enum Options
+    {
+        /**
+         * A PickResult is returned for each hit Node along a RayNode's
+         * length. This is the default value for picking.
+         */
+        PICK_ALL = 0,
 
-  /**
-   * These options are used by SceneGraph::ray_test() to configure the
-   * intersection.
-   */
-  enum Options {
-                 /**
-                  * A PickResult is returned for each hit Node along a RayNode's
-                  * length. This is the default value for picking.
-                  */
-                 PICK_ALL                 = 0,
+        /**
+         * Only the first hit Node is used as a PickResult.
+         */
+        PICK_ONLY_FIRST_OBJECT = 1 << 1,
 
-                 /**
-                  * Only the first hit Node is used as a PickResult.
-                  */
-                 PICK_ONLY_FIRST_OBJECT   = 1<<1,
+        /**
+         * Only the first face of each hit Node is used as a
+         * PickResult.
+         */
+        PICK_ONLY_FIRST_FACE = 1 << 2,
 
-                 /**
-                  * Only the first face of each hit Node is used as a
-                  * PickResult.
-                  */
-                 PICK_ONLY_FIRST_FACE     = 1<<2,
+        /**
+         * If set, the positions of all intersection points in the hit
+         * Nodes' object coordinates are written to the respective
+         * PickResult.
+         */
+        GET_POSITIONS = 1 << 3,
 
-                 /**
-                  * If set, the positions of all intersection points in the hit
-                  * Nodes' object coordinates are written to the respective
-                  * PickResult.
-                  */
-                 GET_POSITIONS            = 1<<3,
+        /**
+         * If set, the world positions of all intersection points in
+         * are written to the respective PickResult.
+         */
+        GET_WORLD_POSITIONS = 1 << 4,
 
-                 /**
-                  * If set, the world positions of all intersection points in
-                  * are written to the respective PickResult.
-                  */
-                 GET_WORLD_POSITIONS      = 1<<4,
+        /**
+         * If set, the normals of the surfaces at all intersection
+         * points in the hit Nodes' object coordinates are written to
+         * the respective PickResult.
+         */
+        GET_NORMALS = 1 << 5,
 
-                 /**
-                  * If set, the normals of the surfaces at all intersection
-                  * points in the hit Nodes' object coordinates are written to
-                  * the respective PickResult.
-                  */
-                 GET_NORMALS              = 1<<5,
+        /**
+         * If set, the normals of the surfaces at all intersection
+         * points in world coordinates are written to the respective
+         * PickResult.
+         */
+        GET_WORLD_NORMALS = 1 << 6,
 
-                 /**
-                  * If set, the normals of the surfaces at all intersection
-                  * points in world coordinates are written to the respective
-                  * PickResult.
-                  */
-                 GET_WORLD_NORMALS        = 1<<6,
+        /**
+         * If set, all obtained normals are interpolated according to
+         * the hit Node's vertex normals and written to the respective
+         * PickResult.
+         */
+        INTERPOLATE_NORMALS = 1 << 7,
 
-                 /**
-                  * If set, all obtained normals are interpolated according to
-                  * the hit Node's vertex normals and written to the respective
-                  * PickResult.
-                  */
-                 INTERPOLATE_NORMALS      = 1<<7,
+        /**
+         * If set, the hit Node's texture coordinates at the hit's
+         * position are interpolated and written to the respective
+         * PickResult.
+         */
+        GET_TEXTURE_COORDS = 1 << 8
+    };
 
-                 /**
-                  * If set, the hit Node's texture coordinates at the hit's
-                  * position are interpolated and written to the respective
-                  * PickResult.
-                  */
-                 GET_TEXTURE_COORDS       = 1<<8
-               };
+    /**
+     * Constructor.
+     *
+     * This constructs a PickResult with the given parameters. A PickResult is
+     * instantiated for each successful intersection of a RayNode with a
+     * GeometryNode.
+     *
+     * \param d   The distance between the RayNode's origin and the
+     *            intersection point.
+     * \param o   The Node beeing hit.
+     * \param p   The hit's position in the hit Node's object coordinates.
+     * \param wp  The hit's position in world coordinates.
+     * \param n   The surface normal at the hit's position the hit Node's object
+     *            coordinates.
+     * \param wn  The surface normal at the hit's position in world coordinates.
+     * \param t   The hit Node's texture coordinates at the hit's position.
+     */
+    PickResult(float d, node::Node* o, math::vec3 const& p, math::vec3 const& wp, math::vec3 const& n, math::vec3 const& wn, math::vec2 const& t)
+        : distance(d), object(o), position(p), world_position(wp), normal(n), world_normal(wn), texture_coords(t)
+    {
+    }
 
-  /**
-   * Constructor.
-   *
-   * This constructs a PickResult with the given parameters. A PickResult is
-   * instantiated for each successful intersection of a RayNode with a
-   * GeometryNode.
-   *
-   * \param d   The distance between the RayNode's origin and the
-   *            intersection point.
-   * \param o   The Node beeing hit.
-   * \param p   The hit's position in the hit Node's object coordinates.
-   * \param wp  The hit's position in world coordinates.
-   * \param n   The surface normal at the hit's position the hit Node's object
-   *            coordinates.
-   * \param wn  The surface normal at the hit's position in world coordinates.
-   * \param t   The hit Node's texture coordinates at the hit's position.
-   */
-  PickResult(float d, node::Node* o,
-             math::vec3 const& p, math::vec3 const& wp,
-             math::vec3 const& n, math::vec3 const& wn,
-             math::vec2 const& t)
-    : distance(d), object(o),
-      position(p), world_position(wp),
-      normal(n), world_normal(wn),
-      texture_coords(t) {}
+    /** The distance between a RayNode's origin and the intersection point.*/
+    float distance;
+    /** The Node beeing hit.*/
+    node::Node* object;
+    /** The Node beeing hit.*/
+    mutable math::vec3 position;
+    /** The hit's position in the hit Node's object coordinates.*/
+    mutable math::vec3 world_position;
+    /** The surface normal at the hit's position the hit Node's object coordinates.*/
+    mutable math::vec3 normal;
+    /** The surface normal at the hit's position in world coordinates.*/
+    mutable math::vec3 world_normal;
+    /** The hit Node's texture coordinates at the hit's position.*/
+    mutable math::vec2 texture_coords;
 
-  /** The distance between a RayNode's origin and the intersection point.*/
-  float                distance;
-  /** The Node beeing hit.*/
-  node::Node*          object;
-  /** The Node beeing hit.*/
-  mutable math::vec3   position;
-  /** The hit's position in the hit Node's object coordinates.*/
-  mutable math::vec3   world_position;
-  /** The surface normal at the hit's position the hit Node's object coordinates.*/
-  mutable math::vec3   normal;
-  /** The surface normal at the hit's position in world coordinates.*/
-  mutable math::vec3   world_normal;
-  /** The hit Node's texture coordinates at the hit's position.*/
-  mutable math::vec2   texture_coords;
-
-  /**
-   * Compares two PickResults.
-   *
-   * As comparison criterion, the PickResults' distance to the respective
-   * RayNode's origin is used.
-   *
-   * \param rhs The PickResult to be compared with.
-   */
-  bool operator<(PickResult const& rhs) const {
-    return distance < rhs.distance;
-  }
+    /**
+     * Compares two PickResults.
+     *
+     * As comparison criterion, the PickResults' distance to the respective
+     * RayNode's origin is used.
+     *
+     * \param rhs The PickResult to be compared with.
+     */
+    bool operator<(PickResult const& rhs) const { return distance < rhs.distance; }
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PICK_RESULT_HPP
+#endif // GUA_PICK_RESULT_HPP

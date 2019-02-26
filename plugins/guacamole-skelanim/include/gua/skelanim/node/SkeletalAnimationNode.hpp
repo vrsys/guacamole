@@ -28,177 +28,165 @@
 #include <gua/skelanim/utils/Skeleton.hpp>
 #include <gua/platform.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class SkinnedMeshResource;
 class SkeletalAnimation;
 struct Bone;
 
-namespace node {
-
+namespace node
+{
 /**
  * @brief represents an entity with geometry and bone hierarchy
  * which can be animated and influencs the mesh
  * @details has two current animations and two times which
  * determinate the current poses in the anims
  * the blend factor controls how much theseconds pose influecnes the first
- * 
+ *
  */
-  class GUA_SKELANIM_DLL SkeletalAnimationNode : public GeometryNode {
+class GUA_SKELANIM_DLL SkeletalAnimationNode : public GeometryNode
+{
+  public: // c'tor / d'tor
+    inline SkeletalAnimationNode(std::string const& node_name = ""){};
 
- public:  // c'tor / d'tor
+    SkeletalAnimationNode(std::string const& node_name,
+                          std::vector<std::string> const& geometry_description,
+                          std::vector<std::shared_ptr<Material>> const& materials,
+                          Skeleton const&,
+                          math::mat4 const& transform = math::mat4::identity());
 
-  inline SkeletalAnimationNode(
-      std::string const& node_name = ""){};
+  public: // methods
+    Node* get();
 
-  SkeletalAnimationNode(
-      std::string const& node_name,
-      std::vector<std::string> const& geometry_description,
-      std::vector<std::shared_ptr<Material> > const& materials,
-      Skeleton const&,
-      math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Get the strings referring to an entry in guacamole's GeometryDatabase.
+     */
+    std::vector<std::string> const& get_geometry_descriptions() const;
 
+    /**
+     * Set the path to the model file containing a skeleton.
+     */
+    void set_skeleton_description(std::string const& geometry_description);
+    /**
+     * Set the strings referring to entries in guacamole's GeometryDatabase.
+     */
+    void set_geometry_descriptions(std::vector<std::string> const& geometry_descriptions);
 
- public:  // methods
+    /**
+     * This is only for the multifield handling in avango
+     */
+    void add_material(std::shared_ptr<Material> const& material);
+    /**
+     * A string referring to an entry in guacamole's MaterialShaderDatabase.
+     */
 
-  Node* get();
+    std::vector<std::shared_ptr<Material>> const& get_materials() const;
 
-  /**
-  * Get the strings referring to an entry in guacamole's GeometryDatabase.
-  */
-  std::vector<std::string> const& get_geometry_descriptions() const;
+    std::shared_ptr<Material> const& get_material(unsigned index) const;
 
-  /**
-  * Set the path to the model file containing a skeleton.
-  */
-  void set_skeleton_description(std::string const& geometry_description);
-  /**
-  * Set the strings referring to entries in guacamole's GeometryDatabase.
-  */
-  void set_geometry_descriptions(std::vector<std::string> const& geometry_descriptions);
+    void set_material(std::shared_ptr<Material> material, unsigned index);
 
-  /**
-  * This is only for the multifield handling in avango
-  */
-  void add_material(std::shared_ptr<Material> const& material);
-  /**
-  * A string referring to an entry in guacamole's MaterialShaderDatabase.
-  */
+    inline void clear_materials() { materials_.clear(); }
 
-  std::vector<std::shared_ptr<Material> > const& get_materials() const;
+    bool get_render_to_gbuffer() const;
+    void set_render_to_gbuffer(bool enable);
 
-  std::shared_ptr<Material> const& get_material(unsigned index) const;
+    bool get_render_to_stencil_buffer() const;
+    void set_render_to_stencil_buffer(bool enable);
 
-  void set_material(std::shared_ptr<Material> material, unsigned index);
+    void set_bones(std::vector<Bone> const& bones);
+    std::vector<Bone> const& get_bones() const;
+    /**
+     * Implements ray picking for a triangular mesh
+     */
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-  inline void clear_materials() { materials_.clear(); }
+    /**
+     * @brief updates bounding boxes
+     * @details by transforming bone boex with current bone
+     * transforms and accumulating them
+     */
+    void update_bounding_box() const override;
 
-  bool get_render_to_gbuffer() const;
-  void set_render_to_gbuffer(bool enable);
+    std::vector<math::BoundingBox<math::vec3>> get_bone_boxes();
 
-  bool get_render_to_stencil_buffer() const;
-  void set_render_to_stencil_buffer(bool enable);
+    void update_cache() override;
 
-  void set_bones(std::vector<Bone> const& bones);
-  std::vector<Bone> const& get_bones() const;
-  /**
-  * Implements ray picking for a triangular mesh
-  */
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+    std::vector<std::shared_ptr<SkinnedMeshResource>> const& get_geometries() const;
 
-  /**
-   * @brief updates bounding boxes
-   * @details by transforming bone boex with current bone 
-   * transforms and accumulating them
-   */
-  void update_bounding_box() const override;
+    // animation related methods
+    void add_animations(std::string const& file_name, std::string const& animation_name);
 
-  std::vector<math::BoundingBox<math::vec3> > get_bone_boxes();
+    std::string const& get_animation_1() const;
+    void set_animation_1(std::string const&);
 
-  void update_cache() override;
+    std::string const& get_animation_2() const;
+    void set_animation_2(std::string const&);
 
-  std::vector<std::shared_ptr<SkinnedMeshResource> > const&
-      get_geometries() const;
+    float get_blend_factor() const;
+    void set_blend_factor(float f);
 
-  //animation related methods
-  void add_animations(std::string const& file_name,
-                      std::string const& animation_name);
+    float get_duration(std::string const&) const;
 
-  std::string const& get_animation_1() const;
-  void set_animation_1(std::string const&);
+    float get_time_1() const;
+    void set_time_1(float);
+    float get_time_2() const;
+    void set_time_2(float);
 
-  std::string const& get_animation_2() const;
-  void set_animation_2(std::string const&);
+    bool has_anims() const;
 
-  float get_blend_factor() const;
-  void set_blend_factor(float f);
+    /**
+     * @brief returns current bone transformations
+     * @details does not trigger an update of the transforms
+     * @return current bone transforms
+     */
+    std::vector<scm::math::mat4f> const& get_bone_transforms() const;
 
-  float get_duration(std::string const&) const;
+    /**
+     * @brief recalculates the bone transformations with the current parameters
+     */
+    void update_bone_transforms();
 
-  float get_time_1() const;
-  void set_time_1(float);
-  float get_time_2() const;
-  void set_time_2(float);
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * @param visitor  A visitor to process the GeometryNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  bool has_anims() const;
+  protected:
+    std::shared_ptr<Node> copy() const override;
 
-  /**
-   * @brief returns current bone transformations
-   * @details does not trigger an update of the transforms
-   * @return current bone transforms
-   */
-  std::vector<scm::math::mat4f> const& get_bone_transforms() const;
+  private: // attributes e.g. special attributes for drawing
+    std::vector<std::shared_ptr<SkinnedMeshResource>> geometries_;
+    std::vector<std::string> geometry_descriptions_;
+    bool geometry_changed_;
 
-  /**
-   * @brief recalculates the bone transformations with the current parameters
-   */
-  void update_bone_transforms();
+    std::vector<std::shared_ptr<Material>> materials_;
+    bool render_to_gbuffer_;
+    bool render_to_stencil_buffer_;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * @param visitor  A visitor to process the GeometryNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
+    // attributes related to animation
+    Skeleton skeleton_;
+    std::map<std::string, SkeletalAnimation> animations_;
 
- protected:
+    bool new_bones_;
+    bool has_anims_;
 
-  std::shared_ptr<Node> copy() const override;
+    const static std::string none_loaded;
 
- private:  // attributes e.g. special attributes for drawing
+    float blend_factor_;
+    std::string anim_1_;
+    std::string anim_2_;
+    float anim_time_1_;
+    float anim_time_2_;
 
-  std::vector<std::shared_ptr<SkinnedMeshResource> > geometries_;
-  std::vector<std::string> geometry_descriptions_;
-  bool geometry_changed_;
-
-  std::vector<std::shared_ptr<Material> > materials_;
-  bool render_to_gbuffer_;
-  bool render_to_stencil_buffer_;
-
-  // attributes related to animation
-  Skeleton skeleton_;
-  std::map<std::string, SkeletalAnimation> animations_;
-
-  bool new_bones_;
-  bool has_anims_;
-
-  const static std::string none_loaded;
-
-  float blend_factor_;
-  std::string anim_1_;
-  std::string anim_2_;
-  float anim_time_1_;
-  float anim_time_2_;
-
-  std::vector<scm::math::mat4f> bone_transforms_;
+    std::vector<scm::math::mat4f> bone_transforms_;
 };
 
-}  // namespace node {
-}  // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_SKELETAL_ANIMATION_NODE_HPP
+#endif // GUA_SKELETAL_ANIMATION_NODE_HPP

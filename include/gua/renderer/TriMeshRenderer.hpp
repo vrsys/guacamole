@@ -30,36 +30,34 @@
 
 #include <scm/gl_core/shader_objects.h>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class TriMeshRenderer {
+class TriMeshRenderer
+{
+  public:
+    TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 
- private:
-
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_none_;
-
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  SubstitutionMap                                                     global_substitution_map_;
-
-  void _create_physical_texture(const RenderContext &ctx);
-  void _apply_cut_update(const RenderContext &ctx);
-  void _collect_feedback(const RenderContext &ctx);
+    void _create_physical_texture(const RenderContext& ctx);
+    void _apply_cut_update(const RenderContext& ctx);
+    void _collect_feedback(const RenderContext& ctx);
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TRIMESH_RENDERER_HPP
+#endif // GUA_TRIMESH_RENDERER_HPP

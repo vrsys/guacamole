@@ -276,7 +276,8 @@ NRPScene::NRPScene() : _mutex_receive(), _mutex_scenegraph(), _mutex_pose_msgs()
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_grid, "General");
     ptr_ds_grid.setNull();
 
-    Ogre::DataStreamPtr ptr_ds_gazebo(new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)(NRPConfig::get_instance().get_nrp_gazebo_material(), std::fstream::in), false));
+    Ogre::DataStreamPtr ptr_ds_gazebo(
+        new Ogre::FileStreamDataStream(OGRE_NEW_T(std::fstream, Ogre::MEMCATEGORY_GENERAL)(NRPConfig::get_instance().get_nrp_gazebo_material(), std::fstream::in), false));
     Ogre::MaterialManager::getSingleton().parseScript(ptr_ds_gazebo, "General");
     ptr_ds_gazebo.setNull();
 
@@ -945,5 +946,5 @@ void NRPScene::pre_render()
 std::mutex &NRPScene::get_mutex_scenegraph() { return _mutex_scenegraph; }
 NRPInteractiveNode *NRPScene::get_interactive_node() const { return _interactive_node; }
 NRPNode *NRPScene::get_root_node() const { return _root_node; }
-}
-}
+} // namespace nrp
+} // namespace gua

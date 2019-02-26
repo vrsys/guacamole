@@ -35,107 +35,102 @@
 
 struct aiMesh;
 
-namespace gua {
+namespace gua
+{
 /**
  * @brief mesh with vertex-bone mapping
  */
-  struct GUA_SKELANIM_DLL SkinnedMesh : public Mesh {
- public:
-  SkinnedMesh();
+struct GUA_SKELANIM_DLL SkinnedMesh : public Mesh
+{
+  public:
+    SkinnedMesh();
 
-  SkinnedMesh(aiMesh const& mesh,
-              Skeleton const& skeleton = Skeleton{} 
-  );
+    SkinnedMesh(aiMesh const& mesh, Skeleton const& skeleton = Skeleton{});
 
 #ifdef GUACAMOLE_FBX
-  SkinnedMesh(FbxMesh& mesh,
-              Skeleton const& skeleton = Skeleton{},
-              unsigned const material_index = 0);
+    SkinnedMesh(FbxMesh& mesh, Skeleton const& skeleton = Skeleton{}, unsigned const material_index = 0);
 #endif
-/**
- * @brief holds information of a skinned vertex
- */
-  struct Vertex {
-    scm::math::vec3f pos;
-    scm::math::vec2f tex;
-    scm::math::vec3f normal;
-    scm::math::vec3f tangent;
-    scm::math::vec3f bitangent;
-    unsigned int bone_id_offset;
-    unsigned int nr_of_bones;
-  };
+    /**
+     * @brief holds information of a skinned vertex
+     */
+    struct Vertex
+    {
+        scm::math::vec3f pos;
+        scm::math::vec2f tex;
+        scm::math::vec3f normal;
+        scm::math::vec3f tangent;
+        scm::math::vec3f bitangent;
+        unsigned int bone_id_offset;
+        unsigned int nr_of_bones;
+    };
 
-  /**
-   * @brief writes vertex info to given buffer
-   * @details writes vertex info to buffer
-   * and offsets weight info
-   * 
-   * @param vertex_buffer buffer to write to
-   * @param resource_offset weight info offset
-   */
-  void copy_to_buffer(Vertex* vertex_buffer, unsigned int resource_offset) const;
+    /**
+     * @brief writes vertex info to given buffer
+     * @details writes vertex info to buffer
+     * and offsets weight info
+     *
+     * @param vertex_buffer buffer to write to
+     * @param resource_offset weight info offset
+     */
+    void copy_to_buffer(Vertex* vertex_buffer, unsigned int resource_offset) const;
 
-  /**
-   * @brief returns vertex layout for skinned mesh vertex
-   * @return schism vertex format
-   */
-  scm::gl::vertex_format get_vertex_format() const override;
+    /**
+     * @brief returns vertex layout for skinned mesh vertex
+     * @return schism vertex format
+     */
+    scm::gl::vertex_format get_vertex_format() const override;
 
-  std::vector<unsigned int> bone_ids;
-  std::vector<float>        bone_weights;
-  std::vector<unsigned int> bone_counts;
+    std::vector<unsigned int> bone_ids;
+    std::vector<float> bone_weights;
+    std::vector<unsigned int> bone_counts;
 
-  std::vector<unsigned int> const& get_bone_ids() const;
-  std::vector<float> const& get_bone_weights() const;
+    std::vector<unsigned int> const& get_bone_ids() const;
+    std::vector<float> const& get_bone_weights() const;
 
- private:
-  /**
-   * @brief holds information for influences on one vertex
-   */
-  struct bone_influences {
-    std::vector<unsigned int> IDs;
-    std::vector<float> weights;
+  private:
+    /**
+     * @brief holds information for influences on one vertex
+     */
+    struct bone_influences
+    {
+        std::vector<unsigned int> IDs;
+        std::vector<float> weights;
 
-    bone_influences() : IDs {}
-    , weights {}
-    {}
-    ;
+        bone_influences() : IDs{}, weights{} {};
 
-    void add_bone(unsigned int bone_ID, float weight) {
-      IDs.push_back(bone_ID);
-      weights.push_back(weight);
-    }
-  };
+        void add_bone(unsigned int bone_ID, float weight)
+        {
+            IDs.push_back(bone_ID);
+            weights.push_back(weight);
+        }
+    };
 
-  /**
-   * @brief create bone influences from assimp mesh and hierarchy
-   * @details collects the bone indices from the hierarchy and
-   * mapping info from the mesh
-   * 
-   * @param mesh skinned assimp mesh
-   * @param skeleton the bone hierarchy
-   * @return the calculated bone influences
-   */
-  static std::vector<bone_influences> get_weights(aiMesh const& mesh,
-                                                  Skeleton const& skeleton);
+    /**
+     * @brief create bone influences from assimp mesh and hierarchy
+     * @details collects the bone indices from the hierarchy and
+     * mapping info from the mesh
+     *
+     * @param mesh skinned assimp mesh
+     * @param skeleton the bone hierarchy
+     * @return the calculated bone influences
+     */
+    static std::vector<bone_influences> get_weights(aiMesh const& mesh, Skeleton const& skeleton);
 
-  /**
-   * @brief create bone influences from fbx mesh and hierarchy
-   * @details collects the bone indices from the hierarchy and
-   * mapping info from the mesh
-   * 
-   * @param mesh skinned fbx mesh
-   * @param skeleton the bone hierarchy
-   * 
-   * @return the calculated bone influences
-   */
+    /**
+     * @brief create bone influences from fbx mesh and hierarchy
+     * @details collects the bone indices from the hierarchy and
+     * mapping info from the mesh
+     *
+     * @param mesh skinned fbx mesh
+     * @param skeleton the bone hierarchy
+     *
+     * @return the calculated bone influences
+     */
 #ifdef GUACAMOLE_FBX
-  static std::vector<bone_influences> get_weights(
-      FbxMesh const& mesh,
-      Skeleton const& skeleton);
+    static std::vector<bone_influences> get_weights(FbxMesh const& mesh, Skeleton const& skeleton);
 #endif
 };
 
-}
+} // namespace gua
 
-#endif  //GUA_SKINNED_MESH_HPP
+#endif // GUA_SKINNED_MESH_HPP

@@ -22,25 +22,24 @@
 // header
 #include <gua/math/BoundingBoxAlgo.hpp>
 
-namespace gua {
-
-namespace math {
-
-math::BoundingBox<math::vec3> transform(
-    math::BoundingBox<math::vec3> const& bbox,
-    math::mat4 const& mat) {
-  auto tmp = math::BoundingBox<math::vec3>();
-  tmp.expandBy(mat * bbox.min);
-  tmp.expandBy(mat * bbox.max);
-  tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.min.y, bbox.max.z));
-  tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.max.y, bbox.min.z));
-  tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.max.y, bbox.max.z));
-  tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.min.y, bbox.max.z));
-  tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.max.y, bbox.min.z));
-  tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.min.y, bbox.min.z));
-  return tmp;
+namespace gua
+{
+namespace math
+{
+math::BoundingBox<math::vec3> transform(math::BoundingBox<math::vec3> const& bbox, math::mat4 const& mat)
+{
+    auto tmp = math::BoundingBox<math::vec3>();
+    tmp.expandBy(mat * bbox.min);
+    tmp.expandBy(mat * bbox.max);
+    tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.min.y, bbox.max.z));
+    tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.max.y, bbox.min.z));
+    tmp.expandBy(mat * math::vec3(bbox.min.x, bbox.max.y, bbox.max.z));
+    tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.min.y, bbox.max.z));
+    tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.max.y, bbox.min.z));
+    tmp.expandBy(mat * math::vec3(bbox.max.x, bbox.min.y, bbox.min.z));
+    return tmp;
 }
 
-}  // namespace math
+} // namespace math
 
-}  // namespace gua
+} // namespace gua

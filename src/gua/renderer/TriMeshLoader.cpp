@@ -361,7 +361,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
 std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const &importer, aiScene const *ai_scene, aiNode *ai_root, std::string const &file_name, unsigned flags,
                                                     unsigned &mesh_count, bool enforce_hierarchy)
 {
-    //std::cout << "get_tree, " << file_name.c_str() << std::endl;
+    // std::cout << "get_tree, " << file_name.c_str() << std::endl;
 
     // creates a geometry node and returns it
     auto load_geometry = [&](aiNode *ai_current, int i) {
@@ -384,11 +384,12 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
     };
 
-    if(!enforce_hierarchy) {
+    if(!enforce_hierarchy)
+    {
         // there is only one child -- skip it!
         if(ai_root->mNumChildren == 1 && ai_root->mNumMeshes == 0)
         {
-            //std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
+            // std::cout << "one child: " << ai_root->mChildren[0]->mName.data << ", no meshes" << std::endl;
 
             auto node = get_tree(importer, ai_scene, ai_root->mChildren[0], file_name, flags, mesh_count, enforce_hierarchy);
             node->set_transform(convert_transformation(ai_root->mTransformation) * convert_transformation(ai_root->mChildren[0]->mTransformation));
@@ -398,14 +399,14 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         // there is only one geometry --- return it!
         if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
         {
-            //std::cout << "no children, one mesh" << std::endl;
+            // std::cout << "no children, one mesh" << std::endl;
 
             auto node = load_geometry(ai_root, 0);
             // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
             return node;
         }
 
-        //std::cout << "multiple children" << std::endl;
+        // std::cout << "multiple children" << std::endl;
 
         // else: there are multiple children and meshes
         auto group(std::make_shared<node::TransformNode>());
@@ -419,7 +420,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 
         for(unsigned i(0); i < ai_root->mNumChildren; ++i)
         {
-            //std::cout << ai_root->mChildren[i]->mName.data << std::endl;
+            // std::cout << ai_root->mChildren[i]->mName.data << std::endl;
 
             auto child = get_tree(importer, ai_scene, ai_root->mChildren[i], file_name, flags, mesh_count, enforce_hierarchy);
             auto child_transform_ai = ai_root->mChildren[i]->mTransformation;
@@ -429,7 +430,9 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         }
 
         return group;
-    } else {
+    }
+    else
+    {
         struct ai_gua_node
         {
             aiNode *ai_node_;
@@ -487,7 +490,7 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const &r
         apply_fallback_material(child, fallback_material, no_shared_materials);
     }
 }
-gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const& transform_ai)
+gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const &transform_ai)
 {
     auto transform_scm = gua::math::mat4::identity();
 
@@ -513,7 +516,7 @@ gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const&
     return transform_scm;
 }
 
-void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const& transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
+void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const &transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX

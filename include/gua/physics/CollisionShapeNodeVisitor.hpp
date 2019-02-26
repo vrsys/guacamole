@@ -39,88 +39,88 @@
 // external headers
 #include <stack>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * This class visits a RigidBodyNode subgraph and collects collision
  *        shapes from there.
  *
  */
-class CollisionShapeNodeVisitor : public NodeVisitor {
- public:
+class CollisionShapeNodeVisitor : public NodeVisitor
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs an CollisionShapeNodeVisitor.
+     */
+    CollisionShapeNodeVisitor();
 
-  /**
-   * Constructor.
-   *
-   * This constructs an CollisionShapeNodeVisitor.
-   */
-  CollisionShapeNodeVisitor();
+    /**
+     * Synchronizes collision shapes associated with the given
+     *        rigid body.
+     *
+     * \param rigid_body  The rigid body that needs to be traversed.
+     */
+    void check(RigidBodyNode* rigid_body);
 
-  /**
-   * Synchronizes collision shapes associated with the given
-   *        rigid body.
-   *
-   * \param rigid_body  The rigid body that needs to be traversed.
-   */
-  void check(RigidBodyNode* rigid_body);
+    /**
+     * Visits a RigidBodyNode
+     *
+     * This function visits a RigidBodyNode
+     *
+     * \param node   Pointer to RigidBodyNode
+     */
+    /* virtual */ void visit(RigidBodyNode* node) override;
 
-  /**
-   * Visits a RigidBodyNode
-   *
-   * This function visits a RigidBodyNode
-   *
-   * \param node   Pointer to RigidBodyNode
-   */
-  /* virtual */ void visit(RigidBodyNode* node) override;
+    /**
+     * Visits a CollisionShapeNode
+     *
+     * This function visits a CollisionShapeNode
+     *
+     * \param node   Pointer to CollisionShapeNode
+     */
+    /* virtual */ void visit(CollisionShapeNode* node) override;
 
-  /**
-   * Visits a CollisionShapeNode
-   *
-   * This function visits a CollisionShapeNode
-   *
-   * \param node   Pointer to CollisionShapeNode
-   */
-  /* virtual */ void visit(CollisionShapeNode* node) override;
+    ///@{
+    /**
+     * Visits a Node
+     *
+     * This function visits a Node
+     *
+     * \param node    Pointer to Node
+     */
 
-  ///@{
-  /**
-   * Visits a Node
-   *
-   * This function visits a Node
-   *
-   * \param node    Pointer to Node
-   */
+    /* virtual */ void visit(node::TransformNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::TransformNode* node) override { generic_visit(node); }
+    /* virtual */ void visit(node::GeometryNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::GeometryNode* node) override { generic_visit(node); }
-  
-  /* virtual */ void visit(node::LightNode* node) override { generic_visit(node); }
+    /* virtual */ void visit(node::LightNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::ScreenNode* node) override { generic_visit(node); }
+    /* virtual */ void visit(node::ScreenNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::RayNode* node) override { generic_visit(node); }
+    /* virtual */ void visit(node::RayNode* node) override { generic_visit(node); }
 
-  /* virtual */ void visit(node::TexturedQuadNode* node) override { generic_visit(node); }
+    /* virtual */ void visit(node::TexturedQuadNode* node) override { generic_visit(node); }
 
-  ///@}
+    ///@}
 
- private:
+  private:
+    void generic_visit(node::Node* node);
+    void push_stack(math::mat4 const& current_matrix);
+    void pop_stack(node::Node* new_node);
 
-  void generic_visit(node::Node* node);
-  void push_stack(math::mat4 const& current_matrix);
-  void pop_stack(node::Node* new_node);
+    RigidBodyNode* rigid_body_;
+    std::stack<math::mat4> matrix_stack_;
+    int last_depth_;
 
-  RigidBodyNode* rigid_body_;
-  std::stack<math::mat4> matrix_stack_;
-  int last_depth_;
-
-  bool resync_;
-  unsigned shape_index_;
+    bool resync_;
+    unsigned shape_index_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_COLLISION_SHAPE_NODE_VISITOR_HPP
+#endif // GUA_COLLISION_SHAPE_NODE_VISITOR_HPP

@@ -23,9 +23,9 @@
 #include <gua/virtual_texturing/VirtualTexture2D.hpp>
 
 // guacamole headers
+#include <gua/math/math.hpp>
 #include <gua/platform.hpp>
 #include <gua/utils/Logger.hpp>
-#include <gua/math/math.hpp>
 
 #include <gua/databases/TextureDatabase.hpp>
 
@@ -36,15 +36,15 @@
 #include <scm/gl_core/render_device.h>
 #include <scm/gl_core/texture_objects.h>
 
-#include <scm/gl_util/data/imaging/texture_loader.h>
 #include <scm/gl_util/data/imaging/texture_image_data.h>
+#include <scm/gl_util/data/imaging/texture_loader.h>
 
 #include <lamure/vt/VTConfig.h>
-#include <lamure/vt/ren/CutDatabase.h>
 #include <lamure/vt/pre/AtlasFile.h>
+#include <lamure/vt/ren/CutDatabase.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <regex>
 
 #define PHYSICAL_TEXTURE_MAX_NUM_LAYERS 256
@@ -52,30 +52,26 @@
 
 #define MAX_TEXTURES 1024
 
-namespace gua {
-  std::map<std::size_t,
-    std::shared_ptr<LayeredPhysicalTexture2D> > VirtualTexture2D::physical_texture_ptr_per_context_ 
-      = std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D> >();
+namespace gua
+{
+std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>> VirtualTexture2D::physical_texture_ptr_per_context_ = std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>>();
 
-  std::map<std::size_t, VTInfo> VirtualTexture2D::vt_info_per_context_ 
-      = std::map<std::size_t, VTInfo>();
+std::map<std::size_t, VTInfo> VirtualTexture2D::vt_info_per_context_ = std::map<std::size_t, VTInfo>();
 
-  std::map<std::size_t, scm::gl::buffer_ptr> VirtualTexture2D::vt_addresses_ubo_per_context_
-      = std::map<std::size_t, scm::gl::buffer_ptr>();
+std::map<std::size_t, scm::gl::buffer_ptr> VirtualTexture2D::vt_addresses_ubo_per_context_ = std::map<std::size_t, scm::gl::buffer_ptr>();
 
-  bool VirtualTexture2D::initialized_vt_system = false;
+bool VirtualTexture2D::initialized_vt_system = false;
 
-  VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename,
-                                     std::size_t physical_texture_tile_slot_size,
-                                     scm::gl::sampler_state_desc const& state_descripton) {
-
+VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename, std::size_t physical_texture_tile_slot_size, scm::gl::sampler_state_desc const& state_descripton)
+{
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
-    if(!initialized_vt_system) {
-      ::vt::VTConfig::CONFIG_PATH = ini_filename;
-      ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
-    
-      initialized_vt_system = true;
+    if(!initialized_vt_system)
+    {
+        ::vt::VTConfig::CONFIG_PATH = ini_filename;
+        ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
+
+        initialized_vt_system = true;
     }
 
     tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
@@ -83,26 +79,23 @@ namespace gua {
     lamure_texture_id_ = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
 
     atlas_file_path_ = atlas_filename;
-    ini_file_path_   = ini_filename;
+    ini_file_path_ = ini_filename;
 
     ::vt::pre::AtlasFile current_atlas_file(atlas_filename.c_str());
 
     max_depth_ = current_atlas_file.getDepth();
-  }
+}
 
+void VirtualTexture2D::upload_to(RenderContext const& ctx) const
+{
+    if(index_texture_mip_map_per_context_[ctx.id] == nullptr)
+    {
+        uint32_t size_index_texture = (uint32_t)vt::QuadTree::get_tiles_per_row(max_depth_);
+        auto index_texture_level_ptr = ctx.render_device->create_texture_2d(scm::math::vec2ui(size_index_texture, size_index_texture), scm::gl::FORMAT_RGBA_8UI, max_depth_ + 1);
 
-
-  void VirtualTexture2D::upload_to(RenderContext const& ctx) const {
-    if(index_texture_mip_map_per_context_[ctx.id] == nullptr) {
-
-        uint32_t size_index_texture = (uint32_t) vt::QuadTree::get_tiles_per_row(max_depth_);
-        auto index_texture_level_ptr = ctx.render_device->create_texture_2d(
-                                                                            scm::math::vec2ui(size_index_texture, size_index_texture), 
-                                                                            scm::gl::FORMAT_RGBA_8UI,
-                                                                            max_depth_ + 1);
-
-        for(uint32_t i = 0; i < max_depth_ + 1; ++i) {
-          ctx.render_context->clear_image_data(index_texture_level_ptr, i, scm::gl::FORMAT_RGBA_8UI, 0);
+        for(uint32_t i = 0; i < max_depth_ + 1; ++i)
+        {
+            ctx.render_context->clear_image_data(index_texture_level_ptr, i, scm::gl::FORMAT_RGBA_8UI, 0);
         }
 
         index_texture_mip_map_per_context_[ctx.id] = index_texture_level_ptr;
@@ -113,21 +106,21 @@ namespace gua {
 
         upload_vt_handle_to_ubo(ctx);
     }
-  }
+}
 
-  void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx,
-                                                        std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs) {
-    
-    for(auto const& update_pair : level_update_pairs) {
-      uint32_t updated_level = update_pair.first;
-      uint32_t size_index_texture = (uint32_t) ::vt::QuadTree::get_tiles_per_row(updated_level);
+void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx, std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs)
+{
+    for(auto const& update_pair : level_update_pairs)
+    {
+        uint32_t updated_level = update_pair.first;
+        uint32_t size_index_texture = (uint32_t)::vt::QuadTree::get_tiles_per_row(updated_level);
 
-      scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
-      scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
+        scm::math::vec3ui origin = scm::math::vec3ui(0, 0, 0);
+        scm::math::vec3ui dimensions = scm::math::vec3ui(size_index_texture, size_index_texture, 1);
 
-      auto& current_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
+        auto& current_index_texture_hierarchy = index_texture_mip_map_per_context_[ctx.id];
 
-      uint32_t max_level = max_depth_;
+        uint32_t max_level = max_depth_;
 
         /*std::cout << "Index " << update_pair.first << "for context" << VirtualTexture2D::vt_info_per_context_[ctx.id].context_id_ << std::endl;
 
@@ -137,42 +130,35 @@ namespace gua {
 
         std::cout << std::endl;*/
 
-      ctx.render_context->update_sub_texture(current_index_texture_hierarchy,
-                                             scm::gl::texture_region(origin, dimensions), 
-                                             max_level-updated_level, scm::gl::FORMAT_RGBA_8UI,
-                                             update_pair.second );
+        ctx.render_context->update_sub_texture(current_index_texture_hierarchy, scm::gl::texture_region(origin, dimensions), max_level - updated_level, scm::gl::FORMAT_RGBA_8UI, update_pair.second);
     }
-  }
+}
 
-  void VirtualTexture2D::upload_vt_handle_to_ubo(RenderContext const& ctx) const {
-    if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id) ) {
-      vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW,
-                                                                               MAX_TEXTURES * sizeof(scm::math::vec4ui));
+void VirtualTexture2D::upload_vt_handle_to_ubo(RenderContext const& ctx) const
+{
+    if(vt_addresses_ubo_per_context_.end() == vt_addresses_ubo_per_context_.find(ctx.id))
+    {
+        vt_addresses_ubo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW, MAX_TEXTURES * sizeof(scm::math::vec4ui));
     }
 
     auto& current_vt_addresses_ubo = vt_addresses_ubo_per_context_[ctx.id];
 
-
-
     uint64_t handle = index_texture_mip_map_per_context_[ctx.id]->native_handle();
 
     uint64_t physical_texture_cpu_address = (handle & 0x00000000ffffffff) | (handle & 0xffffffff00000000);
-    //math::vec2ui swapped_texture_adress = math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+    // math::vec2ui swapped_texture_adress = math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 
-    uint64_t *mapped_physical_texture_address_ubo = (uint64_t *) ctx.render_context->map_buffer(current_vt_addresses_ubo,
-                                                                                                scm::gl::ACCESS_WRITE_ONLY);
+    uint64_t* mapped_physical_texture_address_ubo = (uint64_t*)ctx.render_context->map_buffer(current_vt_addresses_ubo, scm::gl::ACCESS_WRITE_ONLY);
 
     uint32_t current_global_texture_id = gua::TextureDatabase::instance()->get_global_texture_id_by_path(atlas_file_path_);
 
     uint64_t current_handle_write_offset = 2 * current_global_texture_id;
 
     memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset]), &physical_texture_cpu_address, sizeof(uint64_t));
-    
+
     memcpy((char*)(&mapped_physical_texture_address_ubo[current_handle_write_offset + 1]), &max_depth_, sizeof(int32_t));
-    
 
     ctx.render_context->unmap_buffer(current_vt_addresses_ubo);
     ctx.render_context->bind_uniform_buffer(current_vt_addresses_ubo, 4);
-  }
-
 }
+} // namespace gua

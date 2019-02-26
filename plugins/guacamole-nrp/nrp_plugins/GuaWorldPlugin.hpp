@@ -29,6 +29,6 @@ class GuaWorldPlugin : public WorldPlugin
 };
 
 GZ_REGISTER_WORLD_PLUGIN(GuaWorldPlugin)
-}
+} // namespace gazebo
 
 #endif // GUACAMOLE_GUAWORLDPLUGIN_H

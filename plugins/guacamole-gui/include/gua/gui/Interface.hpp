@@ -29,48 +29,48 @@
 #include <gua/gui/mouse_enums.hpp>
 
 // forward declares ------------------------------------------------------------
-namespace Awesomium {
-  class WebCore;
-  class WebView;
-  class WebSession;
-}
+namespace Awesomium
+{
+class WebCore;
+class WebView;
+class WebSession;
+} // namespace Awesomium
 
-namespace gua {
-
+namespace gua
+{
 class ShaderProgram;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------------
-class GUA_DLL Interface : public Singleton<Interface> {
+class GUA_DLL Interface : public Singleton<Interface>
+{
+    ///////////////////////////////////////////////////////////////////////////////
+    // ----------------------------------------------------------- public interface
+  public:
+    events::Signal<Cursor> on_cursor_change;
 
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
- public:
+    void update() const;
 
-  events::Signal<Cursor> on_cursor_change;
+    friend class GuiResource;
+    friend class Singleton<Interface>;
 
-  void update() const;
+    ///////////////////////////////////////////////////////////////////////////////
+    // ---------------------------------------------------------- private interface
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    Interface();
+    ~Interface();
 
-  friend class GuiResource;
-  friend class Singleton<Interface>;
+    Awesomium::WebView* create_webview(int width, int height) const;
 
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  Interface();
-  ~Interface();
-
-  Awesomium::WebView* create_webview(int width, int height) const;
-
-  Awesomium::WebCore* web_core_;
-  Awesomium::WebSession* web_session_;
+    Awesomium::WebCore* web_core_;
+    Awesomium::WebSession* web_session_;
 };
 
 // -----------------------------------------------------------------------------
 
-}
+} // namespace gua
 
 #endif // GUA_GUI_INTERFACE_HPP

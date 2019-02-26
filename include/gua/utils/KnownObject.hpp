@@ -36,56 +36,55 @@
  * NOTE: This class is NOT ment for objects created in a really big amount!
  */
 
-namespace gua {
+namespace gua
+{
+template <typename T>
+class KnownObject
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a KnownObject and stores a pointer on an object
+     * of a derived class into a static list.
+     */
+    KnownObject() : object_id_(existing_objects_.size()) { existing_objects_.push_back(reinterpret_cast<T*>(this)); }
 
-template <typename T> class KnownObject {
- public:
+    /**
+     * Constructor.
+     *
+     * This destructs a KnownObject frees the storage the deleted object
+     * used to allocate in the static vector
+     */
+    virtual ~KnownObject() { existing_objects_[object_id_] = nullptr; }
 
-  /**
-   * Constructor.
-   *
-   * This constructs a KnownObject and stores a pointer on an object
-   * of a derived class into a static list.
-   */
-  KnownObject() : object_id_(existing_objects_.size()) {
+    /**
+     * Returns a pointer on a derived object.
+     *
+     * This function returns a pointer on any of the already constructed
+     * derived objects.
+     *
+     * \param index   The position of the wanted object in the static vector.
+     *
+     * \return object The object of the derived class
+     */
+    static T* pointer(unsigned index = existing_objects_.size() - 1)
+    {
+        if(index >= 0 && index < existing_objects_.size())
+            return existing_objects_[index];
+        return nullptr;
+    }
 
-    existing_objects_.push_back(reinterpret_cast<T*>(this));
-  }
+  protected:
+    const int object_id_;
 
-  /**
-   * Constructor.
-   *
-   * This destructs a KnownObject frees the storage the deleted object
-   * used to allocate in the static vector
-   */
-  virtual ~KnownObject() { existing_objects_[object_id_] = nullptr; }
-
-  /**
-   * Returns a pointer on a derived object.
-   *
-   * This function returns a pointer on any of the already constructed
-   * derived objects.
-   *
-   * \param index   The position of the wanted object in the static vector.
-   *
-   * \return object The object of the derived class
-   */
-  static T* pointer(unsigned index = existing_objects_.size() - 1) {
-    if (index >= 0 && index < existing_objects_.size())
-      return existing_objects_[index];
-    return nullptr;
-  }
-
- protected:
-  const int object_id_;
-
- private:
-  static std::vector<T*> existing_objects_;
-
+  private:
+    static std::vector<T*> existing_objects_;
 };
 
-template <typename T> std::vector<T*> KnownObject<T>::existing_objects_;
+template <typename T>
+std::vector<T*> KnownObject<T>::existing_objects_;
 
-}
+} // namespace gua
 
-#endif  //KNOWN_OBJECT_HPP
+#endif // KNOWN_OBJECT_HPP

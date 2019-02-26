@@ -25,40 +25,40 @@
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * Nodes derived from this class will be stored in the serialized scene.
  *
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL SerializableNode : public Node {
- public:
+class GUA_DLL SerializableNode : public Node
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs an empty SerializableNode.
+     *
+     */
+    SerializableNode(){};
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty SerializableNode.
-   *
-   */
-  SerializableNode() {};
-
-  /**
-   * Constructor.
-   *
-   * This constructs a SerializableNode with the given parameters.
-   *
-   * \param name           The name of the new SerializableNode.
-   * \param transform      A matrix to describe the SerializableNode's
-   *                       transformation.
-   */
-  SerializableNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Constructor.
+     *
+     * This constructs a SerializableNode with the given parameters.
+     *
+     * \param name           The name of the new SerializableNode.
+     * \param transform      A matrix to describe the SerializableNode's
+     *                       transformation.
+     */
+    SerializableNode(std::string const& name, math::mat4 const& transform = math::mat4::identity());
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_SERIALIZABLE_NODE_HPP
+#endif // GUA_SERIALIZABLE_NODE_HPP

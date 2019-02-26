@@ -31,9 +31,10 @@
 
 class btBoxShape;
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * A class representing a box-shaped collision shape.
  *
@@ -41,55 +42,53 @@ namespace physics {
  * length specified by half extents, in local shape coordinates.
  * The box shape can be used for both static and dynamic rigid bodies.
  */
-class GUA_DLL BoxShape : public CollisionShape {
- public:
+class GUA_DLL BoxShape : public CollisionShape
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new box shape with the given vector containg half extents
+     * for each axis.
+     *
+     * \param vec The vector with the half-extents.
+     */
+    BoxShape(const math::vec3& half_extents);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new box shape with the given vector containg half extents
-   * for each axis.
-   *
-   * \param vec The vector with the half-extents.
-   */
-  BoxShape(const math::vec3& half_extents);
+    /**
+     * Constructor.
+     *
+     * Creates a new box shape with given half extents for each axis.
+     *
+     * \param x The half extent for the X axis.
+     * \param Y The half extent for the Y axis.
+     * \param Z The half extent for the Z axis.
+     */
+    BoxShape(float x, float y, float z);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new box shape with given half extents for each axis.
-   *
-   * \param x The half extent for the X axis.
-   * \param Y The half extent for the Y axis.
-   * \param Z The half extent for the Z axis.
-   */
-  BoxShape(float x, float y, float z);
+    /**
+     * Constructor.
+     *
+     * Creates a new box shape with given the half extent for all axes.
+     *
+     * \param half_extent  The half extent for all axes.
+     */
+    BoxShape(float half_extent);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new box shape with given the half extent for all axes.
-   *
-   * \param half_extent  The half extent for all axes.
-   */
-  BoxShape(float half_extent);
+    math::vec3 const& get_half_extents() const { return half_extents_; }
 
-  math::vec3 const& get_half_extents() const { return half_extents_; }
+    void set_half_extents(math::vec3 const& half_extents);
 
-  void set_half_extents(math::vec3 const& half_extents);
+  private:
+    void construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform) override;
 
- private:
+    btCollisionShape* construct_static() override;
 
-  void construct_dynamic(btCompoundShape* bullet_shape,
-                         const btTransform& base_transform) override;
-
-  btCollisionShape* construct_static() override;
-
-  std::unique_ptr<btBoxShape> shape_;
-  math::vec3 half_extents_;
+    std::unique_ptr<btBoxShape> shape_;
+    math::vec3 half_extents_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_BOX_SHAPE_HPP
+#endif // GUA_BOX_SHAPE_HPP

@@ -26,27 +26,27 @@
 
 #include <Awesomium/WebCore.h>
 
-namespace gua {
+namespace gua
+{
+GuiTexture::GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view) : Texture2D(width, height, scm::gl::FORMAT_RGBA_8), view_(view) {}
 
-GuiTexture::GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view)
-    : Texture2D(width, height, scm::gl::FORMAT_RGBA_8)
-    , view_(view)
-  {}
+math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const
+{
+    if(view_ == nullptr)
+    {
+        return math::vec2ui(0, 0);
+    }
 
-math::vec2ui const GuiTexture::get_handle(RenderContext const& context) const {
-  if (view_ == nullptr) {
-    return math::vec2ui(0, 0);
-  }
+    auto surface = static_cast<GLSurface*>(view_->surface());
 
-  auto surface = static_cast<GLSurface*>(view_->surface());
+    if(surface == nullptr)
+    {
+        return math::vec2ui(0, 0);
+    }
 
-  if (surface == nullptr) {
-    return math::vec2ui(0, 0);
-  }
+    surface->bind(context, this);
 
-  surface->bind(context, this);
-
-  return Texture2D::get_handle(context);
+    return Texture2D::get_handle(context);
 }
 
-}
+} // namespace gua

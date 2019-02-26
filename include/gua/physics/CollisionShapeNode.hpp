@@ -31,42 +31,43 @@
  *
  */
 
-namespace gua {
-namespace physics {
+namespace gua
+{
+namespace physics
+{
+class GUA_DLL CollisionShapeNode : public node::TransformNode
+{
+  public:
+    struct Configuration
+    {
+        GUA_ADD_PROPERTY(std::string, shape, "");
+    };
 
-class GUA_DLL CollisionShapeNode : public node::TransformNode {
- public:
+    Configuration data;
 
-  struct Configuration {
-    GUA_ADD_PROPERTY(std::string, shape, "");
-  };
+    /**
+     * Constructor.
+     *
+     * This constructs a CollisionShapeNode with the given parameters.
+     *
+     * \param name       The Node's name
+     * \param transform  The transformation of the object the Node contains.
+     */
+    CollisionShapeNode(const std::string& name, const math::mat4& transform = math::mat4::identity());
 
-  Configuration data;
+    /**
+     * Accepts a visitor and calls concrete visit method
+     *
+     * This method implements the visitor pattern for Nodes
+     *
+     */
+    /* virtual */ void accept(NodeVisitor&);
 
-  /**
-   * Constructor.
-   *
-   * This constructs a CollisionShapeNode with the given parameters.
-   *
-   * \param name       The Node's name
-   * \param transform  The transformation of the object the Node contains.
-   */
-  CollisionShapeNode(const std::string& name,
-                     const math::mat4& transform = math::mat4::identity());
-
-  /**
-   * Accepts a visitor and calls concrete visit method
-   *
-   * This method implements the visitor pattern for Nodes
-   *
-   */
-  /* virtual */ void accept(NodeVisitor&);
-
- private:
-  std::shared_ptr<node::Node> copy() const;
+  private:
+    std::shared_ptr<node::Node> copy() const;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_COLLISION_SHAPE_NODE_HPP
+#endif // GUA_COLLISION_SHAPE_NODE_HPP

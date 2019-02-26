@@ -24,47 +24,40 @@
 
 #include <gua/events/properties/Property.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+template <typename T>
+class SortableProperty : public virtual Property<T>
+{
+  public:
+    SortableProperty() : Property<T>() {}
 
-template <typename T> class SortableProperty : public virtual Property<T> {
+    SortableProperty(T const& value) : Property<T>(value) {}
 
- public:
-  SortableProperty() : Property<T>() {}
+    SortableProperty(SortableProperty<T> const& to_copy) : Property<T>(to_copy) {}
 
-  SortableProperty(T const& value) : Property<T>(value) {}
+    virtual ~SortableProperty() {}
 
-  SortableProperty(SortableProperty<T> const& to_copy) : Property<T>(to_copy) {}
+    bool operator>(SortableProperty<T> const& rhs) const { return Property<T>::get() > rhs.get(); }
 
-  virtual ~SortableProperty() {}
+    bool operator>(T const& rhs) const { return Property<T>::get() > rhs; }
 
-  bool operator>(SortableProperty<T> const& rhs) const {
-    return Property<T>::get() > rhs.get();
-  }
+    bool operator>=(SortableProperty<T> const& rhs) const { return Property<T>::get() >= rhs.get(); }
 
-  bool operator>(T const& rhs) const { return Property<T>::get() > rhs; }
+    bool operator>=(T const& rhs) const { return Property<T>::get() >= rhs; }
 
-  bool operator>=(SortableProperty<T> const& rhs) const {
-    return Property<T>::get() >= rhs.get();
-  }
+    bool operator<(SortableProperty<T> const& rhs) const { return Property<T>::get() < rhs.get(); }
 
-  bool operator>=(T const& rhs) const { return Property<T>::get() >= rhs; }
+    bool operator<(T const& rhs) const { return Property<T>::get() < rhs; }
 
-  bool operator<(SortableProperty<T> const& rhs) const {
-    return Property<T>::get() < rhs.get();
-  }
+    bool operator<=(SortableProperty<T> const& rhs) const { return Property<T>::get() <= rhs.get(); }
 
-  bool operator<(T const& rhs) const { return Property<T>::get() < rhs; }
-
-  bool operator<=(SortableProperty<T> const& rhs) const {
-    return Property<T>::get() <= rhs.get();
-  }
-
-  bool operator<=(T const& rhs) const { return Property<T>::get() <= rhs; }
-
+    bool operator<=(T const& rhs) const { return Property<T>::get() <= rhs; }
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* SORTABLE_PROPERTY_HPP_ */

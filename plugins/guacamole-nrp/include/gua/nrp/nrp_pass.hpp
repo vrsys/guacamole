@@ -18,7 +18,7 @@ class GUA_NRP_DLL NRPPassDescription : public PipelinePassDescription
 
     friend class Pipeline;
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // GUACAMOLE_NRP_PASS_HPP

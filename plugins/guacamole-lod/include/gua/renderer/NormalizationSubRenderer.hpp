@@ -22,44 +22,41 @@
 #ifndef GUA_NORMAL_SUB_RENDERER_HPP
 #define GUA_NORMAL_SUB_RENDERER_HPP
 
-
 //#include <gua/renderer/ShaderProgram.hpp>
 //#include <gua/node/PLodNode.hpp>
-
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/PLodSubRenderer.hpp>
 
- namespace gua {
+namespace gua
+{
+class PLodSubRenderer;
 
-  class PLodSubRenderer;
-
-  class GUA_LOD_DLL NormalizationSubRenderer : public PLodSubRenderer {
-
+class GUA_LOD_DLL NormalizationSubRenderer : public PLodSubRenderer
+{
   public:
-  	NormalizationSubRenderer();
+    NormalizationSubRenderer();
 
-    virtual void create_gpu_resources(gua::RenderContext const& ctx,
-                                       scm::math::vec2ui const& render_target_dims,
-                                       gua::plod_shared_resources& shared_resources) override;
+    virtual void create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources) override;
 
-    virtual void render_sub_pass(Pipeline& pipe, PipelinePassDescription const& desc,
+    virtual void render_sub_pass(Pipeline& pipe,
+                                 PipelinePassDescription const& desc,
                                  gua::plod_shared_resources& shared_resources,
                                  std::vector<node::Node*>& sorted_models,
-                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& nodes_in_frustum_per_model,
+                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
                                  lamure::context_t context_id,
                                  lamure::view_t lamure_view_id) override;
 
-  private: //shader related auxiliary methods
+  private: // shader related auxiliary methods
     virtual void _load_shaders();
-    virtual void _upload_normalization_pass_uniforms(RenderContext const& ctx, 
-                                                     gua::plod_shared_resources& shared_resources);
+    virtual void _upload_normalization_pass_uniforms(RenderContext const& ctx, gua::plod_shared_resources& shared_resources);
+
   private:
-    scm::gl::rasterizer_state_ptr   no_backface_culling_rasterizer_state_;
-    scm::gl::quad_geometry_ptr      fullscreen_quad_;
+    scm::gl::rasterizer_state_ptr no_backface_culling_rasterizer_state_;
+    scm::gl::quad_geometry_ptr fullscreen_quad_;
 
-    scm::gl::sampler_state_ptr      nearest_sampler_state_;
-  };
- } 
+    scm::gl::sampler_state_ptr nearest_sampler_state_;
+};
+} // namespace gua
 
- #endif //GUA_NORMAL_SUB_RENDERER_HPP
+#endif // GUA_NORMAL_SUB_RENDERER_HPP

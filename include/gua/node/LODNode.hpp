@@ -26,9 +26,10 @@
 #include <gua/node/TransformNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent a level of detail node in the SceneGraph.
  *
@@ -42,61 +43,58 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL LODNode : public TransformNode {
- public:
+class GUA_DLL LODNode : public TransformNode
+{
+  public:
+    struct Configuration
+    {
+        /**
+         * A vector storing distances. Indices are mapped to the indices of the
+         * LODNode's children vector.
+         */
+        GUA_ADD_PROPERTY(std::vector<float>, lod_distances, std::vector<float>());
+    };
 
-  struct Configuration {
-      /**
-       * A vector storing distances. Indices are mapped to the indices of the
-       * LODNode's children vector.
-       */
-      GUA_ADD_PROPERTY(std::vector<float>,  lod_distances,   std::vector<float>());
-  };
+    /**
+     * The LODNode's configuration.
+     */
+    Configuration data;
 
-  /**
-   * The LODNode's configuration.
-   */
-  Configuration data;
+    /**
+     * Constructor.
+     *
+     * This constructs an empty LODNode.
+     *
+     */
+    LODNode() = default;
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty LODNode.
-   *
-   */
-  LODNode() = default;
+    /**
+     * Constructor.
+     *
+     * This constructs a LODNode with the given parameters.
+     *
+     * \param name           The name of the new LODNode.
+     * \param configuration  A configuration struct to define the LODNode's
+     *                       properties.
+     * \param transform      A matrix to describe the LODNode's
+     *                       transformation.
+     */
+    LODNode(std::string const& name, Configuration const& configuration = Configuration(), math::mat4 const& transform = math::mat4::identity());
 
-  /**
-   * Constructor.
-   *
-   * This constructs a LODNode with the given parameters.
-   *
-   * \param name           The name of the new LODNode.
-   * \param configuration  A configuration struct to define the LODNode's
-   *                       properties.
-   * \param transform      A matrix to describe the LODNode's
-   *                       transformation.
-   */
-  LODNode(std::string const& name,
-          Configuration const& configuration = Configuration(),
-          math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the LODNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the LODNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
-
- private:
-
-  std::shared_ptr<Node> copy() const;
+  private:
+    std::shared_ptr<Node> copy() const;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_LOD_NODE_HPP
+#endif // GUA_LOD_NODE_HPP

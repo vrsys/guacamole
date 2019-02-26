@@ -38,40 +38,34 @@
 #include <regex>
 #include <list>
 
-namespace gua {
-
-////////////////////////////////////////////////////////////////////////////////
-
-PLODPassDescription::PLODPassDescription()
-  : PipelinePassDescription()
+namespace gua
 {
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
+////////////////////////////////////////////////////////////////////////////////
+
+PLODPassDescription::PLODPassDescription() : PipelinePassDescription()
+{
+    needs_color_buffer_as_input_ = false;
+    writes_only_color_buffer_ = false;
+    enable_for_shadows_ = true;
+    rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const {
-  return std::make_shared<PLODPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> PLODPassDescription::make_copy() const { return std::make_shared<PLODPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass PLODPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{ *this, ctx, substitution_map };
+    PipelinePass pass{*this, ctx, substitution_map};
 
-  auto renderer = std::make_shared<PLODRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
+    auto renderer = std::make_shared<PLODRenderer>();
+    renderer->set_global_substitution_map(substitution_map);
 
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
+    pass.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
-  return pass;
+    return pass;
 }
 
-}
+} // namespace gua

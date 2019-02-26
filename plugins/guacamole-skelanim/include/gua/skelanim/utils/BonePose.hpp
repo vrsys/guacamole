@@ -28,38 +28,37 @@
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * @brief holds transformation of bone
  * @details can be blended with another bone pose
  */
-struct GUA_SKELANIM_DLL BonePose {
- public:
-  BonePose();
+struct GUA_SKELANIM_DLL BonePose
+{
+  public:
+    BonePose();
 
-  BonePose(scm::math::vec3f const& scale,
-           scm::math::quatf const& rotate,
-           scm::math::vec3f const& translate);
+    BonePose(scm::math::vec3f const& scale, scm::math::quatf const& rotate, scm::math::vec3f const& translate);
 
-  ~BonePose();
+    ~BonePose();
 
-  scm::math::mat4f to_matrix() const;
+    scm::math::mat4f to_matrix() const;
 
-  BonePose blend(BonePose const& t, float const factor) const;
+    BonePose blend(BonePose const& t, float const factor) const;
 
-  BonePose operator+(BonePose const& t) const;
-  BonePose& operator+=(BonePose const& t);
+    BonePose operator+(BonePose const& t) const;
+    BonePose& operator+=(BonePose const& t);
 
-  BonePose operator*(float const factor) const;
-  BonePose& operator*=(float const f);
+    BonePose operator*(float const factor) const;
+    BonePose& operator*=(float const f);
 
- private:
-  scm::math::vec3f scaling;
-  scm::math::quatf rotation;
-  scm::math::vec3f translation;
+  private:
+    scm::math::vec3f scaling;
+    scm::math::quatf rotation;
+    scm::math::vec3f translation;
 };
 
-}
+} // namespace gua
 
-#endif  //GUA_BONEPOSE_HPP
+#endif // GUA_BONEPOSE_HPP

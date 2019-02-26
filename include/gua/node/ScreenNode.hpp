@@ -26,9 +26,10 @@
 #include <gua/node/Node.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent a screen in the SceneGraph.
  *
@@ -38,76 +39,73 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL ScreenNode : public Node {
- public:
+class GUA_DLL ScreenNode : public Node
+{
+  public:
+    struct Configuration
+    {
+        /**
+         * A vector containing width and height of the ScreenNode.
+         */
+        GUA_ADD_PROPERTY(math::vec2, size, math::vec2(1.0, 1.0));
+    };
 
-  struct Configuration {
     /**
-     * A vector containing width and height of the ScreenNode.
+     * The ScreenNode's configuration.
      */
-    GUA_ADD_PROPERTY(math::vec2, size, math::vec2(1.0, 1.0));
-  };
+    Configuration data;
 
-  /**
-   * The ScreenNode's configuration.
-   */
-  Configuration data;
+    /**
+     * Constructor.
+     *
+     * This constructs an empty ScreenNode.
+     *
+     */
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty ScreenNode.
-   *
-   */
+    /**
+     * Constructor.
+     *
+     * This constructs a ScreenNode with the given parameters.
+     *
+     * \param name           The name of the new ScreenNode.
+     * \param configuration  A configuration struct to define the ScreenNode's
+     *                       properties.
+     * \param transform      A matrix to describe the ScreenNode's
+     *                       transformation. By default, the ScreenNode is aligned
+     *                       with the xy-plane and facing in +z direction.
+     */
+    ScreenNode(std::string const& name, Configuration const& configuration = Configuration(), math::mat4 const& transform = math::mat4::identity());
 
-  /**
-   * Constructor.
-   *
-   * This constructs a ScreenNode with the given parameters.
-   *
-   * \param name           The name of the new ScreenNode.
-   * \param configuration  A configuration struct to define the ScreenNode's
-   *                       properties.
-   * \param transform      A matrix to describe the ScreenNode's
-   *                       transformation. By default, the ScreenNode is aligned
-   *                       with the xy-plane and facing in +z direction.
-   */
-  ScreenNode(std::string const& name,
-             Configuration const& configuration = Configuration(),
-             math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Returns the ScreenNode's transformation, considering the scaling specified
+     * in the Configuration.
+     *
+     * \return math::mat4  The ScreenNode's scaled transformation.
+     */
+    math::mat4 get_scaled_transform() const;
 
-  /**
-   * Returns the ScreenNode's transformation, considering the scaling specified
-   * in the Configuration.
-   *
-   * \return math::mat4  The ScreenNode's scaled transformation.
-   */
-  math::mat4 get_scaled_transform() const;
+    /**
+     * Returns the ScreenNode's world transformation, considering the scaling
+     * specified in the Configuration.
+     *
+     * \return math::mat4  The ScreenNode's scaled world transformation.
+     */
+    math::mat4 get_scaled_world_transform() const;
 
-  /**
-   * Returns the ScreenNode's world transformation, considering the scaling
-   * specified in the Configuration.
-   *
-   * \return math::mat4  The ScreenNode's scaled world transformation.
-   */
-  math::mat4 get_scaled_world_transform() const;
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the ScreenNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the ScreenNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
-
- private:
-
-  std::shared_ptr<Node> copy() const override;
-
+  private:
+    std::shared_ptr<Node> copy() const override;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_SCREEN_NODE_HPP
+#endif // GUA_SCREEN_NODE_HPP

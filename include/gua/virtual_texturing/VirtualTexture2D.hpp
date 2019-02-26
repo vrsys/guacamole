@@ -23,10 +23,10 @@
 #define GUA_VIRTUALTEXTURE2D_HPP
 
 // guacamole headers
+#include <gua/math/math.hpp>
 #include <gua/platform.hpp>
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/renderer/Texture.hpp>
-#include <gua/math/math.hpp>
 #include <gua/utils/Logger.hpp>
 
 #include <gua/virtual_texturing/LayeredPhysicalTexture2D.hpp>
@@ -39,85 +39,74 @@
 #include <string>
 #include <vector>
 
+#include <memory>
 #include <mutex>
 #include <thread>
-#include <memory>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL VirtualTexture2D : public Texture
+{
+  public:
+    VirtualTexture2D(std::string const& file,
+                     std::size_t physical_texture_tile_slot_size,
+                     scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
 
-class GUA_DLL VirtualTexture2D : public Texture {
- public:
-  
-  VirtualTexture2D(std::string const& file,
-                   std::size_t physical_texture_tile_slot_size,
-                   scm::gl::sampler_state_desc const& state_descripton =
-                   scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST,
-                                               scm::gl::WRAP_REPEAT,
-                                               scm::gl::WRAP_REPEAT));
+    unsigned width() const override { return physical_texture_width_; }
+    unsigned height() const override { return physical_texture_height_; }
+    unsigned get_physical_texture_width() const { return physical_texture_width_; }
+    unsigned get_physical_texture_height() const { return physical_texture_height_; }
+    uint32_t get_tile_size() const { return tile_size_; }
+    uint32_t get_lamure_texture_id() const { return lamure_texture_id_; }
 
-  unsigned width() const override { return physical_texture_width_; }
-  unsigned height() const override { return physical_texture_height_; }
-  unsigned get_physical_texture_width() const { return physical_texture_width_; }
-  unsigned get_physical_texture_height() const { return physical_texture_height_; }
-  uint32_t get_tile_size() const { return tile_size_; }
-  uint32_t get_lamure_texture_id() const { return lamure_texture_id_; }
+    uint32_t get_max_depth() const { return max_depth_; }
 
-  uint32_t get_max_depth() const {return max_depth_;}
+    void upload_to(RenderContext const& context) const override;
 
-  void upload_to(RenderContext const& context) const override;
+    // per render (gua) contexts
+    static std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>> physical_texture_ptr_per_context_;
 
-  // per render (gua) contexts
-  static std::map<std::size_t,
-            std::shared_ptr<LayeredPhysicalTexture2D> > physical_texture_ptr_per_context_;
+    // per render (gua) contexts
+    static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
-  // per render (gua) contexts
-  static std::map<std::size_t, VTInfo> vt_info_per_context_;
+    // static scm::math::vec2ui get_physical_texture_handle(RenderContext const& ctx) {
+    //  return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
+    //}
 
-  //static scm::math::vec2ui get_physical_texture_handle(RenderContext const& ctx) {
-  //  return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
-  //}
+    // std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
+    //  return index_texture_hierarchy_per_context_[ctx.id];
+    //}
 
-  //std::vector<scm::gl::texture_2d_ptr>& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
-  //  return index_texture_hierarchy_per_context_[ctx.id];
-  //}
+    void upload_vt_handle_to_ubo(RenderContext const& ctx) const;
 
-  void upload_vt_handle_to_ubo(RenderContext const& ctx) const;
+    // scm::gl::texture_2d_ptr& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
+    //  return index_texture_mip_map_per_context_[ctx.id];
+    //}
 
-  //scm::gl::texture_2d_ptr& get_index_texture_ptrs_for_context(RenderContext const& ctx) {
-  //  return index_texture_mip_map_per_context_[ctx.id];
-  //}
+    void update_index_texture_hierarchy(RenderContext const& ctx, std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs);
 
-  void update_index_texture_hierarchy(RenderContext const& ctx, 
-                                      std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs);
+  protected:
+    // mutable std::map<std::size_t,
+    //  std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
 
- protected:
+    mutable std::map<std::size_t, scm::gl::texture_2d_ptr> index_texture_mip_map_per_context_;
 
-  //mutable std::map<std::size_t,
-  //  std::vector<scm::gl::texture_2d_ptr> > index_texture_hierarchy_per_context_;
-  
-  mutable std::map<std::size_t,
-    scm::gl::texture_2d_ptr>               index_texture_mip_map_per_context_;
+    static std::map<std::size_t, scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
 
-  static std::map<std::size_t, 
-                   scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
+    // scm::gl::texture_image_data_ptr image_ = nullptr;
+    unsigned physical_texture_width_;
+    unsigned physical_texture_height_;
+    uint16_t tile_size_;
 
+    mutable uint32_t max_depth_;
+    // unsigned layers_;
 
-  //scm::gl::texture_image_data_ptr image_ = nullptr;
-  unsigned physical_texture_width_;
-  unsigned physical_texture_height_;
-  uint16_t tile_size_;
+  private:
+    std::string ini_file_path_;
+    std::string atlas_file_path_;
+    uint32_t lamure_texture_id_;
 
-  mutable uint32_t max_depth_;
-  //unsigned layers_;
-
- private:
-  std::string ini_file_path_;
-  std::string atlas_file_path_;
-  uint32_t    lamure_texture_id_;
-
-  static bool initialized_vt_system;
-
-};  
-
-}
-#endif  // GUA_VIRTUALTEXTURE2D_HPP
+    static bool initialized_vt_system;
+};
+} // namespace gua
+#endif // GUA_VIRTUALTEXTURE2D_HPP

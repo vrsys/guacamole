@@ -50,7 +50,6 @@ class GUA_NRP_DLL NRPConfig
     std::string get_nrp_sky_map();
 
   private:
-
     const char *NETWORK_MAX_TIMEOUT = "NETWORK_MAX_TIMEOUT";
     const char *MASTER_HOST = "MASTER_HOST";
     const char *MASTER_PORT = "MASTER_PORT";
@@ -85,7 +84,7 @@ class GUA_NRP_DLL NRPConfig
 
     explicit NRPConfig(std::string &path);
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // GUACAMOLE_NRP_CONFIG_H

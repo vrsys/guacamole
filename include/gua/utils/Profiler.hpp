@@ -31,48 +31,47 @@
 #include <scm/gl_util/utilities.h>
 #include <string>
 
-namespace gua {
-
+namespace gua
+{
 /**
  *
  *
  *
  */
-class GUA_DLL Profiler {
- public:
+class GUA_DLL Profiler
+{
+  public:
+    class Timer
+    {
+      public:
+        Timer(Profiler const& profiler, std::string const& name);
 
-  class Timer {
-   public:
-    Timer(Profiler const& profiler, std::string const& name);
+        Timer(Profiler const& profiler, std::string const& name, RenderContext const& context);
 
-    Timer(Profiler const& profiler,
-          std::string const& name,
-          RenderContext const& context);
+      private:
+        scm::gl::util::scoped_timer timer_;
+    };
 
-   private:
-    scm::gl::util::scoped_timer timer_;
-  };
+    Profiler();
 
-  Profiler();
+    void enable(bool enable);
 
-  void enable(bool enable);
+    void set_interval(int interval);
 
-  void set_interval(int interval);
+    void update();
 
-  void update();
+    void print();
+    void print(std::vector<std::string> const& names);
 
-  void print();
-  void print(std::vector<std::string> const& names);
+    friend class Timer;
 
-  friend class Timer;
+  private:
+    scm::gl::util::profiling_host_ptr profile_host_;
+    mutable std::set<std::string> timer_names_;
 
- private:
-  scm::gl::util::profiling_host_ptr profile_host_;
-  mutable std::set<std::string> timer_names_;
-
-  int interval_;
-  int frame_count_;
+    int interval_;
+    int frame_count_;
 };
 
-}
-#endif  // GUA_PROFILER_HPP
+} // namespace gua
+#endif // GUA_PROFILER_HPP
