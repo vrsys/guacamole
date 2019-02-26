@@ -27,27 +27,24 @@
 #include <BulletCollision/CollisionShapes/btCylinderShape.h>
 #include <gua/memory.hpp>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 CylinderShape::CylinderShape(const math::vec3& half_extents)
-    : CollisionShape(true, true, true),
-      shape_(gua::make_unique<btCylinderShape>(
-          math::vec3_to_btVector3(half_extents))),
-      half_extents_(half_extents) {}
-
-void CylinderShape::set_half_extents(math::vec3 const& half_extents) {
-  half_extents_ = half_extents;
-  shape_ =
-      gua::make_unique<btCylinderShape>(math::vec3_to_btVector3(half_extents));
+    : CollisionShape(true, true, true), shape_(gua::make_unique<btCylinderShape>(math::vec3_to_btVector3(half_extents))), half_extents_(half_extents)
+{
 }
 
-void CylinderShape::construct_dynamic(btCompoundShape* bullet_shape,
-                                      btTransform const& base_transform) {
-  bullet_shape->addChildShape(base_transform, shape_.get());
+void CylinderShape::set_half_extents(math::vec3 const& half_extents)
+{
+    half_extents_ = half_extents;
+    shape_ = gua::make_unique<btCylinderShape>(math::vec3_to_btVector3(half_extents));
 }
+
+void CylinderShape::construct_dynamic(btCompoundShape* bullet_shape, btTransform const& base_transform) { bullet_shape->addChildShape(base_transform, shape_.get()); }
 
 btCollisionShape* CylinderShape::construct_static() { return shape_.get(); }
 
-}
-}
+} // namespace physics
+} // namespace gua

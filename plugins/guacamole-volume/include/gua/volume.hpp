@@ -26,4 +26,4 @@
 #include <gua/volume/VolumePass.hpp>
 #include <gua/volume/VolumeLoader.hpp>
 
-#endif  // GUA_INCLUDE_VOLUME_HPP
+#endif // GUA_INCLUDE_VOLUME_HPP

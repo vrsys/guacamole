@@ -29,32 +29,32 @@
 
 #include <memory>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL RenderTarget
+{
+  public:
+    RenderTarget(math::vec2ui const& resolution);
+    virtual ~RenderTarget() {}
 
-class GUA_DLL RenderTarget {
- public:
+    virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;
+    virtual void set_viewport(RenderContext const& context);
 
-  RenderTarget(math::vec2ui const& resolution);
-  virtual ~RenderTarget() {}
+    virtual void bind(RenderContext const& context, bool write_depth) = 0;
+    virtual void unbind(RenderContext const& context);
 
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;  
-  virtual void set_viewport(RenderContext const& context);
+    virtual void remove_buffers(RenderContext const& ctx) = 0;
 
-  virtual void bind(RenderContext const& context, bool write_depth) = 0;
-  virtual void unbind(RenderContext const& context);
+    virtual scm::gl::texture_2d_ptr const& get_depth_buffer() const = 0;
 
-  virtual void remove_buffers(RenderContext const& ctx) = 0;
+    unsigned get_width() const { return resolution_.x; }
+    unsigned get_height() const { return resolution_.y; }
+    math::vec2ui const& get_resolution() const { return resolution_; }
 
-  virtual scm::gl::texture_2d_ptr const& get_depth_buffer() const = 0;
-
-  unsigned            get_width()  const      { return resolution_.x; }
-  unsigned            get_height() const      { return resolution_.y; }
-  math::vec2ui const& get_resolution() const  { return resolution_; }
-
- protected:
-  math::vec2ui resolution_;
+  protected:
+    math::vec2ui resolution_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_RENDER_TARGET_HPP
+#endif // GUA_RENDER_TARGET_HPP

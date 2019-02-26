@@ -21,49 +21,39 @@
 
 #include <gua/utils/NamedSharedMemorySegment.hpp>
 
-
 namespace gua
 {
+NamedSharedMemorySegment::NamedSharedMemorySegment(std::string const& shared_memory_segment_name, uint64_t shared_memory_size_in_byte)
+    : mName(shared_memory_segment_name), mSize(shared_memory_size_in_byte), mManagedSharedMemoryObjectPtr(nullptr), mWasCreated(false), mInitRead(false)
+{
+}
 
-  NamedSharedMemorySegment::
-  NamedSharedMemorySegment(std::string const& shared_memory_segment_name,
-                          uint64_t shared_memory_size_in_byte) 
-                            : mName(shared_memory_segment_name),
-                              mSize(shared_memory_size_in_byte),
-                              mManagedSharedMemoryObjectPtr(nullptr),
-                              mWasCreated(false),
-                              mInitRead(false)
-                          {}
-
-  NamedSharedMemorySegment::
-  ~NamedSharedMemorySegment() {
-    if (mWasCreated) {
-      boost::interprocess::shared_memory_object::remove(mName.c_str());
-      delete mManagedSharedMemoryObjectPtr;
+NamedSharedMemorySegment::~NamedSharedMemorySegment()
+{
+    if(mWasCreated)
+    {
+        boost::interprocess::shared_memory_object::remove(mName.c_str());
+        delete mManagedSharedMemoryObjectPtr;
     }
-  }
+}
 
-
-
-  void NamedSharedMemorySegment::create_writeable() {
+void NamedSharedMemorySegment::create_writeable()
+{
     boost::interprocess::shared_memory_object::remove(mName.c_str());
 
     mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::create_only, mName.c_str(), mSize);
-  }
-
-  void NamedSharedMemorySegment::create_readable() {
-    mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::open_only, mName.c_str());
-  }
-
-
-  void NamedSharedMemorySegment::write(char* const data, std::size_t byte_length, std::size_t byte_offset) {
-    std::memcpy( (char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, data, byte_length);
-  }
-
-  void NamedSharedMemorySegment::read(char* data, std::size_t byte_length, std::size_t byte_offset) {
-    std::memcpy( data, (char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, byte_length);
-  }
-
 }
 
+void NamedSharedMemorySegment::create_readable() { mManagedSharedMemoryObjectPtr = new boost::interprocess::managed_shared_memory(::boost::interprocess::open_only, mName.c_str()); }
 
+void NamedSharedMemorySegment::write(char* const data, std::size_t byte_length, std::size_t byte_offset)
+{
+    std::memcpy((char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, data, byte_length);
+}
+
+void NamedSharedMemorySegment::read(char* data, std::size_t byte_length, std::size_t byte_offset)
+{
+    std::memcpy(data, (char*)(mManagedSharedMemoryObjectPtr->get_address()) + byte_offset, byte_length);
+}
+
+} // namespace gua

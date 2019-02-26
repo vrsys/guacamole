@@ -34,8 +34,8 @@
 #include <gua/scenegraph.hpp>
 #include <gua/utils.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * Initialize guacamole.
  *
@@ -43,15 +43,13 @@ namespace gua {
  * using guacamole.
  */
 
-  void GUA_DLL init(int argc, char** argv);
+void GUA_DLL init(int argc, char** argv);
 
-  void GUA_DLL create_resource_material ( std::string const& material_name, 
-                                          std::vector<unsigned char> const& shading_model_resource, 
-                                          std::vector<unsigned char> const& material_resource);
+void GUA_DLL create_resource_material(std::string const& material_name, std::vector<unsigned char> const& shading_model_resource, std::vector<unsigned char> const& material_resource);
 
-}
+} // namespace gua
 
-#endif  // GUA_GUACAMOLE_HPP
+#endif // GUA_GUACAMOLE_HPP
 
 /**
  * \mainpage

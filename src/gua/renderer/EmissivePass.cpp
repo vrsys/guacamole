@@ -22,38 +22,30 @@
 // class header
 #include <gua/renderer/EmissivePass.hpp>
 
-namespace gua {
+namespace gua
+{
+EmissivePassDescription::EmissivePassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "resources/shaders/lighting_emit.vert";
+    fragment_shader_ = "resources/shaders/lighting_emit.frag";
+    name_ = "EmissivePass";
 
-EmissivePassDescription::EmissivePassDescription()
-  : PipelinePassDescription() {
-  vertex_shader_ = "resources/shaders/lighting_emit.vert";
-  fragment_shader_ = "resources/shaders/lighting_emit.frag";
-  name_ = "EmissivePass";
+    needs_color_buffer_as_input_ = true;
+    writes_only_color_buffer_ = true;
+    rendermode_ = RenderMode::Quad;
 
-  needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
-
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
-  blend_state_ = boost::make_optional(
-      scm::gl::blend_state_desc(scm::gl::blend_ops(true,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE)));
+    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    blend_state_ = boost::make_optional(scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> EmissivePassDescription::make_copy() const {
-  return std::make_shared<EmissivePassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> EmissivePassDescription::make_copy() const { return std::make_shared<EmissivePassDescription>(*this); }
 
-PipelinePass EmissivePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+PipelinePass EmissivePassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

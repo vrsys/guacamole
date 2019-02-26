@@ -69,5 +69,5 @@ void NRPCameraNode::translate(math::vec3 const &offset)
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
     Node::translate(offset);
 }
-}
-}
+} // namespace nrp
+} // namespace gua

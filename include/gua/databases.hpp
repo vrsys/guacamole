@@ -30,4 +30,4 @@
 #include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 
-#endif  // GUA_INCLUDE_DATABASES_HPP
+#endif // GUA_INCLUDE_DATABASES_HPP

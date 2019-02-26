@@ -26,16 +26,14 @@
 #include <gua/math/math.hpp>
 #include <gua/math/BoundingBox.hpp>
 
-namespace gua {
+namespace gua
+{
+namespace math
+{
+GUA_DLL math::BoundingBox<math::vec3> transform(math::BoundingBox<math::vec3> const& bbox, math::mat4 const& mat);
 
-namespace math {
+} // namespace math
 
-GUA_DLL math::BoundingBox<math::vec3> transform(
-    math::BoundingBox<math::vec3> const& bbox,
-    math::mat4 const& mat);
+} // namespace gua
 
-}  // namespace math
-
-}  // namespace gua
-
-#endif  // GUA_BOUNDING_BOX_ALGO_HPP
+#endif // GUA_BOUNDING_BOX_ALGO_HPP

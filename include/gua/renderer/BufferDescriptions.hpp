@@ -27,34 +27,33 @@
 // external headers
 #include <string>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * Contains information on a color buffer for a render pass.
  *
  * This struct is used to create new color buffers in render passes.
  */
-struct GUA_DLL ColorBufferDescription {
-  ColorBufferDescription(std::string const& name,
-                         unsigned location,
-                         scm::gl::data_format format =
-                             scm::gl::data_format(scm::gl::FORMAT_RGB_32F))
-      : name_(name), location_(location), format_(format) {}
+struct GUA_DLL ColorBufferDescription
+{
+    ColorBufferDescription(std::string const& name, unsigned location, scm::gl::data_format format = scm::gl::data_format(scm::gl::FORMAT_RGB_32F)) : name_(name), location_(location), format_(format)
+    {
+    }
 
-  /**
-   * The name of the buffer.
-   */
-  std::string name_;
+    /**
+     * The name of the buffer.
+     */
+    std::string name_;
 
-  /**
-   * The location where it should be bound.
-   */
-  unsigned location_;
+    /**
+     * The location where it should be bound.
+     */
+    unsigned location_;
 
-  /**
-   * Information on the internally used data format.
-   */
-  scm::gl::data_format format_;
+    /**
+     * Information on the internally used data format.
+     */
+    scm::gl::data_format format_;
 };
 
 /**
@@ -62,23 +61,21 @@ struct GUA_DLL ColorBufferDescription {
  *
  * This struct is used to create new depth stencil buffers in render passes.
  */
-struct DepthStencilBufferDescription {
-  DepthStencilBufferDescription(std::string const& name,
-                                scm::gl::data_format format =
-                                    scm::gl::data_format(scm::gl::FORMAT_D16))
-      : name_(name), format_(format) {}
+struct DepthStencilBufferDescription
+{
+    DepthStencilBufferDescription(std::string const& name, scm::gl::data_format format = scm::gl::data_format(scm::gl::FORMAT_D16)) : name_(name), format_(format) {}
 
-  /**
-   * The name of the buffer.
-   */
-  std::string name_;
+    /**
+     * The name of the buffer.
+     */
+    std::string name_;
 
-  /**
-   * Information on the internally used data format.
-   */
-  scm::gl::data_format format_;
+    /**
+     * Information on the internally used data format.
+     */
+    scm::gl::data_format format_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_BUFFER_DESCRIPTIONS_HPP
+#endif // GUA_BUFFER_DESCRIPTIONS_HPP

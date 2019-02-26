@@ -34,18 +34,17 @@
 #include <map>
 #include <list>
 
-namespace gua {
-
+namespace gua
+{
 /**
  *
  */
-struct ShaderProgramStage {
-  ShaderProgramStage(scm::gl::shader_stage t,
-                     std::string const& src)
-      : type(t), source(src) {}
+struct ShaderProgramStage
+{
+    ShaderProgramStage(scm::gl::shader_stage t, std::string const& src) : type(t), source(src) {}
 
-  scm::gl::shader_stage type;
-  std::string source;
+    scm::gl::shader_stage type;
+    std::string source;
 };
 
 // TODO: this class may exploit per-context resources capability
@@ -56,148 +55,124 @@ struct ShaderProgramStage {
  * It combines data from a FragmentShader and a VertexShader in order to
  * achieve different visual appearances of the same mesh.
  */
-class GUA_DLL ShaderProgram {
- public:
+class GUA_DLL ShaderProgram
+{
+  public:
+  public:
+    /**
+     * Default constructor.
+     *
+     * Creates a new (invalid) shader program.
+     */
+    ShaderProgram();
 
- public:
-  /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) shader program.
-   */
-  ShaderProgram();
+    /**
+     * Constructor.
+     *
+     * This method takes a vertex shader source and a fragment shader
+     * source and combines them to a ShaderProgram.
+     *
+     * \param v_shader_source      The vertex shader source.
+     * \param f_shader_source      The fragment shader source.
+     * \param substitutions        Shader compile-time substitution map.
+     */
+    void create_from_sources(std::string const& v_shader_source, std::string const& f_shader_source, SubstitutionMap const& substitutions = SubstitutionMap());
 
-  /**
-   * Constructor.
-   *
-   * This method takes a vertex shader source and a fragment shader
-   * source and combines them to a ShaderProgram.
-   *
-   * \param v_shader_source      The vertex shader source.
-   * \param f_shader_source      The fragment shader source.
-   * \param substitutions        Shader compile-time substitution map.
-   */
-  void create_from_sources(std::string const& v_shader_source,
-                           std::string const& f_shader_source,
-                           SubstitutionMap const& substitutions = SubstitutionMap());
+    /**
+     * Constructor.
+     *
+     * This method takes a vertex shader source, a geomtry shader source
+     * and a fragment shader source and combines them to a ShaderProgram.
+     *
+     * \param v_shader_source      The vertex shader source.
+     * \param g_shader_source      The geometry shader source.
+     * \param f_shader_source      The fragment shader source.
+     * \param substitutions        Shader compile-time substitution map.
+     */
+    void create_from_sources(std::string const& v_shader_source, std::string const& g_shader_source, std::string const& f_shader_source, SubstitutionMap const& substitutions = SubstitutionMap());
 
-  /**
-   * Constructor.
-   *
-   * This method takes a vertex shader source, a geomtry shader source
-   * and a fragment shader source and combines them to a ShaderProgram.
-   *
-   * \param v_shader_source      The vertex shader source.
-   * \param g_shader_source      The geometry shader source.
-   * \param f_shader_source      The fragment shader source.
-   * \param substitutions        Shader compile-time substitution map.
-   */
-  void create_from_sources(std::string const& v_shader_source,
-                           std::string const& g_shader_source,
-                           std::string const& f_shader_source,
-                           SubstitutionMap const& substitutions = SubstitutionMap());
+    /**
+     *
+     */
+    void set_shaders(std::vector<ShaderProgramStage> const& shaders,
+                     std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
+                     bool in_rasterization_discard = false,
+                     SubstitutionMap const& substitutions = SubstitutionMap(),
+                     bool enable_virtual_texturing = false);
 
-  /**
-   *
-   */
-  void set_shaders(std::vector<ShaderProgramStage> const& shaders,
-                   std::list<std::string> const& interleaved_stream_capture =
-                       std::list<std::string>(),
-                   bool in_rasterization_discard = false,
-                   SubstitutionMap const& substitutions = SubstitutionMap(),
-                   bool enable_virtual_texturing = false
-                   );
+    /**
+     * Sets compile-time substitution map
+     *
+     * \param substitutions        Shader compile-time substitution map.
+     */
+    void set_substitutions(SubstitutionMap const& substitutions);
 
-  /**
-   * Sets compile-time substitution map
-   *
-   * \param substitutions        Shader compile-time substitution map.
-   */
-  void set_substitutions(SubstitutionMap const& substitutions);
+    /**
+     * Applies this shader.
+     *
+     * All preceeding draw calls on the given context will be affected by
+     * this shader.
+     *
+     * \param context             The context which should use this shader.
+     */
+    void use(RenderContext const& context) const;
 
-  /**
-   * Applies this shader.
-   *
-   * All preceeding draw calls on the given context will be affected by
-   * this shader.
-   *
-   * \param context             The context which should use this shader.
-   */
-  void use(RenderContext const& context) const;
+    /**
+     * Unuses the shader.
+     *
+     * Preceeding draw calls won't use this shader anymore.
+     */
+    void unuse(RenderContext const& context) const;
 
-  /**
-   * Unuses the shader.
-   *
-   * Preceeding draw calls won't use this shader anymore.
-   */
-  void unuse(RenderContext const& context) const;
+    /**
+     * Sets an uniform value.
+     *
+     * Sets an uniform value of a currently used shader.
+     *
+     * \param uniform             The uniform to be set.
+     * \param context             The context which should use this shader.
+     */
+    void apply_uniform(RenderContext const& context, std::string const& name, UniformValue const& uniform, unsigned position = 0) const;
 
-  /**
-   * Sets an uniform value.
-   *
-   * Sets an uniform value of a currently used shader.
-   *
-   * \param uniform             The uniform to be set.
-   * \param context             The context which should use this shader.
-   */
-  void apply_uniform(RenderContext const& context,
-                     std::string const& name,
-                     UniformValue const& uniform,
-                     unsigned position = 0) const;
+    /**
+     *
+     */
+    template <typename T>
+    void set_uniform(RenderContext const& context, T const& value, std::string const& name, unsigned position = 0) const
+    {
+        apply_uniform(context, name, UniformValue(value), position);
+    }
 
-  /**
-   *
-   */
-  template <typename T>
-  void set_uniform(RenderContext const& context,
-                   T const& value,
-                   std::string const& name,
-                   unsigned position = 0) const {
+    /**
+     *
+     */
+    void set_subroutine(RenderContext const& context, scm::gl::shader_stage stage, std::string const& uniform_name, std::string const& routine_name) const;
 
-    apply_uniform(context, name, UniformValue(value), position);
-  }
+    virtual bool upload_to(RenderContext const& context) const;
 
-  /**
-   *
-   */
-  void set_subroutine(RenderContext const& context,
-                      scm::gl::shader_stage stage,
-                      std::string const& uniform_name,
-                      std::string const& routine_name) const;
+    inline scm::gl::program_ptr const& get_program() const { return program_; }
 
-  virtual bool upload_to(RenderContext const& context) const;
+    inline std::vector<ShaderProgramStage> const& get_program_stages() const { return stages_; }
 
-  inline scm::gl::program_ptr const& get_program () const { return program_; }
+  protected: // attributes
+    friend class WindowBase;
 
-  inline std::vector<ShaderProgramStage> const& get_program_stages() const {
-    return stages_;
-  }
+    mutable scm::gl::program_ptr program_;
 
- protected:  // attributes
+  private: // attributes
+    mutable bool dirty_ = false;
 
-  friend class WindowBase;
-
-  mutable scm::gl::program_ptr program_;
-
- private:  // attributes
-
-  mutable bool dirty_ = false;
-
-  std::vector<ShaderProgramStage> stages_;
-  std::list<std::string> interleaved_stream_capture_;
-  bool in_rasterization_discard_ = false;
-  SubstitutionMap substitutions_;
-
+    std::vector<ShaderProgramStage> stages_;
+    std::list<std::string> interleaved_stream_capture_;
+    bool in_rasterization_discard_ = false;
+    SubstitutionMap substitutions_;
 };
 
 /**
  *
  */
-GUA_DLL void save_to_file(ShaderProgram const& p, std::string const& directory,
-                   std::string const& name);
+GUA_DLL void save_to_file(ShaderProgram const& p, std::string const& directory, std::string const& name);
 
+} // namespace gua
 
-
-}
-
-#endif  // GUA_SHADER_PROGRAM_HPP
+#endif // GUA_SHADER_PROGRAM_HPP

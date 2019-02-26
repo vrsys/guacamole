@@ -28,47 +28,43 @@
 #include <scm/gl_core.h>
 #include <gua/math/BoundingBox.hpp>
 
-namespace gua {
-
-struct NURBSData 
+namespace gua
 {
-public :
+struct NURBSData
+{
+  public:
+    struct per_patch_data
+    {
+        unsigned surface_offset;
+        unsigned char order_u;
+        unsigned char order_v;
+        unsigned short trim_type;
+        unsigned trim_id;
+        unsigned obb_id;
 
-  struct per_patch_data
-  {
-    unsigned surface_offset;
-    unsigned char order_u;
-    unsigned char order_v;
-    unsigned short trim_type;
-    unsigned trim_id;
-    unsigned obb_id;
+        scm::math::vec4f nurbs_domain;
+        scm::math::vec4f bbox_min;
+        scm::math::vec4f bbox_max;
 
-    scm::math::vec4f nurbs_domain;
-    scm::math::vec4f bbox_min;
-    scm::math::vec4f bbox_max;
+        float ratio_uv;
+        float edge_length_u;
+        float edge_length_v;
+        float curvature;
+    };
 
-    float ratio_uv;
-    float edge_length_u;
-    float edge_length_v;
-    float curvature;
-  };
-  
+  public:
+    // Constructor and Destructor
+    NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v, unsigned trim_texture);
 
- public:
+    std::shared_ptr<gpucast::beziersurfaceobject> object;
 
-  //Constructor and Destructor
-  NURBSData(std::shared_ptr<gpucast::beziersurfaceobject> const& o, unsigned pre_subdivision_u, unsigned pre_subdivision_v, unsigned trim_texture);
-
-  std::shared_ptr<gpucast::beziersurfaceobject> object;
-
-  // adaptive_tesselation data
-  std::vector<scm::math::vec4f>  tess_patch_data;       // Domain Points
-  std::vector<unsigned>          tess_index_data;       // Index Data
-  std::vector<scm::math::vec4f>  tess_parametric_data;  // Control Points of all the surfaces
-  std::vector<per_patch_data>    tess_attribute_data;
-
+    // adaptive_tesselation data
+    std::vector<scm::math::vec4f> tess_patch_data;      // Domain Points
+    std::vector<unsigned> tess_index_data;              // Index Data
+    std::vector<scm::math::vec4f> tess_parametric_data; // Control Points of all the surfaces
+    std::vector<per_patch_data> tess_attribute_data;
 };
 
-}  // namespace gua
+} // namespace gua
 
-#endif  // GUA_NURBSDATA_HPP_INCLUDED
+#endif // GUA_NURBSDATA_HPP_INCLUDED

@@ -38,41 +38,35 @@
 #include <regex>
 #include <list>
 
-namespace gua {
-
-////////////////////////////////////////////////////////////////////////////////
-
-MLodPassDescription::MLodPassDescription()
-  : PipelinePassDescription()
+namespace gua
 {
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
+////////////////////////////////////////////////////////////////////////////////
+
+MLodPassDescription::MLodPassDescription() : PipelinePassDescription()
+{
+    needs_color_buffer_as_input_ = false;
+    writes_only_color_buffer_ = false;
+    enable_for_shadows_ = true;
+    rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> MLodPassDescription::make_copy() const {
-  return std::make_shared<MLodPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> MLodPassDescription::make_copy() const { return std::make_shared<MLodPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass MLodPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{ *this, ctx, substitution_map };
+    PipelinePass pass{*this, ctx, substitution_map};
 
-  auto renderer = std::make_shared<MLodRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-  renderer->create_state_objects(ctx);
+    auto renderer = std::make_shared<MLodRenderer>();
+    renderer->set_global_substitution_map(substitution_map);
+    renderer->create_state_objects(ctx);
 
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
+    pass.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
-  return pass;
+    return pass;
 }
 
-}
+} // namespace gua

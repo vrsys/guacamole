@@ -26,37 +26,41 @@
 
 #include <memory>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL FullscreenPassDescription : public PipelinePassDescription {
- public:
-  FullscreenPassDescription();
+class GUA_DLL FullscreenPassDescription : public PipelinePassDescription
+{
+  public:
+    FullscreenPassDescription();
 
-  FullscreenPassDescription& source(std::string const& source);
-  std::string const& source() const;
+    FullscreenPassDescription& source(std::string const& source);
+    std::string const& source() const;
 
-  FullscreenPassDescription& source_file(std::string const& source_file);
-  std::string const& source_file() const;
+    FullscreenPassDescription& source_file(std::string const& source_file);
+    std::string const& source_file() const;
 
-  template<typename T>
-  FullscreenPassDescription& uniform(std::string const& name, T const& val) {
-    uniforms[name] = val;
-    return *this;
-  }
+    template <typename T>
+    FullscreenPassDescription& uniform(std::string const& name, T const& val)
+    {
+        uniforms[name] = val;
+        return *this;
+    }
 
-  template<typename T>
-  T const& uniform(std::string const& name) {
-    return boost::get<T>(uniforms[name].data);
-  }
+    template <typename T>
+    T const& uniform(std::string const& name)
+    {
+        return boost::get<T>(uniforms[name].data);
+    }
 
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
+
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_FULLSCREEN_PASS_HPP
+#endif // GUA_FULLSCREEN_PASS_HPP

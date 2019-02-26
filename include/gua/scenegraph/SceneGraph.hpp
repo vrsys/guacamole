@@ -33,18 +33,19 @@
 #include <string>
 #include <set>
 
-namespace gua {
-
+namespace gua
+{
 class NodeVisitor;
 struct Ray;
 
-namespace node {
-  class Node;
-  class CameraNode;
-  class ClippingPlaneNode;
-  class RayNode;
-  struct SerializedCameraNode;
-}
+namespace node
+{
+class Node;
+class CameraNode;
+class ClippingPlaneNode;
+class RayNode;
+struct SerializedCameraNode;
+} // namespace node
 
 /**
  * A class to represent a scene.
@@ -55,291 +56,276 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL SceneGraph {
+class GUA_DLL SceneGraph
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a new SceneGraph.
+     *
+     * \param name  The new SceneGraph's name.
+     */
+    SceneGraph(std::string const& name = "scenegraph");
 
- public:
+    /**
+     * Copy Constructor.
+     *
+     * This constructs a copy of a given SceneGraph.
+     *
+     * \param graph    The SceneGraph to be copied.
+     */
+    SceneGraph(SceneGraph const& graph);
 
-  /**
-   * Constructor.
-   *
-   * This constructs a new SceneGraph.
-   *
-   * \param name  The new SceneGraph's name.
-   */
-  SceneGraph(std::string const& name = "scenegraph");
+    /**
+     * Adds a new Node.
+     *
+     * This function adds a new Node to the SceneGraph. If the given path to a
+     * parent Node is invalid (this means this Node doesn't exist), a new Node is
+     * returned but not added to any parent.
+     *
+     * \param path_to_parent      The location of the Node the new Node will be
+     *                            attached to.
+     * \param node_name           The name of the new Node.
+     *
+     * \tparam tparam             The type of the Node to be added.
+     *
+     * \return std::shared_ptr<T> A shared pointer to the recently added Node.
+     */
+    template <typename T>
+    std::shared_ptr<T> add_node(std::string const& path_to_parent, std::string const& node_name)
+    {
+        auto new_node(std::make_shared<T>(node_name));
 
-  /**
-   * Copy Constructor.
-   *
-   * This constructs a copy of a given SceneGraph.
-   *
-   * \param graph    The SceneGraph to be copied.
-   */
-  SceneGraph(SceneGraph const& graph);
+        std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
-  /**
-   * Adds a new Node.
-   *
-   * This function adds a new Node to the SceneGraph. If the given path to a
-   * parent Node is invalid (this means this Node doesn't exist), a new Node is
-   * returned but not added to any parent.
-   *
-   * \param path_to_parent      The location of the Node the new Node will be
-   *                            attached to.
-   * \param node_name           The name of the new Node.
-   *
-   * \tparam tparam             The type of the Node to be added.
-   *
-   * \return std::shared_ptr<T> A shared pointer to the recently added Node.
-   */
-  template<typename T>
-  std::shared_ptr<T> add_node(std::string const& path_to_parent, std::string const& node_name) {
+        if(!parent)
+        {
+            Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
+            return new_node;
+        }
 
-    auto new_node(std::make_shared<T>(node_name));
-
-    std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
-
-    if (!parent) {
-      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
-      return new_node;
+        return add_node(parent, new_node);
     }
 
-    return add_node(parent, new_node);
-  }
+    /**
+     * Adds a new Node.
+     *
+     * This function adds a new Node to the SceneGraph.
+     *
+     * \param parent              The Node the new Node will be attached to.
+     * \param node_name           The name of the new Node.
+     *
+     * \tparam tparam             The type of the Node to be added.
+     *
+     * \return std::shared_ptr<T> A shared pointer to the recently added Node.
+     */
+    template <typename T>
+    std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const& parent, std::string const& node_name)
+    {
+        auto new_node(std::make_shared<T>(node_name));
 
-  /**
-   * Adds a new Node.
-   *
-   * This function adds a new Node to the SceneGraph.
-   *
-   * \param parent              The Node the new Node will be attached to.
-   * \param node_name           The name of the new Node.
-   *
-   * \tparam tparam             The type of the Node to be added.
-   *
-   * \return std::shared_ptr<T> A shared pointer to the recently added Node.
-   */
-  template<typename T>
-  std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const&  parent, std::string const& node_name) {
-
-    auto new_node(std::make_shared<T>(node_name));
-
-    parent->add_child(new_node);
-    return new_node;
-  }
-
-  /**
-   * Adds a new Node.
-   *
-   * This function adds a new Node to the SceneGraph. If the given path to a
-   * parent Node is invalid (this means this Node doesn't exist), a new Node is
-   * returned but not added to any parent.
-   *
-   * \param path_to_parent      The location of the Node the new Node will be
-   *                            attached to.
-   * \param new_node            The Node to be attached.
-   *
-   * \tparam tparam             The type of the Node to be added.
-   *
-   * \return std::shared_ptr<T> A shared pointer to the recently added Node.
-   */
-  template<typename T>
-  std::shared_ptr<T> add_node(std::string const& path_to_parent, std::shared_ptr<T> const& new_node) {
-
-    std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
-
-    if (!parent) {
-      Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
-      return new_node;
+        parent->add_child(new_node);
+        return new_node;
     }
 
-    return add_node(parent, new_node);
-  }
+    /**
+     * Adds a new Node.
+     *
+     * This function adds a new Node to the SceneGraph. If the given path to a
+     * parent Node is invalid (this means this Node doesn't exist), a new Node is
+     * returned but not added to any parent.
+     *
+     * \param path_to_parent      The location of the Node the new Node will be
+     *                            attached to.
+     * \param new_node            The Node to be attached.
+     *
+     * \tparam tparam             The type of the Node to be added.
+     *
+     * \return std::shared_ptr<T> A shared pointer to the recently added Node.
+     */
+    template <typename T>
+    std::shared_ptr<T> add_node(std::string const& path_to_parent, std::shared_ptr<T> const& new_node)
+    {
+        std::shared_ptr<node::Node> const& parent(find_node(path_to_parent));
 
-  /**
-   * Adds a new Node.
-   *
-   * This function adds a new Node to the SceneGraph.
-   *
-   * \param parent              The Node the new Node will be attached to.
-   * \param new_node            The Node to be attached.
-   *
-   * \tparam tparam             The type of the Node to be added.
-   *
-   * \return std::shared_ptr<T> A shared pointer to the recently added Node.
-   */
-  template<typename T>
-  std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const&  parent, std::shared_ptr<T> const& new_node) {
-    parent->add_child(new_node);
-    return new_node;
-  }
+        if(!parent)
+        {
+            Logger::LOG_WARNING << "A node with the name " << path_to_parent << " does not exist!" << std::endl;
+            return new_node;
+        }
 
-  /**
-   * Removes a Node.
-   *
-   * This function removes a Node from the SceneGraph.
-   *
-   * \param path_to_node   The location of the Node to be removed.
-   */
-  void remove_node(std::string const& path_to_node);
+        return add_node(parent, new_node);
+    }
 
-  /**
-   * Removes a Node.
-   *
-   * This function removes a Node from the SceneGraph.
-   *
-   * \param to_remove   The Node to be removed.
-   */
-  void remove_node(std::shared_ptr<node::Node> const& to_remove);
+    /**
+     * Adds a new Node.
+     *
+     * This function adds a new Node to the SceneGraph.
+     *
+     * \param parent              The Node the new Node will be attached to.
+     * \param new_node            The Node to be attached.
+     *
+     * \tparam tparam             The type of the Node to be added.
+     *
+     * \return std::shared_ptr<T> A shared pointer to the recently added Node.
+     */
+    template <typename T>
+    std::shared_ptr<T> add_node(std::shared_ptr<node::Node> const& parent, std::shared_ptr<T> const& new_node)
+    {
+        parent->add_child(new_node);
+        return new_node;
+    }
 
-  /**
-   * Sets the SceneGraph's name.
-   *
-   * \param name   The SceneGraph's new name.
-   */
-  void set_name(std::string const& name);
+    /**
+     * Removes a Node.
+     *
+     * This function removes a Node from the SceneGraph.
+     *
+     * \param path_to_node   The location of the Node to be removed.
+     */
+    void remove_node(std::string const& path_to_node);
 
-  /**
-   * Returns the SceneGraph's name.
-   *
-   * \return std::string   The SceneGraph's name.
-   */
-  std::string const& get_name() const;
+    /**
+     * Removes a Node.
+     *
+     * This function removes a Node from the SceneGraph.
+     *
+     * \param to_remove   The Node to be removed.
+     */
+    void remove_node(std::shared_ptr<node::Node> const& to_remove);
 
-  /**
-   * Sets the SceneGraph's root Node.
-   *
-   * \param root   The SceneGraph's new root Node.
-   */
-  void set_root(std::shared_ptr<node::Node> const& root);
+    /**
+     * Sets the SceneGraph's name.
+     *
+     * \param name   The SceneGraph's new name.
+     */
+    void set_name(std::string const& name);
 
-  /**
-   * Returns the SceneGraph's root Node.
-   *
-   * \return std::shared_ptr<Node>   The SceneGraph's root Node.
-   */
-  std::shared_ptr<node::Node> const& get_root() const;
+    /**
+     * Returns the SceneGraph's name.
+     *
+     * \return std::string   The SceneGraph's name.
+     */
+    std::string const& get_name() const;
 
-  /**
-   * Allows to access nodes via the index operator.
-   *
-   * This operator allows to access nodes via the index operator. If a
-   * given path doesn't refer to an existing set of nodes, a nullptr is returned.
-   *
-   * \param path_to_node           The path to the wanted Node.
-   *
-   * \return std::shared_ptr<Node> The wanted Node.
-   */
-  std::shared_ptr<node::Node> operator[](std::string const& path_to_node) const;
+    /**
+     * Sets the SceneGraph's root Node.
+     *
+     * \param root   The SceneGraph's new root Node.
+     */
+    void set_root(std::shared_ptr<node::Node> const& root);
 
-  /**
-   * Assignment operator.
-   *
-   * This operator deep copies a given SceneGraph, assignes the copy's values to
-   * the existing graph and returns a reference to it.
-   *
-   * \param rhs                The SceneGraph to be copied.
-   *
-   * \return SceneGraph const& The SceneGraph containing the copied values.
-   */
-  SceneGraph const& operator=(SceneGraph const& rhs);
+    /**
+     * Returns the SceneGraph's root Node.
+     *
+     * \return std::shared_ptr<Node>   The SceneGraph's root Node.
+     */
+    std::shared_ptr<node::Node> const& get_root() const;
 
-  /**
-   * Prints the SceneGraph to a file in GraphViz' dot format.
-   *
-   * Serializes the graph and writes all its Nodes to a file.
-   *
-   * \param file  Complete path to the output file. The file doesn't need to
-   *              exist. The directory structure, however, does.
-   */
-  void to_dot_file(std::string const& file) const;
+    /**
+     * Allows to access nodes via the index operator.
+     *
+     * This operator allows to access nodes via the index operator. If a
+     * given path doesn't refer to an existing set of nodes, a nullptr is returned.
+     *
+     * \param path_to_node           The path to the wanted Node.
+     *
+     * \return std::shared_ptr<Node> The wanted Node.
+     */
+    std::shared_ptr<node::Node> operator[](std::string const& path_to_node) const;
 
-  /**
-   * Updates the cache of all SceneGraph Nodes.
-   *
-   * Calls Node::update_cache() on the root Node.
-   */
-  void update_cache() const;
+    /**
+     * Assignment operator.
+     *
+     * This operator deep copies a given SceneGraph, assignes the copy's values to
+     * the existing graph and returns a reference to it.
+     *
+     * \param rhs                The SceneGraph to be copied.
+     *
+     * \return SceneGraph const& The SceneGraph containing the copied values.
+     */
+    SceneGraph const& operator=(SceneGraph const& rhs);
 
-  /**
-   * Accepts a NodeVisitor to process all SceneGraph Nodes.
-   *
-   * Calls Node::accept() on the root Node.
-   *
-   * \param visitor The NodeVisitor to pe accepted.
-   */
-  void accept(NodeVisitor& visitor) const;
+    /**
+     * Prints the SceneGraph to a file in GraphViz' dot format.
+     *
+     * Serializes the graph and writes all its Nodes to a file.
+     *
+     * \param file  Complete path to the output file. The file doesn't need to
+     *              exist. The directory structure, however, does.
+     */
+    void to_dot_file(std::string const& file) const;
 
-  std::shared_ptr<SerializedScene> serialize(Frustum const& rendering_frustum,
-                                             Frustum const& culling_frustum,
-                                             math::vec3 const& reference_camera_position,
-                                             bool enable_frustum_culling,
-                                             Mask const& mask,
-                                             int view_id) const;
+    /**
+     * Updates the cache of all SceneGraph Nodes.
+     *
+     * Calls Node::update_cache() on the root Node.
+     */
+    void update_cache() const;
 
-  std::shared_ptr<SerializedScene> serialize(
-                                       node::SerializedCameraNode const& camera,
-                                       CameraMode mode) const;
+    /**
+     * Accepts a NodeVisitor to process all SceneGraph Nodes.
+     *
+     * Calls Node::accept() on the root Node.
+     *
+     * \param visitor The NodeVisitor to pe accepted.
+     */
+    void accept(NodeVisitor& visitor) const;
 
-  /**
-   * Intersects a SceneGraph with a given RayNode.
-   *
-   * Calls Node::ray_test() on the root Node.
-   *
-   * \param ray       The RayNode used to check for intersections.
-   * \param options   int to configure the intersection process.
-   * \param mask      A mask to restrict the intersection to certain Nodes.
-   */
-  std::set<PickResult> const ray_test(node::RayNode const& ray,
-                                      int options = PickResult::PICK_ALL,
-                                      Mask const& mask = Mask());
+    std::shared_ptr<SerializedScene>
+    serialize(Frustum const& rendering_frustum, Frustum const& culling_frustum, math::vec3 const& reference_camera_position, bool enable_frustum_culling, Mask const& mask, int view_id) const;
 
-  /**
-   * Intersects a SceneGraph with a given Ray.
-   *
-   * Calls Node::ray_test() on the root Node.
-   *
-   * \param ray       The Ray used to check for intersections.
-   * \param options   int to configure the intersection process.
-   * \param mask      A mask to restrict the intersection to certain Nodes.
-   */
-  std::set<PickResult> const ray_test(Ray const& ray,
-                                      int options = PickResult::PICK_ALL,
-                                      Mask const& mask = Mask());
+    std::shared_ptr<SerializedScene> serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
 
-  std::vector<node::CameraNode*> const& get_camera_nodes() const {
-    return camera_nodes_;
-  }
+    /**
+     * Intersects a SceneGraph with a given RayNode.
+     *
+     * Calls Node::ray_test() on the root Node.
+     *
+     * \param ray       The RayNode used to check for intersections.
+     * \param options   int to configure the intersection process.
+     * \param mask      A mask to restrict the intersection to certain Nodes.
+     */
+    std::set<PickResult> const ray_test(node::RayNode const& ray, int options = PickResult::PICK_ALL, Mask const& mask = Mask());
 
-  std::vector<node::ClippingPlaneNode*> const& get_clipping_plane_nodes() const {
-    return clipping_plane_nodes_;
-  }
+    /**
+     * Intersects a SceneGraph with a given Ray.
+     *
+     * Calls Node::ray_test() on the root Node.
+     *
+     * \param ray       The Ray used to check for intersections.
+     * \param options   int to configure the intersection process.
+     * \param mask      A mask to restrict the intersection to certain Nodes.
+     */
+    std::set<PickResult> const ray_test(Ray const& ray, int options = PickResult::PICK_ALL, Mask const& mask = Mask());
 
-  friend class ::gua::node::Node;
-  friend class ::gua::node::CameraNode;
-  friend class ::gua::node::ClippingPlaneNode;
+    std::vector<node::CameraNode*> const& get_camera_nodes() const { return camera_nodes_; }
 
- private:
+    std::vector<node::ClippingPlaneNode*> const& get_clipping_plane_nodes() const { return clipping_plane_nodes_; }
 
-  std::shared_ptr<node::Node> find_node(std::string const& path_to_node,
-                  std::string const& path_to_start = "/") const;
+    friend class ::gua::node::Node;
+    friend class ::gua::node::CameraNode;
+    friend class ::gua::node::ClippingPlaneNode;
 
-  bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
+  private:
+    std::shared_ptr<node::Node> find_node(std::string const& path_to_node, std::string const& path_to_start = "/") const;
 
-  void add_camera_node(node::CameraNode* camera);
-  void remove_camera_node(node::CameraNode* camera);
+    bool has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const;
 
-  void add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
-  void remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+    void add_camera_node(node::CameraNode* camera);
+    void remove_camera_node(node::CameraNode* camera);
 
+    void add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
+    void remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane);
 
-  std::shared_ptr<node::Node> root_;
-  std::string name_;
+    std::shared_ptr<node::Node> root_;
+    std::string name_;
 
-  std::vector<node::CameraNode*> camera_nodes_;
-  std::vector<node::ClippingPlaneNode*> clipping_plane_nodes_;
+    std::vector<node::CameraNode*> camera_nodes_;
+    std::vector<node::ClippingPlaneNode*> clipping_plane_nodes_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SCENE_GRAPH_HPP
+#endif // GUA_SCENE_GRAPH_HPP

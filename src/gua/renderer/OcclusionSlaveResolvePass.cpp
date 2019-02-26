@@ -133,7 +133,6 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
     PipelinePass pass{*this, ctx, substitution_map};
 #if not defined(__WIN32__) && not defined(_WIN32) && not defined(_WIN64)
     pass.process_ = [&](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) {
-
         // auto& target = pipe.current_viewstate().target;
         // auto& gua_depth_buffer = target->get_depth_buffer();
 
@@ -328,4 +327,4 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 #endif
     return pass;
 }
-}
+} // namespace gua

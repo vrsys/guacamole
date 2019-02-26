@@ -33,6 +33,6 @@ class GuaInteractiveModelPlugin : public ModelPlugin
 };
 
 GZ_REGISTER_MODEL_PLUGIN(GuaInteractiveModelPlugin)
-}
+} // namespace gazebo
 
 #endif // GUACAMOLE_GUAINTERACTIVEMODELPLUGIN_H

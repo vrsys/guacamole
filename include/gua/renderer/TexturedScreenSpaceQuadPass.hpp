@@ -24,17 +24,19 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription
+{
+  public:
+    TexturedScreenSpaceQuadPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
-class GUA_DLL TexturedScreenSpaceQuadPassDescription : public PipelinePassDescription {
- public:
-  TexturedScreenSpaceQuadPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP
+#endif // GUA_TEXTURED_SCREEN_SPACE_QUAD_PASS_HPP

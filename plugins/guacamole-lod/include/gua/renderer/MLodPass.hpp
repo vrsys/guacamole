@@ -25,22 +25,19 @@
 #include <gua/renderer/Lod.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_LOD_DLL MLodPassDescription : public PipelinePassDescription
+{
+  public: // typedefs, enums
+    friend class Pipeline;
 
-  class GUA_LOD_DLL MLodPassDescription : public PipelinePassDescription {
-
-  public : // typedefs, enums
-
-   friend class Pipeline;
-
-  public :
-
+  public:
     MLodPassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_M_LOD_PASS_HPP
+#endif // GUA_M_LOD_PASS_HPP

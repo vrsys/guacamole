@@ -27,10 +27,11 @@
 #include <gua/renderer/RenderContext.hpp>
 #include <gua/utils/Mask.hpp>
 
-namespace gua {
-
-namespace node {
-  class LightNode;
+namespace gua
+{
+namespace node
+{
+class LightNode;
 }
 
 class Pipeline;
@@ -39,40 +40,42 @@ struct CachedShadowMap;
 /**
  *
  */
-class ShadowMap : public RenderTarget {
- public:
+class ShadowMap : public RenderTarget
+{
+  public:
+    ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution);
 
-  ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution);
+    virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
+    virtual void bind(RenderContext const& context, bool write_depth) override;
 
-  virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;  
-  virtual void bind(RenderContext const& context, bool write_depth) override;
+    virtual void set_viewport(RenderContext const& context) override;
+    void set_viewport_offset(math::vec2f const& offset);
+    void set_viewport_size(math::vec2f const& size);
 
-  virtual void set_viewport(RenderContext const& context) override;
-  void set_viewport_offset(math::vec2f const& offset);
-  void set_viewport_size(math::vec2f const& size);
+    virtual void remove_buffers(RenderContext const& ctx) override;
 
-  virtual void remove_buffers(RenderContext const& ctx) override;
+    scm::gl::texture_2d_ptr const& get_depth_buffer() const override;
 
-  scm::gl::texture_2d_ptr const& get_depth_buffer()  const override;
-
- private:
-  scm::gl::frame_buffer_ptr fbo_;
-  scm::gl::texture_2d_ptr depth_buffer_;
-  scm::gl::sampler_state_ptr sampler_state_;
-  math::vec2f viewport_offset_;
-  math::vec2f viewport_size_;
+  private:
+    scm::gl::frame_buffer_ptr fbo_;
+    scm::gl::texture_2d_ptr depth_buffer_;
+    scm::gl::sampler_state_ptr sampler_state_;
+    math::vec2f viewport_offset_;
+    math::vec2f viewport_size_;
 };
 
-struct CachedShadowMap {
-  std::shared_ptr<ShadowMap> shadow_map;
-  Mask                       render_mask;
+struct CachedShadowMap
+{
+    std::shared_ptr<ShadowMap> shadow_map;
+    Mask render_mask;
 };
 
-struct SharedShadowMapResource {
-  std::set<std::shared_ptr<ShadowMap>>                               unused_shadow_maps;
-  std::unordered_map<node::LightNode*, std::vector<CachedShadowMap>> used_shadow_maps;
+struct SharedShadowMapResource
+{
+    std::set<std::shared_ptr<ShadowMap>> unused_shadow_maps;
+    std::unordered_map<node::LightNode*, std::vector<CachedShadowMap>> used_shadow_maps;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SHADOW_MAP_HPP
+#endif // GUA_SHADOW_MAP_HPP

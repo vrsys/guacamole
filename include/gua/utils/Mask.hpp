@@ -30,9 +30,8 @@
 #include <vector>
 #include <set>
 
-
-namespace gua {
-
+namespace gua
+{
 /**
  * RenderMasks are used to display only parts of a scene graph.
  *
@@ -47,48 +46,40 @@ namespace gua {
  * ) --- closing parenthesis
  * Whitespaces are ignored and all other characters are treated as group names.
  */
-class GUA_DLL Mask {
- public:
+class GUA_DLL Mask
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs an Mask.
+     *
+     * \param render_mask      The Mask's string representation.
+     */
+    Mask(std::vector<std::string> const& whitelist_tags = std::vector<std::string>(), std::vector<std::string> const& blacklist_tags = std::vector<std::string>());
 
-  /**
-   * Constructor.
-   *
-   * This constructs an Mask.
-   *
-   * \param render_mask      The Mask's string representation.
-   */
-  Mask(std::vector<std::string> const& whitelist_tags = std::vector<std::string>(),
-       std::vector<std::string> const& blacklist_tags = std::vector<std::string>());
+    /**
+     * Checks a given list of groups against this mask.
+     *
+     * \param groups           A set of groups.
+     * \return                 true, if the given list of groups is
+     *                         supported by this Mask.
+     */
+    bool check(gua::utils::TagList const& tags) const;
 
-  /**
-   * Checks a given list of groups against this mask.
-   *
-   * \param groups           A set of groups.
-   * \return                 true, if the given list of groups is
-   *                         supported by this Mask.
-   */
-  bool check(gua::utils::TagList const& tags) const;
+    gua::utils::TagList whitelist;
+    gua::utils::TagList blacklist;
 
-  gua::utils::TagList whitelist;
-  gua::utils::TagList blacklist;
+    void set_user_data(void* data) { user_data_ = data; }
 
-   void set_user_data(void* data) {
-    user_data_ = data;
-  }
+    void* get_user_data() const { return user_data_; }
 
-  void* get_user_data() const {
-    return user_data_;
-  }
+    bool operator==(Mask const& other) const { return whitelist == other.whitelist && blacklist == other.blacklist; }
 
-  bool operator==(Mask const& other) const {
-    return whitelist == other.whitelist && blacklist == other.blacklist;
-  }
-
- private:
-  void* user_data_ = nullptr;
-
+  private:
+    void* user_data_ = nullptr;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_RENDER_MASK_HPP
+#endif // GUA_RENDER_MASK_HPP

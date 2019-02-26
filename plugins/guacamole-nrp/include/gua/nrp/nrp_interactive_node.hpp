@@ -25,7 +25,7 @@ class GUA_NRP_DLL NRPInteractiveNode : public gua::node::TransformNode
     void translate(math::float_t x, math::float_t y, math::float_t z) override;
     void translate(math::vec3 const &offset) override;
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // GUACAMOLE_NRP_INTERACTIVE_NODE_HPP
