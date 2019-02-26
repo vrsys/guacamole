@@ -29,74 +29,60 @@
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 ////////////////////////////////////////////////////////////////////////////////
 
 TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(
-    std::string const& name,
-    Configuration const& configuration)
-    : SerializableNode(name),
-      data(configuration) {}
+TexturedScreenSpaceQuadNode::TexturedScreenSpaceQuadNode(std::string const& name, Configuration const& configuration) : SerializableNode(name), data(configuration) {}
 
-/* virtual */ void TexturedScreenSpaceQuadNode::accept(NodeVisitor& visitor) {
-  visitor.visit(this);
+/* virtual */ void TexturedScreenSpaceQuadNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(math::vec2 const& pixel, math::vec2ui const& screen_size, math::vec2& result) const
+{
+    math::vec2 pos(pixel / screen_size * 2 - 1);
+
+    math::vec2 size(1.0 * data.get_size().x / screen_size.x, 1.0 * data.get_size().y / screen_size.y);
+
+    math::vec2 offset((2.0 * data.get_offset().x + data.get_anchor().x * (screen_size.x - data.get_size().x)) / screen_size.x,
+                      (2.0 * data.get_offset().y + data.get_anchor().y * (screen_size.y - data.get_size().y)) / screen_size.y);
+
+    pos -= offset;
+    pos /= size;
+
+    result = pos * 0.5 + 0.5;
+
+    return result.x >= 0 && result.x < 1 && result.y >= 0 && result.y < 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TexturedScreenSpaceQuadNode::pixel_to_texcoords(
-  math::vec2 const& pixel, math::vec2ui const& screen_size,
-  math::vec2& result) const {
+void TexturedScreenSpaceQuadNode::update_bounding_box() const { bounding_box_ = math::BoundingBox<math::vec3>(); }
 
-  math::vec2 pos(pixel/screen_size*2-1);
+////////////////////////////////////////////////////////////////////////////////
 
-  math::vec2 size(
-    1.0 * data.get_size().x / screen_size.x,
-    1.0 * data.get_size().y / screen_size.y
-  );
+void TexturedScreenSpaceQuadNode::update_cache()
+{
+    Node::update_cache();
 
-  math::vec2 offset(
-    (2.0 * data.get_offset().x + data.get_anchor().x * (screen_size.x - data.get_size().x))/screen_size.x,
-    (2.0 * data.get_offset().y + data.get_anchor().y * (screen_size.y - data.get_size().y))/screen_size.y
-  );
-
-  pos -= offset;
-  pos /= size;
-
-  result = pos*0.5+0.5;
-
-  return result.x >=0 && result.x < 1 && result.y >=0 && result.y < 1;
+    if(!TextureDatabase::instance()->contains(data.texture()))
+    {
+        TextureDatabase::instance()->load(data.texture());
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TexturedScreenSpaceQuadNode::update_bounding_box() const {
-  bounding_box_ = math::BoundingBox<math::vec3>();
-}
+std::shared_ptr<Node> TexturedScreenSpaceQuadNode::copy() const { return std::make_shared<TexturedScreenSpaceQuadNode>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TexturedScreenSpaceQuadNode::update_cache() {
-  Node::update_cache();
-
-  if (!TextureDatabase::instance()->contains(data.texture())) {
-    TextureDatabase::instance()->load(data.texture());
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> TexturedScreenSpaceQuadNode::copy() const {
-  return std::make_shared<TexturedScreenSpaceQuadNode>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-}
+} // namespace node
+} // namespace gua

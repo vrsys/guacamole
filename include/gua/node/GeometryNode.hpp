@@ -31,10 +31,10 @@
 // external headers
 #include <string>
 
-namespace gua {
-
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent any kind of geometry in the SceneGraph.
  *
@@ -44,17 +44,16 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL GeometryNode : public SerializableNode {
-
+class GUA_DLL GeometryNode : public SerializableNode
+{
   public:
-
     /**
      * Constructor.
      *
      * This constructs an empty GeometryNode.
      *
      */
-    GeometryNode() {};
+    GeometryNode(){};
 
     /**
      * Constructor.
@@ -67,27 +66,23 @@ class GUA_DLL GeometryNode : public SerializableNode {
      * \param transform      A matrix to describe the GeometryNode's
      *                       transformation.
      */
-    GeometryNode(std::string const& name,
-                 math::mat4 const& transform = math::mat4::identity(),
-                 ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
+    GeometryNode(std::string const& name, math::mat4 const& transform = math::mat4::identity(), ShadowMode shadow_mode = ShadowMode::LOW_QUALITY);
 
     /**
-    * A value describing the shadow's quality.
-    */
+     * A value describing the shadow's quality.
+     */
     ShadowMode get_shadow_mode() const { return shadow_mode_; }
-    void       set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
+    void set_shadow_mode(ShadowMode v) { shadow_mode_ = v; }
 
     inline void update_cache() override { Node::update_cache(); }
 
   protected:
-
     // virtual std::shared_ptr<Node> copy() const = 0;
 
     ShadowMode shadow_mode_;
-
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_GEOMETRY_NODE_HPP
+#endif // GUA_GEOMETRY_NODE_HPP

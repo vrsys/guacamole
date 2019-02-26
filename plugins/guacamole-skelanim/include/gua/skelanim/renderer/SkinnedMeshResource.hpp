@@ -33,8 +33,8 @@
 #include <mutex>
 #include <vector>
 
-namespace gua {
-
+namespace gua
+{
 struct RenderContext;
 struct SharedSkinningResource;
 
@@ -46,70 +46,67 @@ struct SharedSkinningResource;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource {
- public:
+class GUA_SKELANIM_DLL SkinnedMeshResource : public GeometryResource
+{
+  public:
+    /**
+     * Default constructor.
+     *
+     * Creates a new and empty Mesh.
+     */
+    SkinnedMeshResource();
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new and empty Mesh.
-   */
-  SkinnedMeshResource();
+    /**
+     * Constructor from an Skinned mesh.
+     *
+     * Initializes the mesh from a given skinned mesh.
+     *
+     * @param mesh mesh to store in this resource.
+     * @param build_kd_tree whether to build the kd tree (not supported).
+     */
+    SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
 
-  /**
-   * Constructor from an Skinned mesh.
-   *
-   * Initializes the mesh from a given skinned mesh.
-   *
-   * @param mesh mesh to store in this resource.
-   * @param build_kd_tree whether to build the kd tree (not supported).
-   */
-  SkinnedMeshResource(SkinnedMesh const& mesh, bool build_kd_tree);
+    /**
+     * Draws the Mesh.
+     *
+     * Draws the Mesh to the given context.
+     *
+     * @param context          The RenderContext to draw onto.
+     */
+    void draw(RenderContext& context) /*const*/;
 
-  /**
-   * Draws the Mesh.
-   *
-   * Draws the Mesh to the given context.
-   *
-   * @param context          The RenderContext to draw onto.
-   */
-  void draw(RenderContext& context) /*const*/;
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits);
 
-  void ray_test(Ray const& ray,
-                int options,
-                node::Node* owner,
-                std::set<PickResult>& hits);
+    unsigned int num_vertices() const;
+    unsigned int num_faces() const;
 
-  unsigned int num_vertices() const;
-  unsigned int num_faces() const;
+    scm::math::vec3 get_vertex(unsigned int i) const;
+    std::vector<unsigned int> get_face(unsigned int i) const;
+    SkinnedMesh const& get_mesh() const;
 
-  scm::math::vec3 get_vertex(unsigned int i) const;
-  std::vector<unsigned int> get_face(unsigned int i) const;
-  SkinnedMesh const& get_mesh() const;
+    /**
+     * @brief calculates the bone bounding boxes
+     * @details applies the transforms to bone boxes and returns them
+     *
+     * @param bone_transforms transform to apply
+     * @return bounding boxes
+     */
+    std::vector<math::BoundingBox<math::vec3>> get_bone_boxes(std::vector<scm::math::mat4f> const& bone_transforms);
 
-  /**
-   * @brief calculates the bone bounding boxes
-   * @details applies the transforms to bone boxes and returns them
-   * 
-   * @param bone_transforms transform to apply
-   * @return bounding boxes
-   */
-  std::vector<math::BoundingBox<math::vec3> > get_bone_boxes(
-      std::vector<scm::math::mat4f> const& bone_transforms);
+    friend class SkeletalAnimationRenderer;
+    friend class LightingPass;
 
-  friend class SkeletalAnimationRenderer;
-  friend class LightingPass;
+    void upload_to(RenderContext& ctx, SharedSkinningResource& resource);
 
-  void upload_to(RenderContext& ctx, SharedSkinningResource& resource);
- private:
-  void init_bone_boxes();
+  private:
+    void init_bone_boxes();
 
-  SkinnedMesh mesh_;
-  std::vector<math::BoundingBox<math::vec3> > bone_boxes_;
- // public:
- //  KDTree kd_tree_;
+    SkinnedMesh mesh_;
+    std::vector<math::BoundingBox<math::vec3>> bone_boxes_;
+    // public:
+    //  KDTree kd_tree_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SKINNED_MESH_RESSOURCE_HPP
+#endif // GUA_SKINNED_MESH_RESSOURCE_HPP

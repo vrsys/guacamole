@@ -32,92 +32,93 @@
 
 #include <unordered_map>
 
-namespace video3d { class NetKinectArray; }
+namespace video3d
+{
+class NetKinectArray;
+}
 
-namespace gua {
-
+namespace gua
+{
 class ShaderProgram;
 class Pipeline;
 class MaterialShader;
 class Video3DResource;
 
-class GUA_VIDEO3D_DLL Video3DRenderer {
- public:
+class GUA_VIDEO3D_DLL Video3DRenderer
+{
+  public:
+    enum pass
+    {
+        warp_pass = 0,
+        blend_pass = 1
+    };
 
-  enum pass {
-    warp_pass = 0,
-    blend_pass = 1
-  };
+  public:
+    Video3DRenderer();
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  Video3DRenderer();
+    // /*virtual*/ void draw   (RenderContext const& context,
+    //                          std::string const& ksfile_name,
+    //                          std::string const& material_name,
+    //                          scm::math::mat4 const& model_matrix,
+    //                          scm::math::mat4 const& normal_matrix,
+    //                          Frustum const& frustum,
+    //                          View const& view) const;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
-  // /*virtual*/ void draw   (RenderContext const& context,
-  //                          std::string const& ksfile_name,
-  //                          std::string const& material_name,
-  //                          scm::math::mat4 const& model_matrix,
-  //                          scm::math::mat4 const& normal_matrix,
-  //                          Frustum const& frustum,
-  //                          View const& view) const;
+    void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
+    void update_buffers(RenderContext const& ctx, Video3DResource const& video3d, Pipeline& pipe);
 
-  void set_global_substitution_map(SubstitutionMap const& smap) {
-    global_substitution_map_ = smap;
-  }
+  private: // attributes
+    void process_textures(RenderContext const& ctx, Video3DResource const& res, Pipeline& pipe);
 
-  void draw_video3dResource(RenderContext& ctx, Video3DResource const& video3d);
-  void update_buffers(RenderContext const& ctx, Video3DResource const& video3d, Pipeline& pipe);
+    bool initialized_;
 
- private:  // attributes
-  void process_textures(RenderContext const& ctx, Video3DResource const& res, Pipeline& pipe);
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 
-  bool initialized_;
+    std::shared_ptr<ShaderProgram> warp_pass_program_;
 
-  std::vector<ShaderProgramStage> program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
-      programs_;
-  SubstitutionMap global_substitution_map_;
+    static const unsigned MAX_NUM_KINECTS = 6;
 
-  std::shared_ptr<ShaderProgram> warp_pass_program_;
+    scm::gl::texture_2d_ptr warp_depth_result_;
+    scm::gl::texture_2d_ptr warp_color_result_;
+    scm::gl::frame_buffer_ptr warp_result_fbo_;
 
-  static const unsigned MAX_NUM_KINECTS = 6;
+    scm::gl::rasterizer_state_ptr no_bfc_rasterizer_state_;
+    scm::gl::sampler_state_ptr nearest_sampler_state_;
+    scm::gl::sampler_state_ptr linear_sampler_state_;
 
-  scm::gl::texture_2d_ptr warp_depth_result_;
-  scm::gl::texture_2d_ptr warp_color_result_;
-  scm::gl::frame_buffer_ptr warp_result_fbo_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
 
-  scm::gl::rasterizer_state_ptr no_bfc_rasterizer_state_;
-  scm::gl::sampler_state_ptr nearest_sampler_state_;
-  scm::gl::sampler_state_ptr linear_sampler_state_;
+    struct Video3DData
+    {
+        Video3DData() = default;
+        Video3DData(RenderContext const& ctx, Video3DResource const& video3d);
+        // gl resources
+        scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
+        scm::gl::texture_2d_ptr color_tex_ = nullptr;
+        scm::gl::texture_2d_ptr depth_tex_ = nullptr;
+        scm::gl::texture_2d_ptr depth_tex_processed_ = nullptr;
 
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_warp_pass_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_blend_pass_;
+        // cpu resources
+        std::shared_ptr<video3d::NetKinectArray> nka_ = nullptr;
+        std::vector<scm::gl::texture_3d_ptr> cv_xyz_ = {};
+        std::vector<scm::gl::texture_3d_ptr> cv_uv_ = {};
+        unsigned frame_counter_ = 0;
+    };
 
-  struct Video3DData {
-    Video3DData() = default;
-    Video3DData(RenderContext const& ctx, Video3DResource const& video3d);
-    // gl resources
-    scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
-    scm::gl::texture_2d_ptr color_tex_ = nullptr;
-    scm::gl::texture_2d_ptr depth_tex_ = nullptr;
-    scm::gl::texture_2d_ptr depth_tex_processed_ = nullptr;
+    std::unordered_map<std::size_t, Video3DData> video3Ddata_;
 
-    // cpu resources
-    std::shared_ptr<video3d::NetKinectArray> nka_ = nullptr;
-    std::vector<scm::gl::texture_3d_ptr> cv_xyz_ = {};
-    std::vector<scm::gl::texture_3d_ptr> cv_uv_ = {};
-    unsigned frame_counter_ = 0;
-  };
-
-  std::unordered_map<std::size_t, Video3DData> video3Ddata_;
-  
-  scm::gl::frame_buffer_ptr fbo_depth_process_;
-  std::shared_ptr<ShaderProgram> depth_process_program_;
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_tex_process_;
+    scm::gl::frame_buffer_ptr fbo_depth_process_;
+    std::shared_ptr<ShaderProgram> depth_process_program_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_tex_process_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VIDEO3D_RENDERER_HPP
+#endif // GUA_VIDEO3D_RENDERER_HPP

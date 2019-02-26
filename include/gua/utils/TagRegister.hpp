@@ -34,13 +34,15 @@
 
 #define GUA_MAX_TAG_COUNT 64
 
-namespace gua {
-namespace utils {
-
+namespace gua
+{
+namespace utils
+{
 /**
  * A class for smooth value interpolation.
  */
-class GUA_DLL TagRegister : public Singleton<TagRegister> {
+class GUA_DLL TagRegister : public Singleton<TagRegister>
+{
   public:
     std::bitset<GUA_MAX_TAG_COUNT> const& get_tag(std::string const& tag);
     std::vector<std::string> const get_tag_strings(std::bitset<GUA_MAX_TAG_COUNT> const& tags);
@@ -54,10 +56,9 @@ class GUA_DLL TagRegister : public Singleton<TagRegister> {
     // this class is a Singleton --- private c'tor and d'tor
     TagRegister() {}
     ~TagRegister() {}
-
 };
 
-}
-}
+} // namespace utils
+} // namespace gua
 
-#endif  //GUA_TAG_REGISTER_HPP
+#endif // GUA_TAG_REGISTER_HPP

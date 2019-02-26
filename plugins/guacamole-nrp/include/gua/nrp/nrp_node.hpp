@@ -12,7 +12,7 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
 {
   public:
     NRPNode();
-    explicit NRPNode(const std::string &name, math::mat4 const &transform = math::mat4::identity(), std::function<void(void)> pre_pass = [&]{}, std::function<void(void)> post_pass = [&]{});
+    explicit NRPNode(const std::string &name, math::mat4 const &transform = math::mat4::identity(), std::function<void(void)> pre_pass = [&] {}, std::function<void(void)> post_pass = [&] {});
 
     std::shared_ptr<node::Node> deep_copy() const override;
     void update_cache() override;
@@ -36,13 +36,13 @@ class GUA_NRP_DLL NRPNode : public gua::node::TransformNode
     void set_should_update_avango(bool should_update_avango);
     bool get_should_update_avango();
 
-private:
+  private:
     std::shared_ptr<node::Node> copy() const override;
 
     bool _should_update_avango = false;
     std::function<void(void)> _pre_pass, _post_pass;
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // GUACAMOLE_NRP_NODE_HPP

@@ -26,80 +26,72 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/scenegraph/SceneGraph.hpp>
 
-namespace gua {
-namespace node {
+namespace gua
+{
+namespace node
+{
+////////////////////////////////////////////////////////////////////////////////
+
+ClippingPlaneNode::ClippingPlaneNode(std::string const& name, math::mat4 const& transform, Configuration configuration) : Node(name, transform), config(configuration) {}
+
+/* virtual */ void ClippingPlaneNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClippingPlaneNode::ClippingPlaneNode(std::string const& name,
-                                     math::mat4 const& transform,
-                                     Configuration configuration)
-    : Node(name, transform)
-    , config(configuration) {}
-
-/* virtual */ void ClippingPlaneNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
-}
+math::vec3 ClippingPlaneNode::get_center() const { return math::get_translation(get_cached_world_transform()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec3 ClippingPlaneNode::get_center() const {
-  return math::get_translation(get_cached_world_transform());
-}
+math::vec3 ClippingPlaneNode::get_normal() const { return math::vec3(scm::math::normalize(get_cached_world_transform() * math::vec4(0, 0, -1, 0))); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-math::vec3 ClippingPlaneNode::get_normal() const {
-  return math::vec3(scm::math::normalize(get_cached_world_transform() * math::vec4(0, 0, -1, 0)));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec4 ClippingPlaneNode::get_component_vector() const {
-  auto normal(get_normal());
-  auto center(get_center());
-  auto dist(scm::math::dot(normal, -center));
-  return math::vec4(normal.x, normal.y, normal.z, dist);
+math::vec4 ClippingPlaneNode::get_component_vector() const
+{
+    auto normal(get_normal());
+    auto center(get_center());
+    auto dist(scm::math::dot(normal, -center));
+    return math::vec4(normal.x, normal.y, normal.z, dist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ClippingPlaneNode::is_visible(int view_id) const {
-  bool visible(false);
+bool ClippingPlaneNode::is_visible(int view_id) const
+{
+    bool visible(false);
 
-  if (config.view_ids().empty()) {
-    visible = true;
-  } else {
-    visible = std::find(config.view_ids().begin(),
-                        config.view_ids().end(),
-                        view_id) != config.view_ids().end();
-  }
+    if(config.view_ids().empty())
+    {
+        visible = true;
+    }
+    else
+    {
+        visible = std::find(config.view_ids().begin(), config.view_ids().end(), view_id) != config.view_ids().end();
+    }
 
-  return visible;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<Node> ClippingPlaneNode::copy() const {
-  return std::make_shared<ClippingPlaneNode>(*this);
+    return visible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ClippingPlaneNode::set_scenegraph(SceneGraph* scenegraph) {
-  if (scenegraph_) {
-    scenegraph_->remove_clipping_plane_node(this);
-  }
+std::shared_ptr<Node> ClippingPlaneNode::copy() const { return std::make_shared<ClippingPlaneNode>(*this); }
 
-  Node::set_scenegraph(scenegraph);
+////////////////////////////////////////////////////////////////////////////////
 
-  if (scenegraph_) {
-    scenegraph_->add_clipping_plane_node(this);
-  }
+void ClippingPlaneNode::set_scenegraph(SceneGraph* scenegraph)
+{
+    if(scenegraph_)
+    {
+        scenegraph_->remove_clipping_plane_node(this);
+    }
 
+    Node::set_scenegraph(scenegraph);
+
+    if(scenegraph_)
+    {
+        scenegraph_->add_clipping_plane_node(this);
+    }
 }
 
-}
-}
+} // namespace node
+} // namespace gua

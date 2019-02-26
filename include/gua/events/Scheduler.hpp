@@ -30,25 +30,25 @@
 #include <gua/platform.hpp>
 #include <gua/events/MainLoop.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+class GUA_DLL Scheduler
+{
+  public:
+    Scheduler();
+    ~Scheduler();
 
-class GUA_DLL Scheduler {
- public:
-  Scheduler();
-  ~Scheduler();
+    void execute_delayed(MainLoop& loop, std::function<void()> callback, double delay);
 
-  void execute_delayed(MainLoop& loop, std::function<void()> callback, double delay);
+  private:
+    void self_callback(boost::asio::deadline_timer* timer, int revents);
 
- private:
-
-   void self_callback(boost::asio::deadline_timer* timer, int revents);
-
-   std::map<boost::asio::deadline_timer*, std::function<void()> > tasks_;
-
+    std::map<boost::asio::deadline_timer*, std::function<void()>> tasks_;
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* SCHEDULER_HPP_ */

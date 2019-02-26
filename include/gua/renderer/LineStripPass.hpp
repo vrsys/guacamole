@@ -29,18 +29,19 @@
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL LineStripPassDescription : public PipelinePassDescription
+{
+  public:
+    LineStripPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
-
-class GUA_DLL LineStripPassDescription : public PipelinePassDescription {
- public:
-  LineStripPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_LINE_STRIP_PASS_HPP
+#endif // GUA_LINE_STRIP_PASS_HPP

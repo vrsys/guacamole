@@ -35,54 +35,49 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 */
-//external headers
+// external headers
 
-namespace gua {
+namespace gua
+{
+// using
 
-  //using 
+class MaterialShader;
+class ShaderProgram;
 
-  class MaterialShader;
-  class ShaderProgram;
-
-  class TV_3VolumeRenderer : public TV_3Renderer {
- 
+class TV_3VolumeRenderer : public TV_3Renderer
+{
   public:
-
     TV_3VolumeRenderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map);
 
- private:  //shader related auxiliary methods
-  
-  void  _create_fbo_resources(gua::RenderContext const& ctx,
-                                      scm::math::vec2ui const& render_target_dims) override;
+  private: // shader related auxiliary methods
+    void _create_fbo_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims) override;
 
-  void  _clear_fbo_attachments(gua::RenderContext const& ctx) override;
+    void _clear_fbo_attachments(gua::RenderContext const& ctx) override;
 
-  void  _load_shaders();
+    void _load_shaders();
 
-  void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
-  void  _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
-  
- private:  //member variables
+    void _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
+    void _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
 
-    //FBOs:
+  private: // member variables
+    // FBOs:
     //////////////////////////////////////////////////////////////////////////////////////
-    scm::gl::frame_buffer_ptr                    volume_raycasting_fbo_;
-    scm::gl::frame_buffer_ptr                    volume_compositing_fbo_;
+    scm::gl::frame_buffer_ptr volume_raycasting_fbo_;
+    scm::gl::frame_buffer_ptr volume_compositing_fbo_;
 
-    //accumulation pass FBO & attachments
-    scm::gl::texture_2d_ptr                      volume_raycasting_back_buffer_color_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_front_buffer_color_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_back_buffer_depth_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_front_buffer_depth_result_;
+    // accumulation pass FBO & attachments
+    scm::gl::texture_2d_ptr volume_raycasting_back_buffer_color_result_;
+    scm::gl::texture_2d_ptr volume_raycasting_front_buffer_color_result_;
+    scm::gl::texture_2d_ptr volume_raycasting_back_buffer_depth_result_;
+    scm::gl::texture_2d_ptr volume_raycasting_front_buffer_depth_result_;
 
-
-    std::vector<ShaderProgramStage>              volume_compositing_shader_stages_;
-    std::shared_ptr<ShaderProgram>               volume_compositing_shader_program_;
+    std::vector<ShaderProgramStage> volume_compositing_shader_stages_;
+    std::shared_ptr<ShaderProgram> volume_compositing_shader_program_;
 
     scm::gl::blend_state_ptr volume_compositing_blend_state_;
     scm::gl::blend_state_ptr no_blending_blend_state_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TV_3_VOLUME_RENDERER_HPP
+#endif // GUA_TV_3_VOLUME_RENDERER_HPP

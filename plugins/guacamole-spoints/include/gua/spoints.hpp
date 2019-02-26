@@ -26,14 +26,14 @@
 #include <gua/spoints/SPointsPass.hpp>
 #include <gua/spoints/SPointsLoader.hpp>
 
-#if defined (_MSC_VER)
-#if defined (GUA_SPOINTS_LIBRARY)
-#define GUA_SPOINTS_DLL __declspec( dllexport )
+#if defined(_MSC_VER)
+#if defined(GUA_SPOINTS_LIBRARY)
+#define GUA_SPOINTS_DLL __declspec(dllexport)
 #else
-#define GUA_SPOINTS_DLL __declspec( dllimport )
+#define GUA_SPOINTS_DLL __declspec(dllimport)
 #endif
 #else
 #define GUA_SPOINTS_DLL
 #endif // #if defined(_MSC_VER)
 
-#endif  // GUA_INCLUDE_SPOINTS_HPP
+#endif // GUA_INCLUDE_SPOINTS_HPP

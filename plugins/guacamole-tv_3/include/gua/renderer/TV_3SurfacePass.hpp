@@ -26,20 +26,19 @@
 #include <gua/renderer/TV_3.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_TV_3_DLL TV_3SurfacePassDescription : public PipelinePassDescription
+{
+  public: // typedefs, enums
+    friend class Pipeline;
 
-  class GUA_TV_3_DLL TV_3SurfacePassDescription : public PipelinePassDescription {
-
-  public : // typedefs, enums
-   friend class Pipeline;
-
-  public :
-
+  public:
     TV_3SurfacePassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TV_3_SURFACE_PASS_HPP
+#endif // GUA_TV_3_SURFACE_PASS_HPP

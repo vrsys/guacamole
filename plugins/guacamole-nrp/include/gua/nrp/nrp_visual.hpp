@@ -87,6 +87,6 @@ class GUA_NRP_DLL NRPVisual
                                                gazebo::common::Color &emissive);
     std::string generate_random_name();
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 #endif // GUACAMOLE_NRP_VISUAL_H

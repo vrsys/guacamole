@@ -29,8 +29,8 @@
 #include <gua/renderer/GeometryResource.hpp>
 #include <gua/databases/GeometryDescription.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A data base for different kinds of geometry.
  *
@@ -39,19 +39,17 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-  class GUA_DLL GeometryDatabase : public Database<GeometryResource>,
-                                   public Singleton<GeometryDatabase> {
- public:
+class GUA_DLL GeometryDatabase : public Database<GeometryResource>, public Singleton<GeometryDatabase>
+{
+  public:
+    friend class Singleton<GeometryDatabase>;
 
-  friend class Singleton<GeometryDatabase>;
-
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  GeometryDatabase() {}
-  ~GeometryDatabase() {}
-
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    GeometryDatabase() {}
+    ~GeometryDatabase() {}
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_GEOMETRY_DATABASE_HPP
+#endif // GUA_GEOMETRY_DATABASE_HPP

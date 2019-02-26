@@ -32,13 +32,13 @@
 
 #include <unordered_set>
 
-namespace gua {
-
+namespace gua
+{
 class TV_3Resource;
 class TV_3Loader;
 
-namespace node {
-
+namespace node
+{
 /**
  * This class is used to represent pointcloud in the SceneGraph.
  *
@@ -46,137 +46,126 @@ namespace node {
  */
 class GUA_TV_3_DLL TV_3Node : public GeometryNode
 {
-public:
-  enum RenderMode  {
-    //compatible with TV_3VolumePassDescription
-    VOL_ISOSURFACE = 0,
-    VOL_MAX_INTENSITY = 1,
-    VOL_COMPOSITING = 2,
-    VOL_AVG_INTENSITY = 3,
-    //compatible with TV_3SurfacePassDescription
-    SUR_PBR = 4,
+  public:
+    enum RenderMode
+    {
+        // compatible with TV_3VolumePassDescription
+        VOL_ISOSURFACE = 0,
+        VOL_MAX_INTENSITY = 1,
+        VOL_COMPOSITING = 2,
+        VOL_AVG_INTENSITY = 3,
+        // compatible with TV_3SurfacePassDescription
+        SUR_PBR = 4,
 
-    MODE_COUNT
-  };
+        MODE_COUNT
+    };
 
-  enum SpatialFilterMode  {
-    S_NEAREST = 0,
-    S_LINEAR   = 1,
+    enum SpatialFilterMode
+    {
+        S_NEAREST = 0,
+        S_LINEAR = 1,
 
-    S_FILTERING_MODE_COUNT
-  };
+        S_FILTERING_MODE_COUNT
+    };
 
-  enum TemporalFilterMode  {
-    T_NEAREST = 0,
-    T_LINEAR   = 1,
+    enum TemporalFilterMode
+    {
+        T_NEAREST = 0,
+        T_LINEAR = 1,
 
-    T_FILTERING_MODE_COUNT
-  };
+        T_FILTERING_MODE_COUNT
+    };
 
-  enum PlaybackMode {
-    NONE = TV_3Resource::NONE,
-    FORWARD = TV_3Resource::FORWARD,
-    BACKWARD = TV_3Resource::BACKWARD,
+    enum PlaybackMode
+    {
+        NONE = TV_3Resource::NONE,
+        FORWARD = TV_3Resource::FORWARD,
+        BACKWARD = TV_3Resource::BACKWARD,
 
-    PLAYBACK_MODE_COUNT
-  };
+        PLAYBACK_MODE_COUNT
+    };
 
-  friend class ::gua::TV_3Loader;
+    friend class ::gua::TV_3Loader;
 
-  // c'tor
-  TV_3Node(std::string const& node_name,
-           std::string const& geometry_description = "gua_default_geometry",
-           std::string const& geometry_file_path = "gua_no_path_specified",
-           std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
-           math::mat4 const& transform = math::mat4::identity());
+    // c'tor
+    TV_3Node(std::string const& node_name,
+             std::string const& geometry_description = "gua_default_geometry",
+             std::string const& geometry_file_path = "gua_no_path_specified",
+             std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
+             math::mat4 const& transform = math::mat4::identity());
 
-public:  // method override
+  public: // method override
+  public: // methods
+    std::shared_ptr<TV_3Resource> const& get_geometry() const;
 
-public:  // methods
+    // /*virtual*/ math::mat4 get_world_transform() const override;
 
-  std::shared_ptr<TV_3Resource> const& get_geometry() const;
+    std::string const& get_geometry_description() const;
+    void set_geometry_description(std::string const& v);
 
- // /*virtual*/ math::mat4 get_world_transform() const override;
+    std::string const& get_geometry_file_path() const;
 
-  std::string const& get_geometry_description() const;
-  void               set_geometry_description(std::string const& v);
+    std::shared_ptr<Material> const& get_material() const;
+    void set_material(std::shared_ptr<Material> const& material);
 
-  std::string const& get_geometry_file_path() const;
+  public:
+    /**
+     * Implements ray picking for a point cloud
+     */
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-  std::shared_ptr<Material> const& get_material() const;
-  void                 set_material(std::shared_ptr<Material> const& material);
+    void update_bounding_box() const override;
 
-public:
-  /**
-  * Implements ray picking for a point cloud
-  */
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+    void update_cache() override;
 
-  void update_bounding_box() const override;
+    void accept(NodeVisitor& visitor) override;
 
-  void update_cache() override;
+    int get_num_time_steps() const { return geometry_->get_num_volume_time_steps(); }
 
-  void accept(NodeVisitor& visitor) override;
+    void set_playback_mode(PlaybackMode playback_mode) { geometry_->set_playback_mode(static_cast<TV_3Resource::PlaybackMode>(playback_mode)); }
+    PlaybackMode get_playback_mode() const { return static_cast<TV_3Node::PlaybackMode>(geometry_->get_playback_mode()); }
 
-  int get_num_time_steps() const { return geometry_->get_num_volume_time_steps(); }
+    void set_playback_fps(float playback_fps) { geometry_->set_playback_fps(playback_fps); }
+    bool get_playback_fps() const { return geometry_->get_playback_fps(); }
 
-  void set_playback_mode(PlaybackMode playback_mode) { geometry_->set_playback_mode(static_cast<TV_3Resource::PlaybackMode>(playback_mode) );}
-  PlaybackMode get_playback_mode() const { return static_cast<TV_3Node::PlaybackMode>(geometry_->get_playback_mode());}
+    void set_time_cursor_pos(float const time_cursor_pos) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
+    float get_time_cursor_pos() const { return geometry_->get_time_cursor_pos(); }
 
-  void set_playback_fps(float playback_fps) { geometry_->set_playback_fps(playback_fps);}
-  bool get_playback_fps() const { return geometry_->get_playback_fps();}
+    RenderMode get_render_mode() const { return render_mode_; }
+    void set_render_mode(RenderMode const render_mode) { render_mode_ = render_mode; }
 
-  void set_time_cursor_pos(float const time_cursor_pos ) const { geometry_->set_time_cursor_pos(time_cursor_pos); }
-  float get_time_cursor_pos() const { return geometry_->get_time_cursor_pos(); }
+    float get_iso_value() const { return iso_value_; }
+    void set_iso_value(float iso_value) { iso_value_ = iso_value; }
 
-  RenderMode                 get_render_mode() const {return render_mode_;}
-  void                       set_render_mode(RenderMode const render_mode) {render_mode_ = render_mode;}
+    TV_3Resource::CompressionMode get_compression_mode() const { return geometry_->get_compression_mode(); }
 
-  float                      get_iso_value() const {return iso_value_;}
-  void                       set_iso_value(float iso_value) {iso_value_ = iso_value;}
+    SpatialFilterMode get_spatial_filter_mode() const { return spatial_filter_mode_; }
 
+    void enable_spatial_linear_filter(bool enable_s_linear_filter) { spatial_filter_mode_ = (enable_s_linear_filter ? SpatialFilterMode::S_LINEAR : SpatialFilterMode::S_NEAREST); }
 
-  TV_3Resource::
-  CompressionMode            get_compression_mode() const {return geometry_->get_compression_mode();}
+    TemporalFilterMode get_temporal_filter_mode() const { return temporal_filter_mode_; }
 
-  SpatialFilterMode          get_spatial_filter_mode() const {return spatial_filter_mode_;}
+    void enable_temporal_linear_filter(bool enable_t_linear_filter) { temporal_filter_mode_ = (enable_t_linear_filter ? TemporalFilterMode::T_LINEAR : TemporalFilterMode::T_NEAREST); }
 
-  void                       enable_spatial_linear_filter(bool enable_s_linear_filter) { 
-                                  spatial_filter_mode_ 
-                                    = (enable_s_linear_filter ? SpatialFilterMode::S_LINEAR : SpatialFilterMode::S_NEAREST);
-                                }
+    std::shared_ptr<Node> copy() const override;
 
-  TemporalFilterMode         get_temporal_filter_mode() const {return temporal_filter_mode_;}
+  private: // attributes e.g. special attributes for drawing
+    std::shared_ptr<TV_3Resource> geometry_;
+    std::string geometry_description_;
+    std::string geometry_file_path_;
+    bool geometry_changed_;
 
-  void                       enable_temporal_linear_filter(bool enable_t_linear_filter) {
-                                  temporal_filter_mode_ 
-                                    = (enable_t_linear_filter ? TemporalFilterMode::T_LINEAR : TemporalFilterMode::T_NEAREST);
-                                }
+    std::shared_ptr<Material> material_;
+    bool material_changed_;
+    RenderMode render_mode_;
 
-std::shared_ptr<Node> copy() const override;
+    float iso_value_{0.0};
 
-
-private:  // attributes e.g. special attributes for drawing
-
-  std::shared_ptr<TV_3Resource> geometry_;
-  std::string                   geometry_description_;
-  std::string                   geometry_file_path_;
-  bool                          geometry_changed_;
-
-  std::shared_ptr<Material>     material_;
-  bool                          material_changed_;
-  RenderMode                    render_mode_;
-
-  float                         iso_value_ {0.0};
-
-  SpatialFilterMode             spatial_filter_mode_ {SpatialFilterMode::S_NEAREST};
-  TemporalFilterMode            temporal_filter_mode_ {TemporalFilterMode::T_NEAREST};
+    SpatialFilterMode spatial_filter_mode_{SpatialFilterMode::S_NEAREST};
+    TemporalFilterMode temporal_filter_mode_{TemporalFilterMode::T_NEAREST};
 };
 
-}  // namespace node {
-}  // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_TV_3_NODE_HPP
+#endif // GUA_TV_3_NODE_HPP

@@ -31,16 +31,16 @@
 #include <list>
 #include <memory>
 
+namespace gua
+{
+class Material;
 
-namespace gua {
-
-  class Material;
-
-namespace node {
+namespace node
+{
 class Node;
 class InnerNode;
 class Video3DNode;
-}
+} // namespace node
 
 /**
  * Loads and draws Video3D.
@@ -48,28 +48,25 @@ class Video3DNode;
  * This class can load Video3D data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Video3D objects.
  */
-class GUA_VIDEO3D_DLL Video3DLoader {
- public:
+class GUA_VIDEO3D_DLL Video3DLoader
+{
+  public:
+    enum Flags
+    {
+        DEFAULTS = 0,
+        MAKE_PICKABLE = 1 << 0,
+        NORMALIZE_POSITION = 1 << 1,
+        NORMALIZE_SCALE = 1 << 2
+    };
 
-  enum Flags {
-  	DEFAULTS = 0,
-  	MAKE_PICKABLE = 1 << 0,
-  	NORMALIZE_POSITION = 1 << 1,
-  	NORMALIZE_SCALE = 1 << 2
-  };
+    Video3DLoader();
+    ~Video3DLoader() = default;
 
-  Video3DLoader();
-  ~Video3DLoader() = default;
+    std::shared_ptr<node::Video3DNode> create_geometry_from_file(std::string const& nodename, std::string const& ksfile, std::shared_ptr<Material> material = nullptr, unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::Video3DNode> create_geometry_from_file(std::string const& nodename,
-                                                               std::string const& ksfile,
-															                                 std::shared_ptr<Material> material = nullptr,
-															                                 unsigned flags = DEFAULTS);
-
- private:
-
+  private:
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VIDEO3D_LOADER_HPP
+#endif // GUA_VIDEO3D_LOADER_HPP

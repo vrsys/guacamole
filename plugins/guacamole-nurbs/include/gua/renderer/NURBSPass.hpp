@@ -25,28 +25,25 @@
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription
+{
+  public: // typedefs, enums
+    friend class Pipeline;
 
-  class GUA_NURBS_DLL NURBSPassDescription : public PipelinePassDescription {
+    void enable_pretessellation(bool enable);
+    bool enable_pretessellation() const;
 
-  public : // typedefs, enums
-
-   friend class Pipeline;
-
-   void enable_pretessellation(bool enable);
-   bool enable_pretessellation() const;
-
-  public :
-
+  public:
     NURBSPassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap& substitution_map) override;
 
-  private :
-
+  private:
     bool _enable_pretessellation = true;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_NURBSPASS_HPP
+#endif // GUA_NURBSPASS_HPP

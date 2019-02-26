@@ -25,24 +25,19 @@
 
 #include <gua/platform.hpp>
 
-namespace gua {
-
-  /*
-  * helper class to generate unique geometry string from parametrization and vice versa
-  */
-  class GUA_DLL GeometryDescription
-  {
+namespace gua
+{
+/*
+ * helper class to generate unique geometry string from parametrization and vice versa
+ */
+class GUA_DLL GeometryDescription
+{
   public: // construction
+    GeometryDescription(std::string const& type, std::string const& filename, unsigned id, unsigned flags);
 
-    GeometryDescription (std::string const& type,
-                         std::string const& filename,
-                         unsigned id, 
-                         unsigned flags);
-      
     GeometryDescription(std::string const& unique_key);
-      
-  public: // methods
 
+  public: // methods
     std::string const& type() const;
     std::string const& filepath() const;
 
@@ -52,16 +47,15 @@ namespace gua {
     std::string const& unique_key() const;
 
   private:
-
     std::string type_;
     std::string filename_;
 
-    unsigned    id_;
-    unsigned    flags_;
+    unsigned id_;
+    unsigned flags_;
 
     std::string unique_key_;
-  };
+};
 
 } // namespace gua
 
-#endif  // GUA_GEOMETRY_DESCRIPTION_HPP
+#endif // GUA_GEOMETRY_DESCRIPTION_HPP

@@ -29,33 +29,34 @@
 // external headers
 #include <scm/gl_core/buffer_objects/uniform_buffer_adaptor.h>
 
-namespace gua {
-
-  const std::size_t NUM_MAX_BONES = 100;
+namespace gua
+{
+const std::size_t NUM_MAX_BONES = 100;
 /**
  * @brief holds the transformations of all bones
  * of skeletalanimationnodes
  */
 class GUA_SKELANIM_DLL BoneTransformUniformBlock
 {
-public:
-  struct BoneTransformBlock {
-    math::mat4f transforms[NUM_MAX_BONES];
-  };
+  public:
+    struct BoneTransformBlock
+    {
+        math::mat4f transforms[NUM_MAX_BONES];
+    };
 
-  using block_type = scm::gl::uniform_block<BoneTransformBlock>;
+    using block_type = scm::gl::uniform_block<BoneTransformBlock>;
 
-  BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
-  ~BoneTransformUniformBlock();
+    BoneTransformUniformBlock(scm::gl::render_device_ptr const& device);
+    ~BoneTransformUniformBlock();
 
-  void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4f> const& new_transforms);
+    void update(scm::gl::render_context_ptr const& context, std::vector<math::mat4f> const& new_transforms);
 
-  inline const block_type&   block() const { return uniform_block_; }
+    inline const block_type& block() const { return uniform_block_; }
 
-private:
-  block_type          uniform_block_;
+  private:
+    block_type uniform_block_;
 };
 
-} // namespace gua {
+} // namespace gua
 
 #endif // #ifndef GUA_BONE_TRANSFORM_UNIFORM_BLOCK_HPP

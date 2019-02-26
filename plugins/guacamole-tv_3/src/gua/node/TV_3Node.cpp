@@ -32,170 +32,170 @@
 
 // guacamole headers
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 ////////////////////////////////////////////////////////////////////////////////
-TV_3Node::TV_3Node(std::string const& name,
-                   std::string const& geometry_description,
-                   std::string const& geometry_file_path,
-                   std::shared_ptr<Material> const& material,
-                   math::mat4 const& transform)
-    : GeometryNode(name, transform),
-      geometry_(nullptr),
-      geometry_changed_(true),
-      geometry_description_(geometry_description),
-      geometry_file_path_(geometry_file_path),
-      material_(material) {
+TV_3Node::TV_3Node(std::string const& name, std::string const& geometry_description, std::string const& geometry_file_path, std::shared_ptr<Material> const& material, math::mat4 const& transform)
+    : GeometryNode(name, transform), geometry_(nullptr), geometry_changed_(true), geometry_description_(geometry_description), geometry_file_path_(geometry_file_path), material_(material)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<TV_3Resource> const& TV_3Node::get_geometry() const {
-  return geometry_;
+std::shared_ptr<TV_3Resource> const& TV_3Node::get_geometry() const { return geometry_; }
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& TV_3Node::get_geometry_file_path() const { return geometry_file_path_; }
+
+////////////////////////////////////////////////////////////////////////////////
+std::string const& TV_3Node::get_geometry_description() const { return geometry_description_; }
+
+////////////////////////////////////////////////////////////////////////////////
+void TV_3Node::set_geometry_description(std::string const& v)
+{
+    geometry_description_ = v;
+    geometry_changed_ = self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& TV_3Node::get_geometry_file_path() const {
-  return geometry_file_path_;
+std::shared_ptr<Material> const& TV_3Node::get_material() const { return material_; }
+
+////////////////////////////////////////////////////////////////////////////////
+void TV_3Node::set_material(std::shared_ptr<Material> const& material)
+{
+    material_ = material;
+    // material_changed_ = self_dirty_ = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& TV_3Node::get_geometry_description() const {
-  return geometry_description_;
-}
+void TV_3Node::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
+{
+    // first of all, check bbox
+    auto box_hits(::gua::intersect(ray, bounding_box_));
 
-////////////////////////////////////////////////////////////////////////////////
-void TV_3Node::set_geometry_description(std::string const& v) {
-  geometry_description_ = v;
-  geometry_changed_ = self_dirty_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Material> const& TV_3Node::get_material() const {
-  return material_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void TV_3Node::set_material(std::shared_ptr<Material> const& material) {
-  material_ = material;
-  //material_changed_ = self_dirty_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void TV_3Node::ray_test_impl(Ray const& ray,
-                             int options,
-                             Mask const& mask,
-                             std::set<PickResult>& hits) {
-  // first of all, check bbox
-  auto box_hits(::gua::intersect(ray, bounding_box_));
-
-  // ray did not intersect bbox -- therefore it wont intersect
-  if (box_hits.first == Ray::END && box_hits.second == Ray::END) {
-    return;
-  }
-
-  // return if only first object shall be returned and the current first hit
-  // is in front of the bbox entry point and the ray does not start inside
-  // the bbox
-  if (options & PickResult::PICK_ONLY_FIRST_OBJECT && hits.size() > 0 &&
-      hits.begin()->distance < box_hits.first && box_hits.first != Ray::END) {
-    return;
-  }
-
-  // bbox is intersected, but check geometry only if mask tells us to check
-  if (get_geometry_description() != "" && mask.check(get_tags())) {
-    auto geometry(
-        GeometryDatabase::instance()->lookup(get_geometry_description()));
-
-    if (geometry) {
-      Ray world_ray(ray);
-      geometry->ray_test(world_ray, options, this, hits);
+    // ray did not intersect bbox -- therefore it wont intersect
+    if(box_hits.first == Ray::END && box_hits.second == Ray::END)
+    {
+        return;
     }
-  }
 
-  for (auto child : get_children()) {
-    child->ray_test_impl(ray, options, mask, hits);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void TV_3Node::update_bounding_box() const {
-  if (geometry_) {
-    auto geometry_bbox(geometry_->get_bounding_box());
-
-    bounding_box_ = transform(geometry_bbox, world_transform_);
-
-    for (auto child : get_children()) {
-      bounding_box_.expandBy(child->get_bounding_box());
+    // return if only first object shall be returned and the current first hit
+    // is in front of the bbox entry point and the ray does not start inside
+    // the bbox
+    if(options & PickResult::PICK_ONLY_FIRST_OBJECT && hits.size() > 0 && hits.begin()->distance < box_hits.first && box_hits.first != Ray::END)
+    {
+        return;
     }
-  } else {
-    Node::update_bounding_box();
-  }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-void TV_3Node::update_cache() {
-  if (geometry_changed_) {
-    if (geometry_description_ != "") {
-      if (!GeometryDatabase::instance()->contains(geometry_description_)) {
-        GeometryDescription desc(geometry_description_);
-        try {
-          gua::TV_3Loader loader;
-          loader.load_geometry(desc.filepath(), desc.flags());
-        } catch (std::exception& e) {
-          Logger::LOG_WARNING
-              << "TV_3Node::update_cache(): Loading failed from "
-              << desc.filepath() << " : " << e.what() << std::endl;
+    // bbox is intersected, but check geometry only if mask tells us to check
+    if(get_geometry_description() != "" && mask.check(get_tags()))
+    {
+        auto geometry(GeometryDatabase::instance()->lookup(get_geometry_description()));
+
+        if(geometry)
+        {
+            Ray world_ray(ray);
+            geometry->ray_test(world_ray, options, this, hits);
         }
-      }
-      geometry_ = std::dynamic_pointer_cast<TV_3Resource>(
-          GeometryDatabase::instance()->lookup(geometry_description_));
-
-      if (!geometry_) {
-        Logger::LOG_WARNING
-            << "Failed to get TV_3Resource for " << geometry_description_
-            << ": The data base entry is of wrong type!" << std::endl;
-      }
     }
 
-    geometry_changed_ = false;
-  }
-
-  // modified version of Node::update_cache -> add local transformation
-  if (self_dirty_) {
-    math::mat4 old_world_trans(world_transform_);
-
-    if (is_root()) {
-      world_transform_ = transform_ * geometry_->local_transform();
-    } else {
-      world_transform_ = get_parent()->get_world_transform() * transform_ *
-                         geometry_->local_transform();
+    for(auto child : get_children())
+    {
+        child->ray_test_impl(ray, options, mask, hits);
     }
-
-    update_bounding_box();
-
-    if (world_transform_ != old_world_trans) {
-      on_world_transform_changed.emit(world_transform_);
-    }
-
-    self_dirty_ = false; 
-  }
-
-  if (child_dirty_) {
-    for (auto const& child : get_children()) {
-      child->update_cache();
-    }
-
-    update_bounding_box();
-
-    child_dirty_ = false;
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/* virtual */ void TV_3Node::accept(NodeVisitor& visitor) {
-  visitor.visit(this);
+void TV_3Node::update_bounding_box() const
+{
+    if(geometry_)
+    {
+        auto geometry_bbox(geometry_->get_bounding_box());
+
+        bounding_box_ = transform(geometry_bbox, world_transform_);
+
+        for(auto child : get_children())
+        {
+            bounding_box_.expandBy(child->get_bounding_box());
+        }
+    }
+    else
+    {
+        Node::update_bounding_box();
+    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+void TV_3Node::update_cache()
+{
+    if(geometry_changed_)
+    {
+        if(geometry_description_ != "")
+        {
+            if(!GeometryDatabase::instance()->contains(geometry_description_))
+            {
+                GeometryDescription desc(geometry_description_);
+                try
+                {
+                    gua::TV_3Loader loader;
+                    loader.load_geometry(desc.filepath(), desc.flags());
+                }
+                catch(std::exception& e)
+                {
+                    Logger::LOG_WARNING << "TV_3Node::update_cache(): Loading failed from " << desc.filepath() << " : " << e.what() << std::endl;
+                }
+            }
+            geometry_ = std::dynamic_pointer_cast<TV_3Resource>(GeometryDatabase::instance()->lookup(geometry_description_));
+
+            if(!geometry_)
+            {
+                Logger::LOG_WARNING << "Failed to get TV_3Resource for " << geometry_description_ << ": The data base entry is of wrong type!" << std::endl;
+            }
+        }
+
+        geometry_changed_ = false;
+    }
+
+    // modified version of Node::update_cache -> add local transformation
+    if(self_dirty_)
+    {
+        math::mat4 old_world_trans(world_transform_);
+
+        if(is_root())
+        {
+            world_transform_ = transform_ * geometry_->local_transform();
+        }
+        else
+        {
+            world_transform_ = get_parent()->get_world_transform() * transform_ * geometry_->local_transform();
+        }
+
+        update_bounding_box();
+
+        if(world_transform_ != old_world_trans)
+        {
+            on_world_transform_changed.emit(world_transform_);
+        }
+
+        self_dirty_ = false;
+    }
+
+    if(child_dirty_)
+    {
+        for(auto const& child : get_children())
+        {
+            child->update_cache();
+        }
+
+        update_bounding_box();
+
+        child_dirty_ = false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/* virtual */ void TV_3Node::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,19 +220,20 @@ std::shared_ptr<TV_3Node> TV_3Node::deep_copy_TV3() const {
 }
 */
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Node> TV_3Node::copy() const {
-  std::shared_ptr<TV_3Node> result = std::make_shared<TV_3Node>(*this);
+std::shared_ptr<Node> TV_3Node::copy() const
+{
+    std::shared_ptr<TV_3Node> result = std::make_shared<TV_3Node>(*this);
 
-  result->update_cache();
+    result->update_cache();
 
-  result->shadow_mode_          = shadow_mode_;
-  result->render_mode_          = render_mode_;
-  result->iso_value_            = iso_value_;
-  result->spatial_filter_mode_  = spatial_filter_mode_;
-  result->temporal_filter_mode_ = temporal_filter_mode_;
+    result->shadow_mode_ = shadow_mode_;
+    result->render_mode_ = render_mode_;
+    result->iso_value_ = iso_value_;
+    result->spatial_filter_mode_ = spatial_filter_mode_;
+    result->temporal_filter_mode_ = temporal_filter_mode_;
 
-  return result;
+    return result;
 }
 
-}
-}
+} // namespace node
+} // namespace gua

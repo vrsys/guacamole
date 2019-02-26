@@ -27,4 +27,3 @@
  */
 
 #endif // GUA_SCENEGRAPH_DOXYGEN_HPP
-

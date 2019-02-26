@@ -28,82 +28,85 @@
 #include <cxxabi.h>
 #endif
 
-namespace gua {
-namespace string_utils {
-
+namespace gua
+{
+namespace string_utils
+{
 ////////////////////////////////////////////////////////////////////////////
 
-std::vector<std::string> split(std::string const& s, char delim) {
+std::vector<std::string> split(std::string const& s, char delim)
+{
+    std::vector<std::string> elems;
 
-  std::vector<std::string> elems;
+    std::stringstream ss(s);
+    std::string item;
 
-  std::stringstream ss(s);
-  std::string item;
+    while(std::getline(ss, item, delim))
+    {
+        elems.push_back(item);
+    }
 
-  while (std::getline(ss, item, delim)) {
-    elems.push_back(item);
-  }
-
-  return elems;
+    return elems;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::string& replace(std::string& str,
-                     std::string const& old_str,
-                     std::string const& new_str) {
-
-  std::size_t pos = 0;
-  while ((pos = str.find(old_str, pos)) != std::string::npos) {
-    str.replace(pos, old_str.length(), new_str);
-    pos += new_str.length();
-  }
-  return str;
+std::string& replace(std::string& str, std::string const& old_str, std::string const& new_str)
+{
+    std::size_t pos = 0;
+    while((pos = str.find(old_str, pos)) != std::string::npos)
+    {
+        str.replace(pos, old_str.length(), new_str);
+        pos += new_str.length();
+    }
+    return str;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::string format_code(std::string const& code) {
+std::string format_code(std::string const& code)
+{
+    std::string result(code);
 
-  std::string result(code);
+    for(int i(0); i < 20; ++i)
+        replace(result, "  ", " ");
 
-  for (int i(0); i < 20; ++i)
-    replace(result, "  ", " ");
+    replace(result, " \n", "\n");
+    replace(result, "\n ", "\n");
 
-  replace(result, " \n", "\n");
-  replace(result, "\n ", "\n");
+    int depth(0);
 
-  int depth(0);
+    for(unsigned pos(0); pos < result.length(); ++pos)
+    {
+        if(result[pos] == '{')
+        {
+            ++depth;
+        }
 
-  for (unsigned pos(0); pos < result.length(); ++pos) {
-    if (result[pos] == '{') {
-      ++depth;
+        if(pos + 1 < result.length() && result[pos + 1] == '}')
+        {
+            --depth;
+        }
+
+        if(result[pos] == '\n' && depth > 0)
+        {
+            result.insert(pos + 1, depth * 4, ' ');
+            pos += 4;
+        }
     }
 
-    if (pos + 1 < result.length() && result[pos + 1] == '}') {
-      --depth;
-    }
-
-    if (result[pos] == '\n' && depth > 0) {
-      result.insert(pos + 1, depth * 4, ' ');
-      pos += 4;
-    }
-  }
-
-  return result;
+    return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::string demangle_type_name(const char* name) {
+std::string demangle_type_name(const char* name)
+{
 #ifdef __GNUG__
     // implementation taken from http://stackoverflow.com/a/4541470
     int status = -4;
-    std::unique_ptr<char, void(*)(void*)> res {
-        abi::__cxa_demangle(name, nullptr, nullptr, &status),
-        std::free
-    };
-    return (status == 0) ? res.get() : name ;
+    std::unique_ptr<char, void (*)(void*)> res{abi::__cxa_demangle(name, nullptr, nullptr, &status), std::free};
+    return (status == 0) ? res.get() : name;
 #else
     return name;
 #endif
@@ -111,21 +114,17 @@ std::string demangle_type_name(const char* name) {
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::string sanitize(std::string const& str) {
-
+std::string sanitize(std::string const& str)
+{
     std::string s(str);
     std::string illegal(" |\\?*+\":<>[](){}/'.,#&\r\n\t");
 
-    std::replace_if(s.begin(), s.end(),
-        [&illegal](char const c) { 
-            return illegal.find_first_of(c) != std::string::npos;
-        }, '_');
+    std::replace_if(s.begin(), s.end(), [&illegal](char const c) { return illegal.find_first_of(c) != std::string::npos; }, '_');
 
     return s;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
-}
-}
-
+} // namespace string_utils
+} // namespace gua

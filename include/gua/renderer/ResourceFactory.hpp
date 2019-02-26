@@ -30,48 +30,34 @@
 
 #include <gua/platform.hpp>
 
-
-namespace gua {
-
+namespace gua
+{
 using SubstitutionMap = std::unordered_map<std::string, std::string>;
 
-class GUA_DLL ResourceFactory {
- public:
+class GUA_DLL ResourceFactory
+{
+  public:
+    ResourceFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
 
-  ResourceFactory(std::vector<std::string> const& search_directories = std::vector<std::string>());
+    virtual ~ResourceFactory() {}
 
-  virtual ~ResourceFactory() {}
+    void add_search_path(std::string const& path);
 
-  void         add_search_path(std::string const& path);
+    std::string read_plain_file(std::string const& file) const;
+    std::string read_shader_file(std::string const& file) const;
+    std::string prepare_shader(std::string const& shader_source, std::string const& label) const;
+    std::string resolve_substitutions(std::string const& shader_source, SubstitutionMap const& smap) const;
 
-  std::string  read_plain_file(std::string const& file) const;
-  std::string  read_shader_file(std::string const& file) const;
-  std::string  prepare_shader(std::string const& shader_source,
-                              std::string const& label) const;
-  std::string  resolve_substitutions(std::string const& shader_source,
-                                     SubstitutionMap const& smap) const;
+  private:
+    bool get_file_contents(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::string& contents, boost::filesystem::path& full_path) const;
 
- private:
+    bool get_file_contents(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::wstring& contents, boost::filesystem::path& full_path) const;
 
-  bool         get_file_contents(boost::filesystem::path const& filename,
-                                 boost::filesystem::path const& current_dir,
-                                 std::string& contents,
-                                 boost::filesystem::path& full_path) const;
+    bool resolve_includes(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::string& contents, std::string const& custom_label = std::string()) const;
 
-  bool         get_file_contents(boost::filesystem::path const& filename,
-                                 boost::filesystem::path const& current_dir,
-                                 std::wstring& contents,
-                                 boost::filesystem::path& full_path) const;
-
-  bool         resolve_includes(boost::filesystem::path const& filename,
-                                boost::filesystem::path const& current_dir,
-                                std::string& contents,
-                                std::string const& custom_label = std::string()) const;
-
-  std::vector<std::string> _search_paths;
-
+    std::vector<std::string> _search_paths;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PIPELINE_HPP
+#endif // GUA_PIPELINE_HPP

@@ -30,37 +30,37 @@
 
 #include <scm/gl_core/shader_objects.h>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 class PipelinePassDescription;
 
-class DepthCubeMapRenderer {
- public:
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+class DepthCubeMapRenderer
+{
+  public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
-  void create_state_objects(RenderContext const& ctx);
+    void create_state_objects(RenderContext const& ctx);
 
- private:
+  private:
+    void prepare_depth_cubemap(node::CubemapNode const& cube_map_node, Pipeline& pipe);
+    void download_depth_cubemap(node::CubemapNode& cube_map_node, Pipeline const& pipe) const;
 
-  void prepare_depth_cubemap(node::CubemapNode const& cube_map_node, Pipeline& pipe);
-  void download_depth_cubemap(node::CubemapNode& cube_map_node, Pipeline const& pipe) const;
+    void generate_depth_cubemap_face(unsigned face, node::CubemapNode const& cube_map_node, Pipeline& pipe) const;
 
-  void generate_depth_cubemap_face(unsigned face, node::CubemapNode const& cube_map_node, Pipeline& pipe) const;
+    unsigned face_counter_ = 0;
 
-  unsigned                        face_counter_ = 0;
+    std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_ = nullptr;
 
-  std::shared_ptr<SharedDepthCubeMapResource> depth_cube_map_res_ = nullptr;
+    scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
+    scm::gl::rasterizer_state_ptr rs_cull_none_ = nullptr;
 
-  scm::gl::rasterizer_state_ptr   rs_cull_back_ = nullptr;
-  scm::gl::rasterizer_state_ptr   rs_cull_none_ = nullptr;
-
-  SubstitutionMap                 global_substitution_map_ = {};
-  std::pair<unsigned int, std::vector<std::size_t>> needs_rendering_ = {0, std::vector<std::size_t>()};
+    SubstitutionMap global_substitution_map_ = {};
+    std::pair<unsigned int, std::vector<std::size_t>> needs_rendering_ = {0, std::vector<std::size_t>()};
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_DEPTH_CUBEMAP_RENDERER_HPP
+#endif // GUA_DEPTH_CUBEMAP_RENDERER_HPP

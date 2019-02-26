@@ -76,7 +76,7 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
     float _bb_min[3];
     float _bb_max[3];
 
-    unsigned char* _tj_compressed_image_buffer;
+    unsigned char *_tj_compressed_image_buffer;
     std::unordered_map<uint32_t, tjhandle> _jpeg_decompressor_per_layer;
 
     void Update();
@@ -84,6 +84,6 @@ class GAZEBO_VISIBLE GuaDynGeoVisualPlugin : public VisualPlugin
 
     void _ReadLoop();
 };
-}
+} // namespace gazebo
 
 #endif // GUACAMOLE_GUADYNGEOVISUALPLUGIN_H

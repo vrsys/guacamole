@@ -26,55 +26,45 @@
 
 #include <memory>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescription {
- public:
+class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescription
+{
+  public:
+    OcclusionSlaveResolvePassDescription();
 
+    void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const override;
 
-  OcclusionSlaveResolvePassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
+  protected:
+    void create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims);
 
-  void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const override;
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+    mutable int last_rendered_view_id;
+    mutable int last_rendered_side;
 
+    scm::math::vec2ui gbuffer_extraction_resolution_;
 
+    std::vector<ShaderProgramStage> control_monitor_shader_stages_;
+    std::shared_ptr<ShaderProgram> control_monitor_shader_program_;
 
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
+    std::vector<ShaderProgramStage> depth_downsampling_shader_stages_;
+    std::shared_ptr<ShaderProgram> depth_downsampling_shader_program_;
 
- protected:
+    bool gpu_resources_already_created_;
 
-  void create_gpu_resources(gua::RenderContext const& ctx,
-                            scm::math::vec2ui const& render_target_dims);
- 
+    scm::gl::depth_stencil_state_ptr no_depth_test_depth_stencil_state_;
+    scm::gl::depth_stencil_state_ptr always_write_depth_stencil_state_;
 
+    scm::gl::sampler_state_ptr nearest_sampler_state_;
 
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
-  mutable int last_rendered_view_id;
-  mutable int last_rendered_side;
-
-  scm::math::vec2ui gbuffer_extraction_resolution_;
-
-
-  std::vector<ShaderProgramStage>                    control_monitor_shader_stages_;
-  std::shared_ptr<ShaderProgram>                     control_monitor_shader_program_;
-
-  std::vector<ShaderProgramStage>                    depth_downsampling_shader_stages_;
-  std::shared_ptr<ShaderProgram>                     depth_downsampling_shader_program_;
-
-  bool                                               gpu_resources_already_created_;
-
-  scm::gl::depth_stencil_state_ptr                   no_depth_test_depth_stencil_state_;
-  scm::gl::depth_stencil_state_ptr                   always_write_depth_stencil_state_;
-
-  scm::gl::sampler_state_ptr                         nearest_sampler_state_;
-
-  scm::gl::frame_buffer_ptr                          depth_buffer_downsampling_fbo_;
-  scm::gl::texture_2d_ptr                            downsampled_depth_attachment_;
-
+    scm::gl::frame_buffer_ptr depth_buffer_downsampling_fbo_;
+    scm::gl::texture_2d_ptr downsampled_depth_attachment_;
 };
-}
+} // namespace gua
 
-#endif  // GUA_OCCLUSION_SLAVE_RESOLVE_PASS_HPP
+#endif // GUA_OCCLUSION_SLAVE_RESOLVE_PASS_HPP

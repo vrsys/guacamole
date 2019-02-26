@@ -31,15 +31,16 @@
 #include <bitset>
 #include <vector>
 
-namespace gua {
-namespace utils {
-
+namespace gua
+{
+namespace utils
+{
 /**
  * A class for smooth value interpolation.
  */
-class GUA_DLL TagList {
+class GUA_DLL TagList
+{
   public:
-
     TagList(std::vector<std::string> const& tags = std::vector<std::string>());
 
     void add_tag(std::string const& tag);
@@ -53,25 +54,18 @@ class GUA_DLL TagList {
     std::vector<std::string> const get_strings() const;
     std::bitset<GUA_MAX_TAG_COUNT> const& get_bits() const;
 
-    void set_user_data(void* data) {
-      user_data_ = data;
-    }
+    void set_user_data(void* data) { user_data_ = data; }
 
-    void* get_user_data() const {
-      return user_data_;
-    }
+    void* get_user_data() const { return user_data_; }
 
-    bool operator==(TagList const& other) const {
-      return tags_ == other.tags_;
-    }
+    bool operator==(TagList const& other) const { return tags_ == other.tags_; }
 
- private:
-  void* user_data_ = nullptr;
-  std::bitset<GUA_MAX_TAG_COUNT> tags_;
-
+  private:
+    void* user_data_ = nullptr;
+    std::bitset<GUA_MAX_TAG_COUNT> tags_;
 };
 
-}
-}
+} // namespace utils
+} // namespace gua
 
-#endif  //GUA_TAG_LIST_HPP
+#endif // GUA_TAG_LIST_HPP

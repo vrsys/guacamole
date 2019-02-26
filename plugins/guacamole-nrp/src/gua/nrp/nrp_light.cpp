@@ -142,5 +142,5 @@ void NRPLight::set_direction(const gazebo::msgs::Vector3d &direction)
     // scm::math::quatd quaternion = scm::math::quatd::from_euler(direction.x(), direction.y(), direction.z());
     // _direction = quaternion.to_matrix();
 }
-}
-}
+} // namespace nrp
+} // namespace gua

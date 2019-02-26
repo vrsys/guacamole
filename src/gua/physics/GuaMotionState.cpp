@@ -22,45 +22,39 @@
 // class header
 #include <gua/physics/GuaMotionState.hpp>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-GuaMotionState::GuaMotionState(const btTransform& start_trans) : dirty(false) {
-  for (int i(0); i < 3; ++i)
-    transforms_[i] = new btTransform(start_trans);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-GuaMotionState::~GuaMotionState() {
-  for (int i(0); i < 3; ++i)
-    delete transforms_[i];
+GuaMotionState::GuaMotionState(const btTransform& start_trans) : dirty(false)
+{
+    for(int i(0); i < 3; ++i)
+        transforms_[i] = new btTransform(start_trans);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void GuaMotionState::getWorldTransform(
-    btTransform& centerOfMassWorldTrans) const {
-  centerOfMassWorldTrans = *transforms_[0];
+GuaMotionState::~GuaMotionState()
+{
+    for(int i(0); i < 3; ++i)
+        delete transforms_[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void GuaMotionState::setWorldTransform(
-    const btTransform& centerOfMassWorldTrans) {
-  *transforms_[0] = centerOfMassWorldTrans;
-}
+/* virtual */ void GuaMotionState::getWorldTransform(btTransform& centerOfMassWorldTrans) const { centerOfMassWorldTrans = *transforms_[0]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void GuaMotionState::latest_transform(
-    btTransform& centerOfMassWorldTrans) const {
-  centerOfMassWorldTrans = *transforms_[2];
-}
+/* virtual */ void GuaMotionState::setWorldTransform(const btTransform& centerOfMassWorldTrans) { *transforms_[0] = centerOfMassWorldTrans; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
-}
+/* virtual */ void GuaMotionState::latest_transform(btTransform& centerOfMassWorldTrans) const { centerOfMassWorldTrans = *transforms_[2]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+} // namespace physics
+} // namespace gua

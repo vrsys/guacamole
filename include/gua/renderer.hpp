@@ -47,4 +47,4 @@
 #include <gua/renderer/GlfwWindow.hpp>
 #endif
 
-#endif  // GUA_INCLUDE_RENDERER_HPP
+#endif // GUA_INCLUDE_RENDERER_HPP

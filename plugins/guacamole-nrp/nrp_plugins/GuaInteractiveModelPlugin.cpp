@@ -52,13 +52,13 @@ void gazebo::GuaInteractiveModelPlugin::callback_pos(ConstPosesStampedPtr &msg)
 }
 void gazebo::GuaInteractiveModelPlugin::on_update()
 {
-    #if GUA_DEBUG == 1
-        gzerr << "on_update: begin" << std::endl;
-        std::cerr << "on_update: begin" << std::endl;
-    #endif
+#if GUA_DEBUG == 1
+    gzerr << "on_update: begin" << std::endl;
+    std::cerr << "on_update: begin" << std::endl;
+#endif
     _model->SetWorldPose(_pose, true, true);
-    #if GUA_DEBUG == 1
-        gzerr << "on_update: end" << std::endl;
-        std::cerr << "on_update: end" << std::endl;
-    #endif
+#if GUA_DEBUG == 1
+    gzerr << "on_update: end" << std::endl;
+    std::cerr << "on_update: end" << std::endl;
+#endif
 }

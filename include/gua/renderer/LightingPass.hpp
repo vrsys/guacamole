@@ -24,19 +24,21 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL LightingPassDescription : public PipelinePassDescription {
- public:
-  LightingPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+class GUA_DLL LightingPassDescription : public PipelinePassDescription
+{
+  public:
+    LightingPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
+
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_LIGHTING_PASS_HPP
+#endif // GUA_LIGHTING_PASS_HPP

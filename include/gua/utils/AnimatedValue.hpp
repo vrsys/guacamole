@@ -24,52 +24,50 @@
 
 #include <gua/platform.hpp>
 
-namespace gua {
-namespace utils {
-
+namespace gua
+{
+namespace utils
+{
 /**
  * A class for smooth value interpolation.
  */
-class GUA_DLL AnimatedValue {
- public:
-  enum Direction {
-    In,
-    Out,
-    InOut,
-    OutIn,
-    Linear
-  };
+class GUA_DLL AnimatedValue
+{
+  public:
+    enum Direction
+    {
+        In,
+        Out,
+        InOut,
+        OutIn,
+        Linear
+    };
 
-  AnimatedValue();
-  AnimatedValue(Direction direction,
-                float start,
-                float end,
-                float duration,
-                float multiplier = 0);
+    AnimatedValue();
+    AnimatedValue(Direction direction, float start, float end, float duration, float multiplier = 0);
 
-  void resetTarget(float end, float duration);
-  void update(float time);
+    void resetTarget(float end, float duration);
+    void update(float time);
 
-  inline float val() const { return val_; }
-  inline float start() const { return start_; }
-  inline float end() const { return end_; }
+    inline float val() const { return val_; }
+    inline float start() const { return start_; }
+    inline float end() const { return end_; }
 
- private:
-  float updateLinear(float t, float s, float e);
-  float updateEaseIn(float t, float s, float e);
-  float updateEaseOut(float t, float s, float e);
-  float updateEaseInOut(float t, float s, float e);
-  float updateEaseOutIn(float t, float s, float e);
+  private:
+    float updateLinear(float t, float s, float e);
+    float updateEaseIn(float t, float s, float e);
+    float updateEaseOut(float t, float s, float e);
+    float updateEaseInOut(float t, float s, float e);
+    float updateEaseOutIn(float t, float s, float e);
 
-  Direction direction_;
+    Direction direction_;
 
-  float val_, start_;
-  float end_, state_;
-  float duration_, multiplier_;
-
+    float val_, start_;
+    float end_, state_;
+    float duration_, multiplier_;
 };
 
-}
-}
+} // namespace utils
+} // namespace gua
 
-#endif  //GUA_ANIMATEDVALUE_HPP
+#endif // GUA_ANIMATEDVALUE_HPP

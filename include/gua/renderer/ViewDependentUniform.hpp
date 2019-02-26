@@ -27,9 +27,10 @@
 #include <string>
 #include <vector>
 
-namespace gua {
-
-class GUA_DLL ViewDependentUniform {
+namespace gua
+{
+class GUA_DLL ViewDependentUniform
+{
   public:
     ViewDependentUniform(UniformValue const& value = UniformValue());
 
@@ -41,23 +42,20 @@ class GUA_DLL ViewDependentUniform {
 
     void reset(int view);
 
-    void apply(RenderContext const& ctx, std::string const& name, int view,
-               scm::gl::program_ptr const& prog, unsigned location = 0) const;
+    void apply(RenderContext const& ctx, std::string const& name, int view, scm::gl::program_ptr const& prog, unsigned location = 0) const;
 
     std::ostream& serialize_to_stream(std::ostream& os) const;
 
     static ViewDependentUniform create_from_serialized_string(std::string const& value);
 
   private:
-
     UniformValue default_;
     std::map<int, UniformValue> uniforms_;
-
 };
 
-//operators
+// operators
 std::ostream& operator<<(std::ostream& os, ViewDependentUniform const& val);
 
-}
+} // namespace gua
 
-#endif  // GUA_VIEW_DEPENDENT_UNIFORM_HPP
+#endif // GUA_VIEW_DEPENDENT_UNIFORM_HPP

@@ -35,8 +35,8 @@
 #include <gua/virtual_texturing/VirtualTexture2D.hpp>
 #endif
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A data base for textures.
  *
@@ -45,46 +45,44 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-  class GUA_DLL TextureDatabase : public Database<Texture>,
-                                  public Singleton<TextureDatabase> {
- public:
+class GUA_DLL TextureDatabase : public Database<Texture>, public Singleton<TextureDatabase>
+{
+  public:
+    /**
+     * Loads a texture file to the database.
+     *
+     * This method loads textures to the data base.
+     *
+     * \param id  An absolute or relative path to the
+     *            directory containing texture files.
+     */
+    void load(std::string const& id);
 
-  /**
-   * Loads a texture file to the database.
-   *
-   * This method loads textures to the data base.
-   *
-   * \param id  An absolute or relative path to the
-   *            directory containing texture files.
-   */
-  void load(std::string const& id);
+    int32_t get_global_texture_id_by_path(std::string const& tex_path) const;
 
-  int32_t get_global_texture_id_by_path(std::string const& tex_path) const;
-
-  friend class Singleton<TextureDatabase>;
-
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-  std::vector<std::shared_ptr<VirtualTexture2D> > get_virtual_textures();
-#endif
-  
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  TextureDatabase();
-  ~TextureDatabase() = default;
-
-  std::vector<std::future<std::string>>        textures_loading_;
-  std::mutex                                   texture_request_mutex_;
-  std::set<std::string>                        texture_loading_;
-
-  std::unordered_map<std::string, uint32_t >   texture_path_to_global_id_mapping_;
-  uint32_t                                     num_loaded_textured_ = 0;
+    friend class Singleton<TextureDatabase>;
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-  std::unordered_map<std::string, std::shared_ptr<VirtualTexture2D> > virtual_textures_;
+    std::vector<std::shared_ptr<VirtualTexture2D>> get_virtual_textures();
 #endif
 
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    TextureDatabase();
+    ~TextureDatabase() = default;
+
+    std::vector<std::future<std::string>> textures_loading_;
+    std::mutex texture_request_mutex_;
+    std::set<std::string> texture_loading_;
+
+    std::unordered_map<std::string, uint32_t> texture_path_to_global_id_mapping_;
+    uint32_t num_loaded_textured_ = 0;
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    std::unordered_map<std::string, std::shared_ptr<VirtualTexture2D>> virtual_textures_;
+#endif
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TEXTURE_DATABASE_HPP
+#endif // GUA_TEXTURE_DATABASE_HPP

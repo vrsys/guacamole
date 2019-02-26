@@ -29,27 +29,26 @@
 #include <gua/config.hpp>
 #include <gua/platform.hpp>
 
-namespace gua {
+namespace gua
+{
+namespace Resources
+{
+GUA_DLL std::string lookup_string(std::string const& file);
+GUA_DLL std::string lookup_string(std::vector<unsigned char> const& resource);
 
-namespace Resources {
+GUA_DLL std::string lookup_shader(std::string const& file);
+GUA_DLL std::string lookup_shader(std::vector<unsigned char> const& resource);
 
-  GUA_DLL std::string                       lookup_string(std::string const& file);
-  GUA_DLL std::string                       lookup_string(std::vector<unsigned char> const& resource);
+GUA_DLL std::vector<unsigned char> const& lookup(std::string const& file);
 
-  GUA_DLL std::string                       lookup_shader(std::string const& file);
-  GUA_DLL std::string                       lookup_shader(std::vector<unsigned char> const& resource);
+GUA_DLL void resolve_includes(std::string& shader_source);
 
-  GUA_DLL std::vector<unsigned char> const& lookup(std::string const& file);
+// generated header
+#ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+#include <gua/generated/R.inl>
+#endif
 
-  GUA_DLL void resolve_includes(std::string& shader_source);
+} // namespace Resources
+} // namespace gua
 
-  // generated header
-  #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-    #include <gua/generated/R.inl>
-  #endif
-  
-
-}
-}
-
-#endif  // GUA_RESOURCES_HPP
+#endif // GUA_RESOURCES_HPP

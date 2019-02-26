@@ -33,18 +33,19 @@
 #include <memory>
 #include <unordered_map>
 
-namespace gua {
+namespace gua
+{
+class GUA_VOLUME_DLL VolumePassDescription : public PipelinePassDescription
+{
+  public:
+    VolumePassDescription();
 
-class GUA_VOLUME_DLL VolumePassDescription : public PipelinePassDescription {
- public:
-  VolumePassDescription();
+    PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
-  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
-
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VOLUME_PASS_HPP
+#endif // GUA_VOLUME_PASS_HPP
