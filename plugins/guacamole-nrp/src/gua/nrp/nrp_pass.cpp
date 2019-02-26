@@ -20,5 +20,5 @@ PipelinePass NRPPassDescription::make_pass(const RenderContext &ctx, Substitutio
 
     return pass;
 }
-}
-}
+} // namespace nrp
+} // namespace gua

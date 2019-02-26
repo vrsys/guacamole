@@ -51,5 +51,5 @@ float NRPConfig::get_light_brightness_multiplier() { return static_cast<float>(a
 std::string NRPConfig::get_nrp_grid_material() { return _config.GetValue(SECTION_STRING_BINDINGS, NRP_GRID_MATERIAL, "0"); }
 std::string NRPConfig::get_nrp_gazebo_material() { return _config.GetValue(SECTION_STRING_BINDINGS, NRP_GAZEBO_MATERIAL, "0"); }
 std::string NRPConfig::get_nrp_sky_map() { return _config.GetValue(SECTION_STRING_BINDINGS, NRP_SKY_MAP, "0"); }
-}
-}
+} // namespace nrp
+} // namespace gua

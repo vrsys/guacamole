@@ -34,52 +34,48 @@
 #include <vector>
 #include <scm/gl_util/primitives/box.h>
 
-namespace gua {
-
+namespace gua
+{
 class RessourceRenderer;
 
 struct Ray;
 
-namespace node {
-  class GeometryNode;
+namespace node
+{
+class GeometryNode;
 };
 
 /**
  * Base class for the render ressources (CPU/GPU) for different geometry types
  */
-class GUA_DLL GeometryResource {
- public:
+class GUA_DLL GeometryResource
+{
+  public:
+    /**
+     * Interface to intersect the geometry with a ray.
+     *
+     * \param ray               The Ray with whom the geometry is about to be
+     *                          intersected.
+     *
+     * \return                  The intersection distance along the ray.
+     */
+    virtual void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) = 0;
 
-  /**
-   * Interface to intersect the geometry with a ray.
-   *
-   * \param ray               The Ray with whom the geometry is about to be
-   *                          intersected.
-   *
-   * \return                  The intersection distance along the ray.
-   */
-  virtual void ray_test(Ray const& ray, int options,
-                        node::Node* owner, std::set<PickResult>& hits) = 0;
+    /**
+     * Get the local bounding box of the geometry.
+     *
+     * \return                  The local bounding box of the geometry.
+     */
+    inline math::BoundingBox<math::vec3> const& get_bounding_box() const { return bounding_box_; }
 
-  /**
-   * Get the local bounding box of the geometry.
-   *
-   * \return                  The local bounding box of the geometry.
-   */
-  inline math::BoundingBox<math::vec3> const& get_bounding_box() const {
-    return bounding_box_;
-  }
+    inline std::size_t uuid() const { return uuid_; }
 
-  inline std::size_t uuid() const { return uuid_; }
+  protected:
+    math::BoundingBox<math::vec3> bounding_box_;
 
- protected:
-
-  math::BoundingBox<math::vec3> bounding_box_;
-
-  std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
-                        boost::uuids::random_generator()());
+    std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_GEOMETRY_RESOURCE_HPP
+#endif // GUA_GEOMETRY_RESOURCE_HPP

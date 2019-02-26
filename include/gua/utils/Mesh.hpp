@@ -34,114 +34,104 @@
 
 struct aiMesh;
 
-namespace gua {
-
+namespace gua
+{
 /**
  * @brief holds vertex information of one mesh
  */
-struct GUA_DLL Mesh {
- public:
-  Mesh();
+struct GUA_DLL Mesh
+{
+  public:
+    Mesh();
 
-  Mesh(aiMesh const& mesh);
+    Mesh(aiMesh const& mesh);
 
 #ifdef GUACAMOLE_FBX
-  Mesh(FbxMesh& mesh, int material_index = -1);
+    Mesh(FbxMesh& mesh, int material_index = -1);
 #endif
 
-  /**
-   * @brief holds information of a vertex
-   */
-  struct Vertex {
-    scm::math::vec3f pos;
-    scm::math::vec2f tex;
-    scm::math::vec3f normal;
-    scm::math::vec3f tangent;
-    scm::math::vec3f bitangent;
-  };
-
-  /**
-   * @brief writes vertex info to given buffer
-   *
-   * @param vertex_buffer buffer to write to
-   */
-  void copy_to_buffer(Vertex* vertex_buffer) const;
-
-  /**
-   * @brief returns vertex layout for mesh vertex
-   * @return schism vertex format
-   */
-  virtual scm::gl::vertex_format get_vertex_format() const;
-
-  std::vector<scm::math::vec3f> positions;
-  std::vector<scm::math::vec3f> normals;
-  std::vector<scm::math::vec2f> texCoords;
-  std::vector<scm::math::vec3f> tangents;
-  std::vector<scm::math::vec3f> bitangents;
-  std::vector<unsigned> indices;
-// TODO: flags, to specify if texcoors are present
-  unsigned int num_vertices;
-  unsigned int num_triangles;
-
- protected:
-
-  /**
-   * @brief stores a temporary vertex to be filtered and then written to buffers
-   */
-  struct temp_vert {
-    temp_vert(unsigned oindex, unsigned pt, unsigned tr, unsigned ind):
-     old_index{oindex},
-     point{pt},
-     normal{},
-     tangent{},
-     bitangent{},
-     uv{},
-     tris{}
+    /**
+     * @brief holds information of a vertex
+     */
+    struct Vertex
     {
-      tris.push_back(std::make_pair(tr, ind));
-    }
+        scm::math::vec3f pos;
+        scm::math::vec2f tex;
+        scm::math::vec3f normal;
+        scm::math::vec3f tangent;
+        scm::math::vec3f bitangent;
+    };
 
-    unsigned old_index;
-    unsigned point;
-    scm::math::vec3f normal;
-    scm::math::vec3f tangent;
-    scm::math::vec3f bitangent;
-    scm::math::vec2f uv;
-    std::vector<std::pair<unsigned, unsigned>> tris; //tris which share vertex
-  };
+    /**
+     * @brief writes vertex info to given buffer
+     *
+     * @param vertex_buffer buffer to write to
+     */
+    void copy_to_buffer(Vertex* vertex_buffer) const;
 
-   /**
-   * @brief stores a temporary tri to be filtered and then written to buffers
-   */
-  struct temp_tri {
-    temp_tri(unsigned a, unsigned b, unsigned c):
-     verts({a, b, c})
-    {}
-    std::array<unsigned, 3> verts;
-  };
+    /**
+     * @brief returns vertex layout for mesh vertex
+     * @return schism vertex format
+     */
+    virtual scm::gl::vertex_format get_vertex_format() const;
 
-  /**
-   * @brief constructs this mesh from the given fbxmesh
-   * @details if material index is given only triangles with this material are imported
-   *
-   * @param mesh mesh to convert
-   * @param material_index material to filter with
-   *
-   * @return indices of triangles that were added to this mesh
-   */
-  std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
+    std::vector<scm::math::vec3f> positions;
+    std::vector<scm::math::vec3f> normals;
+    std::vector<scm::math::vec2f> texCoords;
+    std::vector<scm::math::vec3f> tangents;
+    std::vector<scm::math::vec3f> bitangents;
+    std::vector<unsigned> indices;
+    // TODO: flags, to specify if texcoors are present
+    unsigned int num_vertices;
+    unsigned int num_triangles;
 
-  /**
-   * @brief gets function to acces fbx vertex attribute
-   * @details the returned function allows to acces a vertex attribute regardless of internal mapping
-   *
-   * @return access function
-   */
-  template<typename T>
-  static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
+  protected:
+    /**
+     * @brief stores a temporary vertex to be filtered and then written to buffers
+     */
+    struct temp_vert
+    {
+        temp_vert(unsigned oindex, unsigned pt, unsigned tr, unsigned ind) : old_index{oindex}, point{pt}, normal{}, tangent{}, bitangent{}, uv{}, tris{} { tris.push_back(std::make_pair(tr, ind)); }
+
+        unsigned old_index;
+        unsigned point;
+        scm::math::vec3f normal;
+        scm::math::vec3f tangent;
+        scm::math::vec3f bitangent;
+        scm::math::vec2f uv;
+        std::vector<std::pair<unsigned, unsigned>> tris; // tris which share vertex
+    };
+
+    /**
+     * @brief stores a temporary tri to be filtered and then written to buffers
+     */
+    struct temp_tri
+    {
+        temp_tri(unsigned a, unsigned b, unsigned c) : verts({a, b, c}) {}
+        std::array<unsigned, 3> verts;
+    };
+
+    /**
+     * @brief constructs this mesh from the given fbxmesh
+     * @details if material index is given only triangles with this material are imported
+     *
+     * @param mesh mesh to convert
+     * @param material_index material to filter with
+     *
+     * @return indices of triangles that were added to this mesh
+     */
+    std::vector<unsigned> construct(FbxMesh& mesh, int material_index);
+
+    /**
+     * @brief gets function to acces fbx vertex attribute
+     * @details the returned function allows to acces a vertex attribute regardless of internal mapping
+     *
+     * @return access function
+     */
+    template <typename T>
+    static std::function<unsigned(temp_vert const&)> get_access_function(FbxLayerElementTemplate<T> const& layer);
 };
 
+} // namespace gua
 
-}
-
-#endif //GUA_MESH_HPP
+#endif // GUA_MESH_HPP

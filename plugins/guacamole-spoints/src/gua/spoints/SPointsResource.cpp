@@ -41,121 +41,128 @@
 #include <fstream>
 #include <gua/utils/string_utils.hpp>
 
-namespace gua {
-
-SPointsResource::SPointsData::SPointsData(
-  RenderContext const& ctx,
-  SPointsResource const& spoints_resource) {
-
-  rstate_solid_ = ctx.render_device->create_rasterizer_state(
-                  scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, true);
-
-  nka_ = std::make_shared<spoints::NetKinectArray>(spoints_resource.server_endpoint(), spoints_resource.feedback_endpoint());
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-SPointsResource::SPointsResource(std::string const& server_endpoint, 
-                                 std::string const& feedback_endpoint, 
-                                 unsigned flags)
-    : server_endpoint_(server_endpoint),
-      feedback_endpoint_(feedback_endpoint),
-      is_pickable_(flags & SPointsLoader::MAKE_PICKABLE) {
-  init();
-}
-
-std::string 
-SPointsResource::get_socket_string() const {
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
-
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      return spointsdata_->nka_->get_socket_string();
-    }
-  }
-
-  return "";
-}
-
-void
-SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package) {
-  //std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
-
-  std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
-
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      spointsdata_->nka_->push_matrix_package(cam_mat_package);
-    }
-  }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void SPointsResource::update_buffers(RenderContext const& ctx,
-                                     Pipeline& pipe) {
-
-  {
-    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
-    // lazy resource initialization
-    if (nullptr == spointsdata_) {
-      spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
-    }
-  }
-
-  // synchronize vertex data
-  spointsdata_->nka_->update(ctx, bounding_box_);
-}
-
-unsigned SPointsResource::get_remote_server_screen_width() const {
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      return spointsdata_->nka_->get_remote_server_screen_width();
-    }
-  }
-}
-unsigned SPointsResource::get_remote_server_screen_height() const {
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      return spointsdata_->nka_->get_remote_server_screen_height();
-    }
-  }
-}
-bool SPointsResource::has_calibration(RenderContext const& ctx) const {
-  if(spointsdata_) {
-    if(spointsdata_->nka_) {
-      return spointsdata_->nka_->has_calibration(ctx);
-    }
-  }
-
-  return false;
-}
-
-bool SPointsResource::is_vertex_data_fully_encoded()
+namespace gua
 {
-    if(spointsdata_) {
-      if(spointsdata_->nka_) {
-        return spointsdata_->nka_->is_vertex_data_fully_encoded();
-      }
+SPointsResource::SPointsData::SPointsData(RenderContext const& ctx, SPointsResource const& spoints_resource)
+{
+    rstate_solid_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, true);
+
+    nka_ = std::make_shared<spoints::NetKinectArray>(spoints_resource.server_endpoint(), spoints_resource.feedback_endpoint());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+SPointsResource::SPointsResource(std::string const& server_endpoint, std::string const& feedback_endpoint, unsigned flags)
+    : server_endpoint_(server_endpoint), feedback_endpoint_(feedback_endpoint), is_pickable_(flags & SPointsLoader::MAKE_PICKABLE)
+{
+    init();
+}
+
+std::string SPointsResource::get_socket_string() const
+{
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            return spointsdata_->nka_->get_socket_string();
+        }
+    }
+
+    return "";
+}
+
+void SPointsResource::push_matrix_package(spoints::camera_matrix_package const& cam_mat_package)
+{
+    // std::cout << "SpointsResource PushMatrixPackage: " << cam_mat_package.k_package.is_camera << "\n";
+
+    std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            spointsdata_->nka_->push_matrix_package(cam_mat_package);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void SPointsResource::update_buffers(RenderContext const& ctx, Pipeline& pipe)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
+        // lazy resource initialization
+        if(nullptr == spointsdata_)
+        {
+            spointsdata_ = std::make_shared<SPointsData>(ctx, *this);
+        }
+    }
+
+    // synchronize vertex data
+    spointsdata_->nka_->update(ctx, bounding_box_);
+}
+
+unsigned SPointsResource::get_remote_server_screen_width() const
+{
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            return spointsdata_->nka_->get_remote_server_screen_width();
+        }
+    }
+}
+unsigned SPointsResource::get_remote_server_screen_height() const
+{
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            return spointsdata_->nka_->get_remote_server_screen_height();
+        }
+    }
+}
+bool SPointsResource::has_calibration(RenderContext const& ctx) const
+{
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            return spointsdata_->nka_->has_calibration(ctx);
+        }
     }
 
     return false;
 }
 
-void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program) {
-  if(spointsdata_) {
-    spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);
-  }
+bool SPointsResource::is_vertex_data_fully_encoded()
+{
+    if(spointsdata_)
+    {
+        if(spointsdata_->nka_)
+        {
+            return spointsdata_->nka_->is_vertex_data_fully_encoded();
+        }
+    }
+
+    return false;
 }
 
+void SPointsResource::draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program)
+{
+    if(spointsdata_)
+    {
+        spointsdata_->nka_->draw_textured_triangle_soup(ctx, shader_program);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-void SPointsResource::init() {
-  // approximately local space - can be overwritten from .ks file
-  bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-2.5, -2.5, -2.5),
-                                                math::vec3(2.5,   2.5,  2.5));
-
+void SPointsResource::init()
+{
+    // approximately local space - can be overwritten from .ks file
+    bounding_box_ = math::BoundingBox<math::vec3>(math::vec3(-2.5, -2.5, -2.5), math::vec3(2.5, 2.5, 2.5));
 }
 
-}
+} // namespace gua

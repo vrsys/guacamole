@@ -25,120 +25,116 @@
 #include <gua/events/properties/SortableProperty.hpp>
 #include <gua/events/properties/StreamableProperty.hpp>
 
-namespace gua {
-namespace events {
-
+namespace gua
+{
+namespace events
+{
 template <typename T>
-class NumericProperty : public virtual SortableProperty<T>,
-                        public virtual StreamableProperty<T> {
+class NumericProperty : public virtual SortableProperty<T>, public virtual StreamableProperty<T>
+{
+  public:
+    NumericProperty() : Property<T>() {}
 
- public:
-  NumericProperty() : Property<T>() {}
+    NumericProperty(T const& value) : Property<T>(value) {}
 
-  NumericProperty(T const& value) : Property<T>(value) {}
+    NumericProperty(NumericProperty<T> const& to_copy) : Property<T>(to_copy) {}
 
-  NumericProperty(NumericProperty<T> const& to_copy) : Property<T>(to_copy) {}
+    virtual ~NumericProperty() {}
 
-  virtual ~NumericProperty() {}
+    NumericProperty<T> operator+(NumericProperty<T> const& rhs) const { return NumericProperty(Property<T>::get() + rhs.get()); }
 
-  NumericProperty<T> operator+(NumericProperty<T> const& rhs) const {
-    return NumericProperty(Property<T>::get() + rhs.get());
-  }
+    NumericProperty<T> operator+(T const& rhs) const { return NumericProperty(Property<T>::get() + rhs); }
 
-  NumericProperty<T> operator+(T const& rhs) const {
-    return NumericProperty(Property<T>::get() + rhs);
-  }
+    NumericProperty<T> operator-(NumericProperty<T> const& rhs) const { return NumericProperty(Property<T>::get() - rhs.get()); }
 
-  NumericProperty<T> operator-(NumericProperty<T> const& rhs) const {
-    return NumericProperty(Property<T>::get() - rhs.get());
-  }
+    NumericProperty<T> operator-(T const& rhs) const { return NumericProperty(Property<T>::get() - rhs); }
 
-  NumericProperty<T> operator-(T const& rhs) const {
-    return NumericProperty(Property<T>::get() - rhs);
-  }
+    NumericProperty<T> operator*(NumericProperty<T> const& rhs) const { return NumericProperty(Property<T>::get() * rhs.get()); }
 
-  NumericProperty<T> operator*(NumericProperty<T> const& rhs) const {
-    return NumericProperty(Property<T>::get() * rhs.get());
-  }
+    NumericProperty<T> operator*(T const& rhs) const { return NumericProperty(Property<T>::get() * rhs); }
 
-  NumericProperty<T> operator*(T const& rhs) const {
-    return NumericProperty(Property<T>::get() * rhs);
-  }
+    NumericProperty<T> operator/(NumericProperty<T> const& rhs) const { return NumericProperty(Property<T>::get() / rhs.get()); }
 
-  NumericProperty<T> operator/(NumericProperty<T> const& rhs) const {
-    return NumericProperty(Property<T>::get() / rhs.get());
-  }
+    NumericProperty<T> operator/(T const& rhs) const { return NumericProperty(Property<T>::get() / rhs); }
 
-  NumericProperty<T> operator/(T const& rhs) const {
-    return NumericProperty(Property<T>::get() / rhs);
-  }
+    NumericProperty<T>& operator+=(NumericProperty<T> const& rhs)
+    {
+        set(Property<T>::get() + rhs.get());
+        return *this;
+    }
 
-  NumericProperty<T>& operator+=(NumericProperty<T> const& rhs) {
-    set(Property<T>::get() + rhs.get());
-    return *this;
-  }
+    NumericProperty<T>& operator+=(T const& rhs)
+    {
+        set(Property<T>::get() + rhs);
+        return *this;
+    }
 
-  NumericProperty<T>& operator+=(T const& rhs) {
-    set(Property<T>::get() + rhs);
-    return *this;
-  }
+    NumericProperty<T>& operator-=(NumericProperty<T> const& rhs)
+    {
+        set(Property<T>::get() - rhs.get());
+        return *this;
+    }
 
-  NumericProperty<T>& operator-=(NumericProperty<T> const& rhs) {
-    set(Property<T>::get() - rhs.get());
-    return *this;
-  }
+    NumericProperty<T>& operator-=(T const& rhs)
+    {
+        set(Property<T>::get() - rhs);
+        return *this;
+    }
 
-  NumericProperty<T>& operator-=(T const& rhs) {
-    set(Property<T>::get() - rhs);
-    return *this;
-  }
+    NumericProperty<T>& operator*=(NumericProperty<T> const& rhs)
+    {
+        set(Property<T>::get() * rhs.get());
+        return *this;
+    }
 
-  NumericProperty<T>& operator*=(NumericProperty<T> const& rhs) {
-    set(Property<T>::get() * rhs.get());
-    return *this;
-  }
+    NumericProperty<T>& operator*=(T const& rhs)
+    {
+        set(Property<T>::get() * rhs);
+        return *this;
+    }
 
-  NumericProperty<T>& operator*=(T const& rhs) {
-    set(Property<T>::get() * rhs);
-    return *this;
-  }
+    NumericProperty<T>& operator/=(NumericProperty<T> const& rhs)
+    {
+        set(Property<T>::get() / rhs.get());
+        return *this;
+    }
 
-  NumericProperty<T>& operator/=(NumericProperty<T> const& rhs) {
-    set(Property<T>::get() / rhs.get());
-    return *this;
-  }
+    NumericProperty<T>& operator/=(T const& rhs)
+    {
+        set(Property<T>::get() / rhs);
+        return *this;
+    }
 
-  NumericProperty<T>& operator/=(T const& rhs) {
-    set(Property<T>::get() / rhs);
-    return *this;
-  }
+    NumericProperty<T>& operator++()
+    {
+        T tmp(Property<T>::get());
+        set(++tmp);
+        return *this;
+    }
 
-  NumericProperty<T>& operator++() {
-    T tmp(Property<T>::get());
-    set(++tmp);
-    return *this;
-  }
+    NumericProperty<T> operator++(int dummy)
+    {
+        T tmp(Property<T>::get());
+        set(tmp++);
+        return NumericProperty<T>(tmp);
+    }
 
-  NumericProperty<T> operator++(int dummy) {
-    T tmp(Property<T>::get());
-    set(tmp++);
-    return NumericProperty<T>(tmp);
-  }
+    NumericProperty<T>& operator--()
+    {
+        T tmp(Property<T>::get());
+        set(--tmp);
+        return *this;
+    }
 
-  NumericProperty<T>& operator--() {
-    T tmp(Property<T>::get());
-    set(--tmp);
-    return *this;
-  }
-
-  NumericProperty<T> operator--(int dummy) {
-    T tmp(Property<T>::get());
-    set(tmp--);
-    return NumericProperty<T>(tmp);
-  }
+    NumericProperty<T> operator--(int dummy)
+    {
+        T tmp(Property<T>::get());
+        set(tmp--);
+        return NumericProperty<T>(tmp);
+    }
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* NUMERIC_PROPERTY_HPP_ */

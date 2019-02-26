@@ -29,32 +29,34 @@
 // external headers
 #include <iostream>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+
+Mask::Mask(std::vector<std::string> const& whitelist_tags, std::vector<std::string> const& blacklist_tags) : whitelist(whitelist_tags), blacklist(blacklist_tags) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Mask::Mask(std::vector<std::string> const& whitelist_tags,
-           std::vector<std::string> const& blacklist_tags)
-    : whitelist(whitelist_tags),
-      blacklist(blacklist_tags) {}
+bool Mask::check(gua::utils::TagList const& tags) const
+{
+    auto const& t(tags.get_bits());
 
-////////////////////////////////////////////////////////////////////////////////
+    if(t.any())
+    {
+        auto const& wl(whitelist.get_bits());
+        auto const& bl(blacklist.get_bits());
 
-bool Mask::check(gua::utils::TagList const& tags) const {
-  auto const& t(tags.get_bits());
-
-  if (t.any()) {
-    auto const& wl(whitelist.get_bits());
-    auto const& bl(blacklist.get_bits());
-
-    if (wl.any()) {
-      return (wl & t).any();
-    } else if (bl.any()) {
-      return !(bl & t).any();
+        if(wl.any())
+        {
+            return (wl & t).any();
+        }
+        else if(bl.any())
+        {
+            return !(bl & t).any();
+        }
     }
-  }
 
-  return true;
+    return true;
 }
 
-}
+} // namespace gua

@@ -28,112 +28,95 @@
 #include <memory>
 #include <algorithm>
 
-namespace gua {
+namespace gua
+{
+class TriMeshPassDescription;
+class LineStripPassDescription;
+// class SkeletalAnimationPassDescription;
+class TexturedQuadPassDescription;
+class LightVisibilityPassDescription;
+class BBoxPassDescription;
+class ResolvePassDescription;
+class TexturedScreenSpaceQuadPassDescription;
+class DebugViewPassDescription;
+class SSAAPassDescription;
 
-  class TriMeshPassDescription;
-  class LineStripPassDescription;
-  // class SkeletalAnimationPassDescription;
-  class TexturedQuadPassDescription;
-  class LightVisibilityPassDescription;
-  class BBoxPassDescription;
-  class ResolvePassDescription;
-  class TexturedScreenSpaceQuadPassDescription;
-  class DebugViewPassDescription;
-  class SSAAPassDescription;
+class GUA_DLL PipelineDescription
+{
+  public:
+    static std::shared_ptr<PipelineDescription> make_default();
 
-class GUA_DLL PipelineDescription {
- public:
+    PipelineDescription() {}
+    PipelineDescription(PipelineDescription const& other);
 
-  static std::shared_ptr<PipelineDescription> make_default();
+    virtual ~PipelineDescription();
 
-  PipelineDescription() {}
-  PipelineDescription(PipelineDescription const& other);
+    void add_pass(std::shared_ptr<PipelinePassDescription> const& pass_desc);
 
-  virtual ~PipelineDescription();
+    std::vector<std::shared_ptr<PipelinePassDescription>> const& get_passes() const;
 
-  void add_pass(std::shared_ptr<PipelinePassDescription> const& pass_desc);
+    std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
 
-  std::vector<std::shared_ptr<PipelinePassDescription>> const& get_passes() const;
+    std::shared_ptr<TriMeshPassDescription> const get_tri_mesh_pass() const;
+    std::shared_ptr<LineStripPassDescription> const get_line_strip_pass() const;
+    // std::shared_ptr<SkeletalAnimationPassDescription> const get_skel_anim_pass() const;
+    std::shared_ptr<TexturedQuadPassDescription> const get_textured_quad_pass() const;
+    std::shared_ptr<LightVisibilityPassDescription> const get_light_visibility_pass() const;
+    std::shared_ptr<BBoxPassDescription> const get_bbox_pass() const;
+    std::shared_ptr<ResolvePassDescription> const get_resolve_pass() const;
+    std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const get_textured_screen_space_quad_pass() const;
+    std::shared_ptr<DebugViewPassDescription> const get_debug_view_pass() const;
+    std::shared_ptr<SSAAPassDescription> const get_ssaa_pass() const;
 
-  std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
+    void set_enable_abuffer(bool value) { enable_abuffer_ = value; }
 
-  std::shared_ptr<TriMeshPassDescription> const get_tri_mesh_pass() const;
-  std::shared_ptr<LineStripPassDescription> const get_line_strip_pass() const;
-  // std::shared_ptr<SkeletalAnimationPassDescription> const get_skel_anim_pass() const;
-  std::shared_ptr<TexturedQuadPassDescription> const get_textured_quad_pass() const;
-  std::shared_ptr<LightVisibilityPassDescription> const get_light_visibility_pass() const;
-  std::shared_ptr<BBoxPassDescription> const get_bbox_pass() const;
-  std::shared_ptr<ResolvePassDescription> const get_resolve_pass() const;
-  std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const get_textured_screen_space_quad_pass() const;
-  std::shared_ptr<DebugViewPassDescription> const get_debug_view_pass() const;
-  std::shared_ptr<SSAAPassDescription> const get_ssaa_pass() const;
+    bool get_enable_abuffer() const { return enable_abuffer_; }
 
-  void set_enable_abuffer(bool value) {
-    enable_abuffer_ = value;
-  }
+    void set_abuffer_size(size_t value) { abuffer_size_ = value; }
 
-  bool get_enable_abuffer() const {
-    return enable_abuffer_;
-  }
+    size_t get_abuffer_size() const { return abuffer_size_; }
 
-  void set_abuffer_size(size_t value) {
-    abuffer_size_ = value;
-  }
+    void set_blending_termination_threshold(float value) { blending_termination_threshold_ = std::max(std::min(value, 1.f), .5f); }
 
-  size_t get_abuffer_size() const {
-    return abuffer_size_;
-  }
+    float get_blending_termination_threshold() const { return blending_termination_threshold_; }
 
-  void set_blending_termination_threshold(float value) {
-    blending_termination_threshold_ = std::max(std::min(value, 1.f), .5f);
-  }
+    void set_max_lights_count(int value) { max_lights_count_ = value; }
 
-  float get_blending_termination_threshold() const {
-    return blending_termination_threshold_;
-  }
+    int get_max_lights_count() const { return max_lights_count_; }
 
-  void set_max_lights_count(int value) {
-    max_lights_count_ = value;
-  }
+    void set_user_data(void* data) { user_data_ = data; }
 
-  int get_max_lights_count() const {
-    return max_lights_count_;
-  }
+    void* get_user_data() const { return user_data_; }
 
-  void set_user_data(void* data) {
-    user_data_ = data;
-  }
+    bool operator==(PipelineDescription const& other) const;
+    bool operator!=(PipelineDescription const& other) const;
+    PipelineDescription& operator=(PipelineDescription const& other);
 
-  void* get_user_data() const {
-    return user_data_;
-  }
-
-  bool operator==(PipelineDescription const& other) const;
-  bool operator!=(PipelineDescription const& other) const;
-  PipelineDescription& operator=(PipelineDescription const& other);
-
-  template <typename T>
-  std::shared_ptr<T> const get_pass_by_type() const {
-    for (auto const& pass : passes_) {
-      auto const& casted_pass = std::dynamic_pointer_cast<T>(pass);
-      if (casted_pass) {
-        return casted_pass;
-      }
+    template <typename T>
+    std::shared_ptr<T> const get_pass_by_type() const
+    {
+        for(auto const& pass : passes_)
+        {
+            auto const& casted_pass = std::dynamic_pointer_cast<T>(pass);
+            if(casted_pass)
+            {
+                return casted_pass;
+            }
+        }
+        throw std::runtime_error("PipelinePassDescription::get_pass_by_type: No such pass in PipelineDescription");
     }
-    throw std::runtime_error("PipelinePassDescription::get_pass_by_type: No such pass in PipelineDescription");
-  }
 
-  inline void clear() { passes_.clear(); }
+    inline void clear() { passes_.clear(); }
 
- private:
-  std::vector<std::shared_ptr<PipelinePassDescription>> passes_;
-  void*  user_data_ = nullptr;
-  bool   enable_abuffer_ = false;
-  size_t abuffer_size_ = 800; // in MiB
-  float  blending_termination_threshold_ = 0.99f;
-  int    max_lights_count_ = 128;
+  private:
+    std::vector<std::shared_ptr<PipelinePassDescription>> passes_;
+    void* user_data_ = nullptr;
+    bool enable_abuffer_ = false;
+    size_t abuffer_size_ = 800; // in MiB
+    float blending_termination_threshold_ = 0.99f;
+    int max_lights_count_ = 128;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PIPELINE_DESCRIPTION_HPP
+#endif // GUA_PIPELINE_DESCRIPTION_HPP

@@ -413,5 +413,5 @@ std::string NRPVisual::generate_random_name()
 
     return mesh_random_name;
 }
-}
-}
+} // namespace nrp
+} // namespace gua

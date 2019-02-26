@@ -32,101 +32,88 @@
 
 #include <unordered_map>
 
-namespace gua {
-
+namespace gua
+{
 class ShaderProgram;
 class Pipeline;
 class MaterialShader;
 class SPointsResource;
 
-class GUA_SPOINTS_DLL SPointsRenderer {
- public:
+class GUA_SPOINTS_DLL SPointsRenderer
+{
+  public:
+    enum pass
+    {
+        warp_pass = 0,
+        blend_pass = 1
+    };
 
-  enum pass {
-    warp_pass = 0,
-    blend_pass = 1
-  };
+  public:
+    SPointsRenderer();
+    ~SPointsRenderer() {}
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  SPointsRenderer();
-  ~SPointsRenderer() {}
+    // /*virtual*/ void draw   (RenderContext const& context,
+    //                          std::string const& ksfile_name,
+    //                          std::string const& material_name,
+    //                          scm::math::mat4 const& model_matrix,
+    //                          scm::math::mat4 const& normal_matrix,
+    //                          Frustum const& frustum,
+    //                          View const& view) const;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
-  // /*virtual*/ void draw   (RenderContext const& context,
-  //                          std::string const& ksfile_name,
-  //                          std::string const& material_name,
-  //                          scm::math::mat4 const& model_matrix,
-  //                          scm::math::mat4 const& normal_matrix,
-  //                          Frustum const& frustum,
-  //                          View const& view) const;
+  private:
+    void _load_shaders();
+    // void          _initialize_log_to_lin_conversion_pass_program();
+    void _initialize_shadow_pass_program();
 
-  void set_global_substitution_map(SubstitutionMap const& smap) {
-    global_substitution_map_ = smap;
-  }
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed);
 
-private:
-  void          _load_shaders();
-  //void          _initialize_log_to_lin_conversion_pass_program();
-  void          _initialize_shadow_pass_program();
+    void _create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, bool resize_resource_containers);
 
-  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
-                                                       std::shared_ptr<ShaderProgram> const& current_program,
-                                                       bool& program_changed);
+  private: // attributes
+    // schism-GL states:
+    //////////////////////////////////////////////////////////////////////////////////////
+    scm::gl::rasterizer_state_ptr no_backface_culling_rasterizer_state_;
+    scm::gl::rasterizer_state_ptr backface_culling_rasterizer_state_;
 
-  void          _create_gpu_resources(gua::RenderContext const& ctx,
-                                      scm::math::vec2ui const& render_target_dims,
-                                      bool resize_resource_containers); 
+    scm::gl::sampler_state_ptr nearest_sampler_state_;
 
- private:  // attributes
+    scm::gl::depth_stencil_state_ptr depth_test_with_writing_depth_stencil_state_;
 
-  //schism-GL states:
-  //////////////////////////////////////////////////////////////////////////////////////
-  scm::gl::rasterizer_state_ptr                no_backface_culling_rasterizer_state_;
-  scm::gl::rasterizer_state_ptr                backface_culling_rasterizer_state_;
+    scm::gl::blend_state_ptr no_color_accumulation_state_;
 
-  scm::gl::sampler_state_ptr                   nearest_sampler_state_;
+    bool initialized_;
 
-  scm::gl::depth_stencil_state_ptr             depth_test_with_writing_depth_stencil_state_;
+    bool shaders_loaded_;
 
-  scm::gl::blend_state_ptr                     no_color_accumulation_state_;
+    scm::gl::quad_geometry_ptr fullscreen_quad_;
 
-  bool initialized_;
+    bool gpu_resources_already_created_;
+    unsigned previous_frame_count_;
 
-  bool                                         shaders_loaded_;
+    unsigned current_rendertarget_width_;
+    unsigned current_rendertarget_height_;
 
-  scm::gl::quad_geometry_ptr                   fullscreen_quad_;
+    mutable int last_rendered_view_id = std::numeric_limits<int>::max();
+    mutable int last_rendered_side = 0;
 
-  bool                                         gpu_resources_already_created_;
-  unsigned                                     previous_frame_count_;
+    std::vector<ShaderProgramStage> shadow_pass_shader_stages_;
 
-  unsigned                                     current_rendertarget_width_;  
-  unsigned                                     current_rendertarget_height_;
+    std::vector<ShaderProgramStage> forward_textured_triangles_shader_stages_;
+    std::vector<ShaderProgramStage> forward_textured_triangles_shader_stages_quantized_;
 
-  mutable int last_rendered_view_id = std::numeric_limits<int>::max();
-  mutable int last_rendered_side = 0;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> forward_textured_triangles_pass_programs_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> forward_textured_triangles_pass_programs_quantized_;
 
+    std::shared_ptr<ShaderProgram> shadow_pass_program_;
 
-  std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
-
-  std::vector<ShaderProgramStage>                                      forward_textured_triangles_shader_stages_;
-  std::vector<ShaderProgramStage>                                      forward_textured_triangles_shader_stages_quantized_;
-
-
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_textured_triangles_pass_programs_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > forward_textured_triangles_pass_programs_quantized_;
-
-
-  std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
-
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
-      programs_;
-  SubstitutionMap global_substitution_map_;
-
-
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPOINTS_RENDERER_HPP
+#endif // GUA_SPOINTS_RENDERER_HPP

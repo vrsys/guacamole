@@ -34,6 +34,6 @@ class GUA_NRP_DLL NRPLight
     double _scale;
     scm::math::mat4d _direction;
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 #endif // GUACAMOLE_NRP_LIGHT_H

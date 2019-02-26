@@ -25,37 +25,36 @@
 #include <gua/renderer/TV_3.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_TV_3_DLL TV_3VolumePassDescription : public PipelinePassDescription
+{
+  public: // typedefs, enums
+          /*
+            enum VolumeRenderMode {
+      
+              ISOSURFACE = 0,
+              MAX_INTENSITY = 1,
+              COMPOSITING = 2,
+              AVG_INTENSITY = 3
+      
+            };
+          */
+    friend class Pipeline;
 
-  class GUA_TV_3_DLL TV_3VolumePassDescription : public PipelinePassDescription {
-
-  public : // typedefs, enums
-/*
-  enum VolumeRenderMode {
-    
-    ISOSURFACE = 0,
-    MAX_INTENSITY = 1,
-    COMPOSITING = 2,
-    AVG_INTENSITY = 3
-
-  };
-*/
-   friend class Pipeline;
-
-  public :
-
+  public:
     TV_3VolumePassDescription();
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-/*
-    TV_3VolumePassDescription& mode(VolumeRenderMode const mode);
-    VolumeRenderMode mode() const;
-*/
-  private :
-    //VolumeRenderMode volume_render_mode_;
+    /*
+        TV_3VolumePassDescription& mode(VolumeRenderMode const mode);
+        VolumeRenderMode mode() const;
+    */
+  private:
+    // VolumeRenderMode volume_render_mode_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TV_3_VOLUME_PASS_HPP
+#endif // GUA_TV_3_VOLUME_PASS_HPP

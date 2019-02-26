@@ -41,8 +41,8 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/functional/hash.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class NodeVisitor;
 class SceneGraph;
 class Serializer;
@@ -51,13 +51,15 @@ struct SerializedScene;
 
 struct Ray;
 
-namespace physics { class CollisionShapeNodeVisitor; }
+namespace physics
+{
+class CollisionShapeNodeVisitor;
+}
 
-namespace node {
-
+namespace node
+{
 struct SerializedCameraNode;
 class RayNode;
-
 
 /**
  * This class is used as a base class to provide basic node behaviour.
@@ -69,9 +71,9 @@ class RayNode;
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL Node {
-public:
-
+class GUA_DLL Node
+{
+  public:
     /**
      * Constructor.
      *
@@ -80,8 +82,7 @@ public:
      * \param name        The Node's name
      * \param transform   The Node's transformation.
      */
-    Node(std::string const& name = "",
-         math::mat4 const& transform = math::mat4::identity());
+    Node(std::string const& name = "", math::mat4 const& transform = math::mat4::identity());
 
     /**
      * Destructor.
@@ -90,7 +91,6 @@ public:
      *
      */
     virtual ~Node() = default;
-
 
     /**
      * Returns the Node's name.
@@ -115,11 +115,11 @@ public:
      * \param node_name The name of the new Node to be added as a child.
      * \tparam T The type of the new Node to be added as a child.
      */
-    template<typename T>
-    std::shared_ptr<T> add_child(std::string const& node_name) {
-
-      auto new_node(std::make_shared<T>(node_name));
-      return add_child(new_node);
+    template <typename T>
+    std::shared_ptr<T> add_child(std::string const& node_name)
+    {
+        auto new_node(std::make_shared<T>(node_name));
+        return add_child(new_node);
     }
 
     /**
@@ -131,21 +131,22 @@ public:
      * \param new_node The new Node to be added as a child.
      * \tparam T The type of the new Node to be added as a child.
      */
-    template<typename T>
-    std::shared_ptr<T> add_child(std::shared_ptr<T> const& new_node) {
+    template <typename T>
+    std::shared_ptr<T> add_child(std::shared_ptr<T> const& new_node)
+    {
+        if(new_node->parent_ != nullptr)
+        {
+            new_node->parent_->remove_child(new_node);
+        }
 
-      if (new_node->parent_ != nullptr) {
-        new_node->parent_->remove_child(new_node);
-      }
+        children_.push_back(new_node);
+        new_node->parent_ = this;
 
-      children_.push_back(new_node);
-      new_node->parent_ = this;
+        set_dirty();
 
-      set_dirty();
+        new_node->set_scenegraph(scenegraph_);
 
-      new_node->set_scenegraph(scenegraph_);
-
-      return new_node;
+        return new_node;
     }
 
     /**
@@ -172,7 +173,6 @@ public:
 
     gua::utils::TagList const& get_tags() const;
     gua::utils::TagList& get_tags();
-
 
     /**
      * Returns the Node's transformation.
@@ -203,10 +203,10 @@ public:
     events::Signal<math::mat4 const&> on_world_transform_changed;
 
     /**
-   * Sets the Node's world transformation.
-   *
-   * \param transform The Node's new world transformation.
-   */
+     * Sets the Node's world transformation.
+     *
+     * \param transform The Node's new world transformation.
+     */
     virtual void set_world_transform(math::mat4 const& transform);
 
     /**
@@ -218,7 +218,6 @@ public:
      * \return math::vec3  The Node's world position.
      */
     math::vec3 get_world_position() const;
-
 
     /**
      * Applies a scaling on the Node's transformation.
@@ -324,9 +323,7 @@ public:
      *
      * \return math::BoundingBox<math::vec3>  The Node's BoundingBox.
      */
-    virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const {
-      return bounding_box_;
-    }
+    virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const { return bounding_box_; }
 
     /**
      * Updates a Node's BoundingBox.
@@ -358,9 +355,7 @@ public:
      * \param options   int to configure the intersection process.
      * \param mask      A mask to restrict the intersection to certain Nodes.
      */
-    virtual std::set<PickResult> const ray_test(RayNode const& ray,
-                                                int options = PickResult::PICK_ALL,
-                                                Mask const& mask = Mask());
+    virtual std::set<PickResult> const ray_test(RayNode const& ray, int options = PickResult::PICK_ALL, Mask const& mask = Mask());
 
     /**
      * Intersects a Node with a given Ray.
@@ -375,9 +370,7 @@ public:
      * \param options   int to configure the intersection process.
      * \param mask      A mask to restrict the intersection to certain Nodes.
      */
-    virtual std::set<PickResult> const ray_test(Ray const& ray,
-                                                int options = PickResult::PICK_ALL,
-                                                Mask const& mask = Mask());
+    virtual std::set<PickResult> const ray_test(Ray const& ray, int options = PickResult::PICK_ALL, Mask const& mask = Mask());
 
     /**
      * Accepts a visitor and calls concrete visit method
@@ -407,7 +400,7 @@ public:
      *
      * \return unsigned   A handle for later access.
      */
-    unsigned  add_user_data(void* data);
+    unsigned add_user_data(void* data);
 
     /**
      * Returns user-defined data for a given handle.
@@ -418,11 +411,11 @@ public:
      * \return void*  The user-defined data. This defaults to nullptr if the given
      *                handle is invalid.
      */
-    void*     get_user_data(unsigned handle) const;
+    void* get_user_data(unsigned handle) const;
 
     /**
-    * \return size_t unique address of node
-    */
+     * \return size_t unique address of node
+     */
     inline std::size_t const uuid() const { return uuid_; }
 
     friend class ::gua::SceneGraph;
@@ -430,31 +423,26 @@ public:
     friend class ::gua::DotGenerator;
     friend class ::gua::physics::CollisionShapeNodeVisitor;
 
-    virtual void ray_test_impl(Ray const& ray, int options,
-                               Mask const& mask, std::set<PickResult>& hits);
+    virtual void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits);
 
     /**
-    *
-    */
+     *
+     */
     virtual std::shared_ptr<Node> copy() const = 0;
 
     /**
-    * Deep copies a Node with all its children.
-    *
-    * This function recursively generates new Nodes for the Node itself
-    * and all of its children.
-    *
-    * \return node     A pointer of the recently generated Node.
-    */
+     * Deep copies a Node with all its children.
+     *
+     * This function recursively generates new Nodes for the Node itself
+     * and all of its children.
+     *
+     * \return node     A pointer of the recently generated Node.
+     */
     virtual std::shared_ptr<Node> deep_copy() const;
 
+    SceneGraph* get_scenegraph() const { return scenegraph_; }
 
-    SceneGraph* get_scenegraph() const {
-      return scenegraph_;
-    }
-
-protected:
-
+  protected:
     /**
      * Returns if the Node is Root
      *
@@ -462,9 +450,7 @@ protected:
      */
     inline bool is_root() const { return parent_ == nullptr; }
 
-
-private:
-
+  private:
     /**
      * Sets the Node's parent.
      *
@@ -472,7 +458,7 @@ private:
      */
     inline void set_parent(Node* parent) { parent_ = parent; }
 
-private:
+  private:
     // structure
     Node* parent_ = nullptr;
     std::vector<std::shared_ptr<Node>> children_;
@@ -482,7 +468,7 @@ private:
     std::vector<void*> user_data_;
     std::string name_;
 
-protected:
+  protected:
     bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
 
     void set_dirty() const;
@@ -494,7 +480,6 @@ protected:
     mutable bool self_dirty_ = true;
     mutable bool child_dirty_ = true;
 
-
     // up (cached) annotations
     mutable math::BoundingBox<math::vec3> bounding_box_;
     bool draw_bounding_box_ = false;
@@ -504,11 +489,10 @@ protected:
     mutable math::mat4 world_transform_ = math::mat4::identity();
 
     SceneGraph* scenegraph_ = nullptr;
-    std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(
-        boost::uuids::random_generator()());
+    std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_NODE_HPP
+#endif // GUA_NODE_HPP

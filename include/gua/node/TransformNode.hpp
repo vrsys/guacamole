@@ -25,9 +25,10 @@
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent an transformation node in the SceneGraph.
  *
@@ -37,44 +38,42 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TransformNode : public Node {
- public:
+class GUA_DLL TransformNode : public Node
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs an empty TransformNode.
+     *
+     */
+    TransformNode() = default;
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty TransformNode.
-   *
-   */
-  TransformNode() = default;
+    /**
+     * Constructor.
+     *
+     * This constructs a TransformNode with the given parameters.
+     *
+     * \param name           The name of the new TransformNode.
+     * \param transform      A matrix to describe the TransformNode's
+     *                       transformation.
+     */
+    TransformNode(std::string const& name, math::mat4 const& transform = math::mat4::identity());
 
-  /**
-   * Constructor.
-   *
-   * This constructs a TransformNode with the given parameters.
-   *
-   * \param name           The name of the new TransformNode.
-   * \param transform      A matrix to describe the TransformNode's
-   *                       transformation.
-   */
-  TransformNode(std::string const& name,
-            math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the TransformNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the TransformNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
-
- private:
-
-  std::shared_ptr<Node> copy() const override;
+  private:
+    std::shared_ptr<Node> copy() const override;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_GROUP_NODE_HPP
+#endif // GUA_GROUP_NODE_HPP

@@ -30,28 +30,27 @@
 
 #include <scm/gl_core/shader_objects.h>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class StencilRenderer {
+class StencilRenderer
+{
+  public:
+    StencilRenderer();
+    virtual ~StencilRenderer() {}
 
- public:
+    void render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader);
 
-  StencilRenderer();
-  virtual ~StencilRenderer() {}
+    void create_state_objects(RenderContext const& ctx);
 
-  void render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader);
-
-  void create_state_objects(RenderContext const& ctx);
-
- private:
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_STENCIL_RENDERER_HPP
+#endif // GUA_STENCIL_RENDERER_HPP

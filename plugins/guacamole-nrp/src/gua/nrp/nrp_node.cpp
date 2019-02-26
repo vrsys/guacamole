@@ -86,29 +86,11 @@ void NRPNode::ray_test_impl(Ray const &ray, int options, Mask const &mask, std::
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
     Node::ray_test_impl(ray, options, mask, hits);
 }
-void NRPNode::callback_pre_pass()
-{
-    _pre_pass();
-}
-void NRPNode::callback_post_pass()
-{
-    _post_pass();
-}
-void NRPNode::set_pre_pass(const std::function<void()> pre_pass)
-{
-    this->_pre_pass = std::move(pre_pass);
-}
-void NRPNode::set_post_pass(const std::function<void()> post_pass)
-{
-    this->_post_pass = std::move(post_pass);
-}
-bool NRPNode::get_should_update_avango()
-{
-    return _should_update_avango;
-}
-void NRPNode::set_should_update_avango(bool should_update_avango)
-{
-    this->_should_update_avango = should_update_avango;
-}
-}
-}
+void NRPNode::callback_pre_pass() { _pre_pass(); }
+void NRPNode::callback_post_pass() { _post_pass(); }
+void NRPNode::set_pre_pass(const std::function<void()> pre_pass) { this->_pre_pass = std::move(pre_pass); }
+void NRPNode::set_post_pass(const std::function<void()> post_pass) { this->_post_pass = std::move(post_pass); }
+bool NRPNode::get_should_update_avango() { return _should_update_avango; }
+void NRPNode::set_should_update_avango(bool should_update_avango) { this->_should_update_avango = should_update_avango; }
+} // namespace nrp
+} // namespace gua

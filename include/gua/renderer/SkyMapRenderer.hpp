@@ -27,24 +27,22 @@
 #include <gua/renderer/TextureCube.hpp>
 #include <gua/renderer/Pipeline.hpp>
 
-namespace gua {
+namespace gua
+{
+class SkyMapRenderer
+{
+  public:
+    SkyMapRenderer();
+    virtual ~SkyMapRenderer() {}
 
-class SkyMapRenderer {
+    void render_sky_map(Pipeline& pipe, PipelinePassDescription const& desc);
 
- public:
-
-  SkyMapRenderer();
-  virtual ~SkyMapRenderer() {}
-
-  void render_sky_map(Pipeline& pipe, PipelinePassDescription const& desc);
-
- private:
-
-  std::shared_ptr<ShaderProgram>  program_;
-  std::shared_ptr<TextureCube>    sky_map_;
-  scm::gl::frame_buffer_ptr       fbo_;
+  private:
+    std::shared_ptr<ShaderProgram> program_;
+    std::shared_ptr<TextureCube> sky_map_;
+    scm::gl::frame_buffer_ptr fbo_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SKYMAP_RENDERER_HPP
+#endif // GUA_SKYMAP_RENDERER_HPP

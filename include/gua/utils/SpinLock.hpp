@@ -32,11 +32,11 @@
 #include <atomic>
 #include <thread>
 
-//If 1, enables rescheduling of threads when a spinlock is acquired
+// If 1, enables rescheduling of threads when a spinlock is acquired
 #define SPINLOCK_ENABLE_THREAD_YIELDING 1
 
-namespace gua {
-
+namespace gua
+{
 /**
  * This class represents a simple spinlock.
  *
@@ -47,28 +47,26 @@ namespace gua {
  * them only for a short period blocking.
  */
 
-class SpinLock {
-public:
-
+class SpinLock
+{
+  public:
     /**
      * Constructor.
      *
      * Creates a new spin lock.
      */
-    SpinLock()
-      : lk()
-    {
-      lk.clear();
-    }
+    SpinLock() : lk() { lk.clear(); }
 
     /**
      * Acquires the lock.
      *
      */
-    inline void lock() {
-        while (lk.test_and_set(std::memory_order_acquire)) {
+    inline void lock()
+    {
+        while(lk.test_and_set(std::memory_order_acquire))
+        {
 #if SPINLOCK_ENABLE_THREAD_YIELDING
-          std::this_thread::yield();
+            std::this_thread::yield();
 #endif
         }
     }
@@ -77,29 +75,23 @@ public:
      * Tries to acquire the lock. Returns immediately.
      * \return true if the lock was acquired successfully, otherwise false.
      */
-    inline bool try_lock() {
-      return !lk.test_and_set(std::memory_order_acquire);
-    }
+    inline bool try_lock() { return !lk.test_and_set(std::memory_order_acquire); }
 
     /**
      * Releases the lock.
      *
      */
-    inline void unlock() {
-      lk.clear(std::memory_order_release);
-    }
+    inline void unlock() { lk.clear(std::memory_order_release); }
 
     // No copying construction. No assignment.
 
     SpinLock(const SpinLock&) = delete;
     SpinLock& operator=(const SpinLock&) = delete;
 
-private:
-
- std::atomic_flag lk;
-
+  private:
+    std::atomic_flag lk;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPIN_LOCK_HPP
+#endif // GUA_SPIN_LOCK_HPP

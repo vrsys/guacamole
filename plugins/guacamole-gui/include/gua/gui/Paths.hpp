@@ -28,39 +28,38 @@
 
 #include <string>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------------
-class GUA_DLL Paths : public Singleton<Paths> {
+class GUA_DLL Paths : public Singleton<Paths>
+{
+    ///////////////////////////////////////////////////////////////////////////////
+    // ----------------------------------------------------------- public interface
+  public:
+    // ------------------------------------------------------------ public methods
+    void init(int argc, char** argv);
+    void clean_up();
 
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
- public:
+    std::string tmp_file(std::string const& suffix = "tmp") const;
+    std::string resource(std::string const& type, std::string const& file) const;
+    std::string make_absolute(std::string const& file) const;
+    std::string get_extension(std::string const& file) const;
 
-  // ------------------------------------------------------------ public methods
-  void init(int argc, char** argv);
-  void clean_up();
+    friend class Singleton<Paths>;
 
-  std::string tmp_file(std::string const& suffix = "tmp") const;
-  std::string resource(std::string const& type, std::string const& file) const;
-  std::string make_absolute(std::string const& file) const;
-  std::string get_extension(std::string const& file) const;
+    ///////////////////////////////////////////////////////////////////////////////
+    // ---------------------------------------------------------- private interface
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    Paths();
+    ~Paths() {}
 
-  friend class Singleton<Paths>;
-
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  Paths();
-  ~Paths() {}
-
-  std::string executable_;
+    std::string executable_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_GUI_PATHS_HPP
+#endif // GUA_GUI_PATHS_HPP

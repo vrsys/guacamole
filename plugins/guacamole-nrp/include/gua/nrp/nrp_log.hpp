@@ -130,7 +130,7 @@ class GUA_NRP_DLL NRPLog
         s[len] = 0;
     }
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // PAGODA_LOG_H

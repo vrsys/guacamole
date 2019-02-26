@@ -32,80 +32,79 @@
 #include <scm/gl_util/data/analysis/transfer_function/piecewise_function_1d.h>
 #include <string>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent a volume in the SceneGraph.
  *
  * \ingroup gua_scenegraph
  */
-class GUA_VOLUME_DLL VolumeNode : public SerializableNode {
-public:
+class GUA_VOLUME_DLL VolumeNode : public SerializableNode
+{
+  public:
+#define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>
+#define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3f>
 
-  #define ALPHA_TRANSFER_TYPE scm::data::piecewise_function_1d<float, float>
-  #define COLOR_TRANSFER_TYPE scm::data::piecewise_function_1d<float, math::vec3f>
+    struct Configuration
+    {
+        /**
+         * A string referring to an entry in guacamole's GeometryDatabase.
+         */
+        GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
+        GUA_ADD_PROPERTY(ALPHA_TRANSFER_TYPE, alpha_transfer, {});
+        GUA_ADD_PROPERTY(COLOR_TRANSFER_TYPE, color_transfer, {});
+    };
 
-  struct Configuration {
     /**
-     * A string referring to an entry in guacamole's GeometryDatabase.
+     * The VolumeNode's configuration.
      */
-    GUA_ADD_PROPERTY(std::string, volume, "gua_volume_default");
-    GUA_ADD_PROPERTY(ALPHA_TRANSFER_TYPE, alpha_transfer, {});
-    GUA_ADD_PROPERTY(COLOR_TRANSFER_TYPE, color_transfer, {});
-  };
+    Configuration data;
 
-  /**
-   * The VolumeNode's configuration.
-   */
-  Configuration data;
+    /**
+     * Constructor.
+     *
+     * This constructs an empty VolumeNode.
+     *
+     */
+    VolumeNode(){};
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty VolumeNode.
-   *
-   */
-  VolumeNode() {};
+    /**
+     * Constructor.
+     *
+     * This constructs a VolumeNode with the given parameters.
+     *
+     * \param name           The name of the new VolumeNode.
+     * \param configuration  A configuration struct to define the VolumeNode's
+     *                       properties.
+     * \param transform      A matrix to describe the VolumeNode's
+     *                       transformation.
+     */
+    VolumeNode(std::string const& name, Configuration const& configuration = Configuration(), math::mat4 const& transform = math::mat4::identity());
 
-  /**
-   * Constructor.
-   *
-   * This constructs a VolumeNode with the given parameters.
-   *
-   * \param name           The name of the new VolumeNode.
-   * \param configuration  A configuration struct to define the VolumeNode's
-   *                       properties.
-   * \param transform      A matrix to describe the VolumeNode's
-   *                       transformation.
-   */
-  VolumeNode(std::string const& name,
-             Configuration const& configuration = Configuration(),
-             math::mat4 const& transform = math::mat4::identity());
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the VolumeNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the VolumeNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
+    /**
+     * Updates a VolumeNode's BoundingBox.
+     *
+     * The bounding box is updated according to the transformation matrices of
+     * all children.
+     */
+    void update_bounding_box() const override;
 
-  /**
-   * Updates a VolumeNode's BoundingBox.
-   *
-   * The bounding box is updated according to the transformation matrices of
-   * all children.
-   */
-  void update_bounding_box() const override;
-
-private:
-
-  std::shared_ptr<Node> copy() const override;
+  private:
+    std::shared_ptr<Node> copy() const override;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_VOLUME_NODE_HPP
+#endif // GUA_VOLUME_NODE_HPP

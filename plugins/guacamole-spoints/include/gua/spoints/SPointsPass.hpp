@@ -33,22 +33,23 @@
 #include <memory>
 #include <unordered_map>
 
-namespace gua {
+namespace gua
+{
+class GUA_SPOINTS_DLL SPointsPassDescription : public PipelinePassDescription
+{
+  public:
+    SPointsPassDescription();
 
-class GUA_SPOINTS_DLL SPointsPassDescription : public PipelinePassDescription {
- public:
-  SPointsPassDescription();
+    PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
-  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
+    void apply_post_render_action(RenderContext const& ctx, Pipeline* pipe) const override;
 
-  void apply_post_render_action(RenderContext const& ctx, Pipeline* pipe) const override;
-
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
   private:
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPOINTS_PASS_HPP
+#endif // GUA_SPOINTS_PASS_HPP

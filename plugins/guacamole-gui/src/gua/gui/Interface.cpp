@@ -36,55 +36,51 @@
 
 // Awesomium bug in linux
 #ifndef _WIN32
-Awesomium::DataSource::~DataSource(){}
+Awesomium::DataSource::~DataSource() {}
 #endif
 
-namespace gua {
-
-namespace {
-
+namespace gua
+{
+namespace
+{
 #include "GLSurfaceFactory.ipp"
 #include "AweDataSource.ipp"
 
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Interface::update() const { web_core_->Update(); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Interface::Interface()
+{
+    web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
+    web_core_->set_surface_factory(new GLSurfaceFactory());
+
+    Awesomium::WebPreferences prefs;
+    prefs.enable_smooth_scrolling = true;
+    web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
+
+    Awesomium::DataSource* data_source = new AweDataSource();
+    web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Interface::update() const {
-  web_core_->Update();
+Interface::~Interface()
+{
+    auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
+    Awesomium::WebCore::Shutdown();
+    delete factory;
+    web_session_->Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Interface::Interface() {
-  web_core_ = Awesomium::WebCore::Initialize(Awesomium::WebConfig());
-  web_core_->set_surface_factory(new GLSurfaceFactory());
-
-  Awesomium::WebPreferences prefs;
-  prefs.enable_smooth_scrolling = true;
-  web_session_ = web_core_->CreateWebSession(Awesomium::WSLit(""), prefs);
-
-  Awesomium::DataSource* data_source = new AweDataSource();
-  web_session_->AddDataSource(Awesomium::WSLit("gua"), data_source);
-}
+Awesomium::WebView* Interface::create_webview(int width, int height) const { return web_core_->CreateWebView(width, height, web_session_, Awesomium::kWebViewType_Offscreen); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Interface::~Interface() {
-  auto factory = static_cast<GLSurfaceFactory*>(web_core_->surface_factory());
-  Awesomium::WebCore::Shutdown();
-  delete factory;
-  web_session_->Release();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Awesomium::WebView* Interface::create_webview(int width, int height) const {
-  return web_core_->CreateWebView(width, height, web_session_,
-                                  Awesomium::kWebViewType_Offscreen);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-
+} // namespace gua

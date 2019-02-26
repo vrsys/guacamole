@@ -28,151 +28,159 @@
 #include <gua/utils/Trackball.hpp>
 
 // forward mouse interaction to trackball
-void mouse_button (gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
+void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
-  gua::utils::Trackball::button_type button;
-  gua::utils::Trackball::state_type state;
+    gua::utils::Trackball::button_type button;
+    gua::utils::Trackball::state_type state;
 
-  switch (mousebutton) {
-    case 0: button = gua::utils::Trackball::left; break;
-    case 2: button = gua::utils::Trackball::middle; break;
-    case 1: button = gua::utils::Trackball::right; break;
-  };
+    switch(mousebutton)
+    {
+    case 0:
+        button = gua::utils::Trackball::left;
+        break;
+    case 2:
+        button = gua::utils::Trackball::middle;
+        break;
+    case 1:
+        button = gua::utils::Trackball::right;
+        break;
+    };
 
-  switch (action) {
-    case 0: state = gua::utils::Trackball::released; break;
-    case 1: state = gua::utils::Trackball::pressed; break;
-  };
+    switch(action)
+    {
+    case 0:
+        state = gua::utils::Trackball::released;
+        break;
+    case 1:
+        state = gua::utils::Trackball::pressed;
+        break;
+    };
 
-  trackball.mouse(button, state, trackball.posx(), trackball.posy());
+    trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
+    // initialize guacamole
+    gua::init(argc, argv);
 
-  // initialize guacamole
-  gua::init(argc, argv);
+    auto load_mat = [](std::string const& file) {
+        gua::MaterialShaderDescription desc;
+        desc.load_from_file(file);
+        auto shader(std::make_shared<gua::MaterialShader>(file, std::make_shared<gua::MaterialShaderDescription>(desc)));
+        gua::MaterialShaderDatabase::instance()->add(shader);
+        return shader->make_new_material();
+    };
 
-  auto load_mat = [](std::string const& file){
-    gua::MaterialShaderDescription desc;
-    desc.load_from_file(file);
-    auto shader(std::make_shared<gua::MaterialShader>(file, std::make_shared<gua::MaterialShaderDescription>(desc)));
-    gua::MaterialShaderDatabase::instance()->add(shader);
-    return shader->make_new_material();
-  };
+    // setup scene
+    gua::SceneGraph graph("main_scenegraph");
 
-  // setup scene
-  gua::SceneGraph graph("main_scenegraph");
+    gua::TriMeshLoader loader;
 
-  gua::TriMeshLoader loader;
+    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
-  auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+    // load material and create monkey geometry
+    auto projective_material(load_mat("data/materials/Projective_Texture_Material.gmd"));
+    projective_material->set_uniform("projective_texture", std::string("data/textures/smiley.jpg"));
 
-  // load material and create monkey geometry
-  auto projective_material(load_mat("data/materials/Projective_Texture_Material.gmd"));
-  projective_material->set_uniform("projective_texture", std::string("data/textures/smiley.jpg"));
+    auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", projective_material, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    monkey->scale(3);
+    monkey->translate(0.0, 0.0, -1.0);
+    graph.add_node("/transform", monkey);
 
-  auto monkey(loader.create_geometry_from_file("monkey", "data/objects/monkey.obj", projective_material, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-  monkey->scale(3);
-  monkey->translate(0.0, 0.0, -1.0);
-  graph.add_node("/transform", monkey);
+    auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
+    light2->data.set_type(gua::node::LightNode::Type::POINT);
+    light2->data.brightness = 150.0f;
+    light2->scale(12.f);
+    light2->translate(-3.f, 5.f, 5.f);
 
-  auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-  light2->data.set_type(gua::node::LightNode::Type::POINT);
-  light2->data.brightness = 150.0f;
-  light2->scale(12.f);
-  light2->translate(-3.f, 5.f, 5.f);
+    auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+    screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
+    screen->translate(0, 0, 1.0);
 
-  auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-  screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-  screen->translate(0, 0, 1.0);
+    // add mouse interaction
+    gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-  // add mouse interaction
-  gua::utils::Trackball trackball(0.01, 0.002, 0.2);
+    // setup rendering pipeline and window
+    auto resolution = gua::math::vec2ui(1920, 1080);
 
-  // setup rendering pipeline and window
-  auto resolution = gua::math::vec2ui(1920, 1080);
+    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+    camera->translate(0, 0, 2.0);
+    camera->config.set_resolution(resolution);
+    camera->config.set_screen_path("/screen");
+    camera->config.set_scene_graph_name("main_scenegraph");
+    camera->config.set_output_window_name("main_window");
+    camera->config.set_enable_stereo(false);
+    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-  auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-  camera->translate(0, 0, 2.0);
-  camera->config.set_resolution(resolution);
-  camera->config.set_screen_path("/screen");
-  camera->config.set_scene_graph_name("main_scenegraph");
-  camera->config.set_output_window_name("main_window");
-  camera->config.set_enable_stereo(false);
-  camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    // projector transform node, screen and transform node
+    auto projector_transform = graph.add_node<gua::node::TransformNode>("/", "projector_transform");
+    projector_transform->translate(0.7, 0.0, 0.7);
+    projector_transform->rotate(45.0, 0.0, 1.0, 0.0);
+    graph.add_node("/", projector_transform);
 
-  // projector transform node, screen and transform node
-  auto projector_transform = graph.add_node<gua::node::TransformNode>("/", "projector_transform");
-  projector_transform->translate(0.7, 0.0, 0.7);
-  projector_transform->rotate(45.0, 0.0, 1.0, 0.0);
-  graph.add_node("/", projector_transform);
+    auto projector_screen = graph.add_node<gua::node::ScreenNode>("/projector_transform", "projector_screen");
+    projector_screen->data.set_size(gua::math::vec2(0.5f, 0.5f));
+    projector_screen->translate(0.0, 0.0, -1.0);
+    graph.add_node("/projector_transform", projector_screen);
 
-  auto projector_screen = graph.add_node<gua::node::ScreenNode>("/projector_transform", "projector_screen");
-  projector_screen->data.set_size(gua::math::vec2(0.5f, 0.5f));
-  projector_screen->translate(0.0, 0.0, -1.0);
-  graph.add_node("/projector_transform", projector_screen);
+    auto projector_geometry(loader.create_geometry_from_file("projector_geometry", "data/objects/projector.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::LOAD_MATERIALS));
+    projector_geometry->scale(0.1);
+    graph.add_node("/projector_transform", projector_geometry);
 
-  auto projector_geometry(loader.create_geometry_from_file("projector_geometry", "data/objects/projector.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::LOAD_MATERIALS));
-  projector_geometry->scale(0.1);
-  graph.add_node("/projector_transform", projector_geometry);
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add("main_window", window);
+    window->config.set_enable_vsync(false);
+    window->config.set_size(resolution);
+    window->config.set_resolution(resolution);
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+        window->config.set_resolution(new_size);
+        camera->config.set_resolution(new_size);
+        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    });
+    window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+    window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
+    window->open();
 
-  auto window = std::make_shared<gua::GlfwWindow>();
-  gua::WindowDatabase::instance()->add("main_window", window);
-  window->config.set_enable_vsync(false);
-  window->config.set_size(resolution);
-  window->config.set_resolution(resolution);
-  window->config.set_stereo_mode(gua::StereoMode::MONO);
-  window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-    window->config.set_resolution(new_size);
-    camera->config.set_resolution(new_size);
-    screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-  });
-  window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-    trackball.motion(pos.x, pos.y);
-  });
-  window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    gua::Renderer renderer;
 
-  window->open();
+    // application loop
+    gua::events::MainLoop loop;
+    gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
-  gua::Renderer renderer;
+    ticker.on_tick.connect([&]() {
+        // apply trackball matrix to object
+        gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), gua::math::float_t(trackball.shifty()), gua::math::float_t(trackball.distance())) *
+                                      gua::math::mat4(trackball.rotation());
 
-  // application loop
-  gua::events::MainLoop loop;
-  gua::events::Ticker ticker(loop, 1.0/500.0);
+        projector_transform->set_transform(modelmatrix);
 
-  ticker.on_tick.connect([&]() {
+        // use the guacamole frustum to calculate a view mat and projection mat for the projection
+        auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(), projector_screen->get_scaled_world_transform(), 0.1f, 1000.0f);
 
-    // apply trackball matrix to object
-    gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()),
-      gua::math::float_t(trackball.shifty()),
-      gua::math::float_t(trackball.distance())) * gua::math::mat4(trackball.rotation());
+        auto projection_mat = projection_frustum.get_projection();
+        auto view_mat = projection_frustum.get_view();
 
-    projector_transform->set_transform(modelmatrix);
+        // set these matrices as uniforms for the projection material
+        projective_material->set_uniform("projective_texture_matrix", gua::math::mat4f(projection_mat * view_mat));
+        projective_material->set_uniform("view_texture_matrix", gua::math::mat4f(view_mat));
 
-    // use the guacamole frustum to calculate a view mat and projection mat for the projection
-    auto projection_frustum = gua::Frustum::perspective(projector_transform->get_world_transform(),
-                                                   projector_screen->get_scaled_world_transform(),
-                                                   0.1f, 1000.0f);
+        window->process_events();
+        if(window->should_close())
+        {
+            renderer.stop();
+            window->close();
+            loop.stop();
+        }
+        else
+        {
+            renderer.queue_draw({&graph});
+        }
+    });
 
-    auto projection_mat = projection_frustum.get_projection();
-    auto view_mat = projection_frustum.get_view();
+    loop.start();
 
-    // set these matrices as uniforms for the projection material
-    projective_material->set_uniform("projective_texture_matrix", gua::math::mat4f(projection_mat * view_mat));
-    projective_material->set_uniform("view_texture_matrix", gua::math::mat4f(view_mat));
-
-    window->process_events();
-    if (window->should_close()) {
-      renderer.stop();
-      window->close();
-      loop.stop();
-    } else {
-      renderer.queue_draw({&graph});
-    }
-  });
-
-  loop.start();
-
-  return 0;
+    return 0;
 }

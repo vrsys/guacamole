@@ -24,50 +24,42 @@
 
 #include <gua/events/properties/Property.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+template <typename T>
+class LogicalProperty : public virtual Property<T>
+{
+  public:
+    LogicalProperty() : Property<T>() {}
 
-template <typename T> class LogicalProperty : public virtual Property<T> {
+    LogicalProperty(T const& value) : Property<T>(value) {}
 
- public:
-  LogicalProperty() : Property<T>() {}
+    LogicalProperty(LogicalProperty<T> const& to_copy) : Property<T>(to_copy) {}
 
-  LogicalProperty(T const& value) : Property<T>(value) {}
+    virtual ~LogicalProperty() {}
 
-  LogicalProperty(LogicalProperty<T> const& to_copy) : Property<T>(to_copy) {}
+    bool operator&&(LogicalProperty<T> const& rhs) const { return Property<T>::get() && rhs.get(); }
 
-  virtual ~LogicalProperty() {}
+    bool operator&&(T const& rhs) const { return Property<T>::get() && rhs; }
 
-  bool operator&&(LogicalProperty<T> const& rhs) const {
-    return Property<T>::get() && rhs.get();
-  }
+    bool operator||(LogicalProperty<T> const& rhs) const { return Property<T>::get() || rhs.get(); }
 
-  bool operator&&(T const& rhs) const { return Property<T>::get() && rhs; }
+    bool operator||(T const& rhs) const { return Property<T>::get() || rhs; }
 
-  bool operator||(LogicalProperty<T> const& rhs) const {
-    return Property<T>::get() || rhs.get();
-  }
+    bool operator&(LogicalProperty<T> const& rhs) const { return Property<T>::get() & rhs.get(); }
 
-  bool operator||(T const& rhs) const { return Property<T>::get() || rhs; }
+    bool operator&(T const& rhs) const { return Property<T>::get() & rhs; }
 
-  bool operator&(LogicalProperty<T> const& rhs) const {
-    return Property<T>::get() & rhs.get();
-  }
+    bool operator|(LogicalProperty<T> const& rhs) const { return Property<T>::get() | rhs.get(); }
 
-  bool operator&(T const& rhs) const { return Property<T>::get() & rhs; }
+    bool operator|(T const& rhs) const { return Property<T>::get() | rhs; }
 
-  bool operator|(LogicalProperty<T> const& rhs) const {
-    return Property<T>::get() | rhs.get();
-  }
-
-  bool operator|(T const& rhs) const { return Property<T>::get() | rhs; }
-
-  LogicalProperty<T> operator!() const {
-    return LogicalProperty<T>(!Property<T>::get());
-  }
+    LogicalProperty<T> operator!() const { return LogicalProperty<T>(!Property<T>::get()); }
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* LOGICAL_PROPERTY_HPP_ */

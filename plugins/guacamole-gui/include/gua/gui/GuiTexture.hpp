@@ -25,31 +25,32 @@
 // guacamole headers
 #include <gua/renderer/Texture2D.hpp>
 
-namespace Awesomium {
-  class WebView;
+namespace Awesomium
+{
+class WebView;
 }
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A class representing a texture.
  *
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-class GUA_DLL GuiTexture : public Texture2D {
- public:
+class GUA_DLL GuiTexture : public Texture2D
+{
+  public:
+    /**
+     * Constructor.
+     */
+    GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view);
 
-  /**
-   * Constructor.
-   */
-  GuiTexture(unsigned width, unsigned height, Awesomium::WebView* view);
+    math::vec2ui const get_handle(RenderContext const& context) const override;
 
-  math::vec2ui const get_handle(RenderContext const& context) const override;
-
- protected:
-  Awesomium::WebView* view_ = nullptr;
+  protected:
+    Awesomium::WebView* view_ = nullptr;
 };
 
-}
-#endif  // GUA_GUI_TEXTURE_HPP
+} // namespace gua
+#endif // GUA_GUI_TEXTURE_HPP

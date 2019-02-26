@@ -30,29 +30,27 @@
 
 #include <vector>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * This helper class represents a Ray.
  *
  * It has an origin, a direction and a length.
  */
-  struct GUA_DLL Ray {
+struct GUA_DLL Ray
+{
+    Ray();
+    Ray(math::vec3 const& origin, math::vec3 const& direction, math::vec3::value_type t_max);
 
-  Ray();
-  Ray(math::vec3 const& origin, math::vec3 const& direction, math::vec3::value_type t_max);
+    Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
+    Ray const intersection(scm::gl::box_impl<gua::math::vec3::value_type> const& box) const { return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex())); }
 
-  Ray const intersection(math::BoundingBox<math::vec3> const& box) const;
-  Ray const intersection(scm::gl::box_impl<gua::math::vec3::value_type> const& box) const {
-    return intersection(math::BoundingBox<math::vec3>(box.min_vertex(), box.max_vertex()));
-  }
+    math::vec3 origin_;
+    math::vec3 direction_;
 
-  math::vec3 origin_;
-  math::vec3 direction_;
+    math::vec3::value_type t_max_;
 
-  math::vec3::value_type t_max_;
-
-  static const math::vec3::value_type END;
+    static const math::vec3::value_type END;
 };
 
 GUA_DLL std::pair<float, float> intersect(Ray const& ray, math::BoundingBox<math::vec3> const& box);
@@ -62,23 +60,22 @@ GUA_DLL std::pair<float, float> intersect(Ray const& ray, math::BoundingBox<math
  *
  * It has three vertices, a normal and a visited-flag for internal KDTree usage.
  */
-struct GUA_DLL Triangle {
+struct GUA_DLL Triangle
+{
+    Triangle();
+    Triangle(unsigned face_id);
 
-  Triangle();
-  Triangle(unsigned face_id);
+    float intersect(Mesh const& mesh, Ray const& ray) const;
 
-  float intersect(Mesh const& mesh,Ray const& ray) const;
+    math::vec3 get_vertex(Mesh const& mesh, unsigned vertex_id) const;
+    math::vec3 get_normal(Mesh const& mesh) const;
+    math::vec3 get_normal_interpolated(Mesh const& mesh, math::vec3 const& position) const;
+    math::vec2 get_texture_coords_interpolated(Mesh const& mesh, math::vec3 const& position) const;
 
-  math::vec3 get_vertex(Mesh const& mesh, unsigned vertex_id) const;
-  math::vec3 get_normal(Mesh const& mesh) const;
-  math::vec3 get_normal_interpolated(Mesh const& mesh, math::vec3 const& position) const;
-  math::vec2 get_texture_coords_interpolated(Mesh const& mesh, math::vec3 const& position) const;
-
-
-  unsigned face_id_;
-  mutable unsigned visit_flag_;
+    unsigned face_id_;
+    mutable unsigned visit_flag_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_KD_TREE_UTILS_HPP
+#endif // GUA_KD_TREE_UTILS_HPP

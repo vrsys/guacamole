@@ -24,30 +24,31 @@
 
 #define FBX_NAMESPACE fbxsdk
 
-namespace FBX_NAMESPACE {
-  class FbxMesh;
-  class FbxNode;
-  class FbxManager;
-  class FbxAnimStack;
-  class FbxScene;
-  class FbxTakeInfo;
-  class FbxSurfaceMaterial;
-  class FbxAMatrix;
-  class FbxQuaternion;
+namespace FBX_NAMESPACE
+{
+class FbxMesh;
+class FbxNode;
+class FbxManager;
+class FbxAnimStack;
+class FbxScene;
+class FbxTakeInfo;
+class FbxSurfaceMaterial;
+class FbxAMatrix;
+class FbxQuaternion;
 
-  template<class T>
-  class FbxLayerElementTemplate;
-}
+template <class T>
+class FbxLayerElementTemplate;
+} // namespace FBX_NAMESPACE
 
-using FBX_NAMESPACE::FbxAnimStack;
-using FBX_NAMESPACE::FbxTakeInfo;
 using FBX_NAMESPACE::FbxAMatrix;
-using FBX_NAMESPACE::FbxQuaternion;
-using FBX_NAMESPACE::FbxNode;
-using FBX_NAMESPACE::FbxManager;
-using FBX_NAMESPACE::FbxScene;
-using FBX_NAMESPACE::FbxMesh;
+using FBX_NAMESPACE::FbxAnimStack;
 using FBX_NAMESPACE::FbxLayerElementTemplate;
+using FBX_NAMESPACE::FbxManager;
+using FBX_NAMESPACE::FbxMesh;
+using FBX_NAMESPACE::FbxNode;
+using FBX_NAMESPACE::FbxQuaternion;
+using FBX_NAMESPACE::FbxScene;
 using FBX_NAMESPACE::FbxSurfaceMaterial;
+using FBX_NAMESPACE::FbxTakeInfo;
 
-#endif  // GUA_FBXFWD_HPP
+#endif // GUA_FBXFWD_HPP

@@ -31,13 +31,13 @@
 
 #include <unordered_set>
 
-namespace gua {
-
+namespace gua
+{
 class LodResource;
 class LodLoader;
 
-namespace node {
-
+namespace node
+{
 /**
  * This class is used to represent pointcloud in the SceneGraph.
  *
@@ -45,84 +45,77 @@ namespace node {
  */
 class GUA_LOD_DLL PLodNode : public GeometryNode
 {
-public:
-  friend class ::gua::LodLoader;
+  public:
+    friend class ::gua::LodLoader;
 
-  // c'tor
-  PLodNode(std::string const& node_name,
-           std::string const& geometry_description = "gua_default_geometry",
-           std::string const& geometry_file_path = "gua_no_path_specified",
-           std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
-           math::mat4 const& transform = math::mat4::identity(),
-           float const max_surfel_size = 0.2f,
-           float const radius_scale = 1.0f,
-           float const error_threshold = 2.5f,
-           bool const enable_backface_culling_by_normal = false);
+    // c'tor
+    PLodNode(std::string const& node_name,
+             std::string const& geometry_description = "gua_default_geometry",
+             std::string const& geometry_file_path = "gua_no_path_specified",
+             std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
+             math::mat4 const& transform = math::mat4::identity(),
+             float const max_surfel_size = 0.2f,
+             float const radius_scale = 1.0f,
+             float const error_threshold = 2.5f,
+             bool const enable_backface_culling_by_normal = false);
 
-public:  // method override
+  public: // method override
+  public: // methods
+    std::shared_ptr<LodResource> const& get_geometry() const;
 
-public:  // methods
+    /*virtual*/ math::mat4 get_world_transform() const override;
 
-  std::shared_ptr<LodResource> const& get_geometry() const;
+    std::string const& get_geometry_description() const;
+    void set_geometry_description(std::string const& v);
 
-  /*virtual*/ math::mat4 get_world_transform() const override;
+    std::string const& get_geometry_file_path() const;
 
-  std::string const& get_geometry_description() const;
-  void               set_geometry_description(std::string const& v);
+    std::shared_ptr<Material> const& get_material() const;
+    void set_material(std::shared_ptr<Material> const& material);
 
-  std::string const& get_geometry_file_path() const;
+    float get_radius_scale() const;
+    void set_radius_scale(float scale);
 
-  std::shared_ptr<Material> const& get_material() const;
-  void               set_material(std::shared_ptr<Material> const& material);
+    float get_max_surfel_radius() const;
+    void set_max_surfel_radius(float threshold);
 
-  float              get_radius_scale() const;
-  void               set_radius_scale(float scale);
+    float get_error_threshold() const;
+    void set_error_threshold(float threshold);
 
-  float              get_max_surfel_radius() const;
-  void               set_max_surfel_radius(float threshold);
+    bool get_enable_backface_culling_by_normal() const;
+    void set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
-  float              get_error_threshold() const;
-  void               set_error_threshold(float threshold);
+  public:
+    /**
+     * Implements ray picking for a point cloud
+     */
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-  bool               get_enable_backface_culling_by_normal() const;
-  void               set_enable_backface_culling_by_normal(bool const enable_backface_culling);
+    void update_bounding_box() const override;
 
-public:
-  /**
-  * Implements ray picking for a point cloud
-  */
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+    void update_cache() override;
 
-  void update_bounding_box() const override;
+    void accept(NodeVisitor& visitor) override;
 
-  void update_cache() override;
+  protected:
+    std::shared_ptr<Node> copy() const override;
 
-  void accept(NodeVisitor& visitor) override;
+  private: // attributes e.g. special attributes for drawing
+    std::shared_ptr<LodResource> geometry_;
+    std::string geometry_description_;
+    std::string geometry_file_path_;
+    bool geometry_changed_;
 
-protected:
+    std::shared_ptr<Material> material_;
+    bool material_changed_;
 
-  std::shared_ptr<Node> copy() const override;
-
-private:  // attributes e.g. special attributes for drawing
-
-  std::shared_ptr<LodResource> geometry_;
-  std::string                   geometry_description_;
-  std::string                   geometry_file_path_;
-  bool                          geometry_changed_;
-
-  std::shared_ptr<Material>     material_;
-  bool                          material_changed_;
-
-  float                         radius_scale_;
-  float                         max_surfel_size_;
-  float                         error_threshold_;
-  bool                          enable_backface_culling_by_normal_;
+    float radius_scale_;
+    float max_surfel_size_;
+    float error_threshold_;
+    bool enable_backface_culling_by_normal_;
 };
 
-}  // namespace node {
-}  // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_P_LOD_NODE_HPP
+#endif // GUA_P_LOD_NODE_HPP

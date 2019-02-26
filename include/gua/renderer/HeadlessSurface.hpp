@@ -25,60 +25,60 @@
 // guacamole headers
 #include <gua/renderer/WindowBase.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A window for displaying stuff.
  *
  * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL HeadlessSurface : public WindowBase {
- public:
+class GUA_DLL HeadlessSurface : public WindowBase
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new HeadlessSurface. It owns a RenderContext where Geomtries
+     * can be drawn to.
+     *
+     * \param description   The description of the window.
+     */
+    HeadlessSurface(Configuration const& configuration = Configuration());
 
-  /**
-   * Constructor.
-   *
-   * Creates a new HeadlessSurface. It owns a RenderContext where Geomtries
-   * can be drawn to.
-   *
-   * \param description   The description of the window.
-   */
-  HeadlessSurface(Configuration const& configuration = Configuration());
+    /**
+     * Destructor.
+     *
+     * Cleans all associated memory.
+     */
+    virtual ~HeadlessSurface();
 
-  /**
-   * Destructor.
-   *
-   * Cleans all associated memory.
-   */
-  virtual ~HeadlessSurface();
+    virtual void open();
+    virtual bool get_is_open() const;
+    virtual bool should_close() const;
+    virtual void close();
 
-  virtual void open();
-  virtual bool get_is_open() const;
-  virtual bool should_close() const;
-  virtual void close();
+    virtual void process_events() {}
 
-  virtual void process_events() { }
+    /**
+     * Activate the context of this window.
+     *
+     * Makes the RenderContext of this window current. All preceeding
+     * OpenGL calls will be invoked on this window.
+     */
+    virtual void set_active(bool active);
 
-  /**
-   * Activate the context of this window.
-   *
-   * Makes the RenderContext of this window current. All preceeding
-   * OpenGL calls will be invoked on this window.
-   */
-  virtual void set_active(bool active);
+    /**
+     * Ends the drawing of a new frame.
+     *
+     * This should be called when drawing a frame has been done.
+     */
+    virtual void finish_frame() const;
 
-  /**
-   * Ends the drawing of a new frame.
-   *
-   * This should be called when drawing a frame has been done.
-   */
-  virtual void finish_frame() const;
-
- private:
-  scm::gl::wm::window_ptr window_ = nullptr;
-  scm::gl::wm::headless_surface_ptr headless_surface_ = nullptr;
+  private:
+    scm::gl::wm::window_ptr window_ = nullptr;
+    scm::gl::wm::headless_surface_ptr headless_surface_ = nullptr;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_WINDOW_HPP
+#endif // GUA_WINDOW_HPP

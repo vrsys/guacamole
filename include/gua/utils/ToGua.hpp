@@ -30,29 +30,32 @@
 // external headers
 #include <scm/gl_core.h>
 #include <scm/core/math/quat.h>
-#include <assimp/scene.h>       // for ainodeanim
+#include <assimp/scene.h> // for ainodeanim
 
-namespace to_gua {
-
+namespace to_gua
+{
 GUA_DLL scm::math::mat4f mat4f(aiMatrix4x4 const& m);
 GUA_DLL scm::math::quatf quatf(aiQuaternion const& q);
 
-template<typename T>
-scm::math::vec3f vec3f(T const& v) {
-  scm::math::vec3f res(v[0], v[1], v[2]);
-  return res;
+template <typename T>
+scm::math::vec3f vec3f(T const& v)
+{
+    scm::math::vec3f res(v[0], v[1], v[2]);
+    return res;
 }
 
-template<typename T>
-scm::math::vec2f vec2f(T const& v) {
-  scm::math::vec2f res(v[0], v[1]);
-  return res;
+template <typename T>
+scm::math::vec2f vec2f(T const& v)
+{
+    scm::math::vec2f res(v[0], v[1]);
+    return res;
 }
 
-template<typename T>
-scm::math::vec4f vec4f(T const& v) {
-  scm::math::vec4 res(v[0], v[1], v[2], v[3]);
-  return res;
+template <typename T>
+scm::math::vec4f vec4f(T const& v)
+{
+    scm::math::vec4 res(v[0], v[1], v[2], v[3]);
+    return res;
 }
 
 #ifdef GUACAMOLE_FBX
@@ -60,6 +63,6 @@ GUA_DLL scm::math::mat4f mat4f(FbxAMatrix const& m);
 GUA_DLL scm::math::mat4d mat4d(FbxAMatrix const& m);
 GUA_DLL scm::math::quatf quatf(FbxQuaternion const& q);
 #endif
-}
+} // namespace to_gua
 
-#endif //GUA_TOGUA_HPP
+#endif // GUA_TOGUA_HPP

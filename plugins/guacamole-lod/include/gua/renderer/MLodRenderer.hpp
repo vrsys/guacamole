@@ -33,62 +33,55 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-//external headers
+// external headers
 #include <lamure/ren/cut_database_record.h>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 class ShaderProgram;
 
-class GUA_LOD_DLL MLodRenderer {
- 
+class GUA_LOD_DLL MLodRenderer
+{
   public:
-
     MLodRenderer();
-    virtual ~MLodRenderer() {};
+    virtual ~MLodRenderer(){};
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
-  
+
     void create_state_objects(RenderContext const& ctx);
 
- private:  //lamure auxiliary methods
-  
-  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
-                                                       std::shared_ptr<ShaderProgram> const& current_program,
-                                                       bool& program_changed);
+  private: // lamure auxiliary methods
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed);
 
-  void                           _initialize_tri_mesh_lod_program(MaterialShader* material);
+    void _initialize_tri_mesh_lod_program(MaterialShader* material);
 
-   lamure::context_t             _lamure_register_context(gua::RenderContext const& ctx);
+    lamure::context_t _lamure_register_context(gua::RenderContext const& ctx);
 
-   bool _intersects(scm::gl::boxf const& bbox,
-                    std::vector<math::vec4> const& global_planes) const;
+    bool _intersects(scm::gl::boxf const& bbox, std::vector<math::vec4> const& global_planes) const;
 
-   std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
-   
- private:  //member variables
+    std::vector<math::vec3> _get_frustum_corners_vs(gua::Frustum const& frustum) const;
 
-    bool                                                                gpu_resources_created_;
-    unsigned                                                            previous_frame_count_;
+  private: // member variables
+    bool gpu_resources_created_;
+    unsigned previous_frame_count_;
 
-    std::mutex                                                          mutex_;
+    std::mutex mutex_;
 
-    scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-    scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
-    
-    unsigned                                                            current_rendertarget_width_;  
-    unsigned                                                            current_rendertarget_height_;
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
 
-    std::vector<ShaderProgramStage>                                     program_stages_;
+    unsigned current_rendertarget_width_;
+    unsigned current_rendertarget_height_;
+
+    std::vector<ShaderProgramStage> program_stages_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-    SubstitutionMap                                                     global_substitution_map_;
-
+    SubstitutionMap global_substitution_map_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_M_LOD_RENDERER_HPP
+#endif // GUA_M_LOD_RENDERER_HPP

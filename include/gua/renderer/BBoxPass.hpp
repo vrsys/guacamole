@@ -26,19 +26,21 @@
 
 #include <memory>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL BBoxPassDescription : public PipelinePassDescription {
- public:
-  BBoxPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+class GUA_DLL BBoxPassDescription : public PipelinePassDescription
+{
+  public:
+    BBoxPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
+
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_BBOX_PASS_HPP
+#endif // GUA_BBOX_PASS_HPP

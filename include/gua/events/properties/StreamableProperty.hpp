@@ -26,30 +26,30 @@
 
 #include <ostream>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+template <typename T>
+class StreamableProperty : public virtual Property<T>
+{
+  public:
+    StreamableProperty() : Property<T>() {}
 
-template <typename T> class StreamableProperty : public virtual Property<T> {
+    StreamableProperty(T const& value) : Property<T>(value) {}
 
- public:
-  StreamableProperty() : Property<T>() {}
+    StreamableProperty(StreamableProperty<T> const& to_copy) : Property<T>(to_copy) {}
 
-  StreamableProperty(T const& value) : Property<T>(value) {}
-
-  StreamableProperty(StreamableProperty<T> const& to_copy)
-      : Property<T>(to_copy) {}
-
-  virtual ~StreamableProperty() {}
-
+    virtual ~StreamableProperty() {}
 };
 
 template <typename T>
-    std::ostream& operator<<(std::ostream& os,
-                             StreamableProperty<T> const& rhs) {
-  return (os << rhs.get());
+std::ostream& operator<<(std::ostream& os, StreamableProperty<T> const& rhs)
+{
+    return (os << rhs.get());
 }
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* STREAMABLE_PROPERTY_HPP_ */

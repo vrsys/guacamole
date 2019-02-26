@@ -41,63 +41,57 @@
 
 #define PRINT_RESET "\x001b[0m"
 
-namespace gua {
-
+namespace gua
+{
 bool Logger::enable_debug = true;
 bool Logger::enable_message = true;
 bool Logger::enable_warning = true;
 bool Logger::enable_error = true;
 
-namespace {
-  namespace io = boost::iostreams;
-  io::null_sink                     null_sink;
-  io::stream_buffer<io::null_sink>  null_buffer(null_sink);
-  std::ostream                      dev_null(&null_buffer);
+namespace
+{
+namespace io = boost::iostreams;
+io::null_sink null_sink;
+io::stream_buffer<io::null_sink> null_buffer(null_sink);
+std::ostream dev_null(&null_buffer);
 
-  std::string location_string(const char* f, int l) {
+std::string location_string(const char* f, int l)
+{
     std::string file(std::string(f).substr(std::string(f).find_last_of('/') + 1).c_str());
     std::stringstream sstr;
     sstr << "[" << file << ":" << l << "]";
     return sstr.str();
-  }
+}
 
-  std::ostream& print(bool enable, std::string const& header,
-                      std::string const& color,
-                      const char* file, int line) {
-    if (enable) {
-      return std::cout << color << header
-                       << location_string(file, line)
-                       << PRINT_RESET << " ";
-    } else {
-      return dev_null;
+std::ostream& print(bool enable, std::string const& header, std::string const& color, const char* file, int line)
+{
+    if(enable)
+    {
+        return std::cout << color << header << location_string(file, line) << PRINT_RESET << " ";
     }
-  }
+    else
+    {
+        return dev_null;
+    }
 }
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& Logger::debug_impl(const char* file, int line) {
-  return print(enable_debug, "[GUA][D]", PRINT_BLUE, file, line);
-}
+std::ostream& Logger::debug_impl(const char* file, int line) { return print(enable_debug, "[GUA][D]", PRINT_BLUE, file, line); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& Logger::message_impl(const char* file, int line) {
-  return print(enable_message, "[GUA][M]", PRINT_GREEN, file, line);
-}
+std::ostream& Logger::message_impl(const char* file, int line) { return print(enable_message, "[GUA][M]", PRINT_GREEN, file, line); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& Logger::warning_impl(const char* file, int line) {
-  return print(enable_warning, "[GUA][W]", PRINT_YELLOW, file, line);
-}
+std::ostream& Logger::warning_impl(const char* file, int line) { return print(enable_warning, "[GUA][W]", PRINT_YELLOW, file, line); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& Logger::error_impl(const char* file, int line) {
-  return print(enable_error, "[GUA][E]", PRINT_RED, file, line);
-}
+std::ostream& Logger::error_impl(const char* file, int line) { return print(enable_error, "[GUA][E]", PRINT_RED, file, line); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace gua

@@ -125,7 +125,7 @@ class GUA_NRP_DLL NRPScene
     ptr_visual get_visual(const uint32_t id) const;
     ptr_visual get_visual(const std::string &name) const;
 };
-}
-}
+} // namespace nrp
+} // namespace gua
 
 #endif // GUACAMOLE_NRP_SCENE_H

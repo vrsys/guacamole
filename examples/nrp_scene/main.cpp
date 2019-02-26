@@ -219,9 +219,8 @@ int main(int argc, char **argv)
             avatar->set_transform(modelmatrix * scm::math::make_rotation(90., 1., 0., 0.));
 
 #ifdef RAYTEST
-            auto pick_results = graph.ray_test(ray_from_camera_position,
-                                               gua::PickResult::Options::GET_TEXTURE_COORDS | gua::PickResult::Options::GET_WORLD_NORMALS | gua::PickResult::Options::INTERPOLATE_NORMALS |
-                                                   gua::PickResult::Options::PICK_ONLY_FIRST_FACE);
+            auto pick_results = graph.ray_test(ray_from_camera_position, gua::PickResult::Options::GET_TEXTURE_COORDS | gua::PickResult::Options::GET_WORLD_NORMALS |
+                                                                             gua::PickResult::Options::INTERPOLATE_NORMALS | gua::PickResult::Options::PICK_ONLY_FIRST_FACE);
 
             if(!pick_results.empty())
             {

@@ -63,7 +63,7 @@ void NRPBinder::_connect_to_transport_layer()
     */
 
     auto nrp_config = &NRPConfig::get_instance();
-    
+
     gazebo::common::load();
 
     sdf::setFindCallback(boost::bind(&gazebo::common::find_file, _1));
@@ -106,8 +106,8 @@ void NRPBinder::_connect_to_transport_layer()
 
     // log.d("subscription done");
 
-    gazebo::transport::PublisherPtr pub_interactive = node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", nrp_config->get_interactive_node_queue_limit(),
-                                                                                                  nrp_config->get_interactive_node_update_frequency());
+    gazebo::transport::PublisherPtr pub_interactive =
+        node->Advertise<gazebo::msgs::PosesStamped>("/nrp-gua/interactive_pos", nrp_config->get_interactive_node_queue_limit(), nrp_config->get_interactive_node_update_frequency());
 
     if(!pub_interactive->WaitForConnection(gazebo::common::Time(nrp_config->get_network_max_timeout(), 0)))
     {
@@ -373,5 +373,5 @@ void NRPBinder::callback_modify_light(ConstLightPtr &ptr)
     _scene.on_light_modify_msg(ptr);
 }
 std::mutex &NRPBinder::get_scene_mutex() { return _scene.get_mutex_scenegraph(); }
-}
-}
+} // namespace nrp
+} // namespace gua

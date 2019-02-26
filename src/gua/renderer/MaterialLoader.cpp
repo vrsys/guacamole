@@ -793,4 +793,4 @@ inline bool MaterialLoader::file_exists(std::string const &path)
     std::ifstream file{path.c_str()};
     return !file.fail();
 }
-}
+} // namespace gua

@@ -31,78 +31,77 @@
 #include <gua/platform.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class SceneGraph;
 
-namespace node {
+namespace node
+{
 class Node;
 class GeometryNode;
 class LightNode;
 class ScreenNode;
-}
+} // namespace node
 
 /**
  * This class may be used to parse a path.
  */
-class GUA_DLL DotGenerator : public NodeVisitor {
- public:
+class GUA_DLL DotGenerator : public NodeVisitor
+{
+  public:
+    DotGenerator();
+    ~DotGenerator();
 
-  DotGenerator();
-  ~DotGenerator();
+    /**
+     * Parses a graph.
+     *
+     * This function parses a SceneGraph and generates a graph in
+     * DOT-syntax. The graph then can be saved to a file with the
+     * save() method.
+     *
+     * \param graph       The graph to be parsed.
+     */
+    void parse_graph(SceneGraph const* graph);
 
-  /**
-   * Parses a graph.
-   *
-   * This function parses a SceneGraph and generates a graph in
-   * DOT-syntax. The graph then can be saved to a file with the
-   * save() method.
-   *
-   * \param graph       The graph to be parsed.
-   */
-  void parse_graph(SceneGraph const* graph);
-
-  ///@{
-  /**
-   * Visiters for each Node type
-   */
-  void visit(node::Node* node) override;
-  void visit(node::TransformNode* cam) override;
-  void visit(node::GeometryNode* geometry) override;
-  /*virtual*/ void visit(node::VolumeNode* volume);
-  void visit(node::LightNode* pointlight) override;
-  void visit(node::ScreenNode* screen) override;
-  void visit(node::RayNode* ray) override;
+    ///@{
+    /**
+     * Visiters for each Node type
+     */
+    void visit(node::Node* node) override;
+    void visit(node::TransformNode* cam) override;
+    void visit(node::GeometryNode* geometry) override;
+    /*virtual*/ void visit(node::VolumeNode* volume);
+    void visit(node::LightNode* pointlight) override;
+    void visit(node::ScreenNode* screen) override;
+    void visit(node::RayNode* ray) override;
 #ifdef GUACAMOLE_ENABLE_PHYSICS
-  void visit(physics::RigidBodyNode* rb) override;
-  void visit(physics::CollisionShapeNode* shape) override;
+    void visit(physics::RigidBodyNode* rb) override;
+    void visit(physics::CollisionShapeNode* shape) override;
 #endif
-  void visit(node::TexturedQuadNode* node) override;
-   ///@}
+    void visit(node::TexturedQuadNode* node) override;
+    ///@}
 
-  /**
-   * Saves a DOT-file
-   *
-   * This function saves the generated DOT-graph.
-   *
-   * \param path_to_file  The name of the file the DOT-graph will be saved to.
-   *                      The ending has to be .gv or .dot.
-   */
-  void save(std::string const& path_to_file) const;
+    /**
+     * Saves a DOT-file
+     *
+     * This function saves the generated DOT-graph.
+     *
+     * \param path_to_file  The name of the file the DOT-graph will be saved to.
+     *                      The ending has to be .gv or .dot.
+     */
+    void save(std::string const& path_to_file) const;
 
- private:
+  private:
+    void pre_node_info(node::Node*);
+    void post_node_info(node::Node*, std::string const& fillcolor);
 
-  void pre_node_info(node::Node*);
-  void post_node_info(node::Node*, std::string const& fillcolor);
+    std::string parse_data_;
+    std::string graph_name_;
 
-  std::string parse_data_;
-  std::string graph_name_;
-
-  std::map<int, int> added_nodes_;
-  std::size_t node_count_;
-
+    std::map<int, int> added_nodes_;
+    std::size_t node_count_;
 };
 
-}
+} // namespace gua
 
-#endif  //DOT_GENERATOR_HPP
+#endif // DOT_GENERATOR_HPP

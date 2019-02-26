@@ -24,9 +24,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void gua::physics::CollisionShapeDatabase::add_shape(const std::string& name,
-                                                     CollisionShape* shape) {
-  instance()->add(name, std::shared_ptr<CollisionShape>(shape));
-}
+void gua::physics::CollisionShapeDatabase::add_shape(const std::string& name, CollisionShape* shape) { instance()->add(name, std::shared_ptr<CollisionShape>(shape)); }
 
 ////////////////////////////////////////////////////////////////////////////////

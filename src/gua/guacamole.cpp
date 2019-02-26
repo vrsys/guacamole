@@ -31,71 +31,58 @@
 #include <GLFW/glfw3.h>
 #endif
 
-namespace gua {
-
-void init(int argc, char** argv) {
-  static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
+namespace gua
+{
+void init(int argc, char** argv)
+{
+    static scm::shared_ptr<scm::core> scm_core(new scm::core(argc, argv));
 
 #ifdef GUACAMOLE_GLFW3
-  if (!glfwInit()) {
-    Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
-  }
-  else {
-    Logger::LOG_DEBUG << "Succeed to initialize GLFW!" << std::endl;
-  }
+    if(!glfwInit())
+    {
+        Logger::LOG_ERROR << "Failed to initialize GLFW!" << std::endl;
+    }
+    else
+    {
+        Logger::LOG_DEBUG << "Succeed to initialize GLFW!" << std::endl;
+    }
 #endif
 
-  scm::gl::sampler_state_desc sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE);
+    scm::gl::sampler_state_desc sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE, scm::gl::WRAP_CLAMP_TO_EDGE);
 
-  gua::TextureDatabase::instance()->add("gua_loading_texture",
-      std::make_shared<Texture2D>(gua::make_loading_image(), 1, sampler_state));
+    gua::TextureDatabase::instance()->add("gua_loading_texture", std::make_shared<Texture2D>(gua::make_loading_image(), 1, sampler_state));
 
-  gua::TextureDatabase::instance()->add("gua_default_texture",
-      std::make_shared<Texture2D>(gua::make_default_image(), 1, sampler_state));
-  gua::TextureDatabase::instance()->add("gua_noise_texture",
-      std::make_shared<Texture2D>(gua::make_noise_image(), 1, sampler_state));
+    gua::TextureDatabase::instance()->add("gua_default_texture", std::make_shared<Texture2D>(gua::make_default_image(), 1, sampler_state));
+    gua::TextureDatabase::instance()->add("gua_noise_texture", std::make_shared<Texture2D>(gua::make_noise_image(), 1, sampler_state));
 
-  TriMeshLoader mesh_loader;
+    TriMeshLoader mesh_loader;
 
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ResourceFactory factory;
+    ResourceFactory factory;
 
-  auto light_sphere_obj = factory.read_plain_file("resources/geometry/gua_light_sphere.obj");
-  auto light_cone_obj   = factory.read_plain_file("resources/geometry/gua_light_cone.obj");
+    auto light_sphere_obj = factory.read_plain_file("resources/geometry/gua_light_sphere.obj");
+    auto light_cone_obj = factory.read_plain_file("resources/geometry/gua_light_cone.obj");
 
-  GeometryDatabase::instance()->add(
-    "gua_light_sphere_proxy",
-    std::shared_ptr<GeometryResource>(
-    static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_sphere_obj.c_str(), light_sphere_obj.size(), false)[0])));
+    GeometryDatabase::instance()->add("gua_light_sphere_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_sphere_obj.c_str(), light_sphere_obj.size(), false)[0])));
 
-  GeometryDatabase::instance()->add(
-    "gua_light_cone_proxy",
-    std::shared_ptr<GeometryResource>(
-    static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_cone_obj.c_str(), light_cone_obj.size(), false)[0])));
+    GeometryDatabase::instance()->add("gua_light_cone_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_cone_obj.c_str(), light_cone_obj.size(), false)[0])));
 
 #else
-  GeometryDatabase::instance()->add(
-      "gua_light_sphere_proxy",
-      std::shared_ptr<GeometryResource>(
-      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
-              Resources::lookup_string(Resources::geometry_gua_light_sphere_obj).c_str(),
-              Resources::geometry_gua_light_sphere_obj.size(), false)[0])));
+    GeometryDatabase::instance()->add("gua_light_sphere_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
+                                          Resources::lookup_string(Resources::geometry_gua_light_sphere_obj).c_str(), Resources::geometry_gua_light_sphere_obj.size(), false)[0])));
 
-  GeometryDatabase::instance()->add(
-      "gua_light_cone_proxy",
-      std::shared_ptr<GeometryResource>(
-      static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
-              Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(),
-              Resources::geometry_gua_light_cone_obj.size(), false)[0])));
+    GeometryDatabase::instance()->add("gua_light_cone_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
+                                          Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(), Resources::geometry_gua_light_cone_obj.size(), false)[0])));
 
 #endif
 
-  PBSMaterialFactory::create_material(PBSMaterialFactory::ALL);
+    PBSMaterialFactory::create_material(PBSMaterialFactory::ALL);
 
-  Logger::LOG_DEBUG << "Guacamole initialization finished." << std::endl;
+    Logger::LOG_DEBUG << "Guacamole initialization finished." << std::endl;
 }
 
-
-}
+} // namespace gua

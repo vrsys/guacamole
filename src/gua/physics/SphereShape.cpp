@@ -27,25 +27,21 @@
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 
-namespace gua {
-namespace physics {
+namespace gua
+{
+namespace physics
+{
+SphereShape::SphereShape(float radius) : CollisionShape(true, true, true), shape_(gua::make_unique<btSphereShape>(radius)), radius_(radius) {}
 
-SphereShape::SphereShape(float radius)
-    : CollisionShape(true, true, true),
-      shape_(gua::make_unique<btSphereShape>(radius)),
-      radius_(radius) {}
-
-void SphereShape::set_radius(float radius) {
-  radius_ = radius;
-  shape_ = gua::make_unique<btSphereShape>(radius_);
+void SphereShape::set_radius(float radius)
+{
+    radius_ = radius;
+    shape_ = gua::make_unique<btSphereShape>(radius_);
 }
 
-void SphereShape::construct_dynamic(btCompoundShape* bullet_shape,
-                                    const btTransform& base_transform) {
-  bullet_shape->addChildShape(base_transform, shape_.get());
-}
+void SphereShape::construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform) { bullet_shape->addChildShape(base_transform, shape_.get()); }
 
 btCollisionShape* SphereShape::construct_static() { return shape_.get(); }
 
-}
-}
+} // namespace physics
+} // namespace gua
