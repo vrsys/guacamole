@@ -34,12 +34,14 @@
 
 #include <scm/core/math/math.h>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 // lamure headers
-#include <lamure/vt/common.h>
-#include <lamure/vt/VTConfig.h>
-#include <lamure/vt/ren/CutDatabase.h>
-#include <lamure/vt/ren/CutUpdate.h>
-#include <gua/virtual_texturing/VTBackend.hpp>
+  #include <lamure/vt/common.h>
+  #include <lamure/vt/VTConfig.h>
+  #include <lamure/vt/ren/CutDatabase.h>
+  #include <lamure/vt/ren/CutUpdate.h>
+  #include <gua/virtual_texturing/VTBackend.hpp>
+#endif
 
 namespace
 {
@@ -254,6 +256,7 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
     }
 }
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 void TriMeshRenderer::_create_physical_texture(gua::RenderContext const &ctx)
 {
     if(VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id] == nullptr)
@@ -425,6 +428,8 @@ void TriMeshRenderer::_collect_feedback(gua::RenderContext const &ctx)
 
     ctx.render_context->sync();
 }
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
