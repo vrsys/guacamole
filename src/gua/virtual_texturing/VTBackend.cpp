@@ -34,7 +34,10 @@ void gua::VTBackend::start_backend()
 
     ::vt::CutUpdate::get_instance().start();
 }
-void gua::VTBackend::stop_backend() { ::vt::CutUpdate::get_instance().stop(); }
+void gua::VTBackend::stop_backend() {
+    _camera_contexts.clear();
+    ::vt::CutUpdate::get_instance().stop();
+}
 void gua::VTBackend::init_vt(uint16_t ctx_id, gua::node::CameraNode const& cam)
 {
     auto& vt_info_per_context = VirtualTexture2D::vt_info_per_context_;
