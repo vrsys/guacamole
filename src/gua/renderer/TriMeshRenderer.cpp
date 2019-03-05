@@ -266,7 +266,6 @@ void TriMeshRenderer::_create_physical_texture(gua::RenderContext const &ctx)
         uint32_t phys_tex_creation_px_width = ::vt::VTConfig::get_instance().get_phys_tex_px_width();
         uint32_t phys_tex_creation_px_height = ::vt::VTConfig::get_instance().get_phys_tex_px_width();
         uint32_t phys_tex_creation_num_layers = ::vt::VTConfig::get_instance().get_phys_tex_layers();
-        ;
         uint32_t phys_tex_creation_tile_size = ::vt::VTConfig::get_instance().get_size_tile();
 
         VirtualTexture2D::physical_texture_ptr_per_context_[ctx.id]->upload_to(ctx, phys_tex_creation_px_width, phys_tex_creation_px_height, phys_tex_creation_num_layers, phys_tex_creation_tile_size);

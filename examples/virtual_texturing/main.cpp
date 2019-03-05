@@ -29,6 +29,7 @@
 #include <gua/virtual_texturing/VTBackend.hpp>
 
 #include <gua/utils/Trackball.hpp>
+#include <GLFW/glfw3.h>
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -170,6 +171,8 @@ int main(int argc, char** argv)
     pipe->add_pass(resolve_pass);
     camera->set_pipeline_description(pipe);
 
+    bool should_close = false;
+
     auto add_window = [&](std::string const& window_name, std::shared_ptr<gua::node::CameraNode> const& cam_node) -> std::shared_ptr<gua::GlfwWindow> {
         auto window = std::make_shared<gua::GlfwWindow>();
         gua::WindowDatabase::instance()->add(window_name, window);
@@ -184,7 +187,12 @@ int main(int argc, char** argv)
 
         window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
         window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
+        window->on_key_press.connect([&](int key, int scancode, int action, int mods) {
+            if(key == GLFW_KEY_ESCAPE)
+            {
+                should_close = true;
+            }
+        });
         return window;
     };
 
@@ -234,18 +242,18 @@ int main(int argc, char** argv)
 
         transform->set_transform(manipulation_matrix);
 
-        if(main_window->should_close() || secondary_window->should_close())
+        if(main_window->should_close() || secondary_window->should_close() || should_close)
         {
+            vt_backend->stop_backend();
             renderer.stop();
             main_window->close();
             secondary_window->close();
             loop.stop();
-            vt_backend->stop_backend();
         }
         else
         {
-            main_window->process_events();
-            secondary_window->process_events();
+            // main_window->process_events();
+            // secondary_window->process_events();
             renderer.queue_draw({&graph});
         }
         /*

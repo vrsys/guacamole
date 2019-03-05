@@ -68,4 +68,8 @@ examples/picking/example-picking
 example-gazebo_scene
 
 .idea
-/examples/volumetric_point_and_line_rendering/example-volumetric_point_and_line_rendering
+examples/volumetric_point_and_line_rendering/example-volumetric_point_and_line_rendering
+examples/nrp_scene/example-nrp_scene
+examples/projective_virtual_texturing/example-projective_virtual_texturing
+examples/virtual_texturing/example-virtual_texturing
+
