@@ -23,6 +23,7 @@
 
 // lamure headers
 #include <lamure/vt/VTConfig.h>
+#include <boost/assign/list_of.hpp>
 
 namespace gua
 {
@@ -30,15 +31,29 @@ LayeredPhysicalTexture2D::LayeredPhysicalTexture2D() {}
 
 LayeredPhysicalTexture2D::~LayeredPhysicalTexture2D()
 {
+    feedback_index_ib_.reset();
+    feedback_index_vb_.reset();
+    feedback_vao_.reset();
+    feedback_inv_index_.reset();
+    feedback_lod_storage_.reset();
+
+    physical_texture_ptr_.reset();
+    physical_texture_address_ubo_.reset();
+
+#ifdef RASTERIZATION_COUNT
+    feedback_count_storage.reset();
+#endif
+
     if(!feedback_lod_cpu_buffer_)
     {
         delete[] feedback_lod_cpu_buffer_;
     }
-
+#ifdef RASTERIZATION_COUNT
     if(!feedback_count_cpu_buffer_)
     {
         delete[] feedback_count_cpu_buffer_;
     }
+#endif
 }
 
 void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx, uint32_t width, uint32_t height, uint32_t num_layers, uint32_t tile_size) const
@@ -71,19 +86,37 @@ void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx, uint32_t widt
     auto linear_sampler_state = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
 
     ctx.render_context->make_resident(physical_texture_ptr_, linear_sampler_state);
-    feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
 
+    using namespace scm::math;
+    using namespace scm::gl;
+
+    std::vector<uint32_t> slot_indices(num_feedback_slots_);
+    std::iota(slot_indices.begin(), slot_indices.end(), 0);
+
+    feedback_index_ib_ = ctx.render_device->create_buffer(BIND_INDEX_BUFFER, USAGE_STATIC_DRAW, num_feedback_slots_ * size_of_format(FORMAT_R_32UI), &slot_indices[0]);
+    feedback_index_vb_ = ctx.render_device->create_buffer(BIND_VERTEX_BUFFER, USAGE_DYNAMIC_DRAW, num_feedback_slots_ * size_of_format(FORMAT_R_32UI), 0);
+    feedback_vao_ = ctx.render_device->create_vertex_array(vertex_format(0, 0, TYPE_UINT, size_of_format(FORMAT_R_32UI)), boost::assign::list_of(feedback_index_vb_)); // , shader_vt_feedback_);
+    feedback_inv_index_ = ctx.render_device->create_buffer(BIND_STORAGE_BUFFER, USAGE_DYNAMIC_COPY, num_feedback_slots_ * size_of_format(FORMAT_R_32UI));
+
+    feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
+#ifdef RASTERIZATION_COUNT
     feedback_count_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32UI));
+#endif
 
     physical_texture_address_ubo_ = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW, 4 * sizeof(scm::math::vec2ui));
 
-    ctx.render_context->bind_storage_buffer(feedback_lod_storage_, 0);
-    ctx.render_context->bind_storage_buffer(feedback_count_storage_, 1);
+    ctx.render_context->bind_storage_buffer(feedback_lod_storage_, 2);
+    ctx.render_context->bind_storage_buffer(feedback_inv_index_, 4);
+#ifdef RASTERIZATION_COUNT
+    ctx.render_context->bind_storage_buffer(feedback_count_storage_, 3);
+#endif
 
     upload_physical_texture_handle_to_ubo(ctx);
 
     feedback_lod_cpu_buffer_ = new int32_t[num_feedback_slots_];
+#ifdef RASTERIZATION_COUNT
     feedback_count_cpu_buffer_ = new uint32_t[num_feedback_slots_];
+#endif
 }
 
 void LayeredPhysicalTexture2D::upload_physical_texture_handle_to_ubo(RenderContext const& ctx) const
