@@ -19,49 +19,68 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TRIMESH_RENDERER_HPP
-#define GUA_TRIMESH_RENDERER_HPP
-
-#include <map>
-#include <unordered_map>
+#ifndef GUA_VT_RENDERER_HPP
+#define GUA_VT_RENDERER_HPP
 
 #include <gua/platform.hpp>
 #include <gua/config.hpp>
-#include <gua/renderer/ShaderProgram.hpp>
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 
 #include <scm/gl_core/shader_objects.h>
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-#include <gua/renderer/VTRenderer.hpp>
-#endif
+#include <gua/node/TriMeshNode.hpp>
+
+#include <gua/renderer/ResourceFactory.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
+#include <gua/renderer/Pipeline.hpp>
+
+#include <gua/databases/Resources.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
+
+#include <scm/core/math/math.h>
+#include <scm/core/io/tools.h>
+
+#include <gua/virtual_texturing/VTBackend.hpp>
+
+// lamure headers
+#include <lamure/vt/common.h>
+#include <lamure/vt/VTConfig.h>
+#include <lamure/vt/ren/CutDatabase.h>
+#include <lamure/vt/ren/CutUpdate.h>
+#include <boost/assign.hpp>
 
 namespace gua
 {
-class MaterialShader;
+class RenderContext;
 class Pipeline;
 class PipelinePassDescription;
 
-class TriMeshRenderer
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    : public VTRenderer
-#endif
+struct VTContextState
+{
+    bool has_camera = false;
+    bool feedback_enabled = false;
+};
+
+class VTRenderer
 {
   public:
-    TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+    VTRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
-    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    VTContextState pre_render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void post_render(Pipeline& pipe, PipelinePassDescription const& desc, VTContextState& state);
 
-  private:
-    scm::gl::rasterizer_state_ptr rs_cull_back_;
-    scm::gl::rasterizer_state_ptr rs_cull_none_;
-    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_;
-    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_;
+  protected:
+    scm::gl::program_ptr shader_vt_feedback_;
 
-    std::vector<ShaderProgramStage> program_stages_;
-    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-    SubstitutionMap global_substitution_map_;
+    void _lazy_create_physical_texture(const RenderContext& ctx);
+    void _apply_cut_update(const RenderContext& ctx);
+    void _update_feedback_layout(const RenderContext& ctx);
+    void _collect_feedback(const RenderContext& ctx);
 };
 
 } // namespace gua
+
+#endif
 
 #endif // GUA_TRIMESH_RENDERER_HPP
