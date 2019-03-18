@@ -52,22 +52,14 @@ class GUA_DLL VirtualTexture2D : public Texture
                      std::size_t physical_texture_tile_slot_size,
                      scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
 
-    unsigned width() const override { return physical_texture_width_; }
-    unsigned height() const override { return physical_texture_height_; }
-    unsigned get_physical_texture_width() const { return physical_texture_width_; }
-    unsigned get_physical_texture_height() const { return physical_texture_height_; }
+    unsigned width() const override { return 0; }
+    unsigned height() const override { return 0; }
     uint32_t get_tile_size() const { return tile_size_; }
     uint32_t get_lamure_texture_id() const { return lamure_texture_id_; }
 
     uint32_t get_max_depth() const { return max_depth_; }
 
     void upload_to(RenderContext const& context) const override;
-
-    // per render (gua) contexts
-    static std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>> physical_texture_ptr_per_context_;
-
-    // per render (gua) contexts
-    static std::map<std::size_t, VTInfo> vt_info_per_context_;
 
     // static scm::math::vec2ui get_physical_texture_handle(RenderContext const& ctx) {
     //  return physical_texture_ptr_per_context_[ctx.id]->get_physical_texture_handle(ctx);
@@ -94,8 +86,6 @@ class GUA_DLL VirtualTexture2D : public Texture
     static std::map<std::size_t, scm::gl::buffer_ptr> vt_addresses_ubo_per_context_;
 
     // scm::gl::texture_image_data_ptr image_ = nullptr;
-    unsigned physical_texture_width_;
-    unsigned physical_texture_height_;
     uint16_t tile_size_;
 
     mutable uint32_t max_depth_;
