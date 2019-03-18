@@ -54,10 +54,6 @@
 
 namespace gua
 {
-std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>> VirtualTexture2D::physical_texture_ptr_per_context_ = std::map<std::size_t, std::shared_ptr<LayeredPhysicalTexture2D>>();
-
-std::map<std::size_t, VTInfo> VirtualTexture2D::vt_info_per_context_ = std::map<std::size_t, VTInfo>();
-
 std::map<std::size_t, scm::gl::buffer_ptr> VirtualTexture2D::vt_addresses_ubo_per_context_ = std::map<std::size_t, scm::gl::buffer_ptr>();
 
 bool VirtualTexture2D::initialized_vt_system = false;
