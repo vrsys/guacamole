@@ -1,3 +1,8 @@
+// #define RASTERIZATION_COUNT
+// #define HIGHLIGHT_FEEDBACK_POINT
+
+// #define FINE_DERIVATIVES
+
 struct padded_vt_address{
   uvec2 vt_address;
   ivec2 max_level_and_padding;
@@ -34,26 +39,37 @@ uniform int gua_current_vt_idx;
 const vec2 tile_padding_by_tile_size = pt.tile_padding / pt.tile_size;
 const uint pt_slice_size = pt.dims.x * pt.dims.y;
 
-float dxdy(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint max_level, uint current_level){
-    int max_level_minus_1 = int(max_level) - 1;
-    uint tile_occupation_exponent = (max_level_minus_1)-current_level;
-    uint occupied_index_pixel_per_dimension = uint(1 << tile_occupation_exponent);
-    uvec2 base_xy_offset = index_quadruple.xy;
-    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << (max_level_minus_1)) / vec2(occupied_index_pixel_per_dimension));
+const int ROW_SKIP = 64;
+const int COLUMN_SKIP = 64;
 
-    vec2 c = physical_tile_ratio_xy * 256;
+float dxdy(vec2 texture_sampling_coordinates, uint max_level){
+    vec2 c = texture_sampling_coordinates;
 
-    float dFdxCx = dFdx(c.x);
-    float dFdxCy = dFdx(c.y);
+#ifdef FINE_DERIVATIVES
+    float dFdxCx = dFdxFine(c.x);
+    float dFdxCy = dFdxFine(c.y);
 
-    float dFdyCx = dFdy(c.x);
-    float dFdyCy = dFdy(c.y);
+    float dFdyCx = dFdyFine(c.x);
+    float dFdyCy = dFdyFine(c.y);
+#else
+    float dFdxCx = dFdxCoarse(c.x);
+    float dFdxCy = dFdxCoarse(c.y);
 
-    float rho = max(sqrt(dFdxCx * dFdxCx + dFdxCy * dFdxCy), sqrt(dFdyCx * dFdyCx + dFdyCy * dFdyCy));
+    float dFdyCx = dFdyCoarse(c.x);
+    float dFdyCy = dFdyCoarse(c.y);
+#endif
 
-    float lambda = log2(rho);
+    float dx_sq_norm = dFdxCx * dFdxCx + dFdxCy * dFdxCy;
+    float dy_sq_norm = dFdyCx * dFdyCx + dFdyCy * dFdyCy;
 
-    return lambda - current_level;
+    float sqrho = max(1.f / dx_sq_norm, 1.f / dy_sq_norm);
+
+    if(isinf(sqrho) || isnan(sqrho))
+    {
+        return -float(max_level);
+    }
+
+    return 0.5f * log2(pt.tile_size.x * pt.tile_size.x / sqrho); //a valid trick to avoid sqrt and two log2s
 }
 
 /*
@@ -61,14 +77,6 @@ float dxdy(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint max_le
  */
 vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coordinates, uint current_level, int max_level)
 {
-    // exponent for calculating the occupied pixels in our index texture, based on which level the tile is in
-    int max_level_minus_1 = max_level - 1;
-
-    uint tile_occupation_exponent = (max_level_minus_1)-current_level;
-
-    // 2^tile_occupation_exponent defines how many pixel (of the index texture) are used by the given tile
-    uint occupied_index_pixel_per_dimension = uint(1 << tile_occupation_exponent);
-
     // offset represented as tiles is divided by total num tiles per axis
     // (replace max_width_tiles later by correct uniform)
     // extracting x,y from index texture
@@ -76,7 +84,7 @@ vec4 get_physical_texture_color(uvec4 index_quadruple, vec2 texture_sampling_coo
 
     // base x,y coordinates * number of tiles / number of used index texture pixel
     // taking the factional part by modf
-    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << (max_level_minus_1)) / vec2(occupied_index_pixel_per_dimension));
+    vec2 physical_tile_ratio_xy = fract(texture_sampling_coordinates * (1 << current_level));
 
     // Use only tile_size - 2*tile_padding pixels to render scene
     // Therefore, scale reduced tile size to full size and translate it
@@ -202,44 +210,54 @@ vec4 illustrate_level(int desired_level, idx_tex_positions positions)
 
 vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int max_level)
 {
+    float lambda = -dxdy(texture_coordinates, max_level);
+
+    float mix_ratio = fract(lambda);
+    int desired_level = max(0, min(int(ceil(lambda)), int(max_level)));
+
     idx_tex_positions positions;
 
-    /// Binary-like search for maximum available depth
-    int left = 0;
-    int right = max_level;
-    while(left < right)
+    uvec4 idx_child_pos = textureLod(idx_tex_mm, texture_coordinates, max_level - desired_level).rgba;
+
+    if(idx_child_pos.w == 1u)
     {
-        int i = (left + right) / 2;
-
-        uvec4 idx_child_pos = textureLod(idx_tex_mm, texture_coordinates, max_level - i).rgba;
-
-        if(i == 0)
+        uvec4 idx_parent_pos = textureLod(idx_tex_mm, texture_coordinates, max_level - desired_level + 1).rgba;
+        positions = idx_tex_positions(desired_level - 1, idx_parent_pos, desired_level, idx_child_pos);
+    }
+    else
+    {
+        /// Binary-like search for maximum available depth
+        int left = 0;
+        int right = desired_level;
+        while(left < right)
         {
-            positions = idx_tex_positions(0, idx_child_pos, 0, idx_child_pos);
-            break;
-        }
+            int i = (left + right) / 2;
 
-        if(idx_child_pos.w == 1u)
-        {
-            if(right - i == 1)
+            uvec4 idx_child_pos = textureLod(idx_tex_mm, texture_coordinates, max_level - i).rgba;
+
+            if(i == 0)
             {
-                uvec4 idx_parent_pos = textureLod(idx_tex_mm, texture_coordinates,  max_level - i + 1).rgba;
-                positions = idx_tex_positions(i - 1, idx_parent_pos, i, idx_child_pos);
+                positions = idx_tex_positions(0, idx_child_pos, 0, idx_child_pos);
                 break;
             }
 
-            left = min(i, max_level);
-        }
-        else
-        {
-            right = max(i, 0);
+            if(idx_child_pos.w == 1u)
+            {
+                if(right - i == 1)
+                {
+                    uvec4 idx_parent_pos = textureLod(idx_tex_mm, texture_coordinates, max_level - i + 1).rgba;
+                    positions = idx_tex_positions(i - 1, idx_parent_pos, i, idx_child_pos);
+                    break;
+                }
+
+                left = min(i, desired_level);
+            }
+            else
+            {
+                right = max(i, 0);
+            }
         }
     }
-
-    float lambda = -dxdy(positions.child_idx, texture_coordinates, max_level, positions.child_lvl);
-
-    float mix_ratio = fract(lambda);
-    int desired_level = int(ceil(lambda));
 
     vec4 c;
 #ifdef VIS_1
@@ -258,9 +276,13 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
 
     if(enable_feedback)
     {
-        if(int(gl_FragCoord.x) % 64 == 0 && int(gl_FragCoord.y) % 64 == 0)
+        if(int(gl_FragCoord.x) % COLUMN_SKIP == 0 && int(gl_FragCoord.y) % ROW_SKIP == 0)
         {
             update_feedback(desired_level, positions.child_idx);
+
+#ifdef HIGHLIGHT_FEEDBACK_POINT
+            c = vec4(1., 0., 0., 1.);
+#endif
         }
     }
 
