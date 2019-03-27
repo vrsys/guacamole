@@ -22,6 +22,12 @@ void gua::VTBackend::add_context(uint16_t ctx_id, gua::node::CameraNode& camera)
 }
 void gua::VTBackend::start_backend()
 {
+    if(::vt::VTConfig::CONFIG_PATH.empty())
+    {
+        std::cerr << "VTBackend will not be started, due to undefined configuration file. Check if any VT model is provided";
+        return;
+    }
+
     for(auto cam_ctx : _camera_contexts)
     {
         auto& current_vt_info = vt_info_per_context_[cam_ctx.second];
@@ -32,7 +38,14 @@ void gua::VTBackend::start_backend()
 
     ::vt::CutUpdate::get_instance().start();
 }
-void gua::VTBackend::stop_backend() { ::vt::CutUpdate::get_instance().stop(); }
+void gua::VTBackend::stop_backend()
+{
+    if(::vt::VTConfig::CONFIG_PATH.empty())
+    {
+        return;
+    }
+    ::vt::CutUpdate::get_instance().stop();
+}
 void gua::VTBackend::init_vt(uint16_t ctx_id, gua::node::CameraNode const& cam)
 {
     auto current_vt_info_per_context_iterator = vt_info_per_context_.find(ctx_id);
@@ -81,11 +94,22 @@ void gua::VTBackend::register_cuts(uint16_t ctx_id)
 }
 void gua::VTBackend::add_camera(const std::shared_ptr<gua::node::CameraNode>& camera)
 {
+    if(::vt::VTConfig::CONFIG_PATH.empty())
+    {
+        std::cerr << "VTBackend will not be started, due to undefined configuration file. Check if any VT model is provided";
+        return;
+    }
+
     std::lock_guard<std::mutex> lock(_camera_contexts_mutex);
     add_context((uint16_t)(_camera_contexts.size()), *camera);
 }
 const bool gua::VTBackend::has_camera(size_t uuid) const
 {
+    if(::vt::VTConfig::CONFIG_PATH.empty())
+    {
+        return false;
+    }
+
     for(auto camera : _camera_contexts)
     {
         if(camera.first->uuid() == uuid)
