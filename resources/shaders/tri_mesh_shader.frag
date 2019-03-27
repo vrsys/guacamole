@@ -5,6 +5,13 @@
 @include "common/gua_fragment_shader_input.glsl"
 @include "common/gua_camera_uniforms.glsl"
 
+uniform float gua_texel_width;
+uniform float gua_texel_height;
+
+vec2 gua_get_quad_coords() {
+  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+}
+
 @material_uniforms@
 
 @include "common/gua_fragment_shader_output.glsl"
