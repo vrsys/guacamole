@@ -56,6 +56,13 @@ VTContextState VTRenderer::pre_render(Pipeline &pipe, PipelinePassDescription co
 {
     VTContextState state;
 
+    if(!VirtualTexture2D::initialized_vt_system)
+    {
+        state.has_camera = false;
+        state.feedback_enabled = false;
+        return state;
+    }
+
     state.has_camera = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
     state.feedback_enabled = false;
 

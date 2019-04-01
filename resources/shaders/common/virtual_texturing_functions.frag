@@ -3,16 +3,18 @@
 
 // #define FINE_DERIVATIVES
 
-struct padded_vt_address{
-  uvec2 vt_address;
-  ivec2 max_level_and_padding;
+struct padded_vt_address
+{
+    uvec2 vt_address;
+    ivec2 max_level_and_padding;
 };
 
-struct physical_texture_info_struct {
-  uvec2 address;
-  uvec2 tile_size;
-  vec2  tile_padding;
-  uvec2 dims;
+struct physical_texture_info_struct
+{
+    uvec2 address;
+    uvec2 tile_size;
+    vec2 tile_padding;
+    uvec2 dims;
 };
 
 struct idx_tex_positions
@@ -39,10 +41,11 @@ uniform int gua_current_vt_idx;
 const vec2 tile_padding_by_tile_size = pt.tile_padding / pt.tile_size;
 const uint pt_slice_size = pt.dims.x * pt.dims.y;
 
-const int ROW_SKIP = 64;
-const int COLUMN_SKIP = 64;
+const int ROW_SKIP = 32;
+const int COLUMN_SKIP = 32;
 
-float dxdy(vec2 texture_sampling_coordinates, uint max_level){
+float dxdy(vec2 texture_sampling_coordinates, uint max_level)
+{
     vec2 c = texture_sampling_coordinates;
 
 #ifdef FINE_DERIVATIVES
@@ -69,7 +72,7 @@ float dxdy(vec2 texture_sampling_coordinates, uint max_level){
         return -float(max_level);
     }
 
-    return 0.5f * log2(pt.tile_size.x * pt.tile_size.x / sqrho); //a valid trick to avoid sqrt and two log2s
+    return 0.5f * log2(pt.tile_size.x * pt.tile_size.x / sqrho); // a valid trick to avoid sqrt and two log2s
 }
 
 /*
@@ -128,92 +131,93 @@ vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coo
 // #define VIS_1
 // #define VIS_2
 
-vec4 illustrate_level(int desired_level, idx_tex_positions positions)
+vec4 illustrate_level(int desired_level, idx_tex_positions positions, float mix_ratio)
 {
     vec4 child_color = vec4(0, 0, 0, 1);
     vec4 parent_color = vec4(0, 0, 0, 1);
 
 #ifdef VIS_1
-        vec4 c0 = vec4(0, 0, 0, 1); // black   - level 0 and below
-        vec4 c1 = vec4(0, 0, 1, 1); // blue    - level 1, 8, 15
-        vec4 c2 = vec4(0, 1, 0, 1); // green   - level 2, 9, 16
-        vec4 c3 = vec4(0, 1, 1, 1); // cyan    - level 3, 10
-        vec4 c4 = vec4(1, 0, 0, 1); // red     - level 4, 11
-        vec4 c5 = vec4(1, 0, 1, 1); // magenta - level 5, 12
-        vec4 c6 = vec4(1, 1, 0, 1); // yellow  - level 6, 13
-        vec4 c7 = vec4(1, 1, 1, 1); // white   - level 7, 14
+    vec4 c0 = vec4(0, 0, 0, 1); // black   - level 0 and below
+    vec4 c1 = vec4(0, 0, 1, 1); // blue    - level 1, 8, 15
+    vec4 c2 = vec4(0, 1, 0, 1); // green   - level 2, 9, 16
+    vec4 c3 = vec4(0, 1, 1, 1); // cyan    - level 3, 10
+    vec4 c4 = vec4(1, 0, 0, 1); // red     - level 4, 11
+    vec4 c5 = vec4(1, 0, 1, 1); // magenta - level 5, 12
+    vec4 c6 = vec4(1, 1, 0, 1); // yellow  - level 6, 13
+    vec4 c7 = vec4(1, 1, 1, 1); // white   - level 7, 14
 
-        switch(desired_level)
-        {
-        case -2:
-        case -1:
-        case 0:
-            parent_color = c0;
-            child_color = c0;
-            break;
-        case 1:
-            parent_color = c0;
-            child_color = c1;
-            break;
-        case 2:
-        case 9:
-        case 16:
-            parent_color = c1;
-            child_color = c2;
-            break;
-        case 3:
-        case 10:
-            parent_color = c2;
-            child_color = c3;
-            break;
-        case 4:
-        case 11:
-            parent_color = c3;
-            child_color = c4;
-            break;
-        case 5:
-        case 12:
-            parent_color = c4;
-            child_color = c5;
-            break;
-        case 6:
-        case 13:
-            parent_color = c5;
-            child_color = c6;
-            break;
-        case 7:
-        case 14:
-            parent_color = c6;
-            child_color = c7;
-            break;
-        case 8:
-        case 15:
-            parent_color = c7;
-            child_color = c1;
-        }
+    switch(desired_level)
+    {
+    case -2:
+    case -1:
+    case 0:
+        parent_color = c0;
+        child_color = c0;
+        break;
+    case 1:
+        parent_color = c0;
+        child_color = c1;
+        break;
+    case 2:
+    case 9:
+    case 16:
+        parent_color = c1;
+        child_color = c2;
+        break;
+    case 3:
+    case 10:
+        parent_color = c2;
+        child_color = c3;
+        break;
+    case 4:
+    case 11:
+        parent_color = c3;
+        child_color = c4;
+        break;
+    case 5:
+    case 12:
+        parent_color = c4;
+        child_color = c5;
+        break;
+    case 6:
+    case 13:
+        parent_color = c5;
+        child_color = c6;
+        break;
+    case 7:
+    case 14:
+        parent_color = c6;
+        child_color = c7;
+        break;
+    case 8:
+    case 15:
+        parent_color = c7;
+        child_color = c1;
+    }
 
-        // return vec4(lambda / 16.0f, 0.0f, 0.0f, 1.0f);
+    // return vec4(lambda / 16.0f, 0.0f, 0.0f, 1.0f);
 #endif
 
 #ifdef VIS_2
-        vec4 child_idx = positions.child_idx;
-        float child_lvl = positions.child_lvl;
+    vec4 child_idx = positions.child_idx;
+    float child_lvl = positions.child_lvl;
 
-        child_color = vec4(clamp((child_lvl / 8.0), 0.0, 1.0),
-                           (float(child_idx.x + child_idx.y + child_idx.z) / float(pt.dims.x + pt.dims.y + 0)),
-                           clamp(((child_lvl - 8.0) / 8.0), 0.0, 1.0),
-                           1);
+    vec4 parent_idx = positions.parent_idx;
+    float parent_lvl = positions.parent_lvl;
+
+    child_color = vec4(clamp((child_lvl / 8.0), 0.0, 1.0), (float(child_idx.x + child_idx.y + child_idx.z) / float(pt.dims.x + pt.dims.y + 0)), clamp(((child_lvl - 8.0) / 8.0), 0.0, 1.0), 1);
+    parent_color = vec4(clamp((child_lvl / 8.0), 0.0, 1.0), (float(parent_idx.x + parent_idx.y + parent_idx.z) / float(pt.dims.x + pt.dims.y + 0)), clamp(((parent_lvl - 8.0) / 8.0), 0.0, 1.0), 1);
 #endif
 
-    return child_color;
+    return mix(parent_color, child_color, mix_ratio);
 }
 
 vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int max_level)
 {
     float lambda = -dxdy(texture_coordinates, max_level);
 
-    float mix_ratio = fract(lambda);
     int desired_level = max(0, min(int(ceil(lambda)), int(max_level)));
+    float mix_ratio = (lambda < max_level) ? fract(lambda) : 1.f;
 
     idx_tex_positions positions;
 
@@ -226,6 +230,8 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
     }
     else
     {
+        mix_ratio = 1.f; // No point blending: desired level is not accessible
+
         /// Binary-like search for maximum available depth
         int left = 0;
         int right = desired_level;
@@ -261,11 +267,11 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
 
     vec4 c;
 #ifdef VIS_1
-    c = illustrate_level(desired_level, positions);
+    c = illustrate_level(desired_level, positions, mix_ratio);
 #endif
 
 #ifdef VIS_2
-    c = illustrate_level(desired_level, positions);
+    c = illustrate_level(desired_level, positions, mix_ratio);
 #endif
 
 #ifndef VIS_1
