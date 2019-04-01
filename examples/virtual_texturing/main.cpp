@@ -75,8 +75,8 @@ void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::mat
 
 // #define SECOND_WINDOW
 // #define SECOND_DATASET
-// #define A_BUFFER
-// #define RES_PASS
+#define A_BUFFER
+#define RES_PASS
 #define SCANNED_MODEL_EXPLORATION
 
 int main(int argc, char** argv)
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 #ifdef SCANNED_MODEL_EXPLORATION
     // VT STEP 4/5: - load earth with vt material
     auto earth_geode_1(
-        loader.create_geometry_from_file("earth_geode", vt_model_path, earth_vt_mat, /*gua::TriMeshLoader::NORMALIZE_SCALE |*/ gua::TriMeshLoader::NORMALIZE_POSITION |
+        loader.create_geometry_from_file("earth_geode", vt_model_path, earth_vt_mat, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION |
     gua::TriMeshLoader::MAKE_PICKABLE));
 #else
     // VT STEP 4/5: - load earth with vt material
@@ -229,8 +229,8 @@ int main(int argc, char** argv)
     resolve_pass->tone_mapping_exposure(1.0f);
     pipe->add_pass(resolve_pass);
 #endif
-    pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
     // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 #ifdef A_BUFFER
     pipe->set_enable_abuffer(true);
 #endif

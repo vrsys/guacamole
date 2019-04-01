@@ -96,7 +96,7 @@ void TextureDatabase::load(std::string const& filename)
         std::shared_ptr<VirtualTexture2D> vt_pointer = nullptr;
         if(!occurrence_check)
         {
-            vt_pointer = std::make_shared<VirtualTexture2D>(filename, 256, scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
+            vt_pointer = std::make_shared<VirtualTexture2D>(filename, scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
             instance()->add(filename, vt_pointer);
         }
 
