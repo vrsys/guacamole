@@ -41,8 +41,8 @@ uniform int gua_current_vt_idx;
 const vec2 tile_padding_by_tile_size = pt.tile_padding / pt.tile_size;
 const uint pt_slice_size = pt.dims.x * pt.dims.y;
 
-const int ROW_SKIP = 64;
-const int COLUMN_SKIP = 64;
+const int ROW_SKIP = 32;
+const int COLUMN_SKIP = 32;
 
 float dxdy(vec2 texture_sampling_coordinates, uint max_level)
 {
@@ -125,13 +125,13 @@ vec4 mix_colors(idx_tex_positions positions, int desired_level, vec2 texture_coo
     vec4 child_color = get_physical_texture_color(positions.child_idx, texture_coordinates, positions.child_lvl, max_level);
     vec4 parent_color = get_physical_texture_color(positions.parent_idx, texture_coordinates, positions.parent_lvl, max_level);
 
-    return mix(parent_color, child_color, 1.f - mix_ratio);
+    return mix(parent_color, child_color, mix_ratio);
 }
 
 // #define VIS_1
 // #define VIS_2
 
-vec4 illustrate_level(int desired_level, idx_tex_positions positions)
+vec4 illustrate_level(int desired_level, idx_tex_positions positions, float mix_ratio)
 {
     vec4 child_color = vec4(0, 0, 0, 1);
     vec4 parent_color = vec4(0, 0, 0, 1);
@@ -202,10 +202,14 @@ vec4 illustrate_level(int desired_level, idx_tex_positions positions)
     vec4 child_idx = positions.child_idx;
     float child_lvl = positions.child_lvl;
 
+    vec4 parent_idx = positions.parent_idx;
+    float parent_lvl = positions.parent_lvl;
+
     child_color = vec4(clamp((child_lvl / 8.0), 0.0, 1.0), (float(child_idx.x + child_idx.y + child_idx.z) / float(pt.dims.x + pt.dims.y + 0)), clamp(((child_lvl - 8.0) / 8.0), 0.0, 1.0), 1);
+    parent_color = vec4(clamp((child_lvl / 8.0), 0.0, 1.0), (float(parent_idx.x + parent_idx.y + parent_idx.z) / float(pt.dims.x + pt.dims.y + 0)), clamp(((parent_lvl - 8.0) / 8.0), 0.0, 1.0), 1);
 #endif
 
-    return child_color;
+    return mix(parent_color, child_color, mix_ratio);
 }
 
 vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int max_level)
@@ -213,7 +217,7 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
     float lambda = -dxdy(texture_coordinates, max_level);
 
     int desired_level = max(0, min(int(ceil(lambda)), int(max_level)));
-    float mix_ratio = (lambda < max_level) ? fract(lambda) : 0.f;
+    float mix_ratio = (lambda < max_level) ? fract(lambda) : 1.f;
 
     idx_tex_positions positions;
 
@@ -226,6 +230,8 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
     }
     else
     {
+        mix_ratio = 1.f; // No point blending: desired level is not accessible
+
         /// Binary-like search for maximum available depth
         int left = 0;
         int right = desired_level;
@@ -261,11 +267,11 @@ vec4 traverse_idx_hierarchy(vec2 texture_coordinates, usampler2D idx_tex_mm, int
 
     vec4 c;
 #ifdef VIS_1
-    c = illustrate_level(desired_level, positions);
+    c = illustrate_level(desired_level, positions, mix_ratio);
 #endif
 
 #ifdef VIS_2
-    c = illustrate_level(desired_level, positions);
+    c = illustrate_level(desired_level, positions, mix_ratio);
 #endif
 
 #ifndef VIS_1
