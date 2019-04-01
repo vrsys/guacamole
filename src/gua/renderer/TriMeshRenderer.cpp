@@ -75,7 +75,10 @@ VTRenderer(ctx, smap),
 void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc)
 {
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    auto vt_state = pre_render(pipe, desc);
+    VTContextState vt_state;
+    if(!pipe.current_viewstate().shadow_mode){
+        vt_state = pre_render(pipe, desc);
+    }
 #endif
 
     auto &scene = *pipe.current_viewstate().scene;
@@ -144,8 +147,11 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
                         current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
 #else
-                        bool virtual_texturing_enabled = tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        if(!pipe.current_viewstate().shadow_mode)
+                        {
+                            bool virtual_texturing_enabled = tri_mesh_node->get_material()->get_enable_virtual_texturing();
+                            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        }
 #endif
                         programs_[current_material] = current_shader;
                     }
@@ -165,9 +171,12 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
                     current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                    if(vt_state.has_camera)
+                    if(!pipe.current_viewstate().shadow_mode)
                     {
-                        current_shader->set_uniform(ctx, vt_state.feedback_enabled, "enable_feedback");
+                        if (vt_state.has_camera)
+                        {
+                            current_shader->set_uniform(ctx, vt_state.feedback_enabled, "enable_feedback");
+                        }
                     }
 #endif
                 }
@@ -240,7 +249,10 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
     }
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    post_render(pipe, desc, vt_state);
+    if(!pipe.current_viewstate().shadow_mode)
+    {
+        post_render(pipe, desc, vt_state);
+    }
 #endif
 }
 
