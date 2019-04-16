@@ -77,7 +77,7 @@ void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::mat
 // #define SECOND_DATASET
 #define A_BUFFER
 #define RES_PASS
-#define SCANNED_MODEL_EXPLORATION
+// #define SCANNED_MODEL_EXPLORATION
 
 int main(int argc, char** argv)
 {

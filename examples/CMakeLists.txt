@@ -58,6 +58,9 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-lod})
     add_subdirectory(lod_mesh_textured)
     add_subdirectory(lod_simple)
+    IF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
+      add_subdirectory(lod_mesh_virtually_textured)
+    ENDIF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
   ENDIF (${PLUGIN_guacamole-lod})
 
   # time-varying volume example requires tv_3-plugin
