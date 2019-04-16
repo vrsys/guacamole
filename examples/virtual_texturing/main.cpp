@@ -77,7 +77,7 @@ void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::mat
 // #define SECOND_DATASET
 #define A_BUFFER
 #define RES_PASS
-#define SCANNED_MODEL_EXPLORATION
+// #define SCANNED_MODEL_EXPLORATION
 
 int main(int argc, char** argv)
 {
@@ -96,8 +96,8 @@ int main(int argc, char** argv)
     vt_model_path = "/mnt/pitoti/3d_pitoti/Vianden/Aussen_gesamt/VIANDEN_normals_vt.obj";
     vt_texture_path = "/mnt/pitoti/3d_pitoti/Vianden/Aussen_gesamt/fullRes/vianden_concat.atlas";
 
-    //vt_model_path = "/mnt/pitoti/3d_pitoti/Vianden/Innen_gesamt/Innenraeume_Gesamt_vt.obj";
-    //vt_texture_path = "/mnt/pitoti/3d_pitoti/Vianden/Innen_gesamt/fullRes/vianden_innen_concat.atlas";
+    // vt_model_path = "/mnt/pitoti/3d_pitoti/Vianden/Innen_gesamt/Innenraeume_Gesamt_vt.obj";
+    // vt_texture_path = "/mnt/pitoti/3d_pitoti/Vianden/Innen_gesamt/fullRes/vianden_innen_concat.atlas";
 #endif
 
     if(argc < 3)
@@ -138,8 +138,7 @@ int main(int argc, char** argv)
 #ifdef SCANNED_MODEL_EXPLORATION
     // VT STEP 4/5: - load earth with vt material
     auto earth_geode_1(
-        loader.create_geometry_from_file("earth_geode", vt_model_path, earth_vt_mat, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION |
-    gua::TriMeshLoader::MAKE_PICKABLE));
+        loader.create_geometry_from_file("earth_geode", vt_model_path, earth_vt_mat, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE));
 #else
     // VT STEP 4/5: - load earth with vt material
     auto earth_geode_1(loader.create_geometry_from_file("earth_geode", vt_model_path, earth_vt_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::MAKE_PICKABLE));

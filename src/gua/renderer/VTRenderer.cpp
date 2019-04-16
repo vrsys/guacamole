@@ -111,7 +111,6 @@ void VTRenderer::post_render(Pipeline &pipe, PipelinePassDescription const &desc
         if(state.feedback_enabled && should_collect)
         {
             _collect_feedback(ctx);
-            ctx.render_context->sync();
         }
     }
 }
@@ -289,6 +288,8 @@ void VTRenderer::_update_feedback_layout(const RenderContext &ctx)
 }
 void VTRenderer::_collect_feedback(gua::RenderContext const &ctx)
 {
+    ctx.render_context->sync();
+
     auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
     auto &current_vt_info = vt_info_per_context[ctx.id];
 
