@@ -49,11 +49,10 @@ class VTRenderer;
 class GUA_DLL VirtualTexture2D : public Texture
 {
   public:
-
     friend VTRenderer;
 
     explicit VirtualTexture2D(std::string const& file,
-                     scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
+                              scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
 
     unsigned width() const override { return 0; }
     unsigned height() const override { return 0; }
