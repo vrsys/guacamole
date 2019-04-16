@@ -26,6 +26,9 @@
 #include <map>
 #include <unordered_map>
 
+#include <gua/platform.hpp>
+#include <gua/config.hpp>
+
 // guacamole headers
 #include <gua/renderer/Lod.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -36,6 +39,12 @@
 // external headers
 #include <lamure/ren/cut_database_record.h>
 
+#include <gua/node/MLodNode.hpp>
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/renderer/VTRenderer.hpp>
+#endif
+
 namespace gua
 {
 class MaterialShader;
@@ -44,10 +53,12 @@ class PipelinePassDescription;
 class ShaderProgram;
 
 class GUA_LOD_DLL MLodRenderer
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    : public VTRenderer
+#endif
 {
   public:
-    MLodRenderer();
-    virtual ~MLodRenderer(){};
+    MLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
@@ -55,9 +66,9 @@ class GUA_LOD_DLL MLodRenderer
     void create_state_objects(RenderContext const& ctx);
 
   private: // lamure auxiliary methods
-    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed);
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed, gua::node::MLodNode* mlod_node);
 
-    void _initialize_tri_mesh_lod_program(MaterialShader* material);
+    void _initialize_tri_mesh_lod_program(MaterialShader* material, gua::node::MLodNode* mlod_node);
 
     lamure::context_t _lamure_register_context(gua::RenderContext const& ctx);
 
