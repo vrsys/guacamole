@@ -48,9 +48,10 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRenderer::TriMeshRenderer(RenderContext const &ctx, SubstitutionMap const &smap):
+TriMeshRenderer::TriMeshRenderer(RenderContext const &ctx, SubstitutionMap const &smap)
+    :
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-VTRenderer(ctx, smap),
+      VTRenderer(ctx, smap),
 #endif
       rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK)),
       rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),
@@ -74,10 +75,47 @@ VTRenderer(ctx, smap),
 
 void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc)
 {
+    RenderContext const &ctx(pipe.get_context());
+
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    const auto passes = pipe.current_viewstate().camera.pipeline_description->get_passes();
+
+    int trimesh_position{INT_MAX}, mlod_position{INT_MAX};
+
+    for(int i = 0; i < passes.size(); i++)
+    {
+        if(passes[i]->name() == "TriMeshPass")
+        {
+            trimesh_position = i;
+        }
+
+        if(passes[i]->name() == "MLodPass")
+        {
+            mlod_position = i;
+        }
+    }
+
     VTContextState vt_state;
-    if(!pipe.current_viewstate().shadow_mode){
-        vt_state = pre_render(pipe, desc);
+    if(trimesh_position < mlod_position || mlod_position == INT_MAX)
+    {
+        if(!pipe.current_viewstate().shadow_mode)
+        {
+            vt_state = pre_render(pipe, desc);
+        }
+    }
+    else
+    {
+        auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
+        auto &current_vt_info = vt_info_per_context[ctx.id];
+
+        if(current_vt_info.cut_update_ == nullptr)
+        {
+            vt_state.has_camera = false;
+            vt_state.feedback_enabled = false;
+        }
+
+        vt_state.has_camera = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
+        vt_state.feedback_enabled = current_vt_info.cut_update_->can_accept_feedback(current_vt_info.context_id_);
     }
 #endif
 
@@ -92,8 +130,6 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
         std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node *a, node::Node *b) {
             return reinterpret_cast<node::TriMeshNode *>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode *>(b)->get_material()->get_shader();
         });
-
-        RenderContext const &ctx(pipe.get_context());
 
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
         std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -173,7 +209,7 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
                     if(!pipe.current_viewstate().shadow_mode)
                     {
-                        if (vt_state.has_camera)
+                        if(vt_state.has_camera)
                         {
                             current_shader->set_uniform(ctx, vt_state.feedback_enabled, "enable_feedback");
                         }
@@ -249,9 +285,12 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
     }
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    if(!pipe.current_viewstate().shadow_mode)
+    if(trimesh_position > mlod_position || mlod_position == INT_MAX)
     {
-        post_render(pipe, desc, vt_state);
+        if(!pipe.current_viewstate().shadow_mode)
+        {
+            post_render(pipe, desc, vt_state);
+        }
     }
 #endif
 }
