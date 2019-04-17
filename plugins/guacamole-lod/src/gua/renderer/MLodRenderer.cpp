@@ -173,7 +173,6 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
             mlod_position = i;
         }
     }
-
     VTContextState vt_state;
     if(mlod_position < trimesh_position || trimesh_position == INT_MAX)
     {
@@ -206,8 +205,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     auto const& frustum = pipe.current_viewstate().frustum;
     auto& target = *pipe.current_viewstate().target;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //  obtain nodes
@@ -345,10 +346,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         }
     }
 
-    // scm::gl::context_all_guard context_guard(ctx.render_context);
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / MLodRenderer";
     pipe.begin_gpu_query(ctx, gpu_query_name);
+#endif
 
     MaterialShader* current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_material_program;
@@ -453,8 +454,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     //////////////////////////////////////////////////////////////////////////
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ctx.render_context->reset_state_objects();
 

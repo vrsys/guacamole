@@ -99,8 +99,10 @@ void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
         pipe.bind_gbuffer_input(shader_);
         pipe.bind_light_table(shader_);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
         pipe.begin_gpu_query(ctx, gpu_query_name);
+#endif
 
         if(RenderMode::Callback == rendermode_)
         {
@@ -111,7 +113,9 @@ void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
             pipe.draw_quad();
         }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
+#endif
 
         target.unbind(ctx);
         ctx.render_context->reset_state_objects();

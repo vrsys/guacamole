@@ -54,11 +54,13 @@ void DepthCubeMapRenderer::render(Pipeline &pipe, PipelinePassDescription const 
             needs_rendering_ = std::make_pair(ctx.framecount, std::vector<std::size_t>());
         }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
         std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthCubeMapPass";
 
         pipe.begin_gpu_query(ctx, gpu_query_name);
         pipe.begin_cpu_query(cpu_query_name);
+#endif
 
         for(auto const &object : cube_map_nodes->second)
         {
@@ -95,8 +97,10 @@ void DepthCubeMapRenderer::render(Pipeline &pipe, PipelinePassDescription const 
             }
         }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
+#endif
     }
 
     face_counter_ = (face_counter_ + 1) % 6; // cycle throgh sides

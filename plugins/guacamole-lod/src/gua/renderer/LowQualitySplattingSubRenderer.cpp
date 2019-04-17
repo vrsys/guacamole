@@ -71,8 +71,10 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
     std::shared_ptr<ShaderProgram> current_material_program;
     bool program_changed = false;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
 
     int view_id(camera.config.get_view_id());
 
@@ -122,7 +124,9 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
     }
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
 }
 
 void LowQualitySplattingSubRenderer::_load_shaders()

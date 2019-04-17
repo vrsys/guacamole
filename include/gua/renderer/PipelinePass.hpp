@@ -80,7 +80,7 @@ class GUA_DLL PipelinePassDescription
     boost::optional<scm::gl::blend_state_desc> blend_state_;
     boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
 
-    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) { return; };
+    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {};
 
   public:
     std::map<std::string, UniformValue> uniforms;

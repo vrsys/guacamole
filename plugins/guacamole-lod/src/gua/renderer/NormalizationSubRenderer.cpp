@@ -59,8 +59,10 @@ void NormalizationSubRenderer::render_sub_pass(Pipeline& pipe,
     bool write_depth = true;
     target.bind(ctx, write_depth);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name_normalization_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::NormalizationPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_normalization_pass);
+#endif
 
     shader_program_->use(ctx);
     {
@@ -74,7 +76,9 @@ void NormalizationSubRenderer::render_sub_pass(Pipeline& pipe,
 
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_normalization_pass);
+#endif
 }
 
 void NormalizationSubRenderer::_load_shaders()

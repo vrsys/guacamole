@@ -612,18 +612,18 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const { get_context(
 void Pipeline::draw_quad() { quad_->draw(context_.render_context); }
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 void Pipeline::begin_cpu_query(std::string const &query_name)
 {
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     queries_.cpu_queries[query_name] = start_time;
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 void Pipeline::end_cpu_query(std::string const &query_name)
 {
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     assert(queries_.cpu_queries.count(query_name));
 
     std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
@@ -631,15 +631,13 @@ void Pipeline::end_cpu_query(std::string const &query_name)
 
     double mcs = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
     queries_.results[query_name] = mcs / 1000.0;
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 void Pipeline::begin_gpu_query(RenderContext const &ctx, std::string const &name)
 {
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-
     if(ctx.framecount < 50)
     {
         queries_.gpu_queries.clear();
@@ -676,15 +674,13 @@ void Pipeline::begin_gpu_query(RenderContext const &ctx, std::string const &name
     {
         // query dispatch failed
     }
-
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 void Pipeline::end_gpu_query(RenderContext const &ctx, std::string const &name)
 {
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     // query started
     if(queries_.gpu_queries.count(name))
     {
@@ -700,14 +696,13 @@ void Pipeline::end_gpu_query(RenderContext const &ctx, std::string const &name)
             return;
         }
     }
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 void Pipeline::fetch_gpu_query_results(RenderContext const &ctx)
 {
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     bool queries_ready = true;
     for(auto &q : queries_.gpu_queries)
     {
@@ -727,8 +722,8 @@ void Pipeline::fetch_gpu_query_results(RenderContext const &ctx)
 
         queries_.gpu_queries.clear();
     }
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
