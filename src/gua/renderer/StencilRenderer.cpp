@@ -60,11 +60,13 @@ void StencilRenderer::render(Pipeline &pipe, std::shared_ptr<ShaderProgram> cons
     {
         RenderContext const &ctx(pipe.get_context());
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
         std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
 
         pipe.begin_gpu_query(ctx, gpu_query_name);
         pipe.begin_cpu_query(cpu_query_name);
+#endif
 
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
@@ -102,8 +104,10 @@ void StencilRenderer::render(Pipeline &pipe, std::shared_ptr<ShaderProgram> cons
             }
         }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
+#endif
 
         ctx.render_context->reset_state_objects();
     }

@@ -422,8 +422,10 @@ void TV_3Renderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     auto const& camera = pipe.current_viewstate().camera;
     auto const& frustum = pipe.current_viewstate().frustum;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //  sort nodes
@@ -458,7 +460,9 @@ void TV_3Renderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 
     _postprocessing_pass(pipe, desc);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_cpu_query(cpu_query_name_plod_total);
+#endif
 
     // dispatch cut updates
     if(previous_frame_count_ != ctx.framecount)
