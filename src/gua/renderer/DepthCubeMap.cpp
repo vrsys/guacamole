@@ -34,12 +34,13 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-DepthCubeMap::DepthCubeMap(RenderContext const &ctx, math::vec2ui const &resolution, std::string const &tex_name)
+DepthCubeMap::DepthCubeMap(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& tex_name)
     : RenderTarget(resolution), fbo_(nullptr), texture_distance_(nullptr), depth_buffer_(nullptr), viewport_offset_(math::vec2f(0.f, 0.f)), viewport_size_(math::vec2f(resolution))
 {
     scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_LINEAR,
                                       // scm::gl::FILTER_ANISOTROPIC,
-                                      scm::gl::WRAP_CLAMP_TO_EDGE, scm::gl::WRAP_CLAMP_TO_EDGE);
+                                      scm::gl::WRAP_CLAMP_TO_EDGE,
+                                      scm::gl::WRAP_CLAMP_TO_EDGE);
     state._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
     state._max_anisotropy = 16;
 
@@ -53,15 +54,15 @@ DepthCubeMap::DepthCubeMap(RenderContext const &ctx, math::vec2ui const &resolut
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::clear(RenderContext const &ctx, float depth, unsigned stencil) { ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil); }
+void DepthCubeMap::clear(RenderContext const& ctx, float depth, unsigned stencil) { ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::bind(RenderContext const &ctx, bool write_depth) { ctx.render_context->set_frame_buffer(fbo_); }
+void DepthCubeMap::bind(RenderContext const& ctx, bool write_depth) { ctx.render_context->set_frame_buffer(fbo_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::set_viewport(RenderContext const &ctx)
+void DepthCubeMap::set_viewport(RenderContext const& ctx)
 {
     if(ctx.render_context)
     {
@@ -71,19 +72,19 @@ void DepthCubeMap::set_viewport(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::set_viewport_offset(math::vec2f const &offset) { viewport_offset_ = offset; }
+void DepthCubeMap::set_viewport_offset(math::vec2f const& offset) { viewport_offset_ = offset; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::set_viewport_size(math::vec2f const &size) { viewport_size_ = size; }
+void DepthCubeMap::set_viewport_size(math::vec2f const& size) { viewport_size_ = size; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr const &DepthCubeMap::get_depth_buffer() const { return depth_buffer_; }
+scm::gl::texture_2d_ptr const& DepthCubeMap::get_depth_buffer() const { return depth_buffer_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::remove_buffers(RenderContext const &ctx)
+void DepthCubeMap::remove_buffers(RenderContext const& ctx)
 {
     unbind(ctx);
 
@@ -97,7 +98,7 @@ void DepthCubeMap::remove_buffers(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DepthCubeMap::retrieve_data(RenderContext const &ctx, float near_clip, float far_clip) { texture_distance_->download_data(ctx, near_clip, far_clip); }
+void DepthCubeMap::retrieve_data(RenderContext const& ctx, float near_clip, float far_clip) { texture_distance_->download_data(ctx, near_clip, far_clip); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

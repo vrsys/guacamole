@@ -29,6 +29,9 @@ namespace gua
 {
 class Pipeline;
 class PipelinePass;
+class PipelinePassDescription;
+class PipelineResponsibility;
+class PipelineResponsibilityDescription;
 struct RenderContext;
 
 enum class RenderMode
@@ -38,14 +41,30 @@ enum class RenderMode
     Quad
 };
 
+class GUA_DLL PipelinePassPrivate
+{
+  public:
+    boost::optional<scm::gl::rasterizer_state_desc> rasterizer_state_desc_;
+    boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_desc_;
+    boost::optional<scm::gl::blend_state_desc> blend_state_desc_;
+
+    bool needs_color_buffer_as_input_{false};
+    bool writes_only_color_buffer_{false};
+    bool enable_for_shadows_{false};
+    RenderMode rendermode_{RenderMode::Custom};
+    std::string name_{"PipelinePass"};
+
+    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_;
+};
+
 class GUA_DLL PipelinePassDescription
 {
   public:
-    virtual std::shared_ptr<PipelinePassDescription> make_copy() const = 0;
-    virtual ~PipelinePassDescription() {}
-
     friend class Pipeline;
     friend class PipelinePass;
+
+    virtual std::shared_ptr<PipelinePassDescription> make_copy() const = 0;
+    virtual ~PipelinePassDescription() {}
 
     void touch();
     std::string const& name() const;
@@ -55,39 +74,28 @@ class GUA_DLL PipelinePassDescription
     virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) = 0;
     friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
 
-    virtual void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const {};
     // shader names
     std::string vertex_shader_ = "";
     std::string fragment_shader_ = "";
     std::string geometry_shader_ = "";
-    std::string name_ = "";
 
     bool vertex_shader_is_file_name_ = true;
     bool fragment_shader_is_file_name_ = true;
     bool geometry_shader_is_file_name_ = true;
 
-    bool needs_color_buffer_as_input_ = false;
-    bool writes_only_color_buffer_ = false;
-
-    bool enable_for_shadows_ = false;
     unsigned mod_count_ = 0;
-
     mutable bool recompile_shaders_ = true;
 
-    RenderMode rendermode_ = RenderMode::Custom;
-
-    boost::optional<scm::gl::rasterizer_state_desc> rasterizer_state_;
-    boost::optional<scm::gl::blend_state_desc> blend_state_;
-    boost::optional<scm::gl::depth_stencil_state_desc> depth_stencil_state_;
-
-    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) {};
+    PipelinePassPrivate private_;
+    std::vector<std::shared_ptr<PipelineResponsibilityDescription>> pipeline_responsibilities_;
 
   public:
     std::map<std::string, UniformValue> uniforms;
 
     void set_user_data(void* data) { user_data_ = data; }
-
     void* get_user_data() const { return user_data_; }
+
+    const std::vector<std::shared_ptr<PipelineResponsibilityDescription>>& get_responsibilities() const;
 
   private:
     void* user_data_ = nullptr;
@@ -96,39 +104,91 @@ class GUA_DLL PipelinePassDescription
 class GUA_DLL PipelinePass
 {
   public:
-    inline bool needs_color_buffer_as_input() const { return needs_color_buffer_as_input_; }
-    inline bool writes_only_color_buffer() const { return writes_only_color_buffer_; }
-    inline bool enable_for_shadows() const { return enable_for_shadows_; }
+    friend class Pipeline;
+
+    bool needs_color_buffer_as_input() const;
+    bool writes_only_color_buffer() const;
+    bool enable_for_shadows() const;
+
+    scm::gl::rasterizer_state_ptr rasterizer_state() const;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state() const;
+    scm::gl::blend_state_ptr blend_state() const;
+    std::shared_ptr<ShaderProgram> shader() const;
 
     void process(PipelinePassDescription const& desc, Pipeline& pipe);
 
+    PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
+    ~PipelinePass() = default;
+
     virtual void on_delete(Pipeline* pipe) {}
 
-    friend class Pipeline;
-
   protected:
-  public: // for refactoring purposes
     PipelinePass() = default;
-    PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
 
     virtual void upload_program(PipelinePassDescription const& desc, RenderContext const& ctx);
 
-    std::shared_ptr<ShaderProgram> shader_ = nullptr;
-
-    scm::gl::rasterizer_state_ptr rasterizer_state_ = nullptr;
-    scm::gl::depth_stencil_state_ptr depth_stencil_state_ = nullptr;
-    scm::gl::blend_state_ptr blend_state_ = nullptr;
-
-    bool needs_color_buffer_as_input_ = false;
-    bool writes_only_color_buffer_ = false;
-    bool enable_for_shadows_ = false;
-    RenderMode rendermode_ = RenderMode::Custom;
-    std::string name_ = "PipelinePass";
-
-    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_ = [](PipelinePass&, PipelinePassDescription const&, Pipeline&) { return; };
+    scm::gl::rasterizer_state_ptr rasterizer_state_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+    scm::gl::blend_state_ptr blend_state_;
+    std::shared_ptr<ShaderProgram> shader_;
 
   private:
+    PipelinePassPrivate private_;
     SubstitutionMap substitution_map_;
+};
+
+class GUA_DLL PipelineResponsibilityPrivate
+{
+  public:
+    enum TYPE
+    {
+        PRE_RENDER = 0,
+        POST_RENDER = 1
+    };
+
+    TYPE type_{PRE_RENDER};
+    std::string name_{""};
+    std::function<void(Pipeline& pipe)> fulfil_ = [](Pipeline& pipe) {};
+};
+
+class GUA_DLL PipelineResponsibility
+{
+  public:
+    friend class PipelineResponsibilityDescription;
+
+    ~PipelineResponsibility() = default;
+
+    PipelineResponsibilityPrivate::TYPE type() const { return private_.type_; }
+    std::string name() const { return private_.name_; }
+
+    void fulfil(Pipeline& pipe) { private_.fulfil_(pipe); }
+
+  protected:
+    PipelineResponsibility(PipelineResponsibilityDescription const& desc, Pipeline& pipe);
+
+  private:
+    PipelineResponsibilityPrivate private_;
+};
+
+class GUA_DLL PipelineResponsibilityDescription
+{
+  public:
+    friend class Pipeline;
+    friend class PipelineResponsibility;
+
+    PipelineResponsibilityDescription() = default;
+    ~PipelineResponsibilityDescription() = default;
+
+  protected:
+    virtual PipelineResponsibility make_responsibility(Pipeline& pipe)
+    {
+        PipelineResponsibility responsibility(*this, pipe);
+        return responsibility;
+    };
+
+    PipelineResponsibilityPrivate private_;
+    friend bool operator==(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs);
+    friend bool operator!=(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs);
 };
 
 } // namespace gua

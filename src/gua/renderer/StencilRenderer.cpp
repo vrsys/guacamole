@@ -42,7 +42,7 @@ StencilRenderer::StencilRenderer() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void StencilRenderer::create_state_objects(RenderContext const &ctx)
+void StencilRenderer::create_state_objects(RenderContext const& ctx)
 {
     rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
     rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
@@ -50,15 +50,15 @@ void StencilRenderer::create_state_objects(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void StencilRenderer::render(Pipeline &pipe, std::shared_ptr<ShaderProgram> const &shader)
+void StencilRenderer::render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader)
 {
-    auto const &scene = *pipe.current_viewstate().scene;
+    auto const& scene = *pipe.current_viewstate().scene;
 
     auto objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
     if(objects != scene.nodes.end() && objects->second.size() > 0)
     {
-        RenderContext const &ctx(pipe.get_context());
+        RenderContext const& ctx(pipe.get_context());
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
@@ -72,9 +72,9 @@ void StencilRenderer::render(Pipeline &pipe, std::shared_ptr<ShaderProgram> cons
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
-        for(auto const &object : objects->second)
+        for(auto const& object : objects->second)
         {
-            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode *>(object));
+            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
 
             if(!tri_mesh_node->get_render_to_stencil_buffer())
             {

@@ -24,13 +24,13 @@
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
-ViewDependentUniform::ViewDependentUniform(UniformValue const &value) : default_(value) {}
+ViewDependentUniform::ViewDependentUniform(UniformValue const& value) : default_(value) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-UniformValue const &ViewDependentUniform::get() const { return default_; }
+UniformValue const& ViewDependentUniform::get() const { return default_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-UniformValue const &ViewDependentUniform::get(int view) const
+UniformValue const& ViewDependentUniform::get(int view) const
 {
     auto overwrite(uniforms_.find(view));
     if(overwrite != uniforms_.end())
@@ -41,16 +41,16 @@ UniformValue const &ViewDependentUniform::get(int view) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ViewDependentUniform::set(UniformValue const &value) { default_ = value; }
+void ViewDependentUniform::set(UniformValue const& value) { default_ = value; }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ViewDependentUniform::set(int view, UniformValue const &value) { uniforms_[view] = value; }
+void ViewDependentUniform::set(int view, UniformValue const& value) { uniforms_[view] = value; }
 
 ////////////////////////////////////////////////////////////////////////////////
 void ViewDependentUniform::reset(int view) { uniforms_.erase(view); }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ViewDependentUniform::apply(RenderContext const &ctx, std::string const &name, int view, scm::gl::program_ptr const &prog, unsigned location) const
+void ViewDependentUniform::apply(RenderContext const& ctx, std::string const& name, int view, scm::gl::program_ptr const& prog, unsigned location) const
 {
     try
     {
@@ -64,20 +64,20 @@ void ViewDependentUniform::apply(RenderContext const &ctx, std::string const &na
             default_.apply(ctx, name, prog, location);
         }
     }
-    catch(std::exception &e)
+    catch(std::exception& e)
     {
         Logger::LOG_WARNING << "Error: ViewDependentUniform::apply(): Unable to apply ViewDependentUniform.\n";
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::ostream &ViewDependentUniform::serialize_to_stream(std::ostream &os) const
+std::ostream& ViewDependentUniform::serialize_to_stream(std::ostream& os) const
 {
     // default value gets view id -1
     default_.serialize_to_stream(os);
     os << "|-1,";
 
-    for(auto &uniform : uniforms_)
+    for(auto& uniform : uniforms_)
     {
         uniform.second.serialize_to_stream(os);
         os << "|" << uniform.first << ",";
@@ -87,12 +87,12 @@ std::ostream &ViewDependentUniform::serialize_to_stream(std::ostream &os) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-ViewDependentUniform ViewDependentUniform::create_from_serialized_string(std::string const &value)
+ViewDependentUniform ViewDependentUniform::create_from_serialized_string(std::string const& value)
 {
     ViewDependentUniform new_uniform;
 
     auto tokens(string_utils::split(value, ','));
-    for(auto &token : tokens)
+    for(auto& token : tokens)
     {
         auto parts(string_utils::split(token, '|'));
         std::stringstream id_string(parts[2]);
@@ -113,6 +113,6 @@ ViewDependentUniform ViewDependentUniform::create_from_serialized_string(std::st
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::ostream &operator<<(std::ostream &os, ViewDependentUniform const &val) { return val.serialize_to_stream(os); }
+std::ostream& operator<<(std::ostream& os, ViewDependentUniform const& val) { return val.serialize_to_stream(os); }
 
 } // namespace gua

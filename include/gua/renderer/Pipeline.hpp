@@ -99,7 +99,10 @@ class GUA_DLL Pipeline
 
     scm::gl::texture_2d_ptr render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-    void apply_post_render_actions(RenderContext const& ctx);
+    void load_passes_and_responsibilities();
+
+    void fulfil_pre_render_responsibilities(RenderContext const& ctx);
+    void fulfil_post_render_responsibilities(RenderContext const& ctx);
 
     void generate_shadow_map(node::LightNode& light, LightTable::LightBlock& light_block);
 
@@ -152,6 +155,8 @@ class GUA_DLL Pipeline
     SubstitutionMap global_substitution_map_;
 
     std::vector<PipelinePass> passes_;
+    std::vector<PipelineResponsibility> responsibilities_pre_render_;
+    std::vector<PipelineResponsibility> responsibilities_post_render_;
     scm::gl::quad_geometry_ptr quad_;
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 #define GUA_ENABLE_PROFILING_TIME_QUERIES

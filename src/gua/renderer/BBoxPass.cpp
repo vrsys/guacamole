@@ -34,14 +34,14 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription()
     vertex_shader_ = "shaders/bbox.vert";
     geometry_shader_ = "shaders/bbox.geom";
     fragment_shader_ = "shaders/bbox.frag";
-    name_ = "BBoxPass";
+    private_.name_ = "BBoxPass";
 
-    writes_only_color_buffer_ = false;
-    rendermode_ = RenderMode::Callback;
+    private_.writes_only_color_buffer_ = false;
+    private_.rendermode_ = RenderMode::Callback;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 
-    rasterizer_state_ =
+    private_.rasterizer_state_desc_ =
         boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, false, 0.0f, false, true, scm::gl::point_raster_state(true)));
 }
 
@@ -49,28 +49,26 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription()
 
 std::shared_ptr<PipelinePassDescription> BBoxPassDescription::make_copy() const { return std::make_shared<BBoxPassDescription>(*this); }
 
-PipelinePass BBoxPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto count = 1;
     scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, count * 2 * sizeof(math::vec3f), 0);
     scm::gl::vertex_array_ptr vao_ =
         ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f))(0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f)), {buffer_});
 
-    pass.process_ = [buffer_, vao_](PipelinePass &, PipelinePassDescription const &, Pipeline &pipe) {
-        auto const &scene = *(pipe.current_viewstate().scene);
+    private_.process_ = [buffer_, vao_](PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) {
+        auto const& scene = *(pipe.current_viewstate().scene);
         auto count(scene.bounding_boxes.size());
 
         if(count < 1)
             return;
         // else
-        RenderContext const &ctx(pipe.get_context());
+        RenderContext const& ctx(pipe.get_context());
 
         ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3f));
 
         {
-            auto data = static_cast<math::vec3f *>(ctx.render_context->map_buffer(buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+            auto data = static_cast<math::vec3f*>(ctx.render_context->map_buffer(buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
             for(unsigned int i = 0; i < count; ++i)
             {
@@ -89,6 +87,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const &ctx, Substituti
         ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
     };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

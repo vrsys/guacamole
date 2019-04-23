@@ -2,7 +2,7 @@
 
 namespace gua
 {
-void LightTable::remove_buffers(RenderContext const &ctx)
+void LightTable::remove_buffers(RenderContext const& ctx)
 {
     if(light_bitset_)
     {
@@ -10,7 +10,7 @@ void LightTable::remove_buffers(RenderContext const &ctx)
     }
 }
 
-math::vec2ui LightTable::invalidate(RenderContext const &ctx, math::vec2ui const &resolution, LightTable::array_type const &lights, int tile_power, int sun_lights_num)
+math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const& resolution, LightTable::array_type const& lights, int tile_power, int sun_lights_num)
 {
     sun_lights_num_ = sun_lights_num;
     lights_num_ = lights.size();
@@ -59,8 +59,8 @@ math::vec2ui LightTable::invalidate(RenderContext const &ctx, math::vec2ui const
     }
 
     // clear bitset
-    ctx.render_context->clear_image_sub_data(light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0,
-                                             scm::gl::FORMAT_R_32UI, 0);
+    ctx.render_context->clear_image_sub_data(
+        light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
 
     // upload light UBO
     bool needs_update(false);

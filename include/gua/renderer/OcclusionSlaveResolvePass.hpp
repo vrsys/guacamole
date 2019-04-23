@@ -35,8 +35,6 @@ class GUA_DLL OcclusionSlaveResolvePassDescription : public PipelinePassDescript
   public:
     OcclusionSlaveResolvePassDescription();
 
-    void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const override;
-
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     friend class Pipeline;
 

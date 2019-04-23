@@ -43,7 +43,7 @@
 
 namespace
 {
-gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const &tex)
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = tex->native_handle();
     return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
@@ -55,9 +55,10 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-Pipeline::Pipeline(RenderContext &ctx, math::vec2ui const &resolution)
+Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
     : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution)), camera_block_(ctx.render_device), light_table_(new LightTable), last_resolution_(0, 0), last_description_(),
-      global_substitution_map_(), passes_(), quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)))
+      global_substitution_map_(), passes_(), responsibilities_pre_render_(), responsibilities_post_render_(),
+      quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)))
 {
     const float th = last_description_.get_blending_termination_threshold();
     global_substitution_map_["enable_abuffer"] = "0";
@@ -66,15 +67,42 @@ Pipeline::Pipeline(RenderContext &ctx, math::vec2ui const &resolution)
     global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
     global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
 
-    for(auto pass : last_description_.get_passes())
+    load_passes_and_responsibilities();
+}
+
+void Pipeline::load_passes_and_responsibilities()
+{
+    std::vector<std::shared_ptr<PipelineResponsibilityDescription>> responsibility_descriptions;
+
+    for(const auto& pass_desc : last_description_.get_passes())
     {
-        passes_.push_back(pass->make_pass(ctx, global_substitution_map_));
+        passes_.push_back(pass_desc->make_pass(context_, global_substitution_map_));
+
+        for(const auto& pass_responsibility : pass_desc->get_responsibilities())
+        {
+            responsibility_descriptions.push_back(pass_responsibility);
+        }
+    }
+
+    responsibility_descriptions.erase(std::unique(responsibility_descriptions.begin(), responsibility_descriptions.end()), responsibility_descriptions.end());
+
+    for(auto& responsibility_description : responsibility_descriptions)
+    {
+        auto responsibility = responsibility_description->make_responsibility(*this);
+        if(responsibility.type() == PipelineResponsibilityPrivate::TYPE::PRE_RENDER)
+        {
+            responsibilities_pre_render_.push_back(responsibility);
+        }
+        if(responsibility.type() == PipelineResponsibilityPrivate::TYPE::POST_RENDER)
+        {
+            responsibilities_post_render_.push_back(responsibility);
+        }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const &camera, std::vector<std::unique_ptr<const SceneGraph>> const &scene_graphs)
+scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs)
 {
     // return if pipeline is disabled
     if(!camera.config.get_enabled())
@@ -92,7 +120,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     bool reload_abuffer(false);
 
     // execute all prerender cameras
-    for(auto const &cam : camera.pre_render_cameras)
+    for(auto const& cam : camera.pre_render_cameras)
     {
         if(!context_.render_pipelines.count(cam.uuid))
         {
@@ -144,13 +172,15 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
     if(reload_passes)
     {
-        for(auto &pass : passes_)
+        for(auto& pass : passes_)
         {
             pass.on_delete(this);
         }
 
         passes_.clear();
         global_substitution_map_.clear();
+        responsibilities_pre_render_.clear();
+        responsibilities_post_render_.clear();
 
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
@@ -158,15 +188,12 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
         global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
 
-        for(auto pass : last_description_.get_passes())
-        {
-            passes_.push_back(pass->make_pass(context_, global_substitution_map_));
-        }
+        load_passes_and_responsibilities();
     }
 
     // get scenegraph which shall be rendered
     current_viewstate_.graph = nullptr;
-    for(auto &graph : scene_graphs)
+    for(auto& graph : scene_graphs)
     {
         if(graph->get_name() == camera.config.get_scene_graph_name())
         {
@@ -181,7 +208,11 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     current_viewstate_.scene = current_viewstate_.graph->serialize(camera, mode);
     current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
 
-    camera_block_.update(context_, current_viewstate_.scene->rendering_frustum, math::get_translation(camera.transform), current_viewstate_.scene->clipping_planes, camera.config.get_view_id(),
+    camera_block_.update(context_,
+                         current_viewstate_.scene->rendering_frustum,
+                         math::get_translation(camera.transform),
+                         current_viewstate_.scene->clipping_planes,
+                         camera.config.get_view_id(),
                          camera.config.get_resolution());
     bind_camera_uniform_block(0);
 
@@ -205,7 +236,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     if(context_.framecount % 60 == 0)
     {
         std::cout << "===== Time Queries for Context: " << context_.id << " ============================" << std::endl;
-        for(auto const &t : queries_.results)
+        for(auto const& t : queries_.results)
         {
             std::cout << t.first << " : " << t.second << " ms" << std::endl;
         }
@@ -240,26 +271,34 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::apply_post_render_actions(RenderContext const &ctx)
+void Pipeline::fulfil_pre_render_responsibilities(RenderContext const& ctx)
 {
-    auto pass_descriptions = last_description_.get_passes();
-
-    for(auto &pass : pass_descriptions)
+    for(auto& responsibility : responsibilities_pre_render_)
     {
-        pass->apply_post_render_action(ctx, this);
+        responsibility.fulfil(*this);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::generate_shadow_map(node::LightNode &light, LightTable::LightBlock &light_block)
+void Pipeline::fulfil_post_render_responsibilities(RenderContext const& ctx)
+{
+    for(auto& responsibility : responsibilities_post_render_)
+    {
+        responsibility.fulfil(*this);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::generate_shadow_map(node::LightNode& light, LightTable::LightBlock& light_block)
 {
     if(!shadow_map_res_)
     {
         shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
     }
 
-    auto &current_mask(current_viewstate_.camera.config.mask());
+    auto& current_mask(current_viewstate_.camera.config.mask());
 
     std::shared_ptr<ShadowMap> shadow_map(nullptr);
     bool needs_redraw(false);
@@ -275,7 +314,7 @@ void Pipeline::generate_shadow_map(node::LightNode &light, LightTable::LightBloc
 
     if(cached_shadow_maps != shadow_map_res_->used_shadow_maps.end())
     {
-        for(auto &cached_shadow_map : cached_shadow_maps->second)
+        for(auto& cached_shadow_map : cached_shadow_maps->second)
         {
             if(cached_shadow_map.render_mask == current_mask)
             {
@@ -368,8 +407,12 @@ void Pipeline::generate_shadow_map(node::LightNode &light, LightTable::LightBloc
     current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
     current_viewstate_.camera.config.set_resolution(original_camera_resolution);
 
-    camera_block_.update(context_, current_viewstate_.scene->rendering_frustum, math::get_translation(current_viewstate_.camera.transform), current_viewstate_.scene->clipping_planes,
-                         current_viewstate_.camera.config.get_view_id(), current_viewstate_.camera.config.get_resolution());
+    camera_block_.update(context_,
+                         current_viewstate_.scene->rendering_frustum,
+                         math::get_translation(current_viewstate_.camera.transform),
+                         current_viewstate_.scene->clipping_planes,
+                         current_viewstate_.camera.config.get_view_id(),
+                         current_viewstate_.camera.config.get_resolution());
 
     bind_camera_uniform_block(0);
 
@@ -379,16 +422,19 @@ void Pipeline::generate_shadow_map(node::LightNode &light, LightTable::LightBloc
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::render_shadow_map(LightTable::LightBlock &light_block, Frustum const &frustum, unsigned cascade_id, unsigned viewport_size, bool redraw)
+void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw)
 {
     light_block.projection_view_mats[cascade_id] = math::mat4f(frustum.get_projection() * frustum.get_view());
 
     // only render shadow map if it hasn't been rendered before this frame
     if(redraw)
     {
-        current_viewstate_.scene =
-            current_viewstate_.graph->serialize(frustum, frustum, math::get_translation(current_viewstate_.camera.transform), current_viewstate_.camera.config.enable_frustum_culling(),
-                                                current_viewstate_.camera.config.mask(), current_viewstate_.camera.config.view_id());
+        current_viewstate_.scene = current_viewstate_.graph->serialize(frustum,
+                                                                       frustum,
+                                                                       math::get_translation(current_viewstate_.camera.transform),
+                                                                       current_viewstate_.camera.config.enable_frustum_culling(),
+                                                                       current_viewstate_.camera.config.mask(),
+                                                                       current_viewstate_.camera.config.view_id());
 
         current_viewstate_.frustum = frustum;
 
@@ -407,8 +453,8 @@ void Pipeline::render_shadow_map(LightTable::LightBlock &light_block, Frustum co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &shadow_map, node::LightNode &light, LightTable::LightBlock &light_block, unsigned viewport_size, bool redraw,
-                                            math::mat4 const &original_screen_transform)
+void Pipeline::generate_shadow_map_sunlight(
+    std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode& light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw, math::mat4 const& original_screen_transform)
 {
     auto splits(light.data.get_shadow_cascaded_splits());
 
@@ -423,8 +469,10 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
                             << "clipping range! Fallback to equidistant splits used." << std::endl;
 
         float clipping_range(current_viewstate_.camera.config.far_clip() - current_viewstate_.camera.config.near_clip());
-        splits = {current_viewstate_.camera.config.near_clip(), current_viewstate_.camera.config.near_clip() + clipping_range * 0.25f,
-                  current_viewstate_.camera.config.near_clip() + clipping_range * 0.5f, current_viewstate_.camera.config.near_clip() + clipping_range * 0.75f,
+        splits = {current_viewstate_.camera.config.near_clip(),
+                  current_viewstate_.camera.config.near_clip() + clipping_range * 0.25f,
+                  current_viewstate_.camera.config.near_clip() + clipping_range * 0.5f,
+                  current_viewstate_.camera.config.near_clip() + clipping_range * 0.75f,
                   current_viewstate_.camera.config.far_clip()};
     }
 
@@ -436,7 +484,10 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
         // use cyclops for consistent cascades for left and right eye in stereo
         Frustum cropped_frustum(Frustum::perspective(
             // orig_scene->rendering_frustum.get_camera_transform(),
-            current_viewstate_.camera.transform, original_screen_transform, splits[cascade], splits[cascade + 1]));
+            current_viewstate_.camera.transform,
+            original_screen_transform,
+            splits[cascade],
+            splits[cascade + 1]));
 
         // transform cropped frustum into sun space and calculate radius and
         // bbox of transformed frustum
@@ -449,7 +500,7 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
         auto transform(light.get_cached_world_transform());
 
         auto inverse_sun_transform(scm::math::inverse(transform));
-        for(auto const &corner : cropped_frustum_corners)
+        for(auto const& corner : cropped_frustum_corners)
         {
             math::vec3 new_corner(inverse_sun_transform * corner);
             center_in_sun_space += new_corner / 8;
@@ -457,7 +508,7 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
             extends_in_sun_space.expandBy(new_corner);
         }
 
-        for(auto const &corner : corners_in_sun_space)
+        for(auto const& corner : corners_in_sun_space)
         {
             float radius = scm::math::length(corner - center_in_sun_space);
             if(radius > radius_in_sun_space)
@@ -467,7 +518,8 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
         }
 
         // center of front plane of frustum
-        auto center(math::vec3f((extends_in_sun_space.min[0] + extends_in_sun_space.max[0]) / 2, (extends_in_sun_space.min[1] + extends_in_sun_space.max[1]) / 2,
+        auto center(math::vec3f((extends_in_sun_space.min[0] + extends_in_sun_space.max[0]) / 2,
+                                (extends_in_sun_space.min[1] + extends_in_sun_space.max[1]) / 2,
                                 extends_in_sun_space.max[2] + light.data.get_shadow_near_clipping_in_sun_direction()));
 
         // eliminate sub-pixel movement
@@ -502,7 +554,7 @@ void Pipeline::generate_shadow_map_sunlight(std::shared_ptr<ShadowMap> const &sh
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const &shadow_map, node::LightNode &light, LightTable::LightBlock &light_block, unsigned viewport_size, bool redraw)
+void Pipeline::generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const& shadow_map, node::LightNode& light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw)
 {
     // calculate light frustum
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -0.5));
@@ -514,8 +566,8 @@ void Pipeline::generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const &
                                                  scm::math::make_rotation(90., 0., 1., 0.) * screen_transform,
                                                  scm::math::make_rotation(-90., 0., 1., 0.) * screen_transform};
 
-    std::vector<PipelineViewState::ViewDirection> view_directions = {PipelineViewState::front,  PipelineViewState::back, PipelineViewState::top,
-                                                                     PipelineViewState::bottom, PipelineViewState::left, PipelineViewState::right};
+    std::vector<PipelineViewState::ViewDirection> view_directions = {
+        PipelineViewState::front, PipelineViewState::back, PipelineViewState::top, PipelineViewState::bottom, PipelineViewState::left, PipelineViewState::right};
 
     for(unsigned cascade(0); cascade < screen_transforms.size(); ++cascade)
     {
@@ -535,7 +587,7 @@ void Pipeline::generate_shadow_map_pointlight(std::shared_ptr<ShadowMap> const &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void Pipeline::generate_shadow_map_spotlight(node::LightNode &light, LightTable::LightBlock &light_block, unsigned viewport_size, bool redraw)
+void Pipeline::generate_shadow_map_spotlight(node::LightNode& light, LightTable::LightBlock& light_block, unsigned viewport_size, bool redraw)
 {
     // calculate light frustum
     math::mat4 screen_transform(scm::math::make_translation(0., 0., -1.));
@@ -551,27 +603,27 @@ void Pipeline::generate_shadow_map_spotlight(node::LightNode &light, LightTable:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineViewState const &Pipeline::current_viewstate() const { return current_viewstate_; }
+PipelineViewState const& Pipeline::current_viewstate() const { return current_viewstate_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RenderContext &Pipeline::get_context() { return context_; }
+RenderContext& Pipeline::get_context() { return context_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RenderContext const &Pipeline::get_context() const { return context_; }
+RenderContext const& Pipeline::get_context() const { return context_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<GBuffer> const &Pipeline::get_gbuffer() const { return gbuffer_; }
+std::unique_ptr<GBuffer> const& Pipeline::get_gbuffer() const { return gbuffer_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LightTable &Pipeline::get_light_table() { return *light_table_; }
+LightTable& Pipeline::get_light_table() { return *light_table_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const &shader) const
+void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const
 {
     shader->set_uniform(context_, 1.0f / gbuffer_->get_width(), "gua_texel_width");
     shader->set_uniform(context_, 1.0f / gbuffer_->get_height(), "gua_texel_height");
@@ -591,7 +643,7 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const &shader) 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const &shader) const
+void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const
 {
     shader->set_uniform(context_, int(light_table_->get_lights_num()), "gua_lights_num");
     shader->set_uniform(context_, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
@@ -613,7 +665,7 @@ void Pipeline::draw_quad() { quad_->draw(context_.render_context); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-void Pipeline::begin_cpu_query(std::string const &query_name)
+void Pipeline::begin_cpu_query(std::string const& query_name)
 {
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     queries_.cpu_queries[query_name] = start_time;
@@ -622,7 +674,7 @@ void Pipeline::begin_cpu_query(std::string const &query_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-void Pipeline::end_cpu_query(std::string const &query_name)
+void Pipeline::end_cpu_query(std::string const& query_name)
 {
     assert(queries_.cpu_queries.count(query_name));
 
@@ -636,7 +688,7 @@ void Pipeline::end_cpu_query(std::string const &query_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-void Pipeline::begin_gpu_query(RenderContext const &ctx, std::string const &name)
+void Pipeline::begin_gpu_query(RenderContext const& ctx, std::string const& name)
 {
     if(ctx.framecount < 50)
     {
@@ -679,7 +731,7 @@ void Pipeline::begin_gpu_query(RenderContext const &ctx, std::string const &name
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-void Pipeline::end_gpu_query(RenderContext const &ctx, std::string const &name)
+void Pipeline::end_gpu_query(RenderContext const& ctx, std::string const& name)
 {
     // query started
     if(queries_.gpu_queries.count(name))
@@ -701,10 +753,10 @@ void Pipeline::end_gpu_query(RenderContext const &ctx, std::string const &name)
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-void Pipeline::fetch_gpu_query_results(RenderContext const &ctx)
+void Pipeline::fetch_gpu_query_results(RenderContext const& ctx)
 {
     bool queries_ready = true;
-    for(auto &q : queries_.gpu_queries)
+    for(auto& q : queries_.gpu_queries)
     {
         bool query_ready = ctx.render_context->query_result_available(q.second.query);
         ++q.second.collect_attempts;
@@ -713,7 +765,7 @@ void Pipeline::fetch_gpu_query_results(RenderContext const &ctx)
 
     if(queries_ready)
     {
-        for(auto const &q : queries_.gpu_queries)
+        for(auto const& q : queries_.gpu_queries)
         {
             ctx.render_context->collect_query_results(q.second.query);
             double draw_time_in_ms = static_cast<double>(q.second.query->result()) / 1e6;
@@ -734,16 +786,16 @@ void Pipeline::clear_frame_cache()
         shadow_map_res_ = context_.resources.get<SharedShadowMapResource>();
     }
 
-    for(auto &unused : shadow_map_res_->unused_shadow_maps)
+    for(auto& unused : shadow_map_res_->unused_shadow_maps)
     {
         unused->unbind(context_);
         unused->remove_buffers(context_);
     }
     shadow_map_res_->unused_shadow_maps.clear();
 
-    for(auto &cached_maps : shadow_map_res_->used_shadow_maps)
+    for(auto& cached_maps : shadow_map_res_->used_shadow_maps)
     {
-        for(auto &cached_map : cached_maps.second)
+        for(auto& cached_map : cached_maps.second)
         {
             shadow_map_res_->unused_shadow_maps.insert(cached_map.shadow_map);
         }

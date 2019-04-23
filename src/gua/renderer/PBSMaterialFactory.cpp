@@ -31,7 +31,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Material> PBSMaterialFactory::create_material(Capabilities const &capabilities)
+std::shared_ptr<Material> PBSMaterialFactory::create_material(Capabilities const& capabilities)
 {
     auto mat_name(material_name_from_capabilites(capabilities));
 
@@ -163,7 +163,7 @@ std::shared_ptr<Material> PBSMaterialFactory::create_material(Capabilities const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const PBSMaterialFactory::material_name_from_capabilites(Capabilities const &capabilities)
+std::string const PBSMaterialFactory::material_name_from_capabilites(Capabilities const& capabilities)
 {
     std::string result("gua");
 

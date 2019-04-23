@@ -24,7 +24,7 @@
 
 namespace gua
 {
-void ABuffer::allocate(RenderContext &ctx, size_t buffer_size)
+void ABuffer::allocate(RenderContext& ctx, size_t buffer_size)
 {
     if(!buffer_size)
     {
@@ -50,14 +50,14 @@ void ABuffer::allocate(RenderContext &ctx, size_t buffer_size)
     res_ = resource;
 }
 
-void ABuffer::clear(RenderContext const &ctx, math::vec2ui const &resolution)
+void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution)
 {
     if(!res_)
     {
         return;
     }
 
-    unsigned *ctr = reinterpret_cast<unsigned *>(ctx.render_context->map_buffer(res_->counter, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+    unsigned* ctr = reinterpret_cast<unsigned*>(ctx.render_context->map_buffer(res_->counter, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
     if(ctr)
     {
         *ctr = 0;
@@ -67,7 +67,7 @@ void ABuffer::clear(RenderContext const &ctx, math::vec2ui const &resolution)
     ctx.render_context->clear_buffer_sub_data(res_->frag_list, scm::gl::FORMAT_RG_32UI, 0u, FRAG_LIST_WORD_SIZE * resolution.x * resolution.y, 0);
 }
 
-void ABuffer::bind(RenderContext const &ctx)
+void ABuffer::bind(RenderContext const& ctx)
 {
     if(!res_)
     {
@@ -79,6 +79,6 @@ void ABuffer::bind(RenderContext const &ctx)
     ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
 }
 
-void ABuffer::unbind(RenderContext const &ctx) {}
+void ABuffer::unbind(RenderContext const& ctx) {}
 
 } // namespace gua

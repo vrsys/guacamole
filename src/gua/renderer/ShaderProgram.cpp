@@ -36,7 +36,7 @@ ShaderProgram::ShaderProgram() : program_(), stages_(), interleaved_stream_captu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::create_from_sources(std::string const &v_source, std::string const &f_source, SubstitutionMap const &substitutions)
+void ShaderProgram::create_from_sources(std::string const& v_source, std::string const& f_source, SubstitutionMap const& substitutions)
 {
     program_.reset();
     dirty_ = true;
@@ -50,7 +50,7 @@ void ShaderProgram::create_from_sources(std::string const &v_source, std::string
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::create_from_sources(std::string const &v_source, std::string const &g_source, std::string const &f_source, SubstitutionMap const &substitutions)
+void ShaderProgram::create_from_sources(std::string const& v_source, std::string const& g_source, std::string const& f_source, SubstitutionMap const& substitutions)
 {
     program_.reset();
     dirty_ = true;
@@ -63,8 +63,11 @@ void ShaderProgram::create_from_sources(std::string const &v_source, std::string
 }
 
 ////////////////////////////////////////////////////////////////////////
-void ShaderProgram::set_shaders(std::vector<ShaderProgramStage> const &shaders, std::list<std::string> const &interleaved_stream_capture, bool in_rasterization_discard,
-                                SubstitutionMap const &substitutions, bool enable_virtual_texturing)
+void ShaderProgram::set_shaders(std::vector<ShaderProgramStage> const& shaders,
+                                std::list<std::string> const& interleaved_stream_capture,
+                                bool in_rasterization_discard,
+                                SubstitutionMap const& substitutions,
+                                bool enable_virtual_texturing)
 {
     program_.reset();
     dirty_ = true;
@@ -80,7 +83,7 @@ void ShaderProgram::set_shaders(std::vector<ShaderProgramStage> const &shaders, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::set_substitutions(SubstitutionMap const &substitutions)
+void ShaderProgram::set_substitutions(SubstitutionMap const& substitutions)
 {
     if(substitutions_ != substitutions)
     {
@@ -92,7 +95,7 @@ void ShaderProgram::set_substitutions(SubstitutionMap const &substitutions)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::use(RenderContext const &context) const
+void ShaderProgram::use(RenderContext const& context) const
 {
     // upload to GPU if neccessary
     upload_to(context);
@@ -101,11 +104,11 @@ void ShaderProgram::use(RenderContext const &context) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::unuse(RenderContext const &context) const { context.render_context->reset_program(); }
+void ShaderProgram::unuse(RenderContext const& context) const { context.render_context->reset_program(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::apply_uniform(RenderContext const &context, std::string const &name, UniformValue const &uniform, unsigned position) const
+void ShaderProgram::apply_uniform(RenderContext const& context, std::string const& name, UniformValue const& uniform, unsigned position) const
 {
     // upload to GPU if neccessary
     upload_to(context);
@@ -114,7 +117,7 @@ void ShaderProgram::apply_uniform(RenderContext const &context, std::string cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShaderProgram::set_subroutine(RenderContext const &context, scm::gl::shader_stage stage, std::string const &uniform_name, std::string const &routine_name) const
+void ShaderProgram::set_subroutine(RenderContext const& context, scm::gl::shader_stage stage, std::string const& uniform_name, std::string const& routine_name) const
 {
     // upload to GPU if neccessary
     upload_to(context);
@@ -124,14 +127,14 @@ void ShaderProgram::set_subroutine(RenderContext const &context, scm::gl::shader
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ShaderProgram::upload_to(RenderContext const &context) const
+bool ShaderProgram::upload_to(RenderContext const& context) const
 {
     if(!program_ || dirty_)
     {
         std::list<scm::gl::shader_ptr> shaders;
         ResourceFactory factory;
 
-        for(auto const &s : stages_)
+        for(auto const& s : stages_)
         {
             auto source = factory.resolve_substitutions(s.source, substitutions_);
             shaders.push_back(context.render_device->create_shader(s.type, source));
@@ -144,7 +147,7 @@ bool ShaderProgram::upload_to(RenderContext const &context) const
         else
         {
             scm::gl::interleaved_stream_capture capture_array(interleaved_stream_capture_.front());
-            for(auto const &k : interleaved_stream_capture_)
+            for(auto const& k : interleaved_stream_capture_)
                 capture_array(k);
 
             program_ = context.render_device->create_program(shaders, capture_array, in_rasterization_discard_);
@@ -164,16 +167,16 @@ bool ShaderProgram::upload_to(RenderContext const &context) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void save_to_file(ShaderProgram const &p, std::string const &directory, std::string const &name)
+void save_to_file(ShaderProgram const& p, std::string const& directory, std::string const& name)
 {
-    auto save = [](std::string const &content, std::string const &file) {
+    auto save = [](std::string const& content, std::string const& file) {
         gua::TextFile text(file);
         // text.set_content(string_utils::format_code(content));
         text.set_content(content);
         text.save(true);
     };
 
-    for(auto const &s : p.get_program_stages())
+    for(auto const& s : p.get_program_stages())
     {
         std::string file_extension;
         switch(s.type)
