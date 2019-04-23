@@ -32,19 +32,19 @@ ToneMappingPassDescription::ToneMappingPassDescription() : PipelinePassDescripti
 {
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/tone_mapping.frag";
-    name_ = "ToneMappingPass";
+    private_.name_ = "ToneMappingPass";
 
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
     uniforms["gua_tone_mapping_exposure"] = 1.0f;
     uniforms["gua_tone_mapping_operator"] = static_cast<int>(Method::LINEAR);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ToneMappingPassDescription &ToneMappingPassDescription::exposure(float e)
+ToneMappingPassDescription& ToneMappingPassDescription::exposure(float e)
 {
     uniforms["gua_tone_mapping_exposure"] = e;
     return *this;
@@ -60,7 +60,7 @@ float ToneMappingPassDescription::exposure() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ToneMappingPassDescription &ToneMappingPassDescription::method(ToneMappingPassDescription::Method m)
+ToneMappingPassDescription& ToneMappingPassDescription::method(ToneMappingPassDescription::Method m)
 {
     uniforms["gua_tone_mapping_operator"] = static_cast<int>(m);
     return *this;

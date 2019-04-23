@@ -37,9 +37,9 @@ SkyMapRenderer::SkyMapRenderer() : program_(nullptr), sky_map_(nullptr), fbo_(nu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkyMapRenderer::render_sky_map(Pipeline &pipe, PipelinePassDescription const &desc)
+void SkyMapRenderer::render_sky_map(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-    auto const &ctx(pipe.get_context());
+    auto const& ctx(pipe.get_context());
     const int size_(1024);
 
     auto tex_uniform(desc.uniforms.find("output_texture_name"));

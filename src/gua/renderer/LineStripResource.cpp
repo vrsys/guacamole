@@ -68,7 +68,7 @@ void LineStripResource::compute_bounding_box()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LineStripResource::LineStripResource(LineStrip const &line_strip, bool build_kd_tree) : kd_tree_(), line_strip_(line_strip), clean_flags_per_context_()
+LineStripResource::LineStripResource(LineStrip const& line_strip, bool build_kd_tree) : kd_tree_(), line_strip_(line_strip), clean_flags_per_context_()
 {
     compute_bounding_box();
 
@@ -80,7 +80,7 @@ LineStripResource::LineStripResource(LineStrip const &line_strip, bool build_kd_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::upload_to(RenderContext &ctx) const
+void LineStripResource::upload_to(RenderContext& ctx) const
 {
     std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
 
@@ -100,7 +100,7 @@ void LineStripResource::upload_to(RenderContext &ctx) const
         ctx.line_strips[uuid()] = RenderContext::LineStrip();
     }
 
-    RenderContext::LineStrip *line_strip_to_update_ptr = &ctx.line_strips[uuid()];
+    RenderContext::LineStrip* line_strip_to_update_ptr = &ctx.line_strips[uuid()];
 
     if(update_cached_linestrip)
     {
@@ -125,7 +125,7 @@ void LineStripResource::upload_to(RenderContext &ctx) const
 
     if(line_strip_.vertex_reservoir_size != 0)
     {
-        LineStrip::Vertex *data(static_cast<LineStrip::Vertex *>(ctx.render_context->map_buffer(line_strip_to_update_ptr->vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+        LineStrip::Vertex* data(static_cast<LineStrip::Vertex*>(ctx.render_context->map_buffer(line_strip_to_update_ptr->vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
         line_strip_.copy_to_buffer(data);
         ctx.render_context->unmap_buffer(line_strip_to_update_ptr->vertices);
@@ -138,18 +138,18 @@ void LineStripResource::upload_to(RenderContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::draw(RenderContext &ctx) const
+void LineStripResource::draw(RenderContext& ctx) const
 {
     // DUMMY
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::draw(RenderContext &ctx, bool render_vertices_as_points, bool render_lines_as_strip) const
+void LineStripResource::draw(RenderContext& ctx, bool render_vertices_as_points, bool render_lines_as_strip) const
 {
     auto iter = ctx.line_strips.find(uuid());
 
-    bool &clean_flag_for_context = clean_flags_per_context_[uuid()];
+    bool& clean_flag_for_context = clean_flags_per_context_[uuid()];
 
     if(iter == ctx.line_strips.end() || (!clean_flag_for_context) /*|| ctx_dirty_flag*/)
     {
@@ -187,7 +187,7 @@ void LineStripResource::draw(RenderContext &ctx, bool render_vertices_as_points,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::ray_test(Ray const &ray, int options, node::Node *owner, std::set<PickResult> &hits)
+void LineStripResource::ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits)
 {
     // kd_tree_.ray_test(ray, line_strip_, options, owner, hits);
 }
@@ -215,7 +215,7 @@ void LineStripResource::resolve_vertex_updates(RenderContext& ctx) {
 
 void LineStripResource::make_clean_flags_dirty()
 {
-    for(auto &known_clean_flag : clean_flags_per_context_)
+    for(auto& known_clean_flag : clean_flags_per_context_)
     {
         known_clean_flag.second = false;
     }
@@ -231,7 +231,7 @@ void LineStripResource::compute_consistent_normals() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::compile_buffer_string(std::string &buffer_string)
+void LineStripResource::compile_buffer_string(std::string& buffer_string)
 {
     std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
     line_strip_.compile_buffer_string(buffer_string);
@@ -239,7 +239,7 @@ void LineStripResource::compile_buffer_string(std::string &buffer_string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::uncompile_buffer_string(std::string const &buffer_string)
+void LineStripResource::uncompile_buffer_string(std::string const& buffer_string)
 {
     std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
     line_strip_.uncompile_buffer_string(buffer_string);
@@ -248,7 +248,7 @@ void LineStripResource::uncompile_buffer_string(std::string const &buffer_string
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::push_vertex(LineStrip::Vertex const &in_vertex)
+void LineStripResource::push_vertex(LineStrip::Vertex const& in_vertex)
 {
     std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
 
@@ -300,8 +300,10 @@ void LineStripResource::clear_vertices()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripResource::forward_queued_vertices(std::vector<scm::math::vec3f> const &queued_positions, std::vector<scm::math::vec4f> const &queued_colors, std::vector<float> const &queued_thicknesses,
-                                                std::vector<scm::math::vec3f> const &queued_normals)
+void LineStripResource::forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
+                                                std::vector<scm::math::vec4f> const& queued_colors,
+                                                std::vector<float> const& queued_thicknesses,
+                                                std::vector<scm::math::vec3f> const& queued_normals)
 {
     std::lock_guard<std::mutex> lock(line_strip_update_mutex_);
     line_strip_.forward_queued_vertices(queued_positions, queued_colors, queued_thicknesses, queued_normals);

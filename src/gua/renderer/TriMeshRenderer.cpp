@@ -32,7 +32,7 @@
 
 namespace
 {
-gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const &tex)
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = 0;
     if(tex)
@@ -48,7 +48,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRenderer::TriMeshRenderer(RenderContext const &ctx, SubstitutionMap const &smap)
+TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
     :
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
       VTRenderer(ctx, smap),
@@ -73,62 +73,20 @@ TriMeshRenderer::TriMeshRenderer(RenderContext const &ctx, SubstitutionMap const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc)
+void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-    RenderContext const &ctx(pipe.get_context());
+    RenderContext const& ctx(pipe.get_context());
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    const auto passes = pipe.current_viewstate().camera.pipeline_description->get_passes();
-
-    int trimesh_position{INT_MAX}, mlod_position{INT_MAX};
-
-    for(int i = 0; i < passes.size(); i++)
-    {
-        if(passes[i]->name() == "TriMeshPass")
-        {
-            trimesh_position = i;
-        }
-
-        if(passes[i]->name() == "MLodPass")
-        {
-            mlod_position = i;
-        }
-    }
-
-    VTContextState vt_state;
-    if(trimesh_position < mlod_position || mlod_position == INT_MAX)
-    {
-        if(!pipe.current_viewstate().shadow_mode)
-        {
-            vt_state = pre_render(pipe, desc);
-        }
-    }
-    else
-    {
-        auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
-        auto &current_vt_info = vt_info_per_context[ctx.id];
-
-        if(current_vt_info.cut_update_ == nullptr)
-        {
-            vt_state.has_camera = false;
-            vt_state.feedback_enabled = false;
-        }
-
-        vt_state.has_camera = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
-        vt_state.feedback_enabled = current_vt_info.cut_update_->can_accept_feedback(current_vt_info.context_id_);
-    }
-#endif
-
-    auto &scene = *pipe.current_viewstate().scene;
+    auto& scene = *pipe.current_viewstate().scene;
     auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
     if(sorted_objects != scene.nodes.end() && !sorted_objects->second.empty())
     {
-        auto &target = *pipe.current_viewstate().target;
-        auto const &camera = pipe.current_viewstate().camera;
+        auto& target = *pipe.current_viewstate().target;
+        auto const& camera = pipe.current_viewstate().camera;
 
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node *a, node::Node *b) {
-            return reinterpret_cast<node::TriMeshNode *>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode *>(b)->get_material()->get_shader();
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
         });
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -145,15 +103,15 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
 
         int view_id(camera.config.get_view_id());
 
-        MaterialShader *current_material(nullptr);
+        MaterialShader* current_material(nullptr);
         std::shared_ptr<ShaderProgram> current_shader;
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
-        for(auto const &object : sorted_objects->second)
+        for(auto const& object : sorted_objects->second)
         {
-            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode *>(object));
+            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
             if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
             {
                 continue;
@@ -177,7 +135,7 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
                     else
                     {
                         auto smap = global_substitution_map_;
-                        for(const auto &i : current_material->generate_substitution_map())
+                        for(const auto& i : current_material->generate_substitution_map())
                             smap[i.first] = i.second;
 
                         current_shader = std::make_shared<ShaderProgram>();
@@ -211,9 +169,11 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
                     if(!pipe.current_viewstate().shadow_mode)
                     {
-                        if(vt_state.has_camera)
+                        VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+
+                        if(vt_state && vt_state->has_camera_)
                         {
-                            current_shader->set_uniform(ctx, vt_state.feedback_enabled, "enable_feedback");
+                            current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
                         }
                     }
 #endif
@@ -282,21 +242,7 @@ void TriMeshRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
 #endif
-
-        ctx.render_context->reset_state_objects();
-
-        ctx.render_context->sync();
     }
-
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    if(trimesh_position > mlod_position || mlod_position == INT_MAX)
-    {
-        if(!pipe.current_viewstate().shadow_mode)
-        {
-            post_render(pipe, desc, vt_state);
-        }
-    }
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -228,7 +228,7 @@ int main(int argc, char** argv)
     resolve_pass->tone_mapping_exposure(1.0f);
     pipe->add_pass(resolve_pass);
 #endif
-    // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     pipe->add_pass(std::make_shared<gua::SSAAPassDescription>());
 #ifdef A_BUFFER
     pipe->set_enable_abuffer(true);

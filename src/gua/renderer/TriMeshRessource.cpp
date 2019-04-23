@@ -37,7 +37,7 @@ TriMeshRessource::TriMeshRessource() : kd_tree_(), mesh_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRessource::TriMeshRessource(Mesh const &mesh, bool build_kd_tree) : kd_tree_(), mesh_(mesh)
+TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree) : kd_tree_(), mesh_(mesh)
 {
     if(mesh_.num_vertices > 0)
     {
@@ -57,7 +57,7 @@ TriMeshRessource::TriMeshRessource(Mesh const &mesh, bool build_kd_tree) : kd_tr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::upload_to(RenderContext &ctx) const
+void TriMeshRessource::upload_to(RenderContext& ctx) const
 {
     RenderContext::Mesh cmesh{};
     cmesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
@@ -72,7 +72,7 @@ void TriMeshRessource::upload_to(RenderContext &ctx) const
 
     cmesh.vertices = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, mesh_.num_vertices * sizeof(Mesh::Vertex), 0);
 
-    Mesh::Vertex *data(static_cast<Mesh::Vertex *>(ctx.render_context->map_buffer(cmesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+    Mesh::Vertex* data(static_cast<Mesh::Vertex*>(ctx.render_context->map_buffer(cmesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
     mesh_.copy_to_buffer(data);
 
@@ -88,7 +88,7 @@ void TriMeshRessource::upload_to(RenderContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::draw(RenderContext &ctx) const
+void TriMeshRessource::draw(RenderContext& ctx) const
 {
     auto iter = ctx.meshes.find(uuid());
     if(iter == ctx.meshes.end())
@@ -105,7 +105,7 @@ void TriMeshRessource::draw(RenderContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::ray_test(Ray const &ray, int options, node::Node *owner, std::set<PickResult> &hits) { kd_tree_.ray_test(ray, mesh_, options, owner, hits); }
+void TriMeshRessource::ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) { kd_tree_.ray_test(ray, mesh_, options, owner, hits); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

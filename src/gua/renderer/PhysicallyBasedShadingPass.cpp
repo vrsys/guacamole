@@ -36,7 +36,7 @@ namespace
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void lighting(PipelinePass &pass, PipelinePassDescription const &, Pipeline &pipe)
+void lighting(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe)
 {
 #if 0
   auto const& ctx(pipe.get_context());
@@ -153,17 +153,17 @@ PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription() :
     // so we don't swap and don't clear the colorbuffer
     vertex_shader_ = "shaders/physically_based_shading.vert";
     fragment_shader_ = "shaders/physically_based_shading.frag";
-    name_ = "PhysicallyBasedShadingPass";
+    private_.name_ = "PhysicallyBasedShadingPass";
 
-    needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
-    writes_only_color_buffer_ = true;     // we write out a color
-    rendermode_ = RenderMode::Callback;
+    private_.needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
+    private_.writes_only_color_buffer_ = true;     // we write out a color
+    private_.rendermode_ = RenderMode::Callback;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
-    blend_state_ = boost::make_optional(scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE)));
-    rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.blend_state_desc_ = boost::make_optional(scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE)));
+    private_.rasterizer_state_desc_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
 
-    process_ = lighting;
+    private_.process_ = lighting;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ std::shared_ptr<PipelinePassDescription> PhysicallyBasedShadingPassDescription::
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass PhysicallyBasedShadingPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass PhysicallyBasedShadingPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

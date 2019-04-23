@@ -35,12 +35,12 @@ BackgroundPassDescription::BackgroundPassDescription() : PipelinePassDescription
 {
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/background.frag";
-    name_ = "BackgroundPass";
+    private_.name_ = "BackgroundPass";
 
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
     uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);
     uniforms["gua_background_mode"] = (int)COLOR;
@@ -52,7 +52,7 @@ BackgroundPassDescription::BackgroundPassDescription() : PipelinePassDescription
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::color(utils::Color3f const &color)
+BackgroundPassDescription& BackgroundPassDescription::color(utils::Color3f const& color)
 {
     uniforms["gua_background_color"] = color.vec3f();
     return *this;
@@ -68,7 +68,7 @@ utils::Color3f BackgroundPassDescription::color() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::texture(std::string const &texture)
+BackgroundPassDescription& BackgroundPassDescription::texture(std::string const& texture)
 {
     uniforms["gua_background_texture"] = texture;
     return *this;
@@ -84,7 +84,7 @@ std::string BackgroundPassDescription::texture() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::mode(BackgroundPassDescription::BackgroundMode const &mode)
+BackgroundPassDescription& BackgroundPassDescription::mode(BackgroundPassDescription::BackgroundMode const& mode)
 {
     uniforms["gua_background_mode"] = (int)mode;
     return *this;
@@ -100,7 +100,7 @@ BackgroundPassDescription::BackgroundMode BackgroundPassDescription::mode() cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::enable_fog(bool enable_fog)
+BackgroundPassDescription& BackgroundPassDescription::enable_fog(bool enable_fog)
 {
     uniforms["gua_enable_fog"] = enable_fog;
     return *this;
@@ -116,7 +116,7 @@ bool BackgroundPassDescription::enable_fog() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::fog_start(float fog_start)
+BackgroundPassDescription& BackgroundPassDescription::fog_start(float fog_start)
 {
     uniforms["gua_fog_start"] = fog_start;
     return *this;
@@ -132,7 +132,7 @@ float BackgroundPassDescription::fog_start() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BackgroundPassDescription &BackgroundPassDescription::fog_end(float fog_end)
+BackgroundPassDescription& BackgroundPassDescription::fog_end(float fog_end)
 {
     uniforms["gua_fog_end"] = fog_end;
     return *this;
@@ -152,7 +152,7 @@ std::shared_ptr<PipelinePassDescription> BackgroundPassDescription::make_copy() 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass BackgroundPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass BackgroundPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;
