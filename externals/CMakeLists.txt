@@ -9,4 +9,3 @@ if (UNIX)
 endif(UNIX)
 
 add_subdirectory(lz4)
-add_subdirectory(tiny_jpeg)
