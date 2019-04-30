@@ -29,6 +29,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/ScreenGrabPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/LodLoader.hpp>
 #include <gua/renderer/PLodPass.hpp>
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
     vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/config_demo_do_not_modify.ini";
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
 
-    std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/schiefer_coarse/combined_texture.atlas");
+    std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.atlas");
 
     // VT STEP 1/5: - create a material
     auto vt_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
@@ -74,13 +75,13 @@ int main(int argc, char** argv)
     auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
 
     // load a sample mesh-based lod model
-    std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/schiefer_coarse/Schiefer_Turm_charts_uv.bvh");
+    std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm.bvh");
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
 
     lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
-    mlod_node->set_error_threshold(0.25);
+    mlod_node->set_error_threshold(1.f);
     graph.add_node("/transform/mlod_transform", mlod_node);
 
     mlod_transform->translate(0.0, 0.0, 0.0);
@@ -145,11 +146,15 @@ int main(int argc, char** argv)
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
 
+    // auto screen_grab_pass = std::make_shared<gua::ScreenGrabPassDescription>();
+    // screen_grab_pass->set_output_prefix("/home/tihi6213/Desktop/pic_");
+
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    // pipe->add_pass(screen_grab_pass);
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
     pipe->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
@@ -274,6 +279,7 @@ int main(int argc, char** argv)
             if(framecount++ % 200 == 0)
             {
                 std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+                // screen_grab_pass->set_grab_next(true);
             }
         }
     });
