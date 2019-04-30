@@ -3,7 +3,7 @@
 ###############################################################################
 FILE(GLOB TINY_JPEG_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
 
-ADD_LIBRARY(tiny_jpeg SHARED
+ADD_LIBRARY(tiny_jpeg STATIC
         ${TINY_JPEG_INC}
         ${TINY_JPEG_SRC}
         )
