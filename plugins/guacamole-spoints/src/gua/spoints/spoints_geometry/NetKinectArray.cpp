@@ -1,13 +1,14 @@
+#include <gua/utils/Logger.hpp>
 
+#include <gua/spoints/SPointsFeedbackCollector.hpp>
 #include <gua/spoints/spoints_geometry/NetKinectArray.hpp>
 #include <gua/spoints/spoints_geometry/codec/point_types.h>
-#include <gua/spoints/SPointsFeedbackCollector.hpp>
 
 #include <boost/assign/list_of.hpp>
 
-#include <zmq.hpp>
 #include <iostream>
 #include <mutex>
+#include <zmq.hpp>
 
 #include <gua/spoints/sgtp/SGTP.h>
 // fastlz for inflation of geometry data
@@ -28,11 +29,12 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
 
 NetKinectArray::~NetKinectArray()
 {
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
     if(nullptr != m_tj_compressed_image_buffer_)
     {
         tjFree(m_tj_compressed_image_buffer_);
     }
-
+#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
     m_running_ = false;
     m_recv_.join();
 }
@@ -43,9 +45,8 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
     if(current_point_layout != nullptr)
     {
-
-
-        if(!m_is_fully_encoded_vertex_data_) {
+        if(!m_is_fully_encoded_vertex_data_)
+        {
             auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
 
             auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
@@ -112,13 +113,13 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
                 size_t const vertex_offset = triangle_offset_for_current_layer * 3;
                 size_t const num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
 
-
                 ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, vertex_offset, num_vertices_to_draw);
 
                 triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
             }
-        } else {
-
+        }
+        else
+        {
             scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
             auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
@@ -134,8 +135,6 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             ctx.render_device->main_context()->apply_storage_buffer_bindings();
 
             ctx.render_context->bind_vertex_array(current_point_layout);
-
-
 
             ctx.render_context->apply();
 
@@ -308,7 +307,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                 float* mapped_net_data_vbo_ = (float*)ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
 
-
                 remote_server_screen_width_to_return_ = remote_server_screen_width_;
                 remote_server_screen_height_to_return_ = remote_server_screen_height_;
 
@@ -346,7 +344,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     {
                         uint32_t current_layer_offset = 4 * (layer_to_update_idx);
 
-
                         auto current_region_to_update =
                             scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0], m_texture_space_bounding_boxes_[current_layer_offset + 1], 0),
                                                     scm::math::vec3ui((m_texture_space_bounding_boxes_[current_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 0]),
@@ -382,14 +379,14 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
     return false;
 }
 
-/*float NetKinectArray::get_voxel_size() const {
-  return m_voxel_size_;
-}*/
+    /*float NetKinectArray::get_voxel_size() const {
+      return m_voxel_size_;
+    }*/
 
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
 void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows)
 {
     int num_decompressed_bytes = LZ4_decompress_safe((const char*)&m_buffer_back_compressed_[0], (char*)&m_buffer_back_[0], m_buffer_back_compressed_.size(), m_buffer_back_.size());
-
 
     if(nullptr == m_tj_compressed_image_buffer_)
     {
@@ -452,6 +449,7 @@ void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> co
 
     memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
 }
+#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
 
 void NetKinectArray::readloop()
 {
@@ -519,7 +517,6 @@ void NetKinectArray::readloop()
         }
         else
         {
-
             message_header.fill_texture_byte_offsets_to_bounding_boxes();
 
             for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx)
@@ -531,7 +528,6 @@ void NetKinectArray::readloop()
             m_is_fully_encoded_vertex_data_back_ = message_header.is_fully_encoded_vertex_data;
             m_received_textured_tris_back_ = message_header.num_textured_triangles;
             m_texture_payload_size_in_byte_back_ = message_header.texture_payload_size;
-
 
             m_received_kinect_timestamp_back_ = message_header.timestamp;
             m_received_reconstruction_time_back_ = message_header.geometry_creation_time_in_ms;
@@ -553,13 +549,10 @@ void NetKinectArray::readloop()
 
             m_lod_scaling_back_ = message_header.lod_scaling;
 
-
-
             uint16_t const MAX_LAYER_IDX = 16;
 
-
-            if(!m_is_fully_encoded_vertex_data_back_) {
-
+            if(!m_is_fully_encoded_vertex_data_back_)
+            {
                 m_received_textured_tris_back_ = 0;
                 for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx)
                 {
@@ -573,21 +566,18 @@ void NetKinectArray::readloop()
                     m_texture_space_bounding_boxes_back_[4 * layer_idx + 3] = message_header.tex_bounding_box[layer_idx].max.v;
                     //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
                 }
-
-
-            } else {
-
+            }
+            else
+            {
                 m_num_best_triangles_for_sensor_layer_back_[0] = m_received_textured_tris_back_;
 
                 m_texture_space_bounding_boxes_back_[0] = message_header.tex_bounding_box[0].min.u;
                 m_texture_space_bounding_boxes_back_[1] = message_header.tex_bounding_box[0].min.v;
                 m_texture_space_bounding_boxes_back_[2] = message_header.tex_bounding_box[0].max.u;
                 m_texture_space_bounding_boxes_back_[3] = message_header.tex_bounding_box[0].max.v;
- 
             }
 
-             size_t total_num_received_primitives = m_received_textured_tris_back_;
-
+            size_t total_num_received_primitives = m_received_textured_tris_back_;
 
             if(total_num_received_primitives > 50000000)
             {
@@ -613,7 +603,6 @@ void NetKinectArray::readloop()
 
             size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_texture_payload_size_in_byte_back_ + HEADER_SIZE);
 
-
             if(message_header.is_data_compressed)
             {
                 m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
@@ -635,7 +624,11 @@ void NetKinectArray::readloop()
 
             if(message_header.is_data_compressed)
             {
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
                 _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
+#else
+                gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
+#endif // GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
             }
 
             { // swap
