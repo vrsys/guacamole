@@ -22,6 +22,11 @@
 #ifndef GUA_SCREENGRAB_PASS_HPP
 #define GUA_SCREENGRAB_PASS_HPP
 
+#include <gua/config.hpp>
+
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
+
+#include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
 #include <memory>
@@ -192,5 +197,7 @@ class GUA_DLL ScreenGrabJPEGSaver
 };
 
 } // namespace gua
+
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
 
 #endif // GUA_SCREENGRAB_PASS_HPP
