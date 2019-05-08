@@ -159,7 +159,7 @@ class GUA_DLL ScreenGrabJPEGSaver
     {
         unsigned i;
         unsigned length = dims_.x * dims_.y;
-#pragma omp parallel for
+
         for(i = 0; i < length; i++)
         {
             unsigned offset = i * 3;
