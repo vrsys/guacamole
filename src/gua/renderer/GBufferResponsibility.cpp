@@ -1,5 +1,7 @@
 #include <gua/renderer/GBufferResponsibility.hpp>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+
 namespace gua
 {
 GBufferPreResponsibilityDescription::GBufferPreResponsibilityDescription()
@@ -25,3 +27,5 @@ GBufferPostResponsibilityDescription::GBufferPostResponsibilityDescription()
     };
 }
 } // namespace gua
+
+#endif
