@@ -22,7 +22,7 @@
 // class header
 #include <gua/renderer/ScreenGrabPass.hpp>
 
-#include <gua/renderer/Pipeline.hpp>
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
 
 namespace gua
 {
@@ -91,3 +91,5 @@ void ScreenGrabPassDescription::set_grab_next(bool grab_next)
 }
 
 } // namespace gua
+
+#endif
