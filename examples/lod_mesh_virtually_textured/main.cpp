@@ -48,8 +48,7 @@ int main(int argc, char** argv)
 
     // setup scenegraph
     gua::SceneGraph graph("main_scenegraph");
-
-    vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/FINAL_DEMO_DATA/config_demo_do_not_modify.ini";
+    vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.ini";
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
 
     std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.atlas");
