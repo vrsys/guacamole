@@ -388,7 +388,6 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     if(!(spoints_resource->is_vertex_data_fully_encoded()))
                     {
                         // is_vertex_data_fully_encoded
-                        // std::cout << "IS NOT FULLY ENCODED\n";
                         MaterialShader* current_material = spoints_node->get_material()->get_shader();
                         if(current_material)
                         {
@@ -406,7 +405,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                    forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
                                 forward_textured_triangles_pass_programs_quantized_[current_material] = current_shader;
                             }
                         }
@@ -417,7 +416,6 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     }
                     else
                     {
-                        // std::cout << "IS FULLY ENCODED\n";
                         MaterialShader* current_material = spoints_node->get_material()->get_shader();
                         if(current_material)
                         {
@@ -435,7 +433,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                    forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
                                 forward_textured_triangles_pass_programs_[current_material] = current_shader;
                             }
                         }
@@ -452,7 +450,12 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                     current_shader->use(ctx);
 
-                    ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
+                    if(!(spoints_resource->is_vertex_data_fully_encoded())) {
+                        ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
+                    } else {
+                        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+                    } 
+
 
                     auto const& model_matrix(spoints_node->get_cached_world_transform());
                     auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
