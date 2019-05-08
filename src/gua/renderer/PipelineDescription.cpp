@@ -57,7 +57,7 @@ std::shared_ptr<PipelineDescription> PipelineDescription::make_default()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription::PipelineDescription(PipelineDescription const &other)
+PipelineDescription::PipelineDescription(PipelineDescription const& other)
 {
     for(auto pass : other.passes_)
     {
@@ -75,15 +75,15 @@ PipelineDescription::PipelineDescription(PipelineDescription const &other)
 PipelineDescription::~PipelineDescription() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-void PipelineDescription::add_pass(std::shared_ptr<PipelinePassDescription> const &pass_desc) { passes_.push_back(pass_desc); }
+void PipelineDescription::add_pass(std::shared_ptr<PipelinePassDescription> const& pass_desc) { passes_.push_back(pass_desc); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<std::shared_ptr<PipelinePassDescription>> const &PipelineDescription::get_passes() const { return passes_; }
+std::vector<std::shared_ptr<PipelinePassDescription>> const& PipelineDescription::get_passes() const { return passes_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> const &PipelineDescription::get_pass(std::size_t index) const
+std::shared_ptr<PipelinePassDescription> const& PipelineDescription::get_pass(std::size_t index) const
 {
     assert(index < passes_.size());
     return passes_[index];
@@ -127,7 +127,7 @@ std::shared_ptr<SSAAPassDescription> const PipelineDescription::get_ssaa_pass() 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool PipelineDescription::operator==(PipelineDescription const &other) const
+bool PipelineDescription::operator==(PipelineDescription const& other) const
 {
     if(enable_abuffer_ != other.enable_abuffer_ || abuffer_size_ != other.abuffer_size_ || blending_termination_threshold_ != other.blending_termination_threshold_ ||
        max_lights_count_ != other.max_lights_count_ || passes_.size() != other.passes_.size())
@@ -152,15 +152,15 @@ bool PipelineDescription::operator==(PipelineDescription const &other) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool PipelineDescription::operator!=(PipelineDescription const &other) const { return !(*this == other); }
+bool PipelineDescription::operator!=(PipelineDescription const& other) const { return !(*this == other); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelineDescription &PipelineDescription::operator=(PipelineDescription const &other)
+PipelineDescription& PipelineDescription::operator=(PipelineDescription const& other)
 {
     passes_.clear();
 
-    for(auto const &pass : other.passes_)
+    for(auto const& pass : other.passes_)
     {
         passes_.push_back(pass->make_copy());
     }

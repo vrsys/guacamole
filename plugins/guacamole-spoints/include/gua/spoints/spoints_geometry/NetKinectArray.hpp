@@ -13,9 +13,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
 #include <turbojpeg.h>
-#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
 
 namespace spoints
 {
@@ -128,9 +128,9 @@ class NetKinectArray
     std::string get_socket_string() const;
     // float       get_voxel_size() const;
 
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     std::unordered_map<uint32_t, tjhandle> m_jpeg_decompressor_per_layer;
-#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
 
     SPointsStats get_latest_spoints_stats()
     {
@@ -145,9 +145,9 @@ class NetKinectArray
     bool has_calibration(gua::RenderContext const& ctx) { return m_received_calibration_[ctx.id].load(); }
 
   private:
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     void _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
-#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
     void readloop();
     // void sendfeedbackloop();
 

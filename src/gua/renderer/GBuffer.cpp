@@ -31,7 +31,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-GBuffer::GBuffer(RenderContext const &ctx, math::vec2ui const &resolution)
+GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution)
     : RenderTarget(resolution), abuffer_(), fbo_read_(nullptr), fbo_write_(nullptr), fbo_read_only_color_(nullptr), fbo_write_only_color_(nullptr),
       sampler_state_desc_(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT)
 // linear filtering, only necessary for SSAA 3.11
@@ -89,11 +89,11 @@ GBuffer::GBuffer(RenderContext const &ctx, math::vec2ui const &resolution)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::allocate_a_buffer(RenderContext &ctx, size_t buffer_size) { abuffer_.allocate(ctx, buffer_size); }
+void GBuffer::allocate_a_buffer(RenderContext& ctx, size_t buffer_size) { abuffer_.allocate(ctx, buffer_size); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::clear(RenderContext const &ctx, float depth, unsigned stencil)
+void GBuffer::clear(RenderContext const& ctx, float depth, unsigned stencil)
 {
     ctx.render_context->clear_color_buffers(fbo_write_, scm::math::vec4f(0, 0, 0, 0));
     ctx.render_context->clear_depth_stencil_buffer(fbo_write_, depth, stencil);
@@ -103,7 +103,7 @@ void GBuffer::clear(RenderContext const &ctx, float depth, unsigned stencil)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::clear_color(RenderContext const &ctx)
+void GBuffer::clear_color(RenderContext const& ctx)
 {
     if(ctx.render_context && fbo_write_)
         ctx.render_context->clear_color_buffer(fbo_write_, 0, scm::math::vec4f(0, 0, 0, 0));
@@ -111,7 +111,7 @@ void GBuffer::clear_color(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::bind(RenderContext const &ctx, bool write_depth)
+void GBuffer::bind(RenderContext const& ctx, bool write_depth)
 {
     if(write_depth)
     {
@@ -126,7 +126,7 @@ void GBuffer::bind(RenderContext const &ctx, bool write_depth)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::unbind(RenderContext const &ctx)
+void GBuffer::unbind(RenderContext const& ctx)
 {
     abuffer_.unbind(ctx);
     RenderTarget::unbind(ctx);
@@ -143,7 +143,7 @@ void GBuffer::toggle_ping_pong()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::remove_buffers(RenderContext const &ctx)
+void GBuffer::remove_buffers(RenderContext const& ctx)
 {
     unbind(ctx);
 
@@ -194,7 +194,7 @@ void GBuffer::remove_buffers(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GBuffer::retrieve_depth_data(RenderContext const &ctx, uint32_t *out_data)
+void GBuffer::retrieve_depth_data(RenderContext const& ctx, uint32_t* out_data)
 {
     toggle_ping_pong();
     ctx.render_context->retrieve_texture_data(depth_buffer_, 0, out_data);

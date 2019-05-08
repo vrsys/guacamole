@@ -58,8 +58,6 @@ class GUA_DLL ResolvePassDescription : public PipelinePassDescription
 
     ResolvePassDescription();
 
-    void apply_post_render_action(RenderContext const& ctx, gua::Pipeline* pipe) const override;
-
     /////////////////////////////////////////////////////////////////////////////
     // background
     /////////////////////////////////////////////////////////////////////////////

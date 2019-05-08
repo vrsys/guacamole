@@ -29,12 +29,12 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
 
 NetKinectArray::~NetKinectArray()
 {
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     if(nullptr != m_tj_compressed_image_buffer_)
     {
         tjFree(m_tj_compressed_image_buffer_);
     }
-#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
     m_running_ = false;
     m_recv_.join();
 }
@@ -383,7 +383,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
       return m_voxel_size_;
     }*/
 
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
 void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows)
 {
     int num_decompressed_bytes = LZ4_decompress_safe((const char*)&m_buffer_back_compressed_[0], (char*)&m_buffer_back_[0], m_buffer_back_compressed_.size(), m_buffer_back_.size());
@@ -449,7 +449,7 @@ void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> co
 
     memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
 }
-#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
 
 void NetKinectArray::readloop()
 {
@@ -624,11 +624,11 @@ void NetKinectArray::readloop()
 
             if(message_header.is_data_compressed)
             {
-#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
                 _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
 #else
                 gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
-#endif // GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
+#endif // GUACAMOLE_ENABLE_TURBOJPEG
             }
 
             { // swap

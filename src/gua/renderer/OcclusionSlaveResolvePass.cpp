@@ -42,16 +42,16 @@ OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
 {
     vertex_shader_ = "";
     fragment_shader_ = "";
-    name_ = "OcclusionSlaveResolvePass";
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Custom;
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
+    private_.name_ = "OcclusionSlaveResolvePass";
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Custom;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 }
 
-void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContext const &ctx, gua::Pipeline *pipe) const
+/*void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContext const &ctx, gua::Pipeline *pipe) const
 {
-    /*
+
       auto memory_controller = gua::NamedSharedMemoryController::instance_shared_ptr();
       //std::cout << "Writing depth buffer to: " << depth_buffer_shared_memory_name << "\n";
 
@@ -69,15 +69,15 @@ void OcclusionSlaveResolvePassDescription::apply_post_render_action(RenderContex
       memory_controller->register_remotely_constructed_object_on_segment("DEPTH_FEEDBACK_SEGMENT", "DEPTH_FEEDBACK_SEMAPHOR");
       memory_controller->set_value_for_named_object<std::atomic_int, int>("DEPTH_FEEDBACK_SEMAPHOR", 2);
       std::cout << "Would signal now!\n";
-      */
-}
+
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<PipelinePassDescription> OcclusionSlaveResolvePassDescription::make_copy() const { return std::make_shared<OcclusionSlaveResolvePassDescription>(*this); }
 
-void OcclusionSlaveResolvePassDescription::create_gpu_resources(gua::RenderContext const &ctx, scm::math::vec2ui const &render_target_dims)
+void OcclusionSlaveResolvePassDescription::create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims)
 {
     ResourceFactory factory;
 
@@ -128,17 +128,16 @@ void OcclusionSlaveResolvePassDescription::create_gpu_resources(gua::RenderConte
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
 #if not defined(__WIN32__) && not defined(_WIN32) && not defined(_WIN64)
-    pass.process_ = [&](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) {
+    private_.process_ = [&](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
         // auto& target = pipe.current_viewstate().target;
         // auto& gua_depth_buffer = target->get_depth_buffer();
 
-        auto const &camera = pipe.current_viewstate().camera;
+        auto const& camera = pipe.current_viewstate().camera;
 
-        scm::math::vec2ui const &render_target_dims = camera.config.get_resolution();
+        scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
 
         // custom render pass
         if(!gpu_resources_already_created_)
@@ -150,13 +149,13 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
         ////// >> perform depth downsampling
 
         // scm::gl::context_all_guard context_guard(ctx.render_context);
-        auto &target = *pipe.current_viewstate().target;
+        auto& target = *pipe.current_viewstate().target;
 
         target.set_viewport(ctx);
 
         // auto& gua_depth_buffer = target.get_depth_buffer();
 
-        auto &gua_depth_buffer = pipe.get_gbuffer()->get_depth_buffer();
+        auto& gua_depth_buffer = pipe.get_gbuffer()->get_depth_buffer();
         pipe.get_gbuffer()->toggle_ping_pong();
         // target.unbind(ctx);
         depth_downsampling_shader_program_->use(ctx);
@@ -219,7 +218,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
         // scm::gl::context_all_guard context_guard(ctx.render_context);
 
-        target.bind(ctx, !writes_only_color_buffer_);
+        target.bind(ctx, !pass.writes_only_color_buffer());
         target.set_viewport(ctx);
 
         // scm::math::vec2 downsampling_ratio = scm::math::vec2(render_target_dims) / scm::math::vec2(gbuffer_extraction_resolution_);
@@ -227,7 +226,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
         control_monitor_shader_program_->use(ctx);
 
-        for(auto const &u : desc.uniforms)
+        for(auto const& u : desc.uniforms)
         {
             u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
         }
@@ -262,7 +261,7 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
         std::vector<float> texture_data(pixel_size, 0);
 
-        ctx.render_context->retrieve_texture_data(downsampled_depth_attachment_, 0, (uint32_t *)&texture_data[0]);
+        ctx.render_context->retrieve_texture_data(downsampled_depth_attachment_, 0, (uint32_t*)&texture_data[0]);
         // pipe.get_gbuffer()->retrieve_depth_data(ctx, (uint32_t*)&texture_data[0]);
 
         // std::cout << "Retrieving Depth buffer data!\n";
@@ -315,16 +314,17 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
 
         // std::cout << "Before trying to lock the mutex\n";
         memory_controller->lock_read_write();
-        // std::cout << "After aquiring the mutex lock\n";
+        // std::cout << "After acquiring the mutex lock\n";
 
         memory_controller->add_read_only_memory_segment(memory_segment_label_prefix, false);
         memory_controller->register_remotely_constructed_object_on_segment(memory_segment_label_prefix, depth_buffer_object);
 
-        memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64>>(depth_buffer_object.c_str(), (char *)&texture_data[0], texture_data.size() * 4);
+        memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64>>(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
         memory_controller->unlock_read_write();
         // std::cout << "After unlocking the mutex\n";
     };
 #endif
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 } // namespace gua

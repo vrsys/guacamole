@@ -190,6 +190,13 @@ endif(GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
 ## json ###################################################
 find_package(Json REQUIRED)
 
+
+option (GUACAMOLE_ENABLE_TURBOJPEG "Set to enable usage of TurboJPEG for decompressing images." OFF)
+
+IF (GUACAMOLE_ENABLE_TURBOJPEG)
+  find_package(TurboJPEG REQUIRED)
+ENDIF (GUACAMOLE_ENABLE_TURBOJPEG)
+
 ## setup paths and libraries ##############################
 set(LIB_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/lib

@@ -61,17 +61,17 @@ void main() {
 #endif
 
     fragment_shader_is_file_name_ = false;
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
 
-    rendermode_ = RenderMode::Quad;
+    private_.rendermode_ = RenderMode::Quad;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FullscreenPassDescription &FullscreenPassDescription::source(std::string const &source)
+FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source)
 {
 #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
@@ -87,11 +87,11 @@ FullscreenPassDescription &FullscreenPassDescription::source(std::string const &
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const &FullscreenPassDescription::source() const { return fragment_shader_; }
+std::string const& FullscreenPassDescription::source() const { return fragment_shader_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FullscreenPassDescription &FullscreenPassDescription::source_file(std::string const &source_file)
+FullscreenPassDescription& FullscreenPassDescription::source_file(std::string const& source_file)
 {
     fragment_shader_ = source_file;
     fragment_shader_is_file_name_ = true;
@@ -101,7 +101,7 @@ FullscreenPassDescription &FullscreenPassDescription::source_file(std::string co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const &FullscreenPassDescription::source_file() const { return fragment_shader_; }
+std::string const& FullscreenPassDescription::source_file() const { return fragment_shader_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +109,7 @@ std::shared_ptr<PipelinePassDescription> FullscreenPassDescription::make_copy() 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass FullscreenPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

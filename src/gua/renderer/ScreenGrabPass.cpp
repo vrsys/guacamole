@@ -20,24 +20,23 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/BBoxPass.hpp>
+#include <gua/renderer/ScreenGrabPass.hpp>
 
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/databases/GeometryDatabase.hpp>
-#include <gua/databases/Resources.hpp>
-#include <gua/utils/Logger.hpp>
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
 
 namespace gua
 {
-BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription()
+ScreenGrabPassDescription::ScreenGrabPassDescription() : PipelinePassDescription(), output_prefix_(""), grab_next_(false)
 {
-    vertex_shader_ = "shaders/bbox.vert";
-    geometry_shader_ = "shaders/bbox.geom";
-    fragment_shader_ = "shaders/bbox.frag";
-    private_.name_ = "BBoxPass";
+    vertex_shader_ = "";
+    geometry_shader_ = "";
+    fragment_shader_ = "";
+    private_.name_ = "ScreenGrabPass";
 
-    private_.writes_only_color_buffer_ = false;
-    private_.rendermode_ = RenderMode::Callback;
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.enable_for_shadows_ = false;
+    private_.rendermode_ = RenderMode::Custom;
 
     private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 
@@ -47,48 +46,50 @@ BBoxPassDescription::BBoxPassDescription() : PipelinePassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> BBoxPassDescription::make_copy() const { return std::make_shared<BBoxPassDescription>(*this); }
+std::shared_ptr<PipelinePassDescription> ScreenGrabPassDescription::make_copy() const { return std::make_shared<ScreenGrabPassDescription>(*this); }
 
-PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+PipelinePass ScreenGrabPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    auto count = 1;
-    scm::gl::buffer_ptr buffer_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, count * 2 * sizeof(math::vec3f), 0);
-    scm::gl::vertex_array_ptr vao_ =
-        ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f))(0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f)), {buffer_});
-
-    private_.process_ = [buffer_, vao_](PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) {
-        auto const& scene = *(pipe.current_viewstate().scene);
-        auto count(scene.bounding_boxes.size());
-
-        if(count < 1)
-            return;
-        // else
+    private_.process_ = [&](PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) {
         RenderContext const& ctx(pipe.get_context());
 
-        ctx.render_device->resize_buffer(buffer_, count * 2 * sizeof(math::vec3f));
-
+        if(grab_next_)
         {
-            auto data = static_cast<math::vec3f*>(ctx.render_context->map_buffer(buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+            grab_next_ = false;
+            scm::gl::texture_2d_ptr color_buffer = pipe.get_gbuffer()->get_color_buffer();
+            scm::math::vec2ui dims = color_buffer->dimensions();
 
-            for(unsigned int i = 0; i < count; ++i)
+            auto format = color_buffer->format();
+
+            if(format != scm::gl::data_format::FORMAT_RGB_32F)
             {
-                data[2 * i] = math::vec3f(scene.bounding_boxes[i].min);
-                data[2 * i + 1] = math::vec3f(scene.bounding_boxes[i].max);
+                std::cerr << "Invalid use of ScreenGrabPass with non-standard color buffer" << std::endl;
+                return;
             }
 
-            ctx.render_context->unmap_buffer(buffer_);
+            std::vector<float> host_color_buffer(dims.x * dims.y * 3);
+
+            ctx.render_context->retrieve_texture_data(color_buffer, 0, &host_color_buffer[0]);
+            ctx.render_context->sync();
+
+            ScreenGrabJPEGSaver::get_instance()->save(output_prefix_, dims, host_color_buffer);
         }
-
-        ctx.render_context->bind_vertex_array(vao_);
-
-        ctx.render_context->apply();
-
-        assert(count < std::numeric_limits<unsigned>::max());
-        ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
     };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
+void ScreenGrabPassDescription::set_output_prefix(const std::string& output_prefix)
+{
+    output_prefix_ = output_prefix;
+    touch();
+}
+void ScreenGrabPassDescription::set_grab_next(bool grab_next)
+{
+    grab_next_ = grab_next;
+    touch();
+}
 
 } // namespace gua
+
+#endif

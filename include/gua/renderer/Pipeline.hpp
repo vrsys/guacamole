@@ -74,6 +74,7 @@ struct GUA_DLL PipelineViewState
 class GUA_DLL Pipeline
 {
   public:
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     struct GUA_DLL query_dispatch
     {
         scm::gl::timer_query_ptr query;
@@ -88,6 +89,7 @@ class GUA_DLL Pipeline
         std::unordered_map<std::string, time_point> cpu_queries;
         std::map<std::string, double> results;
     };
+#endif
 
   public:
     friend class DepthCubeMapRenderer;
@@ -97,7 +99,10 @@ class GUA_DLL Pipeline
 
     scm::gl::texture_2d_ptr render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs);
 
-    void apply_post_render_actions(RenderContext const& ctx);
+    void load_passes_and_responsibilities();
+
+    void fulfil_pre_render_responsibilities(RenderContext const& ctx);
+    void fulfil_post_render_responsibilities(RenderContext const& ctx);
 
     void generate_shadow_map(node::LightNode& light, LightTable::LightBlock& light_block);
 
@@ -112,6 +117,7 @@ class GUA_DLL Pipeline
     void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
     void draw_quad();
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     // time queries
     void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
     void end_gpu_query(RenderContext const& ctx, std::string const& query_name);
@@ -120,6 +126,7 @@ class GUA_DLL Pipeline
     void end_cpu_query(std::string const& query_name);
 
     void fetch_gpu_query_results(RenderContext const& ctx);
+#endif
 
     void clear_frame_cache();
 
@@ -148,10 +155,13 @@ class GUA_DLL Pipeline
     SubstitutionMap global_substitution_map_;
 
     std::vector<PipelinePass> passes_;
+    std::vector<PipelineResponsibility> responsibilities_pre_render_;
+    std::vector<PipelineResponsibility> responsibilities_post_render_;
     scm::gl::quad_geometry_ptr quad_;
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 #define GUA_ENABLE_PROFILING_TIME_QUERIES
     time_query_collection queries_;
+#endif
 };
 
 } // namespace gua

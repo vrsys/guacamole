@@ -33,24 +33,30 @@
 
 namespace gua
 {
-TextureCube::TextureCube(unsigned width, unsigned height, scm::gl::data_format color_format, scm::gl::data_format internal_format, unsigned mipmap_layers,
-                         scm::gl::sampler_state_desc const &state_descripton)
+TextureCube::TextureCube(
+    unsigned width, unsigned height, scm::gl::data_format color_format, scm::gl::data_format internal_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, internal_format, mipmap_layers, state_descripton), width_(width), height_(height), file_px_(""), file_nx_(""), file_py_(""), file_ny_(""), file_pz_(""), file_nz_("")
 {
 }
 
-TextureCube::TextureCube(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+TextureCube::TextureCube(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, mipmap_layers, state_descripton), width_(width), height_(height), file_px_(""), file_nx_(""), file_py_(""), file_ny_(""), file_pz_(""), file_nz_("")
 {
 }
 
-TextureCube::TextureCube(std::string const &file_px, std::string const &file_nx, std::string const &file_py, std::string const &file_ny, std::string const &file_pz, std::string const &file_nz,
-                         bool generate_mipmaps, scm::gl::sampler_state_desc const &state_descripton)
+TextureCube::TextureCube(std::string const& file_px,
+                         std::string const& file_nx,
+                         std::string const& file_py,
+                         std::string const& file_ny,
+                         std::string const& file_pz,
+                         std::string const& file_nz,
+                         bool generate_mipmaps,
+                         scm::gl::sampler_state_desc const& state_descripton)
     : Texture(file_px, generate_mipmaps, state_descripton), width_(0), height_(0), file_px_(file_px), file_nx_(file_nx), file_py_(file_py), file_ny_(file_ny), file_pz_(file_pz), file_nz_(file_nz)
 {
 }
 
-void TextureCube::upload_to(RenderContext const &context) const
+void TextureCube::upload_to(RenderContext const& context) const
 {
     std::unique_lock<std::mutex> lock(upload_mutex_);
     RenderContext::Texture ctex{};
