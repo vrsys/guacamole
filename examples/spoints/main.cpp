@@ -149,8 +149,8 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    // auto resolution = gua::math::vec2ui(800, 800);
-    auto resolution = gua::math::vec2ui(3840, 2160);
+     auto resolution = gua::math::vec2ui(800, 800);
+    //auto resolution = gua::math::vec2ui(3840, 2160);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     camera->config.set_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("window1");
-    camera->config.set_enable_stereo(true);
+    camera->config.set_enable_stereo(false);
     // camera->config.set_enable_stereo(true);
     camera->set_pipeline_description(pipe);
 
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
     camera2->config.set_screen_path("/screen2");
     camera2->config.set_scene_graph_name("main_scenegraph");
     camera2->config.set_output_window_name("window2");
-    camera2->config.set_enable_stereo(true);
+    camera2->config.set_enable_stereo(false);
     // camera2->config.set_enable_stereo(true);
     camera2->set_pipeline_description(pipe);
 
@@ -208,7 +208,7 @@ int main(int argc, char** argv)
     camera3->config.set_screen_path("/screen3");
     camera3->config.set_scene_graph_name("main_scenegraph");
     camera3->config.set_output_window_name("window3");
-    camera3->config.set_enable_stereo(true);
+    camera3->config.set_enable_stereo(false);
     // camera3->config.set_enable_stereo(true);
     camera3->set_pipeline_description(pipe);
 
@@ -234,11 +234,11 @@ int main(int argc, char** argv)
         set_window_default(window, cam_node->config.get_resolution());
         cam_node->config.set_output_window_name(window_name);
 
-        // window->config.set_stereo_mode(gua::StereoMode::MONO);
+         window->config.set_stereo_mode(gua::StereoMode::MONO);
         window->config.set_enable_vsync(false);
 
         // if("window3" == window_name) {
-        window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+        //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
         //}
 
         window_handle = window;
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
               add_window("window4", camera4);
             }*/
 
-            std::cout << window_handle->get_rendering_fps() << "\n";
+            //std::cout << window_handle->get_rendering_fps() << "\n";
             ++framecount;
         }
     });

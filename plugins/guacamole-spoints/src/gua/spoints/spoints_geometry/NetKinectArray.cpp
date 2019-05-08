@@ -1,13 +1,14 @@
+#include <gua/utils/Logger.hpp>
 
+#include <gua/spoints/SPointsFeedbackCollector.hpp>
 #include <gua/spoints/spoints_geometry/NetKinectArray.hpp>
 #include <gua/spoints/spoints_geometry/codec/point_types.h>
-#include <gua/spoints/SPointsFeedbackCollector.hpp>
 
 #include <boost/assign/list_of.hpp>
 
-#include <zmq.hpp>
 #include <iostream>
 #include <mutex>
+#include <zmq.hpp>
 
 #include <gua/spoints/sgtp/SGTP.h>
 // fastlz for inflation of geometry data
@@ -28,11 +29,12 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
 
 NetKinectArray::~NetKinectArray()
 {
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
     if(nullptr != m_tj_compressed_image_buffer_)
     {
         tjFree(m_tj_compressed_image_buffer_);
     }
-
+#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
     m_running_ = false;
     m_recv_.join();
 }
@@ -43,75 +45,101 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
     if(current_point_layout != nullptr)
     {
-        auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
-
-        auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
-        auto const& current_uv_pointers = uv_calibs_per_context_[ctx.id];
-
-        scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-        ctx.render_context->bind_vertex_array(current_point_layout);
-
-        if(nullptr == linear_sampler_state_)
+        if(!m_is_fully_encoded_vertex_data_)
         {
-            linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+            auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+
+            auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
+            auto const& current_uv_pointers = uv_calibs_per_context_[ctx.id];
+
+            scm::gl::context_vertex_input_guard vig(ctx.render_context);
+
+            ctx.render_context->bind_vertex_array(current_point_layout);
+
+            if(nullptr == linear_sampler_state_)
+            {
+                linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+            }
+
+            auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
+
+            ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
+
+            // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
+            for(uint32_t sensor_idx = 0; sensor_idx < m_num_sensors_; ++sensor_idx)
+            {
+                auto const& current_individual_inv_xyz_texture = current_inv_xyz_pointers[sensor_idx];
+                ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
+
+                // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
+                auto const& current_individual_uv_texture = current_uv_pointers[sensor_idx];
+                ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_num_sensors_ + sensor_idx + 1);
+            }
+            // m_bound_calibration_data_[ctx.id] = true;
+            //}
+
+            float lod_scaling_for_context = m_current_lod_scaling_per_context_[ctx.id];
+
+            shader_program->set_uniform(ctx, m_inverse_vol_to_world_mat_, "inv_vol_to_world_matrix");
+            shader_program->set_uniform(ctx, lod_scaling_for_context, "scaling_factor");
+
+            size_t initial_vbo_size = 10000000;
+
+            scm::math::vec3 tight_geometry_bb_min_for_context = m_current_tight_geometry_bb_min_per_context_[ctx.id];
+            scm::math::vec3 tight_geometry_bb_max_for_context = m_current_tight_geometry_bb_max_per_context_[ctx.id];
+
+            shader_program->set_uniform(ctx, tight_geometry_bb_min_for_context, "tight_bb_min");
+            shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
+
+            shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
+            ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, initial_vbo_size);
+            // ctx.render_device->main_context()->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+
+            ctx.render_device->main_context()->apply_storage_buffer_bindings();
+
+            uint32_t triangle_offset_for_current_layer = 0;
+            uint32_t num_triangles_to_draw_for_current_layer = 0;
+
+            auto& num_best_triangles_for_sensor_layer_for_context = m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id];
+
+            for(int layer_idx = 0; layer_idx < 4; ++layer_idx)
+            {
+                num_triangles_to_draw_for_current_layer = num_best_triangles_for_sensor_layer_for_context[layer_idx];
+
+                shader_program->set_uniform(ctx, int(layer_idx), "current_sensor_layer");
+
+                ctx.render_context->apply();
+
+                size_t const vertex_offset = triangle_offset_for_current_layer * 3;
+                size_t const num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
+
+                ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, vertex_offset, num_vertices_to_draw);
+
+                triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
+            }
         }
-
-        auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
-
-        ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
-
-        // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
-        for(uint32_t sensor_idx = 0; sensor_idx < m_num_sensors_; ++sensor_idx)
+        else
         {
-            auto const& current_individual_inv_xyz_texture = current_inv_xyz_pointers[sensor_idx];
-            ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
+            scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-            // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
-            auto const& current_individual_uv_texture = current_uv_pointers[sensor_idx];
-            ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_num_sensors_ + sensor_idx + 1);
-        }
-        // m_bound_calibration_data_[ctx.id] = true;
-        //}
+            auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
 
-        float lod_scaling_for_context = m_current_lod_scaling_per_context_[ctx.id];
+            auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+            ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
 
-        shader_program->set_uniform(ctx, m_inverse_vol_to_world_mat_, "inv_vol_to_world_matrix");
-        shader_program->set_uniform(ctx, lod_scaling_for_context, "scaling_factor");
+            size_t initial_vbo_size = 10000000;
 
-        size_t initial_vbo_size = 10000000;
+            shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
+            ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, initial_vbo_size);
 
-        scm::math::vec3 tight_geometry_bb_min_for_context = m_current_tight_geometry_bb_min_per_context_[ctx.id];
-        scm::math::vec3 tight_geometry_bb_max_for_context = m_current_tight_geometry_bb_max_per_context_[ctx.id];
+            ctx.render_device->main_context()->apply_storage_buffer_bindings();
 
-        shader_program->set_uniform(ctx, tight_geometry_bb_min_for_context, "tight_bb_min");
-        shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
-
-        shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-        ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, initial_vbo_size);
-        // ctx.render_device->main_context()->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
-
-        ctx.render_device->main_context()->apply_storage_buffer_bindings();
-
-        uint32_t triangle_offset_for_current_layer = 0;
-        uint32_t num_triangles_to_draw_for_current_layer = 0;
-
-        auto& num_best_triangles_for_sensor_layer_for_context = m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id];
-
-        for(int layer_idx = 0; layer_idx < 4; ++layer_idx)
-        {
-            num_triangles_to_draw_for_current_layer = num_best_triangles_for_sensor_layer_for_context[layer_idx];
-
-            shader_program->set_uniform(ctx, int(layer_idx), "current_sensor_layer");
+            ctx.render_context->bind_vertex_array(current_point_layout);
 
             ctx.render_context->apply();
 
-            size_t const vertex_offset = triangle_offset_for_current_layer * 3;
-            size_t const num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
-
-            ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, vertex_offset, num_vertices_to_draw);
-
-            triangle_offset_for_current_layer += num_triangles_to_draw_for_current_layer;
+            size_t const num_vertices_to_draw = m_received_textured_tris_ * 3;
+            ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
         }
 
         ctx.render_context->reset_vertex_input();
@@ -351,18 +379,15 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
     return false;
 }
 
-/*float NetKinectArray::get_voxel_size() const {
-  return m_voxel_size_;
-}*/
+    /*float NetKinectArray::get_voxel_size() const {
+      return m_voxel_size_;
+    }*/
 
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
 void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows)
 {
     int num_decompressed_bytes = LZ4_decompress_safe((const char*)&m_buffer_back_compressed_[0], (char*)&m_buffer_back_[0], m_buffer_back_compressed_.size(), m_buffer_back_.size());
 
-    /*  std::cout << "num expected decompressed bytes: " << m_buffer_back_.size() << "\n";
-      std::cout << "num_decompressed_bytes: " << num_decompressed_bytes << "\n";
-
-    */
     if(nullptr == m_tj_compressed_image_buffer_)
     {
         m_tj_compressed_image_buffer_ = tjAlloc(1024 * 1024 * 50);
@@ -424,6 +449,7 @@ void NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> co
 
     memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
 }
+#endif //GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
 
 void NetKinectArray::readloop()
 {
@@ -523,25 +549,35 @@ void NetKinectArray::readloop()
 
             m_lod_scaling_back_ = message_header.lod_scaling;
 
-            m_received_textured_tris_back_ = 0;
-
             uint16_t const MAX_LAYER_IDX = 16;
-            for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx)
+
+            if(!m_is_fully_encoded_vertex_data_back_)
             {
-                m_num_best_triangles_for_sensor_layer_back_[layer_idx] = message_header.num_best_triangles_per_sensor[layer_idx];
+                m_received_textured_tris_back_ = 0;
+                for(int layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx)
+                {
+                    m_num_best_triangles_for_sensor_layer_back_[layer_idx] = message_header.num_best_triangles_per_sensor[layer_idx];
 
-                m_received_textured_tris_back_ += message_header.num_best_triangles_per_sensor[layer_idx];
+                    m_received_textured_tris_back_ += message_header.num_best_triangles_per_sensor[layer_idx];
 
-                m_texture_space_bounding_boxes_back_[4 * layer_idx + 0] = message_header.tex_bounding_box[layer_idx].min.u;
-                m_texture_space_bounding_boxes_back_[4 * layer_idx + 1] = message_header.tex_bounding_box[layer_idx].min.v;
-                m_texture_space_bounding_boxes_back_[4 * layer_idx + 2] = message_header.tex_bounding_box[layer_idx].max.u;
-                m_texture_space_bounding_boxes_back_[4 * layer_idx + 3] = message_header.tex_bounding_box[layer_idx].max.v;
-                //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
+                    m_texture_space_bounding_boxes_back_[4 * layer_idx + 0] = message_header.tex_bounding_box[layer_idx].min.u;
+                    m_texture_space_bounding_boxes_back_[4 * layer_idx + 1] = message_header.tex_bounding_box[layer_idx].min.v;
+                    m_texture_space_bounding_boxes_back_[4 * layer_idx + 2] = message_header.tex_bounding_box[layer_idx].max.u;
+                    m_texture_space_bounding_boxes_back_[4 * layer_idx + 3] = message_header.tex_bounding_box[layer_idx].max.v;
+                    //= message_header.texture_bounding_boxes[4*layer_idx + bb_component_idx];
+                }
+            }
+            else
+            {
+                m_num_best_triangles_for_sensor_layer_back_[0] = m_received_textured_tris_back_;
+
+                m_texture_space_bounding_boxes_back_[0] = message_header.tex_bounding_box[0].min.u;
+                m_texture_space_bounding_boxes_back_[1] = message_header.tex_bounding_box[0].min.v;
+                m_texture_space_bounding_boxes_back_[2] = message_header.tex_bounding_box[0].max.u;
+                m_texture_space_bounding_boxes_back_[3] = message_header.tex_bounding_box[0].max.v;
             }
 
             size_t total_num_received_primitives = m_received_textured_tris_back_;
-
-            // std::cout << "Num tris received: " << m_received_textured_tris_back_ << "\n";
 
             if(total_num_received_primitives > 50000000)
             {
@@ -569,7 +605,6 @@ void NetKinectArray::readloop()
 
             if(message_header.is_data_compressed)
             {
-                // std::cout << "Total amount compressed bytes: " << total_encoded_geometry_byte_size << "\n";
                 m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
                 memcpy((unsigned char*)&m_buffer_back_compressed_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
             }
@@ -589,7 +624,11 @@ void NetKinectArray::readloop()
 
             if(message_header.is_data_compressed)
             {
+#ifdef GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
                 _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
+#else
+                gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
+#endif // GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG
             }
 
             { // swap

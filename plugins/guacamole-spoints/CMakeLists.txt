@@ -16,7 +16,13 @@ SOURCE_GROUP("resources" FILES ${GUA_SPOINTS_SHADERS})
 
 SET(GUACAMOLE_SPOINTS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "Path to guacamole-spoints includes.")
 
+
+option (GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG "Set to enable usage of TurboJPEG for decompressing images." OFF)
+
+
+IF (GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG)
 find_package(TurboJPEG REQUIRED)
+ENDIF (GUACAMOLE_SPOINTS_ENABLE_TURBOJPEG)
 
 add_library( guacamole-spoints SHARED
     ${GUA_SPOINTS_INC}
