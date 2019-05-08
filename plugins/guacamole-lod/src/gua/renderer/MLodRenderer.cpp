@@ -156,48 +156,6 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 {
     RenderContext const& ctx(pipe.get_context());
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    const auto passes = pipe.current_viewstate().camera.pipeline_description->get_passes();
-
-    int trimesh_position{INT_MAX}, mlod_position{INT_MAX};
-
-    for(int i = 0; i < passes.size(); i++)
-    {
-        if(passes[i]->name() == "TriMeshPass")
-        {
-            trimesh_position = i;
-        }
-
-        if(passes[i]->name() == "MLodPass")
-        {
-            mlod_position = i;
-        }
-    }
-
-    VTContextState vt_state;
-    if(mlod_position < trimesh_position || trimesh_position == INT_MAX)
-    {
-        if(!pipe.current_viewstate().shadow_mode)
-        {
-            vt_state = pre_render(pipe, desc);
-        }
-    }
-    else
-    {
-        auto& vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
-        auto& current_vt_info = vt_info_per_context[ctx.id];
-
-        if(current_vt_info.cut_update_ == nullptr)
-        {
-            vt_state.has_camera = false;
-            vt_state.feedback_enabled = false;
-        }
-
-        vt_state.has_camera = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
-        vt_state.feedback_enabled = current_vt_info.cut_update_->can_accept_feedback(current_vt_info.context_id_);
-    }
-#endif
-
     ///////////////////////////////////////////////////////////////////////////
     //  retrieve current view state
     ///////////////////////////////////////////////////////////////////////////
@@ -206,8 +164,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     auto const& frustum = pipe.current_viewstate().frustum;
     auto& target = *pipe.current_viewstate().target;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //  obtain nodes
@@ -345,10 +305,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         }
     }
 
-    // scm::gl::context_all_guard context_guard(ctx.render_context);
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / MLodRenderer";
     pipe.begin_gpu_query(ctx, gpu_query_name);
+#endif
 
     MaterialShader* current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_material_program;
@@ -381,9 +341,11 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
             if(!pipe.current_viewstate().shadow_mode)
             {
-                if(vt_state.has_camera)
+                VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+
+                if(vt_state && vt_state->has_camera_)
                 {
-                    current_material_program->set_uniform(ctx, vt_state.feedback_enabled, "enable_feedback");
+                    current_material_program->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
                 }
             }
 #endif
@@ -453,12 +415,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     //////////////////////////////////////////////////////////////////////////
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name_plod_total);
-
-    ctx.render_context->reset_state_objects();
-
-    ctx.render_context->sync();
+#endif
 
     // dispatch cut updates
     if(previous_frame_count_ != ctx.framecount)
@@ -466,16 +426,6 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         previous_frame_count_ = ctx.framecount;
         controller->dispatch(controller->deduce_context_id(ctx.id), ctx.render_device);
     }
-
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    if(mlod_position > trimesh_position || trimesh_position == INT_MAX)
-    {
-        if(!pipe.current_viewstate().shadow_mode)
-        {
-            post_render(pipe, desc, vt_state);
-        }
-    }
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////

@@ -33,16 +33,16 @@
 
 namespace gua
 {
-TextureDistance::TextureDistance(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+TextureDistance::TextureDistance(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture2D(width, height, color_format, mipmap_layers, state_descripton)
 {
     int pixel_size = height_ * width_ * 6;
     int byte_size = pixel_size * sizeof(uint32_t);
-    texture_data_ = (uint32_t *)malloc(byte_size);
+    texture_data_ = (uint32_t*)malloc(byte_size);
     world_depth_data_ = std::vector<float>(pixel_size, -1.0f);
 }
 
-void TextureDistance::download_data(RenderContext const &ctx, float near_clip, float far_clip)
+void TextureDistance::download_data(RenderContext const& ctx, float near_clip, float far_clip)
 {
     ctx.render_context->retrieve_texture_data(get_buffer(ctx), 0, texture_data_);
     unsigned size = height_ * width_;
@@ -68,7 +68,7 @@ void TextureDistance::download_data(RenderContext const &ctx, float near_clip, f
     }
 }
 
-std::vector<float> const &TextureDistance::get_data()
+std::vector<float> const& TextureDistance::get_data()
 {
     // ASCII OUTPUT
     // for (int side = 0; side < 6; side++){

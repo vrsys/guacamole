@@ -35,62 +35,62 @@
 
 namespace gua
 {
-void error_callback(int error, const char *description) { throw std::runtime_error(description); }
+void error_callback(int error, const char* description) { throw std::runtime_error(description); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_resize(GLFWwindow *glfw_window, int width, int height)
+void on_window_resize(GLFWwindow* glfw_window, int width, int height)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
 
     window->config.set_size(math::vec2ui(width, height));
     window->on_resize.emit(window->config.get_size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void on_window_key_press(GLFWwindow *glfw_window, int key, int scancode, int action, int mods)
+void on_window_key_press(GLFWwindow* glfw_window, int key, int scancode, int action, int mods)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_key_press.emit(key, scancode, action, mods);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_char(GLFWwindow *glfw_window, unsigned c)
+void on_window_char(GLFWwindow* glfw_window, unsigned c)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_char.emit(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_button_press(GLFWwindow *glfw_window, int button, int action, int mods)
+void on_window_button_press(GLFWwindow* glfw_window, int button, int action, int mods)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_button_press.emit(button, action, mods);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_move_cursor(GLFWwindow *glfw_window, double x, double y)
+void on_window_move_cursor(GLFWwindow* glfw_window, double x, double y)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_move_cursor.emit(math::vec2(float(x), float(window->config.get_size().y - y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_scroll(GLFWwindow *glfw_window, double x, double y)
+void on_window_scroll(GLFWwindow* glfw_window, double x, double y)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_scroll.emit(math::vec2(float(x), float(y)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void on_window_enter(GLFWwindow *glfw_window, int enter)
+void on_window_enter(GLFWwindow* glfw_window, int enter)
 {
-    auto window(static_cast<GlfwWindow *>(glfwGetWindowUserPointer(glfw_window)));
+    auto window(static_cast<GlfwWindow*>(glfwGetWindowUserPointer(glfw_window)));
     window->on_enter.emit(enter != 0);
 }
 
@@ -100,7 +100,7 @@ void on_window_enter(GLFWwindow *glfw_window, int enter)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-GlfwWindow::GlfwWindow(Configuration const &configuration) : WindowBase(configuration), glfw_window_(nullptr), cursor_mode_{CursorMode::NORMAL} {}
+GlfwWindow::GlfwWindow(Configuration const& configuration) : WindowBase(configuration), glfw_window_(nullptr), cursor_mode_{CursorMode::NORMAL} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 

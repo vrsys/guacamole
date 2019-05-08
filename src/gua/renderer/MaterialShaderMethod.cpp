@@ -31,10 +31,10 @@
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod::MaterialShaderMethod(std::string const &name) : name_(name) {}
+MaterialShaderMethod::MaterialShaderMethod(std::string const& name) : name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod &MaterialShaderMethod::load_from_file(std::string const &file_name)
+MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& file_name)
 {
     if(file_name != "")
     {
@@ -57,7 +57,7 @@ MaterialShaderMethod &MaterialShaderMethod::load_from_file(std::string const &fi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod &MaterialShaderMethod::load_from_json(std::string const &json_string)
+MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& json_string)
 {
     Json::Value value;
     Json::Reader reader;
@@ -104,17 +104,17 @@ MaterialShaderMethod &MaterialShaderMethod::load_from_json(std::string const &js
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod &MaterialShaderMethod::set_name(std::string const &name)
+MaterialShaderMethod& MaterialShaderMethod::set_name(std::string const& name)
 {
     name_ = name;
     return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const &MaterialShaderMethod::get_name() const { return name_; }
+std::string const& MaterialShaderMethod::get_name() const { return name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod &MaterialShaderMethod::set_source(std::string const &source)
+MaterialShaderMethod& MaterialShaderMethod::set_source(std::string const& source)
 {
     source_ = source;
     return *this;
@@ -122,17 +122,17 @@ MaterialShaderMethod &MaterialShaderMethod::set_source(std::string const &source
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const &MaterialShaderMethod::get_source() const { return source_; }
+std::string const& MaterialShaderMethod::get_source() const { return source_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::map<std::string, ViewDependentUniform> const &MaterialShaderMethod::get_uniforms() const { return uniforms_; }
+std::map<std::string, ViewDependentUniform> const& MaterialShaderMethod::get_uniforms() const { return uniforms_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream &MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream &os) const
+std::ostream& MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream& os) const
 {
-    for(auto &uniform : uniforms_)
+    for(auto& uniform : uniforms_)
     {
         os << uniform.first << "#";
         uniform.second.serialize_to_stream(os);
@@ -144,11 +144,11 @@ std::ostream &MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream &o
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderMethod::set_uniforms_from_serialized_string(std::string const &value)
+void MaterialShaderMethod::set_uniforms_from_serialized_string(std::string const& value)
 {
     auto tokens(string_utils::split(value, ';'));
 
-    for(auto &token : tokens)
+    for(auto& token : tokens)
     {
         auto parts(string_utils::split(token, '#'));
         set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));

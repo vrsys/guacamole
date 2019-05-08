@@ -18,63 +18,24 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
-#ifndef GUA_VT_RENDERER_HPP
-#define GUA_VT_RENDERER_HPP
-
-#include <gua/platform.hpp>
-#include <gua/config.hpp>
+#include <gua/renderer/VTResponsibility.hpp>
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 
-#include <scm/gl_core/shader_objects.h>
-
-#include <gua/node/TriMeshNode.hpp>
-
-#include <gua/renderer/ResourceFactory.hpp>
-#include <gua/renderer/TriMeshRessource.hpp>
-#include <gua/renderer/Pipeline.hpp>
-
-#include <gua/databases/Resources.hpp>
-#include <gua/databases/MaterialShaderDatabase.hpp>
-
-#include <scm/core/math/math.h>
-#include <scm/core/io/tools.h>
-
-#include <gua/virtual_texturing/VTBackend.hpp>
-
-// lamure headers
-#include <lamure/vt/common.h>
-#include <lamure/vt/VTConfig.h>
-#include <lamure/vt/ren/CutDatabase.h>
-#include <lamure/vt/ren/CutUpdate.h>
-#include <boost/assign.hpp>
-
 namespace gua
 {
-class RenderContext;
-class Pipeline;
-class PipelinePassDescription;
-
-class VTRenderer
+VTPreResponsibilityDescription::VTPreResponsibilityDescription(VTRenderer& vt_renderer)
 {
-  public:
-    VTRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
-
-    void pre_render(Pipeline& pipe) const;
-    void post_render(Pipeline& pipe) const;
-
-  protected:
-    scm::gl::program_ptr shader_vt_feedback_;
-
-    void _lazy_create_physical_texture(const RenderContext& ctx) const;
-    void _apply_cut_update(const RenderContext& ctx) const;
-    void _update_feedback_layout(const RenderContext& ctx) const;
-    void _collect_feedback(const RenderContext& ctx) const;
-};
-
+    private_.name_ = "vt_pre_responsibility";
+    private_.type_ = PipelineResponsibilityPrivate::TYPE::PRE_RENDER;
+    private_.fulfil_ = [vt_renderer](Pipeline& pipe) { vt_renderer.pre_render(pipe); };
+}
+VTPostResponsibilityDescription::VTPostResponsibilityDescription(VTRenderer& vt_renderer)
+{
+    private_.name_ = "vt_post_responsibility";
+    private_.type_ = PipelineResponsibilityPrivate::TYPE::POST_RENDER;
+    private_.fulfil_ = [vt_renderer](Pipeline& pipe) { vt_renderer.post_render(pipe); };
+}
 } // namespace gua
 
 #endif
-
-#endif // GUA_TRIMESH_RENDERER_HPP

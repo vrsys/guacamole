@@ -51,7 +51,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-bool replace(std::string &str, const std::string &from, const std::string &to)
+bool replace(std::string& str, const std::string& from, const std::string& to)
 {
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos)
@@ -60,10 +60,10 @@ bool replace(std::string &str, const std::string &from, const std::string &to)
     return true;
 }
 
-std::shared_ptr<Material> MaterialLoader::load_material(aiMaterial const *ai_material, std::string const &assets_directory, bool optimize_material, bool nrp) const
+std::shared_ptr<Material> MaterialLoader::load_material(aiMaterial const* ai_material, std::string const& assets_directory, bool optimize_material, bool nrp) const
 {
     // helper lambdas ------------------------------------------------------------
-    auto get_color = [&](const char *pKey, unsigned int type, unsigned int idx) -> std::string {
+    auto get_color = [&](const char* pKey, unsigned int type, unsigned int idx) -> std::string {
         aiColor3D value;
         if(AI_SUCCESS != ai_material->Get(pKey, type, idx, value))
             return "";
@@ -71,7 +71,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(aiMaterial const *ai_mat
         return string_utils::to_string(color);
     };
 
-    auto get_string = [&](const char *pKey, unsigned int type, unsigned int idx) -> std::string {
+    auto get_string = [&](const char* pKey, unsigned int type, unsigned int idx) -> std::string {
         aiString value;
         if(AI_SUCCESS != ai_material->Get(pKey, type, idx, value))
             return "";
@@ -80,7 +80,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(aiMaterial const *ai_mat
 
     auto get_sampler = get_string;
 
-    auto get_float = [&](const char *pKey, unsigned int type, unsigned int idx) -> std::string {
+    auto get_float = [&](const char* pKey, unsigned int type, unsigned int idx) -> std::string {
         float value;
         if(AI_SUCCESS != ai_material->Get(pKey, type, idx, value))
             return "";
@@ -290,7 +290,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(aiMaterial const *ai_mat
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const &fbx_material, std::string const &assets_directory, bool optimize_material, bool nrp) const
+std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const& fbx_material, std::string const& assets_directory, bool optimize_material, bool nrp) const
 {
     PathParser path;
     path.parse(assets_directory);
@@ -311,7 +311,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     }
 
     // method to check if texture is set for an attribute
-    auto get_sampler = [&](const char *attribute) -> std::string {
+    auto get_sampler = [&](const char* attribute) -> std::string {
         FbxProperty property = fbx_material.FindProperty(attribute);
         unsigned texture_count = property.GetSrcObjectCount<FbxTexture>();
         if(texture_count > 0)
@@ -321,7 +321,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
                 Logger::LOG_WARNING << property.GetNameAsCStr() << " has more than one texture, only first one." << std::endl;
             }
             // texture could also be layered or procedural texture
-            FbxFileTexture *texture = property.GetSrcObject<FbxFileTexture>(0);
+            FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>(0);
             if(texture)
             {
                 return get_file_name(texture->GetFileName());
@@ -342,7 +342,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
         Logger::LOG_DEBUG << "Shading Type '" << shading << "' not supported." << std::endl;
     }
     // cast to phong not necessary, only diffuse and emissive values needed
-    FbxSurfaceLambert *lambert = (FbxSurfaceLambert *)&fbx_material;
+    FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)&fbx_material;
     if(!lambert)
     {
         Logger::LOG_ERROR << "Casting Material to Lambert failed." << std::endl;
@@ -433,7 +433,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(FbxSurfaceMaterial const
     return new_mat;
 }
 
-std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const &file_name, std::string const &assets_directory, bool optimize_material, bool nrp) const
+std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const& file_name, std::string const& assets_directory, bool optimize_material, bool nrp) const
 {
     PathParser path;
     path.parse(assets_directory);
@@ -468,7 +468,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const &file_na
         return PBSMaterialFactory::create_material(static_cast<PBSMaterialFactory::Capabilities>(PBSMaterialFactory::ALL));
     }
 
-    auto ends_with = [](std::string const &name, std::string const &suffix) {
+    auto ends_with = [](std::string const& name, std::string const& suffix) {
         for(unsigned i = 0; i < suffix.size(); ++i)
         {
             if(name.at(name.size() - suffix.size() + i) != suffix.at(i))
@@ -490,7 +490,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const &file_na
         capabilities |= PBSMaterialFactory::ALL;
     }
 
-    for(auto const &tex : textures)
+    for(auto const& tex : textures)
     {
         if(ends_with(tex, "_D") || ends_with(tex, "diffuse") || ends_with(tex, "DF"))
         {
@@ -560,7 +560,7 @@ std::shared_ptr<Material> MaterialLoader::load_unreal(std::string const &file_na
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_name, std::string const &assets_directory, bool optimize_material, bool nrp) const
+std::shared_ptr<Material> MaterialLoader::load_material(std::string const& file_name, std::string const& assets_directory, bool optimize_material, bool nrp) const
 {
     PathParser path;
     path.parse(assets_directory);
@@ -585,7 +585,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_
     }
 
     // helper lambdas ------------------------------------------------------------
-    auto get_sampler = [&properties](std::string const &name) -> std::string {
+    auto get_sampler = [&properties](std::string const& name) -> std::string {
         if(properties[name] != Json::Value::null && properties[name].isString())
         {
             return get_file_name(properties[name].asString());
@@ -596,7 +596,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_
         }
     };
 
-    auto get_float = [&properties](std::string const &name) -> float {
+    auto get_float = [&properties](std::string const& name) -> float {
         if(properties[name] != Json::Value::null && (properties[name].isDouble() || properties[name].isInt()))
         {
             return float(properties[name].asDouble());
@@ -606,7 +606,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_
             return NAN;
         }
     };
-    auto get_bool = [&properties](std::string const &name) -> bool {
+    auto get_bool = [&properties](std::string const& name) -> bool {
         if(properties[name] != Json::Value::null && properties[name].isBool())
         {
             return properties[name].asBool();
@@ -617,7 +617,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_
         }
     };
 
-    auto get_color = [&properties](std::string const &name) -> scm::math::vec4f {
+    auto get_color = [&properties](std::string const& name) -> scm::math::vec4f {
         if(properties[name] != Json::Value::null && properties[name].isArray())
         {
             size_t num_values = properties[name].size();
@@ -776,7 +776,7 @@ std::shared_ptr<Material> MaterialLoader::load_material(std::string const &file_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string MaterialLoader::get_file_name(std::string const &path)
+std::string MaterialLoader::get_file_name(std::string const& path)
 {
     // filter out possible path in front of filename
     std::string file_name{path};
@@ -788,7 +788,7 @@ std::string MaterialLoader::get_file_name(std::string const &path)
     return file_name;
 }
 
-inline bool MaterialLoader::file_exists(std::string const &path)
+inline bool MaterialLoader::file_exists(std::string const& path)
 {
     std::ifstream file{path.c_str()};
     return !file.fail();

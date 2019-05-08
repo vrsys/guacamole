@@ -4,12 +4,12 @@
 
 namespace gua
 {
-CameraUniformBlock::CameraUniformBlock(scm::gl::render_device_ptr const &device) : noise_texture_(math::vec2ui(0)) { uniform_block_ = scm::gl::make_uniform_block<CameraBlock>(device); }
+CameraUniformBlock::CameraUniformBlock(scm::gl::render_device_ptr const& device) : noise_texture_(math::vec2ui(0)) { uniform_block_ = scm::gl::make_uniform_block<CameraBlock>(device); }
 
 CameraUniformBlock::~CameraUniformBlock() { uniform_block_.reset(); }
 
-void CameraUniformBlock::update(RenderContext const &context, Frustum const &cam, math::vec3 const &cyclops_position, std::vector<math::vec4> const &clipping_planes, int view_id,
-                                math::vec2ui const &screen_resolution)
+void CameraUniformBlock::update(
+    RenderContext const& context, Frustum const& cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution)
 {
     if(noise_texture_ == math::vec2ui(0))
     {

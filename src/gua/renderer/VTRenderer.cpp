@@ -25,7 +25,7 @@
 
 namespace
 {
-gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const &tex)
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = 0;
     if(tex)
@@ -39,7 +39,7 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const &tex)
 
 namespace gua
 {
-VTRenderer::VTRenderer(RenderContext const &ctx, SubstitutionMap const &smap)
+VTRenderer::VTRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
 {
     ResourceFactory factory;
 
@@ -52,42 +52,47 @@ VTRenderer::VTRenderer(RenderContext const &ctx, SubstitutionMap const &smap)
         shader_vt_feedback_ = ctx.render_device->create_program(list_of(ctx.render_device->create_shader(STAGE_VERTEX_SHADER, vs_vt_feedback)));
     }
 }
-VTContextState VTRenderer::pre_render(Pipeline &pipe, PipelinePassDescription const &desc)
+void VTRenderer::pre_render(Pipeline& pipe) const
 {
-    VTContextState state;
+    VTContextState* state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+    if(!state)
+    {
+        return;
+    }
 
     if(!VirtualTexture2D::initialized_vt_system)
     {
-        state.has_camera = false;
-        state.feedback_enabled = false;
-        return state;
+        state->has_camera_ = false;
+        state->feedback_enabled_ = false;
+        return;
     }
 
-    state.has_camera = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
-    state.feedback_enabled = false;
+    state->has_camera_ = gua::VTBackend::get_instance().has_camera(pipe.current_viewstate().camera.uuid);
+    state->feedback_enabled_ = false;
 
-    if(state.has_camera)
+    if(state->has_camera_)
     {
-        RenderContext const &ctx(pipe.get_context());
+        RenderContext const& ctx(pipe.get_context());
 
         ctx.render_context->apply();
         _lazy_create_physical_texture(ctx);
         ctx.render_context->sync();
 
-        auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
-        auto &current_vt_info = vt_info_per_context[ctx.id];
+        auto& vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
+        auto& current_vt_info = vt_info_per_context[ctx.id];
 
         if(current_vt_info.cut_update_ == nullptr)
         {
-            state.has_camera = false;
-            state.feedback_enabled = false;
-            return state;
+            state->has_camera_ = false;
+            state->feedback_enabled_ = false;
+
+            return;
         }
 
         bool should_update = VTBackend::get_instance().should_update_on_context(pipe.current_viewstate().camera.uuid);
-        state.feedback_enabled = current_vt_info.cut_update_->can_accept_feedback(current_vt_info.context_id_);
+        state->feedback_enabled_ = current_vt_info.cut_update_->can_accept_feedback(current_vt_info.context_id_);
 
-        if(state.feedback_enabled && should_update)
+        if(state->feedback_enabled_ && should_update)
         {
             _update_feedback_layout(ctx);
 
@@ -98,24 +103,23 @@ VTContextState VTRenderer::pre_render(Pipeline &pipe, PipelinePassDescription co
             ctx.render_context->sync();
         }
     }
-
-    return state;
 }
-void VTRenderer::post_render(Pipeline &pipe, PipelinePassDescription const &desc, VTContextState &state)
+void VTRenderer::post_render(Pipeline& pipe) const
 {
-    if(state.has_camera)
+    VTContextState* state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+    if(state && state->has_camera_)
     {
-        RenderContext const &ctx(pipe.get_context());
+        RenderContext const& ctx(pipe.get_context());
 
         bool should_collect = VTBackend::get_instance().should_collect_feedback_on_context(pipe.current_viewstate().camera.uuid);
-        if(state.feedback_enabled && should_collect)
+        if(state->feedback_enabled_ && should_collect)
         {
             _collect_feedback(ctx);
         }
     }
 }
 
-void VTRenderer::_lazy_create_physical_texture(gua::RenderContext const &ctx)
+void VTRenderer::_lazy_create_physical_texture(gua::RenderContext const& ctx) const
 {
     if(VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id] == nullptr)
     {
@@ -126,14 +130,14 @@ void VTRenderer::_lazy_create_physical_texture(gua::RenderContext const &ctx)
         uint32_t phys_tex_creation_num_layers = ::vt::VTConfig::get_instance().get_phys_tex_layers();
         uint32_t phys_tex_creation_tile_size = ::vt::VTConfig::get_instance().get_size_tile();
 
-        VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id]->upload_to(ctx, phys_tex_creation_px_width, phys_tex_creation_px_height, phys_tex_creation_num_layers,
-                                                                                       phys_tex_creation_tile_size);
+        VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id]->upload_to(
+            ctx, phys_tex_creation_px_width, phys_tex_creation_px_height, phys_tex_creation_num_layers, phys_tex_creation_tile_size);
     }
 }
 
-void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
+void VTRenderer::_apply_cut_update(gua::RenderContext const& ctx) const
 {
-    auto *cut_db = &::vt::CutDatabase::get_instance();
+    auto* cut_db = &::vt::CutDatabase::get_instance();
 
     auto vector_of_vt_ptr = TextureDatabase::instance()->get_virtual_textures();
 
@@ -144,7 +148,7 @@ void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
             continue;
         }
 
-        ::vt::Cut *cut = cut_db->start_reading_cut(cut_entry.first);
+        ::vt::Cut* cut = cut_db->start_reading_cut(cut_entry.first);
 
         if(!cut->is_drawn())
         {
@@ -156,7 +160,7 @@ void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
 
         for(auto position_slot_updated : cut->get_front()->get_mem_slots_updated())
         {
-            const ::vt::mem_slot_type *mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second, VTBackend::get_instance().vt_info_per_context_[ctx.id].context_id_);
+            const ::vt::mem_slot_type* mem_slot_updated = cut_db->read_mem_slot_at(position_slot_updated.second, VTBackend::get_instance().vt_info_per_context_[ctx.id].context_id_);
 
             if(mem_slot_updated == nullptr || !mem_slot_updated->updated || !mem_slot_updated->locked || mem_slot_updated->pointer == nullptr)
             {
@@ -213,7 +217,7 @@ void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
 
         for(auto position_slot_cleared : cut->get_front()->get_mem_slots_cleared())
         {
-            const ::vt::mem_slot_type *mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second, VTBackend::get_instance().vt_info_per_context_[ctx.id].context_id_);
+            const ::vt::mem_slot_type* mem_slot_cleared = cut_db->read_mem_slot_at(position_slot_cleared.second, VTBackend::get_instance().vt_info_per_context_[ctx.id].context_id_);
 
             if(mem_slot_cleared == nullptr)
             {
@@ -223,16 +227,16 @@ void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
             updated_levels.insert(::vt::QuadTree::get_depth_of_node(position_slot_cleared.first));
         }
 
-        for(auto const &vt_ptr : vector_of_vt_ptr)
+        for(auto const& vt_ptr : vector_of_vt_ptr)
         {
             if(::vt::Cut::get_dataset_id(cut_entry.first) == vt_ptr->get_lamure_texture_id())
             {
                 // update_index_texture
 
-                std::vector<std::pair<uint16_t, uint8_t *>> level_pairs_to_update;
+                std::vector<std::pair<uint16_t, uint8_t*>> level_pairs_to_update;
                 for(uint16_t updated_level : updated_levels)
                 {
-                    uint8_t *level_address = cut->get_front()->get_index(updated_level);
+                    uint8_t* level_address = cut->get_front()->get_index(updated_level);
                     level_pairs_to_update.emplace_back(updated_level, level_address);
 
                     vt_ptr->update_index_texture_hierarchy(ctx, level_pairs_to_update);
@@ -244,10 +248,10 @@ void VTRenderer::_apply_cut_update(gua::RenderContext const &ctx)
     }
     ctx.render_context->sync();
 }
-void VTRenderer::_update_feedback_layout(const RenderContext &ctx)
+void VTRenderer::_update_feedback_layout(const RenderContext& ctx) const
 {
-    auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
-    auto &current_vt_info = vt_info_per_context[ctx.id];
+    auto& vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
+    auto& current_vt_info = vt_info_per_context[ctx.id];
 
     if(current_vt_info.cut_update_ == nullptr)
     {
@@ -266,9 +270,9 @@ void VTRenderer::_update_feedback_layout(const RenderContext &ctx)
 
     ctx.render_context->apply();
 
-    auto &physical_texture = VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id];
+    auto& physical_texture = VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id];
 
-    auto mapped_index = (uint32_t *)ctx.render_context->map_buffer_range(physical_texture->get_feedback_index_vb(), 0, output.size() * sizeof(uint32_t), scm::gl::ACCESS_WRITE_ONLY);
+    auto mapped_index = (uint32_t*)ctx.render_context->map_buffer_range(physical_texture->get_feedback_index_vb(), 0, output.size() * sizeof(uint32_t), scm::gl::ACCESS_WRITE_ONLY);
     memcpy(&mapped_index[0], &output[0], output.size() * sizeof(uint32_t));
     ctx.render_context->unmap_buffer(physical_texture->get_feedback_index_vb());
 
@@ -286,19 +290,19 @@ void VTRenderer::_update_feedback_layout(const RenderContext &ctx)
 
     ctx.render_context->draw_elements((const unsigned int)allocated_slots->size());
 }
-void VTRenderer::_collect_feedback(gua::RenderContext const &ctx)
+void VTRenderer::_collect_feedback(gua::RenderContext const& ctx) const
 {
     ctx.render_context->sync();
 
-    auto &vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
-    auto &current_vt_info = vt_info_per_context[ctx.id];
+    auto& vt_info_per_context = VTBackend::get_instance().vt_info_per_context_;
+    auto& current_vt_info = vt_info_per_context[ctx.id];
 
     if(current_vt_info.cut_update_ == nullptr)
     {
         return;
     }
 
-    auto &gua_layered_physical_texture_for_context = VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id];
+    auto& gua_layered_physical_texture_for_context = VTBackend::get_instance().physical_texture_ptr_per_context_[ctx.id];
 
     auto feedback_lod_storage_ptr = gua_layered_physical_texture_for_context->get_feedback_lod_storage_ptr();
     auto feedback_lod_cpu_buffer_ptr = gua_layered_physical_texture_for_context->get_feedback_lod_cpu_buffer();
@@ -307,7 +311,7 @@ void VTRenderer::_collect_feedback(gua::RenderContext const &ctx)
 
     size_t compact_size = current_vt_info.cut_update_->get_context_feedback(current_vt_info.context_id_)->get_allocated_slot_index().size();
     memset(feedback_lod_cpu_buffer_ptr, 0, num_feedback_slots * scm::gl::size_of_format(scm::gl::FORMAT_R_32I));
-    int32_t *feedback_lod = (int32_t *)ctx.render_context->map_buffer(feedback_lod_storage_ptr, scm::gl::ACCESS_READ_ONLY);
+    int32_t* feedback_lod = (int32_t*)ctx.render_context->map_buffer(feedback_lod_storage_ptr, scm::gl::ACCESS_READ_ONLY);
     memcpy(feedback_lod_cpu_buffer_ptr, feedback_lod, compact_size * size_of_format(scm::gl::FORMAT_R_32I));
     ctx.render_context->unmap_buffer(feedback_lod_storage_ptr);
     ctx.render_context->clear_buffer_data(feedback_lod_storage_ptr, scm::gl::FORMAT_R_32I, nullptr);
@@ -316,7 +320,7 @@ void VTRenderer::_collect_feedback(gua::RenderContext const &ctx)
     auto feedback_count_storage_ptr = gua_layered_physical_texture_for_context->get_feedback_count_storage_ptr();
     auto feedback_count_cpu_buffer_ptr = gua_layered_physical_texture_for_context->get_feedback_count_cpu_buffer();
 
-    uint32_t *feedback_count = (uint32_t *)ctx.render_context->map_buffer(feedback_count_storage_ptr, scm::gl::ACCESS_READ_ONLY);
+    uint32_t* feedback_count = (uint32_t*)ctx.render_context->map_buffer(feedback_count_storage_ptr, scm::gl::ACCESS_READ_ONLY);
     memcpy(feedback_count_cpu_buffer_ptr, feedback_count, num_feedback_slots * size_of_format(scm::gl::FORMAT_R_32UI));
     ctx.render_context->unmap_buffer(feedback_count_storage_ptr);
     ctx.render_context->clear_buffer_data(feedback_count_storage_ptr, scm::gl::FORMAT_R_32UI, nullptr);

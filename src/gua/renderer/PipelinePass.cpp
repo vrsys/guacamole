@@ -36,36 +36,48 @@ namespace gua
 void PipelinePassDescription::touch() { ++mod_count_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const &PipelinePassDescription::name() const { return name_; }
+std::string const& PipelinePassDescription::name() const { return private_.name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 unsigned PipelinePassDescription::mod_count() const { return mod_count_; }
 
+const std::vector<std::shared_ptr<PipelineResponsibilityDescription>>& PipelinePassDescription::get_responsibilities() const { return pipeline_responsibilities_; }
+
+bool PipelinePass::needs_color_buffer_as_input() const { return private_.needs_color_buffer_as_input_; }
+bool PipelinePass::writes_only_color_buffer() const { return private_.writes_only_color_buffer_; }
+bool PipelinePass::enable_for_shadows() const { return private_.enable_for_shadows_; }
+
+scm::gl::rasterizer_state_ptr PipelinePass::rasterizer_state() const { return rasterizer_state_; }
+scm::gl::depth_stencil_state_ptr PipelinePass::depth_stencil_state() const { return depth_stencil_state_; }
+scm::gl::blend_state_ptr PipelinePass::blend_state() const { return blend_state_; }
+std::shared_ptr<ShaderProgram> PipelinePass::shader() const { return shader_; }
+
+bool operator==(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs) { return lhs.private_.name_ == rhs.private_.name_; }
+bool operator!=(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs) { return lhs.private_.name_ != rhs.private_.name_; }
+
 ////////////////////////////////////////////////////////////////////////////////
-PipelinePass::PipelinePass(PipelinePassDescription const &d, RenderContext const &ctx, SubstitutionMap const &substitution_map)
-    : shader_(std::make_shared<ShaderProgram>()), rasterizer_state_(nullptr), depth_stencil_state_(nullptr), blend_state_(nullptr), needs_color_buffer_as_input_(d.needs_color_buffer_as_input_),
-      writes_only_color_buffer_(d.writes_only_color_buffer_), enable_for_shadows_(d.enable_for_shadows_), rendermode_(d.rendermode_), process_(d.process_), name_(d.name_),
-      substitution_map_(substitution_map)
+PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const& ctx, SubstitutionMap const& substitution_map) : private_(d.private_), substitution_map_(substitution_map)
 {
+    shader_ = std::make_shared<ShaderProgram>();
+
     upload_program(d, ctx);
 
-    if(d.depth_stencil_state_)
+    if(d.private_.depth_stencil_state_desc_)
     {
-        depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(*d.depth_stencil_state_);
+        depth_stencil_state_ = ctx.render_device->create_depth_stencil_state(*d.private_.depth_stencil_state_desc_);
     }
-    if(d.blend_state_)
+    if(d.private_.blend_state_desc_)
     {
-        blend_state_ = ctx.render_device->create_blend_state(*d.blend_state_);
+        blend_state_ = ctx.render_device->create_blend_state(*d.private_.blend_state_desc_);
     }
-    if(d.rasterizer_state_)
+    if(d.private_.rasterizer_state_desc_)
     {
-        rasterizer_state_ = ctx.render_device->create_rasterizer_state(*d.rasterizer_state_);
+        rasterizer_state_ = ctx.render_device->create_rasterizer_state(*d.private_.rasterizer_state_desc_);
     }
 }
-
-void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 {
-    auto const &ctx(pipe.get_context());
+    auto const& ctx(pipe.get_context());
 
     if(desc.recompile_shaders_)
     {
@@ -73,15 +85,15 @@ void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
         desc.recompile_shaders_ = false;
     }
 
-    if(RenderMode::Custom == rendermode_)
+    if(RenderMode::Custom == private_.rendermode_)
     {
-        process_(*this, desc, pipe);
+        private_.process_(*this, desc, pipe);
     }
     else
     {
-        auto &target = *pipe.current_viewstate().target;
+        auto& target = *pipe.current_viewstate().target;
 
-        target.bind(ctx, !writes_only_color_buffer_);
+        target.bind(ctx, !private_.writes_only_color_buffer_);
         target.set_viewport(ctx);
         if(depth_stencil_state_)
             ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
@@ -91,7 +103,7 @@ void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
             ctx.render_context->set_rasterizer_state(rasterizer_state_);
         shader_->use(ctx);
 
-        for(auto const &u : desc.uniforms)
+        for(auto const& u : desc.uniforms)
         {
             u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
         }
@@ -99,26 +111,30 @@ void PipelinePass::process(PipelinePassDescription const &desc, Pipeline &pipe)
         pipe.bind_gbuffer_input(shader_);
         pipe.bind_light_table(shader_);
 
-        std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + name_;
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+        std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + private_->name_;
         pipe.begin_gpu_query(ctx, gpu_query_name);
+#endif
 
-        if(RenderMode::Callback == rendermode_)
+        if(RenderMode::Callback == private_.rendermode_)
         {
-            process_(*this, desc, pipe);
+            private_.process_(*this, desc, pipe);
         }
         else
         { // RenderMode::Quad
             pipe.draw_quad();
         }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
+#endif
 
         target.unbind(ctx);
         ctx.render_context->reset_state_objects();
     }
 }
 
-void PipelinePass::upload_program(PipelinePassDescription const &desc, RenderContext const &ctx)
+void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderContext const& ctx)
 {
     if(!desc.vertex_shader_.empty() && !desc.fragment_shader_.empty())
     {
@@ -149,4 +165,5 @@ void PipelinePass::upload_program(PipelinePassDescription const &desc, RenderCon
     }
 }
 
+PipelineResponsibility::PipelineResponsibility(PipelineResponsibilityDescription const& d, Pipeline& pipe) : private_(d.private_) {}
 } // namespace gua

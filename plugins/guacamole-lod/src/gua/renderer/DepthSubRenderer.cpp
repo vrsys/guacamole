@@ -69,8 +69,10 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
 
     shader_program_->use(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
 
     // loop through all models and render depth pass
     for(auto const& object : sorted_models)
@@ -107,7 +109,9 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
 
     shader_program_->unuse(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
 }
 
 void DepthSubRenderer::_load_shaders()

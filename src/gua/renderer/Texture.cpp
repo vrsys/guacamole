@@ -33,22 +33,22 @@
 
 namespace gua
 {
-Texture::Texture(scm::gl::data_format color_format, scm::gl::data_format internal_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+Texture::Texture(scm::gl::data_format color_format, scm::gl::data_format internal_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : mipmap_layers_(mipmap_layers), color_format_(color_format), internal_format_(internal_format), state_descripton_(state_descripton), file_name_(""), upload_mutex_()
 {
 }
 
-Texture::Texture(scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+Texture::Texture(scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : mipmap_layers_(mipmap_layers), color_format_(color_format), internal_format_(color_format), state_descripton_(state_descripton), file_name_(""), upload_mutex_()
 {
 }
 
-Texture::Texture(std::string const &file, bool generate_mipmaps, scm::gl::sampler_state_desc const &state_descripton)
+Texture::Texture(std::string const& file, bool generate_mipmaps, scm::gl::sampler_state_desc const& state_descripton)
     : mipmap_layers_(generate_mipmaps ? 1 : 0), color_format_(scm::gl::FORMAT_NULL), internal_format_(scm::gl::FORMAT_NULL), state_descripton_(state_descripton), file_name_(file), upload_mutex_()
 {
 }
 
-void Texture::update_sub_data(RenderContext const &context, scm::gl::texture_region const &region, unsigned level, scm::gl::data_format format, const void *const data) const
+void Texture::update_sub_data(RenderContext const& context, scm::gl::texture_region const& region, unsigned level, scm::gl::data_format format, const void* const data) const
 {
     auto iter = context.textures.find(uuid_);
     if(iter == context.textures.end())
@@ -61,7 +61,7 @@ void Texture::update_sub_data(RenderContext const &context, scm::gl::texture_reg
         context.render_context->update_sub_texture(iter->second.texture, region, level, format, data);
 }
 
-void Texture::generate_mipmaps(RenderContext const &context)
+void Texture::generate_mipmaps(RenderContext const& context)
 {
     auto iter = context.textures.find(uuid_);
     if(iter == context.textures.end())
@@ -74,7 +74,7 @@ void Texture::generate_mipmaps(RenderContext const &context)
         context.render_context->generate_mipmaps(iter->second.texture);
 }
 
-math::vec2ui const Texture::get_handle(RenderContext const &context) const
+math::vec2ui const Texture::get_handle(RenderContext const& context) const
 {
     auto iter = context.textures.find(uuid_);
 
@@ -94,7 +94,7 @@ math::vec2ui const Texture::get_handle(RenderContext const &context) const
     return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
 
-scm::gl::texture_image_ptr const &Texture::get_buffer(RenderContext const &context) const
+scm::gl::texture_image_ptr const& Texture::get_buffer(RenderContext const& context) const
 {
     auto iter = context.textures.find(uuid_);
     if(iter == context.textures.end())
@@ -110,7 +110,7 @@ scm::gl::texture_image_ptr const &Texture::get_buffer(RenderContext const &conte
     return nullptr;
 }
 
-void Texture::make_non_resident(RenderContext const &context) const
+void Texture::make_non_resident(RenderContext const& context) const
 {
     auto iter = context.textures.find(uuid_);
     if(iter != context.textures.end())

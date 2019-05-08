@@ -48,7 +48,7 @@ LineStripLoader::LineStripLoader() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::load_geometry(std::string const &file_name, unsigned flags, bool create_empty)
+std::shared_ptr<node::Node> LineStripLoader::load_geometry(std::string const& file_name, unsigned flags, bool create_empty)
 {
     std::shared_ptr<node::Node> cached_node;
     std::string key(file_name + "_" + string_utils::to_string(flags));
@@ -107,7 +107,7 @@ std::shared_ptr<node::Node> LineStripLoader::load_geometry(std::string const &fi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, std::shared_ptr<Material> const &fallback_material, unsigned flags)
+std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags)
 {
     auto cached_node(load_geometry(file_name, flags));
 
@@ -126,7 +126,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::stri
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, unsigned flags)
+std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, unsigned flags)
 {
     auto cached_node(load_geometry(file_name, flags));
 
@@ -146,7 +146,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::stri
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const &node_name, std::string const &empty_name, std::shared_ptr<Material> const &fallback_material, unsigned flags)
+std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const& node_name, std::string const& empty_name, std::shared_ptr<Material> const& fallback_material, unsigned flags)
 {
     auto cached_node(load_geometry(empty_name, flags, true));
 
@@ -165,7 +165,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string c
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const &node_name, std::string const &empty_name, unsigned flags)
+std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string const& node_name, std::string const& empty_name, unsigned flags)
 {
     auto cached_node(load_geometry(empty_name, flags, true));
 
@@ -185,7 +185,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string c
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> LineStripLoader::load(std::string const &file_name, unsigned flags, int topology_type, bool create_empty)
+std::shared_ptr<node::Node> LineStripLoader::load(std::string const& file_name, unsigned flags, int topology_type, bool create_empty)
 {
     TextFile file(file_name);
 
@@ -277,7 +277,7 @@ std::shared_ptr<node::Node> LineStripLoader::load(std::string const &file_name, 
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::vector<LineStripResource *> const LineStripLoader::load_from_buffer(char const *buffer_name, unsigned buffer_size, bool build_kd_tree)
+std::vector<LineStripResource*> const LineStripLoader::load_from_buffer(char const* buffer_name, unsigned buffer_size, bool build_kd_tree)
 {
     /*
       auto importer = std::make_shared<Assimp::Importer>();
@@ -296,12 +296,12 @@ std::vector<LineStripResource *> const LineStripLoader::load_from_buffer(char co
 
       return meshes;
     */
-    return std::vector<LineStripResource *>();
+    return std::vector<LineStripResource*>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int LineStripLoader::is_supported(std::string const &file_name) const
+int LineStripLoader::is_supported(std::string const& file_name) const
 {
     auto point_pos(file_name.find_last_of("."));
     // Assimp::Importer importer;
@@ -326,7 +326,7 @@ int LineStripLoader::is_supported(std::string const &file_name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripLoader::apply_fallback_material(std::shared_ptr<node::Node> const &root, std::shared_ptr<Material> const &fallback_material, bool no_shared_materials)
+void LineStripLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials)
 {
     auto g_node(std::dynamic_pointer_cast<node::LineStripNode>(root));
 
@@ -340,7 +340,7 @@ void LineStripLoader::apply_fallback_material(std::shared_ptr<node::Node> const 
         g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
     }
 
-    for(auto &child : root->get_children())
+    for(auto& child : root->get_children())
     {
         apply_fallback_material(child, fallback_material, no_shared_materials);
     }

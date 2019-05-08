@@ -3,6 +3,14 @@
 
 namespace gua
 {
+struct VTContextState
+{
+    VTContextState(bool has_camera, bool feedback_enabled) : has_camera_(has_camera), feedback_enabled_(feedback_enabled) {}
+
+    bool has_camera_{false};
+    bool feedback_enabled_{false};
+};
+
 class GUA_DLL VTBackend
 {
   public:
@@ -21,6 +29,8 @@ class GUA_DLL VTBackend
     void start_backend();
     void stop_backend();
 
+    VTContextState& get_state(size_t uuid);
+
     const bool has_camera(size_t uuid) const;
     bool should_update_on_context(size_t uuid);
     bool should_collect_feedback_on_context(size_t uuid);
@@ -30,13 +40,15 @@ class GUA_DLL VTBackend
     std::map<std::size_t, VTInfo> vt_info_per_context_;
 
   private:
-    VTBackend() : physical_texture_ptr_per_context_(), vt_info_per_context_(), _camera_contexts(), _context_updated(), _camera_drawn() {}
+    VTBackend() : physical_texture_ptr_per_context_(), vt_info_per_context_(), camera_contexts_(), context_updated_(), camera_drawn_(), context_states_() {}
 
-    std::mutex _camera_contexts_mutex;
+    std::mutex vt_backend_mutex_;
 
-    std::map<gua::node::CameraNode*, uint16_t> _camera_contexts;
-    std::map<uint16_t, bool> _context_updated;
-    std::map<size_t, bool> _camera_drawn;
+    std::map<gua::node::CameraNode*, uint16_t> camera_contexts_;
+    std::map<uint16_t, bool> context_updated_;
+    std::map<size_t, bool> camera_drawn_;
+
+    std::map<uint16_t, VTContextState> context_states_;
 
     void add_context(uint16_t ctx_id, gua::node::CameraNode& camera);
     void init_vt(uint16_t ctx_id, gua::node::CameraNode const& cam);

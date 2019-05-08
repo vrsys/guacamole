@@ -33,23 +33,29 @@
 
 namespace gua
 {
-Texture3D::Texture3D(unsigned width, unsigned height, unsigned depth, scm::gl::data_format color_format, scm::gl::data_format internal_format, std::vector<void *> const &data, unsigned mipmap_layers,
-                     scm::gl::sampler_state_desc const &state_descripton)
+Texture3D::Texture3D(unsigned width,
+                     unsigned height,
+                     unsigned depth,
+                     scm::gl::data_format color_format,
+                     scm::gl::data_format internal_format,
+                     std::vector<void*> const& data,
+                     unsigned mipmap_layers,
+                     scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, internal_format, mipmap_layers, state_descripton), width_(width), height_(height), depth_(depth), data_(data)
 {
 }
 
-Texture3D::Texture3D(unsigned width, unsigned height, unsigned depth, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+Texture3D::Texture3D(unsigned width, unsigned height, unsigned depth, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, mipmap_layers, state_descripton), width_(width), height_(height), depth_(depth)
 {
 }
 
-Texture3D::Texture3D(std::string const &file, bool generate_mipmaps, scm::gl::sampler_state_desc const &state_descripton)
+Texture3D::Texture3D(std::string const& file, bool generate_mipmaps, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(file, generate_mipmaps, state_descripton), width_(0), height_(0), depth_(0)
 {
 }
 
-void Texture3D::upload_to(RenderContext const &context) const
+void Texture3D::upload_to(RenderContext const& context) const
 {
     std::unique_lock<std::mutex> lock(upload_mutex_);
     RenderContext::Texture ctex{};

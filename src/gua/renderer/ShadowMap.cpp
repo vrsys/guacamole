@@ -35,12 +35,13 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-ShadowMap::ShadowMap(RenderContext const &ctx, math::vec2ui const &resolution)
+ShadowMap::ShadowMap(RenderContext const& ctx, math::vec2ui const& resolution)
     : RenderTarget(resolution), fbo_(nullptr), depth_buffer_(nullptr), viewport_offset_(math::vec2f(0.f, 0.f)), viewport_size_(math::vec2f(resolution))
 {
     scm::gl::sampler_state_desc sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR,
                                                    // scm::gl::FILTER_ANISOTROPIC,
-                                                   scm::gl::WRAP_CLAMP_TO_EDGE, scm::gl::WRAP_CLAMP_TO_EDGE);
+                                                   scm::gl::WRAP_CLAMP_TO_EDGE,
+                                                   scm::gl::WRAP_CLAMP_TO_EDGE);
     sampler_state_desc._compare_mode = scm::gl::TEXCOMPARE_COMPARE_REF_TO_TEXTURE;
     sampler_state_desc._max_anisotropy = 16;
 
@@ -55,15 +56,15 @@ ShadowMap::ShadowMap(RenderContext const &ctx, math::vec2ui const &resolution)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::clear(RenderContext const &ctx, float depth, unsigned stencil) { ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil); }
+void ShadowMap::clear(RenderContext const& ctx, float depth, unsigned stencil) { ctx.render_context->clear_depth_stencil_buffer(fbo_, depth, stencil); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::bind(RenderContext const &ctx, bool write_depth) { ctx.render_context->set_frame_buffer(fbo_); }
+void ShadowMap::bind(RenderContext const& ctx, bool write_depth) { ctx.render_context->set_frame_buffer(fbo_); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::set_viewport(RenderContext const &ctx)
+void ShadowMap::set_viewport(RenderContext const& ctx)
 {
     if(ctx.render_context)
     {
@@ -73,19 +74,19 @@ void ShadowMap::set_viewport(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::set_viewport_offset(math::vec2f const &offset) { viewport_offset_ = offset; }
+void ShadowMap::set_viewport_offset(math::vec2f const& offset) { viewport_offset_ = offset; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::set_viewport_size(math::vec2f const &size) { viewport_size_ = size; }
+void ShadowMap::set_viewport_size(math::vec2f const& size) { viewport_size_ = size; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr const &ShadowMap::get_depth_buffer() const { return depth_buffer_; }
+scm::gl::texture_2d_ptr const& ShadowMap::get_depth_buffer() const { return depth_buffer_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ShadowMap::remove_buffers(RenderContext const &ctx)
+void ShadowMap::remove_buffers(RenderContext const& ctx)
 {
     unbind(ctx);
 
