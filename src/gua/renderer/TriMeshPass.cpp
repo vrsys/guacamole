@@ -25,6 +25,8 @@
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/TriMeshRenderer.hpp>
 
+#include <gua/renderer/Pipeline.hpp>
+
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 #include <gua/renderer/VTResponsibility.hpp>
 #endif
