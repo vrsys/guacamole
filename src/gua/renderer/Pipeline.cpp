@@ -636,9 +636,6 @@ void Pipeline::bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) 
     shader->set_uniform(context_, ::get_handle(gbuffer_->get_flags_buffer()), "gua_gbuffer_flags");
     shader->set_uniform(context_, ::get_handle(gbuffer_->get_depth_buffer()), "gua_gbuffer_depth");
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    shader->set_uniform(context_, ::get_handle(gbuffer_->get_uv_buffer()), "gua_gbuffer_uvs");
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

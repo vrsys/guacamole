@@ -70,13 +70,6 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution)
     fbo_write_->attach_color_buffer(3, flags_buffer_, 0, 0);
     fbo_write_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    uv_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGBA_32F, 1);
-    ctx.render_context->make_resident(uv_buffer_, sampler_state_);
-
-    fbo_read_->attach_color_buffer(4, uv_buffer_, 0, 0);
-    fbo_write_->attach_color_buffer(4, uv_buffer_, 0, 0);
-#endif
 
     fbo_read_only_color_ = ctx.render_device->create_frame_buffer();
     fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_, 0, 0);
@@ -184,12 +177,6 @@ void GBuffer::remove_buffers(RenderContext const& ctx)
         ctx.render_context->make_non_resident(depth_buffer_);
     }
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    if(uv_buffer_)
-    {
-        ctx.render_context->make_non_resident(uv_buffer_);
-    }
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

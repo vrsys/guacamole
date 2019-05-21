@@ -15,6 +15,10 @@ vec2 gua_get_quad_coords() {
 
 // depth -----------------------------------------------------------------------
 
+float gua_scale_unscaled_depth(float unscaled_depth) {
+  return unscaled_depth * 2.0 - 1.0;
+}
+
 float gua_get_unscaled_depth() {
     vec2 frag_pos = gua_get_quad_coords();
     return texture2D(sampler2D(gua_gbuffer_depth), frag_pos).x;
@@ -101,13 +105,3 @@ uint gua_get_flags(vec2 frag_pos) {
 uint gua_get_flags() {
     return uint(texelFetch(usampler2D(gua_gbuffer_flags), ivec2(gl_FragCoord.xy), 0).r);
 }
-
-// uvs -----------------------------------------------------------------------
-vec4 gua_get_uvs(vec2 frag_pos) {
-    return texture2D(sampler2D(gua_gbuffer_uvs), frag_pos).rgba;
-}
-
-vec4 gua_get_uvs() {
-    return texelFetch(sampler2D(gua_gbuffer_uvs), ivec2(gl_FragCoord.xy), 0).rgba;
-}
-
