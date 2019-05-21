@@ -231,20 +231,26 @@ void main() {
   float abuffer_accumulation_emissivity = 0.0;
   vec3 gbuffer_color = vec3(0);
 
-  float depth = gua_get_depth();
+  // unscaled depth is in [0, 1]
+  float unscaled_depth = gua_get_unscaled_depth();
+
+  // depth is in [-1, 1]
+  float depth = gua_scale_unscaled_depth(unscaled_depth);
 
 #if @enable_abuffer@
-  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, gua_get_unscaled_depth());
+  bool res = abuf_blend(abuffer_accumulation_color, abuffer_accumulation_emissivity, unscaled_depth);
 #else
   bool res = true;
 #endif
+
+  vec3 pbr = gua_get_pbr();
 
   if (res) {
     if (depth < 1) {
       gbuffer_color += shade_for_all_lights(gua_get_color(),
                                       gua_get_normal(),
                                       gua_get_position(),
-                                      gua_get_pbr(),
+                                      pbr,
                                       gua_get_flags(),
                                       gua_ssao_enable);
       if (gua_enable_fog) {
@@ -255,7 +261,7 @@ void main() {
       gbuffer_color += gua_get_background_color();
     }
 
-    abuffer_accumulation_emissivity += gua_get_pbr().r * (1-abuffer_accumulation_color.a);
+    abuffer_accumulation_emissivity += pbr.r * (1-abuffer_accumulation_color.a);
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
