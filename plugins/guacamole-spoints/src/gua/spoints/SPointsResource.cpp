@@ -104,26 +104,7 @@ void SPointsResource::update_buffers(RenderContext const& ctx, Pipeline& pipe)
     spointsdata_->nka_->update(ctx, bounding_box_);
 }
 
-unsigned SPointsResource::get_remote_server_screen_width() const
-{
-    if(spointsdata_)
-    {
-        if(spointsdata_->nka_)
-        {
-            return spointsdata_->nka_->get_remote_server_screen_width();
-        }
-    }
-}
-unsigned SPointsResource::get_remote_server_screen_height() const
-{
-    if(spointsdata_)
-    {
-        if(spointsdata_->nka_)
-        {
-            return spointsdata_->nka_->get_remote_server_screen_height();
-        }
-    }
-}
+
 bool SPointsResource::has_calibration(RenderContext const& ctx) const
 {
     if(spointsdata_)

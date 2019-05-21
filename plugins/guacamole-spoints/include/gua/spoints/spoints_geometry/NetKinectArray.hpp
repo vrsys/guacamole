@@ -106,6 +106,29 @@ struct SPointsStats
     uint32_t m_total_message_payload_in_byte = 0;
 };
 
+struct SPointsCalibrationDescriptor {
+    uint32_t num_sensors = 0;
+    std::array<uint32_t, 3> inv_xyz_calibration_res;
+    std::array<uint32_t, 3> uv_calibration_res;
+    scm::math::mat4f inverse_vol_to_world_mat;
+};
+
+struct SPointsModelDescriptor {
+    uint32_t received_textured_tris = 0.0;
+    float received_kinect_timestamp = 0.0;
+    float received_reconstruction_time = 0.0;
+  
+    float request_reply_latency_ms = -1.0;
+    int32_t triangle_texture_atlas_size = 0.0;
+   
+    uint32_t texture_payload_size_in_byte = 0;
+   
+
+    uint32_t total_message_payload_in_byte = 0;
+
+    bool is_fully_encoded_vertex_data = false;
+};
+
 class NetKinectArray
 {
   public:
@@ -118,12 +141,12 @@ class NetKinectArray
     bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
     void update_feedback(gua::RenderContext const& ctx);
 
-    bool is_vertex_data_fully_encoded() { return m_is_fully_encoded_vertex_data_; }
+    bool is_vertex_data_fully_encoded() { return m_model_descriptor_.is_fully_encoded_vertex_data; }
 
     inline unsigned char* getBuffer() { return m_buffer_.data(); }
 
-    unsigned get_remote_server_screen_width() const { return remote_server_screen_width_to_return_; }
-    unsigned get_remote_server_screen_height() const { return remote_server_screen_height_to_return_; }
+    //unsigned get_remote_server_screen_width() const { return remote_server_screen_width_to_return_; }
+    //unsigned get_remote_server_screen_height() const { return remote_server_screen_height_to_return_; }
 
     std::string get_socket_string() const;
     // float       get_voxel_size() const;
@@ -136,7 +159,11 @@ class NetKinectArray
     {
         std::lock_guard<std::mutex> lock(m_mutex_);
 
-        return SPointsStats{m_received_textured_tris_, m_received_kinect_timestamp_, m_received_reconstruction_time_, m_request_reply_latency_ms_, m_total_message_payload_in_byte_};
+        return SPointsStats{m_model_descriptor_.received_textured_tris, 
+                            m_model_descriptor_.received_kinect_timestamp, 
+                            m_model_descriptor_.received_reconstruction_time, 
+                            m_model_descriptor_.request_reply_latency_ms, 
+                            m_model_descriptor_.total_message_payload_in_byte};
     }
 
     // void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
@@ -144,22 +171,30 @@ class NetKinectArray
 
     bool has_calibration(gua::RenderContext const& ctx) { return m_received_calibration_[ctx.id].load(); }
 
+  // helper functions
   private:
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
     void _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
-    void readloop();
-    // void sendfeedbackloop();
+    void _readloop();
+
+    void _try_swap_calibration_data_cpu();
+    void _try_swap_model_data_cpu();
 
     // receiving geometry
 
-    bool m_is_fully_encoded_vertex_data_ = false;
-    bool m_is_fully_encoded_vertex_data_back_ = false;
+
+  // member variables
+  private: 
+
+
+    static size_t constexpr INITIAL_VBO_SIZE = 10000000;
+    static uint16_t constexpr MAX_LAYER_IDX = 16;
 
     std::mutex m_mutex_;
     std::atomic<bool> m_running_;
-    const std::string m_server_endpoint_;
-    const std::string m_feedback_endpoint_;
+    std::string const m_server_endpoint_;
+    std::string const m_feedback_endpoint_;
     std::vector<uint8_t> m_buffer_;
     std::vector<uint8_t> m_buffer_back_;
     std::vector<uint8_t> m_buffer_back_compressed_;
@@ -173,18 +208,19 @@ class NetKinectArray
     std::vector<uint8_t> m_calibration_;
     std::vector<uint8_t> m_calibration_back_;
 
-    std::atomic<bool> m_need_calibration_cpu_swap_;
+    std::atomic<bool> m_need_calibration_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_calibration_gpu_swap_;
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_received_calibration_;
 
     mutable std::unordered_map<std::size_t, bool> m_bound_calibration_data_;
 
-    uint32_t m_num_sensors_ = 0;
-    uint32_t m_num_sensors_back_ = 0;
-    std::array<uint32_t, 3> m_inv_xyz_calibration_res_;
-    std::array<uint32_t, 3> m_inv_xyz_calibration_res_back_;
-    std::array<uint32_t, 3> m_uv_calibration_res_;
-    std::array<uint32_t, 3> m_uv_calibration_res_back_;
+
+    SPointsCalibrationDescriptor m_calibration_descriptor_;
+    SPointsCalibrationDescriptor m_calibration_descriptor_back_;
+
+    SPointsModelDescriptor m_model_descriptor_;
+    SPointsModelDescriptor m_model_descriptor_back_;
+
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_;
 
@@ -198,19 +234,18 @@ class NetKinectArray
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_;
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_;
 
-    std::array<uint32_t, 4 * 16> m_texture_space_bounding_boxes_;
-    std::array<uint32_t, 4 * 16> m_texture_space_bounding_boxes_back_;
+    std::array<uint32_t, 4 * MAX_LAYER_IDX> m_texture_space_bounding_boxes_;
+    std::array<uint32_t, 4 * MAX_LAYER_IDX> m_texture_space_bounding_boxes_back_;
 
-    scm::math::mat4f m_inverse_vol_to_world_mat_;
-    scm::math::mat4f m_inverse_vol_to_world_mat_back_;
+
 
     float m_lod_scaling_ = 1.0f;
     float m_lod_scaling_back_ = 1.0f;
 
     mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_;
 
-    std::atomic<bool> m_need_cpu_swap_;
-    mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_gpu_swap_;
+    std::atomic<bool> m_need_model_cpu_swap_{false};
+    mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;
     std::thread m_recv_;
 
     // sending matrices
@@ -238,11 +273,6 @@ class NetKinectArray
     std::array<float, 3> latest_received_bb_min;
     std::array<float, 3> latest_received_bb_max;
 
-    unsigned int remote_server_screen_width_ = 800;
-    unsigned int remote_server_screen_height_ = 800;
-
-    unsigned int remote_server_screen_width_to_return_ = 800;
-    unsigned int remote_server_screen_height_to_return_ = 800;
 
     scm::gl::sampler_state_ptr linear_sampler_state_;
 
@@ -259,27 +289,6 @@ class NetKinectArray
     mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_;
 
     mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
-
-    uint32_t m_received_textured_tris_ = 0.0;
-    uint32_t m_received_textured_tris_back_ = 0.0;
-
-    float m_received_kinect_timestamp_ = 0.0;
-    float m_received_kinect_timestamp_back_ = 0.0;
-
-    float m_received_reconstruction_time_ = 0.0;
-    float m_received_reconstruction_time_back_ = 0.0;
-
-    float m_request_reply_latency_ms_ = -1.0;
-    float m_request_reply_latency_ms_back_ = -1.0;
-
-    int32_t m_triangle_texture_atlas_size_ = 0.0;
-    int32_t m_triangle_texture_atlas_size_back_ = 0.0;
-
-    uint32_t m_texture_payload_size_in_byte_ = 0;
-    uint32_t m_texture_payload_size_in_byte_back_ = 0;
-
-    uint32_t m_total_message_payload_in_byte_ = 0;
-    uint32_t m_total_message_payload_in_byte_back_ = 0;
 
     mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
     mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;

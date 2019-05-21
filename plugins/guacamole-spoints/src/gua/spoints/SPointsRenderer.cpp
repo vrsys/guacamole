@@ -52,86 +52,6 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
     return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
 
-struct VertexOnly
-{
-    scm::math::vec3f pos;
-};
-
-std::vector<unsigned> proxy_mesh_indices(int size, unsigned width, unsigned height)
-{
-    std::vector<unsigned> index_array(size);
-    unsigned v(0);
-    for(unsigned h(0); h < (height - 1); ++h)
-    {
-        for(unsigned w(0); w < (width - 1); ++w)
-        {
-            index_array[v] = (w + h * width);
-            ++v;
-            index_array[v] = (w + h * width + 1);
-            ++v;
-            index_array[v] = (w + h * width + width);
-            ++v;
-            index_array[v] = (w + h * width + width);
-            ++v;
-            index_array[v] = (w + h * width + 1);
-            ++v;
-            index_array[v] = (w + h * width + 1 + width);
-            ++v;
-        }
-    }
-    return index_array;
-}
-
-gua::RenderContext::Mesh create_proxy_mesh(gua::RenderContext& ctx, unsigned height_depthimage, unsigned width_depthimage)
-{
-    int num_vertices = height_depthimage * width_depthimage;
-    // int num_indices = height_depthimage * width_depthimage;
-    int num_triangles = ((height_depthimage - 1) * (width_depthimage - 1)) * 2;
-    int num_triangle_indices = 3 * num_triangles;
-    // int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
-    //                                                   1) + (width_depthimage - 1);
-
-    float step = 1.0f / width_depthimage;
-
-    gua::RenderContext::Mesh proxy_mesh{};
-    proxy_mesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
-    proxy_mesh.indices_type = scm::gl::TYPE_UINT;
-    proxy_mesh.indices_count = num_triangle_indices;
-
-    proxy_mesh.vertices = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_vertices * sizeof(VertexOnly), 0);
-
-    VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(proxy_mesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-    unsigned v(0);
-    for(float h = 0.5 * step; h < height_depthimage * step; h += step)
-    {
-        for(float w = 0.5 * step; w < width_depthimage * step; w += step)
-        {
-            data[v].pos = scm::math::vec3f(w, h, 0.0f);
-            ++v;
-        }
-    }
-
-    ctx.render_context->unmap_buffer(proxy_mesh.vertices);
-
-    std::vector<unsigned> indices = proxy_mesh_indices(num_triangle_indices, width_depthimage, height_depthimage);
-
-    proxy_mesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_triangle_indices * sizeof(unsigned int), indices.data());
-
-    proxy_mesh.vertex_array = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly)), {proxy_mesh.vertices});
-    return proxy_mesh;
-    // ctx.render_context->apply(); // necessary ???
-}
-
-void draw_proxy_mesh(gua::RenderContext const& ctx, gua::RenderContext::Mesh const& mesh)
-{
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
-    ctx.render_context->bind_vertex_array(mesh.vertex_array);
-    ctx.render_context->bind_index_buffer(mesh.indices, mesh.indices_topology, mesh.indices_type);
-
-    ctx.render_context->apply();
-    ctx.render_context->draw_elements(mesh.indices_count);
-}
 
 } // namespace
 
@@ -260,13 +180,11 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         {
             scm::gl::context_all_guard context_guard(ctx.render_context);
 
-            for(auto& o : objects->second)
-            {
+            for(auto& o : objects->second) {
                 auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
                 auto spoints_desc(spoints_node->get_spoints_description());
 
-                if(true)
-                {
+                if(true) {
                     // std::cout << "IS SERVER RESOURCE\n";
 
                     auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
