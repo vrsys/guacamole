@@ -107,9 +107,6 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource
 
     void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
-    unsigned get_remote_server_screen_width() const;
-    unsigned get_remote_server_screen_height() const;
-
     /**
      * Raytest for SPoints
      *

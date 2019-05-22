@@ -223,6 +223,10 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     auto light_sphere = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
     auto light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
+    auto& scene = *pipe.current_viewstate().scene;
+
+    math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
+
     // draw lights
     for(size_t i = 0; i < lights.size(); ++i)
     {
@@ -230,7 +234,11 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
             continue;
 
         math::mat4f light_transform(transforms[i]);
-        gl_program->uniform("gua_model_matrix", 0, light_transform);
+
+        auto light_mvp_mat = view_projection_mat * light_transform;
+
+        gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
+        
         gl_program->uniform("light_id", 0, int(i));
         ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
         ctx.render_context->apply();

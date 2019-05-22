@@ -42,6 +42,7 @@ ResolvePassDescription::ResolvePassDescription() : PipelinePassDescription()
     private_.rendermode_ = RenderMode::Quad;
     private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 
+    
     // default background configuration
     uniforms["gua_background_mode"] = static_cast<int>(BackgroundMode::COLOR);
     uniforms["gua_background_color"] = scm::math::vec3f(0.2f, 0.2f, 0.2f);

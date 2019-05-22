@@ -333,7 +333,7 @@ vec3 gua_shade(int light_id, in ShadingTerms T)
   vec3 col = vec3(0);
   // lighting
   float shaded = gua_calculate_light(light_id,
-                                    T.N, T.P, L, R);
+                                      T.N, T.P, L, R);
   if (shaded > 0.0) {
     vec3 H = normalize(L + T.V);
     float NdotL = clamp(dot(T.N, L), 0.0, 1.0);
