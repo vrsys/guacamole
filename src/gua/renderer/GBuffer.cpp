@@ -41,9 +41,9 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution)
 {
     sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);
 
-    color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_32F, 1);
+    color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
     ctx.render_context->make_resident(color_buffer_read_, sampler_state_);
-    color_buffer_write_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_32F, 1);
+    color_buffer_write_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
     ctx.render_context->make_resident(color_buffer_write_, sampler_state_);
 
     pbr_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
