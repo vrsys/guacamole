@@ -54,10 +54,6 @@ class GUA_DLL GBuffer : public RenderTarget
     inline scm::gl::texture_2d_ptr const& get_flags_buffer() const { return flags_buffer_; }
     inline scm::gl::texture_2d_ptr const& get_depth_buffer() const override { return depth_buffer_; }
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    inline scm::gl::texture_2d_ptr const& get_uv_buffer() const { return uv_buffer_; }
-#endif
-
     inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
     inline scm::gl::sampler_state_desc const& get_sampler_state_desc() const { return sampler_state_desc_; }
     inline scm::gl::sampler_state_ptr const& get_sampler_state() const { return sampler_state_; }
@@ -80,8 +76,6 @@ class GUA_DLL GBuffer : public RenderTarget
     scm::gl::texture_2d_ptr normal_buffer_;
     scm::gl::texture_2d_ptr flags_buffer_;
     scm::gl::texture_2d_ptr depth_buffer_;
-
-    scm::gl::texture_2d_ptr uv_buffer_;
 };
 
 } // namespace gua
