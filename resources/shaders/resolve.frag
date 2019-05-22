@@ -82,7 +82,7 @@ vec3 environment_lighting (in ShadingTerms T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint flags, bool ssao_enable) {
+vec3 shade_for_all_lights(in vec3 color, in vec3 normal, in vec3 position, in vec3 pbr, in uint flags, in float depth, in bool ssao_enable) {
 
   float emit = pbr.r;
 
@@ -96,7 +96,11 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 
   vec3 frag_color = vec3(0);
   for (int i = 0; i < gua_lights_num; ++i) {
-      float screen_space_shadow = compute_screen_space_shadow (i, position);
+      float screen_space_shadow = 0.0;
+
+      if(gua_screen_space_shadows_enable) {
+        screen_space_shadow = compute_screen_space_shadow (i, position);
+      }
 
       // is it either a visible spot/point light or a sun light ?
       if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
@@ -108,7 +112,7 @@ vec3 shade_for_all_lights(vec3 color, vec3 normal, vec3 position, vec3 pbr, uint
 
   float ambient_occlusion = 0.0;
   if (ssao_enable) {
-    ambient_occlusion = compute_ssao();
+    ambient_occlusion = compute_ssao(normal, position, depth);
   }
   frag_color += (1.0 - ambient_occlusion) * environment_lighting(T);
 
@@ -130,7 +134,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
   vec3 position = h.xyz / h.w;
 
-  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, false), pbr.r);
+  vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, depth, false), pbr.r);
   return frag_color_emit;
 }
 #endif
@@ -212,11 +216,13 @@ float get_vignette(float coverage, float softness, float intensity) {
   float a = -coverage/softness;
   float b = 1.0/softness;
   vec2 q = gua_get_quad_coords();
-  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0, 1) * intensity + (1-intensity);
+  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0.0, 1.0) * intensity + (1.0-intensity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
+  //gua_out_color = gua_get_color() + gua_get_normal() + gua_get_pbr() + gua_get_position() + vec3(gua_get_flags());
+
 
   ivec2 frag_pos = ivec2(gl_FragCoord.xy);
 
@@ -243,25 +249,41 @@ void main() {
   bool res = true;
 #endif
 
-  vec3 pbr = gua_get_pbr();
+
+
+    vec3 gbuf_pbr      = gua_get_pbr();
+
+    vec3 background_color = vec3(0.0);
+
+    bool depth_smaller_one = depth >= 1.0;
+    if(gua_enable_fog || (res && depth_smaller_one) ) {
+      background_color = gua_get_background_color();
+    }
 
   if (res) {
     if (depth < 1) {
-      gbuffer_color += shade_for_all_lights(gua_get_color(),
-                                      gua_get_normal(),
-                                      gua_get_position(),
-                                      pbr,
-                                      gua_get_flags(),
-                                      gua_ssao_enable);
+
+      vec3 gua_get_color = gua_get_color();
+      vec3 gbuf_normal   = gua_get_normal();
+      vec3 gbuf_position = gua_unproject_depth_to_position(depth);
+      uint gbuf_flags    = gua_get_flags();
+      
+      gbuffer_color += shade_for_all_lights(gua_get_color,
+                                            gbuf_normal,
+                                            gbuf_position,
+                                            gbuf_pbr,
+                                            gbuf_flags,
+                                            depth,
+                                            gua_ssao_enable);
       if (gua_enable_fog) {
-        gbuffer_color = gua_apply_fog(gbuffer_color, gua_get_background_color());
+        gbuffer_color = gua_apply_fog(gbuffer_color, background_color);
       }
     }
     else {
-      gbuffer_color += gua_get_background_color();
+      gbuffer_color += background_color;
     }
 
-    abuffer_accumulation_emissivity += pbr.r * (1-abuffer_accumulation_color.a);
+    abuffer_accumulation_emissivity += gbuf_pbr.r * (1-abuffer_accumulation_color.a);
     abuf_mix_frag(vec4(gbuffer_color, 1.0), abuffer_accumulation_color);
   }
 
@@ -300,5 +322,7 @@ void main() {
     }
   }
 #endif
+
+
 }
 

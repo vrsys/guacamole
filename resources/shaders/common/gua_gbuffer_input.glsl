@@ -3,7 +3,6 @@ uniform uvec2 gua_gbuffer_pbr;
 uniform uvec2 gua_gbuffer_normal;
 uniform uvec2 gua_gbuffer_flags;
 uniform uvec2 gua_gbuffer_depth;
-uniform uvec2 gua_gbuffer_uvs;
 
 uniform float gua_texel_width;
 uniform float gua_texel_height;
@@ -13,11 +12,21 @@ vec2 gua_get_quad_coords() {
   return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
 }
 
-// depth -----------------------------------------------------------------------
 
+// helper functions
 float gua_scale_unscaled_depth(float unscaled_depth) {
   return unscaled_depth * 2.0 - 1.0;
 }
+
+vec3 gua_unproject_depth_to_position(float scaled_depth) {
+    vec2 frag_pos = gua_get_quad_coords();
+    vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, scaled_depth, 1.0);
+    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+    h /= h.w; 
+    return h.xyz;
+}
+
+// depth -----------------------------------------------------------------------
 
 float gua_get_unscaled_depth() {
     vec2 frag_pos = gua_get_quad_coords();
