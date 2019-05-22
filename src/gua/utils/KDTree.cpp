@@ -55,6 +55,14 @@ void KDTree::generate(Mesh const& mesh)
         }
     }
 
+    //below allows axis-aligned tris to be picked.
+    //axis-aligned tris cause unreliable picking when the boundary of
+    //the kdtree coincides with the triangle. therefore, we expand
+    //the box before building the tree. 
+    auto dim = root_bounds.max - root_bounds.min;
+    root_bounds.min -= 0.01f * dim;
+    root_bounds.max += 0.01f * dim;
+
     for(unsigned i(0); i < 3; ++i)
     {
         LeafData::Comparator comp(i);
