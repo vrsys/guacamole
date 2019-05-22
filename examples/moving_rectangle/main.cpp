@@ -166,14 +166,15 @@ int main(int argc, char** argv)
 */
 
     auto normal_pipe = std::make_shared<gua::PipelineDescription>();
+    normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    
     normal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-    //normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
 
-    //auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-    //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-    //resolve_pass->tone_mapping_exposure(1.0f);
+    auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+    resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    resolve_pass->tone_mapping_exposure(1.0f);
 
-    //normal_pipe->add_pass(resolve_pass);
+    normal_pipe->add_pass(resolve_pass);
     //normal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
@@ -244,7 +245,7 @@ int main(int argc, char** argv)
         {
             renderer.queue_draw({&graph});
 		
-    	    double current_scaling = 2.0 + 100 * (1.0 + std::sin(++frame_count / 500.0));
+    	    double current_scaling = 2.0 + 100;// * (1.0 + std::sin(++frame_count / 500.0));
 	    
 	    auto scm_trans_mat = scm::math::make_translation(0.0, 0.0, -2.0) * scm::math::make_scale(current_scaling, current_scaling, current_scaling) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
 	    example_model->set_transform(scm_trans_mat);		
