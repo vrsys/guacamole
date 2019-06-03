@@ -174,7 +174,7 @@ class NetKinectArray
   // helper functions
   private:
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
-    void _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
+    bool _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
     void _readloop();
 
@@ -203,7 +203,7 @@ class NetKinectArray
     std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
 
     uint8_t* m_tj_compressed_image_buffer_ = nullptr;
-    std::array<uint8_t, 1024 * 1024 * 50> m_decompressed_image_buffer_;
+    std::array<uint8_t, 1024 * 1024 * 100> m_decompressed_image_buffer_;
 
     std::vector<uint8_t> m_calibration_;
     std::vector<uint8_t> m_calibration_back_;
@@ -273,6 +273,8 @@ class NetKinectArray
     std::array<float, 3> latest_received_bb_min;
     std::array<float, 3> latest_received_bb_max;
 
+    volatile std::atomic<int> num_clients_cpu_swapping_{0};
+    volatile std::atomic<int> num_clients_gpu_swapping_{0};
 
     scm::gl::sampler_state_ptr linear_sampler_state_;
 
