@@ -35,11 +35,10 @@ FeedbackCollectorResponsibilityDescription::FeedbackCollectorResponsibilityDescr
     private_.name_ = "spoints_feedback_collector_responsibility";
     private_.type_ = PipelineResponsibilityPrivate::TYPE::POST_RENDER;
     private_.fulfil_ = [](Pipeline& pipe) {
-        /* std::cout << "POST RENDER ACTION IS CALLED" << std::endl; */
         SPointsFeedbackCollector::instance()->send_feedback_frame(pipe.get_context());
     };
-}
 
+}
 SPointsPassDescription::SPointsPassDescription() : PipelinePassDescription()
 {
     private_.needs_color_buffer_as_input_ = false;
@@ -52,6 +51,8 @@ SPointsPassDescription::SPointsPassDescription() : PipelinePassDescription()
 
 PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
+    pipeline_responsibilities_.push_back(std::make_shared<FeedbackCollectorResponsibilityDescription>());
+
     auto renderer{std::make_shared<SPointsRenderer>()};
     renderer->set_global_substitution_map(substitution_map);
     private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
