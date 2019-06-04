@@ -163,12 +163,14 @@ void NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& c
 }
 
 void NetKinectArray::_try_swap_calibration_data_cpu() {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+
     if(m_need_calibration_cpu_swap_.load()) {
         while(num_clients_gpu_swapping_.load()) {
             ;
         }
         ++num_clients_cpu_swapping_;
-        std::lock_guard<std::mutex> lock(m_mutex_);
+        //std::lock_guard<std::mutex> lock(m_mutex_);
         m_calibration_.swap(m_calibration_back_);
 
         std::swap(m_calibration_descriptor_, m_calibration_descriptor_back_);
@@ -180,6 +182,8 @@ void NetKinectArray::_try_swap_calibration_data_cpu() {
 
 
 void NetKinectArray::_try_swap_model_data_cpu() {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+
     if(m_need_model_cpu_swap_.load())
     {
         
@@ -189,7 +193,7 @@ void NetKinectArray::_try_swap_model_data_cpu() {
 
         ++num_clients_cpu_swapping_;
 
-        std::lock_guard<std::mutex> lock(m_mutex_);
+        //std::lock_guard<std::mutex> lock(m_mutex_);
         // start of synchro point
         m_buffer_.swap(m_buffer_back_);
         m_texture_buffer_.swap(m_texture_buffer_back_);
@@ -217,21 +221,33 @@ void NetKinectArray::_try_swap_model_data_cpu() {
 
 bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb)
 {
-    {
-        auto& current_encountered_frame_count = encountered_frame_counts_per_context_[ctx.id];
 
-        if(current_encountered_frame_count != ctx.framecount)
+    //std::lock_guard<std::mutex> lock(m_mutex_);
+    {
         {
-            current_encountered_frame_count = ctx.framecount;
-        }
-        else
-        {
-            return false;
+            //std::lock_guard<std::mutex> lock(m_mutex_);
+            auto current_encountered_frame_count = encountered_frame_counts_per_context_[ctx.id];
+
+            if(current_encountered_frame_count != ctx.framecount)
+            {
+                current_encountered_frame_count = ctx.framecount;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         _try_swap_calibration_data_cpu();
 
-        if(m_need_calibration_gpu_swap_[ctx.id].load()) {
+        bool current_thread_need_calibration_gpu_swap = false;
+        
+        {
+            //std::lock_guard<std::mutex> lock(m_mutex_);
+            current_thread_need_calibration_gpu_swap = m_need_calibration_gpu_swap_[ctx.id].load();
+        }  
+
+        if(current_thread_need_calibration_gpu_swap) {
 
             while(num_clients_cpu_swapping_.load()) {
                 ;
@@ -239,14 +255,13 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
             ++num_clients_gpu_swapping_;
 
-            inv_xyz_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
-            uv_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
+            {
+                std::lock_guard<std::mutex> lock(m_mutex_);
+                inv_xyz_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
+                uv_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
+            }
 
             std::size_t current_read_offset = 0;
-
-
-
-
 
 
 
@@ -315,14 +330,26 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             
 
             --num_clients_gpu_swapping_;
-            m_need_calibration_gpu_swap_[ctx.id].store(false);
-            m_received_calibration_[ctx.id].store(true);
+
+            {
+                std::lock_guard<std::mutex> lock(m_mutex_);
+
+                m_need_calibration_gpu_swap_[ctx.id].store(false);
+                m_received_calibration_[ctx.id].store(true);
+            }
             return true;
         }
 
         _try_swap_model_data_cpu();
 
-        if(m_need_model_gpu_swap_[ctx.id].load())
+        bool current_thread_need_model_gpu_swap = false;
+
+        {
+            std::lock_guard<std::mutex> lock(m_mutex_);
+            current_thread_need_model_gpu_swap = m_need_model_gpu_swap_[ctx.id].load();
+        }
+
+        if(current_thread_need_model_gpu_swap)
         {
 
 
@@ -344,35 +371,47 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
             if(0 != total_num_bytes_to_copy)
             {
-                num_textured_tris_to_draw_per_context_[ctx.id] = m_model_descriptor_.received_textured_tris;
 
+
+                num_textured_tris_to_draw_per_context_[ctx.id] = m_model_descriptor_.received_textured_tris;
                 m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id] = m_num_best_triangles_for_sensor_layer_;
 
-                auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
+                //std::lock_guard<std::mutex> lock(m_mutex_);
+                //auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
+
+
+
+                            //std::lock_guard<std::mutex> lock(m_mutex_);
                 auto& current_empty_vbo = net_data_vbo_per_context_[ctx.id];
                 auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
                 auto& current_texture_atlas = texture_atlas_per_context_[ctx.id];
 
-                if(!current_is_vbo_created)
+                if(!is_vbo_created_per_context_[ctx.id])
                 {
 
-                    std::lock_guard<std::mutex> lock(m_mutex_);
                     current_empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
-
-
                     current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+
+                    auto& current_point_layout = point_layout_per_context_[ctx.id];
+
+                    // size_t size_of_vertex = 2 * sizeof(uint32_t);
+                    current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(current_empty_vbo));
+
+                    is_vbo_created_per_context_[ctx.id] = true;
 
                     size_t texture_width = 1280 * 2;
                     size_t texture_height = 720 * 2;
 
                     current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+                
+                    //is_vbo_created_per_context_[ctx.id] = true;
                 }
 
                 ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
 
                 ctx.render_device->main_context()->apply_storage_buffer_bindings();
-
+                
                 float* mapped_net_data_vbo_ = (float*)ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
 
@@ -425,17 +464,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     }
                 }
 
-                if(!current_is_vbo_created)
-                {
-
-                    std::lock_guard<std::mutex> lock(m_mutex_);
-                    auto& current_point_layout = point_layout_per_context_[ctx.id];
-
-                    // size_t size_of_vertex = 2 * sizeof(uint32_t);
-                    current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(current_empty_vbo));
-
-                    current_is_vbo_created = true;
-                }
             }
             else
             {
@@ -591,7 +619,7 @@ void NetKinectArray::_readloop()
 
                 for(auto& entry : m_need_calibration_gpu_swap_)
                 {
-                    entry.second.store(true);
+                    entry.store(true);
                 }
                 // mutable std::unordered_map<std::size_t,
             }
