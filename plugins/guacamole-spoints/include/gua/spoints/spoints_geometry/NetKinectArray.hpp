@@ -189,7 +189,7 @@ class NetKinectArray
   private: 
 
 
-    static size_t constexpr INITIAL_VBO_SIZE = 10000000;
+    static size_t constexpr INITIAL_VBO_SIZE = 50000000;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
 
     std::mutex m_mutex_;

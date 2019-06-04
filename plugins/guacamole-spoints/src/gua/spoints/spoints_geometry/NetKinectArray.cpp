@@ -253,7 +253,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                 m_need_calibration_gpu_swap_[ctx.id].store(false);
                 m_received_calibration_[ctx.id].store(true);
             } else {
-
+                
                 while(num_clients_cpu_swapping_.load()) {
                     ;
                 }
@@ -398,7 +398,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
                 if(!is_vbo_created_per_context_[ctx.id])
                 {
-
+                    std::lock_guard<std::mutex> lock(m_mutex_);
                     current_empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
                     current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
 
