@@ -143,11 +143,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
                         current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
 #else
-                        if(!pipe.current_viewstate().shadow_mode)
-                        {
-                            bool virtual_texturing_enabled = tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
-                        }
+                        bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
+                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
 #endif
                         programs_[current_material] = current_shader;
                     }
