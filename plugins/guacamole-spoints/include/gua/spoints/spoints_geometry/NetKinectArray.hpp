@@ -12,6 +12,7 @@
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
 #include <turbojpeg.h>
@@ -209,10 +210,15 @@ class NetKinectArray
     std::vector<uint8_t> m_calibration_back_;
 
     std::atomic<bool> m_need_calibration_cpu_swap_{false};
-    mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_calibration_gpu_swap_;
-    mutable std::unordered_map<std::size_t, std::atomic<bool>> m_received_calibration_;
 
-    mutable std::unordered_map<std::size_t, bool> m_bound_calibration_data_;
+    mutable std::vector<std::atomic<bool>> m_need_calibration_gpu_swap_ = std::vector<std::atomic<bool>>(50);
+    mutable std::vector<std::atomic<bool>> m_received_calibration_ = std::vector<std::atomic<bool>>(50);
+    mutable std::vector<bool> m_bound_calibration_data_ = std::vector<bool>(50, false);
+
+   // mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_calibration_gpu_swap_;
+   // mutable std::unordered_map<std::size_t, std::atomic<bool>> m_received_calibration_;
+
+   // mutable std::unordered_map<std::size_t, bool> m_bound_calibration_data_;
 
 
     SPointsCalibrationDescriptor m_calibration_descriptor_;
@@ -280,25 +286,46 @@ class NetKinectArray
 
     // mutable std::unordered_set<std::size_t> known_context_ids_;
     mutable std::unordered_set<std::size_t> encountered_context_ids_for_feedback_frame_;
+    //mutable std::vector<std::size_t> encountered_context_ids_for_feedback_frame_(100);
 
-    mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
-    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
+
+
+    //mutable std::unordered_map<std::size_t, scm::gl::vertex_array_ptr> point_layout_per_context_;
+    //mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> net_data_vbo_per_context_;
     // used for attributeless rendering
-    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> empty_vbo_per_context_;
-    mutable std::unordered_map<std::size_t, scm::gl::texture_2d_ptr> texture_atlas_per_context_;
+    //mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> empty_vbo_per_context_;
 
-    mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
-    mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_;
+    mutable std::vector<scm::gl::vertex_array_ptr> point_layout_per_context_ = std::vector<scm::gl::vertex_array_ptr>(50, nullptr);
+    
+    mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(50, nullptr);
+    mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(50, nullptr);
 
-    mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
 
-    mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
-    mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
-    mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;
+    mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(50, nullptr);
 
-    mutable std::unordered_map<std::size_t, bool> is_vbo_created_per_context_; // = false;
+    //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
+    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(50, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
+    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(50, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
 
-    mutable std::unordered_map<std::size_t, std::size_t> encountered_frame_counts_per_context_; // = false;
+    //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_;
+
+    //mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
+    mutable std::vector<std::size_t> net_data_vbo_size_per_context_ = std::vector<std::size_t>(50, 0);
+
+    mutable std::vector<std::size_t> num_vertex_colored_points_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
+    mutable std::vector<std::size_t> num_vertex_colored_tris_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
+    mutable std::vector<std::size_t> num_textured_tris_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
+
+    mutable std::vector<bool> is_vbo_created_per_context_ = std::vector<bool>(50, false);
+
+    mutable std::vector<std::size_t> encountered_frame_counts_per_context_ = std::vector<std::size_t>(50, 0);
+    //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
+    //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
+    //mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;
+
+    //mutable std::unordered_map<std::size_t, bool> is_vbo_created_per_context_; // = false;
+
+    //mutable std::unordered_map<std::size_t, std::size_t> encountered_frame_counts_per_context_; // = false;
 };
 
 } // namespace spoints
