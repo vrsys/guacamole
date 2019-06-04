@@ -318,6 +318,8 @@ class NetKinectArray
 
     mutable std::vector<bool> is_vbo_created_per_context_ = std::vector<bool>(50, false);
 
+    mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(50, false);
+
     mutable std::vector<std::size_t> encountered_frame_counts_per_context_ = std::vector<std::size_t>(50, 0);
     //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
     //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
