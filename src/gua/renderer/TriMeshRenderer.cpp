@@ -239,6 +239,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
 #endif
+        ctx.render_context->reset_state_objects();
+        ctx.render_context->sync();
     }
 }
 
