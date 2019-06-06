@@ -191,6 +191,7 @@ class NetKinectArray
 
     static size_t constexpr INITIAL_VBO_SIZE = 50000000;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
+    static uint constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
 
     std::mutex m_mutex_;
     std::atomic<bool> m_running_;
@@ -211,9 +212,11 @@ class NetKinectArray
 
     std::atomic<bool> m_need_calibration_cpu_swap_{false};
 
-    mutable std::vector<std::atomic<bool>> m_need_calibration_gpu_swap_ = std::vector<std::atomic<bool>>(50);
-    mutable std::vector<std::atomic<bool>> m_received_calibration_ = std::vector<std::atomic<bool>>(50);
-    mutable std::vector<bool> m_bound_calibration_data_ = std::vector<bool>(50, false);
+
+
+    std::vector<std::atomic<bool>> m_need_calibration_gpu_swap_ = std::vector<std::atomic<bool>>(MAX_NUM_SUPPORTED_CONTEXTS);
+    std::vector<std::atomic<bool>> m_received_calibration_ = std::vector<std::atomic<bool>>(MAX_NUM_SUPPORTED_CONTEXTS);
+    std::vector<bool> m_bound_calibration_data_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
    // mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_calibration_gpu_swap_;
    // mutable std::unordered_map<std::size_t, std::atomic<bool>> m_received_calibration_;
@@ -297,30 +300,30 @@ class NetKinectArray
 
     mutable std::vector<scm::gl::vertex_array_ptr> point_layout_per_context_ = std::vector<scm::gl::vertex_array_ptr>(50, nullptr);
     
-    mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(50, nullptr);
-    mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(50, nullptr);
+    mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+    mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
 
-    mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(50, nullptr);
+    mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
-    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(50, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
-    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(50, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
+    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
+    mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );
 
     //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> uv_calibs_per_context_;
 
     //mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
-    mutable std::vector<std::size_t> net_data_vbo_size_per_context_ = std::vector<std::size_t>(50, 0);
+    mutable std::vector<std::size_t> net_data_vbo_size_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
 
-    mutable std::vector<std::size_t> num_vertex_colored_points_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
-    mutable std::vector<std::size_t> num_vertex_colored_tris_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
-    mutable std::vector<std::size_t> num_textured_tris_to_draw_per_context_ = std::vector<std::size_t>(50, 0);
+    mutable std::vector<std::size_t> num_vertex_colored_points_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
+    mutable std::vector<std::size_t> num_vertex_colored_tris_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
+    mutable std::vector<std::size_t> num_textured_tris_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
 
-    mutable std::vector<bool> is_vbo_created_per_context_ = std::vector<bool>(50, false);
+    mutable std::vector<bool> is_vbo_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
-    mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(50, false);
+    mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
-    mutable std::vector<std::size_t> encountered_frame_counts_per_context_ = std::vector<std::size_t>(50, 0);
+    mutable std::vector<std::size_t> encountered_frame_counts_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
     //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
     //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_tris_to_draw_per_context_;
     //mutable std::unordered_map<std::size_t, std::size_t> num_textured_tris_to_draw_per_context_;
