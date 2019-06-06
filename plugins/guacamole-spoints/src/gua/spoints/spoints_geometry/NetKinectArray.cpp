@@ -100,10 +100,10 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
-            // ctx.render_device->main_context()->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+            ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+            // ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
 
-            ctx.render_device->main_context()->apply_storage_buffer_bindings();
+            ctx.render_context->apply_storage_buffer_bindings();
 
             uint32_t triangle_offset_for_current_layer = 0;
             uint32_t num_triangles_to_draw_for_current_layer = 0;
@@ -137,9 +137,9 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+            ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
 
-            ctx.render_device->main_context()->apply_storage_buffer_bindings();
+            ctx.render_context->apply_storage_buffer_bindings();
 
             ctx.render_context->bind_vertex_array(current_point_layout);
 
@@ -311,7 +311,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     uint const num_channels_inv_xyz_volume = 4;
                     std::size_t const num_bytes_per_inv_xyz_volume = num_channels_inv_xyz_volume * sizeof(float) * total_num_voxels_inv_xyz_calibration_volume;
 
-                    ctx.render_device->main_context()->update_sub_texture(
+                    ctx.render_context->update_sub_texture(
                         current_inv_xyz_calibration_volume_ptr, volumetric_inv_xyz_region_to_update, 
                         0, scm::gl::FORMAT_RGBA_32F, (void*)&m_calibration_[current_read_offset]);
                     current_read_offset += num_bytes_per_inv_xyz_volume;
@@ -326,7 +326,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                                                                                m_calibration_descriptor_.uv_calibration_res[2]),
                                                                                scm::gl::FORMAT_RG_32F);
 
-                    ctx.render_device->main_context()->update_sub_texture(
+                    ctx.render_context->update_sub_texture(
                         current_uv_calibration_volume_ptr, volumetric_uv_region_to_update, 0, scm::gl::FORMAT_RG_32F, (void*)&m_calibration_[current_read_offset]);
                     current_read_offset += num_bytes_per_uv_volume;
                 }
@@ -417,15 +417,15 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     //is_vbo_created_per_context_[ctx.id] = true;
                 }
 
-                ctx.render_device->main_context()->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+                ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
 
-                ctx.render_device->main_context()->apply_storage_buffer_bindings();
+                ctx.render_context->apply_storage_buffer_bindings();
                 
-                float* mapped_net_data_vbo_ = (float*)ctx.render_device->main_context()->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
+                float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
 
 
-                ctx.render_device->main_context()->unmap_buffer(current_net_data_vbo);
+                ctx.render_context->unmap_buffer(current_net_data_vbo);
 
                 m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
 
@@ -468,7 +468,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                         size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
 
 
-                        ctx.render_device->main_context()->update_sub_texture(
+                        ctx.render_context->update_sub_texture(
                             current_texture_atlas, current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
                     }
                 }
