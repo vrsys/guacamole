@@ -23,6 +23,8 @@
 
 // lamure headers
 #include <lamure/vt/VTConfig.h>
+#include <numeric>
+#include <algorithm>
 #include <boost/assign/list_of.hpp>
 
 namespace gua
