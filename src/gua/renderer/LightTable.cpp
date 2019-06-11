@@ -36,7 +36,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
 
     unsigned light_bitset_words = ((lights_num_ - 1) / 32) + 1;
 
-    const uint max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
+    uint32_t const max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
     if(width > max_tex3d_size || height > max_tex3d_size || light_bitset_words > max_tex3d_size)
     {
         Logger::LOG_ERROR << "Dimensions of light table cannot be greater than " << max_tex3d_size << " in size" << std::endl;
