@@ -47,6 +47,11 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
     {
         if(!m_model_descriptor_.is_fully_encoded_vertex_data)
         {
+
+            if(!is_calibration_data_created_per_context_[ctx.id]) {
+                return;
+            }
+
             auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
 
             auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
@@ -147,6 +152,8 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
             size_t const num_vertices_to_draw = m_model_descriptor_.received_textured_tris * 3;
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
+
+            std::cout << "Drawing fully encoded vertex data\n";
         }
 
         ctx.render_context->reset_vertex_input();
@@ -166,8 +173,8 @@ void NetKinectArray::_try_swap_calibration_data_cpu() {
     std::lock_guard<std::mutex> lock(m_mutex_);
 
     if(m_need_calibration_cpu_swap_.load()) {
-        while(num_clients_gpu_swapping_.load()) {
-            ;
+        if(num_clients_gpu_swapping_.load()) {
+            return;
         }
         ++num_clients_cpu_swapping_;
         //std::lock_guard<std::mutex> lock(m_mutex_);
@@ -187,8 +194,8 @@ void NetKinectArray::_try_swap_model_data_cpu() {
     if(m_need_model_cpu_swap_.load())
     {
         
-        while(num_clients_gpu_swapping_.load()) {
-            ;
+        if(num_clients_gpu_swapping_.load()) {
+            return;
         }
 
         ++num_clients_cpu_swapping_;
@@ -249,13 +256,12 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
         if(current_thread_need_calibration_gpu_swap) {
 
-            if(m_received_calibration_[ctx.id].load()) {
+            if(m_received_calibration_[ctx.id]) {
                 m_need_calibration_gpu_swap_[ctx.id].store(false);
-                m_received_calibration_[ctx.id].store(true);
             } else {
                 
-                while(num_clients_cpu_swapping_.load()) {
-                    ;
+                if(num_clients_cpu_swapping_.load()) {
+                    return false;
                 }
 
                 std::lock_guard<std::mutex> lock(m_mutex_);
@@ -362,8 +368,8 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         {
 
 
-            while(num_clients_cpu_swapping_.load()) {
-                ;
+            if(num_clients_cpu_swapping_.load()) {
+                return false;
             }
 
             ++num_clients_gpu_swapping_;
