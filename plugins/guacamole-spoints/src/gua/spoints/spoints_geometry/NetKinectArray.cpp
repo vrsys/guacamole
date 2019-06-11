@@ -48,7 +48,7 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
         if(!m_model_descriptor_.is_fully_encoded_vertex_data)
         {
 
-            if(!is_calibration_data_created_per_context_[ctx.id]) {
+            if( (!is_calibration_data_created_per_context_[ctx.id]) || (!is_vbo_created_per_context_[ctx.id]) ) {
                 return;
             }
 
