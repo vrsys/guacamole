@@ -153,7 +153,7 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             size_t const num_vertices_to_draw = m_model_descriptor_.received_textured_tris * 3;
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
 
-            std::cout << "Drawing fully encoded vertex data\n";
+            //std::cout << "Drawing fully encoded vertex data\n";
         }
 
         ctx.render_context->reset_vertex_input();
@@ -302,6 +302,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     //std::lock_guard<std::mutex> lock(m_mutex_);
 
                     // create and update calibration volume
+                    //std::cout << "Trying to create calib volume of size"
                     auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
                     current_inv_xyz_calibration_volume_ptr =
                         ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
