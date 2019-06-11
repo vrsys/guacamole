@@ -180,6 +180,9 @@ class NetKinectArray
     void _readloop();
 
     void _try_swap_calibration_data_cpu();
+
+    bool _try_swap_calibration_data_gpu(gua::RenderContext const& ctx);
+
     void _try_swap_model_data_cpu();
 
     // receiving geometry

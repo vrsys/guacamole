@@ -187,6 +187,128 @@ void NetKinectArray::_try_swap_calibration_data_cpu() {
     }
 }
 
+bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ctx) {
+        bool current_thread_need_calibration_gpu_swap = false;
+        
+        {
+            //std::lock_guard<std::mutex> lock(m_mutex_);
+            current_thread_need_calibration_gpu_swap = m_need_calibration_gpu_swap_[ctx.id].load();
+        }  
+
+
+
+        if(current_thread_need_calibration_gpu_swap) {
+
+            if(m_received_calibration_[ctx.id]) {
+                m_need_calibration_gpu_swap_[ctx.id].store(false);
+            } else {
+                
+                if(num_clients_cpu_swapping_.load()) {
+                    return false;
+                }
+
+                std::lock_guard<std::mutex> lock(m_mutex_);
+                ++num_clients_gpu_swapping_;
+
+                {
+                    //std::lock_guard<std::mutex> lock(m_mutex_);
+                    inv_xyz_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
+                    uv_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
+                }
+
+                std::size_t current_read_offset = 0;
+
+
+
+                auto const volumetric_inv_xyz_region_to_update =
+                    scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
+                                                                                          m_calibration_descriptor_.inv_xyz_calibration_res[1], 
+                                                                                          m_calibration_descriptor_.inv_xyz_calibration_res[2]));
+
+                auto const volumetric_uv_region_to_update =
+                    scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
+                                                                                          m_calibration_descriptor_.uv_calibration_res[1], 
+                                                                                          m_calibration_descriptor_.uv_calibration_res[2]));
+
+                uint64_t total_num_voxels_uv_calibration_volume = 1;
+
+                for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+                    total_num_voxels_uv_calibration_volume *= m_calibration_descriptor_.uv_calibration_res[dim_idx];
+                }
+
+                uint32_t constexpr num_channels_uv_calibration_volume = 2;
+                std::size_t const num_bytes_per_uv_volume = num_channels_uv_calibration_volume * sizeof(float) * total_num_voxels_uv_calibration_volume;
+
+                for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
+                {
+
+                    //std::lock_guard<std::mutex> lock(m_mutex_);
+
+                    // create and update calibration volume
+                    //std::cout << "Trying to create calib volume of size"
+                    auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
+
+                    std::cout << "Trying to create texture of size: " << m_calibration_descriptor_.inv_xyz_calibration_res[0] 
+                                                                      << m_calibration_descriptor_.inv_xyz_calibration_res[1] 
+                                                                      << m_calibration_descriptor_.inv_xyz_calibration_res[2] << std::endl;
+                    current_inv_xyz_calibration_volume_ptr =
+                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
+                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[1], 
+                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[2]), 
+                                                                               scm::gl::FORMAT_RGBA_32F);
+
+                    uint64_t total_num_voxels_inv_xyz_calibration_volume = 1;
+
+                    for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+                        total_num_voxels_inv_xyz_calibration_volume *= m_calibration_descriptor_.inv_xyz_calibration_res[dim_idx];
+                    }
+                    uint const num_channels_inv_xyz_volume = 4;
+                    std::size_t const num_bytes_per_inv_xyz_volume = num_channels_inv_xyz_volume * sizeof(float) * total_num_voxels_inv_xyz_calibration_volume;
+
+                    ctx.render_context->update_sub_texture(
+                        current_inv_xyz_calibration_volume_ptr, volumetric_inv_xyz_region_to_update, 
+                        0, scm::gl::FORMAT_RGBA_32F, (void*)&m_calibration_[current_read_offset]);
+                    current_read_offset += num_bytes_per_inv_xyz_volume;
+
+                    //=======================================================================================================
+
+                    // create and update calibration volume
+                    auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
+
+                    std::cout << "Trying to create uv texture of size: " << m_calibration_descriptor_.uv_calibration_res[0] 
+                                                                      << m_calibration_descriptor_.uv_calibration_res[1] 
+                                                                      << m_calibration_descriptor_.uv_calibration_res[2] << std::endl;
+                    current_uv_calibration_volume_ptr =
+                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
+                                                                               m_calibration_descriptor_.uv_calibration_res[1], 
+                                                                               m_calibration_descriptor_.uv_calibration_res[2]),
+                                                                               scm::gl::FORMAT_RG_32F);
+
+                    ctx.render_context->update_sub_texture(
+                        current_uv_calibration_volume_ptr, volumetric_uv_region_to_update, 0, scm::gl::FORMAT_RG_32F, (void*)&m_calibration_[current_read_offset]);
+                    current_read_offset += num_bytes_per_uv_volume;
+                }
+
+                // std::cout << "Loaded Volume Textures\n";
+                // current_texture_atlas = ctx.render_device->create_texture_3d(scm::math::vec3ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+                
+
+                --num_clients_gpu_swapping_;
+
+                {
+
+                    is_calibration_data_created_per_context_[ctx.id] = true;
+                    m_need_calibration_gpu_swap_[ctx.id].store(false);
+                    m_received_calibration_[ctx.id].store(true);
+                }
+                return true;
+
+            }
+
+        }
+
+        return true;
+}
 
 void NetKinectArray::_try_swap_model_data_cpu() {
     std::lock_guard<std::mutex> lock(m_mutex_);
@@ -245,115 +367,13 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             }
         }
 
+
         _try_swap_calibration_data_cpu();
 
-        bool current_thread_need_calibration_gpu_swap = false;
-        
-        {
-            //std::lock_guard<std::mutex> lock(m_mutex_);
-            current_thread_need_calibration_gpu_swap = m_need_calibration_gpu_swap_[ctx.id].load();
-        }  
+        bool got_calibration_data = _try_swap_calibration_data_gpu(ctx);
 
-        if(current_thread_need_calibration_gpu_swap) {
-
-            if(m_received_calibration_[ctx.id]) {
-                m_need_calibration_gpu_swap_[ctx.id].store(false);
-            } else {
-                
-                if(num_clients_cpu_swapping_.load()) {
-                    return false;
-                }
-
-                std::lock_guard<std::mutex> lock(m_mutex_);
-                ++num_clients_gpu_swapping_;
-
-                {
-                    //std::lock_guard<std::mutex> lock(m_mutex_);
-                    inv_xyz_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
-                    uv_calibs_per_context_[ctx.id] = std::vector<scm::gl::texture_3d_ptr>(m_calibration_descriptor_.num_sensors, nullptr);
-                }
-
-                std::size_t current_read_offset = 0;
-
-
-
-                auto const volumetric_inv_xyz_region_to_update =
-                    scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
-                                                                                          m_calibration_descriptor_.inv_xyz_calibration_res[1], 
-                                                                                          m_calibration_descriptor_.inv_xyz_calibration_res[2]));
-
-                auto const volumetric_uv_region_to_update =
-                    scm::gl::texture_region(scm::math::vec3ui(0, 0, 0), scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
-                                                                                          m_calibration_descriptor_.uv_calibration_res[1], 
-                                                                                          m_calibration_descriptor_.uv_calibration_res[2]));
-
-                uint64_t total_num_voxels_uv_calibration_volume = 1;
-
-                for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-                    total_num_voxels_uv_calibration_volume *= m_calibration_descriptor_.uv_calibration_res[dim_idx];
-                }
-
-                uint32_t constexpr num_channels_uv_calibration_volume = 2;
-                std::size_t const num_bytes_per_uv_volume = num_channels_uv_calibration_volume * sizeof(float) * total_num_voxels_uv_calibration_volume;
-
-                for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
-                {
-
-                    //std::lock_guard<std::mutex> lock(m_mutex_);
-
-                    // create and update calibration volume
-                    //std::cout << "Trying to create calib volume of size"
-                    auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
-                    current_inv_xyz_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
-                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[1], 
-                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[2]), 
-                                                                               scm::gl::FORMAT_RGBA_32F);
-
-                    uint64_t total_num_voxels_inv_xyz_calibration_volume = 1;
-
-                    for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-                        total_num_voxels_inv_xyz_calibration_volume *= m_calibration_descriptor_.inv_xyz_calibration_res[dim_idx];
-                    }
-                    uint const num_channels_inv_xyz_volume = 4;
-                    std::size_t const num_bytes_per_inv_xyz_volume = num_channels_inv_xyz_volume * sizeof(float) * total_num_voxels_inv_xyz_calibration_volume;
-
-                    ctx.render_context->update_sub_texture(
-                        current_inv_xyz_calibration_volume_ptr, volumetric_inv_xyz_region_to_update, 
-                        0, scm::gl::FORMAT_RGBA_32F, (void*)&m_calibration_[current_read_offset]);
-                    current_read_offset += num_bytes_per_inv_xyz_volume;
-
-                    //=======================================================================================================
-
-                    // create and update calibration volume
-                    auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
-                    current_uv_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
-                                                                               m_calibration_descriptor_.uv_calibration_res[1], 
-                                                                               m_calibration_descriptor_.uv_calibration_res[2]),
-                                                                               scm::gl::FORMAT_RG_32F);
-
-                    ctx.render_context->update_sub_texture(
-                        current_uv_calibration_volume_ptr, volumetric_uv_region_to_update, 0, scm::gl::FORMAT_RG_32F, (void*)&m_calibration_[current_read_offset]);
-                    current_read_offset += num_bytes_per_uv_volume;
-                }
-
-                // std::cout << "Loaded Volume Textures\n";
-                // current_texture_atlas = ctx.render_device->create_texture_3d(scm::math::vec3ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
-                
-
-                --num_clients_gpu_swapping_;
-
-                {
-
-                    is_calibration_data_created_per_context_[ctx.id] = true;
-                    m_need_calibration_gpu_swap_[ctx.id].store(false);
-                    m_received_calibration_[ctx.id].store(true);
-                }
-                return true;
-
-            }
-
+        if(!got_calibration_data) {
+            return false;
         }
 
         _try_swap_model_data_cpu();
@@ -592,7 +612,7 @@ void NetKinectArray::_readloop()
     // std::vector<uint8_t> header_data(header_byte_size, 0);
 
 
-    zmq::message_t zmqm(100000000);
+    zmq::message_t zmqm;
 
     while(m_running_)
     {
