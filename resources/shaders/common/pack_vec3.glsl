@@ -19,11 +19,11 @@ float pack_vec3(vec3 input)
   return uchar3_to_float(float_to_uchar(input.r), float_to_uchar(input.g), float_to_uchar(input.b));
 }
 
-vec3 unpack_multiplicator{1.0, 256.0, 65536.0};
+vec3 unpack_multiplicator = vec3(1.0, 256.0, 65536.0);
 // unpack 32bit packed vec3
 vec3 unpack_vec3(float src)
 {
-  vec3 rgb = fract(src * unpack_multiplicator)
+  vec3 rgb = fract(src * unpack_multiplicator);
   //float r = fract(src);
   //float g = fract(src * 256.0);
   //float b = fract(src * 65536.0);
