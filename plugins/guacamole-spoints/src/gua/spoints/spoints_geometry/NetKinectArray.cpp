@@ -251,12 +251,17 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     std::cout << "Trying to create texture of size: " << m_calibration_descriptor_.inv_xyz_calibration_res[0] 
                                                                       << m_calibration_descriptor_.inv_xyz_calibration_res[1] 
                                                                       << m_calibration_descriptor_.inv_xyz_calibration_res[2] << std::endl;
-                    current_inv_xyz_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
-                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[1], 
-                                                                               m_calibration_descriptor_.inv_xyz_calibration_res[2]), 
-                                                                               scm::gl::FORMAT_RGBA_32F);
 
+                    if(!current_inv_xyz_calibration_volume_ptr) {
+                        current_inv_xyz_calibration_volume_ptr =
+                            ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
+                                                                                   m_calibration_descriptor_.inv_xyz_calibration_res[1], 
+                                                                                   m_calibration_descriptor_.inv_xyz_calibration_res[2]), 
+                                                                                   scm::gl::FORMAT_RGBA_32F);
+                        if(!current_inv_xyz_calibration_volume_ptr) {
+                            return false;
+                        }
+                    }
                     uint64_t total_num_voxels_inv_xyz_calibration_volume = 1;
 
                     for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
@@ -278,11 +283,17 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     std::cout << "Trying to create uv texture of size: " << m_calibration_descriptor_.uv_calibration_res[0] 
                                                                       << m_calibration_descriptor_.uv_calibration_res[1] 
                                                                       << m_calibration_descriptor_.uv_calibration_res[2] << std::endl;
+
+                    if(!current_uv_calibration_volume_ptr) {
                     current_uv_calibration_volume_ptr =
                         ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
                                                                                m_calibration_descriptor_.uv_calibration_res[1], 
                                                                                m_calibration_descriptor_.uv_calibration_res[2]),
                                                                                scm::gl::FORMAT_RG_32F);
+                        if(!current_uv_calibration_volume_ptr) {
+                            return false;
+                        }
+                    }
 
                     ctx.render_context->update_sub_texture(
                         current_uv_calibration_volume_ptr, volumetric_uv_region_to_update, 0, scm::gl::FORMAT_RG_32F, (void*)&m_calibration_[current_read_offset]);
@@ -419,28 +430,50 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
                             //std::lock_guard<std::mutex> lock(m_mutex_);
-                auto& current_empty_vbo = net_data_vbo_per_context_[ctx.id];
+                auto& current_empty_vbo = empty_vbo_per_context_[ctx.id];
                 auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
                 auto& current_texture_atlas = texture_atlas_per_context_[ctx.id];
 
                 if(!is_vbo_created_per_context_[ctx.id])
                 {
                     std::lock_guard<std::mutex> lock(m_mutex_);
-                    current_empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
-                    current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+
+                    if(!current_empty_vbo) {
+                        current_empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
+                        if(!current_empty_vbo) {
+                            return false;
+                        }
+                    }
+
+                    if(!current_net_data_vbo) {
+                        current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+                        if(!current_net_data_vbo) {
+                            return false;
+                        }
+                    }
 
                     auto& current_point_layout = point_layout_per_context_[ctx.id];
 
                     // size_t size_of_vertex = 2 * sizeof(uint32_t);
-                    current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(current_empty_vbo));
+                    if(!current_point_layout) {
+                        current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(current_empty_vbo));
+                        if(!current_point_layout) {
+                            return false;
+                        }
+                    }
 
                     is_vbo_created_per_context_[ctx.id] = true;
 
                     size_t texture_width = 1280 * 2;
                     size_t texture_height = 720 * 2;
 
-                    current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
-                
+                    if(!current_texture_atlas) {
+                        current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+                        if(!current_texture_atlas) {
+                            return false;
+                        }
+                    }
+
                     //is_vbo_created_per_context_[ctx.id] = true;
                 }
 
