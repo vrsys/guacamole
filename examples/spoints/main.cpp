@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     {
         std::cout << "ERROR: please provide a *.sr file containing at least a 'serverport' attribute!" << std::endl;
     }
-    std::string spoinst_resource_file_string(argv[1]);
+    std::string spoints_resource_file_string(argv[1]);
 
     char* argv_tmp[] = {"./example-spoints", NULL};
     int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
@@ -88,11 +88,19 @@ int main(int argc, char** argv)
 
     gua::SPointsLoader vloader;
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto steppo(vloader.create_geometry_from_file("steppo", spoinst_resource_file_string.c_str()));
+    auto steppo(vloader.create_geometry_from_file(std::string("steppo"), spoints_resource_file_string.c_str(), nullptr, 8u) );
     graph.add_node("/transform", steppo);
 
+
     steppo->rotate(180.0, 0.0, 1.0, 0.0);
-    steppo->translate(0.0, -1.0, -3.0);
+    steppo->translate(0.0, -1.0, -20.0);
+
+    auto steppo2(vloader.create_geometry_from_file(std::string("steppo2"), "./spoints_resource_file_eris_for_argos.sr", nullptr, 8u) );
+    graph.add_node("/transform", steppo2);
+
+
+    //steppo2->rotate(180.0, 0.0, 1.0, 0.0);
+    steppo2->translate(0.0, -1.0, -20.0);
 
     gua::TriMeshLoader mloader;
     // auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
@@ -118,7 +126,7 @@ int main(int argc, char** argv)
 
     auto portal_placeholder_plane(mloader.create_geometry_from_file("portal_placeholder_plane", "data/objects/plane.obj"));
     portal_placeholder_plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
-    portal_placeholder_plane->translate(0.0f, 0.0f, -10.0f);
+    portal_placeholder_plane->translate(0.0f, 0.0f, -50.0f);
     // Portal
     auto portal = graph.add_node<gua::node::TexturedQuadNode>("/transform", "portal");
     portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
@@ -135,7 +143,7 @@ int main(int argc, char** argv)
 
     auto screen2 = graph.add_node<gua::node::ScreenNode>("/", "screen2");
     screen2->data.set_size(gua::math::vec2(1.218f, 1.218f));
-    screen2->translate(0.0, 1.5, 1.0);
+    screen2->translate(5.75, 1.5, 1.0);
 
     auto screen3 = graph.add_node<gua::node::ScreenNode>("/", "screen3");
     screen3->data.set_size(gua::math::vec2(1.218f, 1.218f));
@@ -149,8 +157,9 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-     auto resolution = gua::math::vec2ui(800, 800);
-    //auto resolution = gua::math::vec2ui(3840, 2160);
+    auto resolution = gua::math::vec2ui(800, 800);
+    //auto resolution = gua::math::vec2ui(3840/2, 2160/2);
+    //auto resolution = gua::math::vec2ui(4096, 2160);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
@@ -185,66 +194,64 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("window1");
     camera->config.set_enable_stereo(false);
-    // camera->config.set_enable_stereo(true);
+    //camera->config.set_enable_stereo(true);
     camera->set_pipeline_description(pipe);
 
-    // camera->set_pre_render_cameras({portal_camera});
 
     auto camera2 = graph.add_node<gua::node::CameraNode>("/screen2", "cam2");
-    camera2->translate(0.0, 1.5, 2.0);
+    camera2->translate(0, 0, 10.0);
     camera2->config.set_resolution(resolution);
     camera2->config.set_screen_path("/screen2");
     camera2->config.set_scene_graph_name("main_scenegraph");
     camera2->config.set_output_window_name("window2");
     camera2->config.set_enable_stereo(false);
-    // camera2->config.set_enable_stereo(true);
+    //camera->config.set_enable_stereo(true);
     camera2->set_pipeline_description(pipe);
 
-    // camera2->set_pre_render_cameras({portal_camera});
 
-    auto camera3 = graph.add_node<gua::node::CameraNode>("/screen3", "cam3");
-    camera3->translate(0.5, 0, 2.0);
-    camera3->config.set_resolution(resolution);
-    camera3->config.set_screen_path("/screen3");
-    camera3->config.set_scene_graph_name("main_scenegraph");
-    camera3->config.set_output_window_name("window3");
-    camera3->config.set_enable_stereo(false);
-    // camera3->config.set_enable_stereo(true);
-    camera3->set_pipeline_description(pipe);
 
-    // camera3->set_pre_render_cameras({portal_camera});
 
-    auto camera4 = graph.add_node<gua::node::CameraNode>("/screen4", "cam4");
-    camera4->translate(-0.5, 0, 2.0);
-    camera4->config.set_resolution(resolution);
-    camera4->config.set_screen_path("/screen4");
-    camera4->config.set_scene_graph_name("main_scenegraph");
-    camera4->config.set_output_window_name("window4");
-    camera4->config.set_enable_stereo(true);
-    // camera4->config.set_enable_stereo(true);
-    camera4->set_pipeline_description(pipe);
+    //auto add_window = [&](std::string const& window_name, std::shared_ptr<gua::node::CameraNode> const& cam_node) {
+    auto window = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add("window1", window);
+    camera->config.set_output_window_name("window1");
 
-    camera4->set_pre_render_cameras({portal_camera});
+    window->config.set_size(resolution);
+    window->config.set_resolution(resolution);
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_enable_vsync(false);
 
-    std::shared_ptr<gua::GlfwWindow> window_handle = nullptr;
+    window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+    window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    auto add_window = [&](std::string const& window_name, std::shared_ptr<gua::node::CameraNode> const& cam_node) {
-        auto window = std::make_shared<gua::GlfwWindow>();
-        gua::WindowDatabase::instance()->add(window_name, window);
-        set_window_default(window, cam_node->config.get_resolution());
-        cam_node->config.set_output_window_name(window_name);
 
-         window->config.set_stereo_mode(gua::StereoMode::MONO);
-        window->config.set_enable_vsync(false);
+    window->open();
+    // if("window3" == window_name) {
+    //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    //}
 
-        // if("window3" == window_name) {
-        //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
-        //}
+    //};
 
-        window_handle = window;
-    };
 
-    add_window("window1", camera);
+    auto window2 = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add("window2", window2);
+    camera2->config.set_output_window_name("window2");
+
+    window2->config.set_size(resolution);
+    window2->config.set_resolution(resolution);
+    window2->config.set_stereo_mode(gua::StereoMode::MONO);
+    window2->config.set_enable_vsync(false);
+
+    window2->open();
+
+    // if("window3" == window_name) {
+    //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    //}
+
+
+
+
+    //add_window("window1", camera);
 
     // add_window("window3", camera3);
     // add_window("window4", camera4);
