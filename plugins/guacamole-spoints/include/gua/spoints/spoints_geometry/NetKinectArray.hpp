@@ -194,7 +194,7 @@ class NetKinectArray
 
     static size_t constexpr INITIAL_VBO_SIZE = 50000000;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
-    static uint constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
+    static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
 
     std::mutex m_mutex_;
     std::atomic<bool> m_running_;
