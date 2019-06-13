@@ -87,6 +87,7 @@ IF (GUACAMOLE_EXAMPLES)
 
   # spoints example requires glfw and spoints-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
+    add_subdirectory(isbau_spoints)
     add_subdirectory(spoints)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
 

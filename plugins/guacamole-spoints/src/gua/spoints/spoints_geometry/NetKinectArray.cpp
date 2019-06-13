@@ -267,7 +267,7 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
                         total_num_voxels_inv_xyz_calibration_volume *= m_calibration_descriptor_.inv_xyz_calibration_res[dim_idx];
                     }
-                    uint const num_channels_inv_xyz_volume = 4;
+                    uint64_t const num_channels_inv_xyz_volume = 4;
                     std::size_t const num_bytes_per_inv_xyz_volume = num_channels_inv_xyz_volume * sizeof(float) * total_num_voxels_inv_xyz_calibration_volume;
 
                     ctx.render_context->update_sub_texture(
