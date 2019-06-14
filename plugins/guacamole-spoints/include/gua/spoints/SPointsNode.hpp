@@ -59,6 +59,15 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode
     inline float get_screen_space_point_size() const { return screen_space_point_size_; }
     inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
 
+
+    math::BoundingBox<math::vec3> dummy_bounding_box_ = math::BoundingBox<math::vec3>( math::vec3(std::numeric_limits<float>::lowest(),
+                                                                                                 std::numeric_limits<float>::lowest(),
+                                                                                                 std::numeric_limits<float>::lowest()),
+                                                                                      math::vec3(std::numeric_limits<float>::max(),
+                                                                                                 std::numeric_limits<float>::max(),
+                                                                                                 std::numeric_limits<float>::max()) );
+    virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const { return dummy_bounding_box_; };
+
     inline spoints::SPointsStats get_latest_spoints_stats() const
     {
         if(nullptr != spoints_)
