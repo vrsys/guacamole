@@ -41,9 +41,9 @@ NetKinectArray::~NetKinectArray()
 
 void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program)
 {
-    auto const& current_point_layout = point_layout_per_context_[ctx.id];
+    //auto const& current_point_layout = ;
 
-    if(current_point_layout != nullptr)
+    if(point_layout_per_context_[ctx.id] != nullptr)
     {
         if(!m_model_descriptor_.is_fully_encoded_vertex_data)
         {
@@ -52,29 +52,26 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
                 return;
             }
 
-            auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+            //auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
 
-            auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
-            auto const& current_uv_pointers = uv_calibs_per_context_[ctx.id];
+            //auto const& current_inv_xyz_pointers = inv_xyz_calibs_per_context_[ctx.id];
+            //auto const& current_uv_pointers = uv_calibs_per_context_[ctx.id];
 
             scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-            ctx.render_context->bind_vertex_array(current_point_layout);
+            ctx.render_context->bind_vertex_array(point_layout_per_context_[ctx.id]);
+            ctx.render_context->apply_vertex_input();
 
-            if(nullptr == linear_sampler_state_)
-            {
-                linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
-            }
 
-            auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
+            //auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
 
-            ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
+            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_, 0);
             shader_program->set_uniform(ctx, 0, "color_texture_atlas");
 
             // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
             for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
             {
-                auto const& current_individual_inv_xyz_texture = current_inv_xyz_pointers[sensor_idx];
+                auto const& current_individual_inv_xyz_texture = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
                 ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
 
                 std::string uniform_inv_xyz_name = "inv_xyz_volumes[" + std::to_string(sensor_idx) + "]";
@@ -82,7 +79,7 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
                 shader_program->set_uniform(ctx, uniform_inv_xyz_value, uniform_inv_xyz_name);
 
                 // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
-                auto const& current_individual_uv_texture = current_uv_pointers[sensor_idx];
+                auto const& current_individual_uv_texture = uv_calibs_per_context_[ctx.id][sensor_idx];
                 ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_calibration_descriptor_.num_sensors + sensor_idx + 1);
             
                 std::string uniform_uv_name = "uv_volumes[" + std::to_string(sensor_idx) + "]";
@@ -105,8 +102,8 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
-            // ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+            ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
+            //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
 
             ctx.render_context->apply_storage_buffer_bindings();
 
@@ -137,18 +134,17 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
             auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
 
-            auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
-            ctx.render_context->bind_texture(current_texture_atlas, linear_sampler_state_, 0);
+            //auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_, 0);
 
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+            //ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
 
-            ctx.render_context->apply_storage_buffer_bindings();
+            //ctx.render_context->apply_storage_buffer_bindings();
 
-            ctx.render_context->bind_vertex_array(current_point_layout);
-
-            ctx.render_context->apply();
+            ctx.render_context->bind_vertex_array(point_layout_per_context_[ctx.id]);
+            ctx.render_context->apply_vertex_input();
 
             size_t const num_vertices_to_draw = m_model_descriptor_.received_textured_tris * 3;
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
@@ -248,23 +244,7 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     //std::cout << "Trying to create calib volume of size"
                     auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
 
-                    /*
-                    std::cout << "Trying to create texture of size: " << m_calibration_descriptor_.inv_xyz_calibration_res[0] 
-                                                                      << m_calibration_descriptor_.inv_xyz_calibration_res[1] 
-                                                                      << m_calibration_descriptor_.inv_xyz_calibration_res[2] << std::endl;
 
-
-                    if(!current_inv_xyz_calibration_volume_ptr) {
-                        current_inv_xyz_calibration_volume_ptr =
-                            ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.inv_xyz_calibration_res[0], 
-                                                                                   m_calibration_descriptor_.inv_xyz_calibration_res[1], 
-                                                                                   m_calibration_descriptor_.inv_xyz_calibration_res[2]), 
-                                                                                   scm::gl::FORMAT_RGBA_32F);
-                        if(!current_inv_xyz_calibration_volume_ptr) {
-                            return false;
-                        }
-                    }
-                    */
 
                     uint64_t total_num_voxels_inv_xyz_calibration_volume = 1;
 
@@ -286,23 +266,6 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     // create and update calibration volume
                     auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
 
-                    /*
-                    std::cout << "Trying to create uv texture of size: " << m_calibration_descriptor_.uv_calibration_res[0] 
-                                                                      << m_calibration_descriptor_.uv_calibration_res[1] 
-                                                                      << m_calibration_descriptor_.uv_calibration_res[2] << std::endl;
-
-                    
-                    if(!current_uv_calibration_volume_ptr) {
-                    current_uv_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(m_calibration_descriptor_.uv_calibration_res[0], 
-                                                                               m_calibration_descriptor_.uv_calibration_res[1], 
-                                                                               m_calibration_descriptor_.uv_calibration_res[2]),
-                                                                               scm::gl::FORMAT_RG_32F);
-                        if(!current_uv_calibration_volume_ptr) {
-                            return false;
-                        }
-                    }
-                    */
 
                     std::cout << "Updating sub texture uv" << std::endl;
                     ctx.render_context->update_sub_texture(
@@ -373,38 +336,29 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 {
 
                             //std::lock_guard<std::mutex> lock(m_mutex_);
-    auto& current_empty_vbo = empty_vbo_per_context_[ctx.id];
-    auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
-    auto& current_texture_atlas = texture_atlas_per_context_[ctx.id];
+
 
     bool some_gpu_update_went_wrong = false;
     
     if(!is_vbo_created_per_context_[ctx.id])
     {
-        //std::lock_guard<std::mutex> lock(m_mutex_);
+        std::lock_guard<std::mutex> lock(m_mutex_);
 
-        if(!current_empty_vbo) {
-            current_empty_vbo = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, INITIAL_VBO_SIZE, 0);
-            if(!current_empty_vbo) {
+        
+        
+        if(!empty_vbo_per_context_[ctx.id]) {
+            empty_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, INITIAL_VBO_SIZE, 0);
+            ctx.render_context->apply_vertex_input();
+            if(!empty_vbo_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
             }
         }
-        auto& current_point_layout = point_layout_per_context_[ctx.id];
-
+        
         // size_t size_of_vertex = 2 * sizeof(uint32_t);
-        if(!current_point_layout) {
-            current_point_layout = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(current_empty_vbo));
-            if(!current_point_layout) {
-                some_gpu_update_went_wrong = true;
-                std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
-            }
-        }
-
-
-        if(!current_net_data_vbo) {
-            current_net_data_vbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
-            if(!current_net_data_vbo) {
+        if(!point_layout_per_context_[ctx.id]) {
+            point_layout_per_context_[ctx.id] = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 3*sizeof(float)), boost::assign::list_of(empty_vbo_per_context_[ctx.id]));
+            if(!point_layout_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
             }
@@ -412,14 +366,35 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
 
+        std::cout << "LALALALA" << std::endl;
+
+
+        
+        if(!net_data_vbo_per_context_[ctx.id]) {
+            net_data_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+            if(!net_data_vbo_per_context_[ctx.id]) {
+                some_gpu_update_went_wrong = true;
+                std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
+            }
+        }
+        
+        
+
+        
+        ctx.render_context->apply();
+
+        if(nullptr == linear_sampler_state_)
+        {
+            linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+        }
 
 
         size_t texture_width = 1280 * 2;
         size_t texture_height = 720 * 2;
 
-        if(!current_texture_atlas) {
-            current_texture_atlas = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
-            if(!current_texture_atlas) {
+        if(!texture_atlas_per_context_[ctx.id]) {
+            texture_atlas_per_context_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
+            if(!texture_atlas_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
             }
@@ -580,18 +555,19 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
 
-
-
-                ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+                
+                
+                ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
 
                 ctx.render_context->apply_storage_buffer_bindings();
                 
-                float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(current_net_data_vbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
+                float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(net_data_vbo_per_context_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
 
 
-                ctx.render_context->unmap_buffer(current_net_data_vbo);
-
+                ctx.render_context->unmap_buffer(net_data_vbo_per_context_[ctx.id]);
+                
+                
                 m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
 
                 m_current_tight_geometry_bb_min_per_context_[ctx.id] = m_tight_geometry_bb_min_;
@@ -634,7 +610,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
                         ctx.render_context->update_sub_texture(
-                            current_texture_atlas, current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+                            texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
                     }
                 }
 
