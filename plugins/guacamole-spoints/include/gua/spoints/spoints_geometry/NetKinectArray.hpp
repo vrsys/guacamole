@@ -139,7 +139,7 @@ class NetKinectArray
     void draw_vertex_colored_points(gua::RenderContext const& ctx);
     void draw_vertex_colored_triangle_soup(gua::RenderContext const& ctx);
     void draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program);
-    bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb);
+    bool update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb, scm::math::vec3ui const& inv_xyz_vol_res, scm::math::vec3ui const& uv_vol_res);
     void update_feedback(gua::RenderContext const& ctx);
 
     bool is_vertex_data_fully_encoded() { return m_model_descriptor_.is_fully_encoded_vertex_data; }
