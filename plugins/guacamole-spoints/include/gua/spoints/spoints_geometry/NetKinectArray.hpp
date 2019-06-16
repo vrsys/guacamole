@@ -219,6 +219,7 @@ class NetKinectArray
 
     std::vector<std::atomic<bool>> m_need_calibration_gpu_swap_ = std::vector<std::atomic<bool>>(MAX_NUM_SUPPORTED_CONTEXTS);
     std::vector<std::atomic<bool>> m_received_calibration_ = std::vector<std::atomic<bool>>(MAX_NUM_SUPPORTED_CONTEXTS);
+
     std::vector<bool> m_bound_calibration_data_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
    // mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_calibration_gpu_swap_;
@@ -307,6 +308,8 @@ class NetKinectArray
     mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
 
+
+
     mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
@@ -323,6 +326,9 @@ class NetKinectArray
     mutable std::vector<std::size_t> num_textured_tris_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
 
     mutable std::vector<bool> is_vbo_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
+
+    mutable std::vector<bool> are_textures_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
+    
 
     mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 

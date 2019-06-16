@@ -162,8 +162,9 @@ int main(int argc, char** argv)
     //auto resolution = gua::math::vec2ui(4096, 2160);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
+    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
@@ -181,8 +182,9 @@ int main(int argc, char** argv)
     // portal_camera->config.set_enable_stereo(true);
 
     auto portal_pipe = std::make_shared<gua::PipelineDescription>();
-    portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     portal_pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
+    portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
     portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     portal_camera->set_pipeline_description(portal_pipe);
@@ -243,6 +245,8 @@ int main(int argc, char** argv)
     window2->config.set_enable_vsync(false);
 
     window2->open();
+
+        
 
     // if("window3" == window_name) {
     //window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
