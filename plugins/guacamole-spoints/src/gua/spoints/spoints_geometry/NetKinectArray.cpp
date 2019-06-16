@@ -254,7 +254,6 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     uint64_t const num_channels_inv_xyz_volume = 4;
                     std::size_t const num_bytes_per_inv_xyz_volume = num_channels_inv_xyz_volume * sizeof(float) * total_num_voxels_inv_xyz_calibration_volume;
 
-                    std::cout << "Updating sub texture inv xyz" << std::endl;
 
                     ctx.render_context->update_sub_texture(
                         current_inv_xyz_calibration_volume_ptr, volumetric_inv_xyz_region_to_update, 
@@ -266,8 +265,6 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
                     // create and update calibration volume
                     auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
 
-
-                    std::cout << "Updating sub texture uv" << std::endl;
                     ctx.render_context->update_sub_texture(
                         current_uv_calibration_volume_ptr, volumetric_uv_region_to_update, 0, scm::gl::FORMAT_RG_32F, (void*)&m_calibration_[current_read_offset]);
                     current_read_offset += num_bytes_per_uv_volume;
@@ -332,7 +329,7 @@ void NetKinectArray::_try_swap_model_data_cpu() {
     }
 }
 
-bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb)
+bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBox<gua::math::vec3>& in_out_bb, scm::math::vec3ui const& inv_xyz_vol_res, scm::math::vec3ui const& uv_vol_res)
 {
 
                             //std::lock_guard<std::mutex> lock(m_mutex_);
@@ -364,9 +361,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             }
         }
 
-
-
-        std::cout << "LALALALA" << std::endl;
 
 
         
@@ -431,21 +425,16 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     // create and update calibration volume
                     //std::cout << "Trying to create calib volume of size"
 
-                    std::cout << "Trying to create texture of size for layer: " << 128 
-                                                                      << 128 
-                                                                      << 128 << std::endl;
 
                     if(!current_inv_xyz_calibration_volume_ptr) {
                         current_inv_xyz_calibration_volume_ptr =
-                            ctx.render_device->create_texture_3d(scm::math::vec3ui(45, 
-                                                                                   40, 
-                                                                                   45), 
+                            ctx.render_device->create_texture_3d(scm::math::vec3ui(inv_xyz_vol_res[0], 
+                                                                                   inv_xyz_vol_res[1], 
+                                                                                   inv_xyz_vol_res[2]), 
                                                                                    scm::gl::FORMAT_RGBA_32F);
                         if(!current_inv_xyz_calibration_volume_ptr) {
                             std::cout << "THIS TEXTURE UPDATE WENT WRONG" << std::endl;
                             some_gpu_texture_update_went_wrong = true;
-                        } else {
-                            std::cout << "THIS TEXTURE UPDATE WENT RIGHT" << std::endl;                        
                         }
                     }
 
@@ -456,21 +445,15 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                     // create and update calibration volume
                     auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
 
-                    std::cout << "Trying to create uv texture of size: " << 45 
-                                                                         << 40 
-                                                                         << 45 << std::endl;
-
                     if(!current_uv_calibration_volume_ptr) {
                     current_uv_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(128, 
-                                                                               128, 
-                                                                               128),
+                        ctx.render_device->create_texture_3d(scm::math::vec3ui(uv_vol_res[0], 
+                                                                               uv_vol_res[1], 
+                                                                               uv_vol_res[2]),
                                                                                scm::gl::FORMAT_RG_32F);
                         if(!current_uv_calibration_volume_ptr) {
                             std::cout << "THIS TEXTURE UPDATE WENT WRONG2" << std::endl;
                             some_gpu_texture_update_went_wrong = true;
-                        } else {
-                            std::cout << "THIS TEXTURE UPDATE WENT RIGHT2" << std::endl;                        
                         }
                     }
 
