@@ -173,6 +173,33 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             gpu_resources_already_created_ = true;
         }
 
+
+        //update and cr
+        {
+            
+            for(auto& o : objects->second)
+            {
+                auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+
+                auto spoints_desc(spoints_node->get_spoints_description());
+
+                if(!GeometryDatabase::instance()->contains(spoints_desc))
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints." << spoints_desc << ", " << std::endl;
+                    continue;
+                }
+
+                auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
+                if(!spoints_resource)
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
+                    continue;
+                }
+
+                spoints_resource->update_buffers(pipe.get_context(), pipe);
+            }
+        }
+
         ///////////////////////////////////////////////////////////////////////////
         // program initialization
         ///////////////////////////////////////////////////////////////////////////
@@ -184,82 +211,74 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
                 auto spoints_desc(spoints_node->get_spoints_description());
 
-                if(true) {
-                    // std::cout << "IS SERVER RESOURCE\n";
+                auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
+                auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
+                auto view_matrix(pipe.current_viewstate().frustum.get_view());
 
-                    auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
-                    auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
-                    auto view_matrix(pipe.current_viewstate().frustum.get_view());
+                scm::math::mat4f model_matrix = scm::math::mat4f(cached_model_matrix);
+                scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+                scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+                scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
 
-                    scm::math::mat4f model_matrix = scm::math::mat4f(cached_model_matrix);
-                    scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
-                    scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-                    scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
+                spoints::matrix_package current_package;
 
-                    spoints::matrix_package current_package;
+                memcpy((char*)&current_package, (char*)model_matrix.data_array, 16 * sizeof(float));
+                memcpy((char*)&current_package + 16 * sizeof(float), (char*)viewprojection_matrix.data_array, 16 * sizeof(float));
+                memcpy((char*)&current_package + 32 * sizeof(float), (char*)mv_matrix.data_array, 16 * sizeof(float));
+                memcpy(((char*)&current_package) + 48 * sizeof(float), (char*)projection_matrix.data_array, 16 * sizeof(float));
 
-                    memcpy((char*)&current_package, (char*)model_matrix.data_array, 16 * sizeof(float));
-                    memcpy((char*)&current_package + 16 * sizeof(float), (char*)viewprojection_matrix.data_array, 16 * sizeof(float));
-                    memcpy((char*)&current_package + 32 * sizeof(float), (char*)mv_matrix.data_array, 16 * sizeof(float));
-                    memcpy(((char*)&current_package) + 48 * sizeof(float), (char*)projection_matrix.data_array, 16 * sizeof(float));
+                current_package.res_xy[0] = render_target_dims.x;
+                current_package.res_xy[1] = render_target_dims.y;
 
-                    current_package.res_xy[0] = render_target_dims.x;
-                    current_package.res_xy[1] = render_target_dims.y;
+                auto const& camera = pipe.current_viewstate().camera;
+                auto const camera_view_id = camera.config.view_id();
 
-                    auto const& camera = pipe.current_viewstate().camera;
-                    auto const camera_view_id = camera.config.view_id();
+                uint32_t current_camera_feedback_uuid = camera.config.view_id();
 
-                    uint32_t current_camera_feedback_uuid = camera.config.view_id();
-
-                    if(camera.config.enable_stereo())
+                if(camera.config.enable_stereo())
+                {
+                    bool is_left_cam = true;
+                    if(camera_view_id == last_rendered_view_id)
                     {
-                        bool is_left_cam = true;
-                        if(camera_view_id == last_rendered_view_id)
-                        {
-                            last_rendered_side = (last_rendered_side + 1) % 2;
-                            is_left_cam = (last_rendered_side == 0) ? true : false;
-                        }
-
-                        current_package.camera_type = (is_left_cam ? 1 : 2);
-                    }
-                    else
-                    {
-                        last_rendered_side = 0;
-                        current_package.camera_type = 0;
+                        last_rendered_side = (last_rendered_side + 1) % 2;
+                        is_left_cam = (last_rendered_side == 0) ? true : false;
                     }
 
-                    last_rendered_view_id = camera_view_id;
+                    current_package.camera_type = (is_left_cam ? 1 : 2);
+                }
+                else
+                {
+                    last_rendered_side = 0;
+                    current_package.camera_type = 0;
+                }
 
-                    current_package.uuid = current_camera_feedback_uuid;
+                last_rendered_view_id = camera_view_id;
 
-                    auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
-                    if(!spoints_resource)
-                    {
-                        gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
-                        continue;
-                    }
+                current_package.uuid = current_camera_feedback_uuid;
 
-                    // spoints_resource->push_matrix_package(cm_package);
-                    std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
+                auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
+                if(!spoints_resource)
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
+                    continue;
+                }
 
-                    if(!spoints_resource->has_calibration(ctx))
-                    {
-                        current_package.calibration_request = true;
-                    }
-                    else
-                    {
-                        current_package.calibration_request = false;
-                    }
+                // spoints_resource->push_matrix_package(cm_package);
+                std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
 
-                    if("" != feedback_socket_string_of_resource)
-                    {
-                        SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
-                        //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
-                    }
-                    else
-                    {
-                        //     std::cout << "FBS: 0" << "\n";
-                    }
+                if(!spoints_resource->has_calibration(ctx))
+                {
+                    current_package.calibration_request = true;
+                }
+                else
+                {
+                    current_package.calibration_request = false;
+                }
+
+                if("" != feedback_socket_string_of_resource)
+                {
+                    SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
+                    //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
                 }
             }
 
@@ -298,7 +317,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                         continue;
                     }
 
-                    spoints_resource->update_buffers(pipe.get_context(), pipe);
+                    //spoints_resource->update_buffers(pipe.get_context(), pipe);
 
                     // get material dependent shader
                     std::shared_ptr<ShaderProgram> current_shader;
