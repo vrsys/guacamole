@@ -172,9 +172,9 @@ void NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& c
 }
 
 void NetKinectArray::_try_swap_calibration_data_cpu() {
-    std::lock_guard<std::mutex> lock(m_mutex_);
-
     if(m_need_calibration_cpu_swap_.load()) {
+        std::lock_guard<std::mutex> lock(m_mutex_);
+        
         if(num_clients_gpu_swapping_.load()) {
             return;
         }
@@ -298,10 +298,9 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
 }
 
 void NetKinectArray::_try_swap_model_data_cpu() {
-    std::lock_guard<std::mutex> lock(m_mutex_);
-
     if(m_need_model_cpu_swap_.load())
     {
+        std::lock_guard<std::mutex> lock(m_mutex_);
         
         if(num_clients_gpu_swapping_.load()) {
             return;
@@ -782,7 +781,7 @@ void NetKinectArray::_readloop()
                    (char*)message_header.inv_vol_to_world_mat, 16 * sizeof(float));
 
             { // swap
-                std::lock_guard<std::mutex> lock(m_mutex_);
+                //std::lock_guard<std::mutex> lock(m_mutex_);
                 m_need_calibration_cpu_swap_.store(true);
 
                 for(auto& entry : m_need_calibration_gpu_swap_)
@@ -914,7 +913,7 @@ void NetKinectArray::_readloop()
             }
 
             { // swap
-                std::lock_guard<std::mutex> lock(m_mutex_);
+                //std::lock_guard<std::mutex> lock(m_mutex_);
                 m_need_model_cpu_swap_.store(true);
 
                 for(auto& entry : m_need_model_gpu_swap_)
