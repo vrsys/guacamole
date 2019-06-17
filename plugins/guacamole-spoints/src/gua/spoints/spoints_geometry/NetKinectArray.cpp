@@ -14,6 +14,16 @@
 // fastlz for inflation of geometry data
 #include <lz4/lz4.h>
 
+namespace
+{
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
+{
+    uint64_t handle = tex->native_handle();
+    return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+} // namespace
+
 namespace spoints
 {
 NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::string& feedback_endpoint)
@@ -22,9 +32,12 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
       m_server_endpoint_(server_endpoint), m_feedback_endpoint_(feedback_endpoint), m_buffer_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
       m_buffer_back_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
       // m_feedback_need_swap_{false},
-      m_recv_()
+      m_recv_(),
+      m_decompress_geometry_()
 {
     m_recv_ = std::thread([this]() { _readloop(); });
+
+    m_decompress_geometry_ = std::thread([this]() { _decompress_geometry_buffer(); });
 }
 
 NetKinectArray::~NetKinectArray()
@@ -73,12 +86,18 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
                 // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
                 for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
                 {
+
+                    
                     auto const& current_individual_inv_xyz_texture = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
+                    
                     ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_per_context_[ctx.id], sensor_idx + 1);
 
                     std::string uniform_inv_xyz_name = "inv_xyz_volumes[" + std::to_string(sensor_idx) + "]";
                     int uniform_inv_xyz_value = sensor_idx + 1;
                     shader_program->set_uniform(ctx, uniform_inv_xyz_value, uniform_inv_xyz_name);
+                    
+                    //shader_program->set_uniform(ctx, ::get_handle(current_individual_inv_xyz_texture) ,  "inv_xyz_volume_handles[" + std::to_string(sensor_idx)+"]");
+
 
                     // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
                     auto const& current_individual_uv_texture = uv_calibs_per_context_[ctx.id][sensor_idx];
@@ -87,11 +106,16 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
                     std::string uniform_uv_name = "uv_volumes[" + std::to_string(sensor_idx) + "]";
                     int uniform_uv_value = m_calibration_descriptor_.num_sensors + sensor_idx + 1;
                     shader_program->set_uniform(ctx, uniform_uv_value, uniform_uv_name);
+                    
+
+                    
                 }
                 //are_calib_volumes_bound_per_context_[ctx.id] = true;
             
             // m_bound_calibration_data_[ctx.id] = true;
             //}
+
+            
 
             float lod_scaling_for_context = m_current_lod_scaling_per_context_[ctx.id];
 
@@ -106,10 +130,14 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            //ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
+
+
+
+        
+            ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
             //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
 
-            //ctx.render_context->apply_storage_buffer_bindings();
+            ctx.render_context->apply_storage_buffer_bindings();
 
             uint32_t triangle_offset_for_current_layer = 0;
             uint32_t num_triangles_to_draw_for_current_layer = 0;
@@ -136,6 +164,12 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
         }
         else
         {
+
+
+            if(  (!is_vbo_created_per_context_[ctx.id]) ) {
+                return;
+            }
+
             scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
             auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
@@ -145,12 +179,14 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            //ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
-
-            //ctx.render_context->apply_storage_buffer_bindings();
+            ctx.render_context->bind_storage_buffer(current_net_data_vbo, 3, 0, INITIAL_VBO_SIZE);
+            ctx.render_context->apply_storage_buffer_bindings();
 
             ctx.render_context->bind_vertex_array(point_layout_per_context_[ctx.id]);
             ctx.render_context->apply_vertex_input();
+
+            
+            ctx.render_context->apply();
 
             size_t const num_vertices_to_draw = m_model_descriptor_.received_textured_tris * 3;
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
@@ -172,8 +208,10 @@ void NetKinectArray::push_matrix_package(spoints::camera_matrix_package const& c
 }
 
 void NetKinectArray::_try_swap_calibration_data_cpu() {
+
+    std::lock_guard<std::mutex> lock(m_mutex_);
     if(m_need_calibration_cpu_swap_.load()) {
-        std::lock_guard<std::mutex> lock(m_mutex_);
+
         
         if(num_clients_gpu_swapping_.load()) {
             return;
@@ -298,10 +336,12 @@ bool NetKinectArray::_try_swap_calibration_data_gpu(gua::RenderContext const& ct
 }
 
 void NetKinectArray::_try_swap_model_data_cpu() {
+
+        std::lock_guard<std::mutex> lock(m_mutex_);
     if(m_need_model_cpu_swap_.load())
     {
-        std::lock_guard<std::mutex> lock(m_mutex_);
-        
+
+
         if(num_clients_gpu_swapping_.load()) {
             return;
         }
@@ -366,8 +406,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             }
         }
 
-
-
         
         if(!net_data_vbo_per_context_[ctx.id]) {
             net_data_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
@@ -378,14 +416,15 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         }
         
         
-
-        
-        ctx.render_context->apply();
-
-        if(nullptr == linear_sampler_state_per_context_[ctx.id])
+       if(nullptr == linear_sampler_state_per_context_[ctx.id])
         {
             linear_sampler_state_per_context_[ctx.id] = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
         }
+        
+        ctx.render_context->apply();
+
+        std::cout << "TRYING TO CREATE BUFFER\n";
+ 
 
 
         size_t texture_width = 1280 * 2;
@@ -413,59 +452,58 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
     {
 
 
-        
-        bool some_gpu_texture_update_went_wrong = false;
 
-            //std::lock_guard<std::mutex> lock(m_mutex_);
             
-            if(!are_textures_created_per_context_[ctx.id]) {
-                for(uint32_t sensor_idx = 0; sensor_idx < 4; ++sensor_idx)
-                {
+        if(!are_textures_created_per_context_[ctx.id]) {
+
+            std::lock_guard<std::mutex> lock(m_mutex_);
+            for(uint32_t sensor_idx = 0; sensor_idx < 4; ++sensor_idx)
+            {
 
 
 
-                    auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
-                    //std::lock_guard<std::mutex> lock(m_mutex_);
+                auto& current_inv_xyz_calibration_volume_ptr = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
+                //std::lock_guard<std::mutex> lock(m_mutex_);
 
-                    // create and update calibration volume
-                    //std::cout << "Trying to create calib volume of size"
+                // create and update calibration volume
+                //std::cout << "Trying to create calib volume of size"
 
 
+                if(!current_inv_xyz_calibration_volume_ptr) {
+                    current_inv_xyz_calibration_volume_ptr =
+                        ctx.render_device->create_texture_3d(scm::math::vec3ui(inv_xyz_vol_res[0], 
+                                                                               inv_xyz_vol_res[1], 
+                                                                               inv_xyz_vol_res[2]), 
+                                                                               scm::gl::FORMAT_RGBA_32F);
+                        ctx.render_context->make_resident(current_inv_xyz_calibration_volume_ptr, linear_sampler_state_per_context_[ctx.id]);
                     if(!current_inv_xyz_calibration_volume_ptr) {
-                        current_inv_xyz_calibration_volume_ptr =
-                            ctx.render_device->create_texture_3d(scm::math::vec3ui(inv_xyz_vol_res[0], 
-                                                                                   inv_xyz_vol_res[1], 
-                                                                                   inv_xyz_vol_res[2]), 
-                                                                                   scm::gl::FORMAT_RGBA_32F);
-                        if(!current_inv_xyz_calibration_volume_ptr) {
-                            std::cout << "THIS TEXTURE UPDATE WENT WRONG" << std::endl;
-                            some_gpu_texture_update_went_wrong = true;
-                        }
+                        std::cout << "THIS TEXTURE UPDATE WENT WRONG" << std::endl;
                     }
-
-
-
-                    //=======================================================================================================
-
-                    // create and update calibration volume
-                    auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
-
-                    if(!current_uv_calibration_volume_ptr) {
-                    current_uv_calibration_volume_ptr =
-                        ctx.render_device->create_texture_3d(scm::math::vec3ui(uv_vol_res[0], 
-                                                                               uv_vol_res[1], 
-                                                                               uv_vol_res[2]),
-                                                                               scm::gl::FORMAT_RG_32F);
-                        if(!current_uv_calibration_volume_ptr) {
-                            std::cout << "THIS TEXTURE UPDATE WENT WRONG2" << std::endl;
-                            some_gpu_texture_update_went_wrong = true;
-                        }
-                    }
-
-
                 }
-                are_textures_created_per_context_[ctx.id] = true;
+
+
+
+                //=======================================================================================================
+
+                // create and update calibration volume
+                auto& current_uv_calibration_volume_ptr = uv_calibs_per_context_[ctx.id][sensor_idx];
+
+                if(!current_uv_calibration_volume_ptr) {
+                current_uv_calibration_volume_ptr =
+                    ctx.render_device->create_texture_3d(scm::math::vec3ui(uv_vol_res[0], 
+                                                                           uv_vol_res[1], 
+                                                                           uv_vol_res[2]),
+                                                                           scm::gl::FORMAT_RG_32F);
+                    ctx.render_context->make_resident(current_uv_calibration_volume_ptr, linear_sampler_state_per_context_[ctx.id]);
+                    if(!current_uv_calibration_volume_ptr) {
+                        std::cout << "THIS TEXTURE UPDATE WENT WRONG2" << std::endl;
+                    }
+                }
+
+
             }
+            are_textures_created_per_context_[ctx.id] = true;
+        }
 
         //std::cout << "SOME TEXTURE UPDATE WENT WRONG" << std::endl;
 
@@ -543,19 +581,18 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
 
-                
-                if(!are_calib_volumes_bound_per_context_[ctx.id]) {
                 ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
 
                 ctx.render_context->apply_storage_buffer_bindings();
                     are_calib_volumes_bound_per_context_[ctx.id] = true;
-                }
+                
 
+                is_swapping_gpu_model_data_per_context_[ctx.id] = true;
                 float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(net_data_vbo_per_context_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
-
-
                 ctx.render_context->unmap_buffer(net_data_vbo_per_context_[ctx.id]);
+
+                //ctx.render_context->unmap_buffer(net_data_vbo_per_context_[ctx.id]);
                 
                 
                 m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
@@ -615,9 +652,10 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
                             size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
 
-
+                            
                             ctx.render_context->update_sub_texture(
                                 texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+                            
                         }
 
                         } else {
@@ -650,75 +688,107 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
     }*/
 
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
+
+void NetKinectArray::_decompress_geometry_buffer() {
+
+    while(true) {
+        while(!m_submitted_compressed_geometry_buffer_.load()) {
+            ;
+        }
+        m_submitted_compressed_geometry_buffer_.store(false);
+
+        int num_decompressed_bytes = LZ4_decompress_safe((const char*)&m_buffer_back_compressed_[0], (char*)&m_buffer_back_[0], m_buffer_back_compressed_.size(), m_buffer_back_.size());
+
+        m_geometry_decompressor_finished_.store(true);
+    }
+}
+
 bool NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows)
 {
-    int num_decompressed_bytes = LZ4_decompress_safe((const char*)&m_buffer_back_compressed_[0], (char*)&m_buffer_back_[0], m_buffer_back_compressed_.size(), m_buffer_back_.size());
-
-    if(nullptr == m_tj_compressed_image_buffer_)
+    #pragma omp parallel
     {
-        m_tj_compressed_image_buffer_ = tjAlloc(1024 * 1024 * 50);
+
+    #pragma omp single
+    {
+
+    #pragma omp task
+    {
+
     }
 
-    std::size_t byte_offset_to_current_image = 0;
 
-    std::size_t total_image_byte_size = 0;
-
-    std::size_t decompressed_image_offset = 0;
-
-    for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+    #pragma omp task
     {
-        total_image_byte_size += byte_offset_to_jpeg_windows[sensor_layer_idx];
-    }
-
-    for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
-    {
-        if(m_jpeg_decompressor_per_layer.end() == m_jpeg_decompressor_per_layer.find(sensor_layer_idx))
+        if(nullptr == m_tj_compressed_image_buffer_)
         {
-            m_jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
-            if(m_jpeg_decompressor_per_layer[sensor_layer_idx] == NULL)
+            m_tj_compressed_image_buffer_ = tjAlloc(1024 * 1024 * 50);
+        }
+
+        std::size_t byte_offset_to_current_image = 0;
+
+        std::size_t total_image_byte_size = 0;
+
+        std::size_t decompressed_image_offset = 0;
+
+        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+        {
+            total_image_byte_size += byte_offset_to_jpeg_windows[sensor_layer_idx];
+        }
+
+        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+        {
+            if(m_jpeg_decompressor_per_layer.end() == m_jpeg_decompressor_per_layer.find(sensor_layer_idx))
             {
-                std::cout << "ERROR INITIALIZING DECOMPRESSOR\n";
+                m_jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
+                if(m_jpeg_decompressor_per_layer[sensor_layer_idx] == NULL)
+                {
+                    std::cout << "ERROR INITIALIZING DECOMPRESSOR\n";
+                }
             }
+
+            long unsigned int jpeg_size = byte_offset_to_jpeg_windows[sensor_layer_idx];
+
+            memcpy((char*)&m_tj_compressed_image_buffer_[0], (char*)&m_texture_buffer_back_[byte_offset_to_current_image], jpeg_size);
+
+            int header_width, header_height, header_subsamp;
+
+            auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
+
+            int error_handle = tjDecompressHeader2(current_decompressor_handle, &m_tj_compressed_image_buffer_[0], jpeg_size, &header_width, &header_height, &header_subsamp);
+
+            if(-1 == error_handle)
+            {
+                std::cout << "ERROR DECOMPRESSING JPEG\n";
+                std::cout << "Error was: " << tjGetErrorStr() << "\n";
+
+                std::cout << "JPEG SIZE IN BYTE:" << jpeg_size << "\n";
+                std::cout << "Skipping frame again 6.\n";
+                return false;
+            }
+
+            tjDecompress2(current_decompressor_handle,
+                          &m_tj_compressed_image_buffer_[0],
+                          jpeg_size,
+                          &m_decompressed_image_buffer_[decompressed_image_offset],
+                          header_width,
+                          0,
+                          header_height,
+                          TJPF_BGR,
+                          TJFLAG_FASTDCT);
+
+            uint32_t copied_image_byte = header_height * header_width * 3;
+
+            byte_offset_to_current_image += jpeg_size;
+            decompressed_image_offset += copied_image_byte;
         }
 
-        long unsigned int jpeg_size = byte_offset_to_jpeg_windows[sensor_layer_idx];
-
-        memcpy((char*)&m_tj_compressed_image_buffer_[0], (char*)&m_texture_buffer_back_[byte_offset_to_current_image], jpeg_size);
-
-        int header_width, header_height, header_subsamp;
-
-        auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
-
-        int error_handle = tjDecompressHeader2(current_decompressor_handle, &m_tj_compressed_image_buffer_[0], jpeg_size, &header_width, &header_height, &header_subsamp);
-
-        if(-1 == error_handle)
-        {
-            std::cout << "ERROR DECOMPRESSING JPEG\n";
-            std::cout << "Error was: " << tjGetErrorStr() << "\n";
-
-            std::cout << "JPEG SIZE IN BYTE:" << jpeg_size << "\n";
-            std::cout << "Skipping frame again 6.\n";
-            return false;
-        }
-
-        tjDecompress2(current_decompressor_handle,
-                      &m_tj_compressed_image_buffer_[0],
-                      jpeg_size,
-                      &m_decompressed_image_buffer_[decompressed_image_offset],
-                      header_width,
-                      0,
-                      header_height,
-                      TJPF_BGR,
-                      TJFLAG_FASTDCT);
-
-        uint32_t copied_image_byte = header_height * header_width * 3;
-
-        byte_offset_to_current_image += jpeg_size;
-        decompressed_image_offset += copied_image_byte;
+        memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
     }
 
-    memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
 
+    }
+
+    }
     return true;
 }
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
@@ -903,10 +973,25 @@ void NetKinectArray::_readloop()
             if(message_header.is_data_compressed)
             {
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
+
+            auto start_decompression = std::chrono::system_clock::now();
+                m_submitted_compressed_geometry_buffer_.store(true);
+                //_decompress_geometry_buffer();
+
                 bool decompressed_successfully = _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
                 if(!decompressed_successfully) {
                     continue;
                 }
+            auto end_decompression = std::chrono::system_clock::now();
+
+            std::chrono::duration<double> elapsed_seconds = end_decompression-start_decompression;
+    
+            while(!m_geometry_decompressor_finished_.load()) {
+                ;
+            }
+            m_geometry_decompressor_finished_.store(false);
+         
+            std::cout << "elapsed milliseconds: " << elapsed_seconds.count() * 1000.0f << "ms" << std::endl;
 #else
                 gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
 #endif // GUACAMOLE_ENABLE_TURBOJPEG
