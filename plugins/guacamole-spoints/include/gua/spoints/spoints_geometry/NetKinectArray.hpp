@@ -175,6 +175,7 @@ class NetKinectArray
   // helper functions
   private:
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
+    void _decompress_geometry_buffer();
     bool _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
     void _readloop();
@@ -193,6 +194,7 @@ class NetKinectArray
 
 
     static size_t constexpr INITIAL_VBO_SIZE = 20000000;
+    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
     static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
 
@@ -260,6 +262,10 @@ class NetKinectArray
     std::atomic<bool> m_need_model_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;
     std::thread m_recv_;
+    std::thread m_decompress_geometry_;
+
+    std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
+    std::atomic<bool> m_geometry_decompressor_finished_{false};
 
     // sending matrices
     std::mutex m_feedback_mutex_;
@@ -304,10 +310,11 @@ class NetKinectArray
 
     mutable std::vector<scm::gl::vertex_array_ptr> point_layout_per_context_ = std::vector<scm::gl::vertex_array_ptr>(50, nullptr);
     
+    //mutable std::vector<scm::gl::buffer_ptr> compressed_net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
     mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
     mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
-
+    mutable std::vector<scm::gl::buffer_ptr> one_d_color_data_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
 
     mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
@@ -332,6 +339,8 @@ class NetKinectArray
     mutable std::vector<bool> are_calib_volumes_bound_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
     mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
+
+    mutable std::vector<bool> is_swapping_gpu_model_data_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
     mutable std::vector<std::size_t> encountered_frame_counts_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
     //mutable std::unordered_map<std::size_t, std::size_t> num_vertex_colored_points_to_draw_per_context_;
