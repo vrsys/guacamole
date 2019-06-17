@@ -579,21 +579,48 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                         }
                     }
 
-                    if(m_num_best_triangles_for_sensor_layer_[layer_to_update_idx] > 0)
                     {
-                        uint32_t current_layer_offset = 4 * (layer_to_update_idx);
-
-                        auto current_region_to_update =
-                            scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0], m_texture_space_bounding_boxes_[current_layer_offset + 1], 0),
-                                                    scm::math::vec3ui((m_texture_space_bounding_boxes_[current_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 0]),
-                                                                      (m_texture_space_bounding_boxes_[current_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 1]),
-                                                                      1));
-
-                        size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
+                    uint32_t test_layer_offset = 4 * (layer_to_update_idx);
 
 
-                        ctx.render_context->update_sub_texture(
-                            texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+
+
+
+                    if( !(m_texture_space_bounding_boxes_[test_layer_offset + 0] > 2560 || m_texture_space_bounding_boxes_[test_layer_offset + 0] < 0 || 
+                        m_texture_space_bounding_boxes_[test_layer_offset + 1] > 1440 || m_texture_space_bounding_boxes_[test_layer_offset + 1] < 0 ||
+                       (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) > 2560 ||
+                       (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) > 1440 || 
+                       (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) < 0    ||
+                       (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) < 0      ) )
+                    {
+
+                    
+
+                        if(m_num_best_triangles_for_sensor_layer_[layer_to_update_idx] > 0)
+                        {
+                            uint32_t current_layer_offset = 4 * (layer_to_update_idx);
+
+                            auto current_region_to_update =
+                                scm::gl::texture_region(scm::math::vec3ui(m_texture_space_bounding_boxes_[current_layer_offset + 0], m_texture_space_bounding_boxes_[current_layer_offset + 1], 0),
+                                                        scm::math::vec3ui((m_texture_space_bounding_boxes_[current_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 0]),
+                                                                          (m_texture_space_bounding_boxes_[current_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[current_layer_offset + 1]),
+                                                                          1));
+
+                            size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
+
+
+                            ctx.render_context->update_sub_texture(
+                                texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+                        }
+
+                        } else {
+                            /*
+                                                std::cout << "TexSpace BB: (" << m_texture_space_bounding_boxes_[test_layer_offset + 0] << " " <<m_texture_space_bounding_boxes_[test_layer_offset + 1] << ")," <<
+                                                  "("   << (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) << " "
+                                                        << (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) << ")" << std::endl; 
+                            */
+                        }
+
                     }
                 }
 
