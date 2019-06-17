@@ -65,14 +65,15 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
             //auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
 
-            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_, 0);
+
+            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_per_context_[ctx.id], 0);
             shader_program->set_uniform(ctx, 0, "color_texture_atlas");
 
             // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
             for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
             {
                 auto const& current_individual_inv_xyz_texture = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
-                ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_, sensor_idx + 1);
+                ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_per_context_[ctx.id], sensor_idx + 1);
 
                 std::string uniform_inv_xyz_name = "inv_xyz_volumes[" + std::to_string(sensor_idx) + "]";
                 int uniform_inv_xyz_value = sensor_idx + 1;
@@ -80,7 +81,7 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
                 // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
                 auto const& current_individual_uv_texture = uv_calibs_per_context_[ctx.id][sensor_idx];
-                ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_, m_calibration_descriptor_.num_sensors + sensor_idx + 1);
+                ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_per_context_[ctx.id], m_calibration_descriptor_.num_sensors + sensor_idx + 1);
             
                 std::string uniform_uv_name = "uv_volumes[" + std::to_string(sensor_idx) + "]";
                 int uniform_uv_value = m_calibration_descriptor_.num_sensors + sensor_idx + 1;
@@ -135,7 +136,7 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             auto& current_net_data_vbo = net_data_vbo_per_context_[ctx.id];
 
             //auto const& current_texture_atlas = texture_atlas_per_context_[ctx.id];
-            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_, 0);
+            ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_per_context_[ctx.id], 0);
 
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
@@ -377,9 +378,9 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         
         ctx.render_context->apply();
 
-        if(nullptr == linear_sampler_state_)
+        if(nullptr == linear_sampler_state_per_context_[ctx.id])
         {
-            linear_sampler_state_ = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
+            linear_sampler_state_per_context_[ctx.id] = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
         }
 
 

@@ -289,7 +289,7 @@ class NetKinectArray
     volatile std::atomic<int> num_clients_cpu_swapping_{0};
     volatile std::atomic<int> num_clients_gpu_swapping_{0};
 
-    scm::gl::sampler_state_ptr linear_sampler_state_;
+    mutable std::vector<scm::gl::sampler_state_ptr> linear_sampler_state_per_context_ = std::vector<scm::gl::sampler_state_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     // mutable std::unordered_set<std::size_t> known_context_ids_;
     mutable std::unordered_set<std::size_t> encountered_context_ids_for_feedback_frame_;
