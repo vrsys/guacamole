@@ -133,6 +133,12 @@ struct SPointsModelDescriptor {
 class NetKinectArray
 {
   public:
+    static size_t constexpr INITIAL_VBO_SIZE = 20000000;
+    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
+    static uint16_t constexpr MAX_LAYER_IDX = 16;
+    static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
+
+
     NetKinectArray(const std::string& server_endpoint, const std::string& feedback_endpoint = "");
     ~NetKinectArray();
 
@@ -153,7 +159,7 @@ class NetKinectArray
     // float       get_voxel_size() const;
 
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
-    std::unordered_map<uint32_t, tjhandle> m_jpeg_decompressor_per_layer;
+    std::vector<tjhandle> m_jpeg_decompressor_per_layer = std::vector<tjhandle>(MAX_LAYER_IDX, 0);
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
 
     SPointsStats get_latest_spoints_stats()
@@ -176,7 +182,7 @@ class NetKinectArray
   private:
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
     void _decompress_geometry_buffer();
-    bool _decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows);
+    void _decompress_images();
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
     void _readloop();
 
@@ -193,23 +199,21 @@ class NetKinectArray
   private: 
 
 
-    static size_t constexpr INITIAL_VBO_SIZE = 20000000;
-    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
-    static uint16_t constexpr MAX_LAYER_IDX = 16;
-    static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
+
 
     std::mutex m_mutex_;
     std::atomic<bool> m_running_;
     std::string const m_server_endpoint_;
     std::string const m_feedback_endpoint_;
-    std::vector<uint8_t> m_buffer_;
-    std::vector<uint8_t> m_buffer_back_;
-    std::vector<uint8_t> m_buffer_back_compressed_;
+    std::vector<uint8_t> m_buffer_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
+    std::vector<uint8_t> m_buffer_back_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
+    std::vector<uint8_t> m_buffer_back_compressed_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
 
     std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
     std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(11059200, 0);
 
-    uint8_t* m_tj_compressed_image_buffer_ = nullptr;
+    std::vector<uint8_t*> m_tj_compressed_image_buffer_per_layer_ =  std::vector<uint8_t*>(MAX_LAYER_IDX, nullptr);
     std::array<uint8_t, 1024 * 1024 * 100> m_decompressed_image_buffer_;
 
     std::vector<uint8_t> m_calibration_;
@@ -217,6 +221,7 @@ class NetKinectArray
 
     std::atomic<bool> m_need_calibration_cpu_swap_{false};
 
+    std::vector<std::size_t> m_byte_offset_to_jpeg_windows_ = std::vector<std::size_t>(MAX_LAYER_IDX, 0);
 
 
     std::vector<std::atomic<bool>> m_need_calibration_gpu_swap_ = std::vector<std::atomic<bool>>(MAX_NUM_SUPPORTED_CONTEXTS);
@@ -261,12 +266,16 @@ class NetKinectArray
 
     std::atomic<bool> m_need_model_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;
-    std::thread m_recv_;
-    std::thread m_decompress_geometry_;
+    std::thread m_recv_thread_;
+    std::thread m_decompress_geometry_thread_;
+    std::thread m_decompress_images_thread_;
 
-    std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
-    std::atomic<bool> m_geometry_decompressor_finished_{false};
+    volatile std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
+    volatile std::atomic<bool> m_geometry_decompressor_finished_{false};
 
+    volatile std::atomic<bool> m_submitted_compressed_images_{false};
+    volatile std::atomic<bool> m_image_decompressor_finished_{false};
+    volatile std::atomic<bool> m_image_decompression_without_errors_{true};
     // sending matrices
     std::mutex m_feedback_mutex_;
     // bool       m_feedback_running_;

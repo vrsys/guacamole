@@ -32,24 +32,30 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
       m_server_endpoint_(server_endpoint), m_feedback_endpoint_(feedback_endpoint), m_buffer_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
       m_buffer_back_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
       // m_feedback_need_swap_{false},
-      m_recv_(),
-      m_decompress_geometry_()
+      m_recv_thread_(),
+      m_decompress_geometry_thread_(),
+      m_decompress_images_thread_()
 {
-    m_recv_ = std::thread([this]() { _readloop(); });
+    m_recv_thread_ = std::thread([this]() { _readloop(); });
 
-    m_decompress_geometry_ = std::thread([this]() { _decompress_geometry_buffer(); });
+    m_decompress_geometry_thread_ = std::thread([this]() { _decompress_geometry_buffer(); });
+    m_decompress_images_thread_ = std::thread([this]() { _decompress_images(); });
 }
 
 NetKinectArray::~NetKinectArray()
 {
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
-    if(nullptr != m_tj_compressed_image_buffer_)
-    {
-        tjFree(m_tj_compressed_image_buffer_);
+
+    for(uint32_t layer_idx = 0; layer_idx < MAX_LAYER_IDX; ++layer_idx) {
+
+        if(nullptr != m_tj_compressed_image_buffer_per_layer_[layer_idx]) 
+        {
+            tjFree(m_tj_compressed_image_buffer_per_layer_[layer_idx]);
+        }
     }
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
     m_running_ = false;
-    m_recv_.join();
+    m_recv_thread_.join();
 }
 
 void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program)
@@ -703,93 +709,100 @@ void NetKinectArray::_decompress_geometry_buffer() {
     }
 }
 
-bool NetKinectArray::_decompress_and_rewrite_message(std::vector<std::size_t> const& byte_offset_to_jpeg_windows)
+void NetKinectArray::_decompress_images()
 {
-    #pragma omp parallel
-    {
 
-    #pragma omp single
-    {
-
-    #pragma omp task
-    {
-
-    }
+    //while(true) {
+    //    while(!m_submitted_compressed_images_.load()) {
+    //        ;
+    //    }
+        m_submitted_compressed_images_.store(false);
+        
 
 
-    #pragma omp task
-    {
-        if(nullptr == m_tj_compressed_image_buffer_)
-        {
-            m_tj_compressed_image_buffer_ = tjAlloc(1024 * 1024 * 50);
-        }
-
-        std::size_t byte_offset_to_current_image = 0;
-
-        std::size_t total_image_byte_size = 0;
-
-        std::size_t decompressed_image_offset = 0;
-
-        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
-        {
-            total_image_byte_size += byte_offset_to_jpeg_windows[sensor_layer_idx];
-        }
-
-        for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
-        {
-            if(m_jpeg_decompressor_per_layer.end() == m_jpeg_decompressor_per_layer.find(sensor_layer_idx))
-            {
-                m_jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
-                if(m_jpeg_decompressor_per_layer[sensor_layer_idx] == NULL)
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
+                if(nullptr == m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx])
                 {
-                    std::cout << "ERROR INITIALIZING DECOMPRESSOR\n";
+                    m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx] = tjAlloc(1024 * 1024 * 50);
                 }
             }
 
-            long unsigned int jpeg_size = byte_offset_to_jpeg_windows[sensor_layer_idx];
 
-            memcpy((char*)&m_tj_compressed_image_buffer_[0], (char*)&m_texture_buffer_back_[byte_offset_to_current_image], jpeg_size);
+            std::size_t byte_offset_to_current_image = 0;
 
-            int header_width, header_height, header_subsamp;
+            std::size_t total_image_byte_size = 0;
 
-            auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
+            std::size_t decompressed_image_offset = 0;
 
-            int error_handle = tjDecompressHeader2(current_decompressor_handle, &m_tj_compressed_image_buffer_[0], jpeg_size, &header_width, &header_height, &header_subsamp);
-
-            if(-1 == error_handle)
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
             {
-                std::cout << "ERROR DECOMPRESSING JPEG\n";
-                std::cout << "Error was: " << tjGetErrorStr() << "\n";
-
-                std::cout << "JPEG SIZE IN BYTE:" << jpeg_size << "\n";
-                std::cout << "Skipping frame again 6.\n";
-                return false;
+                total_image_byte_size += m_byte_offset_to_jpeg_windows_[sensor_layer_idx];// byte_offset_to_jpeg_windows[sensor_layer_idx];
             }
 
-            tjDecompress2(current_decompressor_handle,
-                          &m_tj_compressed_image_buffer_[0],
-                          jpeg_size,
-                          &m_decompressed_image_buffer_[decompressed_image_offset],
-                          header_width,
-                          0,
-                          header_height,
-                          TJPF_BGR,
-                          TJFLAG_FASTDCT);
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
+            {
+                //if(m_jpeg_decompressor_per_layer.end() == m_jpeg_decompressor_per_layer.find(sensor_layer_idx))
+                if(0 == m_jpeg_decompressor_per_layer[sensor_layer_idx])
+                {
+                    m_jpeg_decompressor_per_layer[sensor_layer_idx] = tjInitDecompress();
+                    if(m_jpeg_decompressor_per_layer[sensor_layer_idx] == NULL)
+                    {
+                        std::cout << "ERROR INITIALIZING DECOMPRESSOR\n";
+                    }
+                }
+            }
 
-            uint32_t copied_image_byte = header_height * header_width * 3;
+            bool skip_decompression = false;
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
+            {
+                long unsigned int jpeg_size = m_byte_offset_to_jpeg_windows_[sensor_layer_idx];
 
-            byte_offset_to_current_image += jpeg_size;
-            decompressed_image_offset += copied_image_byte;
-        }
+                //memcpy((char*)&m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx][0], (char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image], jpeg_size);
 
-        memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
-    }
+                int header_width, header_height, header_subsamp;
 
+                auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
 
-    }
+                int error_handle = tjDecompressHeader2(current_decompressor_handle, (unsigned char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image], jpeg_size, &header_width, &header_height, &header_subsamp);
 
-    }
-    return true;
+                if(-1 == error_handle)
+                {
+                    std::cout << "ERROR DECOMPRESSING JPEG\n";
+                    std::cout << "Error was: " << tjGetErrorStr() << "\n";
+
+                    std::cout << "JPEG SIZE IN BYTE:" << jpeg_size << "\n";
+                    std::cout << "Skipping frame again 6.\n";
+                    m_image_decompression_without_errors_.store(false);
+
+                    skip_decompression = true;
+                }
+
+                if(!skip_decompression) {
+                    tjDecompress2(current_decompressor_handle,
+                                  (unsigned char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image],
+                                  jpeg_size,
+                                  &m_texture_buffer_back_[decompressed_image_offset],
+                                  header_width,
+                                  0,
+                                  header_height,
+                                  TJPF_BGR,
+                                  TJFLAG_FASTDCT);
+
+                    uint32_t copied_image_byte = header_height * header_width * 3;
+
+                    byte_offset_to_current_image += jpeg_size;
+                    decompressed_image_offset += copied_image_byte;
+                }
+            }
+
+            if(!skip_decompression) {
+                m_image_decompression_without_errors_.store(true);
+            }
+
+            //memcpy((char*)m_texture_buffer_back_.data(), (char*)m_decompressed_image_buffer_.data(), decompressed_image_offset);
+        m_image_decompressor_finished_.store(true);
+    //}
+
 }
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
 
@@ -947,13 +960,17 @@ void NetKinectArray::_readloop()
 
             size_t total_uncompressed_geometry_payload_byte_size = textured_tris_byte_size;
 
-            m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size*4);
+            if(m_buffer_back_.size() < total_uncompressed_geometry_payload_byte_size*4) { 
+                m_buffer_back_.resize(total_uncompressed_geometry_payload_byte_size*4);
+            }
 
             size_t const total_encoded_geometry_byte_size = zmqm.size() - (m_model_descriptor_back_.texture_payload_size_in_byte + HEADER_SIZE);
 
             if(message_header.is_data_compressed)
             {
-                m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
+                if(m_buffer_back_compressed_.size() < total_encoded_geometry_byte_size) {
+                    m_buffer_back_compressed_.resize(total_encoded_geometry_byte_size);
+                }
                 memcpy((unsigned char*)&m_buffer_back_compressed_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
             }
             else
@@ -961,13 +978,19 @@ void NetKinectArray::_readloop()
                 memcpy((unsigned char*)&m_buffer_back_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE, total_encoded_geometry_byte_size);
             }
 
-            memcpy((unsigned char*)&m_texture_buffer_back_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_model_descriptor_back_.texture_payload_size_in_byte);
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
+            if(message_header.is_data_compressed)
+            {
+                memcpy((unsigned char*)&m_texture_buffer_back_compressed_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_model_descriptor_back_.texture_payload_size_in_byte);
+            } else {
+                memcpy((unsigned char*)&m_texture_buffer_back_[0], ((unsigned char*)zmqm.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_model_descriptor_back_.texture_payload_size_in_byte);
+            }
+#else 
 
-            std::vector<std::size_t> byte_offset_to_jpeg_windows(MAX_LAYER_IDX, 0);
-
+#endif
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
             {
-                byte_offset_to_jpeg_windows[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
+                m_byte_offset_to_jpeg_windows_[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
             }
 
             if(message_header.is_data_compressed)
@@ -976,12 +999,13 @@ void NetKinectArray::_readloop()
 
             auto start_decompression = std::chrono::system_clock::now();
                 m_submitted_compressed_geometry_buffer_.store(true);
+
+                m_submitted_compressed_images_.store(true);
+
                 //_decompress_geometry_buffer();
 
-                bool decompressed_successfully = _decompress_and_rewrite_message(byte_offset_to_jpeg_windows);
-                if(!decompressed_successfully) {
-                    continue;
-                }
+                _decompress_images();
+
             auto end_decompression = std::chrono::system_clock::now();
 
             std::chrono::duration<double> elapsed_seconds = end_decompression-start_decompression;
@@ -989,9 +1013,19 @@ void NetKinectArray::_readloop()
             while(!m_geometry_decompressor_finished_.load()) {
                 ;
             }
+
+            
+            //while(!m_image_decompressor_finished_.load()) {
+            //    ;
+            //}
+
+            //if(!m_image_decompression_without_errors_.load()) {
+            //    continue;
+            //}
+            
             m_geometry_decompressor_finished_.store(false);
-         
-            std::cout << "elapsed milliseconds: " << elapsed_seconds.count() * 1000.0f << "ms" << std::endl;
+            m_submitted_compressed_images_.store(false);
+            //std::cout << "elapsed milliseconds: " << elapsed_seconds.count() * 1000.0f << "ms" << std::endl;
 #else
                 gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
 #endif // GUACAMOLE_ENABLE_TURBOJPEG
