@@ -42,6 +42,8 @@
 
 namespace
 {
+
+/*
 gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = 0;
@@ -50,7 +52,7 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
         handle = tex->native_handle();
     }
     return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
-}
+}*/
 
 
 } // namespace
@@ -415,7 +417,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                         current_shader->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
                         current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
                         // hack
-                        current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+                        //current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
                         current_shader->set_uniform(ctx, scm::math::mat4f(model_matrix), "kinect_model_matrix");
 
                         current_shader->set_uniform(ctx, scm::math::mat4f(mv_matrix), "kinect_mv_matrix");

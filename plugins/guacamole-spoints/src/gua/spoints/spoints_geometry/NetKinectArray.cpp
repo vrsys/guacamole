@@ -69,24 +69,27 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             ctx.render_context->bind_texture(texture_atlas_per_context_[ctx.id], linear_sampler_state_per_context_[ctx.id], 0);
             shader_program->set_uniform(ctx, 0, "color_texture_atlas");
 
-            // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
-            for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
-            {
-                auto const& current_individual_inv_xyz_texture = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
-                ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_per_context_[ctx.id], sensor_idx + 1);
 
-                std::string uniform_inv_xyz_name = "inv_xyz_volumes[" + std::to_string(sensor_idx) + "]";
-                int uniform_inv_xyz_value = sensor_idx + 1;
-                shader_program->set_uniform(ctx, uniform_inv_xyz_value, uniform_inv_xyz_name);
+                // if(m_bound_calibration_data_.end() == m_bound_calibration_data_.find(ctx.id) ) {
+                for(uint32_t sensor_idx = 0; sensor_idx < m_calibration_descriptor_.num_sensors; ++sensor_idx)
+                {
+                    auto const& current_individual_inv_xyz_texture = inv_xyz_calibs_per_context_[ctx.id][sensor_idx];
+                    ctx.render_context->bind_texture(current_individual_inv_xyz_texture, linear_sampler_state_per_context_[ctx.id], sensor_idx + 1);
 
-                // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
-                auto const& current_individual_uv_texture = uv_calibs_per_context_[ctx.id][sensor_idx];
-                ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_per_context_[ctx.id], m_calibration_descriptor_.num_sensors + sensor_idx + 1);
+                    std::string uniform_inv_xyz_name = "inv_xyz_volumes[" + std::to_string(sensor_idx) + "]";
+                    int uniform_inv_xyz_value = sensor_idx + 1;
+                    shader_program->set_uniform(ctx, uniform_inv_xyz_value, uniform_inv_xyz_name);
+
+                    // shader_program->set_uniform(ctx, int(sensor_idx), "inv_xyz_volumes[" + std::to_string(sensor_idx)+"]");
+                    auto const& current_individual_uv_texture = uv_calibs_per_context_[ctx.id][sensor_idx];
+                    ctx.render_context->bind_texture(current_individual_uv_texture, linear_sampler_state_per_context_[ctx.id], m_calibration_descriptor_.num_sensors + sensor_idx + 1);
+                
+                    std::string uniform_uv_name = "uv_volumes[" + std::to_string(sensor_idx) + "]";
+                    int uniform_uv_value = m_calibration_descriptor_.num_sensors + sensor_idx + 1;
+                    shader_program->set_uniform(ctx, uniform_uv_value, uniform_uv_name);
+                }
+                //are_calib_volumes_bound_per_context_[ctx.id] = true;
             
-                std::string uniform_uv_name = "uv_volumes[" + std::to_string(sensor_idx) + "]";
-                int uniform_uv_value = m_calibration_descriptor_.num_sensors + sensor_idx + 1;
-                shader_program->set_uniform(ctx, uniform_uv_value, uniform_uv_name);
-            }
             // m_bound_calibration_data_[ctx.id] = true;
             //}
 
@@ -103,23 +106,25 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             shader_program->set_uniform(ctx, tight_geometry_bb_max_for_context, "tight_bb_max");
 
             shader_program->set_uniform(ctx, int(3), "Out_Sorted_Vertex_Tri_Data");
-            ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
+            //ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
             //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
 
-            ctx.render_context->apply_storage_buffer_bindings();
+            //ctx.render_context->apply_storage_buffer_bindings();
 
             uint32_t triangle_offset_for_current_layer = 0;
             uint32_t num_triangles_to_draw_for_current_layer = 0;
 
             auto& num_best_triangles_for_sensor_layer_for_context = m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id];
 
+
+
             for(int layer_idx = 0; layer_idx < 4; ++layer_idx)
             {
                 num_triangles_to_draw_for_current_layer = num_best_triangles_for_sensor_layer_for_context[layer_idx];
 
                 shader_program->set_uniform(ctx, int(layer_idx), "current_sensor_layer");
-
                 ctx.render_context->apply();
+    
 
                 size_t const vertex_offset = triangle_offset_for_current_layer * 3;
                 size_t const num_vertices_to_draw = num_triangles_to_draw_for_current_layer * 3;
@@ -345,7 +350,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         
         
         if(!empty_vbo_per_context_[ctx.id]) {
-            empty_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, INITIAL_VBO_SIZE, 0);
+            empty_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
             ctx.render_context->apply_vertex_input();
             if(!empty_vbo_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
@@ -355,7 +360,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         
         // size_t size_of_vertex = 2 * sizeof(uint32_t);
         if(!point_layout_per_context_[ctx.id]) {
-            point_layout_per_context_[ctx.id] = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 3*sizeof(float)), boost::assign::list_of(empty_vbo_per_context_[ctx.id]));
+            point_layout_per_context_[ctx.id] = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(empty_vbo_per_context_[ctx.id]));
             if(!point_layout_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
@@ -540,11 +545,13 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
                 
-                
+                if(!are_calib_volumes_bound_per_context_[ctx.id]) {
                 ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
 
                 ctx.render_context->apply_storage_buffer_bindings();
-                
+                    are_calib_volumes_bound_per_context_[ctx.id] = true;
+                }
+
                 float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(net_data_vbo_per_context_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_ONLY);
                 memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
 

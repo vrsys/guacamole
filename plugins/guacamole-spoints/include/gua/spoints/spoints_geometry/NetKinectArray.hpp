@@ -329,6 +329,7 @@ class NetKinectArray
 
     mutable std::vector<bool> are_textures_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
     
+    mutable std::vector<bool> are_calib_volumes_bound_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
     mutable std::vector<bool> is_calibration_data_created_per_context_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
 
