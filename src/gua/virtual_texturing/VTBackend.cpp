@@ -1,9 +1,9 @@
 #include <gua/platform.hpp>
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/guacamole.hpp>
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 
 #include <fstream>
 #include <regex>
