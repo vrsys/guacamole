@@ -1,5 +1,7 @@
 #include <gua/platform.hpp>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/guacamole.hpp>
 
@@ -214,3 +216,5 @@ gua::VTContextState& gua::VTBackend::get_state(size_t uuid)
         return null_state;
     }
 }
+
+#endif // GUACAMOLE_ENABLE_VIRTUAL_TEXTURING

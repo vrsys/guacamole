@@ -1,6 +1,8 @@
 #ifndef GUACAMOLE_VTBACKEND_H
 #define GUACAMOLE_VTBACKEND_H
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+
 namespace gua
 {
 struct VTContextState
@@ -56,4 +58,5 @@ class GUA_DLL VTBackend
 };
 } // namespace gua
 
+#endif // GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 #endif // GUACAMOLE_VTBACKEND_H
