@@ -73,6 +73,7 @@ Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
 void Pipeline::load_passes_and_responsibilities()
 {
     std::vector<std::shared_ptr<PipelineResponsibilityDescription>> responsibility_descriptions;
+    std::set<std::string> responsibility_names;
 
     for(const auto& pass_desc : last_description_.get_passes())
     {
@@ -80,11 +81,12 @@ void Pipeline::load_passes_and_responsibilities()
 
         for(const auto& pass_responsibility : pass_desc->get_responsibilities())
         {
-            responsibility_descriptions.push_back(pass_responsibility);
+            if (responsibility_names.find(pass_responsibility->private_.name_) == responsibility_names.cend()){
+                responsibility_names.insert(pass_responsibility->private_.name_);
+                responsibility_descriptions.push_back(pass_responsibility);
+            }
         }
     }
-
-    responsibility_descriptions.erase(std::unique(responsibility_descriptions.begin(), responsibility_descriptions.end()), responsibility_descriptions.end());
 
     for(auto& responsibility_description : responsibility_descriptions)
     {
