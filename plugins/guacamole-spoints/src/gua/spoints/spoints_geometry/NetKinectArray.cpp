@@ -38,8 +38,10 @@ NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::st
 {
     m_recv_thread_ = std::thread([this]() { _readloop(); });
 
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     m_decompress_geometry_thread_ = std::thread([this]() { _decompress_geometry_buffer(); });
     m_decompress_images_thread_ = std::thread([this]() { _decompress_images(); });
+#endif
 }
 
 NetKinectArray::~NetKinectArray()
