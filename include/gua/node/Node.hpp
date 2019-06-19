@@ -43,6 +43,7 @@
 
 namespace gua
 {
+class WindowBase;
 class NodeVisitor;
 class SceneGraph;
 class Serializer;
@@ -199,6 +200,13 @@ class GUA_DLL Node
     virtual math::mat4 get_world_transform() const;
 
     math::mat4 const& get_cached_world_transform() const;
+
+	math::mat4 get_latest_cached_world_transform(const WindowBase* w) const;
+
+  private:
+    virtual math::mat4 get_latest_world_transform(const WindowBase* w) const;
+
+  public:
 
     events::Signal<math::mat4 const&> on_world_transform_changed;
 

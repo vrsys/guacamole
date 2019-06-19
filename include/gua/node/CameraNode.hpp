@@ -190,6 +190,10 @@ struct GUA_DLL SerializedCameraNode
     std::shared_ptr<PipelineDescription> pipeline_description;
     std::vector<SerializedCameraNode> pre_render_cameras;
 
+	math::mat4 parents_transform;
+    std::string camera_node_name;
+    static std::map<std::size_t, CameraNode*> camera_nodes;
+
     Frustum get_rendering_frustum(SceneGraph const& graph, CameraMode mode) const { return CameraNode::make_frustum(graph, transform, config, mode, false); }
 
     Frustum get_culling_frustum(SceneGraph const& graph, CameraMode mode) const { return CameraNode::make_frustum(graph, transform, config, mode, true); }
