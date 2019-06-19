@@ -133,6 +133,7 @@ struct SPointsModelDescriptor {
 class NetKinectArray
 {
   public:
+    static size_t constexpr MAX_ZMQ_MESSAGE_SIZE = 500000000;
     static size_t constexpr INITIAL_VBO_SIZE = 20000000;
     static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
@@ -184,6 +185,7 @@ class NetKinectArray
     void _decompress_geometry_buffer();
     void _decompress_images();
 #endif //GUACAMOLE_ENABLE_TURBOJPEG
+    void _unpack_back_message();
     void _readloop();
 
     void _try_swap_calibration_data_cpu();
@@ -202,6 +204,16 @@ class NetKinectArray
 
 
     std::mutex m_mutex_;
+
+    std::mutex m_unpack_mutex_;
+
+    bool m_has_new_message_to_unpack = false;
+    std::vector<uint8_t> m_back_zmq_unpack_buffer_ = std::vector<uint8_t>(MAX_ZMQ_MESSAGE_SIZE);
+    std::vector<uint8_t> m_front_zmq_unpack_buffer_ = std::vector<uint8_t>(MAX_ZMQ_MESSAGE_SIZE);
+
+    std::size_t m_back_unpack_zmq_message_size_ = 0;
+    std::size_t m_front_unpack_zmq_message_size_ = 0;
+
     std::atomic<bool> m_running_;
     std::string const m_server_endpoint_;
     std::string const m_feedback_endpoint_;
@@ -269,6 +281,7 @@ class NetKinectArray
     std::thread m_recv_thread_;
     std::thread m_decompress_geometry_thread_;
     std::thread m_decompress_images_thread_;
+    std::thread m_unpack_thread_;
 
     volatile std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
     volatile std::atomic<bool> m_geometry_decompressor_finished_{false};

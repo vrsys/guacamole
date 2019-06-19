@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     steppo->translate(0.0, -1.0, -20.0);
 
     auto steppo2(vloader.create_geometry_from_file(std::string("steppo2"), "./spoints_resource_file_eris_for_argos.sr", nullptr, 8u) );
-    graph.add_node("/transform", steppo2);
+    //graph.add_node("/transform", steppo2);
 
 
     //steppo2->rotate(180.0, 0.0, 1.0, 0.0);
