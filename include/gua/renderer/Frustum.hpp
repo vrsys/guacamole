@@ -59,6 +59,7 @@ class GUA_DLL Frustum
 
     inline math::mat4 const& get_projection() const { return projection_; }
     inline math::mat4 const& get_view() const { return view_; }
+	inline void set_view(math::mat4 const& view) const { view_ = view; }
     inline math::mat4::value_type get_clip_near() const { return clip_near_; }
     inline math::mat4::value_type get_clip_far() const { return clip_far_; }
 
@@ -78,7 +79,7 @@ class GUA_DLL Frustum
     math::mat4 camera_transform_;
     math::mat4 screen_transform_;
     math::mat4 projection_;
-    math::mat4 view_;
+    mutable math::mat4 view_;
     std::vector<math::vec4> planes_;
     math::mat4::value_type clip_near_;
     math::mat4::value_type clip_far_;

@@ -102,12 +102,23 @@ void Pipeline::load_passes_and_responsibilities()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs)
+scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& original_camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs)
 {
+	node::SerializedCameraNode camera(original_camera);
+
     // return if pipeline is disabled
     if(!camera.config.get_enabled())
     {
         return {nullptr};
+    }
+
+	bool rendering_for_hmd = false;
+    if(camera.camera_node_name.find("Vive-HMD-User") != std::string::npos)
+    {
+        rendering_for_hmd = true;
+		auto camera_transform = context_.render_window->get_latest_matrices(4);
+        camera.transform = camera.parents_transform * camera_transform;
+        node::SerializedCameraNode::camera_nodes[camera.uuid]->set_transform(camera_transform);
     }
 
     // store the current camera data
@@ -208,12 +219,18 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     current_viewstate_.scene = current_viewstate_.graph->serialize(camera, mode);
     current_viewstate_.frustum = current_viewstate_.scene->rendering_frustum;
 
-    camera_block_.update(context_,
-                         current_viewstate_.scene->rendering_frustum,
-                         math::get_translation(camera.transform),
-                         current_viewstate_.scene->clipping_planes,
-                         camera.config.get_view_id(),
-                         camera.config.get_resolution());
+    if(rendering_for_hmd)
+    {
+        camera_block_.updateHMD(context_, current_viewstate_.scene->rendering_frustum, camera.parents_transform, math::get_translation(camera.transform), current_viewstate_.scene->clipping_planes,
+                                camera.config.get_view_id(),
+                             camera.config.get_resolution());
+    }
+    else
+    {
+        camera_block_.update(context_, current_viewstate_.scene->rendering_frustum, math::get_translation(camera.transform), current_viewstate_.scene->clipping_planes, camera.config.get_view_id(),
+                             camera.config.get_resolution());
+    }
+
     bind_camera_uniform_block(0);
 
     // clear gbuffer

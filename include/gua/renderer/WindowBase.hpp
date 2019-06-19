@@ -178,6 +178,8 @@ class GUA_DLL WindowBase
     float get_rendering_fps() { return rendering_fps; }
     std::atomic<float> rendering_fps;
 
+	virtual math::mat4 get_latest_matrices(unsigned id) const;
+
   protected:
     std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 

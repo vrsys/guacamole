@@ -25,6 +25,7 @@
 
 // guacamole headers
 #include <gua/platform.hpp>
+#include <gua/renderer/WindowBase.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/string_utils.hpp>
 #include <gua/node/RayNode.hpp>
@@ -143,7 +144,38 @@ math::mat4 Node::get_world_transform() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+math::mat4 Node::get_latest_world_transform(const WindowBase* w) const {
+  math::mat4 result = get_transform();
+  if ("Vive-HMD-Controller_0" == get_name()) {
+    result = w->get_latest_matrices(5);
+  } else if ("Vive-HMD-Controller_1" == get_name()) {
+    result = w->get_latest_matrices(6);
+  } else if (get_name().find("Vive-HMD-User") != std::string::npos) {
+    result = w->get_latest_matrices(4);
+  }
+
+  if (parent_)
+    return parent_->get_latest_world_transform(w) * result;
+
+  return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 math::mat4 const& Node::get_cached_world_transform() const { return world_transform_; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+math::mat4 Node::get_latest_cached_world_transform(const WindowBase* w) const {
+  math::mat4 world_transform = world_transform_;
+
+  const std::string node_path(get_path());
+  if (node_path.find("Vive-HMD") != std::string::npos) {
+    world_transform = get_latest_world_transform(w);
+  }
+
+  return world_transform;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
