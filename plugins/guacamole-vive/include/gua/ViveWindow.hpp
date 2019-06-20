@@ -80,7 +80,9 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
   enum DeviceID {
     HMD = 1 << 0,
     CONTROLLER_0 = 1 << 1,
+	CONTROLLER_0_YAW = 30,
     CONTROLLER_1 = 1 << 2,
+	CONTROLLER_1_YAW = 31,
     TRACKING_REFERENCE_0 = 1 << 3,
     TRACKING_REFERENCE_1 = 1 << 4
   };
@@ -113,12 +115,9 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
       ControllerContinuousStates controller_continuous_state);
   math::mat4 get_sensor_orientation(DeviceID device_id = DeviceID::HMD) const;
 
-  // steppo
   bool register_node(std::shared_ptr<node::Node> node_ptr, DeviceID device_id = DeviceID::HMD);
-
+  /*virtual*/ int is_node_registered(std::string const& path) const override;
   /*virtual*/ math::mat4 get_latest_matrices(unsigned id) const override;
-
-
 
   math::vec2 const& get_left_screen_size() const;
   math::vec2 const& get_right_screen_size() const;
@@ -165,6 +164,7 @@ class GUA_VIVE_DLL ViveWindow : public GlfwWindow {
   TrackedDevice hmd_device_;
   std::vector<ControllerDevice> known_controller_devices_;
   std::vector<TrackedDevice> known_tracking_reference_devices_;
+  std::map<std::string, int> registered_nodes_;
 
   unsigned int number_of_tracked_devices_ = 0;
   std::vector<vr::TrackedDevicePose_t> tracked_devices_handles_;
