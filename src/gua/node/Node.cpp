@@ -145,14 +145,30 @@ math::mat4 Node::get_world_transform() const
 ////////////////////////////////////////////////////////////////////////////////
 
 math::mat4 Node::get_latest_world_transform(const WindowBase* w) const {
-  math::mat4 result = get_transform();
-  if ("Vive-HMD-Controller_0" == get_name()) {
-    result = w->get_latest_matrices(5);
-  } else if ("Vive-HMD-Controller_1" == get_name()) {
-    result = w->get_latest_matrices(6);
-  } else if (get_name().find("Vive-HMD-User") != std::string::npos) {
-    result = w->get_latest_matrices(4);
-  }
+
+	int registered_node_id = w->is_node_registered(get_path());
+	math::mat4 result;
+
+	switch (registered_node_id) {
+		case 0: // Vive HMD
+			result = w->get_latest_matrices(4);
+			break;
+		case 1: // Vive CONTROLLER_0
+			result = w->get_latest_matrices(5);
+			break;
+		case 11: // Vive CONTROLLER_0 (yaw only)
+			result = gua::math::get_yaw_matrix(w->get_latest_matrices(5));
+			break;
+		case 2: // Vive CONTROLLER_1
+			result = w->get_latest_matrices(6);
+			break;
+		case 21: // Vive CONTROLLER_1 (yaw only)
+			result = gua::math::get_yaw_matrix(w->get_latest_matrices(6));
+			break;
+		default:
+			result = get_transform();
+			break;
+	}
 
   if (parent_)
     return parent_->get_latest_world_transform(w) * result;
@@ -168,13 +184,9 @@ math::mat4 const& Node::get_cached_world_transform() const { return world_transf
 
 math::mat4 Node::get_latest_cached_world_transform(const WindowBase* w) const {
   math::mat4 world_transform = world_transform_;
-
-  const std::string node_path(get_path());
-  if (node_path.find("Vive-HMD") != std::string::npos) {
-    world_transform = get_latest_world_transform(w);
-  }
-
-  return world_transform;
+  world_transform_ = get_latest_world_transform(w);
+  update_bounding_box();
+  return world_transform_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
