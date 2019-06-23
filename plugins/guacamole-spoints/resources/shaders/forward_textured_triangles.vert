@@ -18,9 +18,8 @@ out vec2 pass_uvs;
 //out vec3 pass_point_color;
 
 //uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_mv_matrix;
-uniform mat4 kinect_mvp_matrix;
+
+uniform mat4 mvp_matrix;
 
 uniform mat4 inv_vol_to_world_matrix;
 
@@ -80,30 +79,16 @@ void main() {
   vec4 extracted_vertex_pos = vec4(x, y, z,
                                    1.0);
 
-/*
-  if(0 == gl_VertexID) {
-    extracted_vertex_pos.x = 0.0;
-    extracted_vertex_pos.y = 0.0;
-    extracted_vertex_pos.z = 0.0;   
-  } else if(2 == gl_VertexID) {
-    extracted_vertex_pos.x = 1.0;
-    extracted_vertex_pos.y = 0.0;
-    extracted_vertex_pos.z = 0.0;   
-  } else if(1 == gl_VertexID) {
-    extracted_vertex_pos.x = 1.0;
-    extracted_vertex_pos.y = 1.0;
-    extracted_vertex_pos.z = 0.0;   
-  } 
-*/
+
   //vec4 extracted_vertex_pos = vec4(tri_positions[gl_VertexID % 3], 1.0);
 
-  gua_world_position = (kinect_model_matrix * extracted_vertex_pos).xyz;
-  gua_view_position  = (kinect_mv_matrix * extracted_vertex_pos).xyz;
+  gua_world_position = (gua_model_matrix * extracted_vertex_pos).xyz;
+  gua_view_position  = (gua_model_view_matrix * extracted_vertex_pos).xyz;
   
   @material_method_calls_vert@
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
+  gl_Position = mvp_matrix * extracted_vertex_pos;
 
 
 
