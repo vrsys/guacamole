@@ -27,7 +27,7 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 namespace spoints
 {
 NetKinectArray::NetKinectArray(const std::string& server_endpoint, const std::string& feedback_endpoint)
-    : m_mutex_(), m_running_(true),
+    : m_mutex_(), m_unpack_mutex_(), m_running_(true),
       // m_feedback_running_(true),
       m_server_endpoint_(server_endpoint), m_feedback_endpoint_(feedback_endpoint), m_buffer_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
       m_buffer_back_(/*(m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()*/),
@@ -199,8 +199,6 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
 
             size_t const num_vertices_to_draw = m_model_descriptor_.received_textured_tris * 3;
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_TRIANGLE_LIST, 0, num_vertices_to_draw);
-
-            //std::cout << "Drawing fully encoded vertex data\n";
         }
 
         ctx.render_context->reset_vertex_input();
@@ -432,7 +430,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         
         ctx.render_context->apply();
 
-        std::cout << "TRYING TO CREATE BUFFER\n";
+        //std::cout << "TRYING TO CREATE BUFFER\n";
  
 
 
@@ -698,10 +696,6 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
 void NetKinectArray::_unpack_back_message() {
-
-        //std::cout << "Executing dummy unpack" << std::endl;
-        
-
         while(true) {
 
             {
@@ -871,12 +865,12 @@ void NetKinectArray::_unpack_back_message() {
                 if(message_header.is_data_compressed)
                 {
                     memcpy((unsigned char*)&m_texture_buffer_back_compressed_[0], ((unsigned char*)m_front_zmq_unpack_buffer_.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_model_descriptor_back_.texture_payload_size_in_byte);
-                } else {
+                } else 
+    #endif
+                {
                     memcpy((unsigned char*)&m_texture_buffer_back_[0], ((unsigned char*)m_front_zmq_unpack_buffer_.data()) + HEADER_SIZE + total_encoded_geometry_byte_size, m_model_descriptor_back_.texture_payload_size_in_byte);
                 }
-    #else 
 
-    #endif
                 for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx)
                 {
                     m_byte_offset_to_jpeg_windows_[sensor_layer_idx] = message_header.jpeg_bytes_per_sensor[sensor_layer_idx];
@@ -899,22 +893,6 @@ void NetKinectArray::_unpack_back_message() {
 
                 std::chrono::duration<double> elapsed_seconds = end_decompression-start_decompression;
         
-                //while(!m_geometry_decompressor_finished_.load()) {
-                //    ;
-                //}
-
-                
-                //while(!m_image_decompressor_finished_.load()) {
-                //    ;
-                //}
-
-                //if(!m_image_decompression_without_errors_.load()) {
-                //    continue;
-                //}
-                
-                //m_geometry_decompressor_finished_.store(false);
-                //m_submitted_compressed_images_.store(false);
-                //std::cout << "elapsed milliseconds: " << elapsed_seconds.count() * 1000.0f << "ms" << std::endl;
     #else
                     gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
     #endif // GUACAMOLE_ENABLE_TURBOJPEG
@@ -1078,14 +1056,12 @@ void NetKinectArray::_readloop()
     {
 
         socket.recv(&zmqm); // blocking
-
         {
             std::lock_guard<std::mutex> unpack_lock(m_unpack_mutex_);
 
             m_has_new_message_to_unpack = true;
             memcpy( (char*) m_back_zmq_unpack_buffer_.data(), zmqm.data(), zmqm.size());
             m_back_unpack_zmq_message_size_ = zmqm.size();
-
         }
 
         pre_loop_time_stamp = current_timestamp;
