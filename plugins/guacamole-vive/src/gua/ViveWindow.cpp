@@ -34,7 +34,7 @@ ViveWindow::ViveWindow(std::string const& display)
   initialize_hmd_environment();
 
   // calculate screen size, translation and eye distance
-  calculate_viewing_setup(0.5, 500.0);
+  calculate_viewing_setup(0.05, 500.0);
 }
 
 ViveWindow::~ViveWindow() {
@@ -614,29 +614,42 @@ bool ViveWindow::register_node(std::shared_ptr<node::Node> node_ptr, DeviceID de
   switch (device_id) {
     case DeviceID::HMD:
       hmd_device_.node_ptr_ = node_ptr;
+	  registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 0));
       success = true;
       break;
     case DeviceID::CONTROLLER_0:
       if (known_controller_devices_.size() > 0) {
         known_controller_devices_[0].node_ptr_ = node_ptr;
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 1));
         success = true;
       }
       break;
+	case DeviceID::CONTROLLER_0_YAW:
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 11));
+		success = true;
+		break;
     case DeviceID::CONTROLLER_1:
       if (known_controller_devices_.size() > 1) {
         known_controller_devices_[1].node_ptr_ = node_ptr;
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 2));
         success = true;
       }
       break;
+	case DeviceID::CONTROLLER_1_YAW:
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 21));
+		success = true;
+		break;
     case DeviceID::TRACKING_REFERENCE_0:
       if (known_tracking_reference_devices_.size() > 0) {
         known_tracking_reference_devices_[0].node_ptr_ = node_ptr;
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 3));
         success = true;
       }
       break;
     case DeviceID::TRACKING_REFERENCE_1:
       if (known_tracking_reference_devices_.size() > 1) {
         known_tracking_reference_devices_[1].node_ptr_ = node_ptr;
+		registered_nodes_.insert(std::pair<std::string, int>(node_ptr->get_path(), 4));
         success = true;
       }
       break;
@@ -647,6 +660,13 @@ bool ViveWindow::register_node(std::shared_ptr<node::Node> node_ptr, DeviceID de
   return success;
 }
 
+/*virtual*/ int ViveWindow::is_node_registered(std::string const& path) const {
+	std::map<std::string, int>::const_iterator search = registered_nodes_.find(path);
+	if (search != registered_nodes_.end()) {
+		return search->second;
+	}
+	return -1;
+}
 
 
 /*virtual*/ math::mat4 ViveWindow::get_latest_matrices(unsigned id) const {

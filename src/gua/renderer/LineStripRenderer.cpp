@@ -208,8 +208,10 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
             if(current_shader_program && line_strip_node->get_geometry())
             {
-                auto model_view_mat = scene.rendering_frustum.get_view() * line_strip_node->get_cached_world_transform();
-                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(line_strip_node->get_cached_world_transform()))));
+				auto const node_world_transform = line_strip_node->get_latest_cached_world_transform(ctx.render_window);
+
+                auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
+                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
 
                 int rendering_mode = pipe.current_viewstate().shadow_mode ? (line_strip_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
