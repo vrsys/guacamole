@@ -215,7 +215,7 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
 
                 int rendering_mode = pipe.current_viewstate().shadow_mode ? (line_strip_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-                current_shader_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(line_strip_node->get_cached_world_transform()));
+                current_shader_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
