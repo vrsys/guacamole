@@ -399,15 +399,6 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     auto const node_world_transform = spoints_node->get_latest_cached_world_transform(ctx.render_window);
                     auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
 
-                    auto const& model_matrix(spoints_node->get_cached_world_transform());
-                    auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
-                    auto view_matrix(pipe.current_viewstate().frustum.get_view());
-
-                    scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_view_mat);
-
-                    scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-
-                    scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
                     int rendering_mode = pipe.current_viewstate().shadow_mode ? (spoints_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
@@ -422,11 +413,9 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
 
 
-                        current_shader->set_uniform(ctx, scm::math::mat4f(model_matrix), "gua_model_matrix");
+                        current_shader->set_uniform(ctx, scm::math::mat4f(node_world_transform), "gua_model_matrix");
+                        current_shader->set_uniform(ctx, scm::math::mat4f(model_view_mat), "gua_model_view_matrix");
 
-                        current_shader->set_uniform(ctx, scm::math::mat4f(mv_matrix), "gua_model_view_matrix");
-
-                        current_shader->set_uniform(ctx, scm::math::mat4f(mvp_matrix), "mvp_matrix");
 
                         current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
                     }

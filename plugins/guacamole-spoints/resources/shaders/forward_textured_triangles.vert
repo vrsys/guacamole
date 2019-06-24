@@ -88,7 +88,7 @@ void main() {
   @material_method_calls_vert@
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = mvp_matrix * extracted_vertex_pos;
+  gl_Position = gua_projection_matrix * gua_model_view_matrix * extracted_vertex_pos;
 
 
 
