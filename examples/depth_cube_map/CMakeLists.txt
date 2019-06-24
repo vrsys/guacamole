@@ -13,8 +13,8 @@ target_link_libraries(${_EXE_NAME} guacamole-gui guacamole-PLOD)
 # copy runtime libraries as a post-build process
 IF (MSVC)
     ADD_CUSTOM_COMMAND ( TARGET ${_EXE_NAME} POST_BUILD 
-      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP /njh /njs /ndl /nc /ns
-            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP /njh /njs /ndl /nc /ns
+      COMMAND robocopy \"${GLOBAL_EXT_DIR}/bin/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP > nul
+            & robocopy \"${LIBRARY_OUTPUT_PATH}/$(Configuration)/\" \"${EXECUTABLE_OUTPUT_PATH}/$(Configuration)/\" *.dll /R:0 /W:0 /NP > nul
             \n if %ERRORLEVEL% LEQ 7 (exit /b 0) else (exit /b 1)
     )
 ENDIF (MSVC)
