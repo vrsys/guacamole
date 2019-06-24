@@ -186,7 +186,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                 int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-                current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
+                current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
