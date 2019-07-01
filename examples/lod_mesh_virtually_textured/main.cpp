@@ -42,6 +42,8 @@
 #include <lamure/vt/VTConfig.h>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 
+// #define WITH_CONFIG
+
 int main(int argc, char** argv)
 {
     // init guacamole
@@ -49,8 +51,15 @@ int main(int argc, char** argv)
 
     // setup scenegraph
     gua::SceneGraph graph("main_scenegraph");
+
+#ifdef WITH_CONFIG
     vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.ini";
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
+#else
+    gua::VTBackend::set_physical_texture_size(2048);
+    gua::VTBackend::set_update_throughput_size(4);
+    gua::VTBackend::set_ram_cache_size(32768);
+#endif
 
     // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.atlas");
     std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
