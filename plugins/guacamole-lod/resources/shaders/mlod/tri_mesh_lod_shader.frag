@@ -37,10 +37,6 @@ void main()
   gua_uvs.z = 0.0;
   gua_uvs.w = 0;
 
-  if (gua_rendering_mode != 1) {
-      @material_method_calls_frag@
-  }
-
   if (gua_rendering_mode == 0) {
   #if @enable_virtual_texturing@
       usampler2D index_texture_mip_map_to_sample = usampler2D(vts[gua_current_vt_idx].vt_address);
@@ -56,6 +52,10 @@ void main()
       gua_alpha = virtual_texturing_color.a;
  #endif
  }
+
+  if (gua_rendering_mode != 1) {
+      @material_method_calls_frag@
+  }
 
   submit_fragment(gl_FragCoord.z);
 }
