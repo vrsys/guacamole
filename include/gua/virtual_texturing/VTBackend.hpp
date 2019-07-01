@@ -20,6 +20,10 @@ class GUA_DLL VTBackend
         return instance;
     }
 
+    static void set_physical_texture_size(uint32_t);
+    static void set_update_throughput_size(uint32_t);
+    static void set_ram_cache_size(uint32_t);
+
     VTBackend(VTBackend const&) = delete;
     void operator=(VTBackend const&) = delete;
 

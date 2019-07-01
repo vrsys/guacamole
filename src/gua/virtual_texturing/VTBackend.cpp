@@ -23,12 +23,6 @@ void gua::VTBackend::add_context(uint16_t ctx_id, gua::node::CameraNode& camera)
 }
 void gua::VTBackend::start_backend()
 {
-    if(::vt::VTConfig::CONFIG_PATH.empty())
-    {
-        std::cerr << "VTBackend will not be started, due to undefined configuration file. Check if any VT model is provided";
-        return;
-    }
-
     for(auto cam_ctx : camera_contexts_)
     {
         auto& current_vt_info = vt_info_per_context_[cam_ctx.second];
@@ -41,10 +35,6 @@ void gua::VTBackend::start_backend()
 }
 void gua::VTBackend::stop_backend()
 {
-    if(::vt::VTConfig::CONFIG_PATH.empty())
-    {
-        return;
-    }
     ::vt::CutUpdate::get_instance().stop();
 }
 void gua::VTBackend::init_vt(uint16_t ctx_id, gua::node::CameraNode const& cam)
@@ -213,4 +203,18 @@ gua::VTContextState& gua::VTBackend::get_state(size_t uuid)
         VTContextState null_state{false, false};
         return null_state;
     }
+}
+void gua::VTBackend::set_physical_texture_size(uint32_t sizePhysicalTexture)
+{
+    vt::VTConfig::get_instance().set_size_physical_texture(sizePhysicalTexture);
+    vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
+}
+void gua::VTBackend::set_update_throughput_size(uint32_t sizePhysicalUpdateThroughput)
+{
+    vt::VTConfig::get_instance().set_size_physical_update_throughput(sizePhysicalUpdateThroughput);
+}
+void gua::VTBackend::set_ram_cache_size(uint32_t sizeRamCache)
+{
+    vt::VTConfig::get_instance().set_size_ram_cache(sizeRamCache);
+    vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
 }
