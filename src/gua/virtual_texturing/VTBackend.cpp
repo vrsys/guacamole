@@ -33,10 +33,7 @@ void gua::VTBackend::start_backend()
 
     ::vt::CutUpdate::get_instance().start();
 }
-void gua::VTBackend::stop_backend()
-{
-    ::vt::CutUpdate::get_instance().stop();
-}
+void gua::VTBackend::stop_backend() { ::vt::CutUpdate::get_instance().stop(); }
 void gua::VTBackend::init_vt(uint16_t ctx_id, gua::node::CameraNode const& cam)
 {
     auto current_vt_info_per_context_iterator = vt_info_per_context_.find(ctx_id);
@@ -85,22 +82,11 @@ void gua::VTBackend::register_cuts(uint16_t ctx_id)
 }
 void gua::VTBackend::add_camera(const std::shared_ptr<gua::node::CameraNode>& camera)
 {
-    if(::vt::VTConfig::CONFIG_PATH.empty())
-    {
-        std::cerr << "VTBackend will not be started, due to undefined configuration file. Check if any VT model is provided";
-        return;
-    }
-
     std::lock_guard<std::mutex> lock(vt_backend_mutex_);
     add_context((uint16_t)(camera_contexts_.size()), *camera);
 }
 const bool gua::VTBackend::has_camera(size_t uuid) const
 {
-    if(::vt::VTConfig::CONFIG_PATH.empty())
-    {
-        return false;
-    }
-
     for(auto camera : camera_contexts_)
     {
         if(camera.first->uuid() == uuid)
@@ -186,12 +172,6 @@ gua::VTContextState& gua::VTBackend::get_state(size_t uuid)
 {
     std::lock_guard<std::mutex> lock(vt_backend_mutex_);
 
-    if(::vt::VTConfig::CONFIG_PATH.empty())
-    {
-        VTContextState null_state{false, false};
-        return null_state;
-    }
-
     auto state = context_states_.find(uuid);
 
     if(state != context_states_.end())
@@ -213,8 +193,4 @@ void gua::VTBackend::set_update_throughput_size(uint32_t sizePhysicalUpdateThrou
 {
     vt::VTConfig::get_instance().set_size_physical_update_throughput(sizePhysicalUpdateThroughput);
 }
-void gua::VTBackend::set_ram_cache_size(uint32_t sizeRamCache)
-{
-    vt::VTConfig::get_instance().set_size_ram_cache(sizeRamCache);
-    vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
-}
+void gua::VTBackend::set_ram_cache_size(uint32_t sizeRamCache) { vt::VTConfig::get_instance().set_size_ram_cache(sizeRamCache); }

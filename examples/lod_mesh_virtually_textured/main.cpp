@@ -55,11 +55,11 @@ int main(int argc, char** argv)
 #ifdef WITH_CONFIG
     vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.ini";
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
-#else
+#endif
+
     gua::VTBackend::set_physical_texture_size(2048);
     gua::VTBackend::set_update_throughput_size(4);
     gua::VTBackend::set_ram_cache_size(32768);
-#endif
 
     // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.atlas");
     std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     vt_mat->set_uniform("Metalness", 0.25f);
     vt_mat->set_uniform("Roughness", 0.75f);
     vt_mat->set_uniform("Emissivity", 0.5f);
-    vt_mat->set_uniform("vt_mat", vt_texture_path);
+    vt_mat->set_uniform("vt_test", vt_texture_path);
     // VT STEP 3/5: - enable virtual texturing for this material
     vt_mat->set_enable_virtual_texturing(true);
     vt_mat->set_show_back_faces(false);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
     mlod_node->set_min_lod_depth(6);
 
-    lod_loader.apply_fallback_material(mlod_node, vt_mat);
+    // lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
     mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
     mlod_node->set_error_threshold(1.0);
