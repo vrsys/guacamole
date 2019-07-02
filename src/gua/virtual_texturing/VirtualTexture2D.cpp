@@ -47,6 +47,10 @@
 #include <iostream>
 #include <regex>
 
+#ifdef _WIN32
+#include <WinBase.h>
+#endif
+
 #define PHYSICAL_TEXTURE_MAX_NUM_LAYERS 256
 #define PHYSICAL_TEXTURE_MAX_RES_PER_AXIS 8192
 
@@ -64,10 +68,17 @@ VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename, scm::gl::s
 
     if(!initialized_vt_system)
     {
-        if(access(ini_filename.c_str(), F_OK) != -1)
-        {
-            ::vt::VTConfig::CONFIG_PATH = ini_filename;
-        }
+#ifdef _WIN32
+		if (INVALID_FILE_ATTRIBUTES != GetFileAttributes(ini_filename.c_str()) || GetLastError() != ERROR_FILE_NOT_FOUND)
+		{
+			::vt::VTConfig::CONFIG_PATH = ini_filename;
+		}
+#else
+		if (access(ini_filename.c_str(), F_OK) != -1)
+		{
+			::vt::VTConfig::CONFIG_PATH = ini_filename;
+		}
+#endif
 
         ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
         tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
