@@ -94,7 +94,6 @@ class GUA_DLL VirtualTexture2D : public Texture
     // unsigned layers_;
 
   private:
-    std::string ini_file_path_;
     std::string atlas_file_path_;
     uint32_t lamure_texture_id_;
 

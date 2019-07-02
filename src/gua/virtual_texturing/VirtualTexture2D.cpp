@@ -64,18 +64,20 @@ VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename, scm::gl::s
 
     if(!initialized_vt_system)
     {
-        ::vt::VTConfig::CONFIG_PATH = ini_filename;
+        if(access(ini_filename.c_str(), F_OK) != -1)
+        {
+            ::vt::VTConfig::CONFIG_PATH = ini_filename;
+        }
+
         ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
+        tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
 
         initialized_vt_system = true;
     }
 
-    tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
-
     lamure_texture_id_ = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
 
     atlas_file_path_ = atlas_filename;
-    ini_file_path_ = ini_filename;
 
     ::vt::pre::AtlasFile current_atlas_file(atlas_filename.c_str());
 
