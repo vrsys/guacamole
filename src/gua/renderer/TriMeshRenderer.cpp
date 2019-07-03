@@ -179,12 +179,14 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
             if(current_shader && tri_mesh_node->get_geometry())
             {
-                auto model_view_mat = scene.rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
-                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
+                auto const node_world_transform = tri_mesh_node->get_latest_cached_world_transform(ctx.render_window);
+
+				auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
+                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
 
                 int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-                current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
+                current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
@@ -239,6 +241,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
 #endif
+        ctx.render_context->reset_state_objects();
+        ctx.render_context->sync();
     }
 }
 

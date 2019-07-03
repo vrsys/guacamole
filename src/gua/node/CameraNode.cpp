@@ -57,6 +57,8 @@ std::shared_ptr<Node> CameraNode::copy() const { return std::make_shared<CameraN
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::map<size_t, CameraNode*> SerializedCameraNode::camera_nodes = std::map<size_t, CameraNode*>();
+
 SerializedCameraNode CameraNode::serialize() const
 {
     SerializedCameraNode s = {config, get_world_transform(), uuid()};
@@ -67,6 +69,13 @@ SerializedCameraNode CameraNode::serialize() const
     }
 
     s.pipeline_description = pipeline_description_;
+
+	s.parents_transform = get_parent()->get_world_transform();
+    s.camera_node_name = get_name();
+  
+	if (SerializedCameraNode::camera_nodes[s.uuid] == nullptr) {
+	    SerializedCameraNode::camera_nodes[s.uuid] = (CameraNode*) this;
+	}
 
     return s;
 }

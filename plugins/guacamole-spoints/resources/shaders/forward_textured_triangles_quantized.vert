@@ -17,13 +17,13 @@
 out vec2 pass_uvs;
 //out vec3 pass_point_color;
 
+
+//uniform uvec2 inv_xyz_volume_handles[4];
 layout(binding=1) uniform sampler3D inv_xyz_volumes[4];
 layout(binding=5) uniform sampler3D uv_volumes[4];
 
 //uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_mv_matrix;
-uniform mat4 kinect_mvp_matrix;
+uniform mat4 mvp_matrix;
 
 uniform mat4 inv_vol_to_world_matrix;
 
@@ -117,17 +117,18 @@ void main() {
                                    1.0);
   //vec4 extracted_vertex_pos = vec4(tri_positions[gl_VertexID % 3], 1.0);
 
-  gua_world_position = (kinect_model_matrix * extracted_vertex_pos).xyz;
-  gua_view_position  = (kinect_mv_matrix * extracted_vertex_pos).xyz;
+  gua_world_position = (gua_model_matrix * extracted_vertex_pos).xyz;
+  gua_view_position  = (gua_model_view_matrix * extracted_vertex_pos).xyz;
   
   @material_method_calls_vert@
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
+  gl_Position = gua_projection_matrix * gua_model_view_matrix * extracted_vertex_pos;
 
   vec3 calib_sample_pos = (inv_vol_to_world_matrix * extracted_vertex_pos).xyz;
 
   vec3 pos_calib = texture(inv_xyz_volumes[current_sensor_layer], calib_sample_pos.xyz ).rgb;
+  //vec3 pos_calib = texture(usampler3D(inv_xyz_volume_handles[current_sensor_layer]), calib_sample_pos.xyz ).rgb;
   vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy / scaling_factor;
 
   pass_uvs = pos_color / 2.0 + viewport_offsets[current_sensor_layer];

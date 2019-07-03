@@ -59,6 +59,7 @@ class GUA_SPOINTS_DLL SPointsNode : public GeometryNode
     inline float get_screen_space_point_size() const { return screen_space_point_size_; }
     inline void set_screen_space_point_size(float point_size) { screen_space_point_size_ = point_size; }
 
+
     inline spoints::SPointsStats get_latest_spoints_stats() const
     {
         if(nullptr != spoints_)
