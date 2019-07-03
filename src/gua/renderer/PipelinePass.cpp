@@ -52,7 +52,9 @@ scm::gl::depth_stencil_state_ptr PipelinePass::depth_stencil_state() const { ret
 scm::gl::blend_state_ptr PipelinePass::blend_state() const { return blend_state_; }
 std::shared_ptr<ShaderProgram> PipelinePass::shader() const { return shader_; }
 
-bool operator==(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs) { return lhs.private_.name_ == rhs.private_.name_; }
+bool operator==(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs) {
+    return lhs.private_.name_ == rhs.private_.name_;
+}
 bool operator!=(PipelineResponsibilityDescription const& lhs, PipelineResponsibilityDescription const& rhs) { return lhs.private_.name_ != rhs.private_.name_; }
 
 ////////////////////////////////////////////////////////////////////////////////

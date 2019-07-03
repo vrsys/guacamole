@@ -41,7 +41,7 @@ class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class TriMeshRenderer
+class GUA_DLL TriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
 #endif

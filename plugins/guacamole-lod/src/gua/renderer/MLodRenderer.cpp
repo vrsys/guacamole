@@ -263,7 +263,9 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         std::vector<lamure::ren::cut::node_slot_aggregate>& node_list = cut.complete_set();
 
         // perform frustum culling
-        lamure::ren::bvh const* bvh = database->get_model(model_id)->get_bvh();
+        lamure::ren::bvh * bvh = database->get_model(model_id)->get_bvh();
+        bvh->set_min_lod_depth(mlod_node->get_min_lod_depth());
+
         scm::gl::frustum const& culling_frustum = cut_update_cam.get_frustum_by_model(math::mat4f(scm_model_matrix));
 
         std::vector<scm::gl::boxf> const& model_bounding_boxes = bvh->get_bounding_boxes();
