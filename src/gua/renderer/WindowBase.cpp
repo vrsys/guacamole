@@ -373,6 +373,8 @@ void WindowBase::swap_buffers()
 #endif
 }
 
+/* virtual */ math::mat4 WindowBase::get_latest_matrices(unsigned id) const { return math::mat4::identity(); }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void WindowBase::DebugOutput::operator()(scm::gl::debug_source source, scm::gl::debug_type type, scm::gl::debug_severity severity, const std::string& message) const

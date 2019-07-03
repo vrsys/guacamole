@@ -36,7 +36,7 @@
 
 namespace gua
 {
-class GUA_DLL FeedbackCollectorResponsibilityDescription : public PipelineResponsibilityDescription
+class GUA_SPOINTS_DLL FeedbackCollectorResponsibilityDescription : public PipelineResponsibilityDescription
 {
 public:
     explicit FeedbackCollectorResponsibilityDescription();

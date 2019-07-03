@@ -37,6 +37,8 @@ void set_window_default(std::shared_ptr<gua::WindowBase> const& window, gua::mat
     window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
 }
 
+unsigned framecount = 0;
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -88,18 +90,57 @@ int main(int argc, char** argv)
 
     gua::SPointsLoader vloader;
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto spoints_geode(vloader.create_geometry_from_file(std::string("spoints_geode"), spoints_resource_file_string.c_str(), nullptr, 8u) );
-    graph.add_node("/transform", spoints_geode);
+    auto steppo(vloader.create_geometry_from_file(std::string("steppo"), spoints_resource_file_string.c_str(), nullptr, 8u) );
+    graph.add_node("/transform", steppo);
 
 
-    spoints_geode->rotate(180.0, 0.0, 1.0, 0.0);
-    spoints_geode->translate(0.0, -1.0, -20.0);
+    steppo->rotate(180.0, 0.0, 1.0, 0.0);
+    steppo->translate(0.0, -1.0, -20.0);
+
+    auto steppo2(vloader.create_geometry_from_file(std::string("steppo2"), "./spoints_resource_file_eris_for_argos.sr", nullptr, 8u) );
+    //graph.add_node("/transform", steppo2);
+
+
+    //steppo2->rotate(180.0, 0.0, 1.0, 0.0);
+    steppo2->translate(0.0, -1.0, -20.0);
+
+    gua::TriMeshLoader mloader;
+    // auto plane(mloader.create_geometry_from_file("plane", "data/objects/plane.obj"));
+    // plane->scale(10);
+    // plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
+    // graph.add_node("/transform", plane);
 
     transform->translate(0.0f, 0.0f, -10.0f);
 
+    /*
+      auto light = graph.add_node<gua::node::LightNode>("/", "light");
+      light->data.set_type(gua::node::LightNode::Type::SPOT);
+      light->data.set_brightness(8.f);
+      light->data.set_shadow_cascaded_splits({0.1f, 1.f, 10.f, 50.f});
+      light->data.set_shadow_near_clipping_in_sun_direction(10.0f);
+      light->data.set_shadow_far_clipping_in_sun_direction(10.0f);
+      light->data.set_max_shadow_dist(80.0f);
+      light->data.set_shadow_offset(0.002f);
+      light->data.set_enable_shadows(true);
+      light->data.set_shadow_map_size(512);
+      light->rotate(-65, 1, 0, 0);
+    */
+
+    auto portal_placeholder_plane(mloader.create_geometry_from_file("portal_placeholder_plane", "data/objects/plane.obj"));
+    portal_placeholder_plane->rotate(90.0f, 1.0f, 0.0f, 0.0f);
+    portal_placeholder_plane->translate(0.0f, 0.0f, -50.0f);
+    // Portal
+    auto portal = graph.add_node<gua::node::TexturedQuadNode>("/transform", "portal");
+    portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
+    portal->data.set_texture("portal");
+    portal->translate(1.5f, 0.f, -0.10f);
+    portal->rotate(-30, 0.f, 1.f, 0.f);
+
+    // portal->rotate(90.0f, 1.0f, 0.0f, 0.0f);
+    //graph.add_node("/transform", portal_placeholder_plane);
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
-    screen->data.set_size(gua::math::vec2(1.218f, 1.218f));
+    screen->data.set_size(gua::math::vec2(0.7f, 0.4));
     screen->translate(0, 0, 1.0);
 
     auto screen2 = graph.add_node<gua::node::ScreenNode>("/", "screen2");
@@ -118,19 +159,35 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(800, 800);
+    //auto resolution = gua::math::vec2ui(800, 800);
     //auto resolution = gua::math::vec2ui(3840/2, 2160/2);
-    //auto resolution = gua::math::vec2ui(4096, 2160);
+    auto resolution = gua::math::vec2ui(3840, 2160);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-
+    pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
     pipe->add_pass(std::make_shared<gua::TexturedQuadPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
+    auto portal_screen = graph.add_node<gua::node::ScreenNode>("/transform", "portal_screen");
+    portal_screen->data.set_size(gua::math::vec2(1.2f, 1.2f));
+    portal_screen->translate(0.0f, 1.0f, 0.0f);
+    auto portal_camera = graph.add_node<gua::node::CameraNode>("/transform/portal_screen", "portal_cam");
+    portal_camera->translate(0.f, 1.8f, 2.f);
+    portal_camera->config.set_resolution(gua::math::vec2ui(resolution[0], resolution[1]));
+    portal_camera->config.set_screen_path("/transform/portal_screen");
+    portal_camera->config.set_scene_graph_name("main_scenegraph");
+    portal_camera->config.set_output_texture_name("portal");
+    // portal_camera->config.set_enable_stereo(true);
+
+    auto portal_pipe = std::make_shared<gua::PipelineDescription>();
+    portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    portal_pipe->add_pass(std::make_shared<gua::SPointsPassDescription>());
+    portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    portal_pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    portal_camera->set_pipeline_description(portal_pipe);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0, 0, 2.0);
@@ -141,7 +198,6 @@ int main(int argc, char** argv)
     camera->config.set_enable_stereo(false);
     //camera->config.set_enable_stereo(true);
     camera->set_pipeline_description(pipe);
-
 
 
 
@@ -161,23 +217,61 @@ int main(int argc, char** argv)
 
 
     window->open();
- 
 
-  
+
+
+
+    //add_window("window1", camera);
+
+    // add_window("window3", camera3);
+    // add_window("window4", camera4);
+    /*
+      auto window = std::make_shared<gua::GlfwWindow>();
+      gua::WindowDatabase::instance()->add("main_window", window);
+      window->config.set_enable_vsync(false);
+      window->config.set_size(resolution);
+      window->config.set_resolution(resolution);
+      //window->config.set_stereo_mode(gua::StereoMode::MONO);
+      window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    */
+    /*
+
+      window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+        window->config.set_resolution(new_size);
+        camera->config.set_resolution(new_size);
+        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+      });
+    */
+
+    /*
+    window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+      trackball.motion(pos.x, pos.y);
+    });
+    window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+    window->open();
+  */
     gua::Renderer renderer;
 
     // application loop
     gua::events::MainLoop loop;
     gua::events::Ticker ticker(loop, 1.0 / 10000.0);
 
-    unsigned framecount = 0;
+
+
+
+    double distance = 10.0;
+
+    double centroid_distance = 3.0;
+    double down = 1.0;
 
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
-        gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), gua::math::float_t(trackball.shifty()), gua::math::float_t(trackball.distance())) *
-                                      gua::math::mat4(trackball.rotation());
+        gua::math::mat4 modelmatrix = scm::math::make_translation(0.0, 0.0, -5.0) * scm::math::make_translation(gua::math::float_t(trackball.shiftx()), gua::math::float_t(trackball.shifty()), gua::math::float_t(trackball.distance()));
 
         transform->set_transform(modelmatrix);
+
+        steppo->set_transform( scm::math::make_translation(0.0, -down, -centroid_distance) * gua::math::mat4(trackball.rotation()) * scm::math::make_translation(0.0, down, centroid_distance) * scm::math::make_rotation(180.0, 0.0, 1.0, 0.0) );
 
         // window->process_events();
         if(false /* window->should_close()*/)

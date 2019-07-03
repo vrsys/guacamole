@@ -3,6 +3,8 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/guacamole.hpp>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+
 #include <fstream>
 #include <regex>
 
@@ -194,3 +196,5 @@ void gua::VTBackend::set_update_throughput_size(uint32_t sizePhysicalUpdateThrou
     vt::VTConfig::get_instance().set_size_physical_update_throughput(sizePhysicalUpdateThroughput);
 }
 void gua::VTBackend::set_ram_cache_size(uint32_t sizeRamCache) { vt::VTConfig::get_instance().set_size_ram_cache(sizeRamCache); }
+
+#endif // GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
