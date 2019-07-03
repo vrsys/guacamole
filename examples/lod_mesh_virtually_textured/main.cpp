@@ -40,6 +40,9 @@
 
 #include <gua/virtual_texturing/VTBackend.hpp>
 #include <lamure/vt/VTConfig.h>
+#include <gua/renderer/PBSMaterialFactory.hpp>
+
+// #define WITH_CONFIG
 
 int main(int argc, char** argv)
 {
@@ -48,39 +51,58 @@ int main(int argc, char** argv)
 
     // setup scenegraph
     gua::SceneGraph graph("main_scenegraph");
+
+#ifdef WITH_CONFIG
     vt::VTConfig::CONFIG_PATH = "/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.ini";
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
+#endif
 
-    std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm_rgb.atlas");
+    gua::VTBackend::set_physical_texture_size(2048);
+    gua::VTBackend::set_update_throughput_size(4);
+    gua::VTBackend::set_ram_cache_size(32768);
+
+    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.atlas");
+    std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
+    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.atlas");
+    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.atlas");
 
     // VT STEP 1/5: - create a material
-    auto vt_mat = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
+    auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
     // VT STEP 2/5: - load *.atlas-File as uniform
-    vt_mat->set_uniform("vt_mat", vt_texture_path);
-    vt_mat->set_uniform("metalness", 0.f);
-    vt_mat->set_uniform("roughness", 1.f);
+    vt_mat->set_uniform("Metalness", 0.25f);
+    vt_mat->set_uniform("Roughness", 0.75f);
+    vt_mat->set_uniform("Emissivity", 0.5f);
+    vt_mat->set_uniform("vt_test", vt_texture_path);
     // VT STEP 3/5: - enable virtual texturing for this material
     vt_mat->set_enable_virtual_texturing(true);
     vt_mat->set_show_back_faces(false);
 
     // configure lod backend
     gua::LodLoader lod_loader;
-    lod_loader.set_out_of_core_budget_in_mb(16384);
+    lod_loader.set_out_of_core_budget_in_mb(32768);
     lod_loader.set_render_budget_in_mb(4096);
-    lod_loader.set_upload_budget_in_mb(16);
+    lod_loader.set_upload_budget_in_mb(64);
 
     auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
 
     auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
 
     // load a sample mesh-based lod model
-    std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/SchieferTurm/meshlod_master/Schiefer_Turm.bvh");
+    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.bvh");
+    std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.bvh");
+    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.bvh");
+    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.bvh");
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
+    mlod_node->set_min_lod_depth(6);
 
-    lod_loader.apply_fallback_material(mlod_node, vt_mat);
+    // lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
-    mlod_node->set_error_threshold(1.f);
+    mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
+    mlod_node->set_error_threshold(1.0);
     graph.add_node("/transform/mlod_transform", mlod_node);
 
     mlod_transform->translate(0.0, 0.0, 0.0);
@@ -139,11 +161,12 @@ int main(int argc, char** argv)
 
     // use close near plane to allow inspection of details
     camera->config.set_near_clip(0.01f);
-    camera->config.set_far_clip(20.0f);
+    camera->config.set_far_clip(100.0f);
     camera->config.set_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
+    camera->config.set_enable_frustum_culling(false);
 
     // auto screen_grab_pass = std::make_shared<gua::ScreenGrabPassDescription>();
     // screen_grab_pass->set_output_prefix("/home/tihi6213/Desktop/pic_");

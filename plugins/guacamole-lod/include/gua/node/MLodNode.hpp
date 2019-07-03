@@ -73,6 +73,9 @@ class GUA_LOD_DLL MLodNode : public GeometryNode
     float get_error_threshold();
     void set_error_threshold(float const threshold);
 
+    int get_min_lod_depth();
+    void set_min_lod_depth(int min_lod_depth);
+
   public:
     /**
      * Implements ray picking for a multiresolution mesh
@@ -98,6 +101,7 @@ class GUA_LOD_DLL MLodNode : public GeometryNode
     bool material_changed_;
 
     float error_threshold_;
+    int min_lod_depth_;
 };
 
 } // namespace node

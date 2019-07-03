@@ -56,7 +56,7 @@ class RenderContext;
 class Pipeline;
 class PipelinePassDescription;
 
-class VTRenderer
+class GUA_DLL VTRenderer
 {
   public:
     VTRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
