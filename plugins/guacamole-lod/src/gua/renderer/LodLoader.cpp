@@ -191,10 +191,10 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
+    auto material_shader(std::make_shared<gua::MaterialShader>("MLod_unshaded_material", desc));
+    gua::MaterialShaderDatabase::instance()->add(material_shader);
 
-    auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
-
-    auto cached_node(load_lod_trimesh(filename, filename, shader->make_new_material(), flags));
+    auto cached_node(load_lod_trimesh(filename, filename, material_shader->make_new_material(), flags));
 
     if(cached_node)
     {
