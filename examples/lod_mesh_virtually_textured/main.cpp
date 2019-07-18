@@ -46,8 +46,15 @@
 
 int main(int argc, char** argv)
 {
-    // init guacamole
-    gua::init(argc, argv);
+    if(3 != argc){
+        std::cout << "usage: " << argv[0] << " filename.bvh filename.atlas" << std::endl;
+        return 0;  
+    }
+    char* argv_tmp[] = {"./example-lod_mesh_virtually_textured", nullptr};
+    int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
+    ;
+    // initialize guacamole
+    gua::init(argc_tmp, argv_tmp);
 
     // setup scenegraph
     gua::SceneGraph graph("main_scenegraph");
@@ -62,9 +69,10 @@ int main(int argc, char** argv)
     gua::VTBackend::set_ram_cache_size(32768);
 
     // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.atlas");
-    std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
+    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
     // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.atlas");
     // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.atlas");
+    std::string vt_texture_path(argv[2]);
 
     // VT STEP 1/5: - create a material
     auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
@@ -92,9 +100,10 @@ int main(int argc, char** argv)
 
     // load a sample mesh-based lod model
     // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.bvh");
-    std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.bvh");
+    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.bvh");
     // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.bvh");
     // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.bvh");
+    std::string tri_mesh_file(argv[1]);
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
     mlod_node->set_min_lod_depth(6);
