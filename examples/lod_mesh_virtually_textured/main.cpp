@@ -106,12 +106,12 @@ int main(int argc, char** argv)
     std::string tri_mesh_file(argv[1]);
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
-    mlod_node->set_min_lod_depth(6);
+    mlod_node->set_min_lod_depth(0);
 
     // lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
     mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
-    mlod_node->set_error_threshold(1.0);
+    mlod_node->set_error_threshold(5.0);
     graph.add_node("/transform/mlod_transform", mlod_node);
 
     mlod_transform->translate(0.0, 0.0, 0.0);
