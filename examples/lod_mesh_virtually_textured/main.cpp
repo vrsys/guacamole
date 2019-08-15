@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     // configure lod backend
     gua::LodLoader lod_loader;
     lod_loader.set_out_of_core_budget_in_mb(32768);
-    lod_loader.set_render_budget_in_mb(4096);
+    lod_loader.set_render_budget_in_mb(8192);
     lod_loader.set_upload_budget_in_mb(64);
 
     auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     std::string tri_mesh_file(argv[1]);
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
-    mlod_node->set_min_lod_depth(0);
+    mlod_node->set_min_lod_depth(6);
 
     // lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
