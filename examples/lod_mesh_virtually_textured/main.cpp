@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     vt_mat->set_uniform("Metalness", 0.25f);
     vt_mat->set_uniform("Roughness", 0.75f);
     vt_mat->set_uniform("Emissivity", 0.5f);
-    //vt_mat->set_uniform("Colour", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+    vt_mat->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
 
     if (atlas_file != "") {
       // VT STEP 2/5: - load *.atlas-File as uniform
@@ -117,7 +117,14 @@ int main(int argc, char** argv)
     std::string tri_mesh_file(lod_file);
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
-    mlod_node->set_min_lod_depth(6);
+
+
+    auto bvh = lamure::ren::model_database::get_instance()->get_model(0)->get_bvh();
+    uint32_t min_lod_depth = bvh->get_min_lod_depth();
+    
+    std::cout << "precomputed min lod depth: " << min_lod_depth << std::endl;
+
+    mlod_node->set_min_lod_depth(5); //works for most models
 
 
     mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
