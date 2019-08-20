@@ -246,8 +246,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         lamure::model_t model_id = controller->deduce_model_id(mlod_node->get_geometry_description());
 
         auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
-        // auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
-        // auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
+        //auto const& scm_model_matrix = mlod_node->get_world_transform();
+        
+         auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+         auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
         // auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
         cuts->send_transform(context_id, model_id, math::mat4f(scm_model_matrix));
@@ -266,17 +268,21 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         lamure::ren::bvh * bvh = database->get_model(model_id)->get_bvh();
         bvh->set_min_lod_depth(mlod_node->get_min_lod_depth());
 
-        scm::gl::frustum const& culling_frustum = cut_update_cam.get_frustum_by_model(math::mat4f(scm_model_matrix));
+        //scm::gl::frustum const& culling_frustum = cut_update_cam.get_frustum_by_model(math::mat4f(scm_model_matrix));
+        auto culling_frustum = scm::gl::frustum(scm::math::mat4f(scm_model_view_projection_matrix));
 
         std::vector<scm::gl::boxf> const& model_bounding_boxes = bvh->get_bounding_boxes();
 
-        std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
+        std::cout << "BB: " << model_bounding_boxes[0].min_vertex() << std::endl;
 
+        std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[model_id];
+/*
         auto global_clipping_planes = scene.clipping_planes;
         unsigned num_global_clipping_planes = global_clipping_planes.size();
         auto scm_transpose_model_matrix = scm::math::transpose(scm_model_matrix);
         auto scm_inverse_model_matrix = scm::math::inverse(scm_model_matrix);
-
+*/
+/*
         for(unsigned plane_idx = 0; plane_idx < num_global_clipping_planes; ++plane_idx)
         {
             scm::math::vec4d plane_vec = scm::math::vec4d(global_clipping_planes[plane_idx]);
@@ -294,12 +300,12 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 
             global_clipping_planes[plane_idx] = scm::math::vec4d(xyz_comp, -d);
         }
-
+*/
         for(auto const& n : node_list)
         {
             if(culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1)
             {
-                if(num_global_clipping_planes == 0 || _intersects(model_bounding_boxes[n.node_id_], global_clipping_planes))
+                //if(num_global_clipping_planes == 0 || _intersects(model_bounding_boxes[n.node_id_], global_clipping_planes))
                 {
                     nodes_in_frustum.insert(n.node_id_);
                 }
