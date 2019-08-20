@@ -40,19 +40,31 @@
 
 #include <gua/virtual_texturing/VTBackend.hpp>
 #include <lamure/vt/VTConfig.h>
+#include <lamure/ren/model_database.h>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 
 // #define WITH_CONFIG
 
 int main(int argc, char** argv)
 {
-    if(3 != argc){
-        std::cout << "usage: " << argv[0] << " filename.bvh filename.atlas" << std::endl;
-        return 0;  
+    std::string lod_file = "";
+    std::string atlas_file = "";
+
+    if (argc == 2) {
+      lod_file = argv[1];
     }
+    else if (argc == 3) {
+      lod_file = argv[1];
+      atlas_file = argv[2];
+    }
+    else {
+      std::cout << "usage: " << argv[0] << " filename.bvh filename.atlas" << std::endl;
+      return 0;  
+    }
+    
     char* argv_tmp[] = {"./example-lod_mesh_virtually_textured", nullptr};
     int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
-    ;
+    
     // initialize guacamole
     gua::init(argc_tmp, argv_tmp);
 
@@ -64,28 +76,31 @@ int main(int argc, char** argv)
     vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
 #endif
 
-    gua::VTBackend::set_physical_texture_size(2048);
-    gua::VTBackend::set_update_throughput_size(4);
-    gua::VTBackend::set_ram_cache_size(32768);
-
-    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.atlas");
-    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.atlas");
-    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.atlas");
-    // std::string vt_texture_path("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.atlas");
-    std::string vt_texture_path(argv[2]);
+    if (atlas_file != "") {
+      gua::VTBackend::set_physical_texture_size(2048);
+      gua::VTBackend::set_update_throughput_size(4);
+      gua::VTBackend::set_ram_cache_size(32768);
+    }
 
     // VT STEP 1/5: - create a material
     auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
         gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
         gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
         gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
-    // VT STEP 2/5: - load *.atlas-File as uniform
+    
     vt_mat->set_uniform("Metalness", 0.25f);
     vt_mat->set_uniform("Roughness", 0.75f);
     vt_mat->set_uniform("Emissivity", 0.5f);
-    vt_mat->set_uniform("vt_test", vt_texture_path);
-    // VT STEP 3/5: - enable virtual texturing for this material
-    vt_mat->set_enable_virtual_texturing(true);
+    //vt_mat->set_uniform("Colour", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+
+    if (atlas_file != "") {
+      // VT STEP 2/5: - load *.atlas-File as uniform
+      vt_mat->set_uniform("vt_test", atlas_file);
+
+      // VT STEP 3/5: - enable virtual texturing for this material
+      vt_mat->set_enable_virtual_texturing(true);
+    }
+
     vt_mat->set_show_back_faces(false);
 
     // configure lod backend
@@ -99,16 +114,11 @@ int main(int argc, char** argv)
     auto mlod_transform = graph.add_node<gua::node::TransformNode>("/transform", "mlod_transform");
 
     // load a sample mesh-based lod model
-    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/lion_250k/lion_fixed.bvh");
-    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/halberstadt/halberstadt_ultra/Dom_Halberstadt_ultra_fixed.bvh");
-    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/Hirschberg/Stadtmodell/Stadtmodell.bvh");
-    // std::string tri_mesh_file("/mnt/terabytes_of_textures/output_sensitive_rendering/kopf/mesh/kopf_fixed.bvh");
-    std::string tri_mesh_file(argv[1]);
+    std::string tri_mesh_file(lod_file);
 
     auto mlod_node = lod_loader.load_lod_trimesh("tri_mesh", tri_mesh_file.c_str(), vt_mat, gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE);
     mlod_node->set_min_lod_depth(6);
 
-    // lod_loader.apply_fallback_material(mlod_node, vt_mat);
 
     mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
     mlod_node->set_error_threshold(5.0);
@@ -121,9 +131,9 @@ int main(int argc, char** argv)
 
     auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
     light->data.set_type(gua::node::LightNode::Type::POINT);
-    light->data.set_enable_shadows(true);
+    light->data.set_enable_shadows(false);
 
-    light->data.set_shadow_map_size(1920);
+    light->data.set_shadow_map_size(512);
     light->data.set_shadow_offset(0.01f);
     light->data.set_softness(3.f);
     light->data.set_shadow_far_clipping_in_sun_direction(2.0f);
@@ -135,9 +145,9 @@ int main(int argc, char** argv)
 
     auto light2 = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
-    light2->data.set_enable_shadows(true);
+    light2->data.set_enable_shadows(false);
 
-    light2->data.set_shadow_map_size(1920);
+    light2->data.set_shadow_map_size(512);
     light2->data.set_shadow_offset(0.01f);
     light2->data.set_softness(3.f);
     light2->data.set_shadow_far_clipping_in_sun_direction(2.0f);
@@ -147,7 +157,21 @@ int main(int argc, char** argv)
     light2->scale(8.0f);
     light2->translate(0.f, 1.5f, -2.0f);
 
-    auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+
+    auto view_transform = graph.add_node<gua::node::TransformNode>("/", "view_transform");
+
+
+#if 0
+    //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)
+    auto bvh = lamure::ren::model_database::get_instance()->get_model(0)->get_bvh();
+    auto bb = mlod_node->get_bounding_box();
+    auto model_dim = scm::math::length(bb.max - bb.min);
+    auto center = (bb.max + bb.min) / 2.f;
+    
+    view_transform->translate(center.x, center.y, center.z + model_dim);
+#endif
+
+    auto screen = graph.add_node<gua::node::ScreenNode>("/view_transform", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
 
@@ -161,31 +185,29 @@ int main(int argc, char** argv)
     int button_state = -1;
 
     // setup rendering pipeline and window
-    // auto resolution = gua::math::vec2ui(3840, 2160);
     auto resolution = gua::math::vec2ui(1920, 1080);
 
-    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-    camera->translate(0.0f, 0, 2.5f);
+
+    auto camera = graph.add_node<gua::node::CameraNode>("/view_transform/screen", "cam");
+    camera->translate(0.f, 0.f, 2.5f);
+    
+
     camera->config.set_resolution(resolution);
 
     // use close near plane to allow inspection of details
     camera->config.set_near_clip(0.01f);
     camera->config.set_far_clip(100.0f);
-    camera->config.set_screen_path("/screen");
+    camera->config.set_screen_path("/view_transform/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
-    camera->config.set_enable_frustum_culling(false);
-
-    // auto screen_grab_pass = std::make_shared<gua::ScreenGrabPassDescription>();
-    // screen_grab_pass->set_output_prefix("/home/tihi6213/Desktop/pic_");
+    camera->config.set_enable_frustum_culling(true);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-    // pipe->add_pass(screen_grab_pass);
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
     pipe->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
@@ -281,9 +303,11 @@ int main(int argc, char** argv)
 
     window->open();
 
-    auto vt_backend = &gua::VTBackend::get_instance();
-    vt_backend->add_camera(camera);
-    vt_backend->start_backend();
+    if (atlas_file != "") {
+      auto vt_backend = &gua::VTBackend::get_instance();
+      vt_backend->add_camera(camera);
+      vt_backend->start_backend();
+    }
 
     gua::Renderer renderer;
 
@@ -299,7 +323,10 @@ int main(int argc, char** argv)
         window->process_events();
         if(window->should_close())
         {
-            vt_backend->stop_backend();
+            if (atlas_file != "") {
+              auto vt_backend = &gua::VTBackend::get_instance();
+              vt_backend->stop_backend();
+            }
             renderer.stop();
             window->close();
             loop.stop();
