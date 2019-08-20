@@ -48,7 +48,7 @@ MLodNode::MLodNode(std::string const& name,
     : GeometryNode(name, transform), geometry_(nullptr), geometry_changed_(true), geometry_description_(geometry_description), geometry_file_path_(geometry_file_path), material_(material),
       error_threshold_(threshold)
 {
-    min_lod_depth_ = 6; // works for most datasets
+    min_lod_depth_ = 0; // default: collapse to root
 }
 
 ////////////////////////////////////////////////////////////////////////////////
