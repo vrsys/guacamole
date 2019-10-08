@@ -328,7 +328,6 @@ void DynamicLineResource::uncompile_buffer_string(std::string const &buffer_stri
 
 void DynamicLineResource::compile_buffer_string(std::string &buffer_string)
 {
-    std::cout << "DLineRes compile_buffer_string" << std::endl;
     std::lock_guard<std::mutex> lock(dynamic_geometry_update_mutex_);
     dynamic_geometry_ptr_->compile_buffer_string(buffer_string);
 }
@@ -339,7 +338,6 @@ void DynamicLineResource::compile_buffer_string(std::string &buffer_string)
 void DynamicLineResource::push_vertex(DynamicGeometry::Vertex const &in_vertex)
 {
     std::lock_guard<std::mutex> lock(dynamic_geometry_update_mutex_);
-    std::cout << " pushing vertex" << std::endl;
 
     if(std::dynamic_pointer_cast<DynamicGeometry>(dynamic_geometry_ptr_)->push_vertex(in_vertex))
     {
@@ -360,7 +358,6 @@ void DynamicLineResource::update_vertex(int vertex_idx, DynamicGeometry::Vertex 
         if(dynamic_geometry_ptr_->num_occupied_vertex_slots > 0)
         {
             // TODO remove old vertex position
-            // bounding_box_.expandBy(math::vec3{dynamic_geometry_ptr_->positions[vertex_idx]});
         }
         make_clean_flags_dirty();
     }
