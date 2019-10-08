@@ -30,23 +30,22 @@
  *
  */
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL Timer
+{
+  public:
+    void start();
+    void reset();
 
-class GUA_DLL Timer {
+    double get_elapsed() const;
 
- public:
-  void start();
-  void reset();
+    static double get_now();
 
-  double get_elapsed() const;
-
-  static double get_now();
-
- private:
-  double start_;
-
+  private:
+    double start_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TIMER_HPP
+#endif // GUA_TIMER_HPP

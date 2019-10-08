@@ -28,8 +28,8 @@
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/WindowBase.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A data base for windows.
  *
@@ -38,18 +38,17 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-  class GUA_DLL WindowDatabase : public Database<WindowBase>,
-                                 public Singleton<WindowDatabase> {
- public:
-  friend class Singleton<WindowDatabase>;
+class GUA_DLL WindowDatabase : public Database<WindowBase>, public Singleton<WindowDatabase>
+{
+  public:
+    friend class Singleton<WindowDatabase>;
 
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  WindowDatabase() {}
-  ~WindowDatabase() {}
-
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    WindowDatabase() {}
+    ~WindowDatabase() {}
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_WINDOW_DATABASE_HPP
+#endif // GUA_WINDOW_DATABASE_HPP

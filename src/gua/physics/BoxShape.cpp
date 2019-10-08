@@ -27,37 +27,28 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <gua/memory.hpp>
 
-namespace gua {
-namespace physics {
+namespace gua
+{
+namespace physics
+{
+BoxShape::BoxShape(const math::vec3& half_extents) : CollisionShape(true, true, true), shape_(gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents))), half_extents_(half_extents) {}
 
-BoxShape::BoxShape(const math::vec3& half_extents)
-    : CollisionShape(true, true, true),
-      shape_(
-          gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents))),
-      half_extents_(half_extents) {}
-
-BoxShape::BoxShape(float x, float y, float z)
-    : CollisionShape(true, true, true),
-      shape_(gua::make_unique<btBoxShape>(btVector3(x, y, z))),
-      half_extents_(x, y, z) {}
+BoxShape::BoxShape(float x, float y, float z) : CollisionShape(true, true, true), shape_(gua::make_unique<btBoxShape>(btVector3(x, y, z))), half_extents_(x, y, z) {}
 
 BoxShape::BoxShape(float half_extent)
-    : CollisionShape(true, true, true),
-      shape_(gua::make_unique<btBoxShape>(
-          btVector3(half_extent, half_extent, half_extent))),
-      half_extents_(half_extent, half_extent, half_extent) {}
-
-void BoxShape::set_half_extents(math::vec3 const& half_extents) {
-  half_extents_ = half_extents;
-  shape_ = gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents_));
+    : CollisionShape(true, true, true), shape_(gua::make_unique<btBoxShape>(btVector3(half_extent, half_extent, half_extent))), half_extents_(half_extent, half_extent, half_extent)
+{
 }
 
-void BoxShape::construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform) {
-  bullet_shape->addChildShape(base_transform, shape_.get());
+void BoxShape::set_half_extents(math::vec3 const& half_extents)
+{
+    half_extents_ = half_extents;
+    shape_ = gua::make_unique<btBoxShape>(math::vec3_to_btVector3(half_extents_));
 }
+
+void BoxShape::construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform) { bullet_shape->addChildShape(base_transform, shape_.get()); }
 
 btCollisionShape* BoxShape::construct_static() { return shape_.get(); }
 
-}
-}
+} // namespace physics
+} // namespace gua

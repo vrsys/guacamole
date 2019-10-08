@@ -26,55 +26,41 @@
 
 #include <lamure/ren/controller.h>
 
-namespace {
-
-gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex) {
-  uint64_t handle = tex->native_handle();
-  return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+namespace
+{
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
+{
+    uint64_t handle = tex->native_handle();
+    return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
 
+} // namespace
+
+namespace gua
+{
+LowQualitySplattingSubRenderer::LowQualitySplattingSubRenderer() : PLodSubRenderer() { _load_shaders(); }
+
+void LowQualitySplattingSubRenderer::create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources)
+{
+    // state objects
+    no_backface_culling_rasterizer_state_ =
+        ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, false, 0.0, false, false, scm::gl::point_raster_state(false));
 }
 
-namespace gua {
-
-  LowQualitySplattingSubRenderer::LowQualitySplattingSubRenderer() : PLodSubRenderer(){
-  	_load_shaders();
-  }
-
-  void LowQualitySplattingSubRenderer::create_gpu_resources(gua::RenderContext const& ctx,
-                                               scm::math::vec2ui const& render_target_dims,
-                                               gua::plod_shared_resources& shared_resources) {
-    
-    //state objects
-    no_backface_culling_rasterizer_state_ = ctx.render_device
-      ->create_rasterizer_state(scm::gl::FILL_SOLID,
-                                scm::gl::CULL_NONE,
-                                scm::gl::ORIENT_CCW,
-                                false,
-                                false,
-                                0.0,
-                                false,
-                                false,
-                                scm::gl::point_raster_state(false));
-
-
-  }
-
-  void LowQualitySplattingSubRenderer::
-  render_sub_pass(Pipeline& pipe, PipelinePassDescription const& desc,
-  				        gua::plod_shared_resources& shared_resources,
-  				        std::vector<node::Node*>& sorted_models,
-                  std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& nodes_in_frustum_per_model,
-                  lamure::context_t context_id,
-  				        lamure::view_t lamure_view_id
-  				        ) 
-  {
+void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
+                                                     PipelinePassDescription const& desc,
+                                                     gua::plod_shared_resources& shared_resources,
+                                                     std::vector<node::Node*>& sorted_models,
+                                                     std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
+                                                     lamure::context_t context_id,
+                                                     lamure::view_t lamure_view_id)
+{
     auto const& camera = pipe.current_viewstate().camera;
-  	RenderContext const& ctx(pipe.get_context());
+    RenderContext const& ctx(pipe.get_context());
     auto& target = *pipe.current_viewstate().target;
 
     scm::gl::context_all_guard context_guard(ctx.render_context);
-    
+
     ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
 
     bool write_depth = true;
@@ -85,79 +71,86 @@ namespace gua {
     std::shared_ptr<ShaderProgram> current_material_program;
     bool program_changed = false;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
 
     int view_id(camera.config.get_view_id());
 
-    //loop through all models and render depth pass
-    for (auto const& object : sorted_models) {
+    // loop through all models and render depth pass
+    for(auto const& object : sorted_models)
+    {
+        auto plod_node(reinterpret_cast<node::PLodNode*>(object));
 
-      auto plod_node(reinterpret_cast<node::PLodNode*>(object));
+        current_material = plod_node->get_material()->get_shader();
 
-      current_material = plod_node->get_material()->get_shader();
+        current_material_program = _get_material_dependent_shader_program(current_material, current_material_program, program_changed);
 
-      current_material_program = _get_material_dependent_shader_program(current_material,
-                                                                        current_material_program,
-                                                                        program_changed);
+        lamure::ren::controller* controller = lamure::ren::controller::get_instance();
+        lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
+        std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];
 
-      lamure::ren::controller* controller = lamure::ren::controller::get_instance(); 
-      lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
-      std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];
+        auto const& plod_resource = plod_node->get_geometry();
 
-      auto const& plod_resource = plod_node->get_geometry();
+        if(plod_resource && current_material_program)
+        {
+            if(program_changed)
+            {
+                current_material_program->unuse(ctx);
+                current_material_program->use(ctx);
+                current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+            }
 
-      if (plod_resource && current_material_program) {
+            plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+            _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
 
-        if (program_changed) {
-          current_material_program->unuse(ctx);
-          current_material_program->use(ctx);
-          current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+            ctx.render_context->apply();
+
+            plod_resource->draw(ctx,
+                                context_id,
+                                lamure_view_id,
+                                model_id,
+                                controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
+                                nodes_in_frustum,
+                                scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
+
+            program_changed = false;
         }
-
-        plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-        _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
-        
-        ctx.render_context->apply();
-
-        plod_resource->draw(ctx,
-          context_id,
-          lamure_view_id,
-          model_id,
-          controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-          nodes_in_frustum,
-          scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
-
-        program_changed = false;
-      }
-      else {
-        Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
-      }
+        else
+        {
+            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+        }
     }
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);
+#endif
+}
 
-
-  }
-
-  void LowQualitySplattingSubRenderer::_load_shaders() {
-    //create stages only with one thread!
-    if(!shaders_loaded_) {
-
+void LowQualitySplattingSubRenderer::_load_shaders()
+{
+    // create stages only with one thread!
+    if(!shaders_loaded_)
+    {
 #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
 #error "This works only with GUACAMOLE_RUNTIME_PROGRAM_COMPILATION enabled"
 #endif
-    ResourceFactory factory;
-    shader_stages_.clear();
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.vert")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.geom")));
-    shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.frag")));
-    shaders_loaded_ = true;
-   }
-  }
+        ResourceFactory factory;
+        shader_stages_.clear();
+        shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.vert")));
+        shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.geom")));
+        shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.frag")));
+        shaders_loaded_ = true;
+    }
+}
 
-  void LowQualitySplattingSubRenderer::_upload_model_dependent_uniforms(std::shared_ptr<ShaderProgram> const& current_material_shader, RenderContext const& ctx, node::PLodNode* plod_node, gua::Pipeline& pipe) {
+void LowQualitySplattingSubRenderer::_upload_model_dependent_uniforms(std::shared_ptr<ShaderProgram> const& current_material_shader,
+                                                                      RenderContext const& ctx,
+                                                                      node::PLodNode* plod_node,
+                                                                      gua::Pipeline& pipe)
+{
     auto const& frustum = pipe.current_viewstate().frustum;
 
     auto const& scm_model_matrix = plod_node->get_cached_world_transform();
@@ -175,6 +168,6 @@ namespace gua {
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
     current_material_shader->apply_uniform(ctx, "max_surfel_radius", plod_node->get_max_surfel_radius());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
-  }
+}
 
-} //namespace gua
+} // namespace gua

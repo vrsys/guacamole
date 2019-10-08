@@ -28,8 +28,8 @@
 #include <gua/databases/Database.hpp>
 #include <gua/renderer/MaterialShader.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A data base for materials.
  *
@@ -38,34 +38,32 @@ namespace gua {
  *
  * \ingroup gua_databases
  */
-  class GUA_DLL MaterialShaderDatabase : public Database<MaterialShader>,
-                                         public Singleton<MaterialShaderDatabase> {
- public:
+class GUA_DLL MaterialShaderDatabase : public Database<MaterialShader>, public Singleton<MaterialShaderDatabase>
+{
+  public:
+    std::mutex update_lock;
 
-  std::mutex update_lock;
+    /**
+     * Pre-loads some Materials.
+     *
+     * This method loads gmd materials to the data base.
+     *
+     * \param directory    An absolute or relative path to the
+     *                     directory containing gmd files.
+     */
 
-  /**
-   * Pre-loads some Materials.
-   *
-   * This method loads gmd materials to the data base.
-   *
-   * \param directory    An absolute or relative path to the
-   *                     directory containing gmd files.
-   */
+    void add(std::shared_ptr<MaterialShader> const& material);
 
-  void add(std::shared_ptr<MaterialShader> const& material);
+    void reload_all();
 
-  void reload_all();
+    friend class Singleton<MaterialShaderDatabase>;
 
-  friend class Singleton<MaterialShaderDatabase>;
-
- private:
-  // this class is a Singleton --- private c'tor and d'tor
-  MaterialShaderDatabase() {}
-  ~MaterialShaderDatabase() {}
-
+  private:
+    // this class is a Singleton --- private c'tor and d'tor
+    MaterialShaderDatabase() {}
+    ~MaterialShaderDatabase() {}
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_MATERIAL_SHADER_DATABASE_HPP
+#endif // GUA_MATERIAL_SHADER_DATABASE_HPP

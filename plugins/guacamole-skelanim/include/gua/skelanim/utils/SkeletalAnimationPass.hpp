@@ -29,19 +29,19 @@
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
-namespace gua {
+namespace gua
+{
+class GUA_SKELANIM_DLL SkeletalAnimationPassDescription : public PipelinePassDescription
+{
+  public:
+    SkeletalAnimationPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
-  class GUA_SKELANIM_DLL SkeletalAnimationPassDescription
-    : public PipelinePassDescription {
- public:
-  SkeletalAnimationPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
-
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SLELETAL_ANIMATION_PASS_HPP
+#endif // GUA_SLELETAL_ANIMATION_PASS_HPP

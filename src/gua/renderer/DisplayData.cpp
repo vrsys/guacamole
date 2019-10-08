@@ -24,27 +24,24 @@
 
 #include <chrono>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
 float DisplayData::physics_fps_ = 0.f;
 
-std::chrono::high_resolution_clock::time_point DisplayData::last_update_ =
-    std::chrono::high_resolution_clock::now();
+std::chrono::high_resolution_clock::time_point DisplayData::last_update_ = std::chrono::high_resolution_clock::now();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DisplayData::set_physics_fps(float fps) {
+void DisplayData::set_physics_fps(float fps)
+{
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - last_update_).count() < 250)
+        return;
 
-  if (std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::high_resolution_clock::now() - last_update_)
-          .count() < 250)
-    return;
+    DisplayData::physics_fps_ = fps;
 
-  DisplayData::physics_fps_ = fps;
-
-  last_update_ = std::chrono::high_resolution_clock::now();
+    last_update_ = std::chrono::high_resolution_clock::now();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,4 +50,4 @@ float DisplayData::get_physics_fps() const { return DisplayData::physics_fps_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}  // namespace gua
+} // namespace gua

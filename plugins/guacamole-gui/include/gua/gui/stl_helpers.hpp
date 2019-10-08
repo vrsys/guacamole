@@ -19,7 +19,6 @@
  *                                                                            *
  ******************************************************************************/
 
-
 #ifndef GUA_GUI_STL_HELPERS_HPP
 #define GUA_GUI_STL_HELPERS_HPP
 
@@ -28,73 +27,80 @@
 #include <iostream>
 #include <sstream>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-T clamp(T val, T a, T b) {
-  return std::min(std::max(val, a<b?a:b), a<b?b:a);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-T from_string(std::string const& v) {
-  std::istringstream iss(v);
-  T result;
-  iss >> result;
-  return result;
+T clamp(T val, T a, T b)
+{
+    return std::min(std::max(val, a < b ? a : b), a < b ? b : a);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::string to_string(T const& v) {
-  std::ostringstream oss;
-  oss << v;
-  return oss.str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-
-namespace std {
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, std::vector<T> const& v) {
-
-  typename std::vector<T>::const_iterator i(v.begin());
-  while (i != v.end()) {
-      os << *i;
-
-      if (++i != v.end()) {
-        os << " ";
-      }
-  }
-  return os;
+T from_string(std::string const& v)
+{
+    std::istringstream iss(v);
+    T result;
+    iss >> result;
+    return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::istream& operator>>(std::istream& is, std::vector<T>& v) {
-  v.clear();
-
-  T new_one;
-  while (is >> new_one) {
-    v.push_back(new_one);
-  }
-
-  is.clear();
-
-  return is;
+std::string to_string(T const& v)
+{
+    std::ostringstream oss;
+    oss << v;
+    return oss.str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+} // namespace gua
+
+namespace std
+{
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, std::vector<T> const& v)
+{
+    typename std::vector<T>::const_iterator i(v.begin());
+    while(i != v.end())
+    {
+        os << *i;
+
+        if(++i != v.end())
+        {
+            os << " ";
+        }
+    }
+    return os;
 }
-#endif //GUA_GUI_STL_HELPERS_HPP
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+std::istream& operator>>(std::istream& is, std::vector<T>& v)
+{
+    v.clear();
+
+    T new_one;
+    while(is >> new_one)
+    {
+        v.push_back(new_one);
+    }
+
+    is.clear();
+
+    return is;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+} // namespace std
+#endif // GUA_GUI_STL_HELPERS_HPP

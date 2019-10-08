@@ -28,60 +28,56 @@
 
 #include <memory>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL GBuffer : public RenderTarget
+{
+  public:
+    GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
 
-class GUA_DLL GBuffer : public RenderTarget {
- public:
+    void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
+    void clear_color(RenderContext const& context);
 
-  GBuffer(RenderContext const& ctx, math::vec2ui const& resolution);
+    void bind(RenderContext const& context, bool write_depth) override;
+    void unbind(RenderContext const& context) override;
 
-  void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
-  void clear_color(RenderContext const& context);
-  
-  void bind(RenderContext const& context, bool write_depth) override;
-  void unbind(RenderContext const& context) override;
+    void toggle_ping_pong();
 
-  void toggle_ping_pong();
+    void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
+    void remove_buffers(RenderContext const& ctx) override;
 
-  void allocate_a_buffer(RenderContext& ctx, size_t buffer_size);
-  void remove_buffers(RenderContext const& ctx) override;
+    void retrieve_depth_data(RenderContext const& ctx, uint32_t* out_data);
 
-  inline scm::gl::texture_2d_ptr const& get_color_buffer() const { return color_buffer_read_; }
-  inline scm::gl::texture_2d_ptr const& get_pbr_buffer() const { return pbr_buffer_; }
-  inline scm::gl::texture_2d_ptr const& get_normal_buffer() const { return normal_buffer_; }
-  inline scm::gl::texture_2d_ptr const& get_flags_buffer() const { return flags_buffer_; }
-  inline scm::gl::texture_2d_ptr const& get_depth_buffer()  const override { return depth_buffer_; }
+    inline scm::gl::texture_2d_ptr const& get_color_buffer() const { return color_buffer_read_; }
+    inline scm::gl::texture_2d_ptr const& get_pbr_buffer() const { return pbr_buffer_; }
+    inline scm::gl::texture_2d_ptr const& get_normal_buffer() const { return normal_buffer_; }
+    inline scm::gl::texture_2d_ptr const& get_flags_buffer() const { return flags_buffer_; }
+    inline scm::gl::texture_2d_ptr const& get_depth_buffer() const override { return depth_buffer_; }
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-  inline scm::gl::texture_2d_ptr const& get_uv_buffer()  const { return uv_buffer_; }
-#endif
+    inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
+    inline scm::gl::sampler_state_desc const& get_sampler_state_desc() const { return sampler_state_desc_; }
+    inline scm::gl::sampler_state_ptr const& get_sampler_state() const { return sampler_state_; }
 
-  inline scm::gl::frame_buffer_ptr get_fbo_read() const { return fbo_read_; }
-  inline scm::gl::sampler_state_desc const& get_sampler_state_desc() const { return sampler_state_desc_; }
-  inline scm::gl::sampler_state_ptr const& get_sampler_state() const { return sampler_state_; }
+  private:
+    ABuffer abuffer_;
 
- private:
-  ABuffer abuffer_;
+    scm::gl::frame_buffer_ptr fbo_read_;
+    scm::gl::frame_buffer_ptr fbo_write_;
 
-  scm::gl::frame_buffer_ptr fbo_read_;
-  scm::gl::frame_buffer_ptr fbo_write_;
+    scm::gl::frame_buffer_ptr fbo_read_only_color_;
+    scm::gl::frame_buffer_ptr fbo_write_only_color_;
 
-  scm::gl::frame_buffer_ptr fbo_read_only_color_;
-  scm::gl::frame_buffer_ptr fbo_write_only_color_;
+    scm::gl::sampler_state_desc sampler_state_desc_;
+    scm::gl::sampler_state_ptr sampler_state_;
 
-  scm::gl::sampler_state_desc sampler_state_desc_;
-  scm::gl::sampler_state_ptr sampler_state_;
-
-  scm::gl::texture_2d_ptr color_buffer_read_;
-  scm::gl::texture_2d_ptr color_buffer_write_;
-  scm::gl::texture_2d_ptr pbr_buffer_;
-  scm::gl::texture_2d_ptr normal_buffer_;
-  scm::gl::texture_2d_ptr flags_buffer_;
-  scm::gl::texture_2d_ptr depth_buffer_;
-
-  scm::gl::texture_2d_ptr uv_buffer_;
+    scm::gl::texture_2d_ptr color_buffer_read_;
+    scm::gl::texture_2d_ptr color_buffer_write_;
+    scm::gl::texture_2d_ptr pbr_buffer_;
+    scm::gl::texture_2d_ptr normal_buffer_;
+    scm::gl::texture_2d_ptr flags_buffer_;
+    scm::gl::texture_2d_ptr depth_buffer_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_GBUFFER_HPP
+#endif // GUA_GBUFFER_HPP

@@ -26,33 +26,33 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class GBuffer;
 
-class VolumeRenderer {
- public:
+class VolumeRenderer
+{
+  public:
+    VolumeRenderer();
+    ~VolumeRenderer() {}
 
-  VolumeRenderer();
-  ~VolumeRenderer() {}
+    void render(Pipeline& pipe);
 
-  void render(Pipeline& pipe);
+  private:
+    void init_resources(Pipeline& pipe);
 
- private:
-  void init_resources(Pipeline& pipe);
+    scm::gl::frame_buffer_ptr volume_raygeneration_fbo_;
+    std::shared_ptr<Texture2D> volume_raygeneration_color_buffer_;
+    std::shared_ptr<Texture2D> volume_raygeneration_depth_buffer_;
 
-  scm::gl::frame_buffer_ptr volume_raygeneration_fbo_;
-  std::shared_ptr<Texture2D> volume_raygeneration_color_buffer_;
-  std::shared_ptr<Texture2D> volume_raygeneration_depth_buffer_;
+    ResourceFactory program_factory_;
+    std::shared_ptr<ShaderProgram> composite_shader_;
+    std::shared_ptr<ShaderProgram> ray_generation_shader_;
 
-  ResourceFactory                program_factory_;
-  std::shared_ptr<ShaderProgram> composite_shader_;
-  std::shared_ptr<ShaderProgram> ray_generation_shader_;
-
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr blend_state_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+    scm::gl::blend_state_ptr blend_state_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VOLUME_RENDERER_HPP
+#endif // GUA_VOLUME_RENDERER_HPP

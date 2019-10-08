@@ -28,22 +28,21 @@
 // external headers
 #include <sstream>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+
+void MaterialShaderDatabase::add(std::shared_ptr<MaterialShader> const& material) { Database<MaterialShader>::add(material->get_name(), material); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDatabase::add(std::shared_ptr<MaterialShader> const& material) {
-  Database<MaterialShader>::add(material->get_name(), material);
+void MaterialShaderDatabase::reload_all()
+{
+    // for (auto const& date: data_) {
+    //   date.second->reload();
+    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDatabase::reload_all() {
-  // for (auto const& date: data_) {
-  //   date.second->reload();
-  // }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
+} // namespace gua

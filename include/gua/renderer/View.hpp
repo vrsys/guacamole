@@ -26,21 +26,19 @@
 #include <gua/renderer/Frustum.hpp>
 #include <gua/math/math.hpp>
 
-namespace gua {
-
-struct View 
+namespace gua
 {
-  View(std::size_t viewid, bool is_stereo) 
-  : id(viewid), stereo(is_stereo)
-  {};
+struct View
+{
+    View(std::size_t viewid, bool is_stereo) : id(viewid), stereo(is_stereo){};
 
-  std::size_t   id;
-  bool          stereo;
+    std::size_t id;
+    bool stereo;
 
-  Frustum       left;
-  Frustum       right;
+    Frustum left;
+    Frustum right;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VIEW_HPP
+#endif // GUA_VIEW_HPP

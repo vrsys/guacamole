@@ -26,100 +26,106 @@
 
 #include <boost/variant.hpp>
 
-namespace gua {
-
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription::SSAAPassDescription()
-    : PipelinePassDescription()
-  {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription::SSAAPassDescription() : PipelinePassDescription()
+{
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/ssaa.frag";
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
-    name_ = "SSAAPassDescription";
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.name_ = "SSAAPassDescription";
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
     uniforms["gua_ssaa_mode"] = static_cast<int>(SSAAMode::FAST_FXAA);
     uniforms["gua_fxaa_quality_subpix"] = 0.75f;
     uniforms["gua_fxaa_edge_threshold"] = 0.125f;
     uniforms["gua_fxaa_threshold_min"] = 0.0625f;
 
-    uniforms["gua_enable_pinhole_correction"] = false; 
-  }
+    uniforms["gua_enable_pinhole_correction"] = false;
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription& SSAAPassDescription::mode(SSAAMode mode) {
-    uniforms["gua_ssaa_mode"] = static_cast<int>(mode);;
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription& SSAAPassDescription::mode(SSAAMode mode)
+{
+    uniforms["gua_ssaa_mode"] = static_cast<int>(mode);
+    ;
     return *this;
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription::SSAAMode SSAAPassDescription::mode() const {
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription::SSAAMode SSAAPassDescription::mode() const
+{
     auto uniform(uniforms.find("gua_ssaa_mode"));
     return static_cast<SSAAPassDescription::SSAAMode>(boost::get<int>(uniform->second.data));
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription& SSAAPassDescription::fxaa_quality_subpix(float quality) {
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription& SSAAPassDescription::fxaa_quality_subpix(float quality)
+{
     uniforms["gua_fxaa_quality_subpix"] = quality;
     return *this;
-  }
+}
 
-    ////////////////////////////////////////////////////////////////////////////////
-  float SSAAPassDescription::fxaa_quality_subpix() const {
+////////////////////////////////////////////////////////////////////////////////
+float SSAAPassDescription::fxaa_quality_subpix() const
+{
     auto uniform(uniforms.find("gua_fxaa_quality_subpix"));
     return boost::get<float>(uniform->second.data);
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription& SSAAPassDescription::fxaa_edge_threshold(float threshold) {
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription& SSAAPassDescription::fxaa_edge_threshold(float threshold)
+{
     uniforms["gua_fxaa_quality_subpix"] = threshold;
     return *this;
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  float SSAAPassDescription::fxaa_edge_threshold() const {
+////////////////////////////////////////////////////////////////////////////////
+float SSAAPassDescription::fxaa_edge_threshold() const
+{
     auto uniform(uniforms.find("gua_fxaa_edge_threshold"));
     return boost::get<float>(uniform->second.data);
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription& SSAAPassDescription::fxaa_threshold_min(float minimum) {
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription& SSAAPassDescription::fxaa_threshold_min(float minimum)
+{
     uniforms["gua_fxaa_threshold_min"] = minimum;
     return *this;
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  float SSAAPassDescription::fxaa_threshold_min() const {
+////////////////////////////////////////////////////////////////////////////////
+float SSAAPassDescription::fxaa_threshold_min() const
+{
     auto uniform(uniforms.find("gua_fxaa_threshold_min"));
     return boost::get<float>(uniform->second.data);
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  SSAAPassDescription& SSAAPassDescription::enable_pinhole_correction(bool enable)
-  {
+////////////////////////////////////////////////////////////////////////////////
+SSAAPassDescription& SSAAPassDescription::enable_pinhole_correction(bool enable)
+{
     uniforms["gua_enable_pinhole_correction"] = enable;
     return *this;
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
-  bool SSAAPassDescription::enable_pinhole_correction() const{
+////////////////////////////////////////////////////////////////////////////////
+bool SSAAPassDescription::enable_pinhole_correction() const
+{
     auto uniform(uniforms.find("gua_enable_pinhole_correction"));
     return boost::get<bool>(uniform->second.data);
-  }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<PipelinePassDescription> SSAAPassDescription::make_copy() const { return std::make_shared<SSAAPassDescription>(*this); }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<PipelinePassDescription> SSAAPassDescription::make_copy() const {
-    return std::make_shared<SSAAPassDescription>(*this);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  PipelinePass SSAAPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
-  {
+////////////////////////////////////////////////////////////////////////////////
+PipelinePass SSAAPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;
-  }
-
 }
+
+} // namespace gua

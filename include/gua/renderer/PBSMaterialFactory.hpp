@@ -30,31 +30,30 @@
 #include <string>
 #include <memory>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL PBSMaterialFactory
+{
+  public:
+    enum Capabilities
+    {
+        COLOR_VALUE = 1 << 0,
+        COLOR_MAP = 1 << 1,
+        COLOR_VALUE_AND_MAP = 1 << 2,
+        ROUGHNESS_VALUE = 1 << 3,
+        ROUGHNESS_MAP = 1 << 4,
+        METALNESS_VALUE = 1 << 5,
+        METALNESS_MAP = 1 << 6,
+        EMISSIVITY_VALUE = 1 << 7,
+        EMISSIVITY_MAP = 1 << 8,
+        NORMAL_MAP = 1 << 9,
+        ALL = 1 << 10
+    };
 
-
-class GUA_DLL PBSMaterialFactory {
-
- public:
-  enum Capabilities {
-    COLOR_VALUE = 1 << 0,
-    COLOR_MAP = 1 << 1,
-    COLOR_VALUE_AND_MAP = 1 << 2,
-    ROUGHNESS_VALUE = 1 << 3,
-    ROUGHNESS_MAP = 1 << 4,
-    METALNESS_VALUE = 1 << 5,
-    METALNESS_MAP = 1 << 6,
-    EMISSIVITY_VALUE = 1 << 7,
-    EMISSIVITY_MAP = 1 << 8,
-    NORMAL_MAP = 1 << 9,
-    ALL = 1 << 10
-  };
-
-  static std::shared_ptr<Material> create_material(Capabilities const& capabilities);
-  static std::string const material_name_from_capabilites(Capabilities const& capabilities);
-
+    static std::shared_ptr<Material> create_material(Capabilities const& capabilities);
+    static std::string const material_name_from_capabilites(Capabilities const& capabilities);
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PBS_MATERIAL_FACTORY_HPP
+#endif // GUA_PBS_MATERIAL_FACTORY_HPP

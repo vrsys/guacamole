@@ -23,20 +23,17 @@
 
 #include <iostream>
 
-namespace gua {
-  namespace events {
+namespace gua
+{
+namespace events
+{
+MainLoop::MainLoop() {}
 
-    MainLoop::MainLoop() {}
+MainLoop::~MainLoop() {}
 
-    MainLoop::~MainLoop() {}
+void MainLoop::start() { io_service.run(); }
 
-    void MainLoop::start() {
-      io_service.run();
-    }
+void MainLoop::stop() { io_service.stop(); }
 
-    void MainLoop::stop() {
-      io_service.stop();
-    }
-
-  }
-}
+} // namespace events
+} // namespace gua

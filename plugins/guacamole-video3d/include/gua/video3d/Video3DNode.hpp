@@ -35,60 +35,54 @@
  *
  */
 
-namespace gua {
+namespace gua
+{
+class Video3DResource;
 
-	class Video3DResource;
+namespace node
+{
+class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode
+{
+  public:
+    Video3DNode(std::string const& name,
+                std::string const& video_description = "gua_default_video",
+                std::shared_ptr<Material> const& material = nullptr,
+                math::mat4 const& transform = math::mat4::identity());
 
-namespace node {
+  public:
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-class GUA_VIDEO3D_DLL Video3DNode : public GeometryNode {
+    void update_cache() override;
 
- public :
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the GeometryNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  Video3DNode(std::string const& name,
-              std::string const& video_description = "gua_default_video",
-              std::shared_ptr<Material> const& material = nullptr,
-              math::mat4  const& transform = math::mat4::identity());
+    std::string const& get_video_description() const;
+    void set_video_description(std::string const& v);
+    void force_reload();
 
- public :
+    std::shared_ptr<Material> const& get_material() const;
+    void set_material(std::shared_ptr<Material> const& material);
 
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+  protected:
+    std::shared_ptr<Node> copy() const override;
 
-  void update_cache() override;
+  private:
+    std::shared_ptr<Video3DResource> video_;
+    std::string video_description_;
+    bool video_changed_;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the GeometryNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
-
-  std::string const& get_video_description() const;
-  void               set_video_description(std::string const& v);
-  void               force_reload();
-
-  std::shared_ptr<Material> const& get_material() const;
-  void                      set_material(std::shared_ptr<Material> const& material);
-
- protected:
-  std::shared_ptr<Node> copy() const override;
-
- private:
-
-  std::shared_ptr<Video3DResource> video_;
-  std::string                      video_description_;
-  bool                             video_changed_;
-
-  std::shared_ptr<Material>        material_;
-  bool                             material_changed_;
+    std::shared_ptr<Material> material_;
+    bool material_changed_;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_VIDEO3D_NODE_HPP
+#endif // GUA_VIDEO3D_NODE_HPP

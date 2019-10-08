@@ -25,20 +25,15 @@
 // guacamole headers
 #include <gua/scenegraph/NodeVisitor.hpp>
 
-namespace gua {
-namespace node {
+namespace gua
+{
+namespace node
+{
+TransformNode::TransformNode(std::string const& name, math::mat4 const& transform) : Node(name, transform) {}
 
-TransformNode::TransformNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
+/* virtual */ void TransformNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
-/* virtual */ void TransformNode::accept(NodeVisitor& visitor) {
+std::shared_ptr<Node> TransformNode::copy() const { return std::make_shared<TransformNode>(*this); }
 
-  visitor.visit(this);
-}
-
-std::shared_ptr<Node> TransformNode::copy() const {
-  return std::make_shared<TransformNode>(*this);
-}
-
-}
-}
+} // namespace node
+} // namespace gua

@@ -30,94 +30,86 @@
 
 class btConvexHullShape;
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * A class representing a convex hull collision shape.
  *
  * This class implements an implicit convex hull of an array of vertices.
  * The convex hull shape can be used for both static and dynamic rigid bodies.
  */
-class GUA_DLL ConvexHullShape : public CollisionShape {
- public:
+class GUA_DLL ConvexHullShape : public CollisionShape
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates an empty convex hull shape.
+     */
+    ConvexHullShape();
 
-  /**
-   * Constructor.
-   *
-   * Creates an empty convex hull shape.
-   */
-  ConvexHullShape();
+    /**
+     * Destructor.
+     *
+     * Deletes the convex hull shape and frees all associated data.
+     */
+    virtual ~ConvexHullShape();
 
-  /**
-   * Destructor.
-   *
-   * Deletes the convex hull shape and frees all associated data.
-   */
-  virtual ~ConvexHullShape();
+    /**
+     * Adds a point to the convex hull.
+     *
+     * This method allows to build a convex hull by adding one point at a time.
+     *
+     * \param point The point.
+     */
+    void add_point(const math::vec3& point);
 
-  /**
-   * Adds a point to the convex hull.
-   *
-   * This method allows to build a convex hull by adding one point at a time.
-   *
-   * \param point The point.
-   */
-  void add_point(const math::vec3& point);
+    /**
+     * Creates a convex hull from the given geometry.
+     *
+     * \param geometry_list               The list of geometries from the
+     *                                    Geometry Database.
+     * \param compensate_collision_margin If true, the shape will be scaled
+     *                                    down a little bit to compensate the
+     *                                    collision margin.
+     */
+    void build_from_geometry(const std::vector<std::string>& geometry_list, bool compensate_collision_margin = true);
 
-  /**
-   * Creates a convex hull from the given geometry.
-   *
-   * \param geometry_list               The list of geometries from the
-   *                                    Geometry Database.
-   * \param compensate_collision_margin If true, the shape will be scaled
-   *                                    down a little bit to compensate the
-   *                                    collision margin.
-   */
-  void build_from_geometry(const std::vector<std::string>& geometry_list,
-                           bool compensate_collision_margin = true);
+    /**
+     * The factory method that creates a convex hull from the given
+     *        geometry.
+     *
+     * \param geometry_list               The list of geometries from the
+     *                                    Geometry Database.
+     * \param compensate_collision_margin If true, the shape will be scaled
+     *                                    down a little bit to compensate the
+     *                                    collision margin.
+     */
+    static ConvexHullShape* FromGeometry(const std::vector<std::string>& geometry_list, bool compensate_collision_margin = true);
 
-  /**
-   * The factory method that creates a convex hull from the given
-   *        geometry.
-   *
-   * \param geometry_list               The list of geometries from the
-   *                                    Geometry Database.
-   * \param compensate_collision_margin If true, the shape will be scaled
-   *                                    down a little bit to compensate the
-   *                                    collision margin.
-   */
-  static ConvexHullShape* FromGeometry(
-      const std::vector<std::string>& geometry_list,
-      bool compensate_collision_margin = true);
+    /**
+     * The factory method that creates a convex hull from the meshes
+     *        previously loaded by GeometryNode.
+     *
+     * \param file_name     The filename where the geometries was loaded from.
+     * \param compensate_collision_margin If true, the shape will be scaled
+     *                                    down a little bit to compensate the
+     *                                    collision margin.
+     * \param flags         GeometryLoader flags.
+     */
+    static ConvexHullShape* FromGeometryFile(const std::string& file_name, bool compensate_collision_margin = true, unsigned flags = TriMeshLoader::DEFAULTS);
 
-  /**
-   * The factory method that creates a convex hull from the meshes
-   *        previously loaded by GeometryNode.
-   *
-   * \param file_name     The filename where the geometries was loaded from.
-   * \param compensate_collision_margin If true, the shape will be scaled
-   *                                    down a little bit to compensate the
-   *                                    collision margin.
-   * \param flags         GeometryLoader flags.
-   */
-  static ConvexHullShape* FromGeometryFile(const std::string& file_name,
-                                           bool compensate_collision_margin =
-                                               true,
-                                           unsigned flags =
-                                               TriMeshLoader::DEFAULTS);
+  private:
+    virtual void construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform);
 
- private:
+    virtual btCollisionShape* construct_static();
 
-  virtual void construct_dynamic(btCompoundShape* bullet_shape,
-                                 const btTransform& base_transform);
-
-  virtual btCollisionShape* construct_static();
-
-  btConvexHullShape* shape_;
+    btConvexHullShape* shape_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_CONVEX_HULL_SHAPE_HPP
+#endif // GUA_CONVEX_HULL_SHAPE_HPP

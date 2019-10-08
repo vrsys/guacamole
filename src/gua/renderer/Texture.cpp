@@ -31,104 +31,92 @@
 #include <scm/gl_util/data/imaging/texture_loader.h>
 #include <iostream>
 
-namespace gua {
-
-Texture::Texture(scm::gl::data_format color_format,
-                 scm::gl::data_format internal_format,
-                 unsigned mipmap_layers,
-                 scm::gl::sampler_state_desc const& state_descripton)
-    : mipmap_layers_(mipmap_layers),
-      color_format_(color_format),
-      internal_format_(internal_format),
-      state_descripton_(state_descripton),
-      file_name_(""),
-      upload_mutex_() {}
-
-Texture::Texture(scm::gl::data_format color_format,
-                 unsigned mipmap_layers,
-                 scm::gl::sampler_state_desc const& state_descripton)
-    : mipmap_layers_(mipmap_layers),
-      color_format_(color_format),
-      internal_format_(color_format),
-      state_descripton_(state_descripton),
-      file_name_(""),
-      upload_mutex_() {}
-
-Texture::Texture(std::string const& file,
-                 bool generate_mipmaps,
-                 scm::gl::sampler_state_desc const& state_descripton)
-    :
-      mipmap_layers_(generate_mipmaps ? 1 : 0),
-      color_format_(scm::gl::FORMAT_NULL),
-      internal_format_(scm::gl::FORMAT_NULL),
-      state_descripton_(state_descripton),
-      file_name_(file),
-      upload_mutex_() {}
-
-void Texture::update_sub_data(RenderContext const& context,
-                              scm::gl::texture_region const& region,
-                              unsigned level,
-                              scm::gl::data_format format,
-                              const void* const data) const{
-  auto iter = context.textures.find(uuid_);
-  if (iter == context.textures.end()) {
-    upload_to(context);
-    iter = context.textures.find(uuid_);
-  }
-
-  if (iter != context.textures.end())
-    context.render_context->update_sub_texture(
-      iter->second.texture,
-      region, level, format, data);
+namespace gua
+{
+Texture::Texture(scm::gl::data_format color_format, scm::gl::data_format internal_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
+    : mipmap_layers_(mipmap_layers), color_format_(color_format), internal_format_(internal_format), state_descripton_(state_descripton), file_name_(""), upload_mutex_()
+{
 }
 
-void Texture::generate_mipmaps(RenderContext const& context) {
-  auto iter = context.textures.find(uuid_);
-  if (iter == context.textures.end()) {
-    upload_to(context);
-    iter = context.textures.find(uuid_);
-  }
-
-  if (iter != context.textures.end())
-    context.render_context->generate_mipmaps(iter->second.texture);
+Texture::Texture(scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
+    : mipmap_layers_(mipmap_layers), color_format_(color_format), internal_format_(color_format), state_descripton_(state_descripton), file_name_(""), upload_mutex_()
+{
 }
 
-math::vec2ui const Texture::get_handle(RenderContext const& context) const {
-  auto iter = context.textures.find(uuid_);
-
-  uint64_t handle(0);
-
-  if (iter == context.textures.end()) {
-    upload_to(context);
-    iter = context.textures.find(uuid_);
-  }
-
-  if (iter != context.textures.end()) {
-    handle = iter->second.texture->native_handle();
-  }
-
-  return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+Texture::Texture(std::string const& file, bool generate_mipmaps, scm::gl::sampler_state_desc const& state_descripton)
+    : mipmap_layers_(generate_mipmaps ? 1 : 0), color_format_(scm::gl::FORMAT_NULL), internal_format_(scm::gl::FORMAT_NULL), state_descripton_(state_descripton), file_name_(file), upload_mutex_()
+{
 }
 
-scm::gl::texture_image_ptr const& Texture::get_buffer(
-    RenderContext const& context) const {
-  auto iter = context.textures.find(uuid_);
-  if (iter == context.textures.end()) {
-    upload_to(context);
-    iter = context.textures.find(uuid_);
-  }
+void Texture::update_sub_data(RenderContext const& context, scm::gl::texture_region const& region, unsigned level, scm::gl::data_format format, const void* const data) const
+{
+    auto iter = context.textures.find(uuid_);
+    if(iter == context.textures.end())
+    {
+        upload_to(context);
+        iter = context.textures.find(uuid_);
+    }
 
-  if (iter != context.textures.end()) {
-    return iter->second.texture;
-  }
-  return nullptr;
+    if(iter != context.textures.end())
+        context.render_context->update_sub_texture(iter->second.texture, region, level, format, data);
 }
 
-void Texture::make_non_resident(RenderContext const& context) const {
-  auto iter = context.textures.find(uuid_);
-  if (iter != context.textures.end()) {
-    context.render_context->make_non_resident(iter->second.texture);
-  }
+void Texture::generate_mipmaps(RenderContext const& context)
+{
+    auto iter = context.textures.find(uuid_);
+    if(iter == context.textures.end())
+    {
+        upload_to(context);
+        iter = context.textures.find(uuid_);
+    }
+
+    if(iter != context.textures.end())
+        context.render_context->generate_mipmaps(iter->second.texture);
 }
 
+math::vec2ui const Texture::get_handle(RenderContext const& context) const
+{
+    auto iter = context.textures.find(uuid_);
+
+    uint64_t handle(0);
+
+    if(iter == context.textures.end())
+    {
+        upload_to(context);
+        iter = context.textures.find(uuid_);
+    }
+
+    if(iter != context.textures.end())
+    {
+        handle = iter->second.texture->native_handle();
+    }
+
+    return math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
 }
+
+scm::gl::texture_image_ptr const& Texture::get_buffer(RenderContext const& context) const
+{
+    auto iter = context.textures.find(uuid_);
+    if(iter == context.textures.end())
+    {
+        upload_to(context);
+        iter = context.textures.find(uuid_);
+    }
+
+    if(iter != context.textures.end())
+    {
+        return iter->second.texture;
+    }
+    return nullptr;
+}
+
+void Texture::make_non_resident(RenderContext const& context) const
+{
+    auto iter = context.textures.find(uuid_);
+    if(iter != context.textures.end())
+    {
+        context.render_context->make_non_resident(iter->second.texture);
+    }
+}
+
+} // namespace gua

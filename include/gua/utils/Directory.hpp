@@ -30,56 +30,55 @@
  * This class is used to read the contents of a directory.
  */
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL Directory
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a Directory without a path.
+     */
+    Directory();
 
-class GUA_DLL Directory {
+    /**
+     * Constructor.
+     *
+     * This constructs a Directory with a path.
+     *
+     * \param path_name The path to the directory to be read.
+     */
+    Directory(std::string const& path_name);
 
- public:
+    /**
+     * Returns if the given path to the directory is valid.
+     *
+     * \return The validity of the path.
+     */
+    bool is_valid() const;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a Directory without a path.
-   */
-  Directory();
+    /**
+     * Returns the given directory's content.
+     *
+     * \return The given directory's content.
+     */
+    std::string const& get_content() const;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a Directory with a path.
-   *
-   * \param path_name The path to the directory to be read.
-   */
-  Directory(std::string const& path_name);
+    /**
+     * Returns the given directory's name.
+     *
+     * \return The given directory's name.
+     */
+    std::string const& get_directory_name() const;
 
-  /**
-   * Returns if the given path to the directory is valid.
-   *
-   * \return The validity of the path.
-   */
-  bool is_valid() const;
+  private:
+    std::string path_name_;
+    mutable std::string content_;
 
-  /**
-   * Returns the given directory's content.
-   *
-   * \return The given directory's content.
-   */
-  std::string const& get_content() const;
-
-  /**
-   * Returns the given directory's name.
-   *
-   * \return The given directory's name.
-   */
-  std::string const& get_directory_name() const;
-
- private:
-  std::string path_name_;
-  mutable std::string content_;
-
-  mutable bool is_loaded_;
+    mutable bool is_loaded_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_DIRECTORY_HPP
+#endif // GUA_DIRECTORY_HPP

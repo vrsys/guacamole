@@ -26,30 +26,31 @@
 
 #include <list>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL MaterialShaderDescription
+{
+  public:
+    MaterialShaderDescription() = default;
+    MaterialShaderDescription(std::string const& file);
 
-class GUA_DLL MaterialShaderDescription {
- public:
-  MaterialShaderDescription() = default;
-  MaterialShaderDescription(std::string const& file);
+    void load_from_file(std::string const& file_name);
+    void load_from_json(std::string const& json);
 
-  void load_from_file(std::string const& file_name);
-  void load_from_json(std::string const& json);
+    MaterialShaderDescription& add_vertex_method(std::shared_ptr<MaterialShaderMethod> const& method);
+    MaterialShaderDescription& add_fragment_method(std::shared_ptr<MaterialShaderMethod> const& method);
 
-  MaterialShaderDescription& add_vertex_method(std::shared_ptr<MaterialShaderMethod> const& method);
-  MaterialShaderDescription& add_fragment_method(std::shared_ptr<MaterialShaderMethod> const& method);
+    std::list<std::shared_ptr<MaterialShaderMethod>> const& get_vertex_methods() const;
+    std::list<std::shared_ptr<MaterialShaderMethod>> const& get_fragment_methods() const;
 
-  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_vertex_methods() const;
-  std::list<std::shared_ptr<MaterialShaderMethod>> const& get_fragment_methods() const;
+    MaterialShaderDescription& clear_vertex_methods();
+    MaterialShaderDescription& clear_fragment_methods();
 
-  MaterialShaderDescription& clear_vertex_methods();
-  MaterialShaderDescription& clear_fragment_methods();
-
- private:
-  std::list<std::shared_ptr<MaterialShaderMethod>> vertex_methods_;
-  std::list<std::shared_ptr<MaterialShaderMethod>> fragment_methods_;
+  private:
+    std::list<std::shared_ptr<MaterialShaderMethod>> vertex_methods_;
+    std::list<std::shared_ptr<MaterialShaderMethod>> fragment_methods_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_MATERIAL_SHADER_DESCRIPTION_HPP
+#endif // GUA_MATERIAL_SHADER_DESCRIPTION_HPP

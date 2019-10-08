@@ -28,19 +28,21 @@
 
 #include <memory>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL PhysicallyBasedShadingPassDescription : public PipelinePassDescription {
- public:
-  PhysicallyBasedShadingPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+class GUA_DLL PhysicallyBasedShadingPassDescription : public PipelinePassDescription
+{
+  public:
+    PhysicallyBasedShadingPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
+
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PHYSICALLY_BASED_SHADING_PASS_HPP
+#endif // GUA_PHYSICALLY_BASED_SHADING_PASS_HPP

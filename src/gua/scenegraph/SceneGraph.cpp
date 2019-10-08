@@ -35,82 +35,69 @@
 // external headers
 #include <iostream>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+
+SceneGraph::SceneGraph(std::string const& name) : root_(new node::TransformNode("/", math::mat4::identity())), name_(name) { root_->set_scenegraph(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SceneGraph::SceneGraph(std::string const& name)
-    : root_(new node::TransformNode("/", math::mat4::identity())),
-      name_(name) {
-  root_->set_scenegraph(this);
-}
+SceneGraph::SceneGraph(SceneGraph const& graph) : root_(graph.root_ ? graph.root_->deep_copy() : nullptr), name_(graph.name_) { root_->set_scenegraph(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SceneGraph::SceneGraph(SceneGraph const& graph)
-    : root_(graph.root_ ? graph.root_->deep_copy() : nullptr),
-      name_(graph.name_) {
-  root_->set_scenegraph(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void SceneGraph::remove_node(std::string const& path_to_node) {
-
+void SceneGraph::remove_node(std::string const& path_to_node)
+{
     std::shared_ptr<node::Node> const& searched_node(find_node(path_to_node));
 
-    if (searched_node && searched_node->get_parent()) {
+    if(searched_node && searched_node->get_parent())
+    {
         searched_node->get_parent()->remove_child(searched_node);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::remove_node(std::shared_ptr<node::Node> const& to_remove) {
-    if (to_remove->get_parent()) {
+void SceneGraph::remove_node(std::shared_ptr<node::Node> const& to_remove)
+{
+    if(to_remove->get_parent())
+    {
         to_remove->get_parent()->remove_child(to_remove);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::set_name(std::string const& name) {
-  name_ = name;
-}
+void SceneGraph::set_name(std::string const& name) { name_ = name; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const& SceneGraph::get_name() const {
-  return name_;
-}
+std::string const& SceneGraph::get_name() const { return name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::set_root(std::shared_ptr<node::Node> const& root) {
-  root_ = root;
-}
+void SceneGraph::set_root(std::shared_ptr<node::Node> const& root) { root_ = root; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> const& SceneGraph::get_root() const {
-  return root_;
-}
+std::shared_ptr<node::Node> const& SceneGraph::get_root() const { return root_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_node) const {
-
+std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_node) const
+{
     auto result(find_node(path_to_node, "/"));
 
-    if (result == nullptr)
+    if(result == nullptr)
         Logger::LOG_WARNING << "Unable to get node: A node at location " << path_to_node << " doesn't exist!" << std::endl;
     return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs) {
-
+SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs)
+{
     root_ = rhs.root_ ? rhs.root_->deep_copy() : nullptr;
 
     return *this;
@@ -118,7 +105,8 @@ SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::to_dot_file(std::string const& file) const {
+void SceneGraph::to_dot_file(std::string const& file) const
+{
     DotGenerator generator;
     generator.parse_graph(this);
     generator.save(file);
@@ -126,33 +114,36 @@ void SceneGraph::to_dot_file(std::string const& file) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::update_cache() const {
-    if (root_) {
+void SceneGraph::update_cache() const
+{
+    if(root_)
+    {
         root_->update_cache();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_node,
-                            std::string const& path_to_start) const {
-
+std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_node, std::string const& path_to_start) const
+{
     PathParser parser;
     parser.parse(path_to_node);
 
-    std::shared_ptr<node::Node> to_be_found(path_to_start == "/"
-                          ? root_
-                          : find_node(path_to_start));
+    std::shared_ptr<node::Node> to_be_found(path_to_start == "/" ? root_ : find_node(path_to_start));
 
-    for (auto const& node_name : parser.get_parsed_path()) {
-      for (auto child : to_be_found->get_children()) {
-            if (child->get_name() == node_name) {
+    for(auto const& node_name : parser.get_parsed_path())
+    {
+        for(auto const& child : to_be_found->get_children())
+        {
+            if(child->get_name() == node_name)
+            {
                 to_be_found = child;
                 break;
             }
         }
 
-        if (to_be_found->get_name() != node_name) {
+        if(to_be_found->get_name() != node_name)
+        {
             return nullptr;
         }
     }
@@ -162,13 +153,14 @@ std::shared_ptr<node::Node> SceneGraph::find_node(std::string const& path_to_nod
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
-                           std::string const & child_name) const {
+bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent, std::string const& child_name) const
+{
+    auto const& children(parent->get_children());
 
-    auto children(parent->get_children());
-
-    for (auto child : children) {
-        if (child->get_name() == child_name) {
+    for(auto const& child : children)
+    {
+        if(child->get_name() == child_name)
+        {
             return true;
         }
     }
@@ -177,100 +169,94 @@ bool SceneGraph::has_child(std::shared_ptr<node::Node> const& parent,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::add_camera_node(node::CameraNode* camera) {
-  auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
+void SceneGraph::add_camera_node(node::CameraNode* camera)
+{
+    auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
 
-  if (pos == camera_nodes_.end()) {
-    camera_nodes_.push_back(camera);
-  }
+    if(pos == camera_nodes_.end())
+    {
+        camera_nodes_.push_back(camera);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::remove_camera_node(node::CameraNode* camera) {
-  if (camera_nodes_.empty()) return;
-  auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
+void SceneGraph::remove_camera_node(node::CameraNode* camera)
+{
+    if(camera_nodes_.empty())
+        return;
+    auto pos(std::find(camera_nodes_.begin(), camera_nodes_.end(), camera));
 
-  if (pos != camera_nodes_.end()) {
-    camera_nodes_.erase(pos);
-  }
+    if(pos != camera_nodes_.end())
+    {
+        camera_nodes_.erase(pos);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane) {
-  auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
+void SceneGraph::add_clipping_plane_node(node::ClippingPlaneNode* clipping_plane)
+{
+    auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
 
-  if (pos == clipping_plane_nodes_.end()) {
-    clipping_plane_nodes_.push_back(clipping_plane);
-  }
+    if(pos == clipping_plane_nodes_.end())
+    {
+        clipping_plane_nodes_.push_back(clipping_plane);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane) {
-  auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
+void SceneGraph::remove_clipping_plane_node(node::ClippingPlaneNode* clipping_plane)
+{
+    auto pos(std::find(clipping_plane_nodes_.begin(), clipping_plane_nodes_.end(), clipping_plane));
 
-  if (pos != clipping_plane_nodes_.end()) {
-    clipping_plane_nodes_.erase(pos);
-  }
+    if(pos != clipping_plane_nodes_.end())
+    {
+        clipping_plane_nodes_.erase(pos);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SceneGraph::accept(NodeVisitor & visitor) const { root_->accept(visitor); }
+void SceneGraph::accept(NodeVisitor& visitor) const { root_->accept(visitor); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray,
-                                                int options,
-                                                Mask const& mask) {
-    return root_->ray_test(ray, options, mask);
+std::set<PickResult> const SceneGraph::ray_test(node::RayNode const& ray, int options, Mask const& mask) { return root_->ray_test(ray, options, mask); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::set<PickResult> const SceneGraph::ray_test(Ray const& ray, int options, Mask const& mask) { return root_->ray_test(ray, options, mask); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<SerializedScene>
+SceneGraph::serialize(Frustum const& rendering_frustum, Frustum const& culling_frustum, math::vec3 const& reference_camera_position, bool enable_frustum_culling, Mask const& mask, int view_id) const
+{
+    auto out = std::make_shared<SerializedScene>();
+    out->rendering_frustum = rendering_frustum;
+    out->culling_frustum = culling_frustum;
+    out->reference_camera_position = reference_camera_position;
+
+    Serializer s;
+    s.check(*out, *this, mask, enable_frustum_culling, view_id);
+
+    return out;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::set<PickResult> const SceneGraph::ray_test(Ray const& ray,
-                                                int options,
-                                                Mask const& mask) {
-    return root_->ray_test(ray, options, mask);
+std::shared_ptr<SerializedScene> SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const
+{
+    return serialize(camera.get_rendering_frustum(*this, mode),
+                     camera.get_culling_frustum(*this, mode),
+                     math::get_translation(camera.transform),
+                     camera.config.enable_frustum_culling(),
+                     camera.config.mask(),
+                     camera.config.view_id());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<SerializedScene> SceneGraph::serialize(Frustum const& rendering_frustum,
-                                                       Frustum const& culling_frustum,
-                                                       math::vec3 const& reference_camera_position,
-                                                       bool enable_frustum_culling,
-                                                       Mask const& mask,
-                                                       int view_id) const {
-  auto out = std::make_shared<SerializedScene>();
-  out->rendering_frustum = rendering_frustum;
-  out->culling_frustum = culling_frustum;
-  out->reference_camera_position = reference_camera_position;
-
-  Serializer s;
-  s.check(*out, *this, mask, enable_frustum_culling, view_id);
-
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<SerializedScene> SceneGraph::serialize(
-                                       node::SerializedCameraNode const& camera,
-                                       CameraMode mode) const {
-
-    return serialize(
-      camera.get_rendering_frustum(*this, mode),
-      camera.get_culling_frustum(*this, mode),
-      math::get_translation(camera.transform),
-      camera.config.enable_frustum_culling(),
-      camera.config.mask(),
-      camera.config.view_id()
-    );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
+} // namespace gua

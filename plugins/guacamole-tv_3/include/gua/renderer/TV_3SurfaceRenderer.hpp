@@ -33,46 +33,40 @@
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-//external headers
+// external headers
 
-namespace gua {
+namespace gua
+{
+// using
 
-  //using 
+class MaterialShader;
+class ShaderProgram;
 
-  class MaterialShader;
-  class ShaderProgram;
-
-  class TV_3SurfaceRenderer : public TV_3Renderer {
- 
+class TV_3SurfaceRenderer : public TV_3Renderer
+{
   public:
-
     TV_3SurfaceRenderer(gua::RenderContext const& ctx, gua::SubstitutionMap const& substitution_map);
 
- private:  //shader related auxiliary methods
-  
-  void  _create_fbo_resources(gua::RenderContext const& ctx,
-                                      scm::math::vec2ui const& render_target_dims) override;
+  private: // shader related auxiliary methods
+    void _create_fbo_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims) override;
 
-  void  _clear_fbo_attachments(gua::RenderContext const& ctx) override;
+    void _clear_fbo_attachments(gua::RenderContext const& ctx) override;
 
-  void  _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
-  void  _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
-  
- private:  //member variables
+    void _raycasting_pass(gua::Pipeline& pipe, std::vector<gua::node::Node*> const& sorted_nodes, PipelinePassDescription const& desc) override;
+    void _postprocessing_pass(gua::Pipeline& pipe, PipelinePassDescription const& desc) override;
 
-    //FBOs:
+  private: // member variables
+    // FBOs:
     //////////////////////////////////////////////////////////////////////////////////////
-    scm::gl::frame_buffer_ptr                    volume_raycasting_fbo_;
+    scm::gl::frame_buffer_ptr volume_raycasting_fbo_;
 
-    //accumulation pass FBO & attachments
-    scm::gl::texture_2d_ptr                      volume_raycasting_color_result_;
-    scm::gl::texture_2d_ptr                      volume_raycasting_depth_result_;
+    // accumulation pass FBO & attachments
+    scm::gl::texture_2d_ptr volume_raycasting_color_result_;
+    scm::gl::texture_2d_ptr volume_raycasting_depth_result_;
 
-
-    //std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>  
-
+    // std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TV_3_SURFACE_RENDERER_HPP
+#endif // GUA_TV_3_SURFACE_RENDERER_HPP

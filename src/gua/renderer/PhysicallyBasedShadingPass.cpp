@@ -30,13 +30,14 @@
 //#include <gua/node/SpotLightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-
-namespace {
-
+namespace gua
+{
+namespace
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pipe) {
+void lighting(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe)
+{
 #if 0
   auto const& ctx(pipe.get_context());
   auto gl_program(ctx.render_context->current_program());
@@ -142,48 +143,39 @@ void lighting(PipelinePass& pass, PipelinePassDescription const& , Pipeline& pip
 #endif
 }
 
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+
+PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription() : PipelinePassDescription()
+{
+    // here we assume, that the emissive pass was run previously
+    // so we don't swap and don't clear the colorbuffer
+    vertex_shader_ = "shaders/physically_based_shading.vert";
+    fragment_shader_ = "shaders/physically_based_shading.frag";
+    private_.name_ = "PhysicallyBasedShadingPass";
+
+    private_.needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
+    private_.writes_only_color_buffer_ = true;     // we write out a color
+    private_.rendermode_ = RenderMode::Callback;
+
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.blend_state_desc_ = boost::make_optional(scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE)));
+    private_.rasterizer_state_desc_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
+
+    private_.process_ = lighting;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PhysicallyBasedShadingPassDescription::PhysicallyBasedShadingPassDescription()
-  : PipelinePassDescription() {
-  // here we assume, that the emissive pass was run previously
-  // so we don't swap and don't clear the colorbuffer
-  vertex_shader_ = "shaders/physically_based_shading.vert";
-  fragment_shader_ = "shaders/physically_based_shading.frag";
-  name_ = "PhysicallyBasedShadingPass";
-
-  needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
-  writes_only_color_buffer_ = true; // we write out a color
-  rendermode_ = RenderMode::Callback;
-
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
-  blend_state_ = boost::make_optional(
-      scm::gl::blend_state_desc(scm::gl::blend_ops(true,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE,
-                                                    scm::gl::FUNC_ONE)));
-  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
-        scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
-
-  process_ = lighting;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<PipelinePassDescription> PhysicallyBasedShadingPassDescription::make_copy() const {
-  return std::make_shared<PhysicallyBasedShadingPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> PhysicallyBasedShadingPassDescription::make_copy() const { return std::make_shared<PhysicallyBasedShadingPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass PhysicallyBasedShadingPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

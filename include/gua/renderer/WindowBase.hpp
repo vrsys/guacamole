@@ -38,13 +38,12 @@
 #include <string>
 #include <scm/gl_util/primitives/quad.h>
 
-
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
 struct nvstusb_context;
 #endif
 
-namespace gua {
-
+namespace gua
+{
 class Geometry;
 class Texture;
 
@@ -53,183 +52,169 @@ class Texture;
  *
  * It's a window which can display OpenGL stuff.
  */
-class GUA_DLL WindowBase {
- public:
+class GUA_DLL WindowBase
+{
+  public:
+    enum TextureDisplayMode
+    {
+        FULL,
+        RED,
+        GREEN,
+        CYAN,
+        CHECKER_EVEN,
+        CHECKER_ODD,
+        QUAD_BUFFERED_LEFT,
+        QUAD_BUFFERED_RIGHT
+    };
 
-  enum TextureDisplayMode {
-    FULL,
-    RED,
-    GREEN,
-    CYAN,
-    CHECKER_EVEN,
-    CHECKER_ODD,
-    QUAD_BUFFERED_LEFT,
-    QUAD_BUFFERED_RIGHT
-  };
-
-  /**
-   * A description of a window.
-   *
-   * Used when creating a window.
-   */
-  struct Configuration {
-
-    GUA_ADD_PROPERTY(math::vec2ui, size, math::vec2ui(800, 600));
-    GUA_ADD_PROPERTY(std::string, title, "guacamole");
+    /**
+     * A description of a window.
+     *
+     * Used when creating a window.
+     */
+    struct Configuration
+    {
+        GUA_ADD_PROPERTY(math::vec2ui, size, math::vec2ui(800, 600));
+        GUA_ADD_PROPERTY(std::string, title, "guacamole");
 #if WIN32
-    GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY1");
+        GUA_ADD_PROPERTY(std::string, display_name, "\\\\.\\DISPLAY1");
 #else
-    GUA_ADD_PROPERTY(std::string, display_name, ":0.0");
+        GUA_ADD_PROPERTY(std::string, display_name, ":0.0");
 #endif
-    GUA_ADD_PROPERTY(int, monitor, 0);
-    GUA_ADD_PROPERTY(StereoMode, stereo_mode, StereoMode::MONO);
-    GUA_ADD_PROPERTY(math::vec2ui, left_resolution, math::vec2ui(800, 600));
-    GUA_ADD_PROPERTY(math::vec2ui, left_position, math::vec2ui(0, 0));
-    GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
-    GUA_ADD_PROPERTY(math::vec2ui, right_position, math::vec2ui(0, 0));
-    GUA_ADD_PROPERTY(math::vec2i, window_position, math::vec2i(0, 0));
-    GUA_ADD_PROPERTY(bool, fullscreen_mode, false);
-    GUA_ADD_PROPERTY(bool, enable_vsync, true);
-    GUA_ADD_PROPERTY(bool, debug, false);
-    GUA_ADD_PROPERTY(std::string, warp_matrix_red_right, "");
-    GUA_ADD_PROPERTY(std::string, warp_matrix_green_right, "");
-    GUA_ADD_PROPERTY(std::string, warp_matrix_blue_right, "");
-    GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
-    GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
-    GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
+        GUA_ADD_PROPERTY(int, monitor, 0);
+        GUA_ADD_PROPERTY(StereoMode, stereo_mode, StereoMode::MONO);
+        GUA_ADD_PROPERTY(math::vec2ui, left_resolution, math::vec2ui(800, 600));
+        GUA_ADD_PROPERTY(math::vec2ui, left_position, math::vec2ui(0, 0));
+        GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
+        GUA_ADD_PROPERTY(math::vec2ui, right_position, math::vec2ui(0, 0));
+        GUA_ADD_PROPERTY(math::vec2i, window_position, math::vec2i(0, 0));
+        GUA_ADD_PROPERTY(bool, fullscreen_mode, false);
+        GUA_ADD_PROPERTY(bool, enable_vsync, true);
+        GUA_ADD_PROPERTY(bool, debug, false);
+        GUA_ADD_PROPERTY(std::string, warp_matrix_red_right, "");
+        GUA_ADD_PROPERTY(std::string, warp_matrix_green_right, "");
+        GUA_ADD_PROPERTY(std::string, warp_matrix_blue_right, "");
+        GUA_ADD_PROPERTY(std::string, warp_matrix_red_left, "");
+        GUA_ADD_PROPERTY(std::string, warp_matrix_green_left, "");
+        GUA_ADD_PROPERTY(std::string, warp_matrix_blue_left, "");
 
-    // convenience access to resolution
-    void set_resolution(math::vec2ui const& res) {
-      left_resolution() = right_resolution() = res;
-    }
+        // convenience access to resolution
+        void set_resolution(math::vec2ui const& res) { left_resolution() = right_resolution() = res; }
 
-    math::vec2ui const& get_resolution() {
-      return get_left_resolution();
-    }
+        math::vec2ui const& get_resolution() { return get_left_resolution(); }
 
-    // convenience access to position
-    void set_position(math::vec2ui const& pos) {
-      left_position() = right_position() = pos;
-    }
+        // convenience access to position
+        void set_position(math::vec2ui const& pos) { left_position() = right_position() = pos; }
 
-    math::vec2ui const& get_position() {
-      return get_left_position();
-    }
+        math::vec2ui const& get_position() { return get_left_position(); }
 
-  } config;
+    } config;
 
-  /**
-   * Constructor.
-   *
-   * Creates a new WindowBase. It owns a RenderContext where Geomtries
-   * can be drawn to.
-   *
-   * \param description   The description of the window.
-   */
-  WindowBase(Configuration const& configuration = Configuration());
+    /**
+     * Constructor.
+     *
+     * Creates a new WindowBase. It owns a RenderContext where Geomtries
+     * can be drawn to.
+     *
+     * \param description   The description of the window.
+     */
+    WindowBase(Configuration const& configuration = Configuration());
 
-  /**
-   * Destructor.
-   *
-   * Cleans all associated memory.
-   */
-  virtual ~WindowBase();
+    /**
+     * Destructor.
+     *
+     * Cleans all associated memory.
+     */
+    virtual ~WindowBase();
 
-  virtual void open() = 0;
-  virtual bool get_is_open() const = 0;
-  virtual bool should_close() const = 0;
-  virtual void close() = 0;
-  virtual void init_context();
-  void destroy_context();
+    virtual void open() = 0;
+    virtual bool get_is_open() const = 0;
+    virtual bool should_close() const = 0;
+    virtual void close() = 0;
+    virtual void init_context();
+    void destroy_context();
 
-  /**
-   * Activate the context of this window.
-   *
-   * Makes the RenderContext of this window current. All preceeding
-   * OpenGL calls will be invoked on this window.
-   */
-  virtual void set_active(bool active) = 0;
+    /**
+     * Activate the context of this window.
+     *
+     * Makes the RenderContext of this window current. All preceeding
+     * OpenGL calls will be invoked on this window.
+     */
+    virtual void set_active(bool active) = 0;
 
-  /**
-   * Starts the drawing of a new frame.
-   *
-   * This should be called when a new frame is about to be drawn.
-   */
-  virtual void start_frame();
+    /**
+     * Starts the drawing of a new frame.
+     *
+     * This should be called when a new frame is about to be drawn.
+     */
+    virtual void start_frame();
 
-  /**
-   * Ends the drawing of a new frame.
-   *
-   * This should be called when drawing a frame has been done.
-   */
-  virtual void finish_frame();
+    /**
+     * Ends the drawing of a new frame.
+     *
+     * This should be called when drawing a frame has been done.
+     */
+    virtual void finish_frame();
 
-  /**
-   *
-   */
-  virtual void display(scm::gl::texture_2d_ptr const& center_texture);
+    /**
+     *
+     */
+    virtual void display(scm::gl::texture_2d_ptr const& center_texture);
 
-  virtual void display(scm::gl::texture_2d_ptr const& center_texture,
-                       bool is_left);
+    virtual void display(scm::gl::texture_2d_ptr const& center_texture, bool is_left);
 
-  virtual void process_events() = 0;
+    virtual void process_events() = 0;
 
-  /**
-   * Get the RenderContext of this window.
-   *
-   * Can be called in order to retrieve the RenderContext of this
-   * WindowBase.
-   *
-   * \return The context owned by this window.
-   */
-  RenderContext* get_context();
+    /**
+     * Get the RenderContext of this window.
+     *
+     * Can be called in order to retrieve the RenderContext of this
+     * WindowBase.
+     *
+     * \return The context owned by this window.
+     */
+    RenderContext* get_context();
 
-  float get_rendering_fps() { return rendering_fps; }
-  std::atomic<float> rendering_fps;
+    float get_rendering_fps() { return rendering_fps; }
+    std::atomic<float> rendering_fps;
 
-protected:
+	virtual math::mat4 get_latest_matrices(unsigned id) const;
+	virtual int is_node_registered(std::string const& path) const { return -1; };
 
-  std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
+  protected:
+    std::shared_ptr<WarpMatrix> warpRR_, warpGR_, warpBR_, warpRL_, warpGL_, warpBL_;
 
-  virtual void swap_buffers_impl() {};
+    virtual void swap_buffers_impl(){};
 
-  struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output {
-    /*virtual*/ void operator()(scm::gl::debug_source source,
-                                scm::gl::debug_type type,
-                                scm::gl::debug_severity severity,
-                                const std::string& message) const;
-  };
+    struct GUA_DLL DebugOutput : public scm::gl::render_context::debug_output
+    {
+        /*virtual*/ void operator()(scm::gl::debug_source source, scm::gl::debug_type type, scm::gl::debug_severity severity, const std::string& message) const;
+    };
 
-  mutable RenderContext ctx_;
-  ShaderProgram fullscreen_shader_;
-  scm::gl::quad_geometry_ptr fullscreen_quad_;
+    mutable RenderContext ctx_;
+    ShaderProgram fullscreen_shader_;
+    scm::gl::quad_geometry_ptr fullscreen_quad_;
 
-  scm::gl::depth_stencil_state_ptr depth_stencil_state_;
-  scm::gl::blend_state_ptr blend_state_;
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_;
+    scm::gl::blend_state_ptr blend_state_;
 
-  static std::atomic_uint last_context_id_;
+    static std::atomic_uint last_context_id_;
 
-  static std::mutex last_context_id_mutex_;
+    static std::mutex last_context_id_mutex_;
 
+  private:
+    void display(scm::gl::texture_2d_ptr const& texture, math::vec2ui const& size, math::vec2ui const& position, TextureDisplayMode mode = FULL, bool is_left = true, bool clear = true);
 
- private:
-  void display(scm::gl::texture_2d_ptr const& texture,
-               math::vec2ui const& size,
-               math::vec2ui const& position,
-               TextureDisplayMode mode = FULL,
-               bool is_left = true,
-               bool clear = true);
+    void swap_buffers();
 
-  void swap_buffers();
+    static void swap_buffers_callback();
+    static WindowBase* current_instance_;
 
-  static void swap_buffers_callback();
-  static WindowBase* current_instance_;
-
-  #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
-  nvstusb_context* nv_context_;
-  #endif
+#ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
+    nvstusb_context* nv_context_;
+#endif
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_WINDOW_BASE_HPP
+#endif // GUA_WINDOW_BASE_HPP

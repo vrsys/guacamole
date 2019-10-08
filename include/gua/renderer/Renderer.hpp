@@ -32,88 +32,84 @@
 #include <gua/utils/FpsCounter.hpp>
 #include <gua/concurrent/Doublebuffer.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class SceneGraph;
 
-namespace node {
-  struct SerializedCameraNode;
-  class CameraNode;
-}
+namespace node
+{
+struct SerializedCameraNode;
+class CameraNode;
+} // namespace node
 
 /**
  * Manages the rendering on multiple contexts.
  *
  * This class is used to provide a renderer frontend interface to the user.
  */
-class GUA_DLL Renderer {
- public:
-  using SceneGraphs = std::vector<std::unique_ptr<const SceneGraph> >;
+class GUA_DLL Renderer
+{
+  public:
+    using SceneGraphs = std::vector<std::unique_ptr<const SceneGraph>>;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a new Renderer.
-   *
-   * \param pipelines        A vector of Pipelines to process. For each
-   *                         pipeline a RenderClient is created.
-   */
-  Renderer();
-  Renderer(Renderer const&) = delete;
-  Renderer& operator=(Renderer const&) = delete;
+    /**
+     * Constructor.
+     *
+     * This constructs a new Renderer.
+     *
+     * \param pipelines        A vector of Pipelines to process. For each
+     *                         pipeline a RenderClient is created.
+     */
+    Renderer();
+    Renderer(Renderer const&) = delete;
+    Renderer& operator=(Renderer const&) = delete;
 
-  /**
-  *
-  */
-  ~Renderer();
+    /**
+     *
+     */
+    ~Renderer();
 
-  /**
-   * Request a redraw of all RenderClients.
-   *
-   * Takes a Scenegraph and asks all clients to draw it.
-   *
-   * \param scene_graphs      The SceneGraphs to be processed.
-   */
-  void queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bool alternate_frame_rendering = false);
+    /**
+     * Request a redraw of all RenderClients.
+     *
+     * Takes a Scenegraph and asks all clients to draw it.
+     *
+     * \param scene_graphs      The SceneGraphs to be processed.
+     */
+    void queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bool alternate_frame_rendering = false);
 
-  void draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs);
+    void draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs);
 
-  void stop();
+    void stop();
 
-  inline float get_application_fps() {
-    return application_fps_.fps;
-  }
+    inline float get_application_fps() { return application_fps_.fps; }
 
- private:
+  private:
+    void send_renderclient(std::string const& window, std::shared_ptr<const Renderer::SceneGraphs> sgs, node::CameraNode* cam, bool alternate_frame_rendering);
 
-  void send_renderclient(std::string const& window,
-                         std::shared_ptr<const Renderer::SceneGraphs> sgs,
-                         node::CameraNode* cam,
-                         bool alternate_frame_rendering);
+    struct Item
+    {
+        Item() = default;
+        Item(std::shared_ptr<node::SerializedCameraNode> const& sc, std::shared_ptr<const SceneGraphs> const& sgs, bool afr = false)
+            : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr)
+        {
+        }
 
-  struct Item {
-    Item() = default;
-    Item( std::shared_ptr<node::SerializedCameraNode> const& sc,
-          std::shared_ptr<const SceneGraphs> const& sgs,
-          bool afr = false )
-          : serialized_cam(sc), scene_graphs(sgs), alternate_frame_rendering(afr)
-    {}
+        std::shared_ptr<node::SerializedCameraNode> serialized_cam;
+        std::shared_ptr<const SceneGraphs> scene_graphs;
+        bool alternate_frame_rendering;
+    };
 
-    std::shared_ptr<node::SerializedCameraNode> serialized_cam;
-    std::shared_ptr<const SceneGraphs>          scene_graphs;
-    bool                                        alternate_frame_rendering;
-  };
+    using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item>>;
+    using Renderclient = std::pair<Mailbox, std::thread>;
 
-  using Mailbox = std::shared_ptr<gua::concurrent::Doublebuffer<Item> >;
-  using Renderclient = std::pair<Mailbox, std::thread>;
+    static void renderclient(Mailbox in, std::string name);
 
-  static void renderclient(Mailbox in, std::string name);
+    std::map<std::string, Renderclient> render_clients_;
 
-  std::map<std::string, Renderclient> render_clients_;
-
-  FpsCounter application_fps_;
+    FpsCounter application_fps_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_RENDERER_HPP
+#endif // GUA_RENDERER_HPP

@@ -32,15 +32,16 @@
 #include <memory>
 #include <unordered_set>
 
-namespace gua {
+namespace gua
+{
+class Material;
 
-  class Material;
-
-namespace node {
+namespace node
+{
 class Node;
 class InnerNode;
 class SPointsNode;
-}
+} // namespace node
 
 /**
  * Loads and draws Video3D.
@@ -48,41 +49,33 @@ class SPointsNode;
  * This class can load Video3D data from files and display them in multiple
  * contexts. A MeshLoader object is made of several Video3D objects.
  */
-class GUA_SPOINTS_DLL SPointsLoader {
- public:
+class GUA_SPOINTS_DLL SPointsLoader
+{
+  public:
+    enum Flags
+    {
+        DEFAULTS = 0,
+        MAKE_PICKABLE = 1 << 0,
+        NORMALIZE_POSITION = 1 << 1,
+        NORMALIZE_SCALE = 1 << 2
+    };
 
-  enum Flags {
-  	DEFAULTS = 0,
-  	MAKE_PICKABLE = 1 << 0,
-  	NORMALIZE_POSITION = 1 << 1,
-  	NORMALIZE_SCALE = 1 << 2
-  };
+    SPointsLoader();
+    ~SPointsLoader() = default;
 
-  SPointsLoader();
-  ~SPointsLoader() = default;
+    std::shared_ptr<node::SPointsNode>
+    create_geometry_from_file(std::string const& nodename, std::string const& spoints_resource_filepath, std::shared_ptr<Material> material = nullptr, unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::SPointsNode> create_geometry_from_file(std::string const& nodename,
-                                                               std::string const& spoints_resource_filepath,
-															                                 std::shared_ptr<Material> material = nullptr,
-															                                 unsigned flags = DEFAULTS);
+    bool is_supported(std::string const& file_name) const;
 
+  private:
+    std::string _strip_whitespace(std::string const& in_string) const;
 
-  bool is_supported(std::string const& file_name) const;
+    void _split_filename(std::string const& in_line_buffer, std::vector<std::string> const& registered_tokens, std::map<std::string, std::string>& tokens) const;
 
- private:
-
-  std::string _strip_whitespace(std::string const& in_string) const;
-  
-  void _split_filename(std::string const& in_line_buffer, 
-                      std::vector<std::string> const& registered_tokens,
-                      std::map<std::string, std::string>& tokens) const;
-
-   std::unordered_set<std::string> _supported_file_extensions;
-
-
-
+    std::unordered_set<std::string> _supported_file_extensions;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPOINTS_LOADER_HPP
+#endif // GUA_SPOINTS_LOADER_HPP
