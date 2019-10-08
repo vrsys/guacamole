@@ -26,61 +26,43 @@
 #include <gua/skelanim/renderer/SkeletalAnimationRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-SkeletalAnimationPassDescription::SkeletalAnimationPassDescription()
-    : PipelinePassDescription() {
-  vertex_shader_ = "";    // "shaders/tri_mesh_shader.vert";
-  fragment_shader_ = "";  // "shaders/tri_mesh_shader.frag";
-  name_ = "SkeletalAnimationPass";
+SkeletalAnimationPassDescription::SkeletalAnimationPassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "";   // "shaders/tri_mesh_shader.vert";
+    fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
+    private_.name_ = "SkeletalAnimationPass";
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 
-  depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(
-      true,
-      true,
-      scm::gl::COMPARISON_LESS,
-      true,
-      1,
-      0,
-      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription>
-SkeletalAnimationPassDescription::make_copy() const {
-  return std::make_shared<SkeletalAnimationPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> SkeletalAnimationPassDescription::make_copy() const { return std::make_shared<SkeletalAnimationPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass SkeletalAnimationPassDescription::make_pass(
-    RenderContext const& ctx,
-    SubstitutionMap& substitution_map) {
-  PipelinePass pass { *this, ctx, substitution_map }
-  ;
+PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+    auto renderer = std::make_shared<SkeletalAnimationRenderer>(ctx);
+    renderer->set_global_substitution_map(substitution_map);
+    renderer->create_state_objects(ctx);
 
-  auto renderer = std::make_shared<SkeletalAnimationRenderer>(ctx);
-  renderer->set_global_substitution_map(substitution_map);
-  renderer->create_state_objects(ctx);
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
+        renderer->render(pipe, desc);
+    };
 
-  pass.process_ = [renderer](PipelinePass & pass,
-                             PipelinePassDescription const & desc,
-                             Pipeline & pipe) {
-
-    pipe.get_context().render_context
-        ->set_depth_stencil_state(pass.depth_stencil_state_, 1);
-    renderer->render(pipe, desc);
-  }
-  ;
-
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

@@ -27,4 +27,3 @@
  */
 
 #endif // GUA_DATABASES_DOXYGEN_HPP
-

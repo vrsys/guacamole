@@ -21,76 +21,64 @@
 
 // class header
 #include <gua/renderer/ABuffer.hpp>
- 
-namespace gua {
 
-void ABuffer::allocate(RenderContext& ctx, size_t buffer_size) {
+namespace gua
+{
+void ABuffer::allocate(RenderContext& ctx, size_t buffer_size)
+{
+    if(!buffer_size)
+    {
+        res_ = nullptr;
+        return;
+    }
 
-  if (!buffer_size) {
-    res_ = nullptr;
-    return;
-  }
+    // get a per-context resource
+    auto resource = ctx.resources.get<SharedResource>();
 
-  // get a per-context resource
-  auto resource = ctx.resources.get<SharedResource>();
+    // compute memory allowance
+    size_t frag_count = (buffer_size * 1024u * 1024u) / (FRAG_LIST_WORD_SIZE + FRAG_DATA_WORD_SIZE);
 
-  // compute memory allowance
-  size_t frag_count = (buffer_size * 1024u * 1024u)
-                      / (FRAG_LIST_WORD_SIZE + FRAG_DATA_WORD_SIZE);
+    // init/reinit if necessary
+    if(!resource->counter || resource->frag_count < frag_count)
+    {
+        resource->frag_count = frag_count;
 
-  // init/reinit if necessary
-  if (!resource->counter || resource->frag_count < frag_count) {
-
-    resource->frag_count = frag_count;
-
-    resource->counter =
-        ctx.render_device->create_buffer(scm::gl::BIND_ATOMIC_COUNTER_BUFFER,
-                                         scm::gl::USAGE_DYNAMIC_COPY,
-                                         sizeof(unsigned));
-    resource->frag_list =
-        ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
-                                         scm::gl::USAGE_DYNAMIC_COPY,
-                                         frag_count * FRAG_LIST_WORD_SIZE);
-    resource->frag_data =
-        ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
-                                         scm::gl::USAGE_DYNAMIC_COPY,
-                                         frag_count * FRAG_DATA_WORD_SIZE);
-  }
-  res_ = resource;
+        resource->counter = ctx.render_device->create_buffer(scm::gl::BIND_ATOMIC_COUNTER_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, sizeof(unsigned));
+        resource->frag_list = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, frag_count * FRAG_LIST_WORD_SIZE);
+        resource->frag_data = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, frag_count * FRAG_DATA_WORD_SIZE);
+    }
+    res_ = resource;
 }
 
-void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution) {
+void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution)
+{
+    if(!res_)
+    {
+        return;
+    }
 
-  if (!res_) {
-    return;
-  }
+    unsigned* ctr = reinterpret_cast<unsigned*>(ctx.render_context->map_buffer(res_->counter, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+    if(ctr)
+    {
+        *ctr = 0;
+    }
+    ctx.render_context->unmap_buffer(res_->counter);
 
-  unsigned* ctr = reinterpret_cast<unsigned*>(ctx.render_context->map_buffer(
-      res_->counter, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
-  if (ctr) {
-    *ctr = 0;
-  }
-  ctx.render_context->unmap_buffer(res_->counter);
-
-  ctx.render_context->clear_buffer_sub_data(res_->frag_list,
-                                            scm::gl::FORMAT_RG_32UI,
-                                            0u,
-                                            FRAG_LIST_WORD_SIZE * resolution.x
-                                                                * resolution.y,
-                                            0);
+    ctx.render_context->clear_buffer_sub_data(res_->frag_list, scm::gl::FORMAT_RG_32UI, 0u, FRAG_LIST_WORD_SIZE * resolution.x * resolution.y, 0);
 }
 
-void ABuffer::bind(RenderContext const& ctx) {
+void ABuffer::bind(RenderContext const& ctx)
+{
+    if(!res_)
+    {
+        return;
+    }
 
-  if (!res_) {
-    return;
-  }
-
-  ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
-  ctx.render_context->bind_storage_buffer(res_->frag_list, 0);
-  ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
+    ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
+    ctx.render_context->bind_storage_buffer(res_->frag_list, 0);
+    ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
 }
 
 void ABuffer::unbind(RenderContext const& ctx) {}
 
-}
+} // namespace gua

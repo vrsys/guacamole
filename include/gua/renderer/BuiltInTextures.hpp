@@ -28,12 +28,12 @@
 
 #include <scm/gl_util/data/imaging/texture_image_data.h>
 
-namespace gua {
-
+namespace gua
+{
 scm::gl::texture_image_data_ptr make_loading_image();
 scm::gl::texture_image_data_ptr make_noise_image();
 scm::gl::texture_image_data_ptr make_default_image();
 
-}
+} // namespace gua
 
-#endif  // GUA_NOISE_TEXTURE_HPP
+#endif // GUA_NOISE_TEXTURE_HPP

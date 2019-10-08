@@ -31,13 +31,12 @@
 
 #include <boost/variant.hpp>
 
-namespace gua {
-
-FullscreenPassDescription::FullscreenPassDescription()
-  : PipelinePassDescription()
+namespace gua
 {
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = R"(
+FullscreenPassDescription::FullscreenPassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+    fragment_shader_ = R"(
 #version 440
 // header
 #extension GL_NV_bindless_texture  : require
@@ -55,70 +54,65 @@ void main() {
   )";
 
 #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ResourceFactory factory;
-  fragment_shader_ = factory.prepare_shader(fragment_shader_, "FullscreenPass shader");
+    ResourceFactory factory;
+    fragment_shader_ = factory.prepare_shader(fragment_shader_, "FullscreenPass shader");
 #else
-  Resources::resolve_includes(fragment_shader_);
+    Resources::resolve_includes(fragment_shader_);
 #endif
 
-  fragment_shader_is_file_name_ = false;
-  needs_color_buffer_as_input_ = true;
-  writes_only_color_buffer_ = true;
+    fragment_shader_is_file_name_ = false;
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
 
-  rendermode_ = RenderMode::Quad;
+    private_.rendermode_ = RenderMode::Quad;
 
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source) {
-
+FullscreenPassDescription& FullscreenPassDescription::source(std::string const& source)
+{
 #ifndef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
-  ResourceFactory factory;
-  fragment_shader_ = factory.prepare_shader(source, "FullscreenPass shader");
+    ResourceFactory factory;
+    fragment_shader_ = factory.prepare_shader(source, "FullscreenPass shader");
 #else
-  fragment_shader_ = source;
-  Resources::resolve_includes(fragment_shader_);
+    fragment_shader_ = source;
+    Resources::resolve_includes(fragment_shader_);
 #endif
-  fragment_shader_is_file_name_ = false;
-  recompile_shaders_ = true;
-  return *this;
+    fragment_shader_is_file_name_ = false;
+    recompile_shaders_ = true;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const& FullscreenPassDescription::source() const {
-  return fragment_shader_;
+std::string const& FullscreenPassDescription::source() const { return fragment_shader_; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+FullscreenPassDescription& FullscreenPassDescription::source_file(std::string const& source_file)
+{
+    fragment_shader_ = source_file;
+    fragment_shader_is_file_name_ = true;
+    recompile_shaders_ = true;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FullscreenPassDescription& FullscreenPassDescription::source_file(std::string const& source_file) {
-  fragment_shader_ = source_file;
-  fragment_shader_is_file_name_ = true;
-  recompile_shaders_ = true;
-  return *this;
-}
+std::string const& FullscreenPassDescription::source_file() const { return fragment_shader_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const& FullscreenPassDescription::source_file() const {
-  return fragment_shader_;
-}
+std::shared_ptr<PipelinePassDescription> FullscreenPassDescription::make_copy() const { return std::make_shared<FullscreenPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> FullscreenPassDescription::make_copy() const {
-  return std::make_shared<FullscreenPassDescription>(*this);
+PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-PipelinePass FullscreenPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
-}
-
-}
+} // namespace gua

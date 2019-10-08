@@ -29,69 +29,71 @@
 #include <gua/video3d/Video3DResource.hpp>
 #include <gua/video3d/Video3DRenderer.hpp>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
+Video3DLoader::Video3DLoader() {}
 
-  Video3DLoader::Video3DLoader()
-  {}
+////////////////////////////////////////////////////////////////////////////////
 
+std::shared_ptr<node::Video3DNode> Video3DLoader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> material, unsigned flags)
+{
+    try
+    {
+        GeometryDescription desc("Video3D", file_name, 0, flags);
 
-  ////////////////////////////////////////////////////////////////////////////////
+        auto resource = std::make_shared<Video3DResource>(file_name, flags);
+        GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-  std::shared_ptr<node::Video3DNode> Video3DLoader::create_geometry_from_file (std::string const& node_name,
-																			   std::string const& file_name,
-																			   std::shared_ptr<Material> material,
-																			   unsigned flags)
-  {
-	  try {
-      GeometryDescription desc("Video3D", file_name, 0, flags);
+        auto result = std::shared_ptr<node::Video3DNode>(new node::Video3DNode(node_name, desc.unique_key()));
+        result->update_cache();
 
-      auto resource = std::make_shared<Video3DResource>(file_name, flags);
-      GeometryDatabase::instance()->add(desc.unique_key(), resource);
+        // add a default video 3D material if not already loaded
+        if(!gua::MaterialShaderDatabase::instance()->contains("gua_default_video3d_material"))
+        {
+            ResourceFactory factory;
+            auto material = factory.read_plain_file("resources/materials/video3d.gmd");
+            auto desc(std::make_shared<gua::MaterialShaderDescription>());
+            desc->load_from_json(material.c_str());
+            auto shader(std::make_shared<gua::MaterialShader>("gua_default_video3d_material", desc));
+            gua::MaterialShaderDatabase::instance()->add(shader);
+        }
 
-      auto result = std::shared_ptr<node::Video3DNode>(new node::Video3DNode(node_name, desc.unique_key()));
-	    result->update_cache();
-	  
-	    // add a default video 3D material if not already loaded
-	    if (!gua::MaterialShaderDatabase::instance()->contains("gua_default_video3d_material")) {
-	  	  ResourceFactory factory;
-	  	  auto material = factory.read_plain_file("resources/materials/video3d.gmd");
-	  	  auto desc(std::make_shared<gua::MaterialShaderDescription>());
-	  	  desc->load_from_json(material.c_str());
-	  	  auto shader(std::make_shared<gua::MaterialShader>("gua_default_video3d_material", desc));
-	  	  gua::MaterialShaderDatabase::instance()->add(shader);
-	    }
-	  
-	    if (!material) {
-		    result->set_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_video3d_material")->make_new_material());
-      }
-      else {
-        result->set_material(material);
-      }
+        if(!material)
+        {
+            result->set_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_video3d_material")->make_new_material());
+        }
+        else
+        {
+            result->set_material(material);
+        }
 
-      auto bbox = resource->get_bounding_box();
+        auto bbox = resource->get_bounding_box();
 
-      //normalize position?
-      auto normalize_position = flags & Video3DLoader::NORMALIZE_POSITION;
-      if (normalize_position) {
-        auto bbox_center_object_space = math::vec4(bbox.center().x, bbox.center().y, bbox.center().z, 1.0);
-        result->translate(-bbox_center_object_space.x, -bbox_center_object_space.y, -bbox_center_object_space.z);
-      }
+        // normalize position?
+        auto normalize_position = flags & Video3DLoader::NORMALIZE_POSITION;
+        if(normalize_position)
+        {
+            auto bbox_center_object_space = math::vec4(bbox.center().x, bbox.center().y, bbox.center().z, 1.0);
+            result->translate(-bbox_center_object_space.x, -bbox_center_object_space.y, -bbox_center_object_space.z);
+        }
 
-      //normalize scale?
-      auto normalize_scale = flags & Video3DLoader::NORMALIZE_SCALE;
-      if (normalize_scale) {
-        auto scale = 1.0f / scm::math::length(bbox.max - bbox.min);
-        result->scale(scale, scale, scale);
-      }
+        // normalize scale?
+        auto normalize_scale = flags & Video3DLoader::NORMALIZE_SCALE;
+        if(normalize_scale)
+        {
+            auto scale = 1.0f / scm::math::length(bbox.max - bbox.min);
+            result->scale(scale, scale, scale);
+        }
 
-      return result;
+        return result;
     }
-    catch (std::exception &e) {
-      Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
-      return nullptr;
+    catch(std::exception& e)
+    {
+        Logger::LOG_WARNING << "Warning: " << e.what() << " : Failed to load Video3D object " << file_name.c_str() << std::endl;
+        return nullptr;
     }
-  }
-
 }
+
+} // namespace gua

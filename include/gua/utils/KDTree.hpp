@@ -34,105 +34,90 @@
 #include <iosfwd>
 #include <algorithm>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * This class contains a simple KDTree implementation.
  */
-class KDTree {
+class KDTree
+{
+  public:
+    KDTree();
 
- public:
-  KDTree();
+    /**
+     * Initializes the KDTree with the given triangles.
+     *
+     * \param triangles A vector of Triangle.
+     */
+    void generate(Mesh const& mesh);
 
-  /**
-   * Initializes the KDTree with the given triangles.
-   *
-   * \param triangles A vector of Triangle.
-   */
-  void generate(Mesh const& mesh);
+    /**
+     * Checks for intersections with the KDTree.
+     *
+     * \param ray     The Ray which shall be tested against the tree.
+     * \param options A bitwise combined set of options.
+     * \param owner   The Node which will be written in the generated PickResults.
+     * \param hits    A reference to the resulting set. Any contained data will be
+     *                deleted depending on the supplied options.
+     */
+    void ray_test(Ray const& ray, Mesh const& mesh, int options, node::Node* owner, std::set<PickResult>& hits) const;
 
-  /**
-   * Checks for intersections with the KDTree.
-   *
-   * \param ray     The Ray which shall be tested against the tree.
-   * \param options A bitwise combined set of options.
-   * \param owner   The Node which will be written in the generated PickResults.
-   * \param hits    A reference to the resulting set. Any contained data will be
-   *                deleted depending on the supplied options.
-   */
-  void ray_test(Ray const& ray, Mesh const& mesh, int options,
-                node::Node* owner, std::set<PickResult>& hits) const;
+  private:
+    // a private struct used for triangle data storage in the leaves of the tree
+    struct LeafData
+    {
+        struct Comparator
+        {
+            Comparator(unsigned dim);
 
- private:
+            bool operator()(LeafData const& lhs, LeafData const& rhs) const;
+            unsigned dim_;
+        };
 
-  // a private struct used for triangle data storage in the leaves of the tree
-  struct LeafData {
+        LeafData();
+        LeafData(Mesh const& mesh, Triangle const& triangle, unsigned id);
+        LeafData(math::BoundingBox<math::vec3> const& bbox, unsigned id);
 
-    struct Comparator {
-      Comparator(unsigned dim);
+        unsigned id_;
+        math::BoundingBox<math::vec3> bbox_;
 
-      bool operator()(LeafData const& lhs, LeafData const& rhs) const;
-      unsigned dim_;
+        bool operator<(LeafData);
     };
 
-    LeafData();
-    LeafData(Mesh const& mesh, Triangle const& triangle, unsigned id);
-    LeafData(math::BoundingBox<math::vec3> const& bbox, unsigned id);
+    // a private struct which may be used for leaves and internal nodes
+    struct KDNode
+    {
+        KDNode(std::vector<LeafData> const& data = std::vector<LeafData>());
 
-    unsigned id_;
-    math::BoundingBox<math::vec3> bbox_;
+        KDNode(KDNode* left_child, KDNode* right_child, unsigned splitting_dimension, float splitting_position, math::BoundingBox<math::vec3> const& bounds);
 
-    bool operator<(LeafData);
-  };
+        void print(unsigned depth) const;
 
-  // a private struct which may be used for leaves and internal nodes
-  struct KDNode {
-    KDNode(std::vector<LeafData> const& data = std::vector<LeafData>());
+        std::vector<LeafData> data_;
+        KDNode *left_child_, *right_child_;
+        bool is_leaf_;
+        unsigned splitting_dimension_;
+        float splitting_position_;
+        math::BoundingBox<math::vec3> bounds_;
+    };
 
-    KDNode(KDNode* left_child,
-           KDNode* right_child,
-           unsigned splitting_dimension,
-           float splitting_position,
-           math::BoundingBox<math::vec3> const& bounds);
+    // constructs the tree
+    KDNode* build(std::vector<std::vector<LeafData>> const& sorted_triangles, math::BoundingBox<math::vec3> const& bounds);
 
-    void print(unsigned depth) const;
+    // ray test against the tree, returns upon the first intersection
+    bool intersect_one(KDNode* node, Ray const& ray, Mesh const& mesh, int options, std::vector<Triangle> const& triangles, std::set<PickResult>& hits) const;
 
-    std::vector<LeafData> data_;
-    KDNode* left_child_, *right_child_;
-    bool is_leaf_;
-    unsigned splitting_dimension_;
-    float splitting_position_;
-    math::BoundingBox<math::vec3> bounds_;
-  };
+    // ray test against the tree, searches for all intersections
+    void intersect_all(KDNode* node, Ray const& ray, Mesh const& mesh, int options, std::vector<Triangle> const& triangles, std::set<PickResult>& hits) const;
 
-  // constructs the tree
-  KDNode* build(std::vector<std::vector<LeafData> > const& sorted_triangles,
-                math::BoundingBox<math::vec3> const& bounds);
+    KDNode* root_;
+    std::vector<Triangle> triangles_;
 
-  // ray test against the tree, returns upon the first intersection
-  bool intersect_one(KDNode* node,
-                     Ray const& ray,
-                     Mesh const& mesh,
-                     int options,
-                     std::vector<Triangle> const& triangles,
-                     std::set<PickResult>& hits) const;
-
-  // ray test against the tree, searches for all intersections
-  void intersect_all(KDNode* node,
-                     Ray const& ray,
-                     Mesh const& mesh,
-                     int options,
-                     std::vector<Triangle> const& triangles,
-                     std::set<PickResult>& hits) const;
-
-  KDNode* root_;
-  std::vector<Triangle> triangles_;
-
-  mutable node::Node* current_owner_;
-  mutable int current_options_;
-  mutable unsigned current_visit_flag_;
+    mutable node::Node* current_owner_;
+    mutable int current_options_;
+    mutable unsigned current_visit_flag_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_KD_TREE_HPP
+#endif // GUA_KD_TREE_HPP

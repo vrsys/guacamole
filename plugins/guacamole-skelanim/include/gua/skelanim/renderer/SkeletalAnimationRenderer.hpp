@@ -31,52 +31,49 @@
 #include <scm/gl_core/shader_objects.h>
 #include <unordered_map>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-    /**
-   * @brief holds bone mapping offsets
-   * @details holds info about where to read from the bonetransformblock buffers
-   */
-  struct SharedSkinningResource {
+/**
+ * @brief holds bone mapping offsets
+ * @details holds info about where to read from the bonetransformblock buffers
+ */
+struct SharedSkinningResource
+{
     scm::gl::buffer_ptr bone_ids_ = nullptr;
     scm::gl::buffer_ptr bone_weights_ = nullptr;
     size_t offset_bytes = 0;
-  };
-class GUA_SKELANIM_DLL SkeletalAnimationRenderer {
+};
+class GUA_SKELANIM_DLL SkeletalAnimationRenderer
+{
+  public:
+    SkeletalAnimationRenderer(RenderContext const& ctx);
+    virtual ~SkeletalAnimationRenderer() {}
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  SkeletalAnimationRenderer(RenderContext const& ctx);
-  virtual ~SkeletalAnimationRenderer() {}
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void create_state_objects(RenderContext const& ctx);
 
-  void set_global_substitution_map(SubstitutionMap const& smap) {
-    global_substitution_map_ = smap;
-  }
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
 
-  void create_state_objects(RenderContext const& ctx);
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 
- private:
-  scm::gl::rasterizer_state_ptr rs_cull_back_;
-  scm::gl::rasterizer_state_ptr rs_cull_none_;
+    BoneTransformUniformBlock bones_block_;
 
-  std::vector<ShaderProgramStage> program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
-      programs_;
-  SubstitutionMap global_substitution_map_;
+    SharedSkinningResource skinning_resource_;
 
-  BoneTransformUniformBlock bones_block_;
-
-  SharedSkinningResource skinning_resource_;
-
-  unsigned last_frame_;
+    unsigned last_frame_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SKELETAL_ANIMATION_RENDERER_HPP
+#endif // GUA_SKELETAL_ANIMATION_RENDERER_HPP

@@ -22,14 +22,14 @@
 #ifndef GUA_OCULUS_DISTORTION_MESH_HPP
 #define GUA_OCULUS_DISTORTION_MESH_HPP
 
-#if defined (_MSC_VER)
-  #if defined (GUA_OCULUS_LIBRARY)
-    #define GUA_OCULUS_DLL __declspec( dllexport )
-  #else
-#define GUA_OCULUS_DLL __declspec( dllimport )
-  #endif
+#if defined(_MSC_VER)
+#if defined(GUA_OCULUS_LIBRARY)
+#define GUA_OCULUS_DLL __declspec(dllexport)
 #else
-  #define GUA_OCULUS_DLL
+#define GUA_OCULUS_DLL __declspec(dllimport)
+#endif
+#else
+#define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
 #ifndef _WIN32
@@ -39,53 +39,49 @@
 
 #include <scm/gl_core.h>
 
-namespace gua {
+namespace gua
+{
+struct OculusDistortionMesh
+{
+    /* the vertex contains three different texture coordinates
+       since it has to correct chromatic abberations for each
+       wavelength (~color channel) independently
+    */
+    struct DistortionVertex
+    {
+        scm::math::vec2f ndc_2d_pos;
+        scm::math::vec2f tex_r;
+        scm::math::vec2f tex_g;
+        scm::math::vec2f tex_b;
+        float vig_factor;
+    };
 
-struct OculusDistortionMesh {
+    OculusDistortionMesh();
 
-  /* the vertex contains three different texture coordinates
-     since it has to correct chromatic abberations for each
-     wavelength (~color channel) independently
-  */
-  struct DistortionVertex {
-    scm::math::vec2f ndc_2d_pos;
-    scm::math::vec2f tex_r;
-    scm::math::vec2f tex_g;
-    scm::math::vec2f tex_b;
-    float vig_factor;
-  };
+    ~OculusDistortionMesh();
 
-  OculusDistortionMesh();
+    void initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, ovrVector2f* UVScaleOffset, bool isLeftEye);
 
-  ~OculusDistortionMesh();
-  
+    void copy_to_buffer(DistortionVertex* d_vertex_buffer) const;
 
-  void initialize_distortion_mesh(ovrDistortionMesh const& mesh_component, 
-                                  ovrVector2f* UVScaleOffset,
-                                  bool isLeftEye);
+    virtual scm::gl::vertex_format get_vertex_format() const;
 
-  void copy_to_buffer(DistortionVertex* d_vertex_buffer) const;
+    // member
+    std::vector<scm::math::vec2f> ndc_2d_positions;
+    std::vector<scm::math::vec2f> tex_coords_r;
+    std::vector<scm::math::vec2f> tex_coords_g;
+    std::vector<scm::math::vec2f> tex_coords_b;
+    std::vector<float> vig_factors;
+    std::vector<unsigned> indices;
 
-  virtual scm::gl::vertex_format get_vertex_format() const;
+    unsigned int num_vertices;
+    unsigned int num_indices;
 
-
-  //member
-  std::vector<scm::math::vec2f> ndc_2d_positions;
-  std::vector<scm::math::vec2f> tex_coords_r;
-  std::vector<scm::math::vec2f> tex_coords_g;
-  std::vector<scm::math::vec2f> tex_coords_b;
-  std::vector<float> vig_factors;
-  std::vector<unsigned> indices;
-
-  unsigned int num_vertices;
-  unsigned int num_indices;
-
-  unsigned int index_buffer_component_offset;
+    unsigned int index_buffer_component_offset;
 };
 
-}
+} // namespace gua
 
 #endif
 
-
-#endif  // GUA_OCULUS_DISTORTION_MESH_HPP
+#endif // GUA_OCULUS_DISTORTION_MESH_HPP

@@ -38,17 +38,16 @@
 #include <regex>
 #include <list>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3VolumePassDescription::TV_3VolumePassDescription()
-  : PipelinePassDescription()
+TV_3VolumePassDescription::TV_3VolumePassDescription() : PipelinePassDescription()
 {
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = false;
-  rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = false;
+    private_.rendermode_ = RenderMode::Custom;
 }
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,23 +63,18 @@ TV_3VolumePassDescription::VolumeRenderMode TV_3VolumePassDescription::mode() co
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() const {
-  return std::make_shared<TV_3VolumePassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() const { return std::make_shared<TV_3VolumePassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass TV_3VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
-  PipelinePass pass{ *this, ctx, substitution_map };
+PipelinePass TV_3VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+    auto renderer = std::make_shared<TV_3VolumeRenderer>(ctx, substitution_map);
 
-  auto renderer = std::make_shared<TV_3VolumeRenderer>(ctx, substitution_map);
-  
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

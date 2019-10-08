@@ -29,41 +29,40 @@
 // external headers
 #include <scm/gl_core/buffer_objects.h>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL SkyMapPassDescription : public PipelinePassDescription
+{
+  public:
+    SkyMapPassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
+    SkyMapPassDescription& light_direction(math::vec3f const& light_direction);
+    math::vec3f light_direction() const;
 
-class GUA_DLL SkyMapPassDescription : public PipelinePassDescription {
- public:
-  SkyMapPassDescription();
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
+    SkyMapPassDescription& light_color(math::vec3f const& light_color);
+    math::vec3f light_color() const;
 
-  SkyMapPassDescription& light_direction(math::vec3f const& light_direction);
-  math::vec3f light_direction() const;
+    SkyMapPassDescription& light_brightness(float light_brightness);
+    float light_brightness() const;
 
-  SkyMapPassDescription& light_color(math::vec3f const& light_color);
-  math::vec3f light_color() const;
+    SkyMapPassDescription& ground_color(math::vec3f const& ground_color);
+    math::vec3f ground_color() const;
 
-  SkyMapPassDescription& light_brightness(float light_brightness);
-  float light_brightness() const;
+    SkyMapPassDescription& rayleigh_factor(float rayleigh_factor);
+    float rayleigh_factor() const;
 
+    SkyMapPassDescription& mie_factor(float mie_factor);
+    float mie_factor() const;
 
-  SkyMapPassDescription& ground_color(math::vec3f const& ground_color);
-  math::vec3f ground_color() const;
+    SkyMapPassDescription& output_texture_name(std::string const& output_texture_name);
+    std::string output_texture_name() const;
 
-  SkyMapPassDescription& rayleigh_factor(float rayleigh_factor);
-  float rayleigh_factor() const;
-
-  SkyMapPassDescription& mie_factor(float mie_factor);
-  float mie_factor() const;
-
-  SkyMapPassDescription& output_texture_name(std::string const& output_texture_name);
-  std::string output_texture_name() const;
-
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SKY_MAP_PASS
+#endif // GUA_SKY_MAP_PASS

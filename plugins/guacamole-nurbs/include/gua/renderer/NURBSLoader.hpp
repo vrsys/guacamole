@@ -29,14 +29,15 @@
 #include <unordered_set>
 #include <memory>
 
-namespace gua {
+namespace gua
+{
+class Material;
 
-  class Material;
-
-namespace node {
-  class Node;
-  class NURBSNode;
-}
+namespace node
+{
+class Node;
+class NURBSNode;
+} // namespace node
 
 /**
  * Loads NURBS files and creates NURBS nodes.
@@ -44,46 +45,38 @@ namespace node {
  * This class can load NURBS data from files and display them in multiple
  * contexts.
  */
-class GUA_NURBS_DLL NURBSLoader {
- public:
+class GUA_NURBS_DLL NURBSLoader
+{
+  public:
+    enum Flags
+    {
+        DEFAULTS = 0,
+        MAKE_PICKABLE = 1 << 0,
+        NORMALIZE_POSITION = 1 << 1,
+        NORMALIZE_SCALE = 1 << 2,
+        WIREFRAME = 1 << 3,
+        PRE_SUBDIVISION = 1 << 4,
+        TRIM_TEXTURE_8 = 1 << 5,
+        TRIM_TEXTURE_16 = 1 << 6,
+        TRIM_TEXTURE_32 = 1 << 7
+    };
 
-   enum Flags {
-     DEFAULTS = 0,
-     MAKE_PICKABLE = 1 << 0,
-     NORMALIZE_POSITION = 1 << 1,
-     NORMALIZE_SCALE = 1 << 2,
-     WIREFRAME = 1 << 3,
-     PRE_SUBDIVISION = 1 << 4,
-     TRIM_TEXTURE_8 = 1 << 5,
-     TRIM_TEXTURE_16 = 1 << 6,
-     TRIM_TEXTURE_32 = 1 << 7
-   };
+    NURBSLoader();
 
+  public:
+    std::shared_ptr<node::NURBSNode> load_geometry(std::string const& file_name, unsigned flags = DEFAULTS);
 
-  NURBSLoader();
+    std::shared_ptr<node::NURBSNode> load_geometry(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
 
-public:
+    void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
-  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& file_name,
-                                                 unsigned flags = DEFAULTS);
+  private:
+    bool is_supported(std::string const& file_name) const;
 
-  std::shared_ptr<node::NURBSNode> load_geometry(std::string const& node_name,
-                                                 std::string const& file_name,
-                                                 std::shared_ptr<Material> const& fallback_material,
-                                                 unsigned flags = DEFAULTS);
-
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
- 
- private:
-
-  bool is_supported(std::string const& file_name) const;
-
- private:
-
-  std::unordered_set<std::string> _supported_file_extensions;
-
+  private:
+    std::unordered_set<std::string> _supported_file_extensions;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_NURBS_LOADER_HPP
+#endif // GUA_NURBS_LOADER_HPP

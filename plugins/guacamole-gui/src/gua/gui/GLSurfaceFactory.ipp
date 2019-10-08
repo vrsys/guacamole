@@ -6,20 +6,13 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class GLSurfaceFactory : public Awesomium::SurfaceFactory {
+class GLSurfaceFactory : public Awesomium::SurfaceFactory
+{
+    ///////////////////////////////////////////////////////////////////////////////
+    // ----------------------------------------------------------- public interface
+  public:
+    // ------------------------------------------------------------ public methods
+    Awesomium::Surface* CreateSurface(Awesomium::WebView* view, int width, int height) { return new GLSurface(width, height); }
 
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
- public:
-
-  // ------------------------------------------------------------ public methods
-  Awesomium::Surface* CreateSurface(Awesomium::WebView* view,
-                                    int width, int height) {
-    return new GLSurface(width, height);
-  }
-
-  void DestroySurface(Awesomium::Surface* surface) {
-    delete static_cast<GLSurface*>(surface);
-  }
-
+    void DestroySurface(Awesomium::Surface* surface) { delete static_cast<GLSurface*>(surface); }
 };

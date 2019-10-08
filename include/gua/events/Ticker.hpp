@@ -29,30 +29,30 @@
 #include <gua/events/Signal.hpp>
 #include <gua/events/MainLoop.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+class GUA_DLL Ticker
+{
+  public:
+    Ticker(MainLoop& mainloop, double tick_time);
 
-class GUA_DLL Ticker {
-public:
+    void set_tick_time(double tick_time);
+    double get_tick_time() const;
 
-  Ticker(MainLoop& mainloop, double tick_time);
+    Signal<> on_tick;
 
-  void set_tick_time(double tick_time);
-  double get_tick_time() const;
+  private:
+    void self_callback(int revents);
 
-  Signal<> on_tick;
+    void async_wait();
 
-private:
-
-  void self_callback(int revents);
-
-  void async_wait ();
-
-  boost::asio::deadline_timer   timer_;
-  double                        tick_time_;
+    boost::asio::deadline_timer timer_;
+    double tick_time_;
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* TICKER_HPP_ */

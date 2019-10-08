@@ -30,75 +30,74 @@
  * This class is used to read text files.
  */
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL TextFile
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a TextFile without a file.
+     */
+    TextFile();
 
-class GUA_DLL TextFile {
+    /**
+     * Constructor.
+     *
+     * This constructs a TextFile with a file.
+     *
+     * \param file_name The file to be read.
+     */
+    TextFile(std::string const& file_name);
 
- public:
+    /**
+     * Returns if the given file is valid.
+     *
+     * \return The validity of the file.
+     */
+    bool is_valid() const;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a TextFile without a file.
-   */
-  TextFile();
+    /**
+     * Returns the given file's content.
+     *
+     * \return The given file's content.
+     */
+    std::string const& get_content() const;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a TextFile with a file.
-   *
-   * \param file_name The file to be read.
-   */
-  TextFile(std::string const& file_name);
+    /**
+     * Sets the given file's content.
+     *
+     * \param The new content.
+     */
+    void set_content(std::string const& content);
 
-  /**
-   * Returns if the given file is valid.
-   *
-   * \return The validity of the file.
-   */
-  bool is_valid() const;
+    /**
+     * Saves the file
+     *
+     */
+    bool save(bool create_subdirs = false) const;
 
-  /**
-   * Returns the given file's content.
-   *
-   * \return The given file's content.
-   */
-  std::string const& get_content() const;
+    /**
+     * Deletes the file from the file system
+     *
+     */
+    void remove();
 
-  /**
-   * Sets the given file's content.
-   *
-   * \param The new content.
-   */
-  void set_content(std::string const& content);
+    /**
+     * Returns the given file's name.
+     *
+     * \return The given file's name.
+     */
+    std::string const& get_file_name() const;
 
-  /**
-   * Saves the file
-   *
-   */
-  bool save(bool create_subdirs = false) const;
+  private:
+    std::string file_name_;
+    mutable std::string content_;
 
-  /**
-   * Deletes the file from the file system
-   *
-   */
-  void remove();
-
-  /**
-   * Returns the given file's name.
-   *
-   * \return The given file's name.
-   */
-  std::string const& get_file_name() const;
-
- private:
-  std::string file_name_;
-  mutable std::string content_;
-
-  mutable bool is_loaded_;
+    mutable bool is_loaded_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TEXTFILE_HPP
+#endif // GUA_TEXTFILE_HPP

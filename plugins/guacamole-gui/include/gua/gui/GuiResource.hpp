@@ -30,14 +30,14 @@
 #include <gua/gui/mouse_enums.hpp>
 #include <gua/gui/stl_helpers.hpp>
 
+namespace Awesomium
+{
+class WebView;
+class JSValue;
+} // namespace Awesomium
 
-namespace Awesomium {
-  class WebView;
-  class JSValue;
-}
-
-namespace gua {
-
+namespace gua
+{
 class GuiTexture;
 class RenderContext;
 class ShaderProgram;
@@ -50,9 +50,9 @@ class ShaderProgram;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class GuiResource {
+class GuiResource
+{
   public:
-
     /**
      * Default constructor.
      *
@@ -61,12 +61,10 @@ class GuiResource {
     GuiResource();
     ~GuiResource();
 
-    void init(std::string const& name,
-              std::string const& url = "",
-              math::vec2 const& size = math::vec2(1000.f, 1000.f));
+    void init(std::string const& name, std::string const& url = "", math::vec2 const& size = math::vec2(1000.f, 1000.f));
 
     events::Signal<std::string, std::vector<std::string>> on_javascript_callback;
-    events::Signal<>                                      on_loaded;
+    events::Signal<> on_loaded;
 
     void set_url(std::string const& url);
     std::string const& get_url() const;
@@ -89,18 +87,20 @@ class GuiResource {
     void inject_mouse_button(Button button, int action, int mods) const;
     void inject_mouse_wheel(math::vec2 const& direction) const;
 
-    template<typename ...Args>
-    void call_javascript(std::string const& method, Args&& ... a) const {
-      std::vector<std::string> args = {(gua::to_string(a))...};
-      call_javascript_arg_vector(method, args);
+    template <typename... Args>
+    void call_javascript(std::string const& method, Args&&... a) const
+    {
+        std::vector<std::string> args = {(gua::to_string(a))...};
+        call_javascript_arg_vector(method, args);
     }
 
     void call_javascript_arg_vector(std::string const& method, std::vector<std::string> const& args) const;
 
-    template<typename ...Args>
-    void call_javascript_async(std::string const& method, Args&& ... a) const {
-      std::vector<std::string> args = {(gua::to_string(a))...};
-      call_javascript_arg_vector_async(method, args);
+    template <typename... Args>
+    void call_javascript_async(std::string const& method, Args&&... a) const
+    {
+        std::vector<std::string> args = {(gua::to_string(a))...};
+        call_javascript_arg_vector_async(method, args);
     }
 
     void call_javascript_arg_vector_async(std::string const& method, std::vector<std::string> const& args) const;
@@ -108,13 +108,9 @@ class GuiResource {
     void add_javascript_callback(std::string const& name);
     void add_javascript_getter(std::string const& name, std::function<std::string()> callback);
 
-
-    std::unordered_map<std::string, std::function<std::string()>> const& get_result_callbacks() const {
-      return result_callbacks_;
-    }
+    std::unordered_map<std::string, std::function<std::string()>> const& get_result_callbacks() const { return result_callbacks_; }
 
   private:
-
     void add_javascript_callback(std::string const& callback, bool with_result);
 
     std::string name_;
@@ -125,10 +121,9 @@ class GuiResource {
     std::unordered_map<std::string, std::function<std::string()>> result_callbacks_;
     Awesomium::WebView* view_ = nullptr;
     Awesomium::JSValue* js_window_ = nullptr;
-    bool                interactive_ = true;
-
+    bool interactive_ = true;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_GUI_RESOURCE_HPP
+#endif // GUA_GUI_RESOURCE_HPP

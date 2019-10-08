@@ -36,8 +36,8 @@
 
 #include <vector>
 
-namespace gua {
-
+namespace gua
+{
 struct RenderContext;
 
 /**
@@ -48,51 +48,49 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class TriMeshRessource : public GeometryResource {
- public:
+class GUA_DLL TriMeshRessource : public GeometryResource
+{
+  public:
+    /**
+     * Default constructor.
+     *
+     * Creates a new and empty Mesh.
+     */
+    TriMeshRessource();
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new and empty Mesh.
-   */
-   TriMeshRessource();
+    /**
+     * Constructor from an Assimp mesh.
+     *
+     * Initializes the mesh from a given Assimp mesh.
+     *
+     * \param mesh             The Assimp mesh to load the data from.
+     */
+    TriMeshRessource(Mesh const& mesh, bool build_kd_tree);
 
-  /**
-   * Constructor from an Assimp mesh.
-   *
-   * Initializes the mesh from a given Assimp mesh.
-   *
-   * \param mesh             The Assimp mesh to load the data from.
-   */
-   TriMeshRessource(Mesh const& mesh, bool build_kd_tree);
+    /**
+     * Draws the Mesh.
+     *
+     * Draws the Mesh to the given context.
+     *
+     * \param context          The RenderContext to draw onto.
+     */
+    void draw(RenderContext& context) const;
 
-  /**
-   * Draws the Mesh.
-   *
-   * Draws the Mesh to the given context.
-   *
-   * \param context          The RenderContext to draw onto.
-   */
-  void draw(RenderContext& context) const;
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) override;
 
-  void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits) override;
+    inline unsigned int num_vertices() const { return mesh_.num_vertices; }
+    inline unsigned int num_faces() const { return mesh_.num_triangles; }
 
-  inline unsigned int num_vertices() const { return mesh_.num_vertices; }
-  inline unsigned int num_faces() const { return mesh_.num_triangles; }
+    math::vec3 get_vertex(unsigned int i) const;
+    std::vector<unsigned int> get_face(unsigned int i) const;
 
-  math::vec3 get_vertex(unsigned int i) const;
-  std::vector<unsigned int> get_face(unsigned int i) const;
+  private:
+    void upload_to(RenderContext& context) const;
 
- private:
-
-  void upload_to(RenderContext& context) const;
-
-  KDTree kd_tree_;
-  Mesh mesh_;
+    KDTree kd_tree_;
+    Mesh mesh_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TRIMESH_RESSOURCE_HPP
+#endif // GUA_TRIMESH_RESSOURCE_HPP

@@ -29,45 +29,47 @@
 #include <memory>
 #include <vector>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL MaterialShaderMethod
+{
+  public:
+    MaterialShaderMethod(std::string const& name = "");
+    ~MaterialShaderMethod() = default;
 
-class GUA_DLL MaterialShaderMethod {
- public:
+    MaterialShaderMethod& load_from_file(std::string const& file_name);
 
-  MaterialShaderMethod(std::string const& name = "");
-  ~MaterialShaderMethod() = default;
+    MaterialShaderMethod& load_from_json(std::string const& json_string);
 
-  MaterialShaderMethod& load_from_file(std::string const& file_name);
+    MaterialShaderMethod& set_name(std::string const& name);
+    std::string const& get_name() const;
 
-  MaterialShaderMethod& load_from_json(std::string const& json_string);
+    MaterialShaderMethod& set_source(std::string const& source);
+    std::string const& get_source() const;
 
-  MaterialShaderMethod& set_name(std::string const& name);
-  std::string const&    get_name() const;
+    template <typename T>
+    MaterialShaderMethod& set_uniform(std::string const& name, T const& value)
+    {
+        return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
+    }
 
-  MaterialShaderMethod& set_source(std::string const& source);
-  std::string const&    get_source() const;
+    MaterialShaderMethod& set_uniform(std::string const& name, ViewDependentUniform const& uniform)
+    {
+        uniforms_[name] = uniform;
+        return *this;
+    }
 
-  template <typename T>
-  MaterialShaderMethod& set_uniform(std::string const& name, T const& value) {
-    return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
-  }
+    std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
-  MaterialShaderMethod& set_uniform(std::string const& name, ViewDependentUniform const& uniform) {
-    uniforms_[name] = uniform;
-    return *this;
-  }
+    std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
+    void set_uniforms_from_serialized_string(std::string const& value);
 
-  std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
-
-  std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
-  void set_uniforms_from_serialized_string(std::string const& value);
-
- private:
-  std::string name_;
-  std::string source_;
-  std::map<std::string, ViewDependentUniform> uniforms_;
+  private:
+    std::string name_;
+    std::string source_;
+    std::map<std::string, ViewDependentUniform> uniforms_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_MATERIAL_SHADER_METHOD_HPP
+#endif // GUA_MATERIAL_SHADER_METHOD_HPP

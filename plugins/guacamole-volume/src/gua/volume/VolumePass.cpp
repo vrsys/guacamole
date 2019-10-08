@@ -27,44 +27,35 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/Resources.hpp>
 
-namespace gua {
+namespace gua
+{
+VolumePassDescription::VolumePassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "shaders/textured_screen_space_quad.vert";
+    fragment_shader_ = "shaders/textured_screen_space_quad.frag";
 
-VolumePassDescription::VolumePassDescription()
-  : PipelinePassDescription() {
-
-  vertex_shader_ = "shaders/textured_screen_space_quad.vert";
-  fragment_shader_ = "shaders/textured_screen_space_quad.frag";
-
-  needs_color_buffer_as_input_ = false;
-  enable_for_shadows_ = false;
-  writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.enable_for_shadows_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx,
-    SubstitutionMap& substitution_map) {
+PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+    auto renderer(std::make_shared<VolumeRenderer>());
 
-  PipelinePass pass{*this, ctx, substitution_map};
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) { renderer->render(pipe); };
 
-  auto renderer(std::make_shared<VolumeRenderer>());
-
-  pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const&, Pipeline& pipe) {
-
-      renderer->render(pipe);
-  };
-
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> VolumePassDescription::make_copy() const {
-  return std::make_shared<VolumePassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> VolumePassDescription::make_copy() const { return std::make_shared<VolumePassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace gua

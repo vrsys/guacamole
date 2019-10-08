@@ -26,4 +26,4 @@
 #include <gua/skelanim/renderer/SkeletalAnimationPass.hpp>
 #include <gua/skelanim/renderer/SkeletalAnimationLoader.hpp>
 
-#endif  // GUA_INCLUDE_SKELANIM_HPP
+#endif // GUA_INCLUDE_SKELANIM_HPP

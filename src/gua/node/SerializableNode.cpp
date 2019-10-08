@@ -22,11 +22,11 @@
 // class header
 #include <gua/node/SerializableNode.hpp>
 
-namespace gua {
-namespace node {
+namespace gua
+{
+namespace node
+{
+SerializableNode::SerializableNode(std::string const& name, math::mat4 const& transform) : Node(name, transform) {}
 
-SerializableNode::SerializableNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
-
-}
-}
+} // namespace node
+} // namespace gua

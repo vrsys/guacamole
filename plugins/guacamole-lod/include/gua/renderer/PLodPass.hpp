@@ -25,21 +25,20 @@
 #include <gua/renderer/Lod.hpp>
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription
+{
+  public: // typedefs, enums
+    enum SurfelRenderMode
+    {
+        LQ_ONE_PASS = 0,
+        HQ_TWO_PASS = 1
+    };
 
-  class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription {
+    friend class Pipeline;
 
-  public : // typedefs, enums
-
-  enum SurfelRenderMode {
-    LQ_ONE_PASS = 0,
-    HQ_TWO_PASS = 1
-  };
-
-   friend class Pipeline;
-
-  public :
-
+  public:
     PLodPassDescription(SurfelRenderMode const mode = SurfelRenderMode::HQ_TWO_PASS);
     PLodPassDescription& mode(SurfelRenderMode const mode);
     SurfelRenderMode mode() const;
@@ -47,10 +46,10 @@ namespace gua {
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
-  private :
+  private:
     SurfelRenderMode surfel_render_mode_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_P_LOD_PASS_HPP
+#endif // GUA_P_LOD_PASS_HPP

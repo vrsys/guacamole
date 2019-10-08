@@ -28,9 +28,10 @@
 #include <gua/databases/Database.hpp>
 #include <gua/physics/CollisionShape.hpp>
 
-namespace gua { 
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * A data base for collision shapes.
  *
@@ -39,28 +40,26 @@ namespace physics {
  *
  * \ingroup gua_databases
  */
-class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>,
-                                       public Singleton<CollisionShapeDatabase> {
- public:
+class GUA_DLL CollisionShapeDatabase : public Database<CollisionShape>, public Singleton<CollisionShapeDatabase>
+{
+  public:
+    /**
+     * Adds a collision shape to the database.
+     *
+     * \param name  String identifier.
+     * \param shape A pointer to the collision shape.
+     */
+    static void add_shape(const std::string& name, CollisionShape* shape);
 
-  /**
-   * Adds a collision shape to the database.
-   *
-   * \param name  String identifier.
-   * \param shape A pointer to the collision shape.
-   */
-  static void add_shape(const std::string& name, CollisionShape* shape);
+    friend class Singleton<CollisionShapeDatabase>;
 
-  friend class Singleton<CollisionShapeDatabase>;
+  private:
+    CollisionShapeDatabase() {}
 
- private:
-  CollisionShapeDatabase() {}
-
-  ~CollisionShapeDatabase() {}
-
+    ~CollisionShapeDatabase() {}
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_COLLISION_SHAPE_DATABASE_HPP
+#endif // GUA_COLLISION_SHAPE_DATABASE_HPP

@@ -24,10 +24,12 @@
 
 #include <gua/platform.hpp>
 
-namespace gua {
-namespace math {
-namespace random {
-
+namespace gua
+{
+namespace math
+{
+namespace random
+{
 /**
  * Sets a new random seed.
  *
@@ -61,7 +63,7 @@ float GUA_DLL get(float begin, float end);
  * \return        A random integer value.
  */
 int GUA_DLL get(int begin, int end);
-}
-}
-}
-#endif  // GUA_RANDOM_HPP
+} // namespace random
+} // namespace math
+} // namespace gua
+#endif // GUA_RANDOM_HPP

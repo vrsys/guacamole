@@ -26,9 +26,10 @@
 #include <LinearMath/btMotionState.h>
 #include <utility>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 class RigidBodyNode;
 
 /**
@@ -36,84 +37,85 @@ class RigidBodyNode;
  *        This class is used internally in RigidBodyNode and Physics classes
  *        for synchronizing world transforms.
  */
-class GuaMotionState : public btMotionState {
- public:
+class GuaMotionState : public btMotionState
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new motion state instance.
+     *
+     * \param start_trans Initial transform.
+     */
+    GuaMotionState(const btTransform& start_trans = btTransform::getIdentity());
 
-  /**
-   * Constructor.
-   *
-   * Creates a new motion state instance.
-   *
-   * \param start_trans Initial transform.
-   */
-  GuaMotionState(const btTransform& start_trans = btTransform::getIdentity());
+    /**
+     * Destructor.
+     *
+     * Deletes the motion state and frees all associated data.
+     */
+    ~GuaMotionState();
 
-  /**
-   * Destructor.
-   *
-   * Deletes the motion state and frees all associated data.
-   */
-  ~GuaMotionState();
+    /**
+     * Synchronizes world transform from user to physics. This method
+     *        is called by Bullet's simulation function.
+     *
+     * \param [out] centerOfMassWorldTrans Output where the current
+     *                                     transform should be stored.
+     */
+    virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const;
 
-  /**
-   * Synchronizes world transform from user to physics. This method
-   *        is called by Bullet's simulation function.
-   *
-   * \param [out] centerOfMassWorldTrans Output where the current
-   *                                     transform should be stored.
-   */
-  virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const;
+    /**
+     * Synchronizes world transform from physics to user. This method
+     *        is called by Bullet's simulation function for active
+     *        rigid bodies.
+     *
+     * \param centerOfMassWorldTrans New transform.
+     */
+    virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans);
 
-  /**
-   * Synchronizes world transform from physics to user. This method
-   *        is called by Bullet's simulation function for active
-   *        rigid bodies.
-   *
-   * \param centerOfMassWorldTrans New transform.
-   */
-  virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans);
+    /**
+     * Gets the latest world transform that becomes available after
+     *        calling flip_reader().
+     *        This method is called by RigidBodyNode::get_transform().
+     *
+     * \param [out] centerOfMassWorldTrans Output where transform should be
+     *                                     stored.
+     * \sa    flip_reader()
+     */
+    virtual void latest_transform(btTransform& centerOfMassWorldTrans) const;
 
-   /**
-   * Gets the latest world transform that becomes available after
-   *        calling flip_reader().
-   *        This method is called by RigidBodyNode::get_transform().
-   *
-   * \param [out] centerOfMassWorldTrans Output where transform should be
-   *                                     stored.
-   * \sa    flip_reader()
-   */
-  virtual void latest_transform(btTransform& centerOfMassWorldTrans) const;
-
-   /**
-   * Copies the transform from the writer's buffer to the intermediate
-   *        buffer. This method is used in Physics::simulate().
-   */
-  inline void flip_writer() {
-    *transforms_[1] = *transforms_[0];
-    dirty = true;
-  }
-
-   /**
-   * Copies the transform from the intermediate buffer to the reader's
-   *        buffer. Physics::synchronize() calls this method for all
-   *        rigid bodies to retrieve the latest available transforms.
-   * \sa    latest_transform()
-   */
-  inline void flip_reader() {
-    if (dirty) {
-      std::swap(transforms_[1], transforms_[2]);
-      dirty = false;
+    /**
+     * Copies the transform from the writer's buffer to the intermediate
+     *        buffer. This method is used in Physics::simulate().
+     */
+    inline void flip_writer()
+    {
+        *transforms_[1] = *transforms_[0];
+        dirty = true;
     }
-  }
 
- private:
+    /**
+     * Copies the transform from the intermediate buffer to the reader's
+     *        buffer. Physics::synchronize() calls this method for all
+     *        rigid bodies to retrieve the latest available transforms.
+     * \sa    latest_transform()
+     */
+    inline void flip_reader()
+    {
+        if(dirty)
+        {
+            std::swap(transforms_[1], transforms_[2]);
+            dirty = false;
+        }
+    }
 
-  btTransform* transforms_[3];
-  bool dirty;
-
+  private:
+    btTransform* transforms_[3];
+    bool dirty;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_MOTION_STATE_HPP
+#endif // GUA_MOTION_STATE_HPP

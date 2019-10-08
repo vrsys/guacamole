@@ -25,9 +25,10 @@
 #include <gua/events/properties/NumericProperty.hpp>
 #include <gua/events/properties/LogicalProperty.hpp>
 
-namespace gua {
-namespace events {
-
+namespace gua
+{
+namespace events
+{
 using Double = NumericProperty<double>;
 using Float = NumericProperty<float>;
 using Int = NumericProperty<int>;
@@ -35,9 +36,9 @@ using Char = NumericProperty<char>;
 using UInt = NumericProperty<unsigned>;
 using UChar = NumericProperty<unsigned char>;
 
-//using Bool = LogicalProperty<bool>;
+// using Bool = LogicalProperty<bool>;
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* PROPERTIES_HPP_ */

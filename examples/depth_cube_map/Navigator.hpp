@@ -6,10 +6,9 @@
 
 #include <scm/core/math.h>
 
-class Navigator {
-
+class Navigator
+{
   public:
-
     Navigator();
 
     void update();
@@ -26,7 +25,6 @@ class Navigator {
     void set_motion_speed(float motion_speed);
 
   private:
-
     scm::math::mat4f transform_;
 
     scm::math::vec4f current_location_;
@@ -50,4 +48,4 @@ class Navigator {
     float motion_speed_;
 };
 
-#endif  // NAVIGATOR_HPP
+#endif // NAVIGATOR_HPP

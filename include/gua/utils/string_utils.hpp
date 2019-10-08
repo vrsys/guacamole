@@ -27,27 +27,30 @@
 #include <sstream>
 #include <vector>
 
-namespace gua {
-namespace string_utils {
-
-template <typename T> inline std::string to_string(T value) {
-  std::stringstream strstr;
-  strstr << value;
-  return strstr.str();
+namespace gua
+{
+namespace string_utils
+{
+template <typename T>
+inline std::string to_string(T value)
+{
+    std::stringstream strstr;
+    strstr << value;
+    return strstr.str();
 }
 
-template <typename T> inline T from_string(std::string const value) {
-  std::stringstream strstr(value);
-  T result;
-  strstr >> result;
-  return result;
+template <typename T>
+inline T from_string(std::string const value)
+{
+    std::stringstream strstr(value);
+    T result;
+    strstr >> result;
+    return result;
 }
 
 GUA_DLL std::vector<std::string> split(std::string const& s, char delim);
 
-GUA_DLL std::string& replace(std::string& str,
-                             std::string const& old_str,
-                             std::string const& new_str);
+GUA_DLL std::string& replace(std::string& str, std::string const& old_str, std::string const& new_str);
 
 GUA_DLL std::string format_code(std::string const& code);
 
@@ -55,7 +58,7 @@ GUA_DLL std::string demangle_type_name(const char* name);
 
 GUA_DLL std::string sanitize(std::string const& str);
 
-}
-}
+} // namespace string_utils
+} // namespace gua
 
-#endif  //GUA_STRING_UTILS_HPP
+#endif // GUA_STRING_UTILS_HPP

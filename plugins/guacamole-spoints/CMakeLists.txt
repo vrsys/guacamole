@@ -24,9 +24,9 @@ add_library( guacamole-spoints SHARED
     ${GUA_SPOINTS_SHADERS}
 )
 
-target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR})
+target_include_directories(guacamole-spoints PUBLIC ${GUACAMOLE_SPOINTS_INCLUDE_DIR} ${TurboJPEG_INCLUDE_DIRS} ${FASTLZ_INC})
 
-target_link_libraries( guacamole-spoints guacamole)
+target_link_libraries(guacamole-spoints guacamole ${TurboJPEG_LIBRARIES} lz4)
 
 IF (MSVC)
 	set_target_properties(guacamole-spoints PROPERTIES COMPILE_FLAGS "-D GUA_SPOINTS_LIBRARY")

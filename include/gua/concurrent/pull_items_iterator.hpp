@@ -26,78 +26,76 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
 
-namespace gua {
-namespace concurrent {
-
+namespace gua
+{
+namespace concurrent
+{
 // Adapted from:
 // http://ericniebler.com/2013/11/07/input-iterators-vs-input-ranges/
-template <class T, class Container> class pull_items_range {
-  Container& sin_;
-  mutable T obj_;
+template <class T, class Container>
+class pull_items_range
+{
+    Container& sin_;
+    mutable T obj_;
 
-  bool next() const {
-    boost::optional<T> v = sin_->read();
-    if (v)
-      obj_ = *v;
-    return bool(v);
-  }
-
- public:
-
-  struct iterator
-      : boost::iterator_facade<iterator, T const, std::input_iterator_tag> {
-    iterator() : rng_ {}
-    {}
-
-   private:
-    friend class pull_items_range;
-    friend class boost::iterator_core_access;
-
-    explicit iterator(pull_items_range const& rng)
-        : rng_(rng ? &rng : nullptr) {}
-
-    void increment() {
-      // Don't advance a singular iterator
-      BOOST_ASSERT(rng_);
-      // Fetch the next element, null out the
-      // iterator if it fails
-      if (!rng_->next())
-        rng_ = nullptr;
-    }
-    bool equal(iterator that) const { return rng_ == that.rng_; }
-
-    T const& dereference() const {
-      // Don't deref a singular iterator
-      BOOST_ASSERT(rng_);
-      return rng_->obj_;
+    bool next() const
+    {
+        boost::optional<T> v = sin_->read();
+        if(v)
+            obj_ = *v;
+        return bool(v);
     }
 
-    pull_items_range const* rng_;
-  };
-  // Define const_iterator and iterator together:
-  using const_iterator = iterator;
+  public:
+    struct iterator : boost::iterator_facade<iterator, T const, std::input_iterator_tag>
+    {
+        iterator() : rng_{} {}
 
-  explicit pull_items_range(Container& sin) : sin_(sin), obj_ {} {
-    next();  // prime the pump
-  }
+      private:
+        friend class pull_items_range;
+        friend class boost::iterator_core_access;
 
-  iterator begin() const {
-    return iterator { *this };
-  }
+        explicit iterator(pull_items_range const& rng) : rng_(rng ? &rng : nullptr) {}
 
-  iterator end() const {
-    return iterator {};
-  }
+        void increment()
+        {
+            // Don't advance a singular iterator
+            BOOST_ASSERT(rng_);
+            // Fetch the next element, null out the
+            // iterator if it fails
+            if(!rng_->next())
+                rng_ = nullptr;
+        }
+        bool equal(iterator that) const { return rng_ == that.rng_; }
 
-  explicit operator bool() const {
-    return !sin_->closed();
-  }
+        T const& dereference() const
+        {
+            // Don't deref a singular iterator
+            BOOST_ASSERT(rng_);
+            return rng_->obj_;
+        }
 
-  bool operator!() const { return !sin_; }
+        pull_items_range const* rng_;
+    };
+    // Define const_iterator and iterator together:
+    using const_iterator = iterator;
+
+    explicit pull_items_range(Container& sin) : sin_(sin), obj_{}
+    {
+        next(); // prime the pump
+    }
+
+    iterator begin() const { return iterator{*this}; }
+
+    iterator end() const { return iterator{}; }
+
+    explicit operator bool() const { return !sin_->closed(); }
+
+    bool operator!() const { return !sin_; }
 };
 
-}
+} // namespace concurrent
 
-}
+} // namespace gua
 
-#endif  // GUA_PULL_ITEMS_RANGE_HPP
+#endif // GUA_PULL_ITEMS_RANGE_HPP

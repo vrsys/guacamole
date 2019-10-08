@@ -26,14 +26,14 @@
 #include <gua/video3d/Video3DPass.hpp>
 #include <gua/video3d/Video3DLoader.hpp>
 
-#if defined (_MSC_VER)
-#if defined (GUA_VIDEO3D_LIBRARY)
-#define GUA_VIDEO3D_DLL __declspec( dllexport )
+#if defined(_MSC_VER)
+#if defined(GUA_VIDEO3D_LIBRARY)
+#define GUA_VIDEO3D_DLL __declspec(dllexport)
 #else
-#define GUA_VIDEO3D_DLL __declspec( dllimport )
+#define GUA_VIDEO3D_DLL __declspec(dllimport)
 #endif
 #else
 #define GUA_VIDEO3D_DLL
 #endif // #if defined(_MSC_VER)
 
-#endif  // GUA_INCLUDE_VIDEO3D_HPP
+#endif // GUA_INCLUDE_VIDEO3D_HPP

@@ -45,82 +45,78 @@
 #include <scm/core/platform/platform.h>
 #include <scm/core/utilities/platform_warning_disable.h>
 
-namespace gua {
+namespace gua
+{
+class NURBSGPURessource;
 
-  class NURBSGPURessource;
+namespace node
+{
+class NURBSNode;
+};
 
-  namespace node {
-    class NURBSNode;
-  };
-
-  template <typename T>
-  std::size_t size_in_bytes(T const& container)
-  {
+template <typename T>
+std::size_t size_in_bytes(T const& container)
+{
     using value_type = typename T::value_type;
     return container.size() * sizeof(value_type);
-  };
+};
 
-class GUA_NURBS_DLL NURBSResource : public GeometryResource {
+class GUA_NURBS_DLL NURBSResource : public GeometryResource
+{
+  public: // constants
+    struct texture_buffer_binding
+    {
+        scm::gl::texture_buffer_ptr buffer;
+        unsigned texunit;
+    };
+    struct ssbo_binding
+    {
+        scm::gl::buffer_ptr buffer;
+        unsigned unit;
+    };
 
- public: // constants
+    static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 100000000; // 200MB temporary XFB Buffer
 
-   struct texture_buffer_binding {
-     scm::gl::texture_buffer_ptr buffer;
-     unsigned texunit;
-   };
-   struct ssbo_binding {
-     scm::gl::buffer_ptr buffer;
-     unsigned unit;
-   };
-
-   static std::size_t const MAX_XFB_BUFFER_SIZE_IN_BYTES = 100000000; // 200MB temporary XFB Buffer
-
- public : // c'tor / d'tor
-
-   NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
+  public: // c'tor / d'tor
+    NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
                   unsigned pre_subdivision_u,
                   unsigned pre_subdivision_v,
                   unsigned trim_resolution,
                   scm::gl::fill_mode in_fill_mode = scm::gl::FILL_SOLID
-                  //scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME
-                  );
+                  // scm::gl::fill_mode in_fill_mode = scm::gl::FILL_WIREFRAME
+    );
 
- public : // methods
+  public: // methods
+    /*virtual*/ void predraw(RenderContext const& context) const;
 
-  /*virtual*/ void predraw(RenderContext const& context) const;
+    /*virtual*/ void draw(RenderContext const& context, bool pretessellation) const;
 
-  /*virtual*/ void draw(RenderContext const& context, bool pretessellation) const;
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) {}
 
-  void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits) {}
+    void wireframe(bool enable);
 
-  void wireframe(bool enable);
+  private:
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    // CPU ressources
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    std::shared_ptr<NURBSData> _data;
 
- private:
-   
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  // CPU ressources
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  std::shared_ptr<NURBSData> _data;
+    mutable std::mutex _upload_mutex;
 
-  mutable std::mutex                                                        _upload_mutex;
+    scm::gl::fill_mode _fill_mode;
 
-  scm::gl::fill_mode         _fill_mode;
+    /////////////////////////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  private: // helper methods
+    void upload_to(RenderContext const& context) const;
 
- private:  // helper methods
-
-  void upload_to(RenderContext const& context) const;
-
-  void initialize_states(RenderContext const& context) const;
-  void initialize_texture_buffers(RenderContext const& context) const;
-  void validate_texture_buffers() const;
-  void initialize_vertex_data(RenderContext const& context) const;
-  void initialize_transform_feedback(RenderContext const& context) const;
-
+    void initialize_states(RenderContext const& context) const;
+    void initialize_texture_buffers(RenderContext const& context) const;
+    void validate_texture_buffers() const;
+    void initialize_vertex_data(RenderContext const& context) const;
+    void initialize_transform_feedback(RenderContext const& context) const;
 };
 
-}  //namespace gua
+} // namespace gua
 
 #endif // GUA_NURBS_RESSOURCE_HPP

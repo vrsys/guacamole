@@ -27,72 +27,71 @@
 
 #include <scm/gl_core/math.h>
 
-namespace gua {
-namespace utils {
-
+namespace gua
+{
+namespace utils
+{
 class GUA_DLL Trackball
 {
-public:
+  public:
+    enum button_type
+    {
+        left = 0x01,
+        middle = 0x02,
+        right = 0x03
+    };
 
-  enum button_type {
-    left = 0x01,
-    middle = 0x02,
-    right = 0x03
-  };
+    enum state_type
+    {
+        pressed = 0x01,
+        released = 0x02
+    };
 
-  enum state_type {
-    pressed = 0x01,
-    released = 0x02
-  };
+    Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor = 0.25f);
 
-  Trackball(double zoom_factor = 1.0f, double shift_factor = 0.5f, double rotation_factor = 0.25f);
+  public:
+    math::mat4 rotation() const;
 
-public:
+    double distance() const;
+    double shiftx() const;
+    double shifty() const;
 
-  math::mat4          rotation() const;
+    void reset();
 
-  double              distance() const;
-  double              shiftx() const;
-  double              shifty() const;
+    int posx() const;
+    int posy() const;
 
-  void                reset();
+    void mouse(enum button_type button, enum state_type state, int x, int y);
+    void motion(int x, int y);
 
-  int                 posx() const;
-  int                 posy() const;
+  private:
+    // trackball configuration
+    double mapping_zoom_;
+    double mapping_shift_;
+    double mapping_rotate_;
 
-  void                mouse(enum button_type button, enum state_type state, int x, int y);
-  void                motion(int x, int y);
+  private: // temporary state
+    // current button state
+    bool button_left_;
+    bool button_middle_;
+    bool button_right_;
 
-private:
+    // current pixel position
+    int mousepos_x_;
+    int mousepos_y_;
 
-  // trackball configuration
-  double mapping_zoom_;
-  double mapping_shift_;
-  double mapping_rotate_;
+    // current rotation
+    math::mat4 rotation_euler_;
 
-private: // temporary state
+    // current distance
+    double distance_;
 
-  // current button state
-  bool                    button_left_;
-  bool                    button_middle_;
-  bool                    button_right_;
-
-  // current pixel position
-  int                     mousepos_x_;
-  int                     mousepos_y_;
-
-  // current rotation
-  math::mat4              rotation_euler_;
-
-  // current distance
-  double                   distance_;
-
-  // current shift
-  double                   shiftx_;
-  double                   shifty_;
+    // current shift
+    double shiftx_;
+    double shifty_;
 };
 
-}
-}
+} // namespace utils
+} // namespace gua
 
-#endif  // GUA_TRACKBALL_HPP
+#endif // GUA_TRACKBALL_HPP

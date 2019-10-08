@@ -40,35 +40,36 @@
 #include <scm/core/platform/platform.h>
 #include <scm/core/utilities/platform_warning_disable.h>
 
-namespace gua {
-
-  struct NURBSGPURessource : public PluginRessource {
-
+namespace gua
+{
+struct NURBSGPURessource : public PluginRessource
+{
     // array and texture buffers for adaptive tesselation
-    struct surface_tesselation_buffer {
-      scm::gl::vertex_array_ptr     vertex_array;
+    struct surface_tesselation_buffer
+    {
+        scm::gl::vertex_array_ptr vertex_array;
 
-      scm::gl::buffer_ptr           vertex_buffer;
-      scm::gl::buffer_ptr           index_buffer;
-      scm::gl::buffer_ptr           hullvertexmap;
-      scm::gl::buffer_ptr           attribute_buffer;
+        scm::gl::buffer_ptr vertex_buffer;
+        scm::gl::buffer_ptr index_buffer;
+        scm::gl::buffer_ptr hullvertexmap;
+        scm::gl::buffer_ptr attribute_buffer;
 
-      scm::gl::texture_buffer_ptr   parametric_texture_buffer;
-      scm::gl::texture_buffer_ptr   domain_texture_buffer;
-      scm::gl::texture_buffer_ptr   obb_texture_buffer;
-      scm::gl::texture_buffer_ptr   attribute_texture_buffer;
+        scm::gl::texture_buffer_ptr parametric_texture_buffer;
+        scm::gl::texture_buffer_ptr domain_texture_buffer;
+        scm::gl::texture_buffer_ptr obb_texture_buffer;
+        scm::gl::texture_buffer_ptr attribute_texture_buffer;
     } _surface_tesselation_data;
 
-    // texture buffers for trimming   
-    struct {
-      scm::gl::texture_buffer_ptr    partition_texture_buffer;
-      scm::gl::texture_buffer_ptr    contourlist_texture_buffer;
-      scm::gl::texture_buffer_ptr    curvelist_texture_buffer;
-      scm::gl::texture_buffer_ptr    curvedata_texture_buffer;
-      scm::gl::texture_buffer_ptr    pointdata_texture_buffer;
-      scm::gl::texture_buffer_ptr    preclassification_buffer;
+    // texture buffers for trimming
+    struct
+    {
+        scm::gl::texture_buffer_ptr partition_texture_buffer;
+        scm::gl::texture_buffer_ptr contourlist_texture_buffer;
+        scm::gl::texture_buffer_ptr curvelist_texture_buffer;
+        scm::gl::texture_buffer_ptr curvedata_texture_buffer;
+        scm::gl::texture_buffer_ptr pointdata_texture_buffer;
+        scm::gl::texture_buffer_ptr preclassification_buffer;
     } _contour_trimming_data;
-
-  };
-}
+};
+} // namespace gua
 #endif // GUA_NURBS_GPU_RESOURCE_HPP

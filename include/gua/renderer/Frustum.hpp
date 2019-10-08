@@ -29,82 +29,62 @@
 
 #include <set>
 
-namespace gua {
-
+namespace gua
+{
 struct Ray;
 
-namespace node {
-  class RayNode;
+namespace node
+{
+class RayNode;
 }
 
 /**
  *
  */
-class GUA_DLL Frustum {
+class GUA_DLL Frustum
+{
+  public:
+    Frustum();
 
- public:
+    static Frustum perspective(math::mat4 const& camera_transform, math::mat4 const& screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far);
 
-  Frustum();
+    static Frustum orthographic(math::mat4 const& camera_transform, math::mat4 const& screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far);
 
-  static Frustum perspective(math::mat4 const& camera_transform,
-                             math::mat4 const& screen_transform,
-                             math::mat4::value_type clip_near,
-                             math::mat4::value_type clip_far);
+    std::vector<math::vec3> get_corners() const;
 
-  static Frustum orthographic(math::mat4 const& camera_transform,
-                              math::mat4 const& screen_transform,
-                              math::mat4::value_type clip_near,
-                              math::mat4::value_type clip_far);
+    inline math::vec3 get_camera_position() const { return math::vec3(camera_transform_.column(3)[0], camera_transform_.column(3)[1], camera_transform_.column(3)[2]); }
 
-  std::vector<math::vec3> get_corners() const;
+    inline math::mat4 const& get_camera_transform() const { return camera_transform_; }
+    inline math::mat4 const& get_screen_transform() const { return screen_transform_; }
 
-  inline math::vec3 get_camera_position() const {
-    return math::vec3(camera_transform_.column(3)[0],
-                      camera_transform_.column(3)[1],
-                      camera_transform_.column(3)[2]);
-  }
+    inline math::mat4 const& get_projection() const { return projection_; }
+    inline math::mat4 const& get_view() const { return view_; }
+	inline void set_view(math::mat4 const& view) const { view_ = view; }
+    inline math::mat4::value_type get_clip_near() const { return clip_near_; }
+    inline math::mat4::value_type get_clip_far() const { return clip_far_; }
 
-  inline math::mat4 const& get_camera_transform() const { return camera_transform_; }
-  inline math::mat4 const& get_screen_transform() const { return screen_transform_; }
+    bool intersects(math::BoundingBox<math::vec3> const& bbox, std::vector<math::vec4> const& global_planes = {}) const;
+    bool contains(math::vec3 const& point) const;
 
-  inline math::mat4 const& get_projection() const { return projection_; }
-  inline math::mat4 const& get_view() const { return view_; }
-  inline math::mat4::value_type get_clip_near() const { return clip_near_; }
-  inline math::mat4::value_type get_clip_far() const { return clip_far_; }
+    std::set<PickResult> const ray_test(node::RayNode const& ray, int options = PickResult::PICK_ALL);
 
-  bool intersects(math::BoundingBox<math::vec3> const& bbox,
-                  std::vector<math::vec4> const& global_planes = {}) const;
-  bool contains(math::vec3 const& point) const;
+    std::set<PickResult> const ray_test(Ray const& ray, int options = PickResult::PICK_ALL);
 
-  std::set<PickResult> const ray_test(node::RayNode const& ray,
-                                      int options = PickResult::PICK_ALL);
+    bool operator==(Frustum const& other) const { return projection_ == other.projection_ && clip_near_ == other.clip_near_ && clip_far_ == other.clip_far_; }
+    bool operator!=(Frustum const& other) const { return !(*this == other); }
 
-  std::set<PickResult> const ray_test(Ray const& ray,
-                                      int options = PickResult::PICK_ALL);
+  private:
+    static void init_frustum_members(math::mat4 const& camera_transform, math::mat4 const& screen_transform, Frustum& frustum);
 
-  bool operator==(Frustum const& other) const {
-    return projection_==other.projection_ && clip_near_==other.clip_near_ && clip_far_==other.clip_far_;
-  }
-  bool operator!=(Frustum const& other) const {
-    return !(*this==other);
-  }
-
- private:
-
-  static void init_frustum_members(math::mat4 const& camera_transform,
-                         math::mat4 const& screen_transform,
-                         Frustum& frustum);
-
-  math::mat4 camera_transform_;
-  math::mat4 screen_transform_;
-  math::mat4 projection_;
-  math::mat4 view_;
-  std::vector<math::vec4> planes_;
-  math::mat4::value_type clip_near_;
-  math::mat4::value_type clip_far_;
-
+    math::mat4 camera_transform_;
+    math::mat4 screen_transform_;
+    math::mat4 projection_;
+    mutable math::mat4 view_;
+    std::vector<math::vec4> planes_;
+    math::mat4::value_type clip_near_;
+    math::mat4::value_type clip_far_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_FRUSTUM_HPP
+#endif // GUA_FRUSTUM_HPP
