@@ -231,11 +231,6 @@ void DynamicGeometryNode::update_cache()
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<DynamicGeometryResource> const& DynamicGeometryNode::get_geometry() const { return geometry_; }
 
-////////////////////////////////////////////////////////////////////////////////
-// void DynamicGeometryNode::set_geometry(std::shared_ptr<DynamicGeometryResource> res) {
-//   std::cout<<"set GEOMETRY"<< res<< std::endl;
-//   geometry_ = res;
-// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */ void DynamicGeometryNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
@@ -283,8 +278,7 @@ void DynamicGeometryNode::push_vertex(DynamicGeometry::Vertex const& dynamic_geo
                 dynamic_geometry_vertex.col[1],
                 dynamic_geometry_vertex.col[2],
                 dynamic_geometry_vertex.col[3],
-                dynamic_geometry_vertex.thick //,
-                // dynamic_geometry_vertex.nor[0], dynamic_geometry_vertex.nor[1], dynamic_geometry_vertex.nor[2]
+                dynamic_geometry_vertex.thick 
     );
 };
 
@@ -297,13 +291,13 @@ void DynamicGeometryNode::enqueue_vertex(float x,
                                          float col_b,
                                          float col_a,
                                          float thickness //,
-                                         // float nor_x, float nor_y, float nor_z
+                                         
 )
 {
     queued_positions_.push_back(scm::math::vec3f(x, y, z));
     queued_colors_.push_back(scm::math::vec4f(col_r, col_g, col_b, col_a));
     queued_thicknesses_.push_back(thickness);
-    // queued_normals_.push_back(scm::math::vec3f(nor_x, nor_y, nor_z));
+    
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +309,6 @@ void DynamicGeometryNode::push_vertex(float x,
                                       float col_b,
                                       float col_a,
                                       float thickness //,
-                                      // float nor_x, float nor_y, float nor_z
 )
 {
     if(nullptr != geometry_)
@@ -327,8 +320,7 @@ void DynamicGeometryNode::push_vertex(float x,
                                                col_g,
                                                col_b,
                                                col_a,
-                                               thickness //,
-                                               // nor_x, nor_y, nor_z
+                                               thickness
         );
 
         geometry_->push_vertex(vertex_to_push);
@@ -361,8 +353,6 @@ void DynamicGeometryNode::clear_vertices()
         queued_positions_.clear();
         queued_colors_.clear();
         queued_thicknesses_.clear();
-        // queued_normals_.clear();
-        // geometry_->clear_vertices();
     }
 }
 

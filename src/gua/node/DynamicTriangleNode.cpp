@@ -260,13 +260,6 @@ void DynamicTriangleNode::forward_queued_vertices()
     }
 }
 
-//    ////////////////////////////////////////////////////////////////////////////////
-// void DynamicTriangleNode::set_geometry(std::shared_ptr<DynamicGeometryResource> res) {
-//   std::cout<<"set tri GEOMETRY"<< res<< std::endl;
-//   geometry_ = res;
-// }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 void DynamicTriangleNode::compile_buffer_string(std::string& buffer_string)
