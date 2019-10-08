@@ -47,30 +47,28 @@
 #include <lamure/ren/cut.h>
 #include <lamure/ren/dataset.h>
 
-namespace gua {
-
-  namespace node{
-    class PLodNode;
-    class MLodNode;
-  };
+namespace gua
+{
+namespace node
+{
+class PLodNode;
+class MLodNode;
+}; // namespace node
 
 /**
  * Stores a point cloud model with Lod.
  *
  * This class simply a wrapper for accessing models of PBR library
  */
-  class GUA_LOD_DLL LodResource : public GeometryResource {
-
+class GUA_LOD_DLL LodResource : public GeometryResource
+{
   public: // c'tor /d'tor
-
     LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform);
 
     ~LodResource();
 
   public: // methods
-    
     /*virtual*/ void draw(RenderContext const& context) const;
-
 
     /**
      * Draws the point cloud.
@@ -91,18 +89,14 @@ namespace gua {
 
     math::mat4 const& local_transform() const;
 
-    void ray_test(Ray const& ray,
-                  int options,
-                  node::Node* owner,
-                  std::set<PickResult>& hits);
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits);
 
- private:
-
-  bool          is_pickable_;
-  lamure::model_t  model_id_;
-  math::mat4    local_transform_;
+  private:
+    bool is_pickable_;
+    lamure::model_t model_id_;
+    math::mat4 local_transform_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_LOD_RESSOURCE_HPP
+#endif // GUA_LOD_RESSOURCE_HPP
