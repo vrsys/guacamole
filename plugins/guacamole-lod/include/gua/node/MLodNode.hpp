@@ -31,13 +31,13 @@
 
 #include <unordered_set>
 
-namespace gua {
-
+namespace gua
+{
 class LodResource;
 class LodLoader;
 
-namespace node {
-
+namespace node
+{
 /**
  * This class is used to represent a multiresolution mesh in the SceneGraph.
  *
@@ -45,69 +45,66 @@ namespace node {
  */
 class GUA_LOD_DLL MLodNode : public GeometryNode
 {
-public:
-  friend class ::gua::LodLoader;
+  public:
+    friend class ::gua::LodLoader;
 
-  // c'tor
-  MLodNode(std::string const& node_name,
-           std::string const& geometry_description = "gua_default_geometry",
-           std::string const& geometry_file_path = "gua_no_path_specified",
-           std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
-           math::mat4 const& transform = math::mat4::identity(),
-           float const error_threshold = 2.5f);
+    // c'tor
+    MLodNode(std::string const& node_name,
+             std::string const& geometry_description = "gua_default_geometry",
+             std::string const& geometry_file_path = "gua_no_path_specified",
+             std::shared_ptr<Material> const& material = std::shared_ptr<Material>(),
+             math::mat4 const& transform = math::mat4::identity(),
+             float const error_threshold = 2.5f);
 
-public:  // method override
+  public: // method override
+  public: // methods
+    std::shared_ptr<LodResource> const& get_geometry() const;
 
-public:  // methods
+    /*virtual*/ math::mat4 get_world_transform() const override;
 
-  std::shared_ptr<LodResource> const& get_geometry() const;
+    std::string const& get_geometry_description() const;
+    void set_geometry_description(std::string const& v);
 
-  /*virtual*/ math::mat4 get_world_transform() const override;
+    std::string const& get_geometry_file_path() const;
 
-  std::string const& get_geometry_description() const;
-  void               set_geometry_description(std::string const& v);
+    std::shared_ptr<Material> const& get_material() const;
+    void set_material(std::shared_ptr<Material> const& material);
 
-  std::string const& get_geometry_file_path() const;
+    float get_error_threshold();
+    void set_error_threshold(float const threshold);
 
-  std::shared_ptr<Material> const& get_material() const;
-  void               set_material(std::shared_ptr<Material> const& material);
+    int get_min_lod_depth();
+    void set_min_lod_depth(int min_lod_depth);
 
-  float              get_error_threshold();
-  void               set_error_threshold(float const threshold);
+  public:
+    /**
+     * Implements ray picking for a multiresolution mesh
+     */
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-public:
-  /**
-  * Implements ray picking for a multiresolution mesh
-  */
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+    void update_bounding_box() const override;
 
-  void update_bounding_box() const override;
+    void update_cache() override;
 
-  void update_cache() override;
+    void accept(NodeVisitor& visitor) override;
 
-  void accept(NodeVisitor& visitor) override;
+  protected:
+    std::shared_ptr<Node> copy() const override;
 
-protected:
+  private: // attributes e.g. special attributes for drawing
+    std::shared_ptr<LodResource> geometry_;
+    std::string geometry_description_;
+    std::string geometry_file_path_;
+    bool geometry_changed_;
 
-  std::shared_ptr<Node> copy() const override;
+    std::shared_ptr<Material> material_;
+    bool material_changed_;
 
-private:  // attributes e.g. special attributes for drawing
-
-  std::shared_ptr<LodResource> geometry_;
-  std::string                   geometry_description_;
-  std::string                   geometry_file_path_;
-  bool                          geometry_changed_;
-
-  std::shared_ptr<Material>     material_;
-  bool                          material_changed_;
-
-  float                         error_threshold_;
+    float error_threshold_;
+    int min_lod_depth_;
 };
 
-}  // namespace node {
-}  // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_M_LOD_NODE_HPP
+#endif // GUA_M_LOD_NODE_HPP

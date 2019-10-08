@@ -38,52 +38,43 @@
 #include <regex>
 #include <list>
 
-namespace gua {
-
-////////////////////////////////////////////////////////////////////////////////
-
-PLodPassDescription::PLodPassDescription(SurfelRenderMode const mode)
-  : PipelinePassDescription(),
-    surfel_render_mode_(mode)
+namespace gua
 {
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
+////////////////////////////////////////////////////////////////////////////////
+
+PLodPassDescription::PLodPassDescription(SurfelRenderMode const mode) : PipelinePassDescription(), surfel_render_mode_(mode)
+{
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-PLodPassDescription& PLodPassDescription::mode(SurfelRenderMode const mode) {
-  surfel_render_mode_ = mode;
-  return *this;
+PLodPassDescription& PLodPassDescription::mode(SurfelRenderMode const mode)
+{
+    surfel_render_mode_ = mode;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-PLodPassDescription::SurfelRenderMode PLodPassDescription::mode() const {
-  return surfel_render_mode_;
-}
+PLodPassDescription::SurfelRenderMode PLodPassDescription::mode() const { return surfel_render_mode_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> PLodPassDescription::make_copy() const {
-  return std::make_shared<PLodPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> PLodPassDescription::make_copy() const { return std::make_shared<PLodPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass PLodPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{ *this, ctx, substitution_map };
+    auto renderer = std::make_shared<PLodRenderer>();
+    renderer->set_global_substitution_map(substitution_map);
 
-  auto renderer = std::make_shared<PLodRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
-  pass.process_ = [renderer](
-    PipelinePass& pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

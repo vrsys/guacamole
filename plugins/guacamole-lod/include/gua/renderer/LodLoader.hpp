@@ -30,15 +30,16 @@
 #include <unordered_set>
 #include <memory>
 
-namespace gua {
+namespace gua
+{
+class Material;
 
-  class Material;
-
-namespace node {
-  class Node;
-  class PLodNode;
-  class MLodNode;
-}
+namespace node
+{
+class Node;
+class PLodNode;
+class MLodNode;
+} // namespace node
 
 /**
  * Loads *.kdn and *.lod files and creates Lod nodes.
@@ -47,82 +48,67 @@ namespace node {
  * contexts.
  */
 
-class GUA_LOD_DLL LodLoader {
- public:
+class GUA_LOD_DLL LodLoader
+{
+  public:
+    enum Flags
+    {
+        DEFAULTS = 0,
+        MAKE_PICKABLE = 1 << 0,
+        NORMALIZE_POSITION = 1 << 1,
+        NORMALIZE_SCALE = 1 << 2
+    };
 
-  enum Flags {
-    DEFAULTS = 0,
-    MAKE_PICKABLE = 1 << 0,
-    NORMALIZE_POSITION = 1 << 1,
-    NORMALIZE_SCALE = 1 << 2
-  };
+    LodLoader();
 
+  public:
+    std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& file_name, unsigned flags = DEFAULTS);
 
-  LodLoader();
+    std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
 
-public:
+    std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& file_name, unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& file_name,
-                                                      unsigned flags = DEFAULTS);
+    std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
 
-  std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& node_name,
-                                                      std::string const& file_name,
-                                                      std::shared_ptr<Material> const& fallback_material,
-                                                      unsigned flags =  DEFAULTS);
+    void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
-  std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& file_name,
-                                                   unsigned flags = DEFAULTS);
+    /**
+     * Pointcloud-specific picking methods. Might be moved into a separate object later.
+     *
+     */
+    std::pair<std::string, math::vec3>
+    pick_lod_bvh(math::vec3 const& ray_origin, math::vec3 const& ray_forward, float max_distance, std::set<std::string> const& model_filenames, float aabb_scale) const;
 
-  std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& node_name,
-                                                   std::string const& file_name,
-                                                   std::shared_ptr<Material> const& fallback_material,
-                                                   unsigned flags =  DEFAULTS);
+    std::set<PickResult> pick_lod_interpolate(math::vec3 const& bundle_origin,
+                                              math::vec3 const& bundle_forward,
+                                              math::vec3 const& bundle_up,
+                                              float bundle_radius,
+                                              float max_distance,
+                                              unsigned int max_depth,
+                                              unsigned int surfel_skip,
+                                              float aabb_scale) const;
 
-  void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
- 
-  /**
-   * Pointcloud-specific picking methods. Might be moved into a separate object later.
-   *
-   */
-  std::pair<std::string, math::vec3> pick_lod_bvh(math::vec3 const& ray_origin,
-                                                   math::vec3 const& ray_forward,
-                                                   float max_distance,
-                                                   std::set<std::string> const& model_filenames,
-                                                    float aabb_scale) const;
-                              
-  std::set<PickResult> pick_lod_interpolate(math::vec3 const& bundle_origin,
-                                             math::vec3 const& bundle_forward,
-                                             math::vec3 const& bundle_up,
-                                             float bundle_radius,
-                                             float max_distance,
-                                             unsigned int max_depth,
-                                             unsigned int surfel_skip,  
-                                             float aabb_scale) const;
-  
-  /**
-   * Lod-lib specific configuration methods. Might be moved into a separate object later.
-   *
-   */
-  size_t get_upload_budget_in_mb() const;
-  size_t get_render_budget_in_mb() const;
-  size_t get_out_of_core_budget_in_mb() const;
+    /**
+     * Lod-lib specific configuration methods. Might be moved into a separate object later.
+     *
+     */
+    size_t get_upload_budget_in_mb() const;
+    size_t get_render_budget_in_mb() const;
+    size_t get_out_of_core_budget_in_mb() const;
 
-  void   set_upload_budget_in_mb(size_t const upload_budget);
-  void   set_render_budget_in_mb(size_t const render_budget);
-  void   set_out_of_core_budget_in_mb(size_t const out_of_core_budget);
+    void set_upload_budget_in_mb(size_t const upload_budget);
+    void set_render_budget_in_mb(size_t const render_budget);
+    void set_out_of_core_budget_in_mb(size_t const out_of_core_budget);
 
-  bool is_supported(std::string const& file_name) const;
+    bool is_supported(std::string const& file_name) const;
 
-private: // methods
+  private: // methods
+    math::mat4 _load_local_transform(std::string const& filename) const;
 
-  math::mat4 _load_local_transform (std::string const& filename) const;
-
-private: // member
-
-  std::unordered_set<std::string> _supported_file_extensions;
-
+  private: // member
+    std::unordered_set<std::string> _supported_file_extensions;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_LOD_LOADER_HPP
+#endif // GUA_LOD_LOADER_HPP

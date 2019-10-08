@@ -22,41 +22,39 @@
 #ifndef GUA_DEPTH_SUB_RENDERER_HPP
 #define GUA_DEPTH_SUB_RENDERER_HPP
 
-
 //#include <gua/renderer/ShaderProgram.hpp>
 //#include <gua/node/PLodNode.hpp>
-
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/PLodSubRenderer.hpp>
 
- namespace gua {
+namespace gua
+{
+class PLodSubRenderer;
 
-  class PLodSubRenderer;
-
-  class GUA_LOD_DLL DepthSubRenderer : public PLodSubRenderer {
-
+class GUA_LOD_DLL DepthSubRenderer : public PLodSubRenderer
+{
   public:
-  	DepthSubRenderer();
+    DepthSubRenderer();
 
-    virtual void create_gpu_resources(gua::RenderContext const& ctx,
-                                      scm::math::vec2ui const& render_target_dims,
-                                      gua::plod_shared_resources& shared_resources) override;
+    virtual void create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources) override;
 
-    virtual void render_sub_pass(Pipeline& pipe, PipelinePassDescription const& desc,
+    virtual void render_sub_pass(Pipeline& pipe,
+                                 PipelinePassDescription const& desc,
                                  gua::plod_shared_resources& shared_resources,
                                  std::vector<node::Node*>& sorted_models,
-                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t> >& nodes_in_frustum_per_model,
+                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
                                  lamure::context_t context_id,
                                  lamure::view_t lamure_view_id) override;
 
-  private: //shader related auxiliary methods
+  private: // shader related auxiliary methods
     virtual void _load_shaders();
 
     virtual void _upload_model_dependent_uniforms(RenderContext const& ctx, node::PLodNode* plod_node, gua::Pipeline& pipe);
-  private:
-    scm::gl::rasterizer_state_ptr   no_backface_culling_rasterizer_state_;
-  };
- } 
 
- #endif //GUA_DEPTH_SUB_RENDERER_HPP
+  private:
+    scm::gl::rasterizer_state_ptr no_backface_culling_rasterizer_state_;
+};
+} // namespace gua
+
+#endif // GUA_DEPTH_SUB_RENDERER_HPP
