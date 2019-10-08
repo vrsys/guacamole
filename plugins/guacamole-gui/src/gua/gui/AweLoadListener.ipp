@@ -19,40 +19,29 @@
  *                                                                            *
  ******************************************************************************/
 
-class AweLoadListener : public Awesomium::WebViewListener::Load {
+class AweLoadListener : public Awesomium::WebViewListener::Load
+{
+    ///////////////////////////////////////////////////////////////////////////////
+    // ----------------------------------------------------------- public interface
+  public:
+    // ----------------------------------------------------- contruction interface
+    AweLoadListener(GuiResource* parent) : parent_(parent) {}
 
- ///////////////////////////////////////////////////////////////////////////////
- // ----------------------------------------------------------- public interface
- public:
+    // ------------------------------------------------------------ public methods
+    void OnBeginLoadingFrame(Awesomium::WebView* caller, int64 frame_id, bool is_main_frame, const Awesomium::WebURL& url, bool is_error_page) {}
 
-  // ----------------------------------------------------- contruction interface
-  AweLoadListener(GuiResource* parent)
-    : parent_(parent) {}
+    void OnFailLoadingFrame(Awesomium::WebView* caller, int64 frame_id, bool is_main_frame, const Awesomium::WebURL& url, int error_code, const Awesomium::WebString& error_desc) {}
 
-  // ------------------------------------------------------------ public methods
-  void OnBeginLoadingFrame(
-    Awesomium::WebView* caller, int64 frame_id,
-    bool is_main_frame, const Awesomium::WebURL& url,
-    bool is_error_page) {}
+    void OnFinishLoadingFrame(Awesomium::WebView* caller, int64 frame_id, bool is_main_frame, const Awesomium::WebURL& url) {}
 
-  void OnFailLoadingFrame(
-    Awesomium::WebView* caller, int64 frame_id,
-    bool is_main_frame, const Awesomium::WebURL& url,
-    int error_code, const Awesomium::WebString& error_desc) {}
+    void OnDocumentReady(Awesomium::WebView* caller, const Awesomium::WebURL& url)
+    {
+        caller->CreateGlobalJavascriptObject(Awesomium::WSLit("gua"));
+        parent_->on_loaded.emit();
+    }
 
-
-  void OnFinishLoadingFrame(
-    Awesomium::WebView* caller, int64 frame_id,
-    bool is_main_frame, const Awesomium::WebURL& url) {}
-
-  void OnDocumentReady(
-    Awesomium::WebView* caller, const Awesomium::WebURL& url) {
-    caller->CreateGlobalJavascriptObject(Awesomium::WSLit("gua"));
-    parent_->on_loaded.emit();
-  }
-
- ///////////////////////////////////////////////////////////////////////////////
- // ---------------------------------------------------------- private interface
- private:
-  GuiResource* parent_;
+    ///////////////////////////////////////////////////////////////////////////////
+    // ---------------------------------------------------------- private interface
+  private:
+    GuiResource* parent_;
 };

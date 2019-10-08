@@ -29,35 +29,30 @@
 
 #include <boost/variant.hpp>
 
-namespace gua {
-
-DebugViewPassDescription::DebugViewPassDescription()
-  : PipelinePassDescription()
+namespace gua
 {
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = "shaders/debugview.frag";
-  name_ = "DebugViewPass";
+DebugViewPassDescription::DebugViewPassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+    fragment_shader_ = "shaders/debugview.frag";
+    private_.name_ = "DebugViewPass";
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> DebugViewPassDescription::make_copy() const {
-  return std::make_shared<DebugViewPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> DebugViewPassDescription::make_copy() const { return std::make_shared<DebugViewPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass DebugViewPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

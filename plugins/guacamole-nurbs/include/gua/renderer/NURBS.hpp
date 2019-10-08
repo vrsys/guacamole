@@ -22,14 +22,14 @@
 #ifndef GUA_NURBS_HPP
 #define GUA_NURBS_HPP
 
-#if defined (_MSC_VER)
-#if defined (GUA_NURBS_LIBRARY)
-#define GUA_NURBS_DLL __declspec( dllexport )
+#if defined(_MSC_VER)
+#if defined(GUA_NURBS_LIBRARY)
+#define GUA_NURBS_DLL __declspec(dllexport)
 #else
-#define GUA_NURBS_DLL __declspec( dllimport )
+#define GUA_NURBS_DLL __declspec(dllimport)
 #endif
 #else
 #define GUA_NURBS_DLL
 #endif // #if defined(_MSC_VER)
 
-#endif  // GUA_NURBS_LOADER_HPP
+#endif // GUA_NURBS_LOADER_HPP

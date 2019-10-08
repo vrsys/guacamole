@@ -26,32 +26,27 @@
 #include <gua/scenegraph/NodeVisitor.hpp>
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-namespace node {
+namespace gua
+{
+namespace node
+{
+ScreenNode::ScreenNode(std::string const& name, Configuration const& configuration, math::mat4 const& transform) : Node(name, transform), data(configuration) {}
 
-ScreenNode::ScreenNode(std::string const& name,
-                       Configuration const& configuration,
-                       math::mat4 const& transform)
-    : Node(name, transform), data(configuration) {}
+/* virtual */ void ScreenNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
-/* virtual */ void ScreenNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
-}
-
-math::mat4 ScreenNode::get_scaled_transform() const {
+math::mat4 ScreenNode::get_scaled_transform() const
+{
     math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, gua::math::float_t(1.0)));
     return get_transform() * scale;
 }
 
-math::mat4 ScreenNode::get_scaled_world_transform() const {
-  math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, gua::math::float_t(1.0)));
+math::mat4 ScreenNode::get_scaled_world_transform() const
+{
+    math::mat4 scale(scm::math::make_scale(data.get_size().x, data.get_size().y, gua::math::float_t(1.0)));
     return get_world_transform() * scale;
 }
 
-std::shared_ptr<Node> ScreenNode::copy() const {
-  return std::make_shared<ScreenNode>(*this);
-}
+std::shared_ptr<Node> ScreenNode::copy() const { return std::make_shared<ScreenNode>(*this); }
 
-}
-}
+} // namespace node
+} // namespace gua

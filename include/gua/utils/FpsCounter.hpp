@@ -25,26 +25,28 @@
 #include <gua/platform.hpp>
 #include <gua/utils/Timer.hpp>
 
-namespace gua {
-
+namespace gua
+{
 struct GUA_DLL FpsCounter
 {
-  FpsCounter(unsigned t) : fps(0.0f), frame_count(0), timer(), delay(t) {}
-  void step() {
-    if (++frame_count == delay) {
-      fps = 1.f * delay / float(timer.get_elapsed());
-      timer.reset();
-      frame_count = 0;
+    FpsCounter(unsigned t) : fps(0.0f), frame_count(0), timer(), delay(t) {}
+    void step()
+    {
+        if(++frame_count == delay)
+        {
+            fps = 1.f * delay / float(timer.get_elapsed());
+            timer.reset();
+            frame_count = 0;
+        }
     }
-  }
-  void start() { timer.start(); }
+    void start() { timer.start(); }
 
-  float    fps;
-  unsigned frame_count;
-  Timer    timer;
-  unsigned delay;
+    float fps;
+    unsigned frame_count;
+    Timer timer;
+    unsigned delay;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_FPS_COUNTER_HPP
+#endif // GUA_FPS_COUNTER_HPP

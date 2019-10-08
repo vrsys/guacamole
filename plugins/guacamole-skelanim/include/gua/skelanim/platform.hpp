@@ -22,14 +22,14 @@
 #ifndef GUA_INCLUDE_SKELANIM_PLATFORM_HPP
 #define GUA_INCLUDE_SKELANIM_PLATFORM_HPP
 
-#if defined (_MSC_VER)
-#if defined (GUA_SKELANIM_LIBRARY)
-#define GUA_SKELANIM_DLL __declspec( dllexport )
+#if defined(_MSC_VER)
+#if defined(GUA_SKELANIM_LIBRARY)
+#define GUA_SKELANIM_DLL __declspec(dllexport)
 #else
-#define GUA_SKELANIM_DLL __declspec( dllimport )
+#define GUA_SKELANIM_DLL __declspec(dllimport)
 #endif
 #else
 #define GUA_SKELANIM_DLL
 #endif // #if defined(_MSC_VER)
 
-#endif  // GUA_INCLUDE_SKELANIM_PLATFORM_HPP
+#endif // GUA_INCLUDE_SKELANIM_PLATFORM_HPP

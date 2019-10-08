@@ -24,46 +24,55 @@
 
 #include <boost/mpl/assert.hpp>
 
-namespace gua {
-namespace traits {
-
+namespace gua
+{
+namespace traits
+{
 // vector space meta functions
 
 template <typename T>
-struct scalar {
-  BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
+struct scalar
+{
+    BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
 };
 
 template <>
-struct scalar<float> {
-  using type = float;
+struct scalar<float>
+{
+    using type = float;
 };
 template <>
-struct scalar<double> {
-  using type = double;
+struct scalar<double>
+{
+    using type = double;
 };
 
 template <>
-struct scalar<long double> {
-  using type = long double;
+struct scalar<long double>
+{
+    using type = long double;
 };
 
 template <typename T>
-struct dimension {
-  BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
+struct dimension
+{
+    BOOST_MPL_ASSERT_MSG(false, NOT_IMPLEMENTED_FOR_THIS_VECTOR_TYPE, (types<T>));
 };
 
 template <>
-struct dimension<float> {
-  static const unsigned int value = 1;
+struct dimension<float>
+{
+    static const unsigned int value = 1;
 };
 template <>
-struct dimension<double> {
-  static const unsigned int value = 1;
+struct dimension<double>
+{
+    static const unsigned int value = 1;
 };
 template <>
-struct dimension<long double> {
-  static const unsigned int value = 1;
+struct dimension<long double>
+{
+    static const unsigned int value = 1;
 };
 
 // Examples:
@@ -91,7 +100,7 @@ struct dimension<long double> {
 // {
 //   static const unsigned int value = N;
 // };
-}
-}
+} // namespace traits
+} // namespace gua
 
-#endif  // #ifndef GUA_TRAITS_HPP
+#endif // #ifndef GUA_TRAITS_HPP

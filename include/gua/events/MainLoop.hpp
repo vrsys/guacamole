@@ -28,31 +28,28 @@
 
 #include <gua/platform.hpp>
 
-namespace gua {
-  namespace events {
+namespace gua
+{
+namespace events
+{
+class GUA_DLL MainLoop
+{
+  public:
+    friend class Ticker;
+    friend class Scheduler;
 
-    class GUA_DLL MainLoop
-    {
-    public:
+  public:
+    MainLoop();
+    ~MainLoop();
 
-      friend class Ticker;
-      friend class Scheduler;
+    void start();
+    void stop();
 
-    public :
+  private:
+    boost::asio::io_service io_service;
+};
 
-      MainLoop();
-      ~MainLoop();
-
-      void start();
-      void stop();
-
-    private:
-
-      boost::asio::io_service io_service;
-
-    };
-
-  }
-}
+} // namespace events
+} // namespace gua
 
 #endif /* MAINLOOP_HPP_ */

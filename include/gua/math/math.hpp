@@ -24,6 +24,7 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
+#include <cmath>
 #include <tuple>
 
 template <class TReal>
@@ -32,9 +33,10 @@ class aiMatrix4x4t;
 #include <gua/platform.hpp>
 #include <gua/math/traits.hpp>
 
-namespace gua {
-namespace math {
-
+namespace gua
+{
+namespace math
+{
 ///@{
 /**
  * Some basic math types, typedef'ed from schism.
@@ -105,17 +107,9 @@ using quatf = scm::math::quat<float>;
  *
  * \return                  A frustum matrix.
  */
-math::mat4 GUA_DLL
-compute_perspective_frustum(math::vec4 const& eye_position,
-                            math::mat4 const& screen_transform,
-                            math::mat4::value_type near_plane,
-                            math::mat4::value_type far_plane);
+math::mat4 GUA_DLL compute_perspective_frustum(math::vec4 const& eye_position, math::mat4 const& screen_transform, math::mat4::value_type near_plane, math::mat4::value_type far_plane);
 
-math::mat4 GUA_DLL
-compute_orthographic_frustum(math::vec4 const& eye_position,
-                             math::mat4 const& screen_transform,
-                             math::mat4::value_type near_plane,
-                             math::mat4::value_type far_plane);
+math::mat4 GUA_DLL compute_orthographic_frustum(math::vec4 const& eye_position, math::mat4 const& screen_transform, math::mat4::value_type near_plane, math::mat4::value_type far_plane);
 
 /**
  * Converts an assimp matrix to a schism matrix.
@@ -128,82 +122,99 @@ math::mat4 GUA_DLL mat_ai_to_scm(aiMatrix4x4t<float> const& ai_mat);
 
 #if WIN32
 template <typename T>
-inline T clamp(T const& x, T const& min, T const& max) {
-  return x < min ? min : (x > max ? max : x);
+inline T clamp(T const& x, T const& min, T const& max)
+{
+    return x < min ? min : (x > max ? max : x);
 }
 #else
 template <typename T>
-constexpr T clamp(T const& x, T const& min, T const& max) {
-  return x < min ? min : (x > max ? max : x);
+constexpr T clamp(T const& x, T const& min, T const& max)
+{
+    return x < min ? min : (x > max ? max : x);
 }
 #endif
 
-inline math::vec3 get_translation(math::mat4 const& m) {
-  return math::vec3(m[12], m[13], m[14]);
+inline math::vec3 get_translation(math::mat4 const& m) { return math::vec3(m[12], m[13], m[14]); }
+
+inline math::mat4 get_rotation(math::mat4 const& m)
+{
+    auto q = ::scm::math::quat<math::mat4d::value_type>::from_matrix(m);
+    return q.to_matrix();
 }
 
-inline math::mat4 get_rotation(math::mat4 const& m) {
-  auto q = ::scm::math::quat<math::mat4d::value_type>::from_matrix(m);
-  return q.to_matrix();
+inline math::mat4 get_yaw_matrix(math::mat4 const& m)
+{
+	math::mat4 forward_matrix = m * scm::math::make_translation(0.0, 0.0, -1.0);
+	math::vec4 m_trans = math::vec3(m.column(3));
+	math::vec4 forward_trans = math::vec3(forward_matrix.column(3));
+
+	math::vec3 diff = math::vec3(forward_trans.x - m_trans.x, 0.0, 
+		                         forward_trans.z - m_trans.z);
+	
+	double yaw = (atan2(-1.0, 0.0) - atan2(diff.z, diff.x)) * 180.0/3.14159265;
+	return scm::math::make_translation(m_trans.x, m_trans.y, m_trans.z) * scm::math::make_rotation(yaw, 0.0, 1.0, 0.0);
 }
 
-inline math::vec4 get_scale(math::mat4 const& m) {
-  math::vec3 x_vec(m[0], m[1], m[2]);
-  math::vec3 y_vec(m[4], m[5], m[6]);
-  math::vec3 z_vec(m[8], m[9], m[10]);
-  return math::vec3(scm::math::length(x_vec), scm::math::length(y_vec), scm::math::length(z_vec));
+inline math::vec4 get_scale(math::mat4 const& m)
+{
+    math::vec3 x_vec(m[0], m[1], m[2]);
+    math::vec3 y_vec(m[4], m[5], m[6]);
+    math::vec3 z_vec(m[8], m[9], m[10]);
+    return math::vec3(scm::math::length(x_vec), scm::math::length(y_vec), scm::math::length(z_vec));
 }
 
-std::tuple<float_t, float_t, float_t> GUA_DLL barycentric(math::vec3 const& a,
-                                                          math::vec3 const& b,
-                                                          math::vec3 const& c,
-                                                          math::vec3 const& p);
+std::tuple<float_t, float_t, float_t> GUA_DLL barycentric(math::vec3 const& a, math::vec3 const& b, math::vec3 const& c, math::vec3 const& p);
 
 template <typename ValueType>
-ValueType interpolate(math::vec3 const& position,
-                      std::pair<math::vec3, ValueType> const& a,
-                      std::pair<math::vec3, ValueType> const& b,
-                      std::pair<math::vec3, ValueType> const& c) {
-  float u, v, w;
-  std::tie(u, v, w) = barycentric(a.first, b.first, c.first, position);
-  return u * a.second + v * b.second + w * c.second;
+ValueType interpolate(math::vec3 const& position, std::pair<math::vec3, ValueType> const& a, std::pair<math::vec3, ValueType> const& b, std::pair<math::vec3, ValueType> const& c)
+{
+    float u, v, w;
+    std::tie(u, v, w) = barycentric(a.first, b.first, c.first, position);
+    return u * a.second + v * b.second + w * c.second;
 }
-}
-}
+} // namespace math
+} // namespace gua
 
-namespace gua {
-namespace traits {
-
+namespace gua
+{
+namespace traits
+{
 template <>
-struct scalar<math::vec2d> {
-  using type = math::vec2d::value_type;
+struct scalar<math::vec2d>
+{
+    using type = math::vec2d::value_type;
 };
 
 template <>
-struct scalar<math::vec3d> {
-  using type = math::vec3d::value_type;
+struct scalar<math::vec3d>
+{
+    using type = math::vec3d::value_type;
 };
 
 template <>
-struct scalar<math::vec4d> {
-  using type = math::vec4d::value_type;
+struct scalar<math::vec4d>
+{
+    using type = math::vec4d::value_type;
 };
 
 template <>
-struct dimension<math::vec2d> {
-  static const unsigned int value = 2;
+struct dimension<math::vec2d>
+{
+    static const unsigned int value = 2;
 };
 
 template <>
-struct dimension<math::vec3d> {
-  static const unsigned int value = 3;
+struct dimension<math::vec3d>
+{
+    static const unsigned int value = 3;
 };
 
 template <>
-struct dimension<math::vec4d> {
-  static const unsigned int value = 4;
+struct dimension<math::vec4d>
+{
+    static const unsigned int value = 4;
 };
-}
-}
+} // namespace traits
+} // namespace gua
 
-#endif  // GUA_MATH_HPP
+#endif // GUA_MATH_HPP

@@ -29,39 +29,38 @@
 #include <vector>
 #include <memory>
 
-namespace gua {
-  class Skeleton;
-  class SkeletalAnimation;
+namespace gua
+{
+class Skeleton;
+class SkeletalAnimation;
 
-namespace SkeletalTransformation {
-
+namespace SkeletalTransformation
+{
 /**
  * @brief creates transformations from hierarchy
  * @details returns the binding/default transformation
  *  stored in the skeleton
- * 
+ *
  * @param skeleton the bone hierarchy to use
  * @param anim_start_node node from which to start calculating transforms
  * @param Transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL std::vector<scm::math::mat4f> from_hierarchy(Skeleton const& skeleton, unsigned anim_start_node);
+GUA_SKELANIM_DLL std::vector<scm::math::mat4f> from_hierarchy(Skeleton const& skeleton, unsigned anim_start_node);
 /**
  * @brief creates transformations from anim at given time
- * @details calculates transforms from the pose at given time 
- * 
+ * @details calculates transforms from the pose at given time
+ *
  * @param skeleton the bone hierarchy to use
  * @param anim_start_node node from which to start calculating transforms
  * @param time_normalized time for which to calculate transforms
  * @param anim anim from which to calculate pose
  * @param Transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL std::vector<scm::math::mat4f> from_anim(Skeleton const& skeleton, unsigned anim_start_node,
-               float time_normalized,
-               SkeletalAnimation const& anim);
+GUA_SKELANIM_DLL std::vector<scm::math::mat4f> from_anim(Skeleton const& skeleton, unsigned anim_start_node, float time_normalized, SkeletalAnimation const& anim);
 /**
  * @brief calculates two poses and blends them
  * @details calculates poses for both anims at given time and blend swith blend factor
- * 
+ *
  * @param skeleton the bone hierarchy to use
  * @param anim_start_node node from which to start calculating transforms
  * @param blend_factor factor to blend anims with
@@ -71,16 +70,12 @@ namespace SkeletalTransformation {
  * @param anim_2 second anim
  * @param transforms vector to write transforms to
  // */
-  GUA_SKELANIM_DLL std::vector<scm::math::mat4f> blend_anims(Skeleton const& skeleton, unsigned anim_start_node,
-                 float blend_factor,
-                 float time_normalized1,
-                 float time_normalized2,
-                 SkeletalAnimation const& anim_1,
-                 SkeletalAnimation const& anim_2);
+GUA_SKELANIM_DLL std::vector<scm::math::mat4f>
+blend_anims(Skeleton const& skeleton, unsigned anim_start_node, float blend_factor, float time_normalized1, float time_normalized2, SkeletalAnimation const& anim_1, SkeletalAnimation const& anim_2);
 /**
  * @brief calculates two poses and changes them from node on
  * @details overwrites first pose with second pose on from given node
- * 
+ *
  * @param skeleton the bone hierarchy to use
  * @param anim_start_node node from which to start calculating transforms
  * @param time_normalized1 time for which to calculate transforms from anim_1
@@ -90,13 +85,14 @@ namespace SkeletalTransformation {
  * @param node_name node form which to start overwriting pose1 with pose2
  * @param transforms vector to write transforms to
  */
-  GUA_SKELANIM_DLL std::vector<scm::math::mat4f> partial_blend(Skeleton const& skeleton, unsigned anim_start_node,
-                   float time_normalized1,
-                   float time_normalized2,
-                   SkeletalAnimation const& anim_1,
-                   SkeletalAnimation const& anim_2,
-                   std::string const& split_node_name);
-}
-}
+GUA_SKELANIM_DLL std::vector<scm::math::mat4f> partial_blend(Skeleton const& skeleton,
+                                                             unsigned anim_start_node,
+                                                             float time_normalized1,
+                                                             float time_normalized2,
+                                                             SkeletalAnimation const& anim_1,
+                                                             SkeletalAnimation const& anim_2,
+                                                             std::string const& split_node_name);
+} // namespace SkeletalTransformation
+} // namespace gua
 
-#endif  // GUA_SKELETALTRANSFORMATION_HPP
+#endif // GUA_SKELETALTRANSFORMATION_HPP

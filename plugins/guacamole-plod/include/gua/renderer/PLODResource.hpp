@@ -47,29 +47,27 @@
 #include <pbr/ren/cut.h>
 #include <pbr/ren/lod_point_cloud.h>
 
-namespace gua {
-
-  namespace node{
-    class PLODNode;
-  };
+namespace gua
+{
+namespace node
+{
+class PLODNode;
+};
 
 /**
  * Stores a point cloud model with LOD.
  *
  * This class simply a wrapper for accessing models of PBR library
  */
-class PLODResource : public GeometryResource {
- 
+class PLODResource : public GeometryResource
+{
   public: // c'tor /d'tor
-
     PLODResource(pbr::model_t model_id, bool is_pickable, math::mat4 const& local_transform);
 
     ~PLODResource();
 
   public: // methods
-    
     /*virtual*/ void draw(RenderContext const& context) const;
-
 
     /**
      * Draws the point cloud.
@@ -87,18 +85,14 @@ class PLODResource : public GeometryResource {
 
     math::mat4 const& local_transform() const;
 
-    void ray_test(Ray const& ray,
-                  int options,
-                  node::Node* owner,
-                  std::set<PickResult>& hits);
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits);
 
- private:
-
-  bool          is_pickable_;
-  pbr::model_t  model_id_;
-  math::mat4    local_transform_;
+  private:
+    bool is_pickable_;
+    pbr::model_t model_id_;
+    math::mat4 local_transform_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_PLOD_RESSOURCE_HPP
+#endif // GUA_PLOD_RESSOURCE_HPP

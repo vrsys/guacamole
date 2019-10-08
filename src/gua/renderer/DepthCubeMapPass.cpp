@@ -22,73 +22,60 @@
 // class header
 #include <gua/renderer/DepthCubeMapPass.hpp>
 
-
 #include <gua/renderer/DepthCubeMapRenderer.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/Resources.hpp>
 
-namespace gua {
+namespace gua
+{
+DepthCubeMapPassDesciption::DepthCubeMapPassDesciption() : PipelinePassDescription()
+{
+    vertex_shader_ = "resources/shaders/common/quad.vert";
+    fragment_shader_ = "resources/shaders/textured_quad.frag";
+    private_.name_ = "DepthCubeMapPass";
 
-DepthCubeMapPassDesciption::DepthCubeMapPassDesciption()
-  : PipelinePassDescription() {
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = false;
+    private_.rendermode_ = RenderMode::Custom;
 
-  vertex_shader_ = "resources/shaders/common/quad.vert";
-  fragment_shader_ = "resources/shaders/textured_quad.frag";
-  name_ = "DepthCubeMapPass";
+    private_.rasterizer_state_desc_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = false;
-  rendermode_ = RenderMode::Custom;
+    // depth_stencil_state_ = boost::make_optional(
+    //   scm::gl::depth_stencil_state_desc(
+    //     true, true, scm::gl::COMPARISON_LESS, true, 1, 0,
+    //     scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
+    //   )
+    // );
 
-  rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
-        scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
+    private_.depth_stencil_state_desc_ =
+        boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 0xFF, 0x00, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 
-  // depth_stencil_state_ = boost::make_optional(
-  //   scm::gl::depth_stencil_state_desc(
-  //     true, true, scm::gl::COMPARISON_LESS, true, 1, 0, 
-  //     scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
-  //   )
-  // );
-
-  depth_stencil_state_ = boost::make_optional(
-    scm::gl::depth_stencil_state_desc(
-      false, false, scm::gl::COMPARISON_LESS, true, 0xFF, 0x00, 
-      scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)
-    )
-  );
-
-  // rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
-  //       scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
-
+    // rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(
+    //       scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> DepthCubeMapPassDesciption::make_copy() const {
-  return std::make_shared<DepthCubeMapPassDesciption>(*this);
-}
+std::shared_ptr<PipelinePassDescription> DepthCubeMapPassDesciption::make_copy() const { return std::make_shared<DepthCubeMapPassDesciption>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass DepthCubeMapPassDesciption::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
+    auto renderer = std::make_shared<DepthCubeMapRenderer>();
+    renderer->set_global_substitution_map(substitution_map);
+    renderer->create_state_objects(ctx);
 
-  auto renderer = std::make_shared<DepthCubeMapRenderer>();
-  renderer->set_global_substitution_map(substitution_map);
-  renderer->create_state_objects(ctx);
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state());
+        pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state());
+        renderer->render(pipe, desc);
+    };
 
-  pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const& desc, Pipeline & pipe) {
-
-    pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-    pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state_);
-    renderer->render(pipe, desc);
-  };
-
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

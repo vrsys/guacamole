@@ -34,48 +34,48 @@
 #include <unordered_map>
 #include <typeindex>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * Stores a serialized scene graph.
  *
  * When the optimizer traverses the scene graph, it produces an SerializedScene
  * which contains relevant nodes only.
  */
-struct GUA_DLL SerializedScene {
+struct GUA_DLL SerializedScene
+{
+    /**
+     * All geometry nodes.
+     */
+    std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
 
-  /**
-  * All geometry nodes.
-  */
-  std::unordered_map<std::type_index, std::vector<node::Node*>> nodes;
+    /**
+     * The rendering frustum.
+     */
+    Frustum rendering_frustum;
 
-  /**
-   * The rendering frustum.
-   */
-  Frustum rendering_frustum;
+    /**
+     * The culling frustum. Not neccessarily the same as above.
+     */
+    Frustum culling_frustum;
 
-  /**
-   * The culling frustum. Not neccessarily the same as above.
-   */
-  Frustum culling_frustum;
+    /**
+     * The original camera position for which we are rendering. This stays the
+     * same even if rendering shadow maps, for example.
+     */
+    math::vec3 reference_camera_position;
 
-  /**
-   * The original camera position for which we are rendering. This stays the
-   * same even if rendering shadow maps, for example.
-   */
-  math::vec3 reference_camera_position;
+    /**
+     * Clipping plane parameters.
+     */
+    std::vector<math::vec4> clipping_planes;
 
-  /**
-   * Clipping plane parameters.
-   */
-  std::vector<math::vec4> clipping_planes;
-
-  /**
-   * All bounding boxes.
-   */
-  std::vector<math::BoundingBox<math::vec3> > bounding_boxes;
+    /**
+     * All bounding boxes.
+     */
+    std::vector<math::BoundingBox<math::vec3>> bounding_boxes;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SERIALIZED_SCENE_HPP
+#endif // GUA_SERIALIZED_SCENE_HPP

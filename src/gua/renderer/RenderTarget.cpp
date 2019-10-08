@@ -22,28 +22,26 @@
 // class header
 #include <gua/renderer/RenderTarget.hpp>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+
+RenderTarget::RenderTarget(math::vec2ui const& resolution) : resolution_(resolution) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RenderTarget::RenderTarget(math::vec2ui const& resolution):
-  resolution_(resolution) {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RenderTarget::set_viewport(RenderContext const& ctx) {
-  if (ctx.render_context) {
-    ctx.render_context->set_viewport(
-        scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
-  }
+void RenderTarget::set_viewport(RenderContext const& ctx)
+{
+    if(ctx.render_context)
+    {
+        ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RenderTarget::unbind(RenderContext const& ctx) {
-  ctx.render_context->reset_framebuffer();
-}
+void RenderTarget::unbind(RenderContext const& ctx) { ctx.render_context->reset_framebuffer(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace gua

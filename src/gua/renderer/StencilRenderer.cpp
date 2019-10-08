@@ -34,77 +34,83 @@
 
 #include <scm/core/math/math.h>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-StencilRenderer::StencilRenderer()
-{}
+StencilRenderer::StencilRenderer() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void StencilRenderer::create_state_objects(RenderContext const& ctx)
 {
-  rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
-  rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
+    rs_cull_back_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK);
+    rs_cull_none_ = ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void StencilRenderer::render(Pipeline& pipe, std::shared_ptr<ShaderProgram> const& shader)
 {
-  auto const& scene = *pipe.current_viewstate().scene;
+    auto const& scene = *pipe.current_viewstate().scene;
 
-  auto objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+    auto objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
-  if (objects != scene.nodes.end() && objects->second.size() > 0) {
+    if(objects != scene.nodes.end() && objects->second.size() > 0)
+    {
+        RenderContext const& ctx(pipe.get_context());
 
-    RenderContext const& ctx(pipe.get_context());
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+        std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
+        std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
 
-    std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
-    std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / StencilPass";
+        pipe.begin_gpu_query(ctx, gpu_query_name);
+        pipe.begin_cpu_query(cpu_query_name);
+#endif
 
-    pipe.begin_gpu_query(ctx, gpu_query_name);
-    pipe.begin_cpu_query(cpu_query_name);
+        auto current_rasterizer_state = rs_cull_back_;
+        ctx.render_context->apply();
 
-    auto current_rasterizer_state = rs_cull_back_;
-    ctx.render_context->apply();
+        // loop through all objects, sorted by material ----------------------------
+        for(auto const& object : objects->second)
+        {
+            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
 
-    // loop through all objects, sorted by material ----------------------------
-    for (auto const& object : objects->second) {
+            if(!tri_mesh_node->get_render_to_stencil_buffer())
+            {
+                continue;
+            }
 
-      auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+            if(tri_mesh_node->get_geometry())
+            {
+                auto model_view_mat = scene.rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
+                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
 
-      if (!tri_mesh_node->get_render_to_stencil_buffer()) {
-        continue;
-      }
+                shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
+                shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
+                shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
 
-      if (tri_mesh_node->get_geometry()) {
-        auto model_view_mat = scene.rendering_frustum.get_view() * tri_mesh_node->get_cached_world_transform();
-        UniformValue normal_mat (math::mat4f(scm::math::transpose(scm::math::inverse(tri_mesh_node->get_cached_world_transform()))));
+                current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
 
-        shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(tri_mesh_node->get_cached_world_transform()));
-        shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
-        shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+                if(ctx.render_context->current_rasterizer_state() != current_rasterizer_state)
+                {
+                    ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+                    ctx.render_context->apply_state_objects();
+                }
 
-        current_rasterizer_state = tri_mesh_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
+                ctx.render_context->apply_program();
 
-        if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
-          ctx.render_context->set_rasterizer_state(current_rasterizer_state);
-          ctx.render_context->apply_state_objects();
+                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+            }
         }
 
-        ctx.render_context->apply_program();
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+        pipe.end_gpu_query(ctx, gpu_query_name);
+        pipe.end_cpu_query(cpu_query_name);
+#endif
 
-        tri_mesh_node->get_geometry()->draw(pipe.get_context());
-      }
+        ctx.render_context->reset_state_objects();
     }
-
-    pipe.end_gpu_query(ctx, gpu_query_name);
-    pipe.end_cpu_query(cpu_query_name);
-
-    ctx.render_context->reset_state_objects();
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

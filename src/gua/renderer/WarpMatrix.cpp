@@ -29,52 +29,45 @@
 // external headers
 #include <fstream>
 
-namespace gua {
-
+namespace gua
+{
 WarpMatrix::WarpMatrix() : Texture2D(0, 0), data_() {}
 
-WarpMatrix::WarpMatrix(std::string const& file_name)
-    : Texture2D(0,
-              0,
-              scm::gl::FORMAT_RGBA_16F,
-              1,
-              scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR)),
-      data_() {
+WarpMatrix::WarpMatrix(std::string const& file_name) : Texture2D(0, 0, scm::gl::FORMAT_RGBA_16F, 1, scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_LINEAR)), data_()
+{
+    std::ifstream file(file_name, std::ios::binary);
 
-  std::ifstream file(file_name, std::ios::binary);
+    if(file)
+    {
+        file.read((char*)&width_, sizeof(unsigned));
+        file.read((char*)&height_, sizeof(unsigned));
 
-  if (file) {
-    file.read((char*)&width_, sizeof(unsigned));
-    file.read((char*)&height_, sizeof(unsigned));
+        data_ = std::vector<float>(width_ * height_ * 4);
 
-    data_ = std::vector<float>(width_ * height_ * 4);
+        file.read((char*)data_.data(), sizeof(float) * data_.size());
 
-    file.read((char*)data_.data(), sizeof(float) * data_.size());
-
-    file.close();
-  } else {
-    Logger::LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
-  }
+        file.close();
+    }
+    else
+    {
+        Logger::LOG_WARNING << "Unable to load Warpmatrix! File " << file_name << " does not exist." << std::endl;
+    }
 }
 
-void WarpMatrix::upload_to(RenderContext const& context) const {
-  std::unique_lock<std::mutex> lock(upload_mutex_);
-  RenderContext::Texture ctex{};
+void WarpMatrix::upload_to(RenderContext const& context) const
+{
+    std::unique_lock<std::mutex> lock(upload_mutex_);
+    RenderContext::Texture ctex{};
 
-  std::vector<void*> tmp_data;
-  tmp_data.push_back(data_.data());
+    std::vector<void*> tmp_data;
+    tmp_data.push_back(data_.data());
 
-  ctex.texture = context.render_device->create_texture_2d(
-      scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_),
-                               color_format_),
-      scm::gl::FORMAT_RGBA_32F,
-      tmp_data);
+    ctex.texture = context.render_device->create_texture_2d(scm::gl::texture_2d_desc(scm::math::vec2ui(width_, height_), color_format_), scm::gl::FORMAT_RGBA_32F, tmp_data);
 
-  ctex.sampler_state =
-      context.render_device->create_sampler_state(state_descripton_);
+    ctex.sampler_state = context.render_device->create_sampler_state(state_descripton_);
 
-  context.textures[uuid_] = ctex;
-  context.render_context->make_resident(ctex.texture, ctex.sampler_state);
+    context.textures[uuid_] = ctex;
+    context.render_context->make_resident(ctex.texture, ctex.sampler_state);
 }
 
-}
+} // namespace gua

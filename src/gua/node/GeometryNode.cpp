@@ -22,17 +22,12 @@
 // class header
 #include <gua/node/GeometryNode.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 ////////////////////////////////////////////////////////////////////////////////
-GeometryNode::GeometryNode(std::string const& name,
-                           math::mat4 const& transform,
-                           ShadowMode shadow_mode)
-  : SerializableNode(name, transform),
-    shadow_mode_(shadow_mode)
-{}
+GeometryNode::GeometryNode(std::string const& name, math::mat4 const& transform, ShadowMode shadow_mode) : SerializableNode(name, transform), shadow_mode_(shadow_mode) {}
 
-
-}
-}
+} // namespace node
+} // namespace gua

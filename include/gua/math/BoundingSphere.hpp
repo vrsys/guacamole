@@ -29,28 +29,29 @@
 #include <limits>
 #include <vector>
 
-namespace gua {
-namespace math {
-
+namespace gua
+{
+namespace math
+{
 /**
  * A math representation of a bounding sphere.
  */
 template <typename V>
-struct BoundingSphere {
-  using scalar_type = typename traits::scalar<V>::type;
-  using point_type = V;
+struct BoundingSphere
+{
+    using scalar_type = typename traits::scalar<V>::type;
+    using point_type = V;
 
-  point_type center;
-  scalar_type radius;
+    point_type center;
+    scalar_type radius;
 
-  /** Create empty bounding sphere */
-  BoundingSphere() : center(0), radius(0) {}
+    /** Create empty bounding sphere */
+    BoundingSphere() : center(0), radius(0) {}
 
-  /** Create a degenerate bounding sphere containing only a single point */
-  explicit BoundingSphere(point_type const& p) : center(p), radius(0) {}
+    /** Create a degenerate bounding sphere containing only a single point */
+    explicit BoundingSphere(point_type const& p) : center(p), radius(0) {}
 
-  explicit BoundingSphere(point_type const& c, scalar_type r)
-      : center(c), radius(r) {}
+    explicit BoundingSphere(point_type const& c, scalar_type r) : center(c), radius(r) {}
 
 #if 0
   /** Create the smallest bounding sphere containing all the given points */
@@ -59,21 +60,23 @@ struct BoundingSphere {
   }
 #endif
 
-  bool contains(point_type const& p) const {
-    scalar_type sqDistance(0);
-    for (unsigned int i = 0; i < traits::dimension<V>::value; ++i)
-      sqDistance += (p[i] - center[i]) * (p[i] - center[i]);
+    bool contains(point_type const& p) const
+    {
+        scalar_type sqDistance(0);
+        for(unsigned int i = 0; i < traits::dimension<V>::value; ++i)
+            sqDistance += (p[i] - center[i]) * (p[i] - center[i]);
 
-    return sqDistance <= radius * radius;
-  }
+        return sqDistance <= radius * radius;
+    }
 
-  bool intersects(BoundingSphere<V> const& rhs) const {
-    scalar_type sqDistance(0);
-    for (unsigned int i = 0; i < traits::dimension<V>::value; ++i)
-      sqDistance += (rhs.center[i] - center[i]) * (rhs.center[i] - center[i]);
+    bool intersects(BoundingSphere<V> const& rhs) const
+    {
+        scalar_type sqDistance(0);
+        for(unsigned int i = 0; i < traits::dimension<V>::value; ++i)
+            sqDistance += (rhs.center[i] - center[i]) * (rhs.center[i] - center[i]);
 
-    return sqDistance <= (radius + rhs.radius) * (radius + rhs.radius);
-  }
+        return sqDistance <= (radius + rhs.radius) * (radius + rhs.radius);
+    }
 
 #if 0
   void expandBy(point_type const& p) {
@@ -81,41 +84,38 @@ struct BoundingSphere {
   }
 #endif
 
-  void expandBy(BoundingSphere<V> const& rhs) {
-    auto ab = rhs.center - center;
+    void expandBy(BoundingSphere<V> const& rhs)
+    {
+        auto ab = rhs.center - center;
 
-    scalar_type sqDistance(0);
-    for (unsigned int i = 0; i < traits::dimension<V>::value; ++i)
-      sqDistance += ab[i] * ab[i];
+        scalar_type sqDistance(0);
+        for(unsigned int i = 0; i < traits::dimension<V>::value; ++i)
+            sqDistance += ab[i] * ab[i];
 
-    auto dist = std::sqrt(sqDistance);
+        auto dist = std::sqrt(sqDistance);
 
-    radius = 0.5 * (radius + dist + rhs.radius);
-    center = center + 0.5 * ab;
-  }
+        radius = 0.5 * (radius + dist + rhs.radius);
+        center = center + 0.5 * ab;
+    }
 
-  inline bool isEmpty() const { return point_type(0) == center; }
+    inline bool isEmpty() const { return point_type(0) == center; }
 
-  bool operator==(BoundingSphere<V> const& rhs) const {
-    return rhs.center == center && rhs.radius == radius;
-  }
+    bool operator==(BoundingSphere<V> const& rhs) const { return rhs.center == center && rhs.radius == radius; }
 
-  bool operator!=(BoundingSphere<V> const& rhs) const {
-    return !(*this == rhs);
-  }
+    bool operator!=(BoundingSphere<V> const& rhs) const { return !(*this == rhs); }
 };
 
 /** union of two bounding spheres */
 template <typename V>
-BoundingSphere<V> combine(BoundingSphere<V> const& lhs,
-                          BoundingSphere<V> const& rhs) {
-  BoundingSphere<V> tmp(lhs);
-  tmp.expandBy(rhs);
-  return tmp;
+BoundingSphere<V> combine(BoundingSphere<V> const& lhs, BoundingSphere<V> const& rhs)
+{
+    BoundingSphere<V> tmp(lhs);
+    tmp.expandBy(rhs);
+    return tmp;
 }
 
-}  // namespace math
+} // namespace math
 
-}  // namespace gua
+} // namespace gua
 
-#endif  // GUA_BOUNDING_SPHERE_HPP
+#endif // GUA_BOUNDING_SPHERE_HPP

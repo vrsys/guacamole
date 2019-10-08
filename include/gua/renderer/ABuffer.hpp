@@ -28,32 +28,31 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/RenderContext.hpp>
 
-namespace gua {
+namespace gua
+{
+class GUA_DLL ABuffer
+{
+  public:
+    struct SharedResource
+    {
+        scm::gl::buffer_ptr counter;
+        scm::gl::buffer_ptr frag_list;
+        scm::gl::buffer_ptr frag_data;
+        size_t frag_count = 0;
+    };
 
-class GUA_DLL ABuffer {
- public:
+    void allocate(RenderContext& ctx, size_t buffer_size);
+    void clear(RenderContext const& ctx, math::vec2ui const& resolution);
+    void bind(RenderContext const& ctx);
+    void unbind(RenderContext const& ctx);
 
-  struct SharedResource {
-    scm::gl::buffer_ptr counter;
-    scm::gl::buffer_ptr frag_list;
-    scm::gl::buffer_ptr frag_data;
-    size_t              frag_count = 0;
-  };
+  private:
+    const size_t FRAG_LIST_WORD_SIZE = 8;
+    const size_t FRAG_DATA_WORD_SIZE = 16;
 
-  void allocate(RenderContext& ctx, size_t buffer_size);
-  void clear(RenderContext const& ctx, math::vec2ui const& resolution);
-  void bind(RenderContext const& ctx);
-  void unbind(RenderContext const& ctx);
-
- private:
-
-  const size_t FRAG_LIST_WORD_SIZE = 8;
-  const size_t FRAG_DATA_WORD_SIZE = 16;
-
-  std::shared_ptr<SharedResource> res_ = nullptr;
-
+    std::shared_ptr<SharedResource> res_ = nullptr;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_ABUFFER_HPP
+#endif // GUA_ABUFFER_HPP

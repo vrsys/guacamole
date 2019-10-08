@@ -26,32 +26,35 @@
 #include <cstdlib>
 #include <ctime>
 
-namespace gua {
-namespace math {
-namespace random {
-namespace {
-
+namespace gua
+{
+namespace math
+{
+namespace random
+{
+namespace
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned int init_seed() {
-
-  unsigned int seed = static_cast<unsigned int>(std::time(nullptr));
-  std::srand(seed);
-  return seed;
+unsigned int init_seed()
+{
+    unsigned int seed = static_cast<unsigned int>(std::time(nullptr));
+    std::srand(seed);
+    return seed;
 }
 
 unsigned int global_seed = init_seed();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void set_seed(unsigned int seed) {
-
-  std::srand(seed);
-  global_seed = seed;
+void set_seed(unsigned int seed)
+{
+    std::srand(seed);
+    global_seed = seed;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,20 +63,14 @@ unsigned int get_seed() { return global_seed; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float get(float begin, float end) {
-
-  return static_cast<float>(std::rand()) / RAND_MAX * (end - begin) + begin;
-}
+float get(float begin, float end) { return static_cast<float>(std::rand()) / RAND_MAX * (end - begin) + begin; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int get(int begin, int end) {
-
-  return std::rand() % (end - begin + 1) + begin;
-}
+int get(int begin, int end) { return std::rand() % (end - begin + 1) + begin; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
-}
-}
+} // namespace random
+} // namespace math
+} // namespace gua

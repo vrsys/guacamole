@@ -23,75 +23,80 @@
 
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-namespace utils {
+namespace gua
+{
+namespace utils
+{
+/////////////////////////////////////////////////////////////////////////////////
+TagList::TagList(std::vector<std::string> const& tags) { add_tags(tags); }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  TagList::TagList(std::vector<std::string> const& tags) {
-    add_tags(tags);
-  }
+/////////////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////////////////////////////////////////
-
-  void TagList::add_tag(std::string const& tag) {
+void TagList::add_tag(std::string const& tag)
+{
     auto new_tag(gua::utils::TagRegister::instance()->get_tag(tag));
-    if (new_tag.any()) {
-      tags_ |= new_tag;
+    if(new_tag.any())
+    {
+        tags_ |= new_tag;
     }
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void TagList::add_tags(std::vector<std::string> const& tags) {
-    for (auto const& tag : tags) {
-      add_tag(tag);
+void TagList::add_tags(std::vector<std::string> const& tags)
+{
+    for(auto const& tag : tags)
+    {
+        add_tag(tag);
     }
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void TagList::remove_tag(std::string const& tag) {
-    if (tags_.any()) {
-      auto tag_to_remove(gua::utils::TagRegister::instance()->get_tag(tag));
-      if (tag_to_remove.any()) {
-        tags_ &= tag_to_remove.flip();
-      }
+void TagList::remove_tag(std::string const& tag)
+{
+    if(tags_.any())
+    {
+        auto tag_to_remove(gua::utils::TagRegister::instance()->get_tag(tag));
+        if(tag_to_remove.any())
+        {
+            tags_ &= tag_to_remove.flip();
+        }
     }
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void TagList::remove_tags(std::vector<std::string> const& tags) {
-    if (tags_.any()) {
-      for (auto tag : tags) {
-        remove_tag(tag);
-      }
+void TagList::remove_tags(std::vector<std::string> const& tags)
+{
+    if(tags_.any())
+    {
+        for(auto tag : tags)
+        {
+            remove_tag(tag);
+        }
     }
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  void TagList::clear_tags() {
-    tags_.reset();
-  }
+void TagList::clear_tags() { tags_.reset(); }
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  std::vector<std::string> const TagList::get_strings() const {
-    if (tags_.any()) {
-      return gua::utils::TagRegister::instance()->get_tag_strings(tags_);
+std::vector<std::string> const TagList::get_strings() const
+{
+    if(tags_.any())
+    {
+        return gua::utils::TagRegister::instance()->get_tag_strings(tags_);
     }
 
     return std::vector<std::string>();
-  }
-
-
- ////////////////////////////////////////////////////////////////////////////////
-
-  std::bitset<GUA_MAX_TAG_COUNT> const& TagList::get_bits() const {
-    return tags_;
-  }
-
-
 }
-}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::bitset<GUA_MAX_TAG_COUNT> const& TagList::get_bits() const { return tags_; }
+
+} // namespace utils
+} // namespace gua

@@ -28,43 +28,42 @@
 
 class btSphereShape;
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * A class representing a sphere-shaped collision shape.
  *
  * This class is a sphere primitive around the origin with the given radius.
  * The sphere shape can be used for both static and dynamic rigid bodies.
  */
-class GUA_DLL SphereShape : public CollisionShape {
- public:
+class GUA_DLL SphereShape : public CollisionShape
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new sphere shape with the given radius.
+     *
+     * \param radius The radius of the sphere.
+     */
+    SphereShape(float radius);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new sphere shape with the given radius.
-   *
-   * \param radius The radius of the sphere.
-   */
-  SphereShape(float radius);
+    inline float get_radius() const { return radius_; }
 
-  inline float get_radius() const { return radius_; }
+    void set_radius(float radius);
 
-  void set_radius(float radius);
+  private:
+    void construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform) override;
 
- private:
+    btCollisionShape* construct_static() override;
 
-  void construct_dynamic(btCompoundShape* bullet_shape,
-                         const btTransform& base_transform) override;
-
-  btCollisionShape* construct_static() override;
-
-  std::unique_ptr<btSphereShape> shape_;
-  float radius_;
+    std::unique_ptr<btSphereShape> shape_;
+    float radius_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_SPHERE_SHAPE_HPP
+#endif // GUA_SPHERE_SHAPE_HPP

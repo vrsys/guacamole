@@ -24,32 +24,33 @@
 
 #include <gua/renderer/PipelinePass.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 
-class GUA_DLL SSAOPassDescription : public PipelinePassDescription {
- public:
+class GUA_DLL SSAOPassDescription : public PipelinePassDescription
+{
+  public:
+    SSAOPassDescription();
+    SSAOPassDescription(SSAOPassDescription const& copy) = default;
 
-  SSAOPassDescription();
-  SSAOPassDescription(SSAOPassDescription const& copy) = default;
+    SSAOPassDescription& radius(float radius);
+    float radius() const;
 
-  SSAOPassDescription& radius(float radius);
-  float radius() const;
+    SSAOPassDescription& intensity(float intensity);
+    float intensity() const;
 
-  SSAOPassDescription& intensity(float intensity);
-  float intensity() const;
+    SSAOPassDescription& falloff(float falloff);
+    float falloff() const;
 
-  SSAOPassDescription& falloff(float falloff);
-  float falloff() const;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
 
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 
-  friend class Pipeline;
- protected:
-  PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SSAO_PASS_HPP
+#endif // GUA_SSAO_PASS_HPP

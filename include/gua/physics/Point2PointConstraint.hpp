@@ -26,90 +26,87 @@
 #include <gua/platform.hpp>
 #include <gua/physics/Constraint.hpp>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * The point-to-point constraint connects two rigid bodies or one rigid
  *        body and a fixed point in worldspace.
  *
  * This constraint represents a ball socket joint.
  */
-class GUA_DLL Point2PointConstraint : public Constraint {
- public:
+class GUA_DLL Point2PointConstraint : public Constraint
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new constraint between one rigid body and a fixed point in
+     * worldspace.
+     *
+     * \param body_a  The rigid body.
+     * \param pivot_a The pivot point in body's local space.
+     */
+    Point2PointConstraint(RigidBodyNode* body_a, const math::vec3& pivot_a);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new constraint between one rigid body and a fixed point in
-   * worldspace.
-   *
-   * \param body_a  The rigid body.
-   * \param pivot_a The pivot point in body's local space.
-   */
-  Point2PointConstraint(RigidBodyNode* body_a, const math::vec3& pivot_a);
+    /**
+     * Constructor.
+     *
+     * Creates a new constraint between two rigid bodies. The constraint limits
+     * the translation so that the local pivot points of 2 rigidbodies match
+     * in worldspace.
+     *
+     * \param body_a  The first rigid body.
+     * \param body_b  The second rigid body.
+     * \param pivot_a The pivot point in the local space of the first body.
+     * \param pivot_b The pivot point in the local space of the second body.
+     */
+    Point2PointConstraint(RigidBodyNode* body_a, RigidBodyNode* body_b, const math::vec3& pivot_a, const math::vec3& pivot_b);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new constraint between two rigid bodies. The constraint limits
-   * the translation so that the local pivot points of 2 rigidbodies match
-   * in worldspace.
-   *
-   * \param body_a  The first rigid body.
-   * \param body_b  The second rigid body.
-   * \param pivot_a The pivot point in the local space of the first body.
-   * \param pivot_b The pivot point in the local space of the second body.
-   */
-  Point2PointConstraint(RigidBodyNode* body_a,
-                        RigidBodyNode* body_b,
-                        const math::vec3& pivot_a,
-                        const math::vec3& pivot_b);
+    /**
+     * Destructor.
+     *
+     * Deletes the constraint and frees all associated data.
+     */
+    virtual ~Point2PointConstraint() {}
 
-  /**
-   * Destructor.
-   *
-   * Deletes the constraint and frees all associated data.
-   */
-  virtual ~Point2PointConstraint() {}
+    /**
+     * Sets the pivot point of the first rigid body.
+     *
+     * \param pivot The pivot point in the local space.
+     */
+    void set_pivot_a(const math::vec3& pivot);
 
-  /**
-   * Sets the pivot point of the first rigid body.
-   *
-   * \param pivot The pivot point in the local space.
-   */
-  void set_pivot_a(const math::vec3& pivot);
+    /**
+     * Sets the pivot point of the second rigid body.
+     *
+     * \param pivot The pivot point in the local space.
+     */
+    void set_pivot_b(const math::vec3& pivot);
 
-  /**
-   * Sets the pivot point of the second rigid body.
-   *
-   * \param pivot The pivot point in the local space.
-   */
-  void set_pivot_b(const math::vec3& pivot);
+    /**
+     * Gets the pivot point of the first rigid body.
+     *
+     * \return The pivot point in the local space.
+     */
+    const math::vec3& pivot_a() const { return pivot_a_.first; }
 
-  /**
-   * Gets the pivot point of the first rigid body.
-   *
-   * \return The pivot point in the local space.
-   */
-  const math::vec3& pivot_a() const { return pivot_a_.first; }
+    /**
+     * Gets the pivot point of the second rigid body.
+     *
+     * \return The pivot point in the local space.
+     */
+    const math::vec3& pivot_b() const { return pivot_b_.first; }
 
-  /**
-   * Gets the pivot point of the second rigid body.
-   *
-   * \return The pivot point in the local space.
-   */
-  const math::vec3& pivot_b() const { return pivot_b_.first; }
+  private:
+    virtual void update_constraint();
 
- private:
-
-  virtual void update_constraint();
-
-  Vec3Field pivot_a_;
-  Vec3Field pivot_b_;
+    Vec3Field pivot_a_;
+    Vec3Field pivot_b_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // POINT_2_POINT_CONSTRAINT_HPP
+#endif // POINT_2_POINT_CONSTRAINT_HPP

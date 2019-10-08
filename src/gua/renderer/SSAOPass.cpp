@@ -27,90 +27,87 @@
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription::SSAOPassDescription()
-  : PipelinePassDescription() {
+SSAOPassDescription::SSAOPassDescription() : PipelinePassDescription()
+{
+    vertex_shader_ = "shaders/common/fullscreen_quad.vert";
+    fragment_shader_ = "shaders/ssao.frag";
 
-  vertex_shader_ = "shaders/common/fullscreen_quad.vert";
-  fragment_shader_ = "shaders/ssao.frag";
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
 
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = true;
-  rendermode_ = RenderMode::Quad;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
-  depth_stencil_state_ = boost::make_optional(
-      scm::gl::depth_stencil_state_desc(false, false));
-
-  blend_state_ = boost::make_optional(
-      scm::gl::blend_state_desc(scm::gl::blend_ops(
-                                            true,
-                                            scm::gl::FUNC_SRC_ALPHA,
-                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA,
-                                            scm::gl::FUNC_SRC_ALPHA,
-                                            scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
-  uniforms["gua_ssao_radius"]    = 1.0f;
-  uniforms["gua_ssao_intensity"] = 1.0f;
-  uniforms["gua_ssao_falloff"]   = 0.1f;
-  uniforms["gua_noise_tex"]      = std::string("gua_noise_texture");
+    private_.blend_state_desc_ = boost::make_optional(
+        scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
+    uniforms["gua_ssao_radius"] = 1.0f;
+    uniforms["gua_ssao_intensity"] = 1.0f;
+    uniforms["gua_ssao_falloff"] = 0.1f;
+    uniforms["gua_noise_tex"] = std::string("gua_noise_texture");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription& SSAOPassDescription::radius(float radius) {
-  uniforms["gua_ssao_radius"] = radius;
-  return *this;
+SSAOPassDescription& SSAOPassDescription::radius(float radius)
+{
+    uniforms["gua_ssao_radius"] = radius;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::radius() const {
-  auto uniform(uniforms.find("gua_ssao_radius"));
-  return boost::get<float>(uniform->second.data);
+float SSAOPassDescription::radius() const
+{
+    auto uniform(uniforms.find("gua_ssao_radius"));
+    return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription& SSAOPassDescription::intensity(float intensity) {
-  uniforms["gua_ssao_intensity"] = intensity;
-  return *this;
+SSAOPassDescription& SSAOPassDescription::intensity(float intensity)
+{
+    uniforms["gua_ssao_intensity"] = intensity;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::intensity() const {
-  auto uniform(uniforms.find("gua_ssao_intensity"));
-  return boost::get<float>(uniform->second.data);
+float SSAOPassDescription::intensity() const
+{
+    auto uniform(uniforms.find("gua_ssao_intensity"));
+    return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription& SSAOPassDescription::falloff(float falloff) {
-  uniforms["gua_ssao_falloff"] = falloff;
-  return *this;
+SSAOPassDescription& SSAOPassDescription::falloff(float falloff)
+{
+    uniforms["gua_ssao_falloff"] = falloff;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float SSAOPassDescription::falloff() const {
-  auto uniform(uniforms.find("gua_ssao_falloff"));
-  return boost::get<float>(uniform->second.data);
+float SSAOPassDescription::falloff() const
+{
+    auto uniform(uniforms.find("gua_ssao_falloff"));
+    return boost::get<float>(uniform->second.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> SSAOPassDescription::make_copy() const {
-  return std::make_shared<SSAOPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> SSAOPassDescription::make_copy() const { return std::make_shared<SSAOPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

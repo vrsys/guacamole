@@ -39,7 +39,6 @@
 #include <mutex>
 #include <chrono>
 
-
 // forward declarations of Bullet's classes
 class btDynamicsWorld;
 class btBroadphaseInterface;
@@ -47,15 +46,16 @@ class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 // default simulation parameters
-const float physics_default_gravity = -9.81f;             // m/s
-const float physics_default_fixed_timestep = 1.f / 80.f;  // seconds
+const float physics_default_gravity = -9.81f;            // m/s
+const float physics_default_fixed_timestep = 1.f / 80.f; // seconds
 const int physics_default_max_sub_steps = 3;
 const bool physics_default_reduce_sim_rate = true;
-const int physics_default_max_sim_time = int(1.e6 / 200);  // microseconds
+const int physics_default_max_sim_time = int(1.e6 / 200); // microseconds
 
 // class RigidBodyNode;
 class Constraint;
@@ -67,9 +67,9 @@ class Constraint;
  * rigid bodies and constraints as well as provides scene graph traversal
  * capability and methods to tune simulation parameters.
  */
-class GUA_DLL Physics {
-public:
-
+class GUA_DLL Physics
+{
+  public:
     Physics();
     /**
      * Constructor.
@@ -165,9 +165,7 @@ public:
      * \param max_sim_time Maximum time in microseconds to be spent on each
      *                     simulation step.
      */
-    void simulation_rate_reduction(bool enabled,
-                                   int max_sim_time =
-                                       physics_default_max_sim_time);
+    void simulation_rate_reduction(bool enabled, int max_sim_time = physics_default_max_sim_time);
 
     /**
      * Applies new transforms to scene graph nodes and prepares
@@ -201,9 +199,7 @@ public:
      * \param mask Bitwise mask for collision filtering
      * \sa    add_constraint()
      */
-    void add_rigid_body(std::shared_ptr<RigidBodyNode> const& body,
-                        RigidBodyNode::CollisionFilterGroups const& group,
-                        RigidBodyNode::CollisionFilterGroups const& mask);
+    void add_rigid_body(std::shared_ptr<RigidBodyNode> const& body, RigidBodyNode::CollisionFilterGroups const& group, RigidBodyNode::CollisionFilterGroups const& mask);
 
     /**
      * Removes a rigid body from the simulation.
@@ -221,8 +217,7 @@ public:
      *                         associated with the constraint.
      * \sa    add_rigid_body()
      */
-    void add_constraint(Constraint* ct,
-                        bool disable_collisions_between_linked_bodies = false);
+    void add_constraint(Constraint* ct, bool disable_collisions_between_linked_bodies = false);
 
     /**
      * Removes a constraint from the simulation.
@@ -261,9 +256,7 @@ public:
      *
      * \return The reference to the mutex.
      */
-    inline std::mutex& lock() const {
-        return simulation_mutex_;
-    }
+    inline std::mutex& lock() const { return simulation_mutex_; }
 
     ///@{
     /**
@@ -277,19 +270,18 @@ public:
     btDynamicsWorld* get_bullet_dynamics_world() { return dw_; }
     ///@}
 
-// No copying construction. No assignment.
+    // No copying construction. No assignment.
     Physics(const Physics&) = delete;
     Physics(Physics&&) = delete;
     Physics& operator=(const Physics&) = delete;
     Physics& operator=(Physics&&) = delete;
 
-private:
-
+  private:
     // the simulation thread entry point.
     void simulate();
 
     // pop front element from call-once queue
-    bool pop_call_once(std::function<void()> & value);
+    bool pop_call_once(std::function<void()>& value);
 
     // ensures exclusive access to the physics structures.
     mutable std::mutex simulation_mutex_;
@@ -314,7 +306,7 @@ private:
     CollisionShapeNodeVisitor shape_visitor_;
 
     // queue for call-once functions
-    std::queue<std::function<void()> > call_once_queue_;
+    std::queue<std::function<void()>> call_once_queue_;
     std::mutex call_once_queue_mutex_;
 
     // Bullet's objects
@@ -328,10 +320,9 @@ private:
 
     /// \todo Change this to std::atomic<float> after upgrade to GCC 4.7
     float physics_fps_;
-}
-;
+};
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_PHYSICS_HPP
+#endif // GUA_PHYSICS_HPP

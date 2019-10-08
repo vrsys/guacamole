@@ -30,58 +30,58 @@
  *
  */
 
-namespace gua {
+namespace gua
+{
+class PathParser
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a PathParser
+     */
+    PathParser();
 
-class PathParser {
- public:
+    /**
+     * Parses a path.
+     *
+     * This function parses a path and stores each substring of the path
+     * which is separated by "/" into a vector cell.
+     * Special attention is payed to a leading "/", which is considered
+     * as part of the path and therefore also added to the vector.
+     * Furthermore a finishing "/" sets a trigger.
+     *
+     * \param path       The path to be parsed.
+     */
+    void parse(std::string const& path);
 
-  /**
-   * Constructor.
-   *
-   * This constructs a PathParser
-   */
-  PathParser();
+    std::string get_path(bool ignore_last_entry = false) const;
 
-  /**
-   * Parses a path.
-   *
-   * This function parses a path and stores each substring of the path
-   * which is separated by "/" into a vector cell.
-   * Special attention is payed to a leading "/", which is considered
-   * as part of the path and therefore also added to the vector.
-   * Furthermore a finishing "/" sets a trigger.
-   *
-   * \param path       The path to be parsed.
-   */
-  void parse(std::string const& path);
+    /**
+     * Returns a parsed path.
+     *
+     * This function returns the vector containing the parsed path's data.
+     *
+     * \return path_data The parsed path's data.
+     */
+    std::vector<std::string> const& get_parsed_path() const;
 
-  std::string get_path(bool ignore_last_entry = false) const;
+    /**
+     * Returns if the pars has a "/" at its end.
+     *
+     * This function returns true if the trigger on a finishing "/" is set.
+     *
+     * \return finished_by_slash The value of the trigger.
+     */
+    bool path_is_finished_by_slash() const;
 
-  /**
-   * Returns a parsed path.
-   *
-   * This function returns the vector containing the parsed path's data.
-   *
-   * \return path_data The parsed path's data.
-   */
-  std::vector<std::string> const& get_parsed_path() const;
+    void make_absolute(std::string const& path_from_cwd);
 
-  /**
-   * Returns if the pars has a "/" at its end.
-   *
-   * This function returns true if the trigger on a finishing "/" is set.
-   *
-   * \return finished_by_slash The value of the trigger.
-   */
-  bool path_is_finished_by_slash() const;
-
-  void make_absolute(std::string const& path_from_cwd);
-
- private:
-  std::vector<std::string> parsed_path_;
-  bool finished_by_slash_;
+  private:
+    std::vector<std::string> parsed_path_;
+    bool finished_by_slash_;
 };
 
-}
+} // namespace gua
 
-#endif  //PATH_PARSER_HPP
+#endif // PATH_PARSER_HPP

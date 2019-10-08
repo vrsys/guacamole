@@ -30,70 +30,72 @@
 #include <boost/optional.hpp>
 #include <boost/none.hpp>
 
-namespace gua {
-namespace concurrent {
+namespace gua
+{
+namespace concurrent
+{
+template <typename T>
+class Doublebuffer
+{
+  public:
+    Doublebuffer() : front_(), back_(), updated_(false), copy_mutex_(), copy_cond_var_(), shutdown_(false) {}
 
-template <typename T> class Doublebuffer {
- public:
-  Doublebuffer()
-      : front_()
-      , back_()
-      , updated_(false)
-      , copy_mutex_()
-      , copy_cond_var_()
-      , shutdown_(false)
-    {}
-
-  bool push_back(T const& scene_graphs) {
-    if (shutdown_)
-      return false;
+    bool push_back(T const& scene_graphs)
     {
-      // blocks until ownership can be obtained for the current thread.
-      std::lock_guard<std::mutex> lock(copy_mutex_);
-      back_ = scene_graphs;
-      updated_ = true;
+        if(shutdown_)
+            return false;
+        {
+            // blocks until ownership can be obtained for the current thread.
+            std::lock_guard<std::mutex> lock(copy_mutex_);
+            back_ = scene_graphs;
+            updated_ = true;
+        }
+        copy_cond_var_.notify_one();
+        return true;
     }
-    copy_cond_var_.notify_one();
-    return true;
-  }
 
-  boost::optional<T> read() {
-    if (shutdown_) {
-      return boost::optional<T>();
-    }
+    boost::optional<T> read()
     {
-      std::unique_lock<std::mutex> lock(copy_mutex_);
-      while (!updated_ && !shutdown_) {
-        copy_cond_var_.wait(lock);
-      }
-      if (shutdown_) {
-        return boost::none;
-      }
-      updated_ = false;
-      std::swap(front_, back_);
+        if(shutdown_)
+        {
+            return boost::optional<T>();
+        }
+        {
+            std::unique_lock<std::mutex> lock(copy_mutex_);
+            while(!updated_ && !shutdown_)
+            {
+                copy_cond_var_.wait(lock);
+            }
+            if(shutdown_)
+            {
+                return boost::none;
+            }
+            updated_ = false;
+            std::swap(front_, back_);
+        }
+
+        return boost::make_optional(front_);
+    }
+    inline void close()
+    {
+        shutdown_ = true;
+        copy_cond_var_.notify_all();
     }
 
-    return boost::make_optional(front_);
-  }
-  inline void close() {
-    shutdown_ = true;
-    copy_cond_var_.notify_all();
-  }
+    bool closed() const { return shutdown_; }
 
-  bool closed() const { return shutdown_; }
+  private:
+    T front_;
+    T back_;
+    bool updated_;
 
- private:
-  T front_;
-  T back_;
-  bool updated_;
-
-  std::mutex copy_mutex_;
-  std::condition_variable copy_cond_var_;
-  std::atomic<bool> shutdown_;
+    std::mutex copy_mutex_;
+    std::condition_variable copy_cond_var_;
+    std::atomic<bool> shutdown_;
 };
 
-}
+} // namespace concurrent
 
-}
+} // namespace gua
 
-#endif  // GUA_DOUBLEBUFFER_HPP
+#endif // GUA_DOUBLEBUFFER_HPP

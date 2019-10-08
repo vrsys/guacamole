@@ -25,7 +25,7 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/enums.hpp>
 #include <gua/utils/InstanceCollection.hpp>
- 
+
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
 #include <gua/virtual_texturing/VTInfo.hpp>
 #endif
@@ -40,22 +40,23 @@
 #include <scm/gl_core/window_management/surface.h>
 #include <atomic>
 
-namespace gua {
-
+namespace gua
+{
 class Pipeline;
 class WindowBase;
 
-namespace node{
-  class Node;
+namespace node
+{
+class Node;
 }
 
 /**
-* Abstract base class for plugin ressources
-*/
+ * Abstract base class for plugin ressources
+ */
 struct GUA_DLL PluginRessource
 {
-public:
-  virtual ~PluginRessource() = default;
+  public:
+    virtual ~PluginRessource() = default;
 };
 
 /**
@@ -63,135 +64,119 @@ public:
  *
  * Stores all relevant information on a OpenGL context.
  */
-struct GUA_DLL RenderContext {
+struct GUA_DLL RenderContext
+{
+    /**
+     * c'tor
+     */
+    RenderContext();
 
-  /**
-  * c'tor
-  */
-  RenderContext();
+    /**
+     * The schism render device associated with this context.
+     */
+    scm::gl::render_device_ptr render_device;
 
-  /**
-   * The schism render device associated with this context.
-   */
-  scm::gl::render_device_ptr render_device;
+    /**
+     * The schism render constext associated with this context.
+     */
+    scm::gl::render_context_ptr render_context;
 
-  /**
-   * The schism render constext associated with this context.
-   */
-  scm::gl::render_context_ptr render_context;
+    /**
+     * The schism context of this RenderContext.
+     */
+    scm::gl::wm::context_ptr context;
 
-   /**
-   * The schism context of this RenderContext.
-   */
-  scm::gl::wm::context_ptr context;
+    /**
+     * The display where this context was opened.
+     */
+    scm::gl::wm::display_ptr display;
 
-  /**
-   * The display where this context was opened.
-   */
-  scm::gl::wm::display_ptr display;
+    /**
+     * The window which is rendered into.
+     */
+    WindowBase* render_window;
 
-  /**
-   * The window which is rendered into.
-   */
-  WindowBase* render_window;
+    /**
+     * A unique ID for this context.
+     */
+    unsigned id;
 
-  /**
-   * A unique ID for this context.
-   */
-  unsigned id;
+    /**
+     * framecounter for this context
+     */
+    unsigned framecount;
 
-  /**
-  * framecounter for this context
-  */
-  unsigned framecount;
+    gua::CameraMode mode;
 
-  gua::CameraMode mode;
+    /**
+     * Resources associated with this context
+     */
+    InstanceCollection resources;
 
-  /**
-  * Resources associated with this context
-  */
-  InstanceCollection resources;
+    class Mesh
+    {
+      public:
+        Mesh() = default;
+        Mesh(scm::gl::vertex_array_ptr const& a, scm::gl::buffer_ptr const& v, scm::gl::buffer_ptr const& i)
+            : vertex_array(a), vertices(v), indices(i), indices_topology(scm::gl::PRIMITIVE_TRIANGLE_LIST), indices_type(scm::gl::TYPE_UINT), indices_count(0)
+        {
+        }
+        scm::gl::vertex_array_ptr vertex_array;
+        scm::gl::buffer_ptr vertices;
+        scm::gl::buffer_ptr indices;
+        scm::gl::primitive_topology indices_topology;
+        scm::gl::data_type indices_type;
+        int indices_count;
+    };
 
-  class Mesh
-  {
-    public:
-      Mesh() = default;
-      Mesh( scm::gl::vertex_array_ptr const& a
-          , scm::gl::buffer_ptr const& v
-          , scm::gl::buffer_ptr const& i)
-        : vertex_array(a)
-        , vertices(v)
-        , indices(i)
-        , indices_topology(scm::gl::PRIMITIVE_TRIANGLE_LIST)
-        , indices_type(scm::gl::TYPE_UINT)
-        , indices_count(0)
-      {}
-      scm::gl::vertex_array_ptr   vertex_array;
-      scm::gl::buffer_ptr         vertices;
-      scm::gl::buffer_ptr         indices;
-      scm::gl::primitive_topology indices_topology;
-      scm::gl::data_type          indices_type;
-      int                         indices_count;
-  };
+    mutable std::unordered_map<std::size_t, Mesh> meshes;
 
-  mutable std::unordered_map<std::size_t, Mesh> meshes;
+    class LineStrip
+    {
+      public:
+        LineStrip() = default;
+        LineStrip(scm::gl::vertex_array_ptr const& a, scm::gl::buffer_ptr const& v, scm::gl::buffer_ptr const& i)
+            : vertex_array(a), vertices(v), vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY), vertex_reservoir_size(0), num_occupied_vertex_slots(0), current_buffer_size_in_vertices(0)
+        {
+        }
+        scm::gl::vertex_array_ptr vertex_array;
+        scm::gl::buffer_ptr vertices;
+        scm::gl::primitive_topology vertex_topology;
+        int vertex_reservoir_size;
+        int num_occupied_vertex_slots;
+        int current_buffer_size_in_vertices;
+    };
 
-  class LineStrip
-  {
-    public:
-      LineStrip() = default;
-      LineStrip( scm::gl::vertex_array_ptr const& a,
-                 scm::gl::buffer_ptr const& v
-               , scm::gl::buffer_ptr const& i)
-               : vertex_array(a)
-               , vertices(v)
-               , vertex_topology(scm::gl::PRIMITIVE_LINE_STRIP_ADJACENCY)
-               , vertex_reservoir_size(0)
-               , num_occupied_vertex_slots(0)
-               , current_buffer_size_in_vertices(0)
-      {}
-      scm::gl::vertex_array_ptr   vertex_array;
-      scm::gl::buffer_ptr         vertices;
-      scm::gl::primitive_topology vertex_topology;
-      int                         vertex_reservoir_size;
-      int                         num_occupied_vertex_slots;
-      int                         current_buffer_size_in_vertices;
-  };
+    mutable std::unordered_map<std::size_t, LineStrip> line_strips;
 
-  mutable std::unordered_map<std::size_t, LineStrip> line_strips;
+    class Texture
+    {
+      public:
+        Texture() = default;
+        Texture(scm::gl::texture_image_ptr const& t, scm::gl::sampler_state_ptr const& s) : texture(t), sampler_state(s) {}
+        scm::gl::texture_image_ptr texture;
+        scm::gl::sampler_state_ptr sampler_state;
+    };
 
-  class Texture
-  {
-    public:
-      Texture() = default;
-      Texture(scm::gl::texture_image_ptr const& t,
-              scm::gl::sampler_state_ptr const& s)
-        : texture(t), sampler_state(s)
-      {}
-      scm::gl::texture_image_ptr texture;
-      scm::gl::sampler_state_ptr sampler_state;
-  };
+    /**
+     * Textures associated with this context
+     */
+    mutable std::unordered_map<std::size_t, Texture> textures;
 
-  /**
-  * Textures associated with this context
-  */
-  mutable std::unordered_map<std::size_t, Texture> textures;
+    /**
+     * Texture arrays associated with this contect
+     */
+    mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr>> texture_2d_arrays;
+    mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> texture_3d_arrays;
 
-  /**
-  * Texture arrays associated with this contect
-  */
-  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr> > texture_2d_arrays;
-  mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr> > texture_3d_arrays;
+    /**
+     * Resources associated with this context
+     */
+    std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 
-  /**
-  * Resources associated with this context
-  */
-  std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
-
-  mutable std::unordered_map<std::size_t, std::shared_ptr<PluginRessource>> plugin_ressources;
+    mutable std::unordered_map<std::size_t, std::shared_ptr<PluginRessource>> plugin_ressources;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_RENDERCONTEXT_HPP
-
+#endif // GUA_RENDERCONTEXT_HPP

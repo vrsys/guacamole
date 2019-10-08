@@ -26,8 +26,8 @@
 #include <gua/platform.hpp>
 #include <gua/renderer/Texture2D.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A class representing a warp matrix.
  *
@@ -35,31 +35,30 @@ namespace gua {
  * when the projecting beamers for the colors red, green and blue don't
  * overlap exactly.
  */
-class GUA_DLL WarpMatrix : public Texture2D {
- public:
+class GUA_DLL WarpMatrix : public Texture2D
+{
+  public:
+    /**
+     * Default constructor.
+     *
+     * Creates a new (invalid) WarpMatrix.
+     */
+    WarpMatrix();
 
-  /**
-   * Default constructor.
-   *
-   * Creates a new (invalid) WarpMatrix.
-   */
-  WarpMatrix();
+    /**
+     * Constructor.
+     *
+     * Creates a new WarpMatrix from a given path to a warp matrix file.
+     *
+     * \param file_name            Path to a warp matrix file.
+     */
+    WarpMatrix(std::string const& file_name);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new WarpMatrix from a given path to a warp matrix file.
-   *
-   * \param file_name            Path to a warp matrix file.
-   */
-  WarpMatrix(std::string const& file_name);
+  private:
+    void upload_to(RenderContext const& context) const override;
 
- private:
-  void upload_to(RenderContext const& context) const override;
-
-  mutable std::vector<float> data_;
-
+    mutable std::vector<float> data_;
 };
 
-}
-#endif  // GUA_WARP_MATRIX_HPP
+} // namespace gua
+#endif // GUA_WARP_MATRIX_HPP

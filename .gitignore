@@ -60,6 +60,7 @@ examples/animation/example-animation
 examples/physics/example-physics
 examples/tiledwall/example-tiledwall
 examples/lod_mesh_textured/example-lod_mesh_textured
+examples/lod_mesh_virtually_textured/example-lod_mesh_virtually_textured
 examples/time_varying_volume/example-time_varying_volume
 examples/depth_cube_map/example-depth_cube_map
 examples/lod_simple/example-lod_simple
@@ -68,3 +69,11 @@ examples/plod_simple/example-plod_simple
 
 install
 examples/picking/example-picking
+example-gazebo_scene
+
+.idea
+examples/volumetric_point_and_line_rendering/example-volumetric_point_and_line_rendering
+examples/nrp_scene/example-nrp_scene
+examples/projective_virtual_texturing/example-projective_virtual_texturing
+examples/virtual_texturing/example-virtual_texturing
+

@@ -9,3 +9,5 @@
 #ifdef GL_NV_shader_atomic_int64
 #extension GL_NV_shader_atomic_int64 : enable
 #endif
+
+#extension GL_ARB_derivative_control : enable

@@ -26,29 +26,23 @@
 #include <gua/node/TransformNode.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
-namespace gua {
-namespace physics {
+namespace gua
+{
+namespace physics
+{
+////////////////////////////////////////////////////////////////////////////////
+
+CollisionShapeNode::CollisionShapeNode(const std::string& name, const math::mat4& transform) : node::TransformNode(name, transform) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CollisionShapeNode::CollisionShapeNode(const std::string& name,
-                                       const math::mat4& transform)
-    : node::TransformNode(name, transform) {}
+/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void CollisionShapeNode::accept(NodeVisitor& visitor) {
-
-  visitor.visit(this);
-}
+std::shared_ptr<node::Node> CollisionShapeNode::copy() const { return std::make_shared<node::TransformNode>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> CollisionShapeNode::copy() const {
-  return std::make_shared<node::TransformNode>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
-}
+} // namespace physics
+} // namespace gua

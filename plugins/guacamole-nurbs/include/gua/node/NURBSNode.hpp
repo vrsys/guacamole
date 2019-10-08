@@ -27,89 +27,78 @@
 
 #include <gua/node/GeometryNode.hpp>
 
-namespace gua {
-
+namespace gua
+{
 class NURBSResource;
 class NURBSLoader;
 
-namespace node {
-
+namespace node
+{
 /**
-* This class is used to represent NURBS geometry in the SceneGraph.
-*
-* \ingroup gua_scenegraph
-*/
+ * This class is used to represent NURBS geometry in the SceneGraph.
+ *
+ * \ingroup gua_scenegraph
+ */
 class GUA_NURBS_DLL NURBSNode : public GeometryNode
 {
-public :
+  public:
+    friend class NURBSLoader;
 
-  friend class NURBSLoader;
+  public: // c'tor
+    NURBSNode(std::string const& node_name,
+              std::string const& geometry_description = "gua_default_geometry",
+              std::shared_ptr<Material> const& material = nullptr,
+              math::mat4 const& transform = math::mat4::identity());
 
-public : // c'tor
+  public: // methods
+    std::shared_ptr<NURBSResource> const& get_geometry() const;
 
-  NURBSNode(std::string const& node_name,
-            std::string const& geometry_description = "gua_default_geometry",
-            std::shared_ptr<Material> const& material = nullptr,
-            math::mat4  const& transform = math::mat4::identity());
+    std::string const& get_geometry_description() const;
+    void set_geometry_description(std::string const& v);
 
-public: // methods
+    std::shared_ptr<Material> const& get_material() const;
+    void set_material(std::shared_ptr<Material> const& material);
 
-  std::shared_ptr<NURBSResource> const& get_geometry() const;
+  public: // render configuration
+    float max_pre_tesselation() const;
+    void max_pre_tesselation(float t);
 
-  std::string const&                    get_geometry_description() const;
-  void                                  set_geometry_description(std::string const& v);
+    float max_tesselation_error() const;
+    void max_tesselation_error(float t);
 
-  std::shared_ptr<Material> const&      get_material() const;
-  void                                  set_material(std::shared_ptr<Material> const& material);
+    void wireframe(bool enable);
+    bool wireframe() const;
 
-public: // render configuration
+    void trimming(bool enable);
+    bool trimming() const;
 
-  float max_pre_tesselation() const;
-  void  max_pre_tesselation(float t);
+  public: // virtual/override methods
+    void ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits) override;
 
-  float max_tesselation_error() const;
-  void  max_tesselation_error(float t);
+    void update_bounding_box() const override;
 
-  void wireframe(bool enable);
-  bool wireframe() const;
+    void update_cache() override;
 
-  void trimming(bool enable);
-  bool trimming() const;
+    void accept(NodeVisitor& visitor) override;
 
-public: // virtual/override methods
+  protected:
+    std::shared_ptr<Node> copy() const override;
 
-  void ray_test_impl(Ray const& ray,
-                     int options,
-                     Mask const& mask,
-                     std::set<PickResult>& hits) override;
+  private: // attributes e.g. special attributes for drawing
+    std::shared_ptr<NURBSResource> geometry_;
+    std::string geometry_description_;
+    bool geometry_changed_;
 
-  void update_bounding_box() const override;
+    std::shared_ptr<Material> material_;
+    bool material_changed_;
 
-  void update_cache() override;
-
-  void accept(NodeVisitor& visitor) override;
-
-protected:
-
-  std::shared_ptr<Node> copy() const override;
-
-private : // attributes e.g. special attributes for drawing
-
-  std::shared_ptr<NURBSResource>  geometry_;
-  std::string                     geometry_description_;
-  bool                            geometry_changed_;
-
-  std::shared_ptr<Material>       material_;
-  bool                            material_changed_;
-
-  float                           max_tesselation_error_ = 8.0f;
-  float                           max_pre_tesselation_ = 64.0f;
-  bool                            wireframe_ = false;
-  bool                            trimming_ = true;
-
+    float max_tesselation_error_ = 8.0f;
+    float max_pre_tesselation_ = 64.0f;
+    bool wireframe_ = false;
+    bool trimming_ = true;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_NURBS_NODE_HPP
+#endif // GUA_NURBS_NODE_HPP

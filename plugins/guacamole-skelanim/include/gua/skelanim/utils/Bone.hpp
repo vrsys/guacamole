@@ -32,34 +32,31 @@
 
 struct aiNode;
 
-namespace gua {
-
+namespace gua
+{
 /**
  * @brief represents one node in skeletal hierarchy
  * @details has methods to traverse skeleton hierarchy
  */
-struct GUA_SKELANIM_DLL Bone {
- public:
-  Bone();
-  Bone(std::string const& name, 
-    scm::math::mat4f const& idle,
-    scm::math::mat4f const& offset = scm::math::mat4f::identity(),
-    std::vector<unsigned> childs = std::vector<unsigned>{}
-  );
-  Bone(aiNode const& node);
+struct GUA_SKELANIM_DLL Bone
+{
+  public:
+    Bone();
+    Bone(std::string const& name, scm::math::mat4f const& idle, scm::math::mat4f const& offset = scm::math::mat4f::identity(), std::vector<unsigned> childs = std::vector<unsigned>{});
+    Bone(aiNode const& node);
 
 #ifdef GUACAMOLE_FBX
-  Bone(FbxNode& node);
+    Bone(FbxNode& node);
 #endif
 
-  std::string name;
-  std::vector<unsigned> children;
-  // idle/reference pose matrix
-  scm::math::mat4f idle_matrix;
-  //transforms to bone space
-  scm::math::mat4f offset_matrix;
+    std::string name;
+    std::vector<unsigned> children;
+    // idle/reference pose matrix
+    scm::math::mat4f idle_matrix;
+    // transforms to bone space
+    scm::math::mat4f offset_matrix;
 };
 
-}
+} // namespace gua
 
-#endif  //GUA_BONE_HPP
+#endif // GUA_BONE_HPP

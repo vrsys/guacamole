@@ -28,12 +28,13 @@
 #include <string>
 #include <vector>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class ShaderProgram;
 
-class GUA_DLL Material {
+class GUA_DLL Material
+{
   public:
     Material(std::string const& shader_name = "gua_default_material");
     Material(Material const& copy);
@@ -46,109 +47,127 @@ class GUA_DLL Material {
     MaterialShader* get_shader() const;
 
     template <typename T>
-    Material& set_uniform(std::string const& name, T const& value) {
-      return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
+    Material& set_uniform(std::string const& name, T const& value)
+    {
+        return set_uniform(name, ViewDependentUniform(UniformValue(uniform_compatible_type(value))));
     }
 
     template <typename T>
-    Material& set_uniform(std::string const& name, T const& value, int view_id) {
-      auto val = uniform_compatible_type(value);
-      auto uniform(uniforms_.find(name));
+    Material& set_uniform(std::string const& name, T const& value, int view_id)
+    {
+        auto val = uniform_compatible_type(value);
+        auto uniform(uniforms_.find(name));
 
-      if (uniform != uniforms_.end()) {
-        uniform->second.set(view_id, val);
-      } else {
-        ViewDependentUniform tmp;
-        tmp.set(UniformValue(val));
-        tmp.set(view_id, UniformValue(val));
-        uniforms_[name] = tmp;
-      }
-      return *this;
+        if(uniform != uniforms_.end())
+        {
+            uniform->second.set(view_id, val);
+        }
+        else
+        {
+            ViewDependentUniform tmp;
+            tmp.set(UniformValue(val));
+            tmp.set(view_id, UniformValue(val));
+            uniforms_[name] = tmp;
+        }
+        return *this;
     }
 
-    Material& reset_uniform(std::string const& name, int view_id) {
-      uniforms_[name].reset(view_id);
-      return *this;
+    Material& reset_uniform(std::string const& name, int view_id)
+    {
+        uniforms_[name].reset(view_id);
+        return *this;
     }
 
     std::map<std::string, ViewDependentUniform> const& get_uniforms() const;
 
-    Material& set_show_back_faces(bool value) {
-      show_back_faces_ = value;
-      return *this;
+    Material& set_show_back_faces(bool value)
+    {
+        show_back_faces_ = value;
+        return *this;
     }
 
-    bool get_show_back_faces() const {
-      return show_back_faces_;
+    bool get_show_back_faces() const { return show_back_faces_; }
+
+    Material& set_render_wireframe(bool value)
+    {
+        render_wireframe_ = value;
+        return *this;
     }
 
-    Material& set_render_wireframe(bool value) {
-      render_wireframe_ = value;
-      return *this;
-    }
-
-    bool get_render_wireframe() const {
-      return render_wireframe_;
-    }
+    bool get_render_wireframe() const { return render_wireframe_; }
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-    Material& set_enable_virtual_texturing(bool value) {
-      enable_virtual_texturing_ = value;
-      return *this;
+    Material& set_enable_virtual_texturing(bool value)
+    {
+        enable_virtual_texturing_ = value;
+        return *this;
     }
 
-    bool get_enable_virtual_texturing() const {
-      return enable_virtual_texturing_;
-    }
+    bool get_enable_virtual_texturing() const { return enable_virtual_texturing_; }
 #endif
-
 
     void apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const;
 
     std::ostream& serialize_uniforms_to_stream(std::ostream& os) const;
     void set_uniforms_from_serialized_string(std::string const& value);
 
-    std::string get_sampler(std::string const& name, int view_id) {
-      auto iter = uniforms_.find(name);
-      if (iter == uniforms_.end()) {
-        return std::string("");
-      } else {
-        return boost::get<std::string>(iter->second.get(view_id).data);
-      }
+    std::string get_sampler(std::string const& name, int view_id)
+    {
+        auto iter = uniforms_.find(name);
+        if(iter == uniforms_.end())
+        {
+            return std::string("");
+        }
+        else
+        {
+            return boost::get<std::string>(iter->second.get(view_id).data);
+        }
     }
 
-    std::string get_sampler(std::string const& name) {
-      auto iter = uniforms_.find(name);
-      if (iter == uniforms_.end()) {
-        return std::string("");
-      } else {
-        return boost::get<std::string>(iter->second.get().data);
-      }
+    std::string get_sampler(std::string const& name)
+    {
+        auto iter = uniforms_.find(name);
+        if(iter == uniforms_.end())
+        {
+            return std::string("");
+        }
+        else
+        {
+            return boost::get<std::string>(iter->second.get().data);
+        }
     }
 
-    math::mat4f get_mat4(std::string const& name, int view_id) {
-      auto iter = uniforms_.find(name);
-      if (iter == uniforms_.end()) {
-        return math::mat4f{};
-      } else {
-        return boost::get<math::mat4f>(iter->second.get(view_id).data);
-      }
+    math::mat4f get_mat4(std::string const& name, int view_id)
+    {
+        auto iter = uniforms_.find(name);
+        if(iter == uniforms_.end())
+        {
+            return math::mat4f{};
+        }
+        else
+        {
+            return boost::get<math::mat4f>(iter->second.get(view_id).data);
+        }
     }
 
-    math::mat4f get_mat4(std::string const& name) {
-      auto iter = uniforms_.find(name);
-      if (iter == uniforms_.end()) {
-        return math::mat4f{};
-      } else {
-        return boost::get<math::mat4f>(iter->second.get().data);
-      }
+    math::mat4f get_mat4(std::string const& name)
+    {
+        auto iter = uniforms_.find(name);
+        if(iter == uniforms_.end())
+        {
+            return math::mat4f{};
+        }
+        else
+        {
+            return boost::get<math::mat4f>(iter->second.get().data);
+        }
     }
 
   private:
-
-    Material& set_uniform(std::string const& name, ViewDependentUniform const& value) {
-      uniforms_[name] = value;
-      return *this;
+    Material& set_uniform(std::string const& name, ViewDependentUniform const& value)
+    {
+        uniforms_[name] = value;
+        return *this;
     }
 
     friend class MaterialShader;
@@ -159,9 +178,9 @@ class GUA_DLL Material {
     bool show_back_faces_;
     bool render_wireframe_;
 
-    #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     bool enable_virtual_texturing_;
-    #endif
+#endif
 
     mutable std::mutex mutex_;
 };
@@ -180,11 +199,9 @@ template GUA_DLL Material& Material::set_uniform<math::vec4>(std::string const& 
 template GUA_DLL Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value);
 template GUA_DLL Material& Material::set_uniform<std::string>(std::string const& name, std::string const& value, int view_id);
 
-//operators
+// operators
 std::ostream& operator<<(std::ostream& os, Material const& val);
 
-}
+} // namespace gua
 
-
-
-#endif  // GUA_MATERIAL_HPP
+#endif // GUA_MATERIAL_HPP

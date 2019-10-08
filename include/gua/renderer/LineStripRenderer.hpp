@@ -30,40 +30,37 @@
 
 #include <scm/gl_core/shader_objects.h>
 
-namespace gua {
-
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class LineStripRenderer {
+class LineStripRenderer
+{
+  public:
+    LineStripRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  LineStripRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
 
- private:
+    std::vector<ShaderProgramStage> volumetric_point_program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_point_programs_;
 
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_none_;
+    std::vector<ShaderProgramStage> volumetric_line_program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_line_programs_;
 
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-
-
-  std::vector<ShaderProgramStage>                                     volumetric_point_program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_point_programs_;
-
-  std::vector<ShaderProgramStage>                                     volumetric_line_program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_line_programs_;
-
-  SubstitutionMap                                                     global_substitution_map_;
+    SubstitutionMap global_substitution_map_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TRIMESH_RENDERER_HPP
+#endif // GUA_TRIMESH_RENDERER_HPP

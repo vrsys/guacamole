@@ -23,48 +23,51 @@
 
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-namespace utils {
+namespace gua
+{
+namespace utils
+{
+////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
+std::bitset<GUA_MAX_TAG_COUNT> const& TagRegister::get_tag(std::string const& tag)
+{
+    if(registered_tags_.find(tag) == registered_tags_.end())
+    {
+        auto tag_count(registered_tags_.size());
 
-  std::bitset<GUA_MAX_TAG_COUNT> const& TagRegister::get_tag(
-                                                      std::string const& tag) {
-    if (registered_tags_.find(tag) == registered_tags_.end()) {
+        if(tag_count < GUA_MAX_TAG_COUNT)
+        {
+            std::bitset<GUA_MAX_TAG_COUNT> new_set;
+            new_set.set(tag_count);
 
-      auto tag_count(registered_tags_.size());
-
-      if (tag_count < GUA_MAX_TAG_COUNT) {
-
-        std::bitset<GUA_MAX_TAG_COUNT> new_set;
-        new_set.set(tag_count);
-
-        registered_tags_[tag] = new_set;
-      } else {
-        Logger::LOG_WARNING << "Unable to add new tag: Maximum number of tags is " << GUA_MAX_TAG_COUNT << "!" << std::endl;
-        return default_tag_;
-      }
+            registered_tags_[tag] = new_set;
+        }
+        else
+        {
+            Logger::LOG_WARNING << "Unable to add new tag: Maximum number of tags is " << GUA_MAX_TAG_COUNT << "!" << std::endl;
+            return default_tag_;
+        }
     }
 
     return registered_tags_[tag];
-  }
+}
 
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-  std::vector<std::string> const TagRegister::get_tag_strings(
-                                  std::bitset<GUA_MAX_TAG_COUNT> const& tags) {
-
+std::vector<std::string> const TagRegister::get_tag_strings(std::bitset<GUA_MAX_TAG_COUNT> const& tags)
+{
     std::vector<std::string> tag_strings;
 
-    for (auto const& tag : registered_tags_) {
-      if ((tag.second & tags).any()) {
-        tag_strings.push_back(tag.first);
-      }
+    for(auto const& tag : registered_tags_)
+    {
+        if((tag.second & tags).any())
+        {
+            tag_strings.push_back(tag.first);
+        }
     }
 
     return tag_strings;
-
-  }
-
 }
-}
+
+} // namespace utils
+} // namespace gua

@@ -29,10 +29,10 @@
 #include <gua/node/LightNode.hpp>
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
-
-LightingPassDescription::LightingPassDescription()
-  : PipelinePassDescription() {
+namespace gua
+{
+LightingPassDescription::LightingPassDescription() : PipelinePassDescription()
+{
 #if 0
   // here we assume, that the emissive pass was run previously
   // so we don't swap and don't clear the colorbuffer
@@ -166,16 +166,14 @@ LightingPassDescription::LightingPassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> LightingPassDescription::make_copy() const {
-  return std::make_shared<LightingPassDescription>(*this);
-}
+std::shared_ptr<PipelinePassDescription> LightingPassDescription::make_copy() const { return std::make_shared<LightingPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass LightingPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-  PipelinePass pass{*this, ctx, substitution_map};
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
-}
+} // namespace gua

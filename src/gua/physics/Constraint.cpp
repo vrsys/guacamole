@@ -27,66 +27,67 @@
 #include <gua/physics/Physics.hpp>
 #include <gua/physics/RigidBodyNode.hpp>
 
-namespace gua {
-namespace physics {
+namespace gua
+{
+namespace physics
+{
+////////////////////////////////////////////////////////////////////////////////
+
+Constraint::Constraint(RigidBodyNode* body_a, RigidBodyNode* body_b) : ph_(nullptr), ct_(nullptr), body_a_(body_a), body_b_(body_b), breaking_impulse_threshold_(0.f, false) { invalid_.store(false); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Constraint::Constraint(RigidBodyNode* body_a, RigidBodyNode* body_b)
-    : ph_(nullptr),
-      ct_(nullptr),
-      body_a_(body_a),
-      body_b_(body_b),
-      breaking_impulse_threshold_(0.f, false) {
-  invalid_.store(false);
+Constraint::~Constraint()
+{
+    if(ph_)
+        ph_->remove_constraint(this);
+    if(ct_)
+        delete ct_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Constraint::~Constraint() {
-  if (ph_)
-    ph_->remove_constraint(this);
-  if (ct_)
-    delete ct_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Constraint::set_enabled(bool enabled) {
-  std::lock_guard<SpinLock> lk(lock_);
-  enabled_ = std::make_pair(enabled, true);
-  invalid_.store(true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Constraint::set_breaking_impulse_threshold(float threshold) {
-  if (breaking_impulse_threshold_.first == threshold)
-    return;
-  std::lock_guard<SpinLock> lk(lock_);
-  breaking_impulse_threshold_ = std::make_pair(threshold, true);
-  invalid_.store(true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Constraint::validate() {
-  bool expected_val = true;
-  if (invalid_.compare_exchange_weak(expected_val, false)) {
+void Constraint::set_enabled(bool enabled)
+{
     std::lock_guard<SpinLock> lk(lock_);
-    if (breaking_impulse_threshold_.second) {
-      ct_->setBreakingImpulseThreshold(breaking_impulse_threshold_.first);
-      breaking_impulse_threshold_.second = false;
-    }
-    if (enabled_.second) {
-      ct_->setEnabled(enabled_.first);
-      enabled_.second = false;
-    }
-    update_constraint();
-  }
+    enabled_ = std::make_pair(enabled, true);
+    invalid_.store(true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void Constraint::set_breaking_impulse_threshold(float threshold)
+{
+    if(breaking_impulse_threshold_.first == threshold)
+        return;
+    std::lock_guard<SpinLock> lk(lock_);
+    breaking_impulse_threshold_ = std::make_pair(threshold, true);
+    invalid_.store(true);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Constraint::validate()
+{
+    bool expected_val = true;
+    if(invalid_.compare_exchange_weak(expected_val, false))
+    {
+        std::lock_guard<SpinLock> lk(lock_);
+        if(breaking_impulse_threshold_.second)
+        {
+            ct_->setBreakingImpulseThreshold(breaking_impulse_threshold_.first);
+            breaking_impulse_threshold_.second = false;
+        }
+        if(enabled_.second)
+        {
+            ct_->setEnabled(enabled_.first);
+            enabled_.second = false;
+        }
+        update_constraint();
+    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+} // namespace physics
+} // namespace gua
