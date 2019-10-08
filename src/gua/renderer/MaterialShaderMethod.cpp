@@ -28,128 +28,131 @@
 
 #include <jsoncpp/json/json.h>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+MaterialShaderMethod::MaterialShaderMethod(std::string const& name) : name_(name) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod::MaterialShaderMethod(std::string const& name) :
-  name_(name) {}
+MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& file_name)
+{
+    if(file_name != "")
+    {
+        TextFile file(file_name);
 
-////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod& MaterialShaderMethod::load_from_file(std::string const& file_name) {
-  if (file_name != "") {
-    TextFile file(file_name);
-
-    if (file.is_valid()) {
-      load_from_json(file.get_content());
-    } else {
-      Logger::LOG_WARNING << "Failed to load material method \""
-                          << file_name << "\": "
-                          "File does not exist!" << std::endl;
-    }
-  }
-
-  return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& json_string) {
-  Json::Value value;
-  Json::Reader reader;
-  if (!reader.parse(json_string, value)) {
-    Logger::LOG_WARNING << "Failed to parse material method description: "
-                           "Invalid json String!" << std::endl;
-    return *this;
-  }
-
-  if (value["name"] != Json::Value::null &&
-      value["source"] != Json::Value::null) {
-    set_name(value["name"].asString());
-    set_source(value["source"].asString());
-
-    if (value["uniforms"] != Json::Value::null &&
-        value["uniforms"].isArray()) {
-      for (unsigned int i = 0; i < value["uniforms"].size(); ++i) {
-        auto uniform_string(value["uniforms"][i]);
-        if (uniform_string["name"] != Json::Value::null &&
-            uniform_string["type"] != Json::Value::null &&
-            uniform_string["value"] != Json::Value::null) {
-
-          auto uniform(UniformValue::create_from_strings(
-                        uniform_string["value"].asString(),
-                        uniform_string["type"].asString()
-                      ));
-
-          set_uniform(uniform_string["name"].asString(), ViewDependentUniform(uniform));
-
-        } else {
-          Logger::LOG_WARNING << "Failed to load uniform: "
-                                 "Please provide name, type and value in the description!"
-                              << std::endl;
+        if(file.is_valid())
+        {
+            load_from_json(file.get_content());
         }
-      }
-
+        else
+        {
+            Logger::LOG_WARNING << "Failed to load material method \"" << file_name
+                                << "\": "
+                                   "File does not exist!"
+                                << std::endl;
+        }
     }
-  } else {
-    Logger::LOG_WARNING << "Failed to load material method: "
-                           "Please provide name and source in the description!"
-                        << std::endl;
-  }
-  return *this;
+
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod& MaterialShaderMethod::set_name(std::string const& name) {
-  name_ = name;
-  return *this;
+MaterialShaderMethod& MaterialShaderMethod::load_from_json(std::string const& json_string)
+{
+    Json::Value value;
+    Json::Reader reader;
+    if(!reader.parse(json_string, value))
+    {
+        Logger::LOG_WARNING << "Failed to parse material method description: "
+                               "Invalid json String!"
+                            << std::endl;
+        return *this;
+    }
+
+    if(value["name"] != Json::Value::null && value["source"] != Json::Value::null)
+    {
+        set_name(value["name"].asString());
+        set_source(value["source"].asString());
+
+        if(value["uniforms"] != Json::Value::null && value["uniforms"].isArray())
+        {
+            for(unsigned int i = 0; i < value["uniforms"].size(); ++i)
+            {
+                auto uniform_string(value["uniforms"][i]);
+                if(uniform_string["name"] != Json::Value::null && uniform_string["type"] != Json::Value::null && uniform_string["value"] != Json::Value::null)
+                {
+                    auto uniform(UniformValue::create_from_strings(uniform_string["value"].asString(), uniform_string["type"].asString()));
+
+                    set_uniform(uniform_string["name"].asString(), ViewDependentUniform(uniform));
+                }
+                else
+                {
+                    Logger::LOG_WARNING << "Failed to load uniform: "
+                                           "Please provide name, type and value in the description!"
+                                        << std::endl;
+                }
+            }
+        }
+    }
+    else
+    {
+        Logger::LOG_WARNING << "Failed to load material method: "
+                               "Please provide name and source in the description!"
+                            << std::endl;
+    }
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::string const& MaterialShaderMethod::get_name() const {
-  return name_;
+MaterialShaderMethod& MaterialShaderMethod::set_name(std::string const& name)
+{
+    name_ = name;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderMethod& MaterialShaderMethod::set_source(std::string const& source) {
-  source_ = source;
-  return *this;
-}
+std::string const& MaterialShaderMethod::get_name() const { return name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-std::string const& MaterialShaderMethod::get_source() const {
-  return source_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::map<std::string, ViewDependentUniform> const&
-MaterialShaderMethod::get_uniforms() const {
-  return uniforms_;
+MaterialShaderMethod& MaterialShaderMethod::set_source(std::string const& source)
+{
+    source_ = source;
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream& os) const {
+std::string const& MaterialShaderMethod::get_source() const { return source_; }
 
-  for (auto& uniform : uniforms_) {
-    os << uniform.first << "#";
-    uniform.second.serialize_to_stream(os);
-    os << ";";
-  }
+////////////////////////////////////////////////////////////////////////////////
 
-  return os;
+std::map<std::string, ViewDependentUniform> const& MaterialShaderMethod::get_uniforms() const { return uniforms_; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& MaterialShaderMethod::serialize_uniforms_to_stream(std::ostream& os) const
+{
+    for(auto& uniform : uniforms_)
+    {
+        os << uniform.first << "#";
+        uniform.second.serialize_to_stream(os);
+        os << ";";
+    }
+
+    return os;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderMethod::set_uniforms_from_serialized_string(std::string const& value) {
+void MaterialShaderMethod::set_uniforms_from_serialized_string(std::string const& value)
+{
+    auto tokens(string_utils::split(value, ';'));
 
-  auto tokens(string_utils::split(value, ';'));
-
-  for (auto& token : tokens) {
-    auto parts(string_utils::split(token, '#'));
-    set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
-  }
+    for(auto& token : tokens)
+    {
+        auto parts(string_utils::split(token, '#'));
+        set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
+    }
 }
 
-}
+} // namespace gua

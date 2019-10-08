@@ -53,304 +53,327 @@
 #include <regex>
 #include <fstream>
 
-namespace gua {
-
+namespace gua
+{
 std::mutex TV_3Resource::cpu_volume_loading_mutex_;
 std::map<std::size_t, bool> TV_3Resource::are_cpu_time_steps_loaded_;
-std::map<std::size_t, std::map<std::string, uint64_t>>    TV_3Resource::volume_descriptor_tokens_;
-std::map<std::size_t, std::vector<std::ifstream>>         TV_3Resource::per_resource_file_streams_;
-std::map<std::size_t, std::vector<std::vector<uint8_t >>> TV_3Resource::per_resource_cpu_cache_;
+std::map<std::size_t, std::map<std::string, uint64_t>> TV_3Resource::volume_descriptor_tokens_;
+std::map<std::size_t, std::vector<std::ifstream>> TV_3Resource::per_resource_file_streams_;
+std::map<std::size_t, std::vector<std::vector<uint8_t>>> TV_3Resource::per_resource_cpu_cache_;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens) {
-  size_t file_starting_pos = string_to_split.find_last_of("/") + 1;
-  std::string file_name = string_to_split.substr(file_starting_pos);
-  std::string extension_removed_string = file_name.substr(0,  file_name.find(".raw")  );
-  extension_removed_string = extension_removed_string.substr(0,  extension_removed_string.find(".bin")  );
-  extension_removed_string = extension_removed_string.substr(0,  extension_removed_string.find(".dp")  );
+void TV_3Resource::tokenize_volume_name(std::string const& string_to_split, std::map<std::string, uint64_t>& tokens)
+{
+    size_t file_starting_pos = string_to_split.find_last_of("/") + 1;
+    std::string file_name = string_to_split.substr(file_starting_pos);
+    std::string extension_removed_string = file_name.substr(0, file_name.find(".raw"));
+    extension_removed_string = extension_removed_string.substr(0, extension_removed_string.find(".bin"));
+    extension_removed_string = extension_removed_string.substr(0, extension_removed_string.find(".dp"));
 
-  std::stringstream test(extension_removed_string);
-  std::string segment;
+    std::stringstream test(extension_removed_string);
+    std::string segment;
 
-  std::regex non_negative_number_regex("[[:digit:]]+");
-  std::vector<std::string> registered_tokens;
+    std::regex non_negative_number_regex("[[:digit:]]+");
+    std::vector<std::string> registered_tokens;
 
-  registered_tokens.push_back("w");
-  registered_tokens.push_back("ow");
-  registered_tokens.push_back("h");
-  registered_tokens.push_back("oh");
-  registered_tokens.push_back("d");
-  registered_tokens.push_back("od");
-  registered_tokens.push_back("cn");
-  registered_tokens.push_back("c");
-  registered_tokens.push_back("b");
-  registered_tokens.push_back("t");
-  registered_tokens.push_back("bs");
-  registered_tokens.push_back("i");
-  registered_tokens.push_back("p");
-  registered_tokens.push_back("sy");
-  registered_tokens.push_back("a");
-  registered_tokens.push_back("si");
-  registered_tokens.push_back("norm");
-  registered_tokens.push_back("min");
-  registered_tokens.push_back("max");
-  registered_tokens.push_back("fb");
+    registered_tokens.push_back("w");
+    registered_tokens.push_back("ow");
+    registered_tokens.push_back("h");
+    registered_tokens.push_back("oh");
+    registered_tokens.push_back("d");
+    registered_tokens.push_back("od");
+    registered_tokens.push_back("cn");
+    registered_tokens.push_back("c");
+    registered_tokens.push_back("b");
+    registered_tokens.push_back("t");
+    registered_tokens.push_back("bs");
+    registered_tokens.push_back("i");
+    registered_tokens.push_back("p");
+    registered_tokens.push_back("sy");
+    registered_tokens.push_back("a");
+    registered_tokens.push_back("si");
+    registered_tokens.push_back("norm");
+    registered_tokens.push_back("min");
+    registered_tokens.push_back("max");
+    registered_tokens.push_back("fb");
 
-  while(std::getline(test, segment, '_')) {
-    for( auto const& potentially_matching_token : registered_tokens ) {
-      if( segment.find(potentially_matching_token) == 0 ) {
-        uint64_t length_of_token = potentially_matching_token.size();
-        std::string remaining_string = segment.substr(length_of_token);
+    while(std::getline(test, segment, '_'))
+    {
+        for(auto const& potentially_matching_token : registered_tokens)
+        {
+            if(segment.find(potentially_matching_token) == 0)
+            {
+                uint64_t length_of_token = potentially_matching_token.size();
+                std::string remaining_string = segment.substr(length_of_token);
 
-        bool regex_match_result = std::regex_match(remaining_string, non_negative_number_regex);
-        if(regex_match_result) {
-          tokens[potentially_matching_token] = std::atoi(remaining_string.c_str());
-          break;
+                bool regex_match_result = std::regex_match(remaining_string, non_negative_number_regex);
+                if(regex_match_result)
+                {
+                    tokens[potentially_matching_token] = std::atoi(remaining_string.c_str());
+                    break;
+                }
+            }
         }
-      }
     }
 
-  }
-
-  tokens["num_voxels"] = tokens["w"] * tokens["h"] * tokens["d"];
-  tokens["num_bytes_per_voxel"] = tokens["b"] / 8;
-  tokens["total_num_bytes"] = tokens["num_voxels"] * tokens["num_bytes_per_voxel"]; 
+    tokens["num_voxels"] = tokens["w"] * tokens["h"] * tokens["d"];
+    tokens["num_bytes_per_voxel"] = tokens["b"] / 8;
+    tokens["total_num_bytes"] = tokens["num_voxels"] * tokens["num_bytes_per_voxel"];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TV_3Resource::TV_3Resource(std::string const& resource_file_string, bool is_pickable, CompressionMode compression_mode)
-  : resource_file_name_(resource_file_string),
-    is_pickable_(is_pickable),
-    compression_mode_(compression_mode),
-    local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0))
-    {
+    : resource_file_name_(resource_file_string), is_pickable_(is_pickable), compression_mode_(compression_mode),
+      local_transform_(gua::math::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0))
+{
     std::cout << "Created Uncompressed Volume Resource\n";
-      std::cout << "Loading once\n";
-  bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
-  bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
+    std::cout << "Loading once\n";
+    bounding_box_.min = scm::math::vec3(0.0f, 0.0f, 0.0f);
+    bounding_box_.max = scm::math::vec3(1.0f, 1.0f, 1.0f);
 
-  cpu_volume_loading_mutex_.lock();
+    cpu_volume_loading_mutex_.lock();
 
-  if(!are_cpu_time_steps_loaded_[uuid_]) {
-    std::vector<std::string> volumes_to_load;
-    if(resource_file_name_.find(".v_rsc") != std::string::npos) {
-      std::string line_buffer;
-      std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
-      while(std::getline(volume_resource_file, line_buffer)) {
-        if(line_buffer.find(".raw") != std::string::npos) {
-          volumes_to_load.push_back(line_buffer);
+    if(!are_cpu_time_steps_loaded_[uuid_])
+    {
+        std::vector<std::string> volumes_to_load;
+        if(resource_file_name_.find(".v_rsc") != std::string::npos)
+        {
+            std::string line_buffer;
+            std::ifstream volume_resource_file(resource_file_name_, std::ios::in);
+            while(std::getline(volume_resource_file, line_buffer))
+            {
+                if(line_buffer.find(".raw") != std::string::npos)
+                {
+                    volumes_to_load.push_back(line_buffer);
+                }
+            }
         }
-      }
-    } else {
-      volumes_to_load.push_back(resource_file_name_);
-    }
+        else
+        {
+            volumes_to_load.push_back(resource_file_name_);
+        }
 
-    uint8_t num_parsed_volumes = 0;
-    for( auto const& vol_path : volumes_to_load ) {
-      if( 0 == num_parsed_volumes++ ) {
-        tokenize_volume_name(vol_path, volume_descriptor_tokens_[uuid_]);  
-      }
-      
-      per_resource_file_streams_[uuid_].push_back(std::ifstream(vol_path.c_str(), std::ios::in | std::ios::binary));
-    }
-    are_cpu_time_steps_loaded_[uuid_] = true;
-  }
-  cpu_volume_loading_mutex_.unlock();
+        uint8_t num_parsed_volumes = 0;
+        for(auto const& vol_path : volumes_to_load)
+        {
+            if(0 == num_parsed_volumes++)
+            {
+                tokenize_volume_name(vol_path, volume_descriptor_tokens_[uuid_]);
+            }
 
+            per_resource_file_streams_[uuid_].push_back(std::ifstream(vol_path.c_str(), std::ios::in | std::ios::binary));
+        }
+        are_cpu_time_steps_loaded_[uuid_] = true;
+    }
+    cpu_volume_loading_mutex_.unlock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TV_3Resource::~TV_3Resource() {
-}
+TV_3Resource::~TV_3Resource() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TV_3Resource::draw(
-  RenderContext const& ctx,
-  scm::gl::vertex_array_ptr const& vertex_array) const {
-  //dummy
+void TV_3Resource::draw(RenderContext const& ctx, scm::gl::vertex_array_ptr const& vertex_array) const
+{
+    // dummy
 }
 
 void TV_3Resource::apply_resource_dependent_uniforms(RenderContext const& ctx, std::shared_ptr<ShaderProgram> const& current_program) const {
 
 };
 
-void TV_3Resource::upload_to(RenderContext const& ctx) const {
-  
-  if(are_cpu_time_steps_loaded_[uuid_]) {
-    int32_t loaded_volumes_count = 0;
+void TV_3Resource::upload_to(RenderContext const& ctx) const
+{
+    if(are_cpu_time_steps_loaded_[uuid_])
+    {
+        int32_t loaded_volumes_count = 0;
 
-    auto& current_tokens = volume_descriptor_tokens_[uuid_];
+        auto& current_tokens = volume_descriptor_tokens_[uuid_];
 
-    for( auto& vol_path : per_resource_file_streams_[uuid_] ) { 
-      scm::math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
+        for(auto& vol_path : per_resource_file_streams_[uuid_])
+        {
+            scm::math::vec3ui vol_dims = scm::math::vec3ui(current_tokens["w"], current_tokens["h"], current_tokens["d"]);
 
-      int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
+            int64_t num_bytes_per_voxel = current_tokens["num_bytes_per_voxel"];
 
-      int64_t num_voxels = current_tokens["total_num_bytes"];
+            int64_t num_voxels = current_tokens["total_num_bytes"];
 
+            // std::vector<unsigned char> read_buffer(num_voxels);
 
-      //std::vector<unsigned char> read_buffer(num_voxels);
+            per_resource_cpu_cache_[uuid_].push_back(std::vector<uint8_t>(num_voxels, 0));
+            vol_path.read((char*)&per_resource_cpu_cache_[uuid_][loaded_volumes_count][0], num_voxels);
 
-      per_resource_cpu_cache_[uuid_].push_back(std::vector<uint8_t>(num_voxels, 0));
-      vol_path.read( (char*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0], num_voxels);
+            scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
 
+            if(CompressionMode::UNCOMPRESSED != compression_mode_)
+            {
+                int64_t const num_index_bytes = current_tokens["i"] / 8;
+                int64_t const block_size = current_tokens["bs"];
+                for(int dim_idx = 0; dim_idx < 3; ++dim_idx)
+                {
+                    vol_dims[dim_idx] /= block_size;
+                }
 
-      scm::gl::data_format read_format = scm::gl::data_format::FORMAT_NULL;
+                if(1 == num_index_bytes)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_8UI;
+                }
+                else if(2 == num_index_bytes)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_16UI;
+                }
+                else if(3 == num_index_bytes)
+                {
+                    read_format = scm::gl::data_format::FORMAT_RGB_8UI;
+                }
+                else if(4 == num_index_bytes)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_32UI;
+                }
+            }
+            else
+            {
+                if(1 == num_bytes_per_voxel)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_8;
+                }
+                else if(2 == num_bytes_per_voxel)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_16;
+                }
+                else if(4 == num_bytes_per_voxel)
+                {
+                    read_format = scm::gl::data_format::FORMAT_R_32F;
+                }
+            }
 
-      if( CompressionMode::UNCOMPRESSED != compression_mode_ ) { 
-        int64_t const num_index_bytes = current_tokens["i"] / 8;
-        int64_t const block_size =  current_tokens["bs"];
-        for(int dim_idx = 0; dim_idx < 3; ++dim_idx ) {
-          vol_dims[dim_idx] /= block_size;
+            /*volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format,
+                                                                            {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );
+            */
+            ctx.texture_3d_arrays[uuid()].push_back(
+                ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, {(void*)&per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]}));
+            ++loaded_volumes_count;
         }
 
-        if( 1 == num_index_bytes ) {
-          read_format = scm::gl::data_format::FORMAT_R_8UI;
-        } else if( 2 == num_index_bytes ) {
-          read_format = scm::gl::data_format::FORMAT_R_16UI;
-        } else if( 3 == num_index_bytes ) {
-          read_format = scm::gl::data_format::FORMAT_RGB_8UI;
-        } else if( 4 == num_index_bytes ) {
-          read_format = scm::gl::data_format::FORMAT_R_32UI;   
-        }
+        num_time_steps_ = loaded_volumes_count;
+        /*
 
-      } else {
-        if( 1 == num_bytes_per_voxel ) {
-          read_format = scm::gl::data_format::FORMAT_R_8;
-        } else if( 2 == num_bytes_per_voxel ) {
-          read_format = scm::gl::data_format::FORMAT_R_16;   
-        } else if( 4 == num_bytes_per_voxel ) {
-          read_format = scm::gl::data_format::FORMAT_R_32F;   
-        }
-      }
-
-      /*volume_textures_.push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 
-                                                                      {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );
+        std::make_shared<scm::gl::texture_3d>(
+                                                                new scm::gl::texture_3d(*ctx.render_device,
+                                                                    scm::gl::texture_3d_desc(scm::math::vec3ui(256,256,225),
+                                                                                        scm::gl::data_format::FORMAT_R_8)  );
       */
-      ctx.texture_3d_arrays[uuid()].push_back(ctx.render_device->create_texture_3d(scm::gl::texture_3d_desc(vol_dims, read_format), read_format, 
-                                                                      {(void*) &per_resource_cpu_cache_[uuid_][loaded_volumes_count][0]} ) );
-      ++loaded_volumes_count;
+    }
+}
+
+void TV_3Resource::bind_volume_texture(RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const
+{
+    auto iter = ctx.texture_3d_arrays.find(uuid());
+    if(iter == ctx.texture_3d_arrays.end())
+    {
+        upload_to(ctx);
+        iter = ctx.texture_3d_arrays.find(uuid());
+    }
+    using namespace std::chrono;
+
+    high_resolution_clock::time_point current_time_point = high_resolution_clock::now();
+
+    double elapsed_seconds = duration_cast<duration<double>>(current_time_point - last_time_point_).count();
+
+    int playback_multiplier = 1;
+
+    if(PlaybackMode::BACKWARD == playback_mode_)
+    {
+        playback_multiplier = -1;
     }
 
-    num_time_steps_ = loaded_volumes_count;
-  /*
+    if(PlaybackMode::NONE != playback_mode_)
+    {
+        time_cursor_pos_ += elapsed_seconds * playback_fps_ * playback_multiplier;
+    }
 
-  std::make_shared<scm::gl::texture_3d>(
-                                                          new scm::gl::texture_3d(*ctx.render_device, 
-                                                              scm::gl::texture_3d_desc(scm::math::vec3ui(256,256,225),
-                                                                                  scm::gl::data_format::FORMAT_R_8)  );
-*/
-  }
+    last_time_point_ = current_time_point;
+
+    while(time_cursor_pos_ < 0.0)
+    {
+        time_cursor_pos_ += num_time_steps_;
+    }
+
+    int32_t volume_id = int32_t(time_cursor_pos_) % num_time_steps_;
+
+    // ctx.render_context->bind_texture(volume_textures_[ ((frame_counter_++) / 10) % volume_textures_.size()], sampler_state, 0);
+    ctx.render_context->bind_texture((iter->second)[volume_id], sampler_state, 0);
+
+    /*
+      std::cout << "In drawing branch\n";
+      scm::gl::context_vertex_input_guard vig(ctx.render_context);
+
+      ctx.render_context->apply();
+      std::cout << "Before drawing\n";
+      volume_proxy_.draw(ctx.render_context);
+    */
 }
-
-void TV_3Resource::bind_volume_texture(
-  RenderContext const& ctx, scm::gl::sampler_state_ptr const& sampler_state) const {
-  auto iter = ctx.texture_3d_arrays.find(uuid());
-  if (iter == ctx.texture_3d_arrays.end()) {
-    upload_to(ctx);
-    iter = ctx.texture_3d_arrays.find(uuid());
-  }
-  using namespace std::chrono;
-
-  high_resolution_clock::time_point current_time_point = high_resolution_clock::now();
-
-  double elapsed_seconds = duration_cast<duration<double>>(current_time_point - last_time_point_).count();
-
-  int playback_multiplier = 1;
-
-  if(PlaybackMode::BACKWARD == playback_mode_) {
-    playback_multiplier = -1;
-  }
-
-  if(PlaybackMode::NONE != playback_mode_) {
-    time_cursor_pos_ += elapsed_seconds * playback_fps_ * playback_multiplier;
-  }
-
-  last_time_point_ = current_time_point;
-
-  while(time_cursor_pos_ < 0.0) {
-    time_cursor_pos_ += num_time_steps_;
-  }
-
-  int32_t volume_id = int32_t(time_cursor_pos_) % num_time_steps_;
-
-  //ctx.render_context->bind_texture(volume_textures_[ ((frame_counter_++) / 10) % volume_textures_.size()], sampler_state, 0);
-  ctx.render_context->bind_texture((iter->second)[volume_id], sampler_state, 0);
-
-/*
-  std::cout << "In drawing branch\n";
-  scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-  ctx.render_context->apply();
-  std::cout << "Before drawing\n";
-  volume_proxy_.draw(ctx.render_context);
-*/
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 math::mat4 const& TV_3Resource::local_transform() const
 {
-  //return scm::math::mat4d(1.0);
-  return local_transform_;
+    // return scm::math::mat4d(1.0);
+    return local_transform_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TV_3Resource::ray_test(Ray const& ray,
-                             int options,
-                             node::Node* owner,
-                             std::set<PickResult>& hits) {
-/*
-  if (!is_pickable_)
-    return;
+void TV_3Resource::ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits)
+{
+    /*
+      if (!is_pickable_)
+        return;
 
-  bool has_hit = false;
-  PickResult pick = PickResult(
-    0.f,
-    owner,
-    ray.origin_,
-    math::vec3(0.f, 0.f, 0.f),
-    math::vec3(0.f, 1.f, 0.f),
-    math::vec3(0.f, 1.f, 0.f),
-    math::vec2(0.f, 0.f));
+      bool has_hit = false;
+      PickResult pick = PickResult(
+        0.f,
+        owner,
+        ray.origin_,
+        math::vec3(0.f, 0.f, 0.f),
+        math::vec3(0.f, 1.f, 0.f),
+        math::vec3(0.f, 1.f, 0.f),
+        math::vec2(0.f, 0.f));
 
-  const auto model_transform = owner->get_cached_world_transform();
-  const auto world_origin = ray.origin_;
-  const auto world_direction = scm::math::normalize(ray.direction_);
-  
-  pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), scm::math::length(ray.direction_));
-  pbr::ren::Ray::Intersection intersection;
+      const auto model_transform = owner->get_cached_world_transform();
+      const auto world_origin = ray.origin_;
+      const auto world_direction = scm::math::normalize(ray.direction_);
 
-  auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
+      pbr::ren::Ray plod_ray(math::vec3f(world_origin), math::vec3f(world_direction), scm::math::length(ray.direction_));
+      pbr::ren::Ray::Intersection intersection;
 
-  float aabb_scale = 9.0f;
-  unsigned int max_depth = 255;
-  unsigned int surfel_skip = 1;
-  bool wysiwyg = true;
- 
-  pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
-  pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
- 
-  if (plod_ray.IntersectModel(model_id, math::mat4f(model_transform), aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
-    has_hit = true;
-    pick.distance = intersection.distance_;
-    pick.world_position = intersection.position_;
-    auto object_position = scm::math::inverse(model_transform) * gua::math::vec4(intersection.position_.x, intersection.position_.y, intersection.position_.z, 1.0);
-    pick.position = math::vec3(object_position.x, object_position.y, object_position.z);
-    pick.normal = intersection.normal_;
-  }
+      auto plod_node = reinterpret_cast<node::PLODNode*>(owner);
 
-  if (has_hit && (hits.empty() || pick.distance < hits.begin()->distance)) {
-    hits.insert(pick);
-  }
-*/
+      float aabb_scale = 9.0f;
+      unsigned int max_depth = 255;
+      unsigned int surfel_skip = 1;
+      bool wysiwyg = true;
+
+      pbr::ren::Controller* controller = pbr::ren::Controller::GetInstance();
+      pbr::model_t model_id = controller->DeduceModelId(plod_node->get_geometry_description());
+
+      if (plod_ray.IntersectModel(model_id, math::mat4f(model_transform), aabb_scale, max_depth, surfel_skip, wysiwyg, intersection)) {
+        has_hit = true;
+        pick.distance = intersection.distance_;
+        pick.world_position = intersection.position_;
+        auto object_position = scm::math::inverse(model_transform) * gua::math::vec4(intersection.position_.x, intersection.position_.y, intersection.position_.z, 1.0);
+        pick.position = math::vec3(object_position.x, object_position.y, object_position.z);
+        pick.normal = intersection.normal_;
+      }
+
+      if (has_hit && (hits.empty() || pick.distance < hits.begin()->distance)) {
+        hits.insert(pick);
+      }
+    */
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace gua

@@ -33,18 +33,19 @@
 #include <memory>
 #include <unordered_map>
 
-namespace gua {
+namespace gua
+{
+class GUA_VIDEO3D_DLL Video3DPassDescription : public PipelinePassDescription
+{
+  public:
+    Video3DPassDescription();
 
-class GUA_VIDEO3D_DLL Video3DPassDescription : public PipelinePassDescription {
- public:
-  Video3DPassDescription();
+    PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
 
-  PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap&);
-
-  std::shared_ptr<PipelinePassDescription> make_copy() const override;
-  friend class Pipeline;
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_VIDEO3D_PASS_HPP
+#endif // GUA_VIDEO3D_PASS_HPP

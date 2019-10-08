@@ -23,35 +23,27 @@
 
 #include <boost/bind.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+Ticker::Ticker(MainLoop& mainloop, double tick_time) : timer_(mainloop.io_service, boost::posix_time::microseconds(int(1000000.0 * tick_time))), tick_time_(tick_time) { async_wait(); }
 
-Ticker::Ticker(MainLoop& mainloop, double tick_time)
-  : timer_(mainloop.io_service,
-      boost::posix_time::microseconds(1000000.0*tick_time)),
-    tick_time_(tick_time) {
-  async_wait();
+void Ticker::set_tick_time(double tick_time) { tick_time_ = tick_time; }
+
+double Ticker::get_tick_time() const { return tick_time_; }
+
+void Ticker::self_callback(int revents)
+{
+    async_wait();
+    on_tick.emit();
 }
 
-void Ticker::set_tick_time(double tick_time) {
-  tick_time_ = tick_time;
+void Ticker::async_wait()
+{
+    timer_.expires_from_now(boost::posix_time::microseconds(int(1000000.0 * tick_time_)));
+    timer_.async_wait(boost::bind(&Ticker::self_callback, this, 0));
 }
 
-double Ticker::get_tick_time() const {
-  return tick_time_;
-}
-
-void Ticker::self_callback(int revents) {
-  async_wait();
-  on_tick.emit();
-}
-
-void Ticker::async_wait() {
-  timer_.expires_from_now(
-      boost::posix_time::microseconds(1000000.0*tick_time_));
-  timer_.async_wait(boost::bind(&Ticker::self_callback, this, 0));
-}
-
-}
-}
-
+} // namespace events
+} // namespace gua

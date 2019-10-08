@@ -24,7 +24,6 @@
 
 #include <gua/video3d/video3d_geometry/fastdxt/util.h>
 
-
 #if defined(WIN32)
 #include <io.h>
 LARGE_INTEGER perf_freq;
@@ -45,34 +44,33 @@ struct timeval tv_start;
 
 #include <fcntl.h>
 
-
 void aInitialize()
 {
 #if defined(WIN32)
-	QueryPerformanceCounter(&perf_start);
-	QueryPerformanceFrequency(&perf_freq);
-	AllocConsole();
-	win_err =  GetStdHandle(STD_ERROR_HANDLE);
+    QueryPerformanceCounter(&perf_start);
+    QueryPerformanceFrequency(&perf_freq);
+    AllocConsole();
+    win_err = GetStdHandle(STD_ERROR_HANDLE);
 #elif defined(__APPLE__)
-	if( perf_conversion == 0.0 )
-	{
-		mach_timebase_info_data_t info;
-		kern_return_t err = mach_timebase_info( &info );
+    if(perf_conversion == 0.0)
+    {
+        mach_timebase_info_data_t info;
+        kern_return_t err = mach_timebase_info(&info);
 
-		//Convert the timebase into seconds
-		if( err == 0  )
-			perf_conversion = 1e-9 * (double) info.numer / (double) info.denom;
-	}
-		// Start of time
-	perf_start = mach_absolute_time();
+        // Convert the timebase into seconds
+        if(err == 0)
+            perf_conversion = 1e-9 * (double)info.numer / (double)info.denom;
+    }
+    // Start of time
+    perf_start = mach_absolute_time();
 
-		// Initialize the random generator
-	srand(getpid());
+    // Initialize the random generator
+    srand(getpid());
 #else
-		// Start of time
-	gettimeofday(&tv_start,0);
-		// Initialize the random generator
-	srand(getpid());
+    // Start of time
+    gettimeofday(&tv_start, 0);
+    // Initialize the random generator
+    srand(getpid());
 #endif
 }
 
@@ -86,81 +84,77 @@ double aTime()
 #endif
 
 #if defined(WIN32)
-        // Windows: get performance counter and subtract starting mark
-	QueryPerformanceCounter(&perf_counter);
-	return (double)(perf_counter.QuadPart - perf_start.QuadPart) / (double)perf_freq.QuadPart;
+    // Windows: get performance counter and subtract starting mark
+    QueryPerformanceCounter(&perf_counter);
+    return (double)(perf_counter.QuadPart - perf_start.QuadPart) / (double)perf_freq.QuadPart;
 #elif defined(__APPLE__)
     uint64_t difference = mach_absolute_time() - perf_start;
-    return perf_conversion * (double) difference;
+    return perf_conversion * (double)difference;
 #else
-        // UNIX: gettimeofday
-	gettimeofday(&tv,0);
-	return (double)(tv.tv_sec - tv_start.tv_sec) + (double)(tv.tv_usec - tv_start.tv_usec) / 1000000.0;
+    // UNIX: gettimeofday
+    gettimeofday(&tv, 0);
+    return (double)(tv.tv_sec - tv_start.tv_sec) + (double)(tv.tv_usec - tv_start.tv_usec) / 1000000.0;
 #endif
 }
 
-
-
-void aLog(char* format,...)
+void aLog(char* format, ...)
 {
-	va_list vl;
-	char line[2048];
+    va_list vl;
+    char line[2048];
 
-	va_start(vl,format);
-	vsprintf(line,format,vl);
-	va_end(vl);
+    va_start(vl, format);
+    vsprintf(line, format, vl);
+    va_end(vl);
 
 #if defined(WIN32)
-	DWORD res;
-	WriteFile(win_err, line, (DWORD)strlen(line), &res, NULL);
+    DWORD res;
+    WriteFile(win_err, line, (DWORD)strlen(line), &res, NULL);
 #endif
-	fprintf(stderr,"%s",line);
-	fflush(stderr);
+    fprintf(stderr, "%s", line);
+    fflush(stderr);
 }
 
-void aError(char* format,...)
+void aError(char* format, ...)
 {
-	va_list vl;
-	char line[2048];
+    va_list vl;
+    char line[2048];
 
-	va_start(vl,format);
-	vsprintf(line,format,vl);
-	va_end(vl);
+    va_start(vl, format);
+    vsprintf(line, format, vl);
+    va_end(vl);
 
 #if defined(WIN32)
-	DWORD res;
-	WriteFile(win_err, line, (DWORD)strlen(line), &res, NULL);
+    DWORD res;
+    WriteFile(win_err, line, (DWORD)strlen(line), &res, NULL);
 #endif
-	fprintf(stderr,"%s",line);
-	fflush(stderr);
+    fprintf(stderr, "%s", line);
+    fflush(stderr);
 
     exit(1);
 }
 
-
-
 void* aAlloc(size_t const n)
 {
-	void* result;
+    void* result;
 #if defined(WIN32)
-	result = LocalAlloc(0,n);
+    result = LocalAlloc(0, n);
 #else
-	result = malloc(n);
+    result = malloc(n);
 #endif
-	// Filling with zeros
-	memset(result, 0, n);
+    // Filling with zeros
+    memset(result, 0, n);
 
-	if(!result)
-		aError("Aura: not enough memory for %d bytes",n);
-	return result;
+    if(!result)
+        aError("Aura: not enough memory for %d bytes", n);
+    return result;
 }
 
 void aFree(void* const p)
 {
 #if defined(WIN32)
-	LocalFree(p);
+    LocalFree(p);
 #else
-	if (p)
+    if(p)
         free(p);
     else
         aError("Alloc> Trying to free a NULL pointer\n");
@@ -168,39 +162,33 @@ void aFree(void* const p)
 }
 
 #if defined(WIN32)
-float
-drand48(void)
-{
-	return (((float) rand()) / RAND_MAX);
-}
+float drand48(void) { return (((float)rand()) / RAND_MAX); }
 #endif
 
-
-void *aligned_malloc(size_t size, size_t align_size) {
-
-  char *ptr,*ptr2,*aligned_ptr;
-  int align_mask = (int)align_size - 1;
-
-  ptr=(char *)malloc(size + align_size + sizeof(int));
-  if(ptr==NULL) return(NULL);
-
-  ptr2 = ptr + sizeof(int);
-  aligned_ptr = ptr2 + (align_size - ((size_t)ptr2 & align_mask));
-
-
-  ptr2 = aligned_ptr - sizeof(int);
-  *((int *)ptr2)=(int)(aligned_ptr - ptr);
-
-  return(aligned_ptr);
-}
-
-void aligned_free(void *ptr)
+void* aligned_malloc(size_t size, size_t align_size)
 {
-	int *ptr2=(int *)ptr - 1;
-	ptr = (char*)ptr - *ptr2;
-	free(ptr);
+    char *ptr, *ptr2, *aligned_ptr;
+    int align_mask = (int)align_size - 1;
+
+    ptr = (char*)malloc(size + align_size + sizeof(int));
+    if(ptr == NULL)
+        return (NULL);
+
+    ptr2 = ptr + sizeof(int);
+    aligned_ptr = ptr2 + (align_size - ((size_t)ptr2 & align_mask));
+
+    ptr2 = aligned_ptr - sizeof(int);
+    *((int*)ptr2) = (int)(aligned_ptr - ptr);
+
+    return (aligned_ptr);
 }
 
+void aligned_free(void* ptr)
+{
+    int* ptr2 = (int*)ptr - 1;
+    ptr = (char*)ptr - *ptr2;
+    free(ptr);
+}
 
 /// File findind
 // From Nvidia toolkit
@@ -209,134 +197,133 @@ using namespace std;
 
 string data_path::get_path(std::string filename)
 {
-  FILE* fp;
-  bool found = false;
-  for(unsigned int i=0; i < path.size(); i++)
+    FILE* fp;
+    bool found = false;
+    for(unsigned int i = 0; i < path.size(); i++)
     {
-      path_name = path[i] + "/" + filename;
-      fp = ::fopen(path_name.c_str(), "r");
+        path_name = path[i] + "/" + filename;
+        fp = ::fopen(path_name.c_str(), "r");
 
-      if(fp != 0)
+        if(fp != 0)
         {
-	  fclose(fp);
-	  found = true;
-	  break;
+            fclose(fp);
+            found = true;
+            break;
         }
     }
 
-  if (found == false)
+    if(found == false)
     {
-      path_name = filename;
-      fp = ::fopen(path_name.c_str(),"r");
-      if (fp != 0)
+        path_name = filename;
+        fp = ::fopen(path_name.c_str(), "r");
+        if(fp != 0)
         {
-	  fclose(fp);
-	  found = true;
+            fclose(fp);
+            found = true;
         }
     }
 
-  if (found == false)
-    return "";
+    if(found == false)
+        return "";
 
-  int loc = path_name.rfind('\\');
-  if (loc == -1)
+    int loc = path_name.rfind('\\');
+    if(loc == -1)
     {
-      loc = path_name.rfind('/');
+        loc = path_name.rfind('/');
     }
 
-  if (loc != -1)
-    file_path = path_name.substr(0, loc);
-  else
-    file_path = ".";
-  return file_path;
+    if(loc != -1)
+        file_path = path_name.substr(0, loc);
+    else
+        file_path = ".";
+    return file_path;
 }
 
 string data_path::get_file(std::string filename)
 {
-  FILE* fp;
+    FILE* fp;
 
-  for(unsigned int i=0; i < path.size(); i++)
+    for(unsigned int i = 0; i < path.size(); i++)
     {
-      path_name = path[i] + "/" + filename;
-      fp = ::fopen(path_name.c_str(), "r");
+        path_name = path[i] + "/" + filename;
+        fp = ::fopen(path_name.c_str(), "r");
 
-      if(fp != 0)
+        if(fp != 0)
         {
-	  fclose(fp);
-	  return path_name;
+            fclose(fp);
+            return path_name;
         }
     }
 
-  path_name = filename;
-  fp = ::fopen(path_name.c_str(),"r");
-  if (fp != 0)
+    path_name = filename;
+    fp = ::fopen(path_name.c_str(), "r");
+    if(fp != 0)
     {
-      fclose(fp);
-      return path_name;
+        fclose(fp);
+        return path_name;
     }
-  return "";
+    return "";
 }
 
 // data files, for read only
-FILE * data_path::fopen(std::string filename, const char * mode)
+FILE* data_path::fopen(std::string filename, const char* mode)
 {
-
-  for(unsigned int i=0; i < path.size(); i++)
+    for(unsigned int i = 0; i < path.size(); i++)
     {
-      std::string s = path[i] + "/" + filename;
-      FILE * fp = ::fopen(s.c_str(), mode);
+        std::string s = path[i] + "/" + filename;
+        FILE* fp = ::fopen(s.c_str(), mode);
 
-      if(fp != 0)
-	return fp;
-      else if (!strcmp(path[i].c_str(),""))
-	{
-	  FILE* fp = ::fopen(filename.c_str(),mode);
-	  if (fp != 0)
-	    return fp;
-	}
+        if(fp != 0)
+            return fp;
+        else if(!strcmp(path[i].c_str(), ""))
+        {
+            FILE* fp = ::fopen(filename.c_str(), mode);
+            if(fp != 0)
+                return fp;
+        }
     }
-  // no luck... return null
-  return 0;
+    // no luck... return null
+    return 0;
 }
 
 //  fill the file stats structure
 //  useful to get the file size and stuff
 int data_path::fstat(std::string filename,
 #ifdef WIN32
-		     struct _stat
+                     struct _stat
 #else
-		     struct stat
+                     struct stat
 #endif
-		     * stat)
+                         * stat)
 {
-  for(unsigned int i=0; i < path.size(); i++)
+    for(unsigned int i = 0; i < path.size(); i++)
     {
-      std::string s = path[i] + "/" + filename;
+        std::string s = path[i] + "/" + filename;
 #ifdef WIN32
-      int fh = ::_open(s.c_str(), _O_RDONLY);
+        int fh = ::_open(s.c_str(), _O_RDONLY);
 #else
-      int fh = ::open(s.c_str(), O_RDONLY);
+        int fh = ::open(s.c_str(), O_RDONLY);
 #endif
-      if(fh >= 0)
+        if(fh >= 0)
         {
 #ifdef WIN32
-	  int result = ::_fstat( fh, stat );
+            int result = ::_fstat(fh, stat);
 #else
-	  int result = ::fstat (fh,stat);
+            int result = ::fstat(fh, stat);
 #endif
-	  if( result != 0 )
+            if(result != 0)
             {
-	      fprintf( stderr, "An fstat error occurred.\n" );
-	      return 0;
+                fprintf(stderr, "An fstat error occurred.\n");
+                return 0;
             }
 #ifdef WIN32
-	  ::_close( fh );
+            ::_close(fh);
 #else
-	  ::close (fh);
+            ::close(fh);
 #endif
-	  return 1;
-    	}
+            return 1;
+        }
     }
-  // no luck...
-  return 0;
+    // no luck...
+    return 0;
 }

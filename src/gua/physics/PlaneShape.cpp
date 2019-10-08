@@ -30,42 +30,37 @@
 #include <stdexcept>
 #include <gua/memory.hpp>
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 ////////////////////////////////////////////////////////////////////////////////
 
-PlaneShape::PlaneShape(float x_normal,
-                       float y_normal,
-                       float z_normal,
-                       float plane_constant)
-    : CollisionShape(true, false, false),
-      shape_(gua::make_unique<btStaticPlaneShape>(
-          btVector3(x_normal, y_normal, z_normal),
-          plane_constant)),
-      normal_(x_normal, y_normal, z_normal),
-      plane_constant_(plane_constant) {}
-
-void PlaneShape::construct_dynamic(btCompoundShape* bullet_shape,
-                                   const btTransform& base_transform) {
-  throw std::runtime_error("Plane shapes cannot take part in dynamical "
-                           "simulations.");
+PlaneShape::PlaneShape(float x_normal, float y_normal, float z_normal, float plane_constant)
+    : CollisionShape(true, false, false), shape_(gua::make_unique<btStaticPlaneShape>(btVector3(x_normal, y_normal, z_normal), plane_constant)), normal_(x_normal, y_normal, z_normal),
+      plane_constant_(plane_constant)
+{
 }
 
-void PlaneShape::set_normal(math::vec3 const& normal) {
-  normal_ = normal;
-  shape_ = gua::make_unique<btStaticPlaneShape>(
-      math::vec3_to_btVector3(normal_), plane_constant_);
-
+void PlaneShape::construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform)
+{
+    throw std::runtime_error("Plane shapes cannot take part in dynamical "
+                             "simulations.");
 }
 
-void PlaneShape::set_plane_constant(float plane_constant) {
-  plane_constant_ = plane_constant;
-  shape_ = gua::make_unique<btStaticPlaneShape>(
-      math::vec3_to_btVector3(normal_), plane_constant_);
+void PlaneShape::set_normal(math::vec3 const& normal)
+{
+    normal_ = normal;
+    shape_ = gua::make_unique<btStaticPlaneShape>(math::vec3_to_btVector3(normal_), plane_constant_);
+}
+
+void PlaneShape::set_plane_constant(float plane_constant)
+{
+    plane_constant_ = plane_constant;
+    shape_ = gua::make_unique<btStaticPlaneShape>(math::vec3_to_btVector3(normal_), plane_constant_);
 }
 
 btCollisionShape* PlaneShape::construct_static() { return shape_.get(); }
 
-}
-}
+} // namespace physics
+} // namespace gua

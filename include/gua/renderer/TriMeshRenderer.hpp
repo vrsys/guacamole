@@ -26,36 +26,42 @@
 #include <unordered_map>
 
 #include <gua/platform.hpp>
+#include <gua/config.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 
 #include <scm/gl_core/shader_objects.h>
 
-namespace gua {
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/renderer/VTRenderer.hpp>
+#endif
 
+namespace gua
+{
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class TriMeshRenderer {
+class GUA_DLL TriMeshRenderer
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    : public VTRenderer
+#endif
+{
+  public:
+    TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
-
- private:
-
-  scm::gl::rasterizer_state_ptr                                       rs_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_cull_none_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_back_;
-  scm::gl::rasterizer_state_ptr                                       rs_wireframe_cull_none_;
-
-  std::vector<ShaderProgramStage>                                     program_stages_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
-  SubstitutionMap                                                     global_substitution_map_;
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_TRIMESH_RENDERER_HPP
+#endif // GUA_TRIMESH_RENDERER_HPP

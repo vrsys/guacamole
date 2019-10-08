@@ -1,0 +1,16 @@
+FILE(GLOB SGTP_INC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h versions/v0.x.x/*.h)
+FILE(GLOB SGTP_SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.c versions/v0.x.x/*.c)
+
+ADD_LIBRARY(sgtp SHARED ${SGTP_INC} ${SGTP_SRC})
+
+set_target_properties(sgtp PROPERTIES LINKER_LANGUAGE CXX)
+
+IF (MSVC)
+ELSEIF (UNIX)
+    install(TARGETS sgtp
+            RUNTIME DESTINATION lib_external
+            LIBRARY DESTINATION lib_external
+            ARCHIVE DESTINATION lib_external)
+ENDIF (MSVC)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION src_external/ FILES_MATCHING PATTERN "*.h")

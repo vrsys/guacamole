@@ -36,50 +36,44 @@
 #include <mutex>
 #include <thread>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * A class representing a texture.
  *
  * This class allows to load texture data from a file and bind the
  * texture to an OpenGL context.
  */
-  class GUA_DLL TextureDistance : public Texture2D {
- public:
+class GUA_DLL TextureDistance : public Texture2D
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs a new texture with the given parameters.
+     *
+     * \param width            The width of the resulting texture.
+     * \param height           The height of the resulting texture.
+     * \param color_format     The color format of the resulting
+     *                         texture.
+     * \param state_descripton The sampler state for the loaded texture.
+     */
+    TextureDistance(unsigned width,
+                    unsigned height,
+                    scm::gl::data_format color_format,
+                    unsigned mipmap_layers = 1,
+                    scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE, scm::gl::WRAP_CLAMP_TO_EDGE));
 
-  /**
-   * Constructor.
-   *
-   * This constructs a new texture with the given parameters.
-   *
-   * \param width            The width of the resulting texture.
-   * \param height           The height of the resulting texture.
-   * \param color_format     The color format of the resulting
-   *                         texture.
-   * \param state_descripton The sampler state for the loaded texture.
-   */
-  TextureDistance(unsigned width,
-            unsigned height,
-            scm::gl::data_format color_format,
-            unsigned mipmap_layers = 1,
-            scm::gl::sampler_state_desc const& state_descripton =
-                scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_MIP_LINEAR,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE,
-                                            scm::gl::WRAP_CLAMP_TO_EDGE));
+    virtual ~TextureDistance() {}
 
-  virtual ~TextureDistance() {}
+    void download_data(RenderContext const& ctx, float near_clip, float far_clip);
+    std::vector<float> const& get_data();
 
-  void download_data(RenderContext const& ctx, float near_clip, float far_clip);
-  std::vector<float> const& get_data();
-
- protected:
-
- private:
-
-  uint32_t* texture_data_;
-  std::vector<float> world_depth_data_;
-
+  protected:
+  private:
+    uint32_t* texture_data_;
+    std::vector<float> world_depth_data_;
 };
 
-}
-#endif  // GUA_TEXTURE_DISTANCE_HPP
+} // namespace gua
+#endif // GUA_TEXTURE_DISTANCE_HPP

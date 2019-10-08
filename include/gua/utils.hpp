@@ -32,4 +32,4 @@
 #include <gua/utils/TextFile.hpp>
 #include <gua/utils/Timer.hpp>
 
-#endif  // GUA_GUACAMOLE_UTILS_HPP
+#endif // GUA_GUACAMOLE_UTILS_HPP

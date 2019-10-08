@@ -29,24 +29,20 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/math/BoundingBoxAlgo.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 const float RayNode::END(std::numeric_limits<float>::max());
 
-RayNode::RayNode(std::string const& name, math::mat4 const& transform)
-    : Node(name, transform) {}
+RayNode::RayNode(std::string const& name, math::mat4 const& transform) : Node(name, transform) {}
 
-void RayNode::accept(NodeVisitor& visitor) {
-    visitor.visit(this);
-}
+void RayNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 
-std::pair<float, float> RayNode::intersect(
-    math::BoundingBox<math::vec3> const& box) const {
-    return ::gua::intersect(get_world_ray(), box);
-}
+std::pair<float, float> RayNode::intersect(math::BoundingBox<math::vec3> const& box) const { return ::gua::intersect(get_world_ray(), box); }
 
-Ray RayNode::get_world_ray() const {
+Ray RayNode::get_world_ray() const
+{
     math::mat4 world_transform(get_world_transform());
 
     math::vec4 origin(0, 0, 0, 1.0);
@@ -58,19 +54,17 @@ Ray RayNode::get_world_ray() const {
     return Ray(origin, direction, 1.0);
 }
 
-void RayNode::update_bounding_box() const {
-
+void RayNode::update_bounding_box() const
+{
     bounding_box_ = math::BoundingBox<math::vec3>();
 
-    for (auto child : get_children()) {
+    for(auto child : get_children())
+    {
         bounding_box_.expandBy(child->get_bounding_box());
     }
-
 }
 
-std::shared_ptr<Node> RayNode::copy() const {
-    return std::make_shared<RayNode>(*this);
-}
+std::shared_ptr<Node> RayNode::copy() const { return std::make_shared<RayNode>(*this); }
 
-}
-}
+} // namespace node
+} // namespace gua

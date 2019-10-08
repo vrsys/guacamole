@@ -36,4 +36,4 @@
 #include <gua/node/TexturedQuadNode.hpp>
 #include <gua/node/TexturedScreenSpaceQuadNode.hpp>
 
-#endif  // GUA_INCLUDE_SCENEGRAPH_HPP
+#endif // GUA_INCLUDE_SCENEGRAPH_HPP

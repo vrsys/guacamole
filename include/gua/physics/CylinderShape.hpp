@@ -30,9 +30,10 @@
 
 class btCylinderShape;
 
-namespace gua {
-namespace physics {
-
+namespace gua
+{
+namespace physics
+{
 /**
  * A class representing a cylinder-shaped collision shape.
  *
@@ -40,36 +41,34 @@ namespace physics {
  * aligned with Y axis of given half-extents vector.
  * The cylinder shape can be used for both static and dynamic rigid bodies.
  */
-class GUA_DLL CylinderShape : public CollisionShape {
- public:
+class GUA_DLL CylinderShape : public CollisionShape
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * Creates a new cylinder shape with the given vector containg half extents
+     * for each axis.
+     *
+     * \param vec The vector with the half-extents. Y is the central axis of
+     *            the cylinder
+     */
+    CylinderShape(const math::vec3& half_extents);
 
-  /**
-   * Constructor.
-   *
-   * Creates a new cylinder shape with the given vector containg half extents
-   * for each axis.
-   *
-   * \param vec The vector with the half-extents. Y is the central axis of
-   *            the cylinder
-   */
-  CylinderShape(const math::vec3& half_extents);
+    inline math::vec3 const& get_half_extents() const { return half_extents_; }
 
-  inline math::vec3 const& get_half_extents() const { return half_extents_; }
+    void set_half_extents(math::vec3 const& half_extents);
 
-  void set_half_extents(math::vec3 const& half_extents);
+  private:
+    void construct_dynamic(btCompoundShape* bullet_shape, const btTransform& base_transform) override;
 
- private:
+    btCollisionShape* construct_static() override;
 
-  void construct_dynamic(btCompoundShape* bullet_shape,
-                         const btTransform& base_transform) override;
-
-  btCollisionShape* construct_static() override;
-
-  std::unique_ptr<btCylinderShape> shape_;
-  math::vec3 half_extents_;
+    std::unique_ptr<btCylinderShape> shape_;
+    math::vec3 half_extents_;
 };
 
-}
-}
+} // namespace physics
+} // namespace gua
 
-#endif  // GUA_CYLINDER_SHAPE_HPP
+#endif // GUA_CYLINDER_SHAPE_HPP

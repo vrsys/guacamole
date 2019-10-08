@@ -31,88 +31,83 @@
 #include <gua/utils/Mask.hpp>
 #include <gua/scenegraph/NodeVisitor.hpp>
 
-namespace gua {
+namespace gua
+{
 class SceneGraph;
 
-namespace node {
-  class SerializableNode;
+namespace node
+{
+class SerializableNode;
 }
-
 
 /**
  * This class is used to convert the scengraph to a (opimized) sequence.
  *
  * It serializes the scene graph.
  */
-class Serializer : public NodeVisitor {
- public:
+class Serializer : public NodeVisitor
+{
+  public:
+    /**
+     * Constructor.
+     *
+     * This constructs an Serializer.
+     */
+    Serializer();
 
-  /**
-   * Constructor.
-   *
-   * This constructs an Serializer.
-   */
-  Serializer();
+    /**
+     * Takes the Scengraph and processes geometry, light and camera
+     *        lists.
+     *
+     * \param scene_graph          The SceneGraph to be processed.
+     * \param render_mask          The mask to be applied to the nodes of
+     *                             the graph.
+     */
+    void check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, int view_id);
 
-  /**
-   * Takes the Scengraph and processes geometry, light and camera
-   *        lists.
-   *
-   * \param scene_graph          The SceneGraph to be processed.
-   * \param render_mask          The mask to be applied to the nodes of
-   *                             the graph.
-   */
-  void check(SerializedScene& output,
-             SceneGraph const& scene_graph,
-             Mask const& mask,
-             bool enable_frustum_culling,
-             int view_id);
+    /**
+     * Visits a TransformNode
+     *
+     * This function provides the interface to visit a TransformNode
+     *
+     * \param cam   Pointer to TransformNode
+     */
+    void visit(node::Node* node) override;
 
-  /**
-   * Visits a TransformNode
-   *
-   * This function provides the interface to visit a TransformNode
-   *
-   * \param cam   Pointer to TransformNode
-   */
-  void visit(node::Node* node) override;
+    /**
+     * Visits an LODNode
+     *
+     * This function provides the interface to visit an LODNode
+     *
+     * \param cam   Pointer to LODNode
+     */
+    void visit(node::LODNode* lod) override;
 
-  /**
-   * Visits an LODNode
-   *
-   * This function provides the interface to visit an LODNode
-   *
-   * \param cam   Pointer to LODNode
-   */
-  void visit(node::LODNode* lod) override;
+    /**
+     * Visits a GeometryNode
+     *
+     * This function provides the interface to visit a GeometryNode
+     *
+     * \param geometry   Pointer to GeometryNode
+     */
+    void visit(node::SerializableNode* geometry) override;
 
-  /**
-   * Visits a GeometryNode
-   *
-   * This function provides the interface to visit a GeometryNode
-   *
-   * \param geometry   Pointer to GeometryNode
-   */
-  void visit(node::SerializableNode* geometry) override;
+  private:
+    bool is_visible(node::Node* node) const;
+    bool check_clipping_planes(node::Node* node) const;
 
+    void visit_children(node::Node* node);
 
- private:
+    Frustum culling_frustum_;
+    Frustum rendering_frustum_;
+    Mask render_mask_;
 
-  bool is_visible(node::Node* node) const;
-  bool check_clipping_planes(node::Node* node) const;
+    SerializedScene* data_;
 
-  void visit_children(node::Node* node);
-
-  Frustum culling_frustum_;
-  Frustum rendering_frustum_;
-  Mask    render_mask_;
-
-  SerializedScene* data_;
-
-  bool enable_frustum_culling_;
-  bool enable_alternative_frustum_culling_;
+    bool enable_frustum_culling_;
+    bool enable_alternative_frustum_culling_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SERIALIZER_HPP
+#endif // GUA_SERIALIZER_HPP

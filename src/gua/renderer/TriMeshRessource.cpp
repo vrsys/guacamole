@@ -29,110 +29,99 @@
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
+
+TriMeshRessource::TriMeshRessource() : kd_tree_(), mesh_() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRessource::TriMeshRessource()
-    : kd_tree_(), mesh_() {}
+TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree) : kd_tree_(), mesh_(mesh)
+{
+    if(mesh_.num_vertices > 0)
+    {
+        bounding_box_ = math::BoundingBox<math::vec3>();
+
+        for(unsigned v(0); v < mesh_.num_vertices; ++v)
+        {
+            bounding_box_.expandBy(math::vec3{mesh_.positions[v]});
+        }
+
+        if(build_kd_tree)
+        {
+            kd_tree_.generate(mesh);
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree)
-    : kd_tree_(), mesh_(mesh) {
+void TriMeshRessource::upload_to(RenderContext& ctx) const
+{
+    RenderContext::Mesh cmesh{};
+    cmesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
+    cmesh.indices_type = scm::gl::TYPE_UINT;
+    cmesh.indices_count = mesh_.num_triangles * 3;
 
-  if (mesh_.num_vertices > 0) {
-    bounding_box_ = math::BoundingBox<math::vec3>();
-
-    for (unsigned v(0); v < mesh_.num_vertices; ++v) {
-      bounding_box_.expandBy(math::vec3{mesh_.positions[v]});
+    if(!(mesh_.num_vertices > 0))
+    {
+        Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
+        return;
     }
 
-    if (build_kd_tree) {
-      kd_tree_.generate(mesh);
+    cmesh.vertices = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, mesh_.num_vertices * sizeof(Mesh::Vertex), 0);
+
+    Mesh::Vertex* data(static_cast<Mesh::Vertex*>(ctx.render_context->map_buffer(cmesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+
+    mesh_.copy_to_buffer(data);
+
+    ctx.render_context->unmap_buffer(cmesh.vertices);
+
+    cmesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, mesh_.num_triangles * 3 * sizeof(unsigned), mesh_.indices.data());
+
+    cmesh.vertex_array = ctx.render_device->create_vertex_array(mesh_.get_vertex_format(), {cmesh.vertices});
+    ctx.meshes[uuid()] = cmesh;
+
+    ctx.render_context->apply();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::draw(RenderContext& ctx) const
+{
+    auto iter = ctx.meshes.find(uuid());
+    if(iter == ctx.meshes.end())
+    {
+        // upload to GPU if neccessary
+        upload_to(ctx);
+        iter = ctx.meshes.find(uuid());
     }
-  }
+    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+    ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+    ctx.render_context->apply_vertex_input();
+    ctx.render_context->draw_elements(iter->second.indices_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::upload_to(RenderContext& ctx) const {
-  RenderContext::Mesh cmesh{};
-  cmesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
-  cmesh.indices_type = scm::gl::TYPE_UINT;
-  cmesh.indices_count = mesh_.num_triangles * 3;
+void TriMeshRessource::ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) { kd_tree_.ray_test(ray, mesh_, options, owner, hits); }
 
-  if (!(mesh_.num_vertices > 0) ) {
-    Logger::LOG_WARNING << "Unable to load Mesh! Has no vertex data." << std::endl;
-    return;
-  }
+////////////////////////////////////////////////////////////////////////////////
 
-  cmesh.vertices =
-      ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_.num_vertices * sizeof(Mesh::Vertex),
-                                       0);
+math::vec3 TriMeshRessource::get_vertex(unsigned int i) const { return math::vec3(mesh_.positions[i].x, mesh_.positions[i].y, mesh_.positions[i].z); }
 
-  Mesh::Vertex* data(static_cast<Mesh::Vertex*>(ctx.render_context->map_buffer(
-      cmesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
+////////////////////////////////////////////////////////////////////////////////
 
-  mesh_.copy_to_buffer(data);
-
-  ctx.render_context->unmap_buffer(cmesh.vertices);
-
-  cmesh.indices =
-      ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       mesh_.num_triangles * 3 * sizeof(unsigned),
-                                       mesh_.indices.data());
-
-  cmesh.vertex_array = ctx.render_device->create_vertex_array(
-      mesh_.get_vertex_format(),
-      {cmesh.vertices});
-  ctx.meshes[uuid()] = cmesh;
-
-  ctx.render_context->apply();
+std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
+{
+    std::vector<unsigned int> face;
+    face.push_back(mesh_.indices[3 * i]);
+    face.push_back(mesh_.indices[3 * i + 1]);
+    face.push_back(mesh_.indices[3 * i + 2]);
+    return face;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRessource::draw(RenderContext& ctx) const {
-  auto iter = ctx.meshes.find(uuid());
-  if (iter == ctx.meshes.end()) {
-    // upload to GPU if neccessary
-    upload_to(ctx);
-    iter = ctx.meshes.find(uuid());
-  }
-  ctx.render_context->bind_vertex_array(iter->second.vertex_array);
-  ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
-  ctx.render_context->apply_vertex_input();
-  ctx.render_context->draw_elements(iter->second.indices_count);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TriMeshRessource::ray_test(Ray const& ray, int options,
-                    node::Node* owner, std::set<PickResult>& hits) {
-  kd_tree_.ray_test(ray, mesh_, options, owner, hits);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-math::vec3 TriMeshRessource::get_vertex(unsigned int i) const {
-  return math::vec3(
-      mesh_.positions[i].x, mesh_.positions[i].y, mesh_.positions[i].z);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const {
-  std::vector<unsigned int> face;
-  face.push_back(mesh_.indices[3*i]);
-  face.push_back(mesh_.indices[3*i+1]);
-  face.push_back(mesh_.indices[3*i+2]);
-  return face;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
+} // namespace gua

@@ -31,23 +31,19 @@
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/TV_3ResourceVQCompressed.hpp>
 
-
-namespace gua {
-
+namespace gua
+{
 /////////////////////////////////////////////////////////////////////////////
 // static variables
 /////////////////////////////////////////////////////////////////////////////
-std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >
-    TV_3Loader::loaded_files_ =
-        std::unordered_map<std::string, std::shared_ptr< ::gua::node::Node> >();
-
+std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> TV_3Loader::loaded_files_ = std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>>();
 
 /////////////////////////////////////////////////////////////////////////////
-TV_3Loader::TV_3Loader() : _supported_file_extensions() {
-  _supported_file_extensions.insert("v_rsc");
-  _supported_file_extensions.insert("raw");
+TV_3Loader::TV_3Loader() : _supported_file_extensions()
+{
+    _supported_file_extensions.insert("v_rsc");
+    _supported_file_extensions.insert("raw");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,146 +101,143 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(
 }
 */
 
-
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_name,
-                                                      unsigned flags,
-                                                      int const cpu_budget,
-                                                      int const gpu_budget) {
+std::shared_ptr<node::Node> TV_3Loader::load_geometry(std::string const& file_name, unsigned flags, int const cpu_budget, int const gpu_budget)
+{
+    std::shared_ptr<node::Node> cached_node = nullptr;
+    std::string key(file_name + "_" + string_utils::to_string(flags));
+    auto searched(loaded_files_.find(key));
 
-  std::shared_ptr<node::Node> cached_node = nullptr;
-  std::string key(file_name + "_" + string_utils::to_string(flags));
-  auto searched(loaded_files_.find(key));
+    if(searched != loaded_files_.end())
+    {
+        cached_node = searched->second;
+    }
+    else
+    {
+        bool fileload_succeed = false;
 
-  if (searched != loaded_files_.end()) {
+        if(is_supported(file_name))
+        {
+            // cached_node = load(file_name, flags);
+            GeometryDescription desc("TV_3", file_name, 0, flags);
 
-    cached_node = searched->second;
+            std::shared_ptr<TV_3Resource> resource = nullptr;
+            if(file_name.find("SW_VQ") != std::string::npos)
+            {
+                resource = std::make_shared<TV_3ResourceVQCompressed>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
+            }
+            else
+            {
+                resource = std::make_shared<TV_3Resource>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
+            }
 
-  } else {
-    bool fileload_succeed = false;
+            GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
-    if (is_supported(file_name)) {
-      //cached_node = load(file_name, flags);
-      GeometryDescription desc("TV_3", file_name, 0, flags);
+            cached_node = std::make_shared<node::TV_3Node>("", desc.unique_key(), file_name);
+            cached_node->update_cache();
 
- 
-      std::shared_ptr<TV_3Resource> resource = nullptr;
-      if(file_name.find("SW_VQ") != std::string::npos) {
-        resource = std::make_shared<TV_3ResourceVQCompressed>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
-      } else {
-        resource = std::make_shared<TV_3Resource>(file_name, flags & TV_3Loader::MAKE_PICKABLE);
-      }
-      
-      GeometryDatabase::instance()->add(desc.unique_key(), resource);
+            loaded_files_.insert(std::make_pair(key, cached_node));
 
-      cached_node = std::make_shared<node::TV_3Node>("", desc.unique_key(), file_name);
-      cached_node->update_cache();
+            // normalize mesh position and rotation
+            if(flags & TV_3Loader::NORMALIZE_POSITION || flags & TV_3Loader::NORMALIZE_SCALE)
+            {
+                auto bbox = cached_node->get_bounding_box();
 
-      loaded_files_.insert(std::make_pair(key, cached_node));
+                if(flags & TV_3Loader::NORMALIZE_POSITION)
+                {
+                    auto center((bbox.min + bbox.max) * 0.5f);
+                    cached_node->translate(-center);
+                }
 
-    
-      // normalize mesh position and rotation
-      if (flags & TV_3Loader::NORMALIZE_POSITION ||
-          flags & TV_3Loader::NORMALIZE_SCALE) {
-        auto bbox = cached_node->get_bounding_box();
+                if(flags & TV_3Loader::NORMALIZE_SCALE)
+                {
+                    auto size(bbox.max - bbox.min);
+                    auto max_size(std::max(std::max(size.x, size.y), size.z));
+                    cached_node->scale(1.f / max_size);
+                }
+            }
 
-        if (flags & TV_3Loader::NORMALIZE_POSITION) {
-          auto center((bbox.min + bbox.max) * 0.5f);
-          cached_node->translate(-center);
+            auto tv_3_cached_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(cached_node);
+            if(flags & TV_3Loader::USE_SURFACE_MODE)
+            {
+                tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::SUR_PBR);
+            }
+            else
+            {
+                tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::VOL_COMPOSITING);
+            }
+
+            fileload_succeed = true;
         }
 
-        if (flags & TV_3Loader::NORMALIZE_SCALE) {
-          auto size(bbox.max - bbox.min);
-          auto max_size(std::max(std::max(size.x, size.y), size.z));
-          cached_node->scale(1.f / max_size);
+        if(!fileload_succeed)
+        {
+            Logger::LOG_WARNING << "Unable to load " << file_name << ": Type is not supported!" << std::endl;
         }
-      }
-  
-      auto tv_3_cached_node = std::dynamic_pointer_cast<gua::node::TV_3Node>(cached_node);    
-      if (flags & TV_3Loader::USE_SURFACE_MODE) {
-        tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::SUR_PBR);
-      } else {
-        tv_3_cached_node->set_render_mode(node::TV_3Node::RenderMode::VOL_COMPOSITING);
-      }
+    }
+    return cached_node;
+}
 
-      fileload_succeed = true;
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(
+    std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags, int const cpu_budget, int const gpu_budget)
+{
+    auto cached_node(load_geometry(file_name, flags));
+
+    if(cached_node)
+    {
+        auto copy(cached_node->deep_copy());
+
+        apply_fallback_material(copy, fallback_material, flags); //& NO_SHARED_MATERIALS
+
+        copy->set_name(node_name);
+        return copy;
     }
 
-    if (!fileload_succeed) {
+    return cached_node;
+}
 
-      Logger::LOG_WARNING << "Unable to load " << file_name
-                          << ": Type is not supported!" << std::endl;
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, unsigned flags, int const cpu_budget, int const gpu_budget)
+{
+    auto cached_node(load_geometry(file_name, flags));
+
+    if(cached_node)
+    {
+        auto copy(std::dynamic_pointer_cast<node::Node>(cached_node->deep_copy()));
+
+        auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
+        apply_fallback_material(copy, shader->make_new_material(), flags /*& NO_SHARED_MATERIALS*/);
+
+        copy->set_name(node_name);
+        return copy;
     }
-  }
-  return cached_node;
-}
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name,
-                                                                  std::string const& file_name,
-                                                                  std::shared_ptr<Material> const& fallback_material,
-                                                                  unsigned flags,
-                                                                  int const cpu_budget,
-                                                                  int const gpu_budget) {
-  auto cached_node(load_geometry(file_name, flags));
-
-  if (cached_node) {
-    auto copy(cached_node->deep_copy());
-
-    apply_fallback_material(
-        copy, fallback_material, flags); //& NO_SHARED_MATERIALS
-
-    copy->set_name(node_name);
-    return copy;
-  }
-
-  return cached_node;
+    return cached_node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string const& node_name,
-                                                          std::string const& file_name,
-                                                          unsigned flags,
-                                                          int const cpu_budget,
-                                                          int const gpu_budget) {
-  auto cached_node(load_geometry(file_name, flags));
+void TV_3Loader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials)
+{
+    auto g_node(std::dynamic_pointer_cast<node::TV_3Node>(root));
 
-  if (cached_node) {
-    auto copy( std::dynamic_pointer_cast<node::Node>( cached_node->deep_copy()) );
+    if(g_node && !g_node->get_material())
+    {
+        g_node->set_material(fallback_material);
+        g_node->update_cache();
+    }
+    else if(g_node && no_shared_materials)
+    {
+        g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
+    }
 
-    auto shader(gua::MaterialShaderDatabase::instance()->lookup(
-        "gua_default_material"));
-    apply_fallback_material(
-        copy, shader->make_new_material(), flags /*& NO_SHARED_MATERIALS*/);
-
-    copy->set_name(node_name);
-    return copy;
-  }
-
-  return cached_node;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TV_3Loader::apply_fallback_material(
-    std::shared_ptr<node::Node> const& root,
-    std::shared_ptr<Material> const& fallback_material,
-    bool no_shared_materials) {
-  auto g_node(std::dynamic_pointer_cast<node::TV_3Node>(root));
-
-  if (g_node && !g_node->get_material()) {
-    g_node->set_material(fallback_material);
-    g_node->update_cache();
-  } else if (g_node && no_shared_materials) {
-    g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
-  }
-
-  for (auto& child : root->get_children()) {
-    apply_fallback_material(child, fallback_material, no_shared_materials);
-  }
+    for(auto& child : root->get_children())
+    {
+        apply_fallback_material(child, fallback_material, no_shared_materials);
+    }
 }
 /////////////////////////////////////////////////////////////////////////////
 
@@ -271,15 +264,11 @@ std::shared_ptr<node::TV_3Node> TV_3Loader::load_geometry(std::string const& fil
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TV_3Loader::is_supported(std::string const& file_name) const {
-
-  std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
-  return filename_decomposition.empty()
-             ? false
-             : _supported_file_extensions.count(filename_decomposition.back()) >
-                   0;
+bool TV_3Loader::is_supported(std::string const& file_name) const
+{
+    std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty() ? false : _supported_file_extensions.count(filename_decomposition.back()) > 0;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -328,19 +317,18 @@ std::set<PickResult> TV_3Loader::pick_lod_interpolate(math::vec3 const& bundle_o
   lamure::ren::ray::intersection intersection;
 
   if (ray.intersect(aabb_scale, ray_up, bundle_radius, max_depth, surfel_skip, intersection)) {
-    PickResult result(intersection.distance_,  
-                      nullptr, 
+    PickResult result(intersection.distance_,
+                      nullptr,
                       math::vec3(intersection.error_),
-                      math::vec3(intersection.position_), 
-                      math::vec3(), 
+                      math::vec3(intersection.position_),
+                      math::vec3(),
                       math::vec3(intersection.normal_),
                       math::vec2());
     results.insert(result);
   }
 
   return results;
-  
+
 }
 */
-}
-
+} // namespace gua

@@ -26,28 +26,27 @@
 
 #include <iostream>
 
-namespace gua {
+namespace gua
+{
+class Logger
+{
+  public:
+    static GUA_DLL bool enable_debug;
+    static GUA_DLL bool enable_message;
+    static GUA_DLL bool enable_warning;
+    static GUA_DLL bool enable_error;
 
-class Logger {
+#define LOG_DEBUG debug_impl(__FILE__, __LINE__)
+#define LOG_MESSAGE message_impl(__FILE__, __LINE__)
+#define LOG_WARNING warning_impl(__FILE__, __LINE__)
+#define LOG_ERROR error_impl(__FILE__, __LINE__)
 
- public:
-
-  static GUA_DLL bool enable_debug;
-  static GUA_DLL bool enable_message;
-  static GUA_DLL bool enable_warning;
-  static GUA_DLL bool enable_error;
-
-  #define LOG_DEBUG   debug_impl  (__FILE__, __LINE__)
-  #define LOG_MESSAGE message_impl(__FILE__, __LINE__)
-  #define LOG_WARNING warning_impl(__FILE__, __LINE__)
-  #define LOG_ERROR   error_impl  (__FILE__, __LINE__)
-
-  static GUA_DLL std::ostream& debug_impl(const char* file, int line);
-  static GUA_DLL std::ostream& message_impl(const char* file, int line);
-  static GUA_DLL std::ostream& warning_impl(const char* file, int line);
-  static GUA_DLL std::ostream& error_impl(const char* file, int line);
+    static GUA_DLL std::ostream& debug_impl(const char* file, int line);
+    static GUA_DLL std::ostream& message_impl(const char* file, int line);
+    static GUA_DLL std::ostream& warning_impl(const char* file, int line);
+    static GUA_DLL std::ostream& error_impl(const char* file, int line);
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_LOGGER_HPP
+#endif // GUA_LOGGER_HPP

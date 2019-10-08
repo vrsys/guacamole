@@ -25,4 +25,4 @@
 #include <gua/gui/GuiResource.hpp>
 #include <gua/gui/Interface.hpp>
 
-#endif  // GUA_INCLUDE_GUI_HPP
+#endif // GUA_INCLUDE_GUI_HPP

@@ -36,10 +36,13 @@
 #include <vector>
 #include <string>
 
-namespace spoints { class NetKinectArray; }
+namespace spoints
+{
+class NetKinectArray;
+}
 
-namespace gua {
-
+namespace gua
+{
 struct RenderContext;
 
 /**
@@ -50,79 +53,91 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class GUA_SPOINTS_DLL SPointsResource : public GeometryResource {
- public:
+class GUA_SPOINTS_DLL SPointsResource : public GeometryResource
+{
+  public:
+    struct SPointsData
+    {
+        SPointsData() = default;
+        SPointsData(RenderContext const& ctx, SPointsResource const& spoints);
+        // gl resources
+        scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
+        // cpu resources
+        std::shared_ptr<spoints::NetKinectArray> nka_ = nullptr;
+        // unsigned frame_counter_ = 0;
+    };
 
-  struct SPointsData {
-    SPointsData() = default;
-    SPointsData(RenderContext const& ctx, SPointsResource const& spoints);
-    // gl resources
-    scm::gl::rasterizer_state_ptr rstate_solid_ = nullptr;
-    // cpu resources
-    std::shared_ptr<spoints::NetKinectArray> nka_ = nullptr;
-    //unsigned frame_counter_ = 0;
-  };
+    /**
+     * constructor.
+     *
+     * Creates a new SPoints from a given spoints string.
+     * \param spoints      Holds information about kinect streams.
+     */
+    SPointsResource(std::string const& spoints_resource_filename, unsigned flags);
 
-  /**
-   * constructor.
-   *
-   * Creates a new SPoints from a given spoints string.
-   * \param spoints      Holds information about kinect streams.
-  */
-   SPointsResource(std::string const& server_endpoint, 
-                   std::string const& feedback_endpoint, 
-                   unsigned flags);
+    /**
+     * destructor.
+     */
+    ~SPointsResource() {}
 
-  /**
-   * destructor.
-   */
-   ~SPointsResource() {}
+    bool has_calibration(RenderContext const& ctx) const;
 
-  void draw(RenderContext const& ctx);
+    bool is_vertex_data_fully_encoded();
 
-  std::string get_socket_string();
+    void draw_textured_triangle_soup(RenderContext const& ctx, std::shared_ptr<gua::ShaderProgram>& shader_program);
 
-  //void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, spoints::matrix_package matrix_package);
-  void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
+    std::string get_socket_string() const;
 
+    spoints::SPointsStats get_latest_spoints_stats() const
+    {
+        std::lock_guard<std::mutex> lock(m_push_matrix_package_mutex_);
 
+        if(spointsdata_)
+        {
+            if(spointsdata_->nka_)
+            {
+                return spointsdata_->nka_->get_latest_spoints_stats();
+            }
+        }
 
-  void update_buffers(RenderContext const& ctx, Pipeline& pipe);
+        return spoints::SPointsStats();
+    }
 
-  unsigned get_remote_server_screen_width() const;
-  unsigned get_remote_server_screen_height() const;
-  
-  /**
-   * Raytest for SPoints
-   *
-   * Not implemented yet.
-   *
-   */
-  void ray_test(Ray const& ray, int options,
-                node::Node* owner, std::set<PickResult>& hits) override
-  {}
+    void push_matrix_package(spoints::camera_matrix_package const& cam_mat_package);
 
-  /**
-   *
-   */
-  void init();
+    void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
-  std::string                     server_endpoint() const {return server_endpoint_; }
-  std::string                     feedback_endpoint() const {return feedback_endpoint_; }
-  bool                            is_pickable() const { return is_pickable_; }
+    /**
+     * Raytest for SPoints
+     *
+     * Not implemented yet.
+     *
+     */
+    void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) override {}
 
- private:
+    /**
+     *
+     */
+    void init();
 
+    std::string server_endpoint() const { return server_endpoint_; }
+    std::string feedback_endpoint() const { return feedback_endpoint_; }
+    bool is_pickable() const { return is_pickable_; }
 
-  std::mutex                      m_push_matrix_package_mutex;
-  std::shared_ptr<SPointsData>    spointsdata_;
+  private:
+    mutable std::mutex m_push_matrix_package_mutex_;
+    std::shared_ptr<SPointsData> spointsdata_;
 
-  std::string                     server_endpoint_;
-  std::string                     feedback_endpoint_;
+    std::string spoints_resource_filename_ = "";
+    std::string server_endpoint_ = "";
+    std::string feedback_endpoint_ = "";
 
-  bool is_pickable_;
+    scm::math::vec3ui inv_xyz_vol_res_ = scm::math::vec3ui(1, 1, 1);
+    scm::math::vec3ui uv_vol_res_ = scm::math::vec3ui(1, 1, 1);
+
+    bool is_pickable_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPOINTS_RESOURCE_HPP
+#endif // GUA_SPOINTS_RESOURCE_HPP

@@ -40,384 +40,330 @@
 #include <gpucast/core/conversion.hpp>
 #include <gpucast/gl/util/hullvertexmap.hpp>
 
-namespace gua {
-
-  
-
-////////////////////////////////////////////////////////////////////////////////
-NURBSResource::NURBSResource(std::shared_ptr<gpucast::beziersurfaceobject> const& object,
-             unsigned pre_subdivision_u, 
-             unsigned pre_subdivision_v,
-             unsigned trim_resolution,
-             scm::gl::fill_mode in_fill_mode)
-             : _data(std::make_shared<NURBSData>(object, pre_subdivision_u, pre_subdivision_v, trim_resolution)),
-      _fill_mode(in_fill_mode)
+namespace gua
 {
-  bounding_box_ = math::BoundingBox<math::vec3>(
-      math::vec3(
-          object->bbox().min[0], object->bbox().min[1], object->bbox().min[2]),
-      math::vec3(
-          object->bbox().max[0], object->bbox().max[1], object->bbox().max[2]));
+////////////////////////////////////////////////////////////////////////////////
+NURBSResource::NURBSResource(
+    std::shared_ptr<gpucast::beziersurfaceobject> const& object, unsigned pre_subdivision_u, unsigned pre_subdivision_v, unsigned trim_resolution, scm::gl::fill_mode in_fill_mode)
+    : _data(std::make_shared<NURBSData>(object, pre_subdivision_u, pre_subdivision_v, trim_resolution)), _fill_mode(in_fill_mode)
+{
+    bounding_box_ =
+        math::BoundingBox<math::vec3>(math::vec3(object->bbox().min[0], object->bbox().min[1], object->bbox().min[2]), math::vec3(object->bbox().max[0], object->bbox().max[1], object->bbox().max[2]));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::predraw(RenderContext const& context) const
 {
-  // upload to GPU if neccessary
-  auto iter = context.plugin_ressources.find(uuid());
-  if (iter == context.plugin_ressources.end()) {
-    upload_to(context);
-    iter = context.plugin_ressources.find(uuid());
-  }
- 
-  auto in_context = context.render_context;
+    // upload to GPU if neccessary
+    auto iter = context.plugin_ressources.find(uuid());
+    if(iter == context.plugin_ressources.end())
+    {
+        upload_to(context);
+        iter = context.plugin_ressources.find(uuid());
+    }
 
-  scm::gl::context_vertex_input_guard cvg(in_context);
-  scm::gl::context_state_objects_guard csg(in_context);
-  scm::gl::context_image_units_guard cig(in_context);
-  scm::gl::context_texture_units_guard ctg(in_context);
+    auto in_context = context.render_context;
 
-  auto resource  = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
-  auto xfb_ptr   = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
-  auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
-  
-  //Transform Feedback Stage Begins
-  in_context->begin_transform_feedback(xfb_ptr->_transform_feedback,
-    scm::gl::PRIMITIVE_POINTS);
-  {
+    scm::gl::context_vertex_input_guard cvg(in_context);
+    scm::gl::context_state_objects_guard csg(in_context);
+    scm::gl::context_image_units_guard cig(in_context);
+    scm::gl::context_texture_units_guard ctg(in_context);
+
+    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
+    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
+    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
+
+    // Transform Feedback Stage Begins
+    in_context->begin_transform_feedback(xfb_ptr->_transform_feedback, scm::gl::PRIMITIVE_POINTS);
+    {
+        // set ssbo and texturebuffer bindings
+        std::map<std::string, texture_buffer_binding> texmap;
+        std::map<std::string, ssbo_binding> ssbomap;
+
+        unsigned texunit = 0;
+
+        texmap["parameter_texture"] = {resource->_surface_tesselation_data.parametric_texture_buffer, texunit++};
+        texmap["attribute_texture"] = {resource->_surface_tesselation_data.attribute_texture_buffer, texunit++};
+        texmap["obb_texture"] = {resource->_surface_tesselation_data.obb_texture_buffer, texunit++};
+        ssbomap["vertexhullmap"] = {resource->_surface_tesselation_data.hullvertexmap, NURBSRenderer::GUA_HULLVERTEXMAP_SSBO_BINDING};
+        ssbomap["attribute_buffer"] = {resource->_surface_tesselation_data.attribute_buffer, NURBSRenderer::GUA_ATTRIBUTE_SSBO_BINDING};
+
+        // apply bindings and corresponding uniforms
+        for(auto k : texmap)
+        {
+            in_context->bind_texture(k.second.buffer, state_ptr->_sstate, k.second.texunit);
+            in_context->current_program()->uniform_sampler(k.first, k.second.texunit);
+        }
+
+        for(auto s : ssbomap)
+        {
+            in_context->bind_storage_buffer(s.second.buffer, s.second.unit);
+            in_context->current_program()->uniform(s.first, s.second.unit);
+        }
+
+        in_context->bind_vertex_array(resource->_surface_tesselation_data.vertex_array);
+        in_context->bind_index_buffer(resource->_surface_tesselation_data.index_buffer, scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, scm::gl::TYPE_UINT);
+
+        in_context->apply();
+
+        in_context->draw_elements(_data->tess_index_data.size());
+    }
+
+    in_context->end_transform_feedback();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void NURBSResource::draw(RenderContext const& context, bool pretessellation) const
+{
+    // upload to GPU if neccessary
+    auto iter = context.plugin_ressources.find(uuid());
+    assert(iter != context.plugin_ressources.end());
+
+    auto in_context = context.render_context;
+
+    scm::gl::context_vertex_input_guard cvg1(in_context);
+    scm::gl::context_state_objects_guard csg1(in_context);
+    scm::gl::context_image_units_guard cig1(in_context);
+    scm::gl::context_texture_units_guard ctg1(in_context);
+
+    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
+    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
+    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
+
+    in_context->bind_vertex_array(xfb_ptr->_transform_feedback_vao);
+
     // set ssbo and texturebuffer bindings
     std::map<std::string, texture_buffer_binding> texmap;
     std::map<std::string, ssbo_binding> ssbomap;
 
     unsigned texunit = 0;
 
-    texmap["parameter_texture"] = { resource->_surface_tesselation_data.parametric_texture_buffer, texunit++ };
-    texmap["attribute_texture"] = { resource->_surface_tesselation_data.attribute_texture_buffer, texunit++ };
-    texmap["obb_texture"] = { resource->_surface_tesselation_data.obb_texture_buffer, texunit++ };
-    ssbomap["vertexhullmap"] = { resource->_surface_tesselation_data.hullvertexmap, NURBSRenderer::GUA_HULLVERTEXMAP_SSBO_BINDING };
-    ssbomap["attribute_buffer"] = { resource->_surface_tesselation_data.attribute_buffer, NURBSRenderer::GUA_ATTRIBUTE_SSBO_BINDING };
+    texmap["parameter_texture"] = {resource->_surface_tesselation_data.parametric_texture_buffer, texunit++};
+    texmap["attribute_texture"] = {resource->_surface_tesselation_data.attribute_texture_buffer, texunit++};
+    texmap["obb_texture"] = {resource->_surface_tesselation_data.obb_texture_buffer, texunit++};
+
+    texmap["trim_partition"] = {resource->_contour_trimming_data.partition_texture_buffer, texunit++};
+    texmap["trim_contourlist"] = {resource->_contour_trimming_data.contourlist_texture_buffer, texunit++};
+    texmap["trim_curvelist"] = {resource->_contour_trimming_data.curvelist_texture_buffer, texunit++};
+    texmap["trim_curvedata"] = {resource->_contour_trimming_data.curvedata_texture_buffer, texunit++};
+    texmap["trim_pointdata"] = {resource->_contour_trimming_data.pointdata_texture_buffer, texunit++};
+    texmap["trim_preclassification"] = {resource->_contour_trimming_data.preclassification_buffer, texunit++};
+
+    ssbomap["vertexhullmap"] = {resource->_surface_tesselation_data.hullvertexmap, NURBSRenderer::GUA_HULLVERTEXMAP_SSBO_BINDING};
+    ssbomap["attribute_buffer"] = {resource->_surface_tesselation_data.attribute_buffer, NURBSRenderer::GUA_ATTRIBUTE_SSBO_BINDING};
 
     // apply bindings and corresponding uniforms
-    for (auto k : texmap) {
-      in_context->bind_texture(k.second.buffer, state_ptr->_sstate, k.second.texunit);
-      in_context->current_program()->uniform_sampler(k.first, k.second.texunit);
+    for(auto k : texmap)
+    {
+        in_context->bind_texture(k.second.buffer, state_ptr->_sstate, k.second.texunit);
+        in_context->current_program()->uniform_sampler(k.first, k.second.texunit);
     }
 
-    for (auto s : ssbomap) {
-      in_context->bind_storage_buffer(s.second.buffer, s.second.unit);
-      in_context->current_program()->uniform(s.first, s.second.unit);
+    for(auto s : ssbomap)
+    {
+        in_context->bind_storage_buffer(s.second.buffer, s.second.unit);
+        in_context->current_program()->uniform(s.first, s.second.unit);
     }
 
-    in_context->bind_vertex_array(resource->_surface_tesselation_data.vertex_array);
-    in_context->bind_index_buffer(resource->_surface_tesselation_data.index_buffer, scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, scm::gl::TYPE_UINT);
+    if(_fill_mode == scm::gl::FILL_WIREFRAME)
+    {
+        in_context->set_rasterizer_state(state_ptr->_wire_no_cull);
+    }
+    else
+    {
+        in_context->set_rasterizer_state(state_ptr->_solid_no_cull);
+    }
 
-    in_context->apply();
-
-    in_context->draw_elements(_data->tess_index_data.size());
-  }
-
-  in_context->end_transform_feedback();
+    if(pretessellation)
+    {
+        in_context->apply();
+        in_context->draw_transform_feedback(scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, xfb_ptr->_transform_feedback);
+    }
+    else
+    {
+        in_context->bind_vertex_array(resource->_surface_tesselation_data.vertex_array);
+        in_context->bind_index_buffer(resource->_surface_tesselation_data.index_buffer, scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, scm::gl::TYPE_UINT);
+        in_context->apply();
+        in_context->draw_elements(_data->tess_index_data.size());
+    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::draw(RenderContext const& context, bool pretessellation) const
+void NURBSResource::upload_to(RenderContext const& context) const
 {
-  // upload to GPU if neccessary
-  auto iter = context.plugin_ressources.find(uuid());
-  assert(iter != context.plugin_ressources.end()); 
+    // create, if neccessary
+    auto resource = std::make_shared<NURBSGPURessource>();
+    context.plugin_ressources[uuid()] = resource;
 
-  auto in_context = context.render_context;
+    // create state
+    initialize_states(context);
+    initialize_transform_feedback(context);
 
-  scm::gl::context_vertex_input_guard cvg1(in_context);
-  scm::gl::context_state_objects_guard csg1(in_context);
-  scm::gl::context_image_units_guard cig1(in_context);
-  scm::gl::context_texture_units_guard ctg1(in_context);
+    initialize_texture_buffers(context);
 
-  auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
-  auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
-  auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
+    initialize_vertex_data(context);
 
-  in_context->bind_vertex_array(xfb_ptr->_transform_feedback_vao);
-
-  // set ssbo and texturebuffer bindings
-  std::map<std::string, texture_buffer_binding> texmap;
-  std::map<std::string, ssbo_binding> ssbomap;
-
-  unsigned texunit = 0;
-
-  texmap["parameter_texture"] = { resource->_surface_tesselation_data.parametric_texture_buffer, texunit++ };
-  texmap["attribute_texture"] = { resource->_surface_tesselation_data.attribute_texture_buffer, texunit++ };
-  texmap["obb_texture"] = { resource->_surface_tesselation_data.obb_texture_buffer, texunit++ };
-
-  texmap["trim_partition"] = { resource->_contour_trimming_data.partition_texture_buffer, texunit++ };
-  texmap["trim_contourlist"] = { resource->_contour_trimming_data.contourlist_texture_buffer, texunit++ };
-  texmap["trim_curvelist"] = { resource->_contour_trimming_data.curvelist_texture_buffer, texunit++ };
-  texmap["trim_curvedata"] = { resource->_contour_trimming_data.curvedata_texture_buffer, texunit++ };
-  texmap["trim_pointdata"] = { resource->_contour_trimming_data.pointdata_texture_buffer, texunit++ };
-  texmap["trim_preclassification"] = { resource->_contour_trimming_data.preclassification_buffer, texunit++ };
-
-  ssbomap["vertexhullmap"] = { resource->_surface_tesselation_data.hullvertexmap, NURBSRenderer::GUA_HULLVERTEXMAP_SSBO_BINDING };
-  ssbomap["attribute_buffer"] = { resource->_surface_tesselation_data.attribute_buffer, NURBSRenderer::GUA_ATTRIBUTE_SSBO_BINDING };
-
-  // apply bindings and corresponding uniforms
-  for (auto k : texmap) {
-    in_context->bind_texture(k.second.buffer, state_ptr->_sstate, k.second.texunit);
-    in_context->current_program()->uniform_sampler(k.first, k.second.texunit);
-  }
-
-  for (auto s : ssbomap) {
-    in_context->bind_storage_buffer(s.second.buffer, s.second.unit);
-    in_context->current_program()->uniform(s.first, s.second.unit);
-  }
-
-  if (_fill_mode == scm::gl::FILL_WIREFRAME) {
-    in_context->set_rasterizer_state(state_ptr->_wire_no_cull);
-  }
-  else {
-    in_context->set_rasterizer_state(state_ptr->_solid_no_cull);
-  }
-
-  if (pretessellation) {
-    in_context->apply();
-    in_context->draw_transform_feedback(
-      scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS,
-      xfb_ptr->_transform_feedback);
-  }
-  else {
-    in_context->bind_vertex_array(resource->_surface_tesselation_data.vertex_array);
-    in_context->bind_index_buffer(resource->_surface_tesselation_data.index_buffer, scm::gl::PRIMITIVE_PATCH_LIST_4_CONTROL_POINTS, scm::gl::TYPE_UINT);
-    in_context->apply();
-    in_context->draw_elements(_data->tess_index_data.size());
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::upload_to(RenderContext const& context) const 
-{
-  // create, if neccessary
-  auto resource = std::make_shared<NURBSGPURessource>();
-  context.plugin_ressources[uuid()] = resource;
-
-  // create state
-  initialize_states(context);
-  initialize_transform_feedback(context);
-
-  initialize_texture_buffers(context);
-
-  initialize_vertex_data(context);
-
-  context.render_context->apply();
+    context.render_context->apply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::initialize_states(RenderContext const& context) const
 {
-  if (context.plugin_ressources.count(NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID)) return;
+    if(context.plugin_ressources.count(NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID))
+        return;
 
-  std::lock_guard<std::mutex> lock(_upload_mutex);
+    std::lock_guard<std::mutex> lock(_upload_mutex);
 
-  auto in_device = context.render_device;
+    auto in_device = context.render_device;
 
-  auto state_ptr = std::make_shared<NURBSRasterizationState>();
-  context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID] = state_ptr;
+    auto state_ptr = std::make_shared<NURBSRasterizationState>();
+    context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID] = state_ptr;
 
-  state_ptr->_sstate = in_device->create_sampler_state(
-    scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
+    state_ptr->_sstate = in_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
-  state_ptr->_wire_no_cull = in_device->create_rasterizer_state(
-    scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
+    state_ptr->_wire_no_cull = in_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
 
-  state_ptr->_solid_no_cull = in_device->create_rasterizer_state(
-    scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
+    state_ptr->_solid_no_cull = in_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false);
 
-  state_ptr->_solid_cull = in_device->create_rasterizer_state(
-    scm::gl::FILL_SOLID, scm::gl::CULL_BACK, scm::gl::ORIENT_CCW, false);
+    state_ptr->_solid_cull = in_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK, scm::gl::ORIENT_CCW, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::initialize_texture_buffers(RenderContext const& context) const 
+void NURBSResource::initialize_texture_buffers(RenderContext const& context) const
 {
-  std::lock_guard<std::mutex> lock(_upload_mutex);
+    std::lock_guard<std::mutex> lock(_upload_mutex);
 
-  validate_texture_buffers();
+    validate_texture_buffers();
 
-  auto in_device = context.render_device;
+    auto in_device = context.render_device;
 
-  assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
-  auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
+    assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
+    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
 
-  // surface tesselation data
-  resource->_surface_tesselation_data.parametric_texture_buffer =
-      in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(_data->tess_parametric_data),
-                                       &_data->tess_parametric_data[0]);
+    // surface tesselation data
+    resource->_surface_tesselation_data.parametric_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->tess_parametric_data), &_data->tess_parametric_data[0]);
 
-  resource->_surface_tesselation_data.obb_texture_buffer =
-    in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-    scm::gl::USAGE_STATIC_DRAW,
-    size_in_bytes(_data->object->serialized_tesselation_obbs()),
-    &_data->object->serialized_tesselation_obbs()[0]);
+    resource->_surface_tesselation_data.obb_texture_buffer = in_device->create_texture_buffer(
+        scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->object->serialized_tesselation_obbs()), &_data->object->serialized_tesselation_obbs()[0]);
 
-  resource->_surface_tesselation_data.attribute_texture_buffer =
-    in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-    scm::gl::USAGE_STATIC_DRAW,
-    size_in_bytes(_data->tess_attribute_data),
-    &_data->tess_attribute_data[0]);
+    resource->_surface_tesselation_data.attribute_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->tess_attribute_data), &_data->tess_attribute_data[0]);
 
-  // trimming data
-  auto const& trimdata = _data->object->serialized_trimdata_as_contour_kd();
-  resource->_contour_trimming_data.partition_texture_buffer =
-      in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->partition),
-                                       &trimdata->partition[0]);
-  ;
-  resource->_contour_trimming_data.contourlist_texture_buffer =
-    in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->contourlist),
-                                       &trimdata->contourlist[0]);
-  ;
-  resource->_contour_trimming_data.curvelist_texture_buffer =
-    in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->curvelist),
-                                       &trimdata->curvelist[0]);
-  ;
-  resource->_contour_trimming_data.curvedata_texture_buffer =
-      in_device->create_texture_buffer(scm::gl::FORMAT_R_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->curvedata),
-                                       &trimdata->curvedata[0]);
-  ;
-  resource->_contour_trimming_data.pointdata_texture_buffer =
-      in_device->create_texture_buffer(scm::gl::FORMAT_RGB_32F,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->pointdata),
-                                       &trimdata->pointdata[0]);
-  ;
+    // trimming data
+    auto const& trimdata = _data->object->serialized_trimdata_as_contour_kd();
+    resource->_contour_trimming_data.partition_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->partition), &trimdata->partition[0]);
+    ;
+    resource->_contour_trimming_data.contourlist_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->contourlist), &trimdata->contourlist[0]);
+    ;
+    resource->_contour_trimming_data.curvelist_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGBA_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->curvelist), &trimdata->curvelist[0]);
+    ;
+    resource->_contour_trimming_data.curvedata_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_R_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->curvedata), &trimdata->curvedata[0]);
+    ;
+    resource->_contour_trimming_data.pointdata_texture_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_RGB_32F, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->pointdata), &trimdata->pointdata[0]);
+    ;
 
-  resource->_contour_trimming_data.preclassification_buffer =
-      in_device->create_texture_buffer(scm::gl::FORMAT_R_8UI,
-                                       scm::gl::USAGE_STATIC_DRAW,
-                                       size_in_bytes(trimdata->preclassification),
-                                       &trimdata->preclassification[0]);
-  ;
+    resource->_contour_trimming_data.preclassification_buffer =
+        in_device->create_texture_buffer(scm::gl::FORMAT_R_8UI, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(trimdata->preclassification), &trimdata->preclassification[0]);
+    ;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::validate_texture_buffers() const
 {
-  if (_data->tess_parametric_data.empty()) _data->tess_parametric_data.resize(1);
-  if (_data->tess_attribute_data.empty())  _data->tess_attribute_data.resize(1);
+    if(_data->tess_parametric_data.empty())
+        _data->tess_parametric_data.resize(1);
+    if(_data->tess_attribute_data.empty())
+        _data->tess_attribute_data.resize(1);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-void NURBSResource::initialize_vertex_data(RenderContext const& context) const 
+void NURBSResource::initialize_vertex_data(RenderContext const& context) const
 {
-  std::lock_guard<std::mutex> lock(_upload_mutex);
+    std::lock_guard<std::mutex> lock(_upload_mutex);
 
-  auto in_device = context.render_device;
+    auto in_device = context.render_device;
 
-  assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
-  auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
+    assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
+    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
 
-  // initialize vertex input for adaptive tesselation
-  int stride = sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec4f);
+    // initialize vertex input for adaptive tesselation
+    int stride = sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec4f);
 
-  scm::gl::vertex_format v_fmt = scm::gl::vertex_format(
-      0,
-      0,
-      scm::gl::TYPE_VEC3F,
-      stride);  // Vertex Position (xf, yf, zf), v_size = a chunk you will pick
-                // each time from buffer
-  v_fmt(0, 1, scm::gl::TYPE_UINT, stride);   // Surface Index (indexf)
-  v_fmt(0, 2, scm::gl::TYPE_VEC4F, stride);  // uv, tmp, tmp
+    scm::gl::vertex_format v_fmt = scm::gl::vertex_format(0,
+                                                          0,
+                                                          scm::gl::TYPE_VEC3F,
+                                                          stride); // Vertex Position (xf, yf, zf), v_size = a chunk you will pick
+                                                                   // each time from buffer
+    v_fmt(0, 1, scm::gl::TYPE_UINT, stride);                       // Surface Index (indexf)
+    v_fmt(0, 2, scm::gl::TYPE_VEC4F, stride);                      // uv, tmp, tmp
 
-  resource->_surface_tesselation_data.vertex_buffer =
-      in_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER,
-                               scm::gl::USAGE_STATIC_DRAW,
-                               size_in_bytes(_data->tess_patch_data),
-                               &_data->tess_patch_data[0]);
+    resource->_surface_tesselation_data.vertex_buffer =
+        in_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->tess_patch_data), &_data->tess_patch_data[0]);
 
-  resource->_surface_tesselation_data.vertex_array = in_device->create_vertex_array(
-    v_fmt, boost::assign::list_of(resource->_surface_tesselation_data.vertex_buffer));
+    resource->_surface_tesselation_data.vertex_array = in_device->create_vertex_array(v_fmt, boost::assign::list_of(resource->_surface_tesselation_data.vertex_buffer));
 
-  resource->_surface_tesselation_data.index_buffer =
-      in_device->create_buffer(scm::gl::BIND_INDEX_BUFFER,
-                               scm::gl::USAGE_STATIC_DRAW,
-                               size_in_bytes(_data->tess_index_data),
-                               &_data->tess_index_data[0]);
+    resource->_surface_tesselation_data.index_buffer =
+        in_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->tess_index_data), &_data->tess_index_data[0]);
 
-  gpucast::gl::hullvertexmap hvm;
-  resource->_surface_tesselation_data.hullvertexmap = in_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
-    scm::gl::USAGE_STATIC_DRAW,
-    size_in_bytes(hvm.data),
-    &hvm.data[0]);
+    gpucast::gl::hullvertexmap hvm;
+    resource->_surface_tesselation_data.hullvertexmap = in_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(hvm.data), &hvm.data[0]);
 
-  resource->_surface_tesselation_data.attribute_buffer =
-    in_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER,
-    scm::gl::USAGE_STATIC_DRAW,
-    size_in_bytes(_data->tess_attribute_data),
-    &_data->tess_attribute_data[0]);
+    resource->_surface_tesselation_data.attribute_buffer =
+        in_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STATIC_DRAW, size_in_bytes(_data->tess_attribute_data), &_data->tess_attribute_data[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::initialize_transform_feedback(RenderContext const& context) const
 {
-  if (context.plugin_ressources.count(NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID)) return;
+    if(context.plugin_ressources.count(NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID))
+        return;
 
-  std::lock_guard<std::mutex> lock(_upload_mutex);
+    std::lock_guard<std::mutex> lock(_upload_mutex);
 
-  auto transform_feedback_buffer = std::make_shared<NURBSTransformFeedbackBuffer>();
-  context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID] = transform_feedback_buffer;
-  
-  auto in_device = context.render_device;
+    auto transform_feedback_buffer = std::make_shared<NURBSTransformFeedbackBuffer>();
+    context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID] = transform_feedback_buffer;
 
-  int stride = sizeof(scm::math::vec3f) +
-    sizeof(unsigned) +
-    sizeof(scm::math::vec2f) +
-    sizeof(scm::math::vec3f);
+    auto in_device = context.render_device;
 
-  scm::gl::vertex_format v_fmt = scm::gl::vertex_format(
-    0,
-    0,
-    scm::gl::TYPE_VEC3F,
-    stride);  // Vertex Position (xf, yf, zf), v_size = a chunk you will pick
-              // each time from buffer
-  v_fmt(0, 1, scm::gl::TYPE_UINT, stride);   // Surface Index (indexf)
-  v_fmt(0, 2, scm::gl::TYPE_VEC2F, stride);  // uv
-  v_fmt(0, 3, scm::gl::TYPE_VEC3F, stride);  // remaining tesselation level
+    int stride = sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec2f) + sizeof(scm::math::vec3f);
 
-  if (transform_feedback_buffer->_transform_feedback == 0)
-  {
-    transform_feedback_buffer->_transform_feedback_vbo =
-      in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER,
-        scm::gl::USAGE_DYNAMIC_COPY,
-        NURBSRenderer::GUA_MAX_XFB_BUFFER_SIZE_IN_BYTES);
+    scm::gl::vertex_format v_fmt = scm::gl::vertex_format(0,
+                                                          0,
+                                                          scm::gl::TYPE_VEC3F,
+                                                          stride); // Vertex Position (xf, yf, zf), v_size = a chunk you will pick
+                                                                   // each time from buffer
+    v_fmt(0, 1, scm::gl::TYPE_UINT, stride);                       // Surface Index (indexf)
+    v_fmt(0, 2, scm::gl::TYPE_VEC2F, stride);                      // uv
+    v_fmt(0, 3, scm::gl::TYPE_VEC3F, stride);                      // remaining tesselation level
 
-    transform_feedback_buffer->_transform_feedback = in_device->create_transform_feedback(
-      scm::gl::stream_output_setup(transform_feedback_buffer->_transform_feedback_vbo));
+    if(transform_feedback_buffer->_transform_feedback == 0)
+    {
+        transform_feedback_buffer->_transform_feedback_vbo =
+            in_device->create_buffer(scm::gl::BIND_TRANSFORM_FEEDBACK_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, NURBSRenderer::GUA_MAX_XFB_BUFFER_SIZE_IN_BYTES);
 
-    transform_feedback_buffer->_transform_feedback_vao = in_device->create_vertex_array(
-      v_fmt, boost::assign::list_of(transform_feedback_buffer->_transform_feedback_vbo));
-  }
+        transform_feedback_buffer->_transform_feedback = in_device->create_transform_feedback(scm::gl::stream_output_setup(transform_feedback_buffer->_transform_feedback_vbo));
+
+        transform_feedback_buffer->_transform_feedback_vao = in_device->create_vertex_array(v_fmt, boost::assign::list_of(transform_feedback_buffer->_transform_feedback_vbo));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::wireframe(bool enable)
 {
-  if (enable) {
-    _fill_mode = scm::gl::FILL_WIREFRAME;
-  } else {
-    _fill_mode = scm::gl::FILL_SOLID;
-  }
+    if(enable)
+    {
+        _fill_mode = scm::gl::FILL_WIREFRAME;
+    }
+    else
+    {
+        _fill_mode = scm::gl::FILL_SOLID;
+    }
 }
 
-}  //namespace scm
+} // namespace gua

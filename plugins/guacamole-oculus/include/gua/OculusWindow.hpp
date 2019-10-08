@@ -22,35 +22,35 @@
 #ifndef GUA_OCULUS_WINDOW_HPP
 #define GUA_OCULUS_WINDOW_HPP
 
-#if defined (_MSC_VER)
-    #if defined (GUA_OCULUS_LIBRARY)
-        #define GUA_OCULUS_DLL __declspec( dllexport )
-    #else
-#define GUA_OCULUS_DLL __declspec( dllimport )
-    #endif
+#if defined(_MSC_VER)
+#if defined(GUA_OCULUS_LIBRARY)
+#define GUA_OCULUS_DLL __declspec(dllexport)
 #else
-    #define GUA_OCULUS_DLL
+#define GUA_OCULUS_DLL __declspec(dllimport)
+#endif
+#else
+#define GUA_OCULUS_DLL
 #endif // #if defined(_MSC_VER)
 
 // guacamole headers
 #include <gua/renderer/GlfwWindow.hpp>
 
-//for the Oculus SDK members
-#if defined (_WIN32)
-    #include <OVR_CAPI.h>
-    #include <Extras/OVR_Math.h>
-    #include <OVR_CAPI_GL.h>
+// for the Oculus SDK members
+#if defined(_WIN32)
+#include <OVR_CAPI.h>
+#include <Extras/OVR_Math.h>
+#include <OVR_CAPI_GL.h>
 #else
-    #include <gua/utils/OculusDistortionMesh.hpp>
+#include <gua/utils/OculusDistortionMesh.hpp>
 #endif
 
 #include <scm/gl_core/state_objects/state_objects_fwd.h>
 
-namespace gua {
-
-class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
- public:
-
+namespace gua
+{
+class GUA_OCULUS_DLL OculusWindow : public GlfwWindow
+{
+  public:
     OculusWindow(std::string const& display);
     virtual ~OculusWindow();
 
@@ -72,8 +72,7 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
 
     void recenter();
 
- private:
-
+  private:
     void initialize_hmd_environment();
     void calculate_viewing_setup();
 
@@ -94,9 +93,8 @@ class GUA_OCULUS_DLL OculusWindow : public GlfwWindow {
     ovrHmdDesc hmd_desc_;
     ovrSession hmd_session_;
     unsigned framecount_ = 0;
-
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_OCULUS_WINDOW_HPP
+#endif // GUA_OCULUS_WINDOW_HPP

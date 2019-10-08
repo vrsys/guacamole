@@ -26,4 +26,4 @@
 #include <gua/math/math.hpp>
 #include <gua/math/random.hpp>
 
-#endif  // GUA_GUACAMOLE_MATH_HPP
+#endif // GUA_GUACAMOLE_MATH_HPP

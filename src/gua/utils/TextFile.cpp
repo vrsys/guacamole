@@ -32,110 +32,116 @@
 
 #include <boost/filesystem.hpp>
 
-namespace gua {
-
+namespace gua
+{
 ////////////////////////////////////////////////////////////////////////////////
 
 TextFile::TextFile() : file_name_(""), content_(""), is_loaded_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TextFile::TextFile(std::string const& file_name)
-    : file_name_(file_name), content_(""), is_loaded_(false) {}
+TextFile::TextFile(std::string const& file_name) : file_name_(file_name), content_(""), is_loaded_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TextFile::is_valid() const {
+bool TextFile::is_valid() const
+{
+    std::ifstream file(file_name_.c_str());
 
-  std::ifstream file(file_name_.c_str());
+    if(file.fail())
+        return false;
 
-  if (file.fail())
-    return false;
-
-  file.close();
-  return true;
+    file.close();
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const& TextFile::get_content() const {
+std::string const& TextFile::get_content() const
+{
+    if(is_loaded_)
+        return content_;
 
-  if (is_loaded_)
-    return content_;
+    is_loaded_ = true;
 
-  is_loaded_ = true;
-
-  std::ifstream ifs(file_name_.c_str());
-  if (!ifs) {
-    Logger::LOG_WARNING << "Cannot open file \"" << file_name_ << "\"!" << std::endl;
-    return content_;
-  }
-
-  std::stringstream oss;
-  oss << ifs.rdbuf();
-
-  if (!ifs && !ifs.eof()) {
-    Logger::LOG_WARNING << "Error reading file \"" << file_name_ << "\"!" << std::endl;
-    return content_;
-  }
-
-  content_ = std::string(oss.str());
-  return content_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TextFile::set_content(std::string const& content) {
-  content_ = content;
-  is_loaded_ = true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool TextFile::save(bool create_subdirs) const {
-
-  if (!is_loaded_) {
-    Logger::LOG_WARNING << "Unable to save file \"" << file_name_ << "\"! No content has been set." << std::endl;
-    return false;
-  }
-
-  if (create_subdirs) {
-    PathParser parser;
-    parser.parse(file_name_);
-    auto path(parser.get_parsed_path());
-
-    std::string current_path("");
-    for (unsigned i(0); i < path.size() - 1; ++i) {
-
-      current_path += path[i] + "/";
-
-      if (!boost::filesystem::exists(current_path.c_str()) ||
-          boost::filesystem::is_directory(current_path.c_str())) {
-        boost::filesystem::create_directory(current_path.c_str());
-      }
-      /*if (!opendir(current_path.c_str()))
-          system(("mkdir " + current_path).c_str());*/
+    std::ifstream ifs(file_name_.c_str());
+    if(!ifs)
+    {
+        Logger::LOG_WARNING << "Cannot open file \"" << file_name_ << "\"!" << std::endl;
+        return content_;
     }
-  }
 
-  std::ofstream ofs(file_name_);
-  if (!ofs) {
-    Logger::LOG_WARNING << "Cannot open file \""<< file_name_ << "\"!" << std::endl;
-    return false;
-  }
+    std::stringstream oss;
+    oss << ifs.rdbuf();
 
-  ofs << content_;
-  ofs.close();
+    if(!ifs && !ifs.eof())
+    {
+        Logger::LOG_WARNING << "Error reading file \"" << file_name_ << "\"!" << std::endl;
+        return content_;
+    }
 
-  return true;
+    content_ = std::string(oss.str());
+    return content_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TextFile::remove() {
-  std::remove(file_name_.c_str());
-  content_ = "";
-  is_loaded_ = false;
+void TextFile::set_content(std::string const& content)
+{
+    content_ = content;
+    is_loaded_ = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool TextFile::save(bool create_subdirs) const
+{
+    if(!is_loaded_)
+    {
+        Logger::LOG_WARNING << "Unable to save file \"" << file_name_ << "\"! No content has been set." << std::endl;
+        return false;
+    }
+
+    if(create_subdirs)
+    {
+        PathParser parser;
+        parser.parse(file_name_);
+        auto path(parser.get_parsed_path());
+
+        std::string current_path("");
+        for(unsigned i(0); i < path.size() - 1; ++i)
+        {
+            current_path += path[i] + "/";
+
+            if(!boost::filesystem::exists(current_path.c_str()) || boost::filesystem::is_directory(current_path.c_str()))
+            {
+                boost::filesystem::create_directory(current_path.c_str());
+            }
+            /*if (!opendir(current_path.c_str()))
+                system(("mkdir " + current_path).c_str());*/
+        }
+    }
+
+    std::ofstream ofs(file_name_);
+    if(!ofs)
+    {
+        Logger::LOG_WARNING << "Cannot open file \"" << file_name_ << "\"!" << std::endl;
+        return false;
+    }
+
+    ofs << content_;
+    ofs.close();
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TextFile::remove()
+{
+    std::remove(file_name_.c_str());
+    content_ = "";
+    is_loaded_ = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,4 +150,4 @@ std::string const& TextFile::get_file_name() const { return file_name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}
+} // namespace gua

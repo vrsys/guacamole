@@ -25,56 +25,53 @@
 #include <map>
 #include <unordered_map>
 
-
 // guacamole headers
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/NURBS.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
 
-namespace gua {
+namespace gua
+{
+class MaterialShader;
+class ShaderProgram;
 
-  class MaterialShader;
-  class ShaderProgram;
-
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  // Transformation Feedback Specific Members - only once per context
-  /////////////////////////////////////////////////////////////////////////////////////////////
-  struct GUA_NURBS_DLL NURBSTransformFeedbackBuffer : public PluginRessource
-  {
+/////////////////////////////////////////////////////////////////////////////////////////////
+// Transformation Feedback Specific Members - only once per context
+/////////////////////////////////////////////////////////////////////////////////////////////
+struct GUA_NURBS_DLL NURBSTransformFeedbackBuffer : public PluginRessource
+{
     static const unsigned GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID = 1;
 
     scm::gl::transform_feedback_ptr _transform_feedback;
-    scm::gl::vertex_array_ptr       _transform_feedback_vao;
-    scm::gl::buffer_ptr             _transform_feedback_vbo;
-  };
+    scm::gl::vertex_array_ptr _transform_feedback_vao;
+    scm::gl::buffer_ptr _transform_feedback_vbo;
+};
 
-  struct GUA_NURBS_DLL NURBSRasterizationState : public PluginRessource
-  {
+struct GUA_NURBS_DLL NURBSRasterizationState : public PluginRessource
+{
     static const unsigned GUA_RASTERIZATION_BASE_CACHE_ID = 2;
 
-    scm::gl::sampler_state_ptr    _sstate;
+    scm::gl::sampler_state_ptr _sstate;
     scm::gl::rasterizer_state_ptr _wire_no_cull;
     scm::gl::rasterizer_state_ptr _solid_cull;
     scm::gl::rasterizer_state_ptr _solid_no_cull;
-  };
+};
 
-  class GUA_NURBS_DLL NURBSRenderer {
-
+class GUA_NURBS_DLL NURBSRenderer
+{
   public:
-
     static const unsigned GUA_MAX_XFB_BUFFER_SIZE_IN_BYTES = 1024000000; // reserve GB transform feedback buffer
     static const unsigned GUA_HULLVERTEXMAP_SSBO_BINDING = 1;
     static const unsigned GUA_ATTRIBUTE_SSBO_BINDING = 2;
     static const unsigned GUA_ATOMIC_COUNTER_BINDING = 3;
     static const unsigned GUA_FEEDBACK_BUFFER_BINDING = 4;
-    //static const unsigned GUA_ABUFFER_MAX_FRAGMENTS = 10000000; // 10M fragments 
+    // static const unsigned GUA_ABUFFER_MAX_FRAGMENTS = 10000000; // 10M fragments
     static const unsigned GUA_ANTI_ALIASING_MODE = 0;
     static const unsigned GUA_WRITE_DEBUG_COUNTER = 0;
     static const unsigned GUA_SECOND_PASS_TRIANGLE_TESSELATION = 0;
     static const unsigned GUA_MAX_FEEDBACK_BUFFER_INDICES = 0;
 
   public:
-
     NURBSRenderer();
     ~NURBSRenderer();
 
@@ -84,17 +81,14 @@ namespace gua {
     void pretessellation(bool enable);
     bool pretessellation() const;
 
-  private:  // auxiliary methods
+  private: // auxiliary methods
+    void _load_shaders();
+    void _initialize_pre_tesselation_program(RenderContext const& ctx);
+    void _initialize_tesselation_program(MaterialShader*);
 
-    void        _load_shaders();
-    void        _initialize_pre_tesselation_program(RenderContext const& ctx);
-    void        _initialize_tesselation_program(MaterialShader*);
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed);
 
-    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
-                                                         std::shared_ptr<ShaderProgram> const& current_program,
-                                                         bool& program_changed);
-
-    void        _reset();
+    void _reset();
 
     std::string _transform_feedback_vertex_shader() const;
     std::string _transform_feedback_geometry_shader() const;
@@ -107,19 +101,18 @@ namespace gua {
     std::string _final_geometry_shader() const;
     std::string _final_fragment_shader() const;
 
-  private:  // attributes
+  private: // attributes
+    unsigned current_modcount_;
+    SubstitutionMap global_substitution_map_;
+    ResourceFactory factory_;
 
-    unsigned                                                            current_modcount_;
-    SubstitutionMap                                                     global_substitution_map_;
-    ResourceFactory                                                     factory_;
-
-    // CPU Ressources                                                   
-    std::vector<ShaderProgramStage>                                     pre_tesselation_shader_stages_;
-    std::list<std::string>                                              pre_tesselation_interleaved_stream_capture_;
-    std::vector<ShaderProgramStage>                                     tesselation_shader_stages_;
+    // CPU Ressources
+    std::vector<ShaderProgramStage> pre_tesselation_shader_stages_;
+    std::list<std::string> pre_tesselation_interleaved_stream_capture_;
+    std::vector<ShaderProgramStage> tesselation_shader_stages_;
 
     // GPU Ressources
-    std::shared_ptr<ShaderProgram>                                      pre_tesselation_program_;
+    std::shared_ptr<ShaderProgram> pre_tesselation_program_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> tesselation_programs_;
 
     bool _enable_triangular_tesselation = false;
@@ -127,8 +120,8 @@ namespace gua {
     bool _antialiasing = false;
     bool _enable_holefilling = false;
     bool _pretessellation = true;
-  };
+};
 
-}
+} // namespace gua
 
-#endif  // GUA_NURBS_RENDERER_HPP
+#endif // GUA_NURBS_RENDERER_HPP

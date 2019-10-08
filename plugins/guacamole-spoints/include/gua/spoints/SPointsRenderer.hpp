@@ -32,126 +32,88 @@
 
 #include <unordered_map>
 
-namespace gua {
-
+namespace gua
+{
 class ShaderProgram;
 class Pipeline;
 class MaterialShader;
 class SPointsResource;
 
-class GUA_SPOINTS_DLL SPointsRenderer {
- public:
+class GUA_SPOINTS_DLL SPointsRenderer
+{
+  public:
+    enum pass
+    {
+        warp_pass = 0,
+        blend_pass = 1
+    };
 
-  enum pass {
-    warp_pass = 0,
-    blend_pass = 1
-  };
+  public:
+    SPointsRenderer();
+    ~SPointsRenderer() {}
 
- public:
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
-  SPointsRenderer();
-  ~SPointsRenderer() {std::cout << "SPOINTSRENDERER DESTROYED\n";}
+    // /*virtual*/ void draw   (RenderContext const& context,
+    //                          std::string const& ksfile_name,
+    //                          std::string const& material_name,
+    //                          scm::math::mat4 const& model_matrix,
+    //                          scm::math::mat4 const& normal_matrix,
+    //                          Frustum const& frustum,
+    //                          View const& view) const;
 
-  void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void set_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 
-  // /*virtual*/ void draw   (RenderContext const& context,
-  //                          std::string const& ksfile_name,
-  //                          std::string const& material_name,
-  //                          scm::math::mat4 const& model_matrix,
-  //                          scm::math::mat4 const& normal_matrix,
-  //                          Frustum const& frustum,
-  //                          View const& view) const;
+  private:
+    void _load_shaders();
+    // void          _initialize_log_to_lin_conversion_pass_program();
+    void _initialize_shadow_pass_program();
 
-  void set_global_substitution_map(SubstitutionMap const& smap) {
-    global_substitution_map_ = smap;
-  }
+    std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed);
 
-private:
-  void          _load_shaders();
-  //void          _initialize_log_to_lin_conversion_pass_program();
-  void          _initialize_depth_pass_program();
-  void          _initialize_accumulation_pass_program(MaterialShader* material);
-  void          _initialize_normalization_pass_program();
-  void          _initialize_shadow_pass_program();
+    void _create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, bool resize_resource_containers);
 
-  std::shared_ptr<ShaderProgram> _get_material_program(MaterialShader* material,
-                                                       std::shared_ptr<ShaderProgram> const& current_program,
-                                                       bool& program_changed);
+  private: // attributes
+    // schism-GL states:
+    //////////////////////////////////////////////////////////////////////////////////////
+    scm::gl::rasterizer_state_ptr no_backface_culling_rasterizer_state_;
+    scm::gl::rasterizer_state_ptr backface_culling_rasterizer_state_;
 
-  void          _create_gpu_resources(gua::RenderContext const& ctx,
-                                    scm::math::vec2ui const& render_target_dims,
-            bool resize_resource_containers); 
+    scm::gl::sampler_state_ptr nearest_sampler_state_;
 
- private:  // attributes
+    scm::gl::depth_stencil_state_ptr depth_test_with_writing_depth_stencil_state_;
 
-  //depth pass FBO & attachments
-  scm::gl::texture_2d_ptr                      depth_pass_log_depth_result_;
-  scm::gl::texture_2d_ptr                      depth_pass_linear_depth_result_;
+    scm::gl::blend_state_ptr no_color_accumulation_state_;
 
-  scm::gl::frame_buffer_ptr                    depth_pass_result_fbo_;
+    bool initialized_;
 
-  //accumulation pass FBO & attachments
-  scm::gl::texture_2d_ptr                      accumulation_pass_color_result_;
-  scm::gl::texture_2d_ptr                      accumulation_pass_weight_and_depth_result_;
-  scm::gl::frame_buffer_ptr                    accumulation_pass_result_fbo_;
+    bool shaders_loaded_;
 
-  //schism-GL states:
-  //////////////////////////////////////////////////////////////////////////////////////
-  scm::gl::rasterizer_state_ptr                no_backface_culling_rasterizer_state_;
+    scm::gl::quad_geometry_ptr fullscreen_quad_;
 
-  scm::gl::sampler_state_ptr                   nearest_sampler_state_;
+    bool gpu_resources_already_created_;
+    unsigned previous_frame_count_;
 
-  scm::gl::depth_stencil_state_ptr             no_depth_test_depth_stencil_state_;
-  scm::gl::depth_stencil_state_ptr             depth_test_without_writing_depth_stencil_state_;
-  scm::gl::depth_stencil_state_ptr             no_depth_test_with_writing_depth_stencil_state_;
+    unsigned current_rendertarget_width_;
+    unsigned current_rendertarget_height_;
 
-  scm::gl::depth_stencil_state_ptr             depth_test_with_writing_depth_stencil_state_;
+    mutable int last_rendered_view_id = std::numeric_limits<int>::max();
+    mutable int last_rendered_side = 0;
 
-  scm::gl::blend_state_ptr                     no_color_accumulation_state_;
-  scm::gl::blend_state_ptr                     color_accumulation_state_;
+    std::vector<ShaderProgramStage> shadow_pass_shader_stages_;
 
-  bool initialized_;
+    std::vector<ShaderProgramStage> forward_textured_triangles_shader_stages_;
+    std::vector<ShaderProgramStage> forward_textured_triangles_shader_stages_quantized_;
 
-  bool                                         shaders_loaded_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> forward_textured_triangles_pass_programs_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> forward_textured_triangles_pass_programs_quantized_;
 
-  scm::gl::quad_geometry_ptr                   fullscreen_quad_;
+    std::shared_ptr<ShaderProgram> shadow_pass_program_;
 
-  bool                                         gpu_resources_already_created_;
-  unsigned                                     previous_frame_count_;
-
-  unsigned                                     current_rendertarget_width_;  
-  unsigned                                     current_rendertarget_height_;
-
-
-  std::vector<ShaderProgramStage> program_stages_;
-
-  //CPU resources
-  //std::vector<ShaderProgramStage>                                      log_to_lin_conversion_shader_stages_;
-  std::vector<ShaderProgramStage>                                      depth_pass_shader_stages_;
-  std::vector<ShaderProgramStage>                                      accumulation_pass_shader_stages_;
-  std::vector<ShaderProgramStage>                                      normalization_pass_shader_stages_;
-
-  std::vector<ShaderProgramStage>                                      shadow_pass_shader_stages_;
-
-  //additional GPU resources 
-  //std::shared_ptr<ShaderProgram>                                       log_to_lin_conversion_pass_program_;
-  std::shared_ptr<ShaderProgram>                                       depth_pass_program_;
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> > accumulation_pass_programs_;
-  std::shared_ptr<ShaderProgram>                                       normalization_pass_program_;
-
-  std::shared_ptr<ShaderProgram>                                       shadow_pass_program_;
-
-  std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram> >
-      programs_;
-  SubstitutionMap global_substitution_map_;
-
-
-
-  scm::gl::rasterizer_state_ptr points_rasterizer_state_;
-
-
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+    SubstitutionMap global_substitution_map_;
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_SPOINTS_RENDERER_HPP
+#endif // GUA_SPOINTS_RENDERER_HPP

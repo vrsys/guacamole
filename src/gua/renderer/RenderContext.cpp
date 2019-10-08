@@ -24,17 +24,9 @@
 
 #include <gua/renderer/WindowBase.hpp>
 
-namespace gua {
+namespace gua
+{
+////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
-
-  RenderContext::RenderContext()
-    : context(),
-    display(),
-    render_context(),
-    render_device(),
-    render_window(nullptr),
-    id(0),
-    framecount(0)
-    {}
-}
+RenderContext::RenderContext() : context(), display(), render_context(), render_device(), render_window(nullptr), id(0), framecount(0) {}
+} // namespace gua

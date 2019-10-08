@@ -43,4 +43,4 @@
 #include <gua/physics/Point2PointConstraint.hpp>
 #include <gua/physics/SliderConstraint.hpp>
 
-#endif  // GUA_INCLUDE_PHYSICS_HPP
+#endif // GUA_INCLUDE_PHYSICS_HPP

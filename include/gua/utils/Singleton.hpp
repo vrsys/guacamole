@@ -30,49 +30,47 @@
  * Singletons are classes, which are only instanciated once.
  */
 
-namespace gua {
+namespace gua
+{
+template <typename T>
+class Singleton
+{
+  public:
+    /**
+     * Gets the instance.
+     *
+     * Singletons are classes, which are only instanciated once. This
+     * method will create this instance if necessary and return a pointer
+     * to it.
+     *
+     * \return The instance of this singleton.
+     */
+    static T* instance()
+    {
+        static T instance;
+        return &instance;
+    };
 
-template <typename T> class Singleton {
- public:
+  protected:
+    /**
+     * Constructor.
+     *
+     * Has to be private in derived classe.
+     */
+    Singleton(){};
 
-  /**
-   * Gets the instance.
-   *
-   * Singletons are classes, which are only instanciated once. This
-   * method will create this instance if necessary and return a pointer
-   * to it.
-   *
-   * \return The instance of this singleton.
-   */
-  static T* instance() {
-    static T instance;
-    return &instance;
-  };
+    /**
+     * Destructor.
+     *
+     * Has to be private in derived classe.
+     */
+    virtual ~Singleton(){};
 
-
- protected:
-
-  /**
-   * Constructor.
-   *
-   * Has to be private in derived classe.
-   */
-  Singleton() {};
-
-  /**
-   * Destructor.
-   *
-   * Has to be private in derived classe.
-   */
-  virtual ~Singleton() {};
-
- private:
-
-  Singleton(Singleton const& copy) = delete;
-  Singleton& operator= (Singleton const&) = delete;
-
+  private:
+    Singleton(Singleton const& copy) = delete;
+    Singleton& operator=(Singleton const&) = delete;
 };
 
-}
+} // namespace gua
 
-#endif  //SINGLETON_HPP
+#endif // SINGLETON_HPP

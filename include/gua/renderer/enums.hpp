@@ -27,8 +27,8 @@
 #include <set>
 #include <boost/optional.hpp>
 
-namespace gua {
-
+namespace gua
+{
 /**
  * Eye of a view.
  *
@@ -36,10 +36,11 @@ namespace gua {
  * has to be rendered. Either from the left eye of a view, from the
  * right or from the exact view position.
  */
-enum class CameraMode {
-  CENTER = 0,
-  LEFT,
-  RIGHT
+enum class CameraMode
+{
+    CENTER = 0,
+    LEFT,
+    RIGHT
 };
 
 /**
@@ -47,15 +48,16 @@ enum class CameraMode {
  *
  * Determines how two stereo images should be mapped to each other.
  */
-enum class StereoMode {
-  MONO = 0,
-  SIDE_BY_SIDE,
-  ANAGLYPH_RED_GREEN,
-  ANAGLYPH_RED_CYAN,
-  CHECKERBOARD,
-  NVIDIA_3D_VISION,
-  QUAD_BUFFERED,
-  SEPARATE_WINDOWS
+enum class StereoMode
+{
+    MONO = 0,
+    SIDE_BY_SIDE,
+    ANAGLYPH_RED_GREEN,
+    ANAGLYPH_RED_CYAN,
+    CHECKERBOARD,
+    NVIDIA_3D_VISION,
+    QUAD_BUFFERED,
+    SEPARATE_WINDOWS
 };
 
 /**
@@ -63,35 +65,37 @@ enum class StereoMode {
  *
  * Determines the quality of shadows.
  */
-enum class ShadowMode {
-  OFF = 0,
-  LOW_QUALITY,
-  HIGH_QUALITY
+enum class ShadowMode
+{
+    OFF = 0,
+    LOW_QUALITY,
+    HIGH_QUALITY
 };
 
 /**
  * All uniform types which are supported by guacamole.
  */
-enum class UniformType {
-  INT = 0,
-  FLOAT,
-  BOOL,
-  VEC2,
-  VEC3,
-  VEC4,
-  VEC2I,
-  VEC3I,
-  VEC4I,
-  VEC2UI,
-  VEC3UI,
-  VEC4UI,
-  MAT3,
-  MAT4,
-  SAMPLER1D,
-  SAMPLER2D,
-  SAMPLER3D,
-  SAMPLERCUBE,
-  NONE
+enum class UniformType
+{
+    INT = 0,
+    FLOAT,
+    BOOL,
+    VEC2,
+    VEC3,
+    VEC4,
+    VEC2I,
+    VEC3I,
+    VEC4I,
+    VEC2UI,
+    VEC3UI,
+    VEC4UI,
+    MAT3,
+    MAT4,
+    SAMPLER1D,
+    SAMPLER2D,
+    SAMPLER3D,
+    SAMPLERCUBE,
+    NONE
 };
 
 /**
@@ -100,26 +104,27 @@ enum class UniformType {
  * Each enum value describes a different buffer configuration. Data type and
  * component count are encoded.
  */
-enum class BufferComponent {
-  I1 = 0,
-  I2,
-  I3,
-  I4,
-  U1,
-  U2,
-  U3,
-  U4,
-  H1,
-  H2,
-  H3,
-  H4,
-  F1,
-  F2,
-  F3,
-  F4,
-  DEPTH_16,
-  DEPTH_24,
-  NONE
+enum class BufferComponent
+{
+    I1 = 0,
+    I2,
+    I3,
+    I4,
+    U1,
+    U2,
+    U3,
+    U4,
+    H1,
+    H2,
+    H3,
+    H4,
+    F1,
+    F2,
+    F3,
+    F4,
+    DEPTH_16,
+    DEPTH_24,
+    NONE
 };
 
 /**
@@ -127,17 +132,18 @@ enum class BufferComponent {
  *
  * Each of these types coresponds to some of the above layer configurations.
  */
-enum BufferComponentType {
-  TYPE_INTEGER = 0,
-  TYPE_UNSIGNED,
-  TYPE_HALF,
-  TYPE_FLOAT,
-  TYPE_DEPTH,
-  TYPE_NONE
+enum BufferComponentType
+{
+    TYPE_INTEGER = 0,
+    TYPE_UNSIGNED,
+    TYPE_HALF,
+    TYPE_FLOAT,
+    TYPE_DEPTH,
+    TYPE_NONE
 };
 
-namespace enums {
-
+namespace enums
+{
 ///@{
 /**
  * Converts BufferComponent to their GLSL representation.
@@ -197,20 +203,23 @@ unsigned get_number_of_components(BufferComponent component);
 std::set<std::string> list_output_types();
 std::set<std::string> list_uniform_types();
 
-template <typename T> bool test_value_string(std::string& value) {
-  std::istringstream in(value);
-  T t;
-  if (in >> t) {
-    std::ostringstream out;
-    out << t;
-    value = out.str();
+template <typename T>
+bool test_value_string(std::string& value)
+{
+    std::istringstream in(value);
+    T t;
+    if(in >> t)
+    {
+        std::ostringstream out;
+        out << t;
+        value = out.str();
 
-    return true;
-  }
+        return true;
+    }
 
-  return false;
+    return false;
 }
-}
-}
+} // namespace enums
+} // namespace gua
 
-#endif  // GUA_ENUMS_HPP
+#endif // GUA_ENUMS_HPP

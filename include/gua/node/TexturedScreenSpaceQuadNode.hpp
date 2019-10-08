@@ -27,9 +27,10 @@
 #include <gua/node/SerializableNode.hpp>
 #include <gua/utils/configuration_macro.hpp>
 
-namespace gua {
-namespace node {
-
+namespace gua
+{
+namespace node
+{
 /**
  * This class is used to represent a textured quad in the SceneGraph.
  *
@@ -38,69 +39,66 @@ namespace node {
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL TexturedScreenSpaceQuadNode : public SerializableNode {
+class GUA_DLL TexturedScreenSpaceQuadNode : public SerializableNode
+{
+  public:
+    struct Configuration
+    {
+        GUA_ADD_PROPERTY(std::string, texture, "gua_default_texture");
+        GUA_ADD_PROPERTY(math::vec2i, size, math::vec2i(1, 1));
+        GUA_ADD_PROPERTY(math::vec2, anchor, math::vec2(0.0, 0.0));
+        GUA_ADD_PROPERTY(math::vec2, offset, math::vec2(0.0, 0.0));
+        GUA_ADD_PROPERTY(float, opacity, 1.f);
+        GUA_ADD_PROPERTY(bool, flip_x, false);
+        GUA_ADD_PROPERTY(bool, flip_y, false);
+    };
 
- public:
+    Configuration data;
 
-  struct Configuration {
-    GUA_ADD_PROPERTY(std::string, texture,    "gua_default_texture");
-    GUA_ADD_PROPERTY(math::vec2i, size,       math::vec2i(1, 1));
-    GUA_ADD_PROPERTY(math::vec2,  anchor,     math::vec2(0.0, 0.0));
-    GUA_ADD_PROPERTY(math::vec2,  offset,     math::vec2(0.0, 0.0));
-    GUA_ADD_PROPERTY(float,       opacity,    1.f);
-    GUA_ADD_PROPERTY(bool,        flip_x,     false);
-    GUA_ADD_PROPERTY(bool,        flip_y,     false);
-  };
+    /**
+     * Constructor.
+     *
+     * This constructs an empty TexturedScreenSpaceQuadNode.
+     *
+     */
+    TexturedScreenSpaceQuadNode();
 
-  Configuration data;
+    /**
+     * Constructor.
+     *
+     * This constructs a TexturedScreenSpaceQuadNode with the given parameters.
+     *
+     * \param name           The name of the new TexturedScreenSpaceQuadNode.
+     * \param configuration  A configuration struct to define the
+     *                       TexturedScreenSpaceQuadNode's properties.
+     * \param transform      A matrix to describe the TexturedScreenSpaceQuadNode's
+     *                       transformation. By default, the TexturedScreenSpaceQuadNode is
+     *                       aligned with the xy-plane and facing in +z direction.
+     */
+    TexturedScreenSpaceQuadNode(std::string const& name, Configuration const& configuration = Configuration());
 
-  /**
-   * Constructor.
-   *
-   * This constructs an empty TexturedScreenSpaceQuadNode.
-   *
-   */
-  TexturedScreenSpaceQuadNode();
+    bool pixel_to_texcoords(math::vec2 const& pixel, math::vec2ui const& screen_size, math::vec2& result) const;
 
-  /**
-   * Constructor.
-   *
-   * This constructs a TexturedScreenSpaceQuadNode with the given parameters.
-   *
-   * \param name           The name of the new TexturedScreenSpaceQuadNode.
-   * \param configuration  A configuration struct to define the
-   *                       TexturedScreenSpaceQuadNode's properties.
-   * \param transform      A matrix to describe the TexturedScreenSpaceQuadNode's
-   *                       transformation. By default, the TexturedScreenSpaceQuadNode is
-   *                       aligned with the xy-plane and facing in +z direction.
-   */
-  TexturedScreenSpaceQuadNode(std::string const& name,
-                              Configuration const& configuration = Configuration());
+    /**
+     * Accepts a visitor and calls concrete visit method.
+     *
+     * This method implements the visitor pattern for Nodes.
+     *
+     * \param visitor  A visitor to process the TexturedScreenSpaceQuadNode's data.
+     */
+    void accept(NodeVisitor& visitor) override;
 
-  bool pixel_to_texcoords(math::vec2 const& pixel, math::vec2ui const& screen_size, math::vec2& result) const;
+    // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
 
-  /**
-   * Accepts a visitor and calls concrete visit method.
-   *
-   * This method implements the visitor pattern for Nodes.
-   *
-   * \param visitor  A visitor to process the TexturedScreenSpaceQuadNode's data.
-   */
-  void accept(NodeVisitor& visitor) override;
+    void update_bounding_box() const override;
 
-  // virtual void serialize(SerializedScene& scene, node::SerializedCameraNode const& camera) override;
+    void update_cache() override;
 
-  void update_bounding_box() const override;
-
-  void update_cache() override;
-
- private:  // methods
-
-  std::shared_ptr<Node> copy() const override;
-
+  private: // methods
+    std::shared_ptr<Node> copy() const override;
 };
 
-} // namespace node {
-} // namespace gua {
+} // namespace node
+} // namespace gua
 
-#endif  // GUA_TEXTURED_SCREEN_SPACE_QUAD_NODE_HPP
+#endif // GUA_TEXTURED_SCREEN_SPACE_QUAD_NODE_HPP

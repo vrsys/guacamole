@@ -24,59 +24,61 @@
 
 #include <gua/events/Signal.hpp>
 
-namespace gua {
-namespace events {
+namespace gua
+{
+namespace events
+{
+template <typename T>
+class Property
+{
+  public:
+    Property() {}
 
-template <typename T> class Property {
+    Property(T const& value) : value_(value) {}
 
- public:
-  Property() {}
+    Property(Property<T> const& to_copy) : value_(to_copy.value_) {}
 
-  Property(T const& value) : value_(value) {}
+    virtual ~Property() {}
 
-  Property(Property<T> const& to_copy) : value_(to_copy.value_) {}
+    virtual Signal<T> const& on_change() const { return on_change_; }
 
-  virtual ~Property() {}
-
-  virtual Signal<T> const& on_change() const { return on_change_; }
-
-  virtual void set(T const& value) {
-    if (value != value_) {
-      value_ = value;
-      on_change_.emit(value_);
+    virtual void set(T const& value)
+    {
+        if(value != value_)
+        {
+            value_ = value;
+            on_change_.emit(value_);
+        }
     }
-  }
 
-  virtual T const& get() const { return value_; }
+    virtual T const& get() const { return value_; }
 
-  Property<T>& operator=(T const& rhs) {
-    set(rhs);
-    return *this;
-  }
+    Property<T>& operator=(T const& rhs)
+    {
+        set(rhs);
+        return *this;
+    }
 
-  Property<T>& operator=(Property<T> const& rhs) {
-    set(rhs.value_);
-    return *this;
-  }
+    Property<T>& operator=(Property<T> const& rhs)
+    {
+        set(rhs.value_);
+        return *this;
+    }
 
-  bool operator==(Property<T> const& rhs) const {
-    return Property<T>::get() == rhs.get();
-  }
+    bool operator==(Property<T> const& rhs) const { return Property<T>::get() == rhs.get(); }
 
-  bool operator==(T const& rhs) const { return Property<T>::get() == rhs; }
+    bool operator==(T const& rhs) const { return Property<T>::get() == rhs; }
 
-  bool operator!=(Property<T> const& rhs) const {
-    return Property<T>::get() != rhs.get();
-  }
+    bool operator!=(Property<T> const& rhs) const { return Property<T>::get() != rhs.get(); }
 
-  bool operator!=(T const& rhs) const { return Property<T>::get() != rhs; }
+    bool operator!=(T const& rhs) const { return Property<T>::get() != rhs; }
 
- private:
-  T value_;
-  Signal<T> on_change_;
+  private:
+    T value_;
+    Signal<T> on_change_;
 };
 
-}
-}
+} // namespace events
+} // namespace gua
 
 #endif /* PROPERTY_HPP_ */

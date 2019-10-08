@@ -31,13 +31,14 @@
 #include <string>
 #include <memory>
 
-
-
-namespace Assimp { class Importer; }
+namespace Assimp
+{
+class Importer;
+}
 struct aiMaterial;
 
-namespace gua {
-
+namespace gua
+{
 class Node;
 class GeometryNode;
 
@@ -47,30 +48,21 @@ class GeometryNode;
  * This class can load mesh data from files and display them in multiple
  * contexts. A MaterialLoader object is made of several Mesh objects.
  */
-class GUA_DLL MaterialLoader {
- public:
-
-  std::shared_ptr<Material> load_material(aiMaterial const* material,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
+class GUA_DLL MaterialLoader
+{
+  public:
+    std::shared_ptr<Material> load_material(aiMaterial const* material, std::string const& assets_directory, bool optimize_material = true, bool nrp = false) const;
 #ifdef GUACAMOLE_FBX
-  std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
+    std::shared_ptr<Material> load_material(FbxSurfaceMaterial const& material, std::string const& assets_directory, bool optimize_material = true, bool nrp = false) const;
 
-	std::shared_ptr<Material> load_unreal(std::string const& file_name,
-															 	std::string const& assets_directory,
-															 	bool optimize_material = true) const;
+    std::shared_ptr<Material> load_unreal(std::string const& file_name, std::string const& assets_directory, bool optimize_material = true, bool nrp = false) const;
 #endif
-  std::shared_ptr<Material> load_material(std::string const& file_name,
-                                std::string const& assets_directory,
-                                bool optimize_material = true) const;
+    std::shared_ptr<Material> load_material(std::string const& file_name, std::string const& assets_directory, bool optimize_material = true, bool nrp = false) const;
 
-  static std::string get_file_name(std::string const& path);
-  inline static bool file_exists(std::string const& path);
+    static std::string get_file_name(std::string const& path);
+    inline static bool file_exists(std::string const& path);
 };
 
-}
+} // namespace gua
 
-#endif  // GUA_MATERIAL_LOADER_HPP
-
+#endif // GUA_MATERIAL_LOADER_HPP

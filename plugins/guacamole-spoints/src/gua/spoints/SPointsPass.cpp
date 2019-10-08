@@ -28,52 +28,43 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/Resources.hpp>
 
-namespace gua {
+namespace gua
+{
+FeedbackCollectorResponsibilityDescription::FeedbackCollectorResponsibilityDescription()
+{
+    private_.name_ = "spoints_feedback_collector_responsibility";
+    private_.type_ = PipelineResponsibilityPrivate::TYPE::POST_RENDER;
+    private_.fulfil_ = [](Pipeline& pipe) {
+        SPointsFeedbackCollector::instance()->send_feedback_frame(pipe.get_context());
+    };
 
-SPointsPassDescription::SPointsPassDescription()
-  : PipelinePassDescription() {
-
-  needs_color_buffer_as_input_ = false;
-  writes_only_color_buffer_ = false;
-  enable_for_shadows_ = true;
-  rendermode_ = RenderMode::Custom;
+}
+SPointsPassDescription::SPointsPassDescription() : PipelinePassDescription()
+{
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) {
+PipelinePass SPointsPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
+{
+    pipeline_responsibilities_.push_back(std::make_shared<FeedbackCollectorResponsibilityDescription>());
 
-  PipelinePass pass{*this, ctx, substitution_map};
+    auto renderer{std::make_shared<SPointsRenderer>()};
+    renderer->set_global_substitution_map(substitution_map);
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
-  auto renderer{std::make_shared<SPointsRenderer>()};
-  renderer->set_global_substitution_map(substitution_map);
-
-  pass.process_ = [renderer](
-      PipelinePass & pass, PipelinePassDescription const& desc, Pipeline& pipe) {
-
-      renderer->render(pipe, desc);
-  };
-
-  return pass;
+    PipelinePass pass{*this, ctx, substitution_map};
+    return pass;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SPointsPassDescription::apply_post_render_action(RenderContext const& ctx) const {
-  /*
-  std::cout << "POST RENDER ACTION IS CALLED" << std::endl;
-  */
-  
-  SPointsFeedbackCollector::instance()->send_feedback_frame(ctx);
-  
-}
+std::shared_ptr<PipelinePassDescription> SPointsPassDescription::make_copy() const { return std::make_shared<SPointsPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<PipelinePassDescription> SPointsPassDescription::make_copy() const {
-  return std::make_shared<SPointsPassDescription>(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-}
+} // namespace gua

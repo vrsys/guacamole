@@ -47,7 +47,7 @@ vec3 gua_apply_skymap_texture() {
   float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
   float y = 1.0 - acos(view.y)/pi;
   vec2 texcoord = vec2(x, y);
-  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
+  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1.0, 0.5)) - gua_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
   return textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
 }
@@ -64,7 +64,7 @@ vec3 gua_apply_fog(vec3 fog_color) {
 
 void main() {
   float depth = gua_get_depth();
-  if (depth < 1) {
+  if (depth < 1.0) {
     if (gua_enable_fog) {
       vec3 fog_color;
 
