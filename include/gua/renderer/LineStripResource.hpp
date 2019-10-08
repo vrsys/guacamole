@@ -92,10 +92,8 @@ class LineStripResource : public GeometryResource
 
     void compute_consistent_normals() const;
 
-
     void compile_buffer_string(std::string& buffer_string);
     void uncompile_buffer_string(std::string const& buffer_string);
-
 
     void push_vertex(LineStrip::Vertex const& in_vertex);
     void pop_front_vertex();
