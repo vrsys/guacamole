@@ -19,24 +19,29 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_DYNAMIC_LINE_PASS_HPP
+#define GUA_DYNAMIC_LINE_PASS_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+#include <gua/renderer/PipelinePass.hpp>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/LineStripNode.hpp>
-#include <gua/node/DynamicGeometryNode.hpp>
-#include <gua/node/DynamicLineNode.hpp>
-#include <gua/node/DynamicTriangleNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/LightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+#include <gua/platform.hpp>
 
-#endif // GUA_INCLUDE_SCENEGRAPH_HPP
+// external headers
+#include <scm/gl_core/buffer_objects.h>
+
+namespace gua
+{
+class GUA_DLL DynamicLinePassDescription : public PipelinePassDescription
+{
+  public:
+    DynamicLinePassDescription();
+    std::shared_ptr<PipelinePassDescription> make_copy() const override;
+    friend class Pipeline;
+
+  protected:
+    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+};
+
+} // namespace gua
+
+#endif // GUA_DYNAMIC_LINE_PASS_HPP

@@ -149,6 +149,42 @@ struct GUA_DLL RenderContext
 
     mutable std::unordered_map<std::size_t, LineStrip> line_strips;
 
+    class DynamicGeometry
+    {
+      public:
+        DynamicGeometry() = default;
+        DynamicGeometry(scm::gl::vertex_array_ptr const& a, scm::gl::buffer_ptr const& v, scm::gl::buffer_ptr const& i)
+            : vertex_array(a), vertices(v), vertex_topology(scm::gl::PRIMITIVE_LINE_LIST), vertex_reservoir_size(0), num_occupied_vertex_slots(0), current_buffer_size_in_vertices(0)
+        {
+        }
+        scm::gl::vertex_array_ptr vertex_array;
+        scm::gl::buffer_ptr vertices;
+        scm::gl::primitive_topology vertex_topology;
+        int vertex_reservoir_size;
+        int num_occupied_vertex_slots;
+        int current_buffer_size_in_vertices;
+    };
+
+    mutable std::unordered_map<std::size_t, DynamicGeometry> dynamic_geometries;
+
+    class DynamicTriangle
+    {
+      public:
+        DynamicTriangle() = default;
+        DynamicTriangle(scm::gl::vertex_array_ptr const& a, scm::gl::buffer_ptr const& v, scm::gl::buffer_ptr const& i)
+            : vertex_array(a), vertices(v), vertex_topology(scm::gl::PRIMITIVE_TRIANGLE_LIST), vertex_reservoir_size(0), num_occupied_vertex_slots(0), current_buffer_size_in_vertices(0)
+        {
+        }
+        scm::gl::vertex_array_ptr vertex_array;
+        scm::gl::buffer_ptr vertices;
+        scm::gl::primitive_topology vertex_topology;
+        int vertex_reservoir_size;
+        int num_occupied_vertex_slots;
+        int current_buffer_size_in_vertices;
+    };
+
+    mutable std::unordered_map<std::size_t, DynamicTriangle> dynamic_triangles;
+
     class Texture
     {
       public:
