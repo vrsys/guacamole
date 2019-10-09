@@ -59,8 +59,10 @@ ENDIF(UNIX)
 IF (MSVC)
   target_link_libraries( guacamole-lod optimized ${LAMURE_RENDERING_LIBRARY}
                                         optimized ${LAMURE_COMMON_LIBRARY}
-                                        #debug ${LAMURE_RENDERING_LIBRARY_DEBUG}
-                                        #debug ${LAMURE_COMMON_LIBRARY_DEBUG}
+                                        optimized ${LAMURE_PROVENANCE_LIBRARY}
+                                        debug ${LAMURE_RENDERING_LIBRARY_DEBUG}
+                                        debug ${LAMURE_COMMON_LIBRARY_DEBUG}
+                                        debug ${LAMURE_PROVENANCE_LIBRARY}
                                         general guacamole
                        )
 ELSEIF (UNIX)
