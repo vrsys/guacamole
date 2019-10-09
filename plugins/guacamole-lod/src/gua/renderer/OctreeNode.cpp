@@ -34,7 +34,7 @@
 // external headers
 #include <lamure/ren/dataset.h>
 
-#include <lamure/prov/aux.h>
+#include <lamure/prov/auxi.h>
 
 namespace gua {
 
