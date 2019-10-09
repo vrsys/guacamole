@@ -70,7 +70,8 @@ ELSEIF (UNIX)
                          guacamole 
                          ${LAMURE_RENDERING_LIBRARY}
                          ${LAMURE_COMMON_LIBRARY}
-                       )
+			 ${LAMURE_PROVENANCE_LIBRARY}
+  		       )
 
 ENDIF (MSVC)
 
