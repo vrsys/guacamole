@@ -19,13 +19,13 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_LINE_STRIP_RESOURCE_HPP
-#define GUA_LINE_STRIP_RESOURCE_HPP
+#ifndef GUA_DYNAMIC_LINE_RESOURCE_HPP
+#define GUA_DYNAMIC_LINE_RESOURCE_HPP
 
 // guacamole headers
 #include <gua/platform.hpp>
 #include <gua/renderer/GeometryResource.hpp>
-#include <gua/utils/LineStrip.hpp>
+#include <gua/renderer/DynamicGeometryResource.hpp>
 #include <gua/utils/KDTree.hpp>
 
 // external headers
@@ -39,47 +39,52 @@
 namespace gua
 {
 struct RenderContext;
-class LineStripResource;
+class DynamicLineResource;
 
 /**
  * Stores geometry data.
  *
- * A line strip can be loaded from an *.lob file and the draw onto multiple
+ * A dynamic geometry can be loaded from an *.lob file and the draw onto multiple
  * contexts.
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
 
-class LineStripResource : public GeometryResource
+class DynamicLineResource : public DynamicGeometryResource
 {
   public:
     /**
      * Default constructor.
      *
-     * Creates a new and empty Line Strip.
+     * Creates a new and empty DynamicGeometryResource.
      */
-    LineStripResource();
+    DynamicLineResource();
 
     /**
      * Constructor from an *.lob strip.
      *
      * Initializes the strip from a given *.lob strip.
      *
-     * \param mesh             The line strip to load the data from.
+     * \param mesh             The dynamic geometry to load the data from.
      */
-    LineStripResource(LineStrip const& line_strip, bool build_kd_tree);
+    DynamicLineResource(std::shared_ptr<DynamicGeometry> dynamic_geometry_ptr, bool build_kd_tree);
 
     /**
-     * Draws the line strip.
+     * Draws the dynamic geometry.
      *
-     * Draws the line strip to the given context.
+     * Draws the dynamic geometry to the given context.
      *
      * \param context          The RenderContext to draw onto.
      */
-    void draw(RenderContext& context) const;
-    void draw(RenderContext& context, bool render_vertices_as_points, bool render_lines_as_strip) const;
+    void draw(RenderContext& context) const override;
+
+    // todo bool not needed anymore copy to dummy
+
+    // void draw(RenderContext& context, bool render_vertices_as_points) const;
 
     void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) override;
+
+    float intersect(std::array<math::vec3, 3> const& points, Ray const& ray) const;
 
     // void resolve_vertex_updates(RenderContext& ctx);
 
@@ -87,40 +92,25 @@ class LineStripResource : public GeometryResource
 
     void compute_bounding_box();
 
-    inline unsigned int num_occupied_vertex_slots() const { return line_strip_.num_occupied_vertex_slots; }
-    inline unsigned int vertex_reservoir_size() const { return line_strip_.vertex_reservoir_size; }
-
     void compute_consistent_normals() const;
 
-    void compile_buffer_string(std::string& buffer_string);
-    void uncompile_buffer_string(std::string const& buffer_string);
+    void compile_buffer_string(std::string& buffer_string) override;
+    void uncompile_buffer_string(std::string const& buffer_string) override;
 
-    void push_vertex(LineStrip::Vertex const& in_vertex);
-    void pop_front_vertex();
-    void pop_back_vertex();
+    void push_vertex(DynamicGeometry::Vertex const& in_vertex);
+    void update_vertex(int vertex_idx, DynamicGeometry::Vertex const& in_vertex);
 
-    void clear_vertices();
+    // ephra
+    void set_vertex_rendering_mode(scm::gl::primitive_topology const& render_mode);
 
-    void forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions,
-                                 std::vector<scm::math::vec4f> const& queued_colors,
-                                 std::vector<float> const& queued_thicknesses,
-                                 std::vector<scm::math::vec3f> const& queued_normals);
+    void forward_queued_vertices(std::vector<scm::math::vec3f> const& queued_positions, std::vector<scm::math::vec4f> const& queued_colors, std::vector<float> const& queued_thicknesses);
 
     math::vec3 get_vertex(unsigned int i) const;
 
-
   private:
     void upload_to(RenderContext& context) const;
-
-    KDTree kd_tree_;
-    LineStrip line_strip_;
-
-    mutable std::mutex line_strip_update_mutex_;
-    mutable std::map<unsigned, bool> clean_flags_per_context_;
-
-    // std::vector<line_strip_update_job*> line_strip_update_queue_;
 };
 
 } // namespace gua
 
-#endif // GUA_LINE_STRIP_RESOURCE_HPP
+#endif // GUA_DYNAMIC_LINE_RESOURCE_HPP

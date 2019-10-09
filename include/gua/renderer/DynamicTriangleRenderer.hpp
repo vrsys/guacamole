@@ -19,24 +19,56 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_SCENEGRAPH_HPP
-#define GUA_INCLUDE_SCENEGRAPH_HPP
+#ifndef GUA_DYNAMIC_TRIANGLE_RENDERER_HPP
+#define GUA_DYNAMIC_TRIANGLE_RENDERER_HPP
 
-// scenegraph header
-#include <gua/scenegraph/SceneGraph.hpp>
+#include <map>
+#include <unordered_map>
 
-// node headers
-#include <gua/node/GeometryNode.hpp>
-#include <gua/node/TriMeshNode.hpp>
-#include <gua/node/LineStripNode.hpp>
-#include <gua/node/DynamicGeometryNode.hpp>
-#include <gua/node/DynamicLineNode.hpp>
-#include <gua/node/DynamicTriangleNode.hpp>
-#include <gua/node/TransformNode.hpp>
-#include <gua/node/LightNode.hpp>
-#include <gua/node/CameraNode.hpp>
-#include <gua/node/ClippingPlaneNode.hpp>
-#include <gua/node/TexturedQuadNode.hpp>
-#include <gua/node/TexturedScreenSpaceQuadNode.hpp>
+#include <gua/platform.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
 
-#endif // GUA_INCLUDE_SCENEGRAPH_HPP
+#include <scm/gl_core/shader_objects.h>
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+#include <gua/renderer/VTRenderer.hpp>
+#endif
+
+
+namespace gua
+{
+class MaterialShader;
+class Pipeline;
+class PipelinePassDescription;
+
+class DynamicTriangleRenderer
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+    : public VTRenderer
+#endif
+{
+  public:
+    DynamicTriangleRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
+
+    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+
+  private:
+    scm::gl::rasterizer_state_ptr rs_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_cull_none_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_;
+    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_;
+
+    std::vector<ShaderProgramStage> program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> programs_;
+
+    std::vector<ShaderProgramStage> volumetric_point_program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_point_programs_;
+
+    std::vector<ShaderProgramStage> volumetric_line_program_stages_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> volumetric_line_programs_;
+
+    SubstitutionMap global_substitution_map_;
+};
+
+} // namespace gua
+
+#endif // GUA_DYNAMIC_TRIANGLE_RENDERER_HPP

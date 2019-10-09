@@ -19,38 +19,73 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_INCLUDE_RENDERER_HPP
-#define GUA_INCLUDE_RENDERER_HPP
+#ifndef GUA_DYNAMIC_LINE_LOADER_HPP
+#define GUA_DYNAMIC_LINE_LOADER_HPP
 
-// renderer headers
-#include <gua/config.hpp>
-#include <gua/renderer/enums.hpp>
-#include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/LineStripLoader.hpp>
+// guacamole headers
 #include <gua/renderer/DynamicGeometryLoader.hpp>
-#include <gua/renderer/DynamicLineLoader.hpp>
-#include <gua/renderer/DynamicTriangleLoader.hpp>
-#include <gua/renderer/Pipeline.hpp>
-#include <gua/renderer/TriMeshPass.hpp>
-#include <gua/renderer/LineStripPass.hpp>
-#include <gua/renderer/DynamicGeometryPass.hpp>
-#include <gua/renderer/DynamicLinePass.hpp>
-#include <gua/renderer/DynamicTrianglePass.hpp>
-#include <gua/renderer/LightVisibilityPass.hpp>
-#include <gua/renderer/BackgroundPass.hpp>
-#include <gua/renderer/ResolvePass.hpp>
-#include <gua/renderer/SkyMapPass.hpp>
-#include <gua/renderer/SSAOPass.hpp>
-#include <gua/renderer/FullscreenPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/Renderer.hpp>
-#include <gua/renderer/Window.hpp>
-#include <gua/renderer/HeadlessSurface.hpp>
-#include <gua/renderer/MaterialShader.hpp>
-#include <gua/renderer/MaterialShaderDescription.hpp>
+#include <gua/renderer/DynamicLineResource.hpp>
+// #include <gua/renderer/DynamicGeometryResource.hpp>
 #include <gua/renderer/Material.hpp>
-#ifdef GUACAMOLE_GLFW3
-#include <gua/renderer/GlfwWindow.hpp>
-#endif
+#include <gua/utils/Mesh.hpp>
 
-#endif // GUA_INCLUDE_RENDERER_HPP
+// external headers
+#include <string>
+#include <list>
+#include <memory>
+
+namespace Assimp
+{
+class Importer;
+}
+struct aiScene;
+struct aiNode;
+
+namespace gua
+{
+namespace node
+{
+class Node;
+class InnerNode;
+class GeometryNode;
+class GeometryDescription;
+} // namespace node
+
+/**
+ * Loads and draws dynamic geometries.
+ *
+ * This class can load dynamic geometry data from files and display them in multiple
+ * contexts. A DynamicLineLoader object is made of several DynamicGeometry objects.
+ */
+class GUA_DLL DynamicLineLoader : public DynamicGeometryLoader
+{
+  public: // typedefs, enums
+    enum Flags
+    {
+        DEFAULTS = 0,
+        MAKE_PICKABLE = 1 << 2,
+        NORMALIZE_POSITION = 1 << 3,
+        NORMALIZE_SCALE = 1 << 4,
+        NO_SHARED_MATERIALS = 1 << 5
+    };
+
+  public:
+    /**
+     * Default constructor.
+     *
+     * Constructs a new and empty MeshLoader.
+     */
+    DynamicLineLoader();
+
+  private: // methods
+    static void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials);
+
+    std::shared_ptr<node::DynamicGeometryNode> create_geometry_instance(std::shared_ptr<DynamicGeometryImporter> importer, GeometryDescription const& desc, unsigned flags) override;
+
+  private: // attributes
+    static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
+};
+
+} // namespace gua
+
+#endif // GUA_DYNAMIC_LINE_LOADER_HPP
