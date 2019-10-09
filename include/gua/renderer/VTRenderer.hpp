@@ -56,27 +56,21 @@ class RenderContext;
 class Pipeline;
 class PipelinePassDescription;
 
-struct VTContextState
-{
-    bool has_camera = false;
-    bool feedback_enabled = false;
-};
-
-class VTRenderer
+class GUA_DLL VTRenderer
 {
   public:
     VTRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
-    VTContextState pre_render(Pipeline& pipe, PipelinePassDescription const& desc);
-    void post_render(Pipeline& pipe, PipelinePassDescription const& desc, VTContextState& state);
+    void pre_render(Pipeline& pipe) const;
+    void post_render(Pipeline& pipe) const;
 
   protected:
     scm::gl::program_ptr shader_vt_feedback_;
 
-    void _lazy_create_physical_texture(const RenderContext& ctx);
-    void _apply_cut_update(const RenderContext& ctx);
-    void _update_feedback_layout(const RenderContext& ctx);
-    void _collect_feedback(const RenderContext& ctx);
+    void _lazy_create_physical_texture(const RenderContext& ctx) const;
+    void _apply_cut_update(const RenderContext& ctx) const;
+    void _update_feedback_layout(const RenderContext& ctx) const;
+    void _collect_feedback(const RenderContext& ctx) const;
 };
 
 } // namespace gua

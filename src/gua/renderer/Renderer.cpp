@@ -39,7 +39,7 @@
 
 namespace
 {
-void display_loading_screen(gua::WindowBase &window)
+void display_loading_screen(gua::WindowBase& window)
 {
     auto loading_texture(gua::TextureDatabase::instance()->lookup("gua_loading_texture"));
     gua::math::vec2ui loading_texture_size(loading_texture->width(), loading_texture->height());
@@ -81,7 +81,7 @@ std::pair<DB<T>, DB<T>> spawnDoublebufferred()
 
 namespace gua
 {
-std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(std::vector<SceneGraph const *> const &scene_graphs)
+std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(std::vector<SceneGraph const*> const& scene_graphs)
 {
     auto sgs = std::make_shared<Renderer::SceneGraphs>();
     for(auto graph : scene_graphs)
@@ -98,7 +98,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
     FpsCounter fpsc(20);
     fpsc.start();
 
-    for(auto &cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in))
+    for(auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in))
     {
         // auto window_name(cmd.serialized_cam->config.get_output_window_name());
 
@@ -138,6 +138,8 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                 }
 
                 window->rendering_fps = fpsc.fps;
+
+                pipe->fulfil_pre_render_responsibilities(*window->get_context());
 
                 if(cmd.serialized_cam->config.get_enable_stereo())
                 {
@@ -191,7 +193,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                 }
 
                 pipe->clear_frame_cache();
-                pipe->apply_post_render_actions(*window->get_context());
+                pipe->fulfil_post_render_responsibilities(*window->get_context());
 
                 // swap buffers
                 window->finish_frame();
@@ -206,7 +208,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
 
 Renderer::Renderer() : render_clients_(), application_fps_(20) { application_fps_.start(); }
 
-void Renderer::send_renderclient(std::string const &window_name, std::shared_ptr<const Renderer::SceneGraphs> sgs, node::CameraNode *cam, bool alternate_frame_rendering)
+void Renderer::send_renderclient(std::string const& window_name, std::shared_ptr<const Renderer::SceneGraphs> sgs, node::CameraNode* cam, bool alternate_frame_rendering)
 {
     auto rclient = render_clients_.find(window_name);
     if(rclient != render_clients_.end())
@@ -224,7 +226,7 @@ void Renderer::send_renderclient(std::string const &window_name, std::shared_ptr
     }
 }
 
-void Renderer::queue_draw(std::vector<SceneGraph const *> const &scene_graphs, bool alternate_frame_rendering)
+void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bool alternate_frame_rendering)
 {
     for(auto graph : scene_graphs)
     {
@@ -235,7 +237,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const *> const &scene_graphs, b
 
     for(auto graph : scene_graphs)
     {
-        for(auto &cam : graph->get_camera_nodes())
+        for(auto& cam : graph->get_camera_nodes())
         {
             if(cam->config.separate_windows())
             {
@@ -252,7 +254,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const *> const &scene_graphs, b
     application_fps_.step();
 }
 
-void Renderer::draw_single_threaded(std::vector<SceneGraph const *> const &scene_graphs)
+void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs)
 {
     for(auto graph : scene_graphs)
     {
@@ -263,7 +265,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const *> const &scene
 
     for(auto graph : scene_graphs)
     {
-        for(auto &cam : graph->get_camera_nodes())
+        for(auto& cam : graph->get_camera_nodes())
         {
             auto window_name(cam->config.get_output_window_name());
             auto serialized_cam(cam->serialize());
@@ -302,6 +304,8 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const *> const &scene
                     }
 
                     window->rendering_fps = application_fps_.fps;
+
+                    pipe->fulfil_pre_render_responsibilities(*window->get_context());
 
                     if(serialized_cam.config.get_enable_stereo())
                     {
@@ -342,7 +346,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const *> const &scene
                     }
 
                     pipe->clear_frame_cache();
-                    pipe->apply_post_render_actions(*window->get_context());
+                    pipe->fulfil_post_render_responsibilities(*window->get_context());
 
                     // swap buffers
                     window->finish_frame();
@@ -356,11 +360,11 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const *> const &scene
 
 void Renderer::stop()
 {
-    for(auto &rc : render_clients_)
+    for(auto& rc : render_clients_)
     {
         rc.second.first->close();
     }
-    for(auto &rc : render_clients_)
+    for(auto& rc : render_clients_)
     {
         rc.second.second.join();
     }

@@ -79,7 +79,7 @@ std::string output_type_to_string(BufferComponent type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-boost::optional<BufferComponent> parse_output_type(std::string const &type)
+boost::optional<BufferComponent> parse_output_type(std::string const& type)
 {
     if(type == "int")
         return boost::make_optional(BufferComponent::I1);
@@ -171,7 +171,7 @@ std::string uniform_type_to_string(UniformType type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-boost::optional<UniformType> parse_uniform_type(std::string const &type)
+boost::optional<UniformType> parse_uniform_type(std::string const& type)
 {
     if(type == "int")
         return boost::make_optional(UniformType::INT);
@@ -232,7 +232,7 @@ std::string buffer_component_type_to_string(BufferComponentType type)
     }
 }
 
-boost::optional<BufferComponentType> parse_buffer_component_type(std::string const &type)
+boost::optional<BufferComponentType> parse_buffer_component_type(std::string const& type)
 {
     if(type == "int")
         return boost::make_optional(TYPE_INTEGER);
@@ -293,7 +293,7 @@ std::string get_default_value(UniformType type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool is_valid_value(UniformType type, std::string &value)
+bool is_valid_value(UniformType type, std::string& value)
 {
     switch(type)
     {

@@ -28,7 +28,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-Material::Material(std::string const &shader_name)
+Material::Material(std::string const& shader_name)
     : shader_name_(shader_name), shader_cache_(nullptr), show_back_faces_(false), render_wireframe_(false)
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
       ,
@@ -40,18 +40,18 @@ Material::Material(std::string const &shader_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Material::Material(Material const &copy)
+Material::Material(Material const& copy)
     : shader_name_(copy.shader_name_), shader_cache_(copy.shader_cache_), uniforms_(copy.uniforms_), show_back_faces_(copy.show_back_faces_), render_wireframe_(copy.render_wireframe_)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string const &Material::get_shader_name() const { return shader_name_; }
+std::string const& Material::get_shader_name() const { return shader_name_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::set_shader_name(std::string const &name)
+void Material::set_shader_name(std::string const& name)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     shader_name_ = name;
@@ -63,7 +63,7 @@ void Material::set_shader_name(std::string const &name)
     {
         auto new_uniforms(shader->get_default_uniforms());
 
-        for(auto const &old_uniform : uniforms_)
+        for(auto const& old_uniform : uniforms_)
         {
             auto it(new_uniforms.find(old_uniform.first));
             if(it != new_uniforms.end())
@@ -78,7 +78,7 @@ void Material::set_shader_name(std::string const &name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::rename_existing_shader(std::string const &name)
+void Material::rename_existing_shader(std::string const& name)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -93,7 +93,7 @@ void Material::rename_existing_shader(std::string const &name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialShader *Material::get_shader() const
+MaterialShader* Material::get_shader() const
 {
     // boost::unique_lock<boost::shared_mutex> lock(mutex_);
     if(!shader_cache_)
@@ -106,15 +106,15 @@ MaterialShader *Material::get_shader() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::map<std::string, ViewDependentUniform> const &Material::get_uniforms() const { return uniforms_; }
+std::map<std::string, ViewDependentUniform> const& Material::get_uniforms() const { return uniforms_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::apply_uniforms(RenderContext const &ctx, ShaderProgram *shader, int view) const
+void Material::apply_uniforms(RenderContext const& ctx, ShaderProgram* shader, int view) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    for(auto const &uniform : uniforms_)
+    for(auto const& uniform : uniforms_)
     {
         uniform.second.apply(ctx, uniform.first, view, shader->get_program());
     }
@@ -122,9 +122,9 @@ void Material::apply_uniforms(RenderContext const &ctx, ShaderProgram *shader, i
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream &Material::serialize_uniforms_to_stream(std::ostream &os) const
+std::ostream& Material::serialize_uniforms_to_stream(std::ostream& os) const
 {
-    for(auto &uniform : uniforms_)
+    for(auto& uniform : uniforms_)
     {
         os << uniform.first << "#";
         uniform.second.serialize_to_stream(os);
@@ -136,11 +136,11 @@ std::ostream &Material::serialize_uniforms_to_stream(std::ostream &os) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Material::set_uniforms_from_serialized_string(std::string const &value)
+void Material::set_uniforms_from_serialized_string(std::string const& value)
 {
     auto tokens(string_utils::split(value, ';'));
 
-    for(auto &token : tokens)
+    for(auto& token : tokens)
     {
         auto parts(string_utils::split(token, '#'));
         set_uniform(parts[0], ViewDependentUniform::create_from_serialized_string(parts[1]));
@@ -149,12 +149,12 @@ void Material::set_uniforms_from_serialized_string(std::string const &value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream &operator<<(std::ostream &os, Material const &val) { return val.serialize_uniforms_to_stream(os); }
+std::ostream& operator<<(std::ostream& os, Material const& val) { return val.serialize_uniforms_to_stream(os); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template <>
-Material &Material::set_uniform<std::string>(std::string const &name, std::string const &tex_name, int view_id)
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& tex_name, int view_id)
 {
     auto uniform(uniforms_.find(name));
     if(!TextureDatabase::instance()->contains(tex_name))
@@ -175,7 +175,7 @@ Material &Material::set_uniform<std::string>(std::string const &name, std::strin
 }
 
 template <>
-Material &Material::set_uniform<std::string>(std::string const &name, std::string const &tex_name)
+Material& Material::set_uniform<std::string>(std::string const& name, std::string const& tex_name)
 {
     if(!TextureDatabase::instance()->contains(tex_name))
         TextureDatabase::instance()->load(tex_name);

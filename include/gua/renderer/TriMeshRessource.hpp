@@ -48,7 +48,7 @@ struct RenderContext;
  * Do not use this class directly, it is just used by the Geometry class to
  * store the individual meshes of a file.
  */
-class TriMeshRessource : public GeometryResource
+class GUA_DLL TriMeshRessource : public GeometryResource
 {
   public:
     /**

@@ -2,7 +2,7 @@
 
 namespace gua
 {
-void LightTable::remove_buffers(RenderContext const &ctx)
+void LightTable::remove_buffers(RenderContext const& ctx)
 {
     if(light_bitset_)
     {
@@ -10,7 +10,7 @@ void LightTable::remove_buffers(RenderContext const &ctx)
     }
 }
 
-math::vec2ui LightTable::invalidate(RenderContext const &ctx, math::vec2ui const &resolution, LightTable::array_type const &lights, int tile_power, int sun_lights_num)
+math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const& resolution, LightTable::array_type const& lights, int tile_power, int sun_lights_num)
 {
     sun_lights_num_ = sun_lights_num;
     lights_num_ = lights.size();
@@ -36,7 +36,8 @@ math::vec2ui LightTable::invalidate(RenderContext const &ctx, math::vec2ui const
 
     unsigned light_bitset_words = ((lights_num_ - 1) / 32) + 1;
 
-    const int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
+    const unsigned int max_tex3d_size = ctx.render_device->capabilities()._max_texture_3d_size;
+
     if(width > max_tex3d_size || height > max_tex3d_size || light_bitset_words > max_tex3d_size)
     {
         Logger::LOG_ERROR << "Dimensions of light table cannot be greater than " << max_tex3d_size << " in size" << std::endl;
@@ -59,8 +60,8 @@ math::vec2ui LightTable::invalidate(RenderContext const &ctx, math::vec2ui const
     }
 
     // clear bitset
-    ctx.render_context->clear_image_sub_data(light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0,
-                                             scm::gl::FORMAT_R_32UI, 0);
+    ctx.render_context->clear_image_sub_data(
+        light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
 
     // upload light UBO
     bool needs_update(false);

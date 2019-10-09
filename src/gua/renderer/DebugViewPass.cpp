@@ -35,12 +35,12 @@ DebugViewPassDescription::DebugViewPassDescription() : PipelinePassDescription()
 {
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/debugview.frag";
-    name_ = "DebugViewPass";
+    private_.name_ = "DebugViewPass";
 
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ std::shared_ptr<PipelinePassDescription> DebugViewPassDescription::make_copy() c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass DebugViewPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass DebugViewPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

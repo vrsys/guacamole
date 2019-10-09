@@ -82,11 +82,11 @@ std::string subroutine_from_mode(WindowBase::TextureDisplayMode mode)
 
 std::atomic_uint WindowBase::last_context_id_{0};
 std::mutex WindowBase::last_context_id_mutex_{};
-WindowBase *WindowBase::current_instance_ = nullptr;
+WindowBase* WindowBase::current_instance_ = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WindowBase::WindowBase(Configuration const &configuration)
+WindowBase::WindowBase(Configuration const& configuration)
     : rendering_fps(1.0f), config(configuration), fullscreen_shader_(), fullscreen_quad_(), depth_stencil_state_(),
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
       nv_context_(nullptr),
@@ -203,7 +203,7 @@ void WindowBase::start_frame()
         }
         else
         {
-            Display *display = XOpenDisplay(0);
+            Display* display = XOpenDisplay(0);
             double display_num = DefaultScreen(display);
             XF86VidModeModeLine mode_line;
             int pixel_clk = 0;
@@ -222,7 +222,7 @@ void WindowBase::finish_frame() { swap_buffers(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(scm::gl::texture_2d_ptr const &center_texture)
+void WindowBase::display(scm::gl::texture_2d_ptr const& center_texture)
 {
     display(center_texture, true);
 
@@ -234,7 +234,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const &center_texture)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(scm::gl::texture_2d_ptr const &texture, bool is_left)
+void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
@@ -247,20 +247,36 @@ void WindowBase::display(scm::gl::texture_2d_ptr const &texture, bool is_left)
         display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(), WindowBase::FULL, is_left, true);
         break;
     case StereoMode::ANAGLYPH_RED_CYAN:
-        display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(),
-                is_left ? WindowBase::RED : WindowBase::CYAN, is_left, is_left);
+        display(texture,
+                is_left ? config.get_left_resolution() : config.get_right_resolution(),
+                is_left ? config.get_left_position() : config.get_right_position(),
+                is_left ? WindowBase::RED : WindowBase::CYAN,
+                is_left,
+                is_left);
         break;
     case StereoMode::ANAGLYPH_RED_GREEN:
-        display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(),
-                is_left ? WindowBase::RED : WindowBase::GREEN, is_left, is_left);
+        display(texture,
+                is_left ? config.get_left_resolution() : config.get_right_resolution(),
+                is_left ? config.get_left_position() : config.get_right_position(),
+                is_left ? WindowBase::RED : WindowBase::GREEN,
+                is_left,
+                is_left);
         break;
     case StereoMode::CHECKERBOARD:
-        display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(),
-                is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD, is_left, true);
+        display(texture,
+                is_left ? config.get_left_resolution() : config.get_right_resolution(),
+                is_left ? config.get_left_position() : config.get_right_position(),
+                is_left ? WindowBase::CHECKER_EVEN : WindowBase::CHECKER_ODD,
+                is_left,
+                true);
         break;
     case StereoMode::QUAD_BUFFERED:
-        display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(),
-                is_left ? WindowBase::QUAD_BUFFERED_LEFT : WindowBase::QUAD_BUFFERED_RIGHT, is_left, true);
+        display(texture,
+                is_left ? config.get_left_resolution() : config.get_right_resolution(),
+                is_left ? config.get_left_position() : config.get_right_position(),
+                is_left ? WindowBase::QUAD_BUFFERED_LEFT : WindowBase::QUAD_BUFFERED_RIGHT,
+                is_left,
+                true);
         break;
     default:
         break;
@@ -269,13 +285,13 @@ void WindowBase::display(scm::gl::texture_2d_ptr const &texture, bool is_left)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RenderContext *WindowBase::get_context() { return &ctx_; }
+RenderContext* WindowBase::get_context() { return &ctx_; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::display(scm::gl::texture_2d_ptr const &texture, math::vec2ui const &size, math::vec2ui const &position, TextureDisplayMode mode, bool is_left, bool clear)
+void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui const& size, math::vec2ui const& position, TextureDisplayMode mode, bool is_left, bool clear)
 {
-    auto const &glapi = ctx_.render_context->opengl_api();
+    auto const& glapi = ctx_.render_context->opengl_api();
     glapi.glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if(config.get_stereo_mode() == StereoMode::QUAD_BUFFERED)
     {
@@ -357,9 +373,11 @@ void WindowBase::swap_buffers()
 #endif
 }
 
+/* virtual */ math::mat4 WindowBase::get_latest_matrices(unsigned id) const { return math::mat4::identity(); }
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void WindowBase::DebugOutput::operator()(scm::gl::debug_source source, scm::gl::debug_type type, scm::gl::debug_severity severity, const std::string &message) const
+void WindowBase::DebugOutput::operator()(scm::gl::debug_source source, scm::gl::debug_type type, scm::gl::debug_severity severity, const std::string& message) const
 {
     Logger::LOG_MESSAGE << "[Source: " << scm::gl::debug_source_string(source) << ", type: " << scm::gl::debug_type_string(type) << ", severity: " << scm::gl::debug_severity_string(severity)
                         << "]: " << message << std::endl;

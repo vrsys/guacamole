@@ -38,6 +38,10 @@ class CameraUniformBlock
     void
     update(RenderContext const& context, Frustum const& cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution);
 
+	void updateHMD(RenderContext const& context, Frustum const& cam, math::mat4 const& camera_parents_transform,
+                   math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id,
+                   math::vec2ui const& screen_resolution);
+
     inline const block_type& block() const { return uniform_block_; }
 
   private:

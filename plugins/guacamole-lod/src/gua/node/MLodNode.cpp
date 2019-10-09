@@ -48,6 +48,7 @@ MLodNode::MLodNode(std::string const& name,
     : GeometryNode(name, transform), geometry_(nullptr), geometry_changed_(true), geometry_description_(geometry_description), geometry_file_path_(geometry_file_path), material_(material),
       error_threshold_(threshold)
 {
+    min_lod_depth_ = 0; // default: collapse to root
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +246,14 @@ std::shared_ptr<Node> MLodNode::copy() const
     result->error_threshold_ = error_threshold_;
 
     return result;
+}
+int MLodNode::get_min_lod_depth()
+{
+    return min_lod_depth_;
+}
+void MLodNode::set_min_lod_depth(int min_lod_depth)
+{
+    min_lod_depth_ = min_lod_depth;
 }
 } // namespace node
 } // namespace gua

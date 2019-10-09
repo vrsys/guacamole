@@ -30,8 +30,8 @@ if (WIN32)
     endif(MSVC12)
 
     if (MSVC14)
-        set (_COMPILER_SUFFIX "vc140")
-        set (_COMPILER_SUFFIX_VERSION "140")
+        set (_COMPILER_SUFFIX "vc141")
+        set (_COMPILER_SUFFIX_VERSION "141")
     endif(MSVC14)
 
     if (MSVC15)

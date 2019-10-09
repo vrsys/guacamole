@@ -62,8 +62,10 @@ void LogToLinSubRenderer::render_sub_pass(Pipeline& pipe,
 
     assert(shader_program_);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name_depth_conversion = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::LogToLinConversionPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_conversion);
+#endif
 
     if(!custom_FBO_ptr_)
     {
@@ -109,7 +111,9 @@ void LogToLinSubRenderer::render_sub_pass(Pipeline& pipe,
 
     shader_program_->unuse(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_depth_conversion);
+#endif
 }
 
 void LogToLinSubRenderer::_load_shaders()

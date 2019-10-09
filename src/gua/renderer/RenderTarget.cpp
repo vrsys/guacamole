@@ -26,11 +26,11 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-RenderTarget::RenderTarget(math::vec2ui const &resolution) : resolution_(resolution) {}
+RenderTarget::RenderTarget(math::vec2ui const& resolution) : resolution_(resolution) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RenderTarget::set_viewport(RenderContext const &ctx)
+void RenderTarget::set_viewport(RenderContext const& ctx)
 {
     if(ctx.render_context)
     {
@@ -40,7 +40,7 @@ void RenderTarget::set_viewport(RenderContext const &ctx)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RenderTarget::unbind(RenderContext const &ctx) { ctx.render_context->reset_framebuffer(); }
+void RenderTarget::unbind(RenderContext const& ctx) { ctx.render_context->reset_framebuffer(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

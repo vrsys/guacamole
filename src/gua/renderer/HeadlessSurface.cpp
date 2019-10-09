@@ -37,7 +37,7 @@
 
 namespace gua
 {
-HeadlessSurface::HeadlessSurface(Configuration const &configuration) : WindowBase(configuration) {}
+HeadlessSurface::HeadlessSurface(Configuration const& configuration) : WindowBase(configuration) {}
 
 HeadlessSurface::~HeadlessSurface() { close(); }
 

@@ -56,7 +56,7 @@ TriMeshLoader::TriMeshLoader() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::load_geometry(std::string const &file_name, unsigned flags)
+std::shared_ptr<node::Node> TriMeshLoader::load_geometry(std::string const& file_name, unsigned flags)
 {
     std::shared_ptr<node::Node> cached_node;
     std::string key(file_name + "_" + string_utils::to_string(flags));
@@ -110,7 +110,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load_geometry(std::string const &file
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, std::shared_ptr<Material> const &fallback_material, unsigned flags)
+std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags)
 {
     auto cached_node(load_geometry(file_name, flags));
 
@@ -129,7 +129,7 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const &node_name, std::string const &file_name, unsigned flags)
+std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string const& node_name, std::string const& file_name, unsigned flags)
 {
     auto cached_node(load_geometry(file_name, flags));
 
@@ -149,7 +149,7 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, unsigned flags)
+std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, unsigned flags)
 {
     TextFile file(file_name);
 
@@ -163,7 +163,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
         {
             // The first thing to do is to create the FBX Manager which is the object
             // allocator for almost all the classes in the SDK
-            FbxManager *sdk_manager = FbxManager::Create();
+            FbxManager* sdk_manager = FbxManager::Create();
             if(!sdk_manager)
             {
                 Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
@@ -172,7 +172,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
 
             // Create an IOSettings object. This object holds all import/export
             // settings.
-            FbxIOSettings *ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
+            FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
             if(flags & TriMeshLoader::LOAD_MATERIALS)
             {
                 ios->SetBoolProp(IMP_FBX_MATERIAL, true);
@@ -192,7 +192,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
             ios->SetBoolProp(IMP_FBX_ANIMATION, false);
             ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
             sdk_manager->SetIOSettings(ios);
-            FbxScene *scene = load_fbx_file(sdk_manager, file_name);
+            FbxScene* scene = load_fbx_file(sdk_manager, file_name);
 
             unsigned count(0);
             std::shared_ptr<node::Node> tree{get_tree(*scene->GetRootNode(), file_name, flags, count)};
@@ -224,7 +224,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
 
             importer->ReadFile(file_name, ai_process_flags);
 
-            aiScene const *scene(importer->GetScene());
+            aiScene const* scene(importer->GetScene());
 
             std::shared_ptr<node::Node> new_node;
 
@@ -256,13 +256,13 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const &file_name, un
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::vector<TriMeshRessource *> const TriMeshLoader::load_from_buffer(char const *buffer_name, unsigned buffer_size, bool build_kd_tree)
+std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(char const* buffer_name, unsigned buffer_size, bool build_kd_tree)
 {
     auto importer = std::make_shared<Assimp::Importer>();
 
-    aiScene const *scene(importer->ReadFileFromMemory(buffer_name, buffer_size, aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace));
+    aiScene const* scene(importer->ReadFileFromMemory(buffer_name, buffer_size, aiProcessPreset_TargetRealtime_Quality | aiProcess_CalcTangentSpace));
 
-    std::vector<TriMeshRessource *> meshes;
+    std::vector<TriMeshRessource*> meshes;
 
     for(unsigned int n = 0; n < scene->mNumMeshes; ++n)
     {
@@ -274,7 +274,7 @@ std::vector<TriMeshRessource *> const TriMeshLoader::load_from_buffer(char const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TriMeshLoader::is_supported(std::string const &file_name) const
+bool TriMeshLoader::is_supported(std::string const& file_name) const
 {
     auto point_pos(file_name.find_last_of("."));
     Assimp::Importer importer;
@@ -294,11 +294,11 @@ bool TriMeshLoader::is_supported(std::string const &file_name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::string const &file_name, unsigned flags, unsigned &mesh_count)
+std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode& fbx_node, std::string const& file_name, unsigned flags, unsigned& mesh_count)
 {
     // creates a geometry node and returns it
-    auto load_geometry = [&](FbxNode &fbx_node) {
-        FbxMesh *fbx_mesh = fbx_node.GetMesh();
+    auto load_geometry = [&](FbxNode& fbx_node) {
+        FbxMesh* fbx_mesh = fbx_node.GetMesh();
 
         GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
         GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*fbx_mesh}, flags & TriMeshLoader::MAKE_PICKABLE));
@@ -313,7 +313,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
             {
                 Logger::LOG_WARNING << "Trimesh has more than one material, using only first one" << std::endl;
             }
-            FbxSurfaceMaterial *mat = fbx_node.GetMaterial(0);
+            FbxSurfaceMaterial* mat = fbx_node.GetMaterial(0);
             material = material_loader.load_material(*mat, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS);
         }
 
@@ -358,13 +358,13 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode &fbx_node, std::stri
 }
 #endif
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Importer> const &importer, aiScene const *ai_scene, aiNode *ai_root, std::string const &file_name, unsigned flags,
-                                                    unsigned &mesh_count, bool enforce_hierarchy)
+std::shared_ptr<node::Node> TriMeshLoader::get_tree(
+    std::shared_ptr<Assimp::Importer> const& importer, aiScene const* ai_scene, aiNode* ai_root, std::string const& file_name, unsigned flags, unsigned& mesh_count, bool enforce_hierarchy)
 {
     // std::cout << "get_tree, " << file_name.c_str() << std::endl;
 
     // creates a geometry node and returns it
-    auto load_geometry = [&](aiNode *ai_current, int i) {
+    auto load_geometry = [&](aiNode* ai_current, int i) {
         GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
         GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
 
@@ -375,7 +375,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
         if(flags & TriMeshLoader::LOAD_MATERIALS)
         {
             MaterialLoader material_loader;
-            aiMaterial const *ai_material(ai_scene->mMaterials[material_index]);
+            aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
             material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
         }
 
@@ -435,7 +435,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
     {
         struct ai_gua_node
         {
-            aiNode *ai_node_;
+            aiNode* ai_node_;
             std::shared_ptr<node::TransformNode> gua_node_;
         };
 
@@ -471,7 +471,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(std::shared_ptr<Assimp::Impo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const &root, std::shared_ptr<Material> const &fallback_material, bool no_shared_materials)
+void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material, bool no_shared_materials)
 {
     auto g_node(std::dynamic_pointer_cast<node::TriMeshNode>(root));
 
@@ -485,12 +485,12 @@ void TriMeshLoader::apply_fallback_material(std::shared_ptr<node::Node> const &r
         g_node->set_material(std::make_shared<Material>(*g_node->get_material()));
     }
 
-    for(auto &child : root->get_children())
+    for(auto& child : root->get_children())
     {
         apply_fallback_material(child, fallback_material, no_shared_materials);
     }
 }
-gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const &transform_ai)
+gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const& transform_ai)
 {
     auto transform_scm = gua::math::mat4::identity();
 
@@ -516,14 +516,14 @@ gua::math::mat4 TriMeshLoader::convert_transformation(aiMatrix4x4t<float> const 
     return transform_scm;
 }
 
-void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const &transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
+void TriMeshLoader::apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const& transform_ai) { node->set_transform(convert_transformation(transform_ai)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_FBX
-FbxScene *TriMeshLoader::load_fbx_file(FbxManager *manager, std::string const &file_name)
+FbxScene* TriMeshLoader::load_fbx_file(FbxManager* manager, std::string const& file_name)
 {
     // Create an importer.
-    FbxImporter *lImporter = FbxImporter::Create(manager, "");
+    FbxImporter* lImporter = FbxImporter::Create(manager, "");
 
     int lFileMajor, lFileMinor, lFileRevision;
     int lSDKMajor, lSDKMinor, lSDKRevision;
@@ -555,7 +555,7 @@ FbxScene *TriMeshLoader::load_fbx_file(FbxManager *manager, std::string const &f
 
     // Create an FBX scene. This object holds most objects imported/exported
     // from/to files.
-    FbxScene *scene = FbxScene::Create(manager, "My Scene");
+    FbxScene* scene = FbxScene::Create(manager, "My Scene");
     if(!scene)
     {
         Logger::LOG_ERROR << "Error: Unable to create FBX scene!\n";

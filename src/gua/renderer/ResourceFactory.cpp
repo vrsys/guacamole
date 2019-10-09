@@ -37,9 +37,9 @@
 
 namespace
 {
-std::string gen_line(std::size_t line, std::string const &label) { return std::string("#line " + std::to_string(line) + " \"" + label + "\"\n"); };
+std::string gen_line(std::size_t line, std::string const& label) { return std::string("#line " + std::to_string(line) + " \"" + label + "\"\n"); };
 
-std::wstring gen_line(std::size_t line, std::wstring const &label)
+std::wstring gen_line(std::size_t line, std::wstring const& label)
 {
     std::wstring label_prepared = label;
     std::replace(label_prepared.begin(), label_prepared.end(), '\\', '/');
@@ -52,7 +52,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-ResourceFactory::ResourceFactory(std::vector<std::string> const &shader_root_directories) : _search_paths(shader_root_directories)
+ResourceFactory::ResourceFactory(std::vector<std::string> const& shader_root_directories) : _search_paths(shader_root_directories)
 {
     add_search_path(std::string(GUACAMOLE_INSTALL_DIR));
     add_search_path(std::string(GUACAMOLE_INSTALL_DIR) + "/resources");
@@ -61,11 +61,11 @@ ResourceFactory::ResourceFactory(std::vector<std::string> const &shader_root_dir
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ResourceFactory::add_search_path(std::string const &path) { _search_paths.push_back(path); }
+void ResourceFactory::add_search_path(std::string const& path) { _search_paths.push_back(path); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ResourceFactory::read_plain_file(std::string const &path) const
+std::string ResourceFactory::read_plain_file(std::string const& path) const
 {
     namespace fs = boost::filesystem;
     std::string out;
@@ -78,7 +78,7 @@ std::string ResourceFactory::read_plain_file(std::string const &path) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ResourceFactory::read_shader_file(std::string const &path) const
+std::string ResourceFactory::read_shader_file(std::string const& path) const
 {
     namespace fs = boost::filesystem;
 
@@ -91,7 +91,7 @@ std::string ResourceFactory::read_shader_file(std::string const &path) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ResourceFactory::prepare_shader(std::string const &shader_source, std::string const &label) const
+std::string ResourceFactory::prepare_shader(std::string const& shader_source, std::string const& label) const
 {
     namespace fs = boost::filesystem;
 
@@ -104,7 +104,7 @@ std::string ResourceFactory::prepare_shader(std::string const &shader_source, st
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ResourceFactory::resolve_substitutions(std::string const &shader_source, SubstitutionMap const &smap) const
+std::string ResourceFactory::resolve_substitutions(std::string const& shader_source, SubstitutionMap const& smap) const
 {
     // TODO: add support for the #line macro if multi-line substitutions are supplied.
     boost::regex regex("\\@(\\w+)\\@");
@@ -132,12 +132,12 @@ std::string ResourceFactory::resolve_substitutions(std::string const &shader_sou
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename, boost::filesystem::path const &current_dir, std::string &contents, boost::filesystem::path &full_path) const
+bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::string& contents, boost::filesystem::path& full_path) const
 {
     std::ifstream ifs;
     std::stringstream error_info;
 
-    auto probe = [&](boost::filesystem::path const &dir) -> bool {
+    auto probe = [&](boost::filesystem::path const& dir) -> bool {
         full_path = boost::filesystem::absolute(filename, dir);
         ifs.open(full_path.native());
         if(!ifs)
@@ -155,7 +155,7 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename,
     // probe files
     if(!probe(current_dir))
     {
-        for(auto const &path : _search_paths)
+        for(auto const& path : _search_paths)
         {
             if(probe(boost::filesystem::path(path)))
                 break;
@@ -178,12 +178,12 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename, boost::filesystem::path const &current_dir, std::wstring &contents, boost::filesystem::path &full_path) const
+bool ResourceFactory::get_file_contents(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::wstring& contents, boost::filesystem::path& full_path) const
 {
     std::ifstream ifs;
     std::stringstream error_info;
 
-    auto probe = [&](boost::filesystem::path const &dir) -> bool {
+    auto probe = [&](boost::filesystem::path const& dir) -> bool {
         full_path = boost::filesystem::absolute(filename, dir);
         ifs.open(full_path.native());
         if(!ifs)
@@ -200,7 +200,7 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename,
     // probe files
     if(!probe(current_dir))
     {
-        for(auto const &path : _search_paths)
+        for(auto const& path : _search_paths)
         {
             if(probe(boost::filesystem::path(path)))
                 break;
@@ -223,7 +223,7 @@ bool ResourceFactory::get_file_contents(boost::filesystem::path const &filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ResourceFactory::resolve_includes(boost::filesystem::path const &filename, boost::filesystem::path const &current_dir, std::string &contents, std::string const &custom_label) const
+bool ResourceFactory::resolve_includes(boost::filesystem::path const& filename, boost::filesystem::path const& current_dir, std::string& contents, std::string const& custom_label) const
 {
     // get contents
     using string_type = boost::filesystem::path::string_type;

@@ -1,5 +1,8 @@
 # Folders
 cmake_out/
+.idea/
+cmake-build-debug
+
 
 # Compiled Object files
 *.slo
@@ -57,6 +60,7 @@ examples/animation/example-animation
 examples/physics/example-physics
 examples/tiledwall/example-tiledwall
 examples/lod_mesh_textured/example-lod_mesh_textured
+examples/lod_mesh_virtually_textured/example-lod_mesh_virtually_textured
 examples/time_varying_volume/example-time_varying_volume
 examples/depth_cube_map/example-depth_cube_map
 examples/lod_simple/example-lod_simple

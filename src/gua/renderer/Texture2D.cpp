@@ -42,29 +42,29 @@
 
 namespace gua
 {
-Texture2D::Texture2D(scm::gl::texture_image_data_ptr image, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+Texture2D::Texture2D(scm::gl::texture_image_data_ptr image, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(image->format(), image->format(), mipmap_layers, state_descripton), image_(image), width_(image ? image->mip_level(0).size().x : 0), height_(image ? image->mip_level(0).size().y : 0)
 {
 }
 
-Texture2D::Texture2D(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const &state_descripton)
+Texture2D::Texture2D(unsigned width, unsigned height, scm::gl::data_format color_format, unsigned mipmap_layers, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(color_format, mipmap_layers, state_descripton), image_(nullptr), width_(width), height_(height)
 {
 }
 
-Texture2D::Texture2D(std::string const &file, bool generate_mipmaps, scm::gl::sampler_state_desc const &state_descripton)
+Texture2D::Texture2D(std::string const& file, bool generate_mipmaps, scm::gl::sampler_state_desc const& state_descripton)
     : Texture(file, generate_mipmaps, state_descripton), image_(load_image_2d(file, mipmap_layers_ > 0)), width_(image_ ? image_->mip_level(0).size().x : 0),
       height_(image_ ? image_->mip_level(0).size().y : 0)
 {
 }
 
-void Texture2D::upload_to(RenderContext const &context) const
+void Texture2D::upload_to(RenderContext const& context) const
 {
     RenderContext::Texture ctex{};
 
     if(image_)
     {
-        std::vector<void *> data;
+        std::vector<void*> data;
         for(unsigned i = 0; i < image_->mip_level_count(); ++i)
             data.push_back(image_->mip_level(i).data().get());
 
@@ -84,7 +84,7 @@ void Texture2D::upload_to(RenderContext const &context) const
     }
 }
 
-scm::gl::texture_image_data_ptr load_image_2d(std::string const &filename, bool create_mips)
+scm::gl::texture_image_data_ptr load_image_2d(std::string const& filename, bool create_mips)
 {
     scm::scoped_ptr<fipImage> in_image(new fipImage);
 
@@ -216,8 +216,8 @@ scm::gl::texture_image_data_ptr load_image_2d(std::string const &filename, bool 
         for(unsigned l = 0; l < lev_size.y; ++l)
         {
             size_t ls = static_cast<size_t>(lev_size.x) * size_of_format(format);
-            uint8_t *s = reinterpret_cast<uint8_t *>(in_image->accessPixels()) + line_pitch * l;
-            uint8_t *d = reinterpret_cast<uint8_t *>(cur_data.get()) + ls * l;
+            uint8_t* s = reinterpret_cast<uint8_t*>(in_image->accessPixels()) + line_pitch * l;
+            uint8_t* d = reinterpret_cast<uint8_t*>(cur_data.get()) + ls * l;
             std::memcpy(d, s, ls);
         }
 

@@ -3,6 +3,8 @@
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/guacamole.hpp>
 
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+
 #include <fstream>
 #include <regex>
 
@@ -16,13 +18,14 @@ void gua::VTBackend::add_context(uint16_t ctx_id, gua::node::CameraNode& camera)
     init_vt(ctx_id, camera);
     register_cuts(ctx_id);
 
-    _camera_contexts.insert({&camera, ctx_id});
-    _context_updated[ctx_id] = false;
-    _camera_drawn[camera.uuid()] = false;
+    camera_contexts_.insert({&camera, ctx_id});
+    context_updated_[ctx_id] = false;
+    camera_drawn_[camera.uuid()] = false;
+    context_states_.insert({camera.uuid(), VTContextState{false, false}});
 }
 void gua::VTBackend::start_backend()
 {
-    for(auto cam_ctx : _camera_contexts)
+    for(auto cam_ctx : camera_contexts_)
     {
         auto& current_vt_info = vt_info_per_context_[cam_ctx.second];
 
@@ -81,12 +84,12 @@ void gua::VTBackend::register_cuts(uint16_t ctx_id)
 }
 void gua::VTBackend::add_camera(const std::shared_ptr<gua::node::CameraNode>& camera)
 {
-    std::lock_guard<std::mutex> lock(_camera_contexts_mutex);
-    add_context((uint16_t)(_camera_contexts.size()), *camera);
+    std::lock_guard<std::mutex> lock(vt_backend_mutex_);
+    add_context((uint16_t)(camera_contexts_.size()), *camera);
 }
 const bool gua::VTBackend::has_camera(size_t uuid) const
 {
-    for(auto camera : _camera_contexts)
+    for(auto camera : camera_contexts_)
     {
         if(camera.first->uuid() == uuid)
         {
@@ -98,11 +101,11 @@ const bool gua::VTBackend::has_camera(size_t uuid) const
 }
 bool gua::VTBackend::should_collect_feedback_on_context(size_t uuid)
 {
-    std::lock_guard<std::mutex> lock(_camera_contexts_mutex);
+    std::lock_guard<std::mutex> lock(vt_backend_mutex_);
 
     uint16_t context_id = UINT16_MAX;
 
-    for(auto camera : _camera_contexts)
+    for(auto camera : camera_contexts_)
     {
         if(camera.first->uuid() == uuid)
         {
@@ -113,22 +116,22 @@ bool gua::VTBackend::should_collect_feedback_on_context(size_t uuid)
 
     bool should_collect = true;
 
-    for(auto camera : _camera_contexts)
+    for(auto camera : camera_contexts_)
     {
         if(camera.second == context_id)
         {
-            should_collect = should_collect && _camera_drawn[camera.first->uuid()];
+            should_collect = should_collect && camera_drawn_[camera.first->uuid()];
         }
     }
 
     if(should_collect)
     {
-        _context_updated[context_id] = false;
-        for(auto camera : _camera_contexts)
+        context_updated_[context_id] = false;
+        for(auto camera : camera_contexts_)
         {
             if(camera.second == context_id)
             {
-                _camera_drawn[camera.first->uuid()] = false;
+                camera_drawn_[camera.first->uuid()] = false;
             }
         }
     }
@@ -137,17 +140,17 @@ bool gua::VTBackend::should_collect_feedback_on_context(size_t uuid)
 }
 bool gua::VTBackend::should_update_on_context(size_t uuid)
 {
-    std::lock_guard<std::mutex> lock(_camera_contexts_mutex);
+    std::lock_guard<std::mutex> lock(vt_backend_mutex_);
 
-    _camera_drawn[uuid] = true;
+    camera_drawn_[uuid] = true;
 
-    for(auto camera : _camera_contexts)
+    for(auto camera : camera_contexts_)
     {
         if(camera.first->uuid() == uuid)
         {
-            if(!_context_updated[camera.second])
+            if(!context_updated_[camera.second])
             {
-                _context_updated[camera.second] = true;
+                context_updated_[camera.second] = true;
                 return true;
             }
         }
@@ -162,7 +165,36 @@ gua::VTBackend::~VTBackend()
     physical_texture_ptr_per_context_.clear();
     vt_info_per_context_.clear();
 
-    _camera_drawn.clear();
-    _context_updated.clear();
-    _camera_contexts.clear();
+    camera_drawn_.clear();
+    context_updated_.clear();
+    camera_contexts_.clear();
+    context_states_.clear();
 }
+gua::VTContextState& gua::VTBackend::get_state(size_t uuid)
+{
+    std::lock_guard<std::mutex> lock(vt_backend_mutex_);
+
+    auto state = context_states_.find(uuid);
+
+    if(state != context_states_.end())
+    {
+        return context_states_.at(uuid);
+    }
+    else
+    {
+        VTContextState null_state{false, false};
+        return null_state;
+    }
+}
+void gua::VTBackend::set_physical_texture_size(uint32_t sizePhysicalTexture)
+{
+    vt::VTConfig::get_instance().set_size_physical_texture(sizePhysicalTexture);
+    vt::VTConfig::get_instance().define_size_physical_texture(64, 8192);
+}
+void gua::VTBackend::set_update_throughput_size(uint32_t sizePhysicalUpdateThroughput)
+{
+    vt::VTConfig::get_instance().set_size_physical_update_throughput(sizePhysicalUpdateThroughput);
+}
+void gua::VTBackend::set_ram_cache_size(uint32_t sizeRamCache) { vt::VTConfig::get_instance().set_size_ram_cache(sizeRamCache); }
+
+#endif // GUACAMOLE_ENABLE_VIRTUAL_TEXTURING

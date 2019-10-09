@@ -5,8 +5,10 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${GUACAMOLE_GLFW3})
     add_subdirectory(clipping)
     add_subdirectory(input)
+    add_subdirectory(moving_rectangle)
     add_subdirectory(multicontext)
     add_subdirectory(nice_and_shiny)
+    add_subdirectory(dynamic_triangle_simple)
     add_subdirectory(oit_demo)
     add_subdirectory(picking)
     add_subdirectory(projective_texturing)
@@ -58,6 +60,9 @@ IF (GUACAMOLE_EXAMPLES)
   IF (${PLUGIN_guacamole-lod})
     add_subdirectory(lod_mesh_textured)
     add_subdirectory(lod_simple)
+    IF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
+      add_subdirectory(lod_mesh_virtually_textured)
+    ENDIF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
   ENDIF (${PLUGIN_guacamole-lod})
 
   # time-varying volume example requires tv_3-plugin
@@ -83,6 +88,7 @@ IF (GUACAMOLE_EXAMPLES)
 
   # spoints example requires glfw and spoints-plugin
   IF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
+    add_subdirectory(isbau_spoints)
     add_subdirectory(spoints)
   ENDIF (${GUACAMOLE_GLFW3} AND ${PLUGIN_guacamole-spoints})
 

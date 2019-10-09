@@ -55,10 +55,22 @@ namespace gua
 
 LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform)
 {
-    scm::gl::boxf bb = lamure::ren::model_database::get_instance()->get_model(model_id)->get_bvh()->get_bounding_boxes()[0];
+    //compute bounds
+    auto bvh = lamure::ren::model_database::get_instance()->get_model(model_id)->get_bvh();
 
-    bounding_box_.min = bb.min_vertex();
-    bounding_box_.max = bb.max_vertex();
+    scm::math::vec3f min_vertex(std::numeric_limits<float>::max());
+    scm::math::vec3f max_vertex(std::numeric_limits<float>::lowest());
+    for (const auto& box : bvh->get_bounding_boxes()) {
+      max_vertex.x = std::max(max_vertex.x, box.max_vertex().x);
+      max_vertex.y = std::max(max_vertex.y, box.max_vertex().y);
+      max_vertex.z = std::max(max_vertex.z, box.max_vertex().z);
+      min_vertex.x = std::min(min_vertex.x, box.min_vertex().x);
+      min_vertex.y = std::min(min_vertex.y, box.min_vertex().y);
+      min_vertex.z = std::min(min_vertex.z, box.min_vertex().z);
+    }
+
+    bounding_box_.min = min_vertex;
+    bounding_box_.max = max_vertex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
