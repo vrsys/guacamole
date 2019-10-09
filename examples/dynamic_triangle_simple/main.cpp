@@ -143,6 +143,11 @@ int main(int argc, char** argv)
     // VT STEP 1/5: - create a material
     auto atlas_material = gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material();
 
+    atlas_material->set_uniform("Metalness", 0.0f);
+    atlas_material->set_uniform("Roughness", 1.0f);
+    atlas_material->set_uniform("Emissivity", 1.0f);
+
+
     // VT STEP 2/5: - load *.atlas-File as uniform
     atlas_material->set_uniform("atlas_material", std::string("/opt/3d_models/lamure/provenance/salem/salem.atlas"));
 
