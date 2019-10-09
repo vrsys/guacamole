@@ -42,7 +42,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-Window::Window(Configuration const &configuration) : WindowBase(configuration) {}
+Window::Window(Configuration const& configuration) : WindowBase(configuration) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,12 +134,12 @@ void Window::set_active(bool active)
             fpQueryMaxSwapGroupsNV(wdc, &max_swap_groups_, &max_swap_barriers_);
         }
 #else
-        fpJoinSwapGroupNV = (PFNGLXJOINSWAPGROUPNVPROC)glXGetProcAddress((GLubyte *)"glXJoinSwapGroupNV");
-        fpBindSwapBarrierNV = (PFNGLXBINDSWAPBARRIERNVPROC)glXGetProcAddress((GLubyte *)"glXBindSwapBarrierNV");
-        fpQuerySwapGroupNV = (PFNGLXQUERYSWAPGROUPNVPROC)glXGetProcAddress((GLubyte *)"glXQuerySwapGroupNV");
-        fpQueryMaxSwapGroupsNV = (PFNGLXQUERYMAXSWAPGROUPSNVPROC)glXGetProcAddress((GLubyte *)"glXQueryMaxSwapGroupsNV");
-        fpQueryFrameCountNV = (PFNGLXQUERYFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte *)"glXQueryFrameCountNV");
-        fpResetFrameCountNV = (PFNGLXRESETFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte *)"glXResetFrameCountNV");
+        fpJoinSwapGroupNV = (PFNGLXJOINSWAPGROUPNVPROC)glXGetProcAddress((GLubyte*)"glXJoinSwapGroupNV");
+        fpBindSwapBarrierNV = (PFNGLXBINDSWAPBARRIERNVPROC)glXGetProcAddress((GLubyte*)"glXBindSwapBarrierNV");
+        fpQuerySwapGroupNV = (PFNGLXQUERYSWAPGROUPNVPROC)glXGetProcAddress((GLubyte*)"glXQuerySwapGroupNV");
+        fpQueryMaxSwapGroupsNV = (PFNGLXQUERYMAXSWAPGROUPSNVPROC)glXGetProcAddress((GLubyte*)"glXQueryMaxSwapGroupsNV");
+        fpQueryFrameCountNV = (PFNGLXQUERYFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte*)"glXQueryFrameCountNV");
+        fpResetFrameCountNV = (PFNGLXRESETFRAMECOUNTNVPROC)glXGetProcAddress((GLubyte*)"glXResetFrameCountNV");
         if(!fpJoinSwapGroupNV || !fpBindSwapBarrierNV || !fpQuerySwapGroupNV || !fpQueryMaxSwapGroupsNV || !fpQueryFrameCountNV || !fpResetFrameCountNV)
         {
             has_NV_swap_group_ext_ = false;
@@ -147,7 +147,7 @@ void Window::set_active(bool active)
         else
         {
             has_NV_swap_group_ext_ = true;
-            Display *display = glXGetCurrentDisplay();
+            Display* display = glXGetCurrentDisplay();
             int screen = config.get_display_name().back() - '0';
             fpQueryMaxSwapGroupsNV(display, screen, &max_swap_groups_, &max_swap_barriers_);
         }
@@ -162,7 +162,7 @@ void Window::set_active(bool active)
 #if WIN32
             bool result = fpJoinSwapGroupNV(GetDC(scm_window_->window_handle()), swap_group_);
 #else
-            Display *display = glXGetCurrentDisplay();
+            Display* display = glXGetCurrentDisplay();
             auto drawable = glXGetCurrentDrawable();
             bool result = fpJoinSwapGroupNV(display, drawable, swap_group_);
 #endif
@@ -177,7 +177,7 @@ void Window::set_active(bool active)
 #if WIN32
             bool result = fpBindSwapBarrierNV(swap_group_, swap_barrier_);
 #else
-            Display *display = glXGetCurrentDisplay();
+            Display* display = glXGetCurrentDisplay();
             bool result = fpBindSwapBarrierNV(display, swap_group_, swap_barrier_);
 #endif
             if(!result)
@@ -200,7 +200,7 @@ void Window::swap_buffers_impl()
     {
 #if WIN32
 #else
-        Display *display = glXGetCurrentDisplay();
+        Display* display = glXGetCurrentDisplay();
         std::string d = config.get_display_name();
         int screen = config.get_display_name().back() - '0';
         auto result = fpQueryFrameCountNV(display, screen, &frame_count_);

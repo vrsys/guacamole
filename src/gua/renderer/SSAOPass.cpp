@@ -36,13 +36,13 @@ SSAOPassDescription::SSAOPassDescription() : PipelinePassDescription()
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/ssao.frag";
 
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
-    blend_state_ = boost::make_optional(
+    private_.blend_state_desc_ = boost::make_optional(
         scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
     uniforms["gua_ssao_radius"] = 1.0f;
     uniforms["gua_ssao_intensity"] = 1.0f;
@@ -52,7 +52,7 @@ SSAOPassDescription::SSAOPassDescription() : PipelinePassDescription()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription &SSAOPassDescription::radius(float radius)
+SSAOPassDescription& SSAOPassDescription::radius(float radius)
 {
     uniforms["gua_ssao_radius"] = radius;
     return *this;
@@ -68,7 +68,7 @@ float SSAOPassDescription::radius() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription &SSAOPassDescription::intensity(float intensity)
+SSAOPassDescription& SSAOPassDescription::intensity(float intensity)
 {
     uniforms["gua_ssao_intensity"] = intensity;
     return *this;
@@ -84,7 +84,7 @@ float SSAOPassDescription::intensity() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SSAOPassDescription &SSAOPassDescription::falloff(float falloff)
+SSAOPassDescription& SSAOPassDescription::falloff(float falloff)
 {
     uniforms["gua_ssao_falloff"] = falloff;
     return *this;
@@ -104,7 +104,7 @@ std::shared_ptr<PipelinePassDescription> SSAOPassDescription::make_copy() const 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass SSAOPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass SSAOPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

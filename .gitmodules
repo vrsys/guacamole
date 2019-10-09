@@ -1,3 +1,0 @@
-[submodule "plugins/guacamole-spoints/include/gua/spoints/sgtp"]
-	path = plugins/guacamole-spoints/include/gua/spoints/sgtp
-	url = https://Nyran@bitbucket.org/Nyran/sgtp.git

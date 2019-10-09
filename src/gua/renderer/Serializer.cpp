@@ -44,7 +44,7 @@ Serializer::Serializer() : data_(nullptr), rendering_frustum_(), enable_frustum_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::check(SerializedScene &output, SceneGraph const &scene_graph, Mask const &mask, bool enable_frustum_culling, int view_id)
+void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, int view_id)
 {
     data_ = &output;
     data_->nodes.clear();
@@ -71,7 +71,7 @@ void Serializer::check(SerializedScene &output, SceneGraph const &scene_graph, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(node::Node *node)
+/* virtual */ void Serializer::visit(node::Node* node)
 {
     if(is_visible(node))
     {
@@ -81,7 +81,7 @@ void Serializer::check(SerializedScene &output, SceneGraph const &scene_graph, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(node::LODNode *node)
+/* virtual */ void Serializer::visit(node::LODNode* node)
 {
     if(is_visible(node))
     {
@@ -112,7 +112,7 @@ void Serializer::check(SerializedScene &output, SceneGraph const &scene_graph, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* virtual */ void Serializer::visit(node::SerializableNode *node)
+/* virtual */ void Serializer::visit(node::SerializableNode* node)
 {
     if(is_visible(node))
     {
@@ -124,7 +124,7 @@ void Serializer::check(SerializedScene &output, SceneGraph const &scene_graph, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Serializer::is_visible(node::Node *node) const
+bool Serializer::is_visible(node::Node* node) const
 {
     bool is_visible(true);
 
@@ -159,9 +159,9 @@ bool Serializer::is_visible(node::Node *node) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::visit_children(node::Node *node)
+void Serializer::visit_children(node::Node* node)
 {
-    for(auto &c : node->children_)
+    for(auto& c : node->children_)
     {
         c->accept(*this);
     }

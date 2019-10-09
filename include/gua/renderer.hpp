@@ -27,9 +27,15 @@
 #include <gua/renderer/enums.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/LineStripLoader.hpp>
+#include <gua/renderer/DynamicGeometryLoader.hpp>
+#include <gua/renderer/DynamicLineLoader.hpp>
+#include <gua/renderer/DynamicTriangleLoader.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
 #include <gua/renderer/LineStripPass.hpp>
+#include <gua/renderer/DynamicGeometryPass.hpp>
+#include <gua/renderer/DynamicLinePass.hpp>
+#include <gua/renderer/DynamicTrianglePass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BackgroundPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>

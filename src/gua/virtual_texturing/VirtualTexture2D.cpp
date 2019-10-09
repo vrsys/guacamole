@@ -47,6 +47,10 @@
 #include <iostream>
 #include <regex>
 
+#ifdef _WIN32
+#include <WinBase.h>
+#endif
+
 #define PHYSICAL_TEXTURE_MAX_NUM_LAYERS 256
 #define PHYSICAL_TEXTURE_MAX_RES_PER_AXIS 8192
 
@@ -58,24 +62,33 @@ std::map<std::size_t, scm::gl::buffer_ptr> VirtualTexture2D::vt_addresses_ubo_pe
 
 bool VirtualTexture2D::initialized_vt_system = false;
 
-VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename, std::size_t physical_texture_tile_slot_size, scm::gl::sampler_state_desc const& state_descripton)
+VirtualTexture2D::VirtualTexture2D(std::string const& atlas_filename, scm::gl::sampler_state_desc const& state_descripton)
 {
     std::string const ini_filename = std::regex_replace(atlas_filename, std::regex(".atlas"), ".ini");
 
     if(!initialized_vt_system)
     {
-        ::vt::VTConfig::CONFIG_PATH = ini_filename;
+#ifdef _WIN32
+		if (INVALID_FILE_ATTRIBUTES != GetFileAttributes(ini_filename.c_str()) || GetLastError() != ERROR_FILE_NOT_FOUND)
+		{
+			::vt::VTConfig::CONFIG_PATH = ini_filename;
+		}
+#else
+		if (access(ini_filename.c_str(), F_OK) != -1)
+		{
+			::vt::VTConfig::CONFIG_PATH = ini_filename;
+		}
+#endif
+
         ::vt::VTConfig::get_instance().define_size_physical_texture(PHYSICAL_TEXTURE_MAX_NUM_LAYERS, PHYSICAL_TEXTURE_MAX_RES_PER_AXIS);
+        tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
 
         initialized_vt_system = true;
     }
 
-    tile_size_ = ::vt::VTConfig::get_instance().get_size_tile();
-
     lamure_texture_id_ = ::vt::CutDatabase::get_instance().register_dataset(atlas_filename);
 
     atlas_file_path_ = atlas_filename;
-    ini_file_path_ = ini_filename;
 
     ::vt::pre::AtlasFile current_atlas_file(atlas_filename.c_str());
 
@@ -106,6 +119,8 @@ void VirtualTexture2D::upload_to(RenderContext const& ctx) const
 
 void VirtualTexture2D::update_index_texture_hierarchy(RenderContext const& ctx, std::vector<std::pair<uint16_t, uint8_t*>> const& level_update_pairs)
 {
+    upload_to(ctx);
+
     for(auto const& update_pair : level_update_pairs)
     {
         uint32_t updated_level = update_pair.first;

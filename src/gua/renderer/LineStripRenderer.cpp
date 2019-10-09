@@ -36,7 +36,7 @@
 
 namespace
 {
-gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const &tex)
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = 0;
     if(tex)
@@ -52,7 +52,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-LineStripRenderer::LineStripRenderer(RenderContext const &ctx, SubstitutionMap const &smap)
+LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
     : rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK)),
       rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),
       rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK)),
@@ -91,27 +91,29 @@ LineStripRenderer::LineStripRenderer(RenderContext const &ctx, SubstitutionMap c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc)
+void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
-    auto &scene = *pipe.current_viewstate().scene;
+    auto& scene = *pipe.current_viewstate().scene;
     auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::LineStripNode))));
 
     if(sorted_objects != scene.nodes.end() && sorted_objects->second.size() > 0)
     {
-        auto &target = *pipe.current_viewstate().target;
-        auto const &camera = pipe.current_viewstate().camera;
+        auto& target = *pipe.current_viewstate().target;
+        auto const& camera = pipe.current_viewstate().camera;
 
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node *a, node::Node *b) {
-            return reinterpret_cast<node::LineStripNode *>(a)->get_material()->get_shader() < reinterpret_cast<node::LineStripNode *>(b)->get_material()->get_shader();
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+            return reinterpret_cast<node::LineStripNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::LineStripNode*>(b)->get_material()->get_shader();
         });
 
-        RenderContext const &ctx(pipe.get_context());
+        RenderContext const& ctx(pipe.get_context());
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
         std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
 
         pipe.begin_gpu_query(ctx, gpu_query_name);
         pipe.begin_cpu_query(cpu_query_name);
+#endif
 
         bool write_depth = true;
         target.bind(ctx, write_depth);
@@ -119,15 +121,15 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
 
         int view_id(camera.config.get_view_id());
 
-        MaterialShader *current_material_shader(nullptr);
+        MaterialShader* current_material_shader(nullptr);
         std::shared_ptr<ShaderProgram> current_shader_program;
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
-        for(auto const &object : sorted_objects->second)
+        for(auto const& object : sorted_objects->second)
         {
-            auto line_strip_node(reinterpret_cast<node::LineStripNode *>(object));
+            auto line_strip_node(reinterpret_cast<node::LineStripNode*>(object));
             if(pipe.current_viewstate().shadow_mode && line_strip_node->get_shadow_mode() == ShadowMode::OFF)
             {
                 continue;
@@ -138,9 +140,9 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
                 continue;
             }
 
-            std::unordered_map<MaterialShader *, std::shared_ptr<ShaderProgram>> *current_material_shader_map = nullptr;
+            std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>>* current_material_shader_map = nullptr;
 
-            std::vector<ShaderProgramStage> *current_shader_stages = nullptr;
+            std::vector<ShaderProgramStage>* current_shader_stages = nullptr;
 
             // select the material shader maps belonging to the current visualization mode:
             // non volumetric line strips and points share the same shader
@@ -177,7 +179,7 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
                     else
                     {
                         auto smap = global_substitution_map_;
-                        for(const auto &i : current_material_shader->generate_substitution_map())
+                        for(const auto& i : current_material_shader->generate_substitution_map())
                             smap[i.first] = i.second;
 
                         current_shader_program = std::make_shared<ShaderProgram>();
@@ -194,7 +196,8 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
                 if(current_shader_program)
                 {
                     current_shader_program->use(ctx);
-                    current_shader_program->set_uniform(ctx, math::vec2ui(target.get_width(), target.get_height()),
+                    current_shader_program->set_uniform(ctx,
+                                                        math::vec2ui(target.get_width(), target.get_height()),
                                                         "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
                     current_shader_program->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
                     current_shader_program->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
@@ -205,12 +208,14 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
 
             if(current_shader_program && line_strip_node->get_geometry())
             {
-                auto model_view_mat = scene.rendering_frustum.get_view() * line_strip_node->get_cached_world_transform();
-                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(line_strip_node->get_cached_world_transform()))));
+				auto const node_world_transform = line_strip_node->get_latest_cached_world_transform(ctx.render_window);
+
+                auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
+                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
 
                 int rendering_mode = pipe.current_viewstate().shadow_mode ? (line_strip_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
-                current_shader_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(line_strip_node->get_cached_world_transform()));
+                current_shader_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
@@ -264,8 +269,10 @@ void LineStripRenderer::render(Pipeline &pipe, PipelinePassDescription const &de
 
         target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
+#endif
 
         ctx.render_context->reset_state_objects();
     }

@@ -73,7 +73,7 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource
      * Creates a new SPoints from a given spoints string.
      * \param spoints      Holds information about kinect streams.
      */
-    SPointsResource(std::string const& server_endpoint, std::string const& feedback_endpoint, unsigned flags);
+    SPointsResource(std::string const& spoints_resource_filename, unsigned flags);
 
     /**
      * destructor.
@@ -107,9 +107,6 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource
 
     void update_buffers(RenderContext const& ctx, Pipeline& pipe);
 
-    unsigned get_remote_server_screen_width() const;
-    unsigned get_remote_server_screen_height() const;
-
     /**
      * Raytest for SPoints
      *
@@ -131,8 +128,12 @@ class GUA_SPOINTS_DLL SPointsResource : public GeometryResource
     mutable std::mutex m_push_matrix_package_mutex_;
     std::shared_ptr<SPointsData> spointsdata_;
 
-    std::string server_endpoint_;
-    std::string feedback_endpoint_;
+    std::string spoints_resource_filename_ = "";
+    std::string server_endpoint_ = "";
+    std::string feedback_endpoint_ = "";
+
+    scm::math::vec3ui inv_xyz_vol_res_ = scm::math::vec3ui(1, 1, 1);
+    scm::math::vec3ui uv_vol_res_ = scm::math::vec3ui(1, 1, 1);
 
     bool is_pickable_;
 };

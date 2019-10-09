@@ -33,37 +33,16 @@ TexturedQuadPassDescription::TexturedQuadPassDescription() : PipelinePassDescrip
 {
     vertex_shader_ = "resources/shaders/common/quad.vert";
     fragment_shader_ = "resources/shaders/textured_quad.frag";
-    name_ = "TexturedQuadPass";
+    private_.name_ = "TexturedQuadPass";
 
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = false;
-    enable_for_shadows_ = true;
-    rendermode_ = RenderMode::Callback;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = true;
+    private_.rendermode_ = RenderMode::Callback;
 
-    rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
+    private_.rasterizer_state_desc_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_NONE));
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
-
-    process_ = [](PipelinePass &pass, PipelinePassDescription const &, Pipeline &pipe) {
-        for(auto const &node : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::TexturedQuadNode))])
-        {
-            auto quad_node(reinterpret_cast<node::TexturedQuadNode *>(node));
-
-            UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));
-            UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
-            UniformValue tex(quad_node->data.get_texture());
-            UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
-
-            auto const &ctx(pipe.get_context());
-
-            pass.shader_->apply_uniform(ctx, "gua_model_matrix", model_mat);
-            pass.shader_->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-            pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
-            pass.shader_->apply_uniform(ctx, "flip", flip);
-
-            pipe.draw_quad();
-        }
-    };
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(true, true, scm::gl::COMPARISON_LESS, true, 1, 0, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +51,29 @@ std::shared_ptr<PipelinePassDescription> TexturedQuadPassDescription::make_copy(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
+    private_.process_ = [](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) {
+        for(auto const& node : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::TexturedQuadNode))])
+        {
+            auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
+
+            UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));
+            UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
+            UniformValue tex(quad_node->data.get_texture());
+            UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
+
+            auto const& ctx(pipe.get_context());
+
+            pass.shader()->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            pass.shader()->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            pass.shader()->apply_uniform(ctx, "gua_in_texture", tex);
+            pass.shader()->apply_uniform(ctx, "flip", flip);
+
+            pipe.draw_quad();
+        }
+    };
+
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }

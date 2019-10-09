@@ -23,6 +23,8 @@
 
 // lamure headers
 #include <lamure/vt/VTConfig.h>
+#include <numeric>
+#include <algorithm>
 #include <boost/assign/list_of.hpp>
 
 namespace gua
@@ -98,9 +100,9 @@ void LayeredPhysicalTexture2D::upload_to(RenderContext const& ctx, uint32_t widt
     feedback_vao_ = ctx.render_device->create_vertex_array(vertex_format(0, 0, TYPE_UINT, size_of_format(FORMAT_R_32UI)), boost::assign::list_of(feedback_index_vb_)); // , shader_vt_feedback_);
     feedback_inv_index_ = ctx.render_device->create_buffer(BIND_STORAGE_BUFFER, USAGE_DYNAMIC_COPY, num_feedback_slots_ * size_of_format(FORMAT_R_32UI));
 
-    feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
+    feedback_lod_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_READ, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32I));
 #ifdef RASTERIZATION_COUNT
-    feedback_count_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_COPY, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32UI));
+    feedback_count_storage_ = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_READ, num_feedback_slots_ * size_of_format(scm::gl::FORMAT_R_32UI));
 #endif
 
     physical_texture_address_ubo_ = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_STATIC_DRAW, 4 * sizeof(scm::math::vec2ui));

@@ -34,22 +34,21 @@ VolumePassDescription::VolumePassDescription() : PipelinePassDescription()
     vertex_shader_ = "shaders/textured_screen_space_quad.vert";
     fragment_shader_ = "shaders/textured_screen_space_quad.frag";
 
-    needs_color_buffer_as_input_ = false;
-    enable_for_shadows_ = false;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.enable_for_shadows_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto renderer(std::make_shared<VolumeRenderer>());
 
-    pass.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) { renderer->render(pipe); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) { renderer->render(pipe); };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

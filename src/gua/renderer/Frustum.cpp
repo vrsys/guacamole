@@ -34,7 +34,7 @@ Frustum::Frustum()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum Frustum::perspective(math::mat4 const &camera_transform, math::mat4 const &screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far)
+Frustum Frustum::perspective(math::mat4 const& camera_transform, math::mat4 const& screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far)
 {
     auto projection = math::compute_perspective_frustum(camera_transform.column(3), screen_transform, clip_near, clip_far);
 
@@ -51,7 +51,7 @@ Frustum Frustum::perspective(math::mat4 const &camera_transform, math::mat4 cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Frustum Frustum::orthographic(math::mat4 const &camera_transform, math::mat4 const &screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far)
+Frustum Frustum::orthographic(math::mat4 const& camera_transform, math::mat4 const& screen_transform, math::mat4::value_type clip_near, math::mat4::value_type clip_far)
 {
     auto projection = math::compute_orthographic_frustum(camera_transform.column(3), screen_transform, clip_near, clip_far);
 
@@ -94,9 +94,9 @@ std::vector<math::vec3> Frustum::get_corners() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Frustum::intersects(math::BoundingBox<math::vec3> const &bbox, std::vector<math::vec4> const &global_planes) const
+bool Frustum::intersects(math::BoundingBox<math::vec3> const& bbox, std::vector<math::vec4> const& global_planes) const
 {
-    auto outside = [](math::vec4 const &plane, math::vec3 const &point) { return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] < 0; };
+    auto outside = [](math::vec4 const& plane, math::vec3 const& point) { return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] < 0; };
 
     for(unsigned i(0); i < 6; ++i)
     {
@@ -115,7 +115,7 @@ bool Frustum::intersects(math::BoundingBox<math::vec3> const &bbox, std::vector<
         }
     }
 
-    for(auto const &plane : global_planes)
+    for(auto const& plane : global_planes)
     {
         auto p(bbox.min);
         if(plane[0] >= 0)
@@ -137,9 +137,9 @@ bool Frustum::intersects(math::BoundingBox<math::vec3> const &bbox, std::vector<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool Frustum::contains(math::vec3 const &point) const
+bool Frustum::contains(math::vec3 const& point) const
 {
-    auto outside = [](math::vec4 const &plane, math::vec3 const &point) { return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] < 0; };
+    auto outside = [](math::vec4 const& plane, math::vec3 const& point) { return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3] < 0; };
 
     for(unsigned i(0); i < 6; ++i)
     {
@@ -154,13 +154,13 @@ bool Frustum::contains(math::vec3 const &point) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::set<PickResult> const Frustum::ray_test(node::RayNode const &ray, int options) { return ray_test(ray.get_world_ray(), options); }
+std::set<PickResult> const Frustum::ray_test(node::RayNode const& ray, int options) { return ray_test(ray.get_world_ray(), options); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // adapted from http://tog.acm.org/resources/GraphicsGems/gemsii/RayCPhdron.c
 
-std::set<PickResult> const Frustum::ray_test(Ray const &ray, int options)
+std::set<PickResult> const Frustum::ray_test(Ray const& ray, int options)
 {
     std::set<PickResult> result;
 
@@ -244,7 +244,7 @@ std::set<PickResult> const Frustum::ray_test(Ray const &ray, int options)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Frustum::init_frustum_members(math::mat4 const &camera_transform, math::mat4 const &screen_transform, Frustum &frustum)
+void Frustum::init_frustum_members(math::mat4 const& camera_transform, math::mat4 const& screen_transform, Frustum& frustum)
 {
     math::mat4 view_transform(screen_transform);
     view_transform[12] = 0.f;

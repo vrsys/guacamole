@@ -28,28 +28,28 @@ namespace gua
 {
 struct GUA_DLL ApplyUniform : public boost::static_visitor<>
 {
-    ApplyUniform(RenderContext const &context, std::string const &str, scm::gl::program_ptr const &p, unsigned l = 0) : ctx(context), name(str), prog(p), location(l) {}
+    ApplyUniform(RenderContext const& context, std::string const& str, scm::gl::program_ptr const& p, unsigned l = 0) : ctx(context), name(str), prog(p), location(l) {}
 
-    RenderContext const &ctx;
-    std::string const &name;
-    scm::gl::program_ptr const &prog;
+    RenderContext const& ctx;
+    std::string const& name;
+    scm::gl::program_ptr const& prog;
     unsigned location;
 
     void operator()(int value) const { prog->uniform(name, location, value); }
     void operator()(bool value) const { prog->uniform(name, location, value); }
     void operator()(float value) const { prog->uniform(name, location, value); }
-    void operator()(math::mat3f const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::mat4f const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec2f const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec3f const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec4f const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec2i const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec3i const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec4i const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec2ui const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec3ui const &value) const { prog->uniform(name, location, value); }
-    void operator()(math::vec4ui const &value) const { prog->uniform(name, location, value); }
-    void operator()(std::string const &tex_name) const
+    void operator()(math::mat3f const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::mat4f const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec2f const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec3f const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec4f const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec2i const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec3i const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec4i const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec2ui const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec3ui const& value) const { prog->uniform(name, location, value); }
+    void operator()(math::vec4ui const& value) const { prog->uniform(name, location, value); }
+    void operator()(std::string const& tex_name) const
     {
         if(tex_name == "0")
         {
@@ -75,20 +75,20 @@ struct GUA_DLL ApplyUniform : public boost::static_visitor<>
     }
 };
 
-void UniformValue::apply(RenderContext const &ctx, std::string const &name, scm::gl::program_ptr const &prog, unsigned location) const
+void UniformValue::apply(RenderContext const& ctx, std::string const& name, scm::gl::program_ptr const& prog, unsigned location) const
 {
     if(prog != nullptr)
         boost::apply_visitor(ApplyUniform(ctx, name, prog, location), data);
 }
 
 template <>
-void UniformValue::write_bytes_impl<bool>(UniformValue const *self, RenderContext const &ctx, char *target)
+void UniformValue::write_bytes_impl<bool>(UniformValue const* self, RenderContext const& ctx, char* target)
 {
     memcpy(target, &boost::get<bool>(self->data), sizeof(int));
 }
 
 template <>
-void UniformValue::write_bytes_impl<std::string>(UniformValue const *self, RenderContext const &ctx, char *target)
+void UniformValue::write_bytes_impl<std::string>(UniformValue const* self, RenderContext const& ctx, char* target)
 {
     auto tex_name(boost::get<std::string>(self->data));
     if(tex_name == "0")
@@ -106,13 +106,13 @@ void UniformValue::write_bytes_impl<std::string>(UniformValue const *self, Rende
         }
         if(texture)
         {
-            auto &handle(texture->get_handle(ctx));
+            auto& handle(texture->get_handle(ctx));
             memcpy(target, &handle, sizeof(math::vec2ui));
         }
     }
 }
 
-UniformValue UniformValue::create_from_string_and_type(std::string const &value, UniformType const &ty)
+UniformValue UniformValue::create_from_string_and_type(std::string const& value, UniformType const& ty)
 {
     switch(ty)
     {
@@ -157,7 +157,7 @@ UniformValue UniformValue::create_from_string_and_type(std::string const &value,
     throw std::runtime_error("UniformValue::create_from_string_and_type(): Invalid type");
 }
 
-UniformValue UniformValue::create_from_strings(std::string const &value, std::string const &ty)
+UniformValue UniformValue::create_from_strings(std::string const& value, std::string const& ty)
 {
     if(auto t = gua::enums::parse_uniform_type(ty))
     {
@@ -169,102 +169,102 @@ UniformValue UniformValue::create_from_strings(std::string const &value, std::st
     }
 }
 
-UniformValue UniformValue::create_from_serialized_string(std::string const &value)
+UniformValue UniformValue::create_from_serialized_string(std::string const& value)
 {
     auto tokens(string_utils::split(value, '|'));
     return create_from_strings(tokens[1], tokens[0]);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<int>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<int>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::INT) << "|" << boost::get<int>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<bool>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<bool>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::BOOL) << "|" << boost::get<bool>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<float>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<float>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::FLOAT) << "|" << boost::get<float>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::mat3f>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::mat3f>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::MAT3) << "|" << boost::get<math::mat3f>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::mat4f>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::mat4f>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::MAT4) << "|" << boost::get<math::mat4f>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec2f>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2f>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC2) << "|" << boost::get<math::vec2f>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec3f>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3f>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC3) << "|" << boost::get<math::vec3f>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec4f>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4f>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC4) << "|" << boost::get<math::vec4f>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec2i>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2i>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC2I) << "|" << boost::get<math::vec2i>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec3i>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3i>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC3I) << "|" << boost::get<math::vec3i>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec4i>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4i>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC4I) << "|" << boost::get<math::vec4i>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec2ui>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec2ui>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC2UI) << "|" << boost::get<math::vec2ui>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec3ui>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec3ui>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC3UI) << "|" << boost::get<math::vec3ui>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<math::vec4ui>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<math::vec4ui>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::VEC4UI) << "|" << boost::get<math::vec4ui>(self->data);
 }
 
 template <>
-std::ostream &UniformValue::serialize_to_stream_impl<std::string>(UniformValue const *self, std::ostream &os)
+std::ostream& UniformValue::serialize_to_stream_impl<std::string>(UniformValue const* self, std::ostream& os)
 {
     return os << enums::uniform_type_to_string(UniformType::SAMPLER2D) << "|" << boost::get<std::string>(self->data);
 }
 
-std::ostream &operator<<(std::ostream &os, UniformValue const &val) { return val.serialize_to_stream(os); }
+std::ostream& operator<<(std::ostream& os, UniformValue const& val) { return val.serialize_to_stream(os); }
 
 } // namespace gua

@@ -280,8 +280,10 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     auto const& frustum = pipe.current_viewstate().frustum;
     auto& target = *pipe.current_viewstate().target;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //  sort nodes
@@ -404,7 +406,9 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         }
     }
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_cpu_query(cpu_query_name_plod_total);
+#endif
 
     // dispatch cut updates
     if(previous_frame_count_ != ctx.framecount)

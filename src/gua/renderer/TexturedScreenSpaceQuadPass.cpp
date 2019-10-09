@@ -31,7 +31,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void render_node(PipelinePass &pass, node::TexturedScreenSpaceQuadNode *quad_node, Pipeline &pipe)
+void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_node, Pipeline& pipe)
 {
     UniformValue tex(quad_node->data.get_texture());
     UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
@@ -45,23 +45,23 @@ void render_node(PipelinePass &pass, node::TexturedScreenSpaceQuadNode *quad_nod
     UniformValue offset(scm::math::vec2f((2.0 * quad_node->data.get_offset().x + quad_node->data.get_anchor().x * (width - quad_node->data.get_size().x)) / width,
                                          (2.0 * quad_node->data.get_offset().y + quad_node->data.get_anchor().y * (height - quad_node->data.get_size().y)) / height));
 
-    auto const &ctx(pipe.get_context());
+    auto const& ctx(pipe.get_context());
 
-    pass.shader_->apply_uniform(ctx, "gua_in_texture", tex);
-    pass.shader_->apply_uniform(ctx, "flip", flip);
-    pass.shader_->apply_uniform(ctx, "size", size);
-    pass.shader_->apply_uniform(ctx, "offset", offset);
-    pass.shader_->apply_uniform(ctx, "opacity", opacity);
+    pass.shader()->apply_uniform(ctx, "gua_in_texture", tex);
+    pass.shader()->apply_uniform(ctx, "flip", flip);
+    pass.shader()->apply_uniform(ctx, "size", size);
+    pass.shader()->apply_uniform(ctx, "offset", offset);
+    pass.shader()->apply_uniform(ctx, "opacity", opacity);
 
     pipe.draw_quad();
 }
 
-void render_quads(PipelinePass &pass, PipelinePassDescription const &, Pipeline &pipe)
+void render_quads(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe)
 {
-    auto &scene = *pipe.current_viewstate().scene;
-    for(auto const &node : scene.nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))])
+    auto& scene = *pipe.current_viewstate().scene;
+    for(auto const& node : scene.nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))])
     {
-        auto quad_node(reinterpret_cast<node::TexturedScreenSpaceQuadNode *>(node));
+        auto quad_node(reinterpret_cast<node::TexturedScreenSpaceQuadNode*>(node));
         render_node(pass, quad_node, pipe);
     }
 }
@@ -72,17 +72,17 @@ TexturedScreenSpaceQuadPassDescription::TexturedScreenSpaceQuadPassDescription()
 {
     vertex_shader_ = "shaders/textured_screen_space_quad.vert";
     fragment_shader_ = "shaders/textured_screen_space_quad.frag";
-    name_ = "TexturedScreenSpaceQuadPass";
+    private_.name_ = "TexturedScreenSpaceQuadPass";
 
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Callback;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Callback;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
-    blend_state_ = boost::make_optional(
+    private_.blend_state_desc_ = boost::make_optional(
         scm::gl::blend_state_desc(scm::gl::blend_ops(true, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA, scm::gl::FUNC_SRC_ALPHA, scm::gl::FUNC_ONE_MINUS_SRC_ALPHA)));
-    process_ = render_quads;
+    private_.process_ = render_quads;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +91,6 @@ std::shared_ptr<PipelinePassDescription> TexturedScreenSpaceQuadPassDescription:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass TexturedScreenSpaceQuadPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map) { return PipelinePass{*this, ctx, substitution_map}; }
+PipelinePass TexturedScreenSpaceQuadPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) { return PipelinePass{*this, ctx, substitution_map}; }
 
 } // namespace gua

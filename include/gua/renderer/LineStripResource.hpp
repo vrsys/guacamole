@@ -108,6 +108,7 @@ class LineStripResource : public GeometryResource
 
     math::vec3 get_vertex(unsigned int i) const;
 
+
   private:
     void upload_to(RenderContext& context) const;
 

@@ -42,6 +42,8 @@
 
 namespace
 {
+
+/*
 gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 {
     uint64_t handle = 0;
@@ -50,88 +52,8 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
         handle = tex->native_handle();
     }
     return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
-}
+}*/
 
-struct VertexOnly
-{
-    scm::math::vec3f pos;
-};
-
-std::vector<unsigned> proxy_mesh_indices(int size, unsigned width, unsigned height)
-{
-    std::vector<unsigned> index_array(size);
-    unsigned v(0);
-    for(unsigned h(0); h < (height - 1); ++h)
-    {
-        for(unsigned w(0); w < (width - 1); ++w)
-        {
-            index_array[v] = (w + h * width);
-            ++v;
-            index_array[v] = (w + h * width + 1);
-            ++v;
-            index_array[v] = (w + h * width + width);
-            ++v;
-            index_array[v] = (w + h * width + width);
-            ++v;
-            index_array[v] = (w + h * width + 1);
-            ++v;
-            index_array[v] = (w + h * width + 1 + width);
-            ++v;
-        }
-    }
-    return index_array;
-}
-
-gua::RenderContext::Mesh create_proxy_mesh(gua::RenderContext& ctx, unsigned height_depthimage, unsigned width_depthimage)
-{
-    int num_vertices = height_depthimage * width_depthimage;
-    // int num_indices = height_depthimage * width_depthimage;
-    int num_triangles = ((height_depthimage - 1) * (width_depthimage - 1)) * 2;
-    int num_triangle_indices = 3 * num_triangles;
-    // int num_line_indices = (height_depthimage - 1) * ((width_depthimage - 1) * 3 +
-    //                                                   1) + (width_depthimage - 1);
-
-    float step = 1.0f / width_depthimage;
-
-    gua::RenderContext::Mesh proxy_mesh{};
-    proxy_mesh.indices_topology = scm::gl::PRIMITIVE_TRIANGLE_LIST;
-    proxy_mesh.indices_type = scm::gl::TYPE_UINT;
-    proxy_mesh.indices_count = num_triangle_indices;
-
-    proxy_mesh.vertices = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_vertices * sizeof(VertexOnly), 0);
-
-    VertexOnly* data(static_cast<VertexOnly*>(ctx.render_context->map_buffer(proxy_mesh.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
-
-    unsigned v(0);
-    for(float h = 0.5 * step; h < height_depthimage * step; h += step)
-    {
-        for(float w = 0.5 * step; w < width_depthimage * step; w += step)
-        {
-            data[v].pos = scm::math::vec3f(w, h, 0.0f);
-            ++v;
-        }
-    }
-
-    ctx.render_context->unmap_buffer(proxy_mesh.vertices);
-
-    std::vector<unsigned> indices = proxy_mesh_indices(num_triangle_indices, width_depthimage, height_depthimage);
-
-    proxy_mesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_triangle_indices * sizeof(unsigned int), indices.data());
-
-    proxy_mesh.vertex_array = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(VertexOnly)), {proxy_mesh.vertices});
-    return proxy_mesh;
-    // ctx.render_context->apply(); // necessary ???
-}
-
-void draw_proxy_mesh(gua::RenderContext const& ctx, gua::RenderContext::Mesh const& mesh)
-{
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
-    ctx.render_context->bind_vertex_array(mesh.vertex_array);
-    ctx.render_context->bind_index_buffer(mesh.indices, mesh.indices_topology, mesh.indices_type);
-
-    ctx.render_context->apply();
-    ctx.render_context->draw_elements(mesh.indices_count);
-}
 
 } // namespace
 
@@ -253,6 +175,33 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             gpu_resources_already_created_ = true;
         }
 
+
+        //update and cr
+        {
+            
+            for(auto& o : objects->second)
+            {
+                auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
+
+                auto spoints_desc(spoints_node->get_spoints_description());
+
+                if(!GeometryDatabase::instance()->contains(spoints_desc))
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): No such spoints." << spoints_desc << ", " << std::endl;
+                    continue;
+                }
+
+                auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
+                if(!spoints_resource)
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
+                    continue;
+                }
+
+                spoints_resource->update_buffers(pipe.get_context(), pipe);
+            }
+        }
+
         ///////////////////////////////////////////////////////////////////////////
         // program initialization
         ///////////////////////////////////////////////////////////////////////////
@@ -260,88 +209,78 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         {
             scm::gl::context_all_guard context_guard(ctx.render_context);
 
-            for(auto& o : objects->second)
-            {
+            for(auto& o : objects->second) {
                 auto spoints_node(reinterpret_cast<node::SPointsNode*>(o));
                 auto spoints_desc(spoints_node->get_spoints_description());
 
-                if(true)
+                auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
+                auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
+                auto view_matrix(pipe.current_viewstate().frustum.get_view());
+
+                scm::math::mat4f model_matrix = scm::math::mat4f(cached_model_matrix);
+                scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+                scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
+                scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
+
+                spoints::matrix_package current_package;
+
+                memcpy((char*)&current_package, (char*)model_matrix.data_array, 16 * sizeof(float));
+                memcpy((char*)&current_package + 16 * sizeof(float), (char*)viewprojection_matrix.data_array, 16 * sizeof(float));
+                memcpy((char*)&current_package + 32 * sizeof(float), (char*)mv_matrix.data_array, 16 * sizeof(float));
+                memcpy(((char*)&current_package) + 48 * sizeof(float), (char*)projection_matrix.data_array, 16 * sizeof(float));
+
+                current_package.res_xy[0] = render_target_dims.x;
+                current_package.res_xy[1] = render_target_dims.y;
+
+                auto const& camera = pipe.current_viewstate().camera;
+                auto const camera_view_id = camera.config.view_id();
+
+                uint32_t current_camera_feedback_uuid = camera.config.view_id();
+
+                if(camera.config.enable_stereo())
                 {
-                    // std::cout << "IS SERVER RESOURCE\n";
-
-                    auto const& cached_model_matrix(spoints_node->get_cached_world_transform());
-                    auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
-                    auto view_matrix(pipe.current_viewstate().frustum.get_view());
-
-                    scm::math::mat4f model_matrix = scm::math::mat4f(cached_model_matrix);
-                    scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
-                    scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-                    scm::math::mat4f viewprojection_matrix = projection_matrix * scm::math::mat4f(view_matrix);
-
-                    spoints::matrix_package current_package;
-
-                    memcpy((char*)&current_package, (char*)model_matrix.data_array, 16 * sizeof(float));
-                    memcpy((char*)&current_package + 16 * sizeof(float), (char*)viewprojection_matrix.data_array, 16 * sizeof(float));
-                    memcpy((char*)&current_package + 32 * sizeof(float), (char*)mv_matrix.data_array, 16 * sizeof(float));
-                    memcpy(((char*)&current_package) + 48 * sizeof(float), (char*)projection_matrix.data_array, 16 * sizeof(float));
-
-                    current_package.res_xy[0] = render_target_dims.x;
-                    current_package.res_xy[1] = render_target_dims.y;
-
-                    auto const& camera = pipe.current_viewstate().camera;
-                    auto const camera_view_id = camera.config.view_id();
-
-                    uint32_t current_camera_feedback_uuid = camera.config.view_id();
-
-                    if(camera.config.enable_stereo())
+                    bool is_left_cam = true;
+                    if(camera_view_id == last_rendered_view_id)
                     {
-                        bool is_left_cam = true;
-                        if(camera_view_id == last_rendered_view_id)
-                        {
-                            last_rendered_side = (last_rendered_side + 1) % 2;
-                            is_left_cam = (last_rendered_side == 0) ? true : false;
-                        }
-
-                        current_package.camera_type = (is_left_cam ? 1 : 2);
-                    }
-                    else
-                    {
-                        last_rendered_side = 0;
-                        current_package.camera_type = 0;
+                        last_rendered_side = (last_rendered_side + 1) % 2;
+                        is_left_cam = (last_rendered_side == 0) ? true : false;
                     }
 
-                    last_rendered_view_id = camera_view_id;
+                    current_package.camera_type = (is_left_cam ? 1 : 2);
+                }
+                else
+                {
+                    last_rendered_side = 0;
+                    current_package.camera_type = 0;
+                }
 
-                    current_package.uuid = current_camera_feedback_uuid;
+                last_rendered_view_id = camera_view_id;
 
-                    auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
-                    if(!spoints_resource)
-                    {
-                        gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
-                        continue;
-                    }
+                current_package.uuid = current_camera_feedback_uuid;
 
-                    // spoints_resource->push_matrix_package(cm_package);
-                    std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
+                auto spoints_resource = std::static_pointer_cast<SPointsResource>(GeometryDatabase::instance()->lookup(spoints_desc));
+                if(!spoints_resource)
+                {
+                    gua::Logger::LOG_WARNING << "SPointsRenderer::draw(): Invalid spoints." << std::endl;
+                    continue;
+                }
 
-                    if(!spoints_resource->has_calibration(ctx))
-                    {
-                        current_package.calibration_request = true;
-                    }
-                    else
-                    {
-                        current_package.calibration_request = false;
-                    }
+                // spoints_resource->push_matrix_package(cm_package);
+                std::string feedback_socket_string_of_resource = spoints_resource->get_socket_string();
 
-                    if("" != feedback_socket_string_of_resource)
-                    {
-                        SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
-                        //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
-                    }
-                    else
-                    {
-                        //     std::cout << "FBS: 0" << "\n";
-                    }
+                if(!spoints_resource->has_calibration(ctx))
+                {
+                    current_package.calibration_request = true;
+                }
+                else
+                {
+                    current_package.calibration_request = false;
+                }
+
+                if("" != feedback_socket_string_of_resource)
+                {
+                    SPointsFeedbackCollector::instance()->push_feedback_matrix(ctx, feedback_socket_string_of_resource, current_package);
+                    //      std::cout << "Feedback socket string was not 0, but: " << feedback_socket_string_of_resource << "\n";
                 }
             }
 
@@ -380,7 +319,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                         continue;
                     }
 
-                    spoints_resource->update_buffers(pipe.get_context(), pipe);
+                    //spoints_resource->update_buffers(pipe.get_context(), pipe);
 
                     // get material dependent shader
                     std::shared_ptr<ShaderProgram> current_shader;
@@ -388,7 +327,6 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     if(!(spoints_resource->is_vertex_data_fully_encoded()))
                     {
                         // is_vertex_data_fully_encoded
-                        // std::cout << "IS NOT FULLY ENCODED\n";
                         MaterialShader* current_material = spoints_node->get_material()->get_shader();
                         if(current_material)
                         {
@@ -406,7 +344,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                    forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
                                 forward_textured_triangles_pass_programs_quantized_[current_material] = current_shader;
                             }
                         }
@@ -417,7 +355,6 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     }
                     else
                     {
-                        // std::cout << "IS FULLY ENCODED\n";
                         MaterialShader* current_material = spoints_node->get_material()->get_shader();
                         if(current_material)
                         {
@@ -435,7 +372,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                    forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
                                 forward_textured_triangles_pass_programs_[current_material] = current_shader;
                             }
                         }
@@ -452,17 +389,16 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                     current_shader->use(ctx);
 
-                    ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
+                    if(!(spoints_resource->is_vertex_data_fully_encoded())) {
+                        ctx.render_context->set_rasterizer_state(backface_culling_rasterizer_state_);
+                    } else {
+                        ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+                    } 
 
-                    auto const& model_matrix(spoints_node->get_cached_world_transform());
-                    auto normal_matrix(scm::math::transpose(scm::math::inverse(spoints_node->get_cached_world_transform())));
-                    auto view_matrix(pipe.current_viewstate().frustum.get_view());
 
-                    scm::math::mat4f mv_matrix = scm::math::mat4f(view_matrix) * scm::math::mat4f(model_matrix);
+                    auto const node_world_transform = spoints_node->get_latest_cached_world_transform(ctx.render_window);
+                    auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
 
-                    scm::math::mat4f projection_matrix = scm::math::mat4f(pipe.current_viewstate().frustum.get_projection());
-
-                    scm::math::mat4f mvp_matrix = projection_matrix * mv_matrix;
 
                     int rendering_mode = pipe.current_viewstate().shadow_mode ? (spoints_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
@@ -474,13 +410,12 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                                     "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
                         current_shader->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
                         current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
-                        // hack
-                        current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
-                        current_shader->set_uniform(ctx, scm::math::mat4f(model_matrix), "kinect_model_matrix");
 
-                        current_shader->set_uniform(ctx, scm::math::mat4f(mv_matrix), "kinect_mv_matrix");
 
-                        current_shader->set_uniform(ctx, scm::math::mat4f(mvp_matrix), "kinect_mvp_matrix");
+
+                        current_shader->set_uniform(ctx, scm::math::mat4f(node_world_transform), "gua_model_matrix");
+                        current_shader->set_uniform(ctx, scm::math::mat4f(model_view_mat), "gua_model_view_matrix");
+
 
                         current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
                     }

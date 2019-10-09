@@ -31,23 +31,22 @@ namespace gua
 {
 Video3DPassDescription::Video3DPassDescription() : PipelinePassDescription()
 {
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = false;
-    enable_for_shadows_ = true;
-    rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = true;
+    private_.rendermode_ = RenderMode::Custom;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PipelinePass Video3DPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto renderer(std::make_shared<Video3DRenderer>());
     renderer->set_global_substitution_map(substitution_map);
 
-    pass.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

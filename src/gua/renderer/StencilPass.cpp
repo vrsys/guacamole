@@ -39,14 +39,14 @@ StencilPassDescription::StencilPassDescription() : PipelinePassDescription()
 {
     vertex_shader_ = "shaders/tri_mesh_shader_stencil.vert";
     fragment_shader_ = "shaders/tri_mesh_shader_stencil.frag";
-    name_ = "StencilPass";
+    private_.name_ = "StencilPass";
 
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = true;
-    enable_for_shadows_ = false;
-    rendermode_ = RenderMode::Callback;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = true;
+    private_.enable_for_shadows_ = false;
+    private_.rendermode_ = RenderMode::Callback;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(
         false, false, scm::gl::COMPARISON_LESS, true, 1, 0xFF, scm::gl::stencil_ops(scm::gl::COMPARISON_ALWAYS, scm::gl::STENCIL_KEEP, scm::gl::STENCIL_KEEP, scm::gl::STENCIL_REPLACE)));
 }
 
@@ -56,19 +56,18 @@ std::shared_ptr<PipelinePassDescription> StencilPassDescription::make_copy() con
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass StencilPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass StencilPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto renderer = std::make_shared<StencilRenderer>();
     renderer->create_state_objects(ctx);
 
-    pass.process_ = [renderer](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) {
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
         pipe.current_viewstate().target->clear(pipe.get_context(), 1.f, 0);
-        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_, 1);
-        renderer->render(pipe, pass.shader_);
+        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
+        renderer->render(pipe, pass.shader());
     };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

@@ -37,7 +37,7 @@ namespace node
 ////////////////////////////////////////////////////////////////////////////////
 LineStripNode::LineStripNode(std::string const& name, std::string const& geometry_description, std::shared_ptr<Material> const& material, math::mat4 const& transform)
     : GeometryNode(name, transform), geometry_(nullptr), geometry_description_(geometry_description), geometry_changed_(true), material_(material), render_to_gbuffer_(true),
-      render_to_stencil_buffer_(false), render_volumetric_(false), render_vertices_as_points_(false), screen_space_line_width_(1.0f), screen_space_point_size_(1.0f), was_created_empty_(false),
+      render_to_stencil_buffer_(false), render_volumetric_(false), render_vertices_as_points_(false), render_lines_as_strip_(true), screen_space_line_width_(1.0f), screen_space_point_size_(1.0f), was_created_empty_(false),
       trigger_update_(false)
 {
 }

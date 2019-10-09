@@ -15,15 +15,16 @@ LightVisibilityPassDescription::LightVisibilityPassDescription() : PipelinePassD
 {
     vertex_shader_ = "shaders/light_visibility.vert";
     fragment_shader_ = "shaders/light_visibility.frag";
-    name_ = "LightVisibilityPass";
+    private_.name_ = "LightVisibilityPass";
 
-    needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
-    writes_only_color_buffer_ = false;    // we don't write out a color
-    rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false; // don't ping pong the color buffer
+    private_.writes_only_color_buffer_ = false;    // we don't write out a color
+    private_.rendermode_ = RenderMode::Custom;
 
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 0xFF, 0x00, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
+    private_.depth_stencil_state_desc_ =
+        boost::make_optional(scm::gl::depth_stencil_state_desc(false, false, scm::gl::COMPARISON_LESS, true, 0xFF, 0x00, scm::gl::stencil_ops(scm::gl::COMPARISON_EQUAL)));
 
-    rasterizer_state_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
+    private_.rasterizer_state_desc_ = boost::make_optional(scm::gl::rasterizer_state_desc(scm::gl::FILL_SOLID, scm::gl::CULL_FRONT));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,9 +33,9 @@ std::shared_ptr<PipelinePassDescription> LightVisibilityPassDescription::make_co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    auto const &glapi = ctx.render_context->opengl_api();
+    auto const& glapi = ctx.render_context->opengl_api();
     substitution_map["light_table_tile_power"] = std::to_string(tile_power_);
     substitution_map["light_table_fallback_mode"] = (rasterization_mode() == FULLSCREEN_FALLBACK) ? "1" : "0";
 
@@ -92,16 +93,15 @@ PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const &ctx,
         ms_sample_count = 0;
     }
 
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto renderer = std::make_shared<LightVisibilityRenderer>();
 
-    pass.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](PipelinePass &pass, PipelinePassDescription const &desc, Pipeline &pipe) {
-        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state_);
-        pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state_);
+    private_.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+        pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state());
+        pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state());
         renderer->render(pass, pipe, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback);
     };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

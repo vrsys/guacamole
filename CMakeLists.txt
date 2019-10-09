@@ -79,6 +79,14 @@ include_directories("${PROJECT_BINARY_DIR}/include")
 ################################################################
 set(GLOBAL_EXT_DIR ${GUACAMOLE_SOURCE_DIR}/externals)
 
+if(MSVC)
+    option(CONTAINER_DEPLOYMENT_BUILD "Set to enable Docker-based deployment behaviors" ON)
+endif()
+
+if(CONTAINER_DEPLOYMENT_BUILD)
+    set(GLOBAL_EXT_DIR ${DEPLOYMENT_EXTERNALS})
+endif(CONTAINER_DEPLOYMENT_BUILD)
+
 include(define_macros)
 include(find_compiler)
 
@@ -109,6 +117,9 @@ elseif (WIN32)
   #set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_MULTITHREADED ON)
   add_definitions("-DBOOST_ALL_NO_LIB")
+  
+  set(BOOST_INCLUDEDIR ${GLOBAL_EXT_DIR}/boost/include)
+  set(BOOST_LIBRARYDIR ${GLOBAL_EXT_DIR}/boost/lib)
 endif (UNIX)
 
 mark_as_advanced(Boost_DIR)
@@ -189,6 +200,13 @@ if(GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
 endif(GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
 ## json ###################################################
 find_package(Json REQUIRED)
+
+
+option (GUACAMOLE_ENABLE_TURBOJPEG "Set to enable usage of TurboJPEG for decompressing images." OFF)
+
+IF (GUACAMOLE_ENABLE_TURBOJPEG)
+  find_package(TurboJPEG REQUIRED)
+ENDIF (GUACAMOLE_ENABLE_TURBOJPEG)
 
 ## setup paths and libraries ##############################
 set(LIB_PATHS

@@ -31,8 +31,6 @@
 #include <gua/renderer/ResourceFactory.hpp>
 
 #include <gua/node/MLodNode.hpp>
-#include <gua/platform.hpp>
-#include <gua/guacamole.hpp>
 #include <gua/renderer/View.hpp>
 
 #include <gua/databases.hpp>
@@ -53,6 +51,7 @@
 #include <lamure/ren/cut_database.h>
 #include <lamure/ren/controller.h>
 #include <boost/assign/list_of.hpp>
+#include <gua/renderer/MLodPass.hpp>
 
 namespace
 {
@@ -67,7 +66,12 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 namespace gua
 {
 //////////////////////////////////////////////////////////////////////////////
-MLodRenderer::MLodRenderer() : gpu_resources_created_(false), current_rendertarget_width_(0), current_rendertarget_height_(0)
+MLodRenderer::MLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
+    :
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+      VTRenderer(ctx, smap),
+#endif
+      gpu_resources_created_(false), current_rendertarget_width_(0), current_rendertarget_height_(0)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
@@ -90,14 +94,15 @@ void MLodRenderer::create_state_objects(RenderContext const& ctx)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ShaderProgram> MLodRenderer::_get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed)
+std::shared_ptr<ShaderProgram>
+MLodRenderer::_get_material_program(MaterialShader* material, std::shared_ptr<ShaderProgram> const& current_program, bool& program_changed, gua::node::MLodNode* mlod_node)
 {
     auto shader_iterator = programs_.find(material);
     if(shader_iterator == programs_.end())
     {
         try
         {
-            _initialize_tri_mesh_lod_program(material);
+            _initialize_tri_mesh_lod_program(material, mlod_node);
             program_changed = true;
             return programs_.at(material);
         }
@@ -123,7 +128,7 @@ std::shared_ptr<ShaderProgram> MLodRenderer::_get_material_program(MaterialShade
 }
 
 //////////////////////////////////////////////////////////////////////////////
-void MLodRenderer::_initialize_tri_mesh_lod_program(MaterialShader* material)
+void MLodRenderer::_initialize_tri_mesh_lod_program(MaterialShader* material, gua::node::MLodNode* mlod_node)
 {
     if(!programs_.count(material))
     {
@@ -135,7 +140,12 @@ void MLodRenderer::_initialize_tri_mesh_lod_program(MaterialShader* material)
             smap[i.first] = i.second;
         }
 
+#ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
         program->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+#else
+        bool virtual_texturing_enabled = mlod_node->get_material()->get_enable_virtual_texturing();
+        program->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+#endif
         programs_[material] = program;
     }
     assert(programs_.count(material));
@@ -154,8 +164,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     auto const& frustum = pipe.current_viewstate().frustum;
     auto& target = *pipe.current_viewstate().target;
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
     pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //  obtain nodes
@@ -234,9 +246,11 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         lamure::model_t model_id = controller->deduce_model_id(mlod_node->get_geometry_description());
 
         auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
-        auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
-        auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
-        auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+        //auto const& scm_model_matrix = mlod_node->get_world_transform();
+        
+        //auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+        //auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
+        // auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
 
         cuts->send_transform(context_id, model_id, math::mat4f(scm_model_matrix));
         cuts->send_rendered(context_id, model_id);
@@ -251,8 +265,11 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         std::vector<lamure::ren::cut::node_slot_aggregate>& node_list = cut.complete_set();
 
         // perform frustum culling
-        lamure::ren::bvh const* bvh = database->get_model(model_id)->get_bvh();
+        lamure::ren::bvh * bvh = database->get_model(model_id)->get_bvh();
+        bvh->set_min_lod_depth(mlod_node->get_min_lod_depth());
+
         scm::gl::frustum const& culling_frustum = cut_update_cam.get_frustum_by_model(math::mat4f(scm_model_matrix));
+        //auto culling_frustum = scm::gl::frustum(scm::math::mat4f(scm_model_view_projection_matrix));
 
         std::vector<scm::gl::boxf> const& model_bounding_boxes = bvh->get_bounding_boxes();
 
@@ -293,10 +310,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         }
     }
 
-    scm::gl::context_all_guard context_guard(ctx.render_context);
-
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / MLodRenderer";
     pipe.begin_gpu_query(ctx, gpu_query_name);
+#endif
 
     MaterialShader* current_material(nullptr);
     std::shared_ptr<ShaderProgram> current_material_program;
@@ -311,14 +328,9 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 
         lamure::model_t model_id = controller->deduce_model_id(mlod_node->get_geometry_description());
 
-        auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
-        auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
-        auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
-        auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
-
         current_material = mlod_node->get_material()->get_shader();
 
-        current_material_program = _get_material_program(current_material, current_material_program, program_changed);
+        current_material_program = _get_material_program(current_material, current_material_program, program_changed, mlod_node);
 
         if(current_material_program)
         {
@@ -330,6 +342,18 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
             current_material_program->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
             // hack
             current_material_program->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+            if(!pipe.current_viewstate().shadow_mode)
+            {
+                VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+
+                if(vt_state && vt_state->has_camera_)
+                {
+                    current_material_program->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
+                }
+            }
+#endif
         }
 
         auto const& mlod_resource = mlod_node->get_geometry();
@@ -344,17 +368,36 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
                 current_material_program->use(ctx);
             }
 
+			auto const node_world_transform = mlod_node->get_latest_cached_world_transform(ctx.render_window);
+
+			auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
+			UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
+
+			int rendering_mode = pipe.current_viewstate().shadow_mode ? (mlod_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
+			current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
+			current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
+			current_material_program->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+			current_material_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+			
+#ifdef oldstuff
+            auto const& scm_model_matrix = mlod_node->get_cached_world_transform();
+            auto scm_model_view_matrix = frustum.get_view() * scm_model_matrix;
+            // auto scm_model_view_projection_matrix = frustum.get_projection() * scm_model_view_matrix;
+            auto scm_normal_matrix = scm::math::transpose(scm::math::inverse(scm_model_matrix));
+
             int rendering_mode = pipe.current_viewstate().shadow_mode ? (mlod_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
             current_material_program->apply_uniform(ctx, "gua_model_matrix", math::mat4f(mlod_node->get_cached_world_transform()));
             current_material_program->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(scm_model_view_matrix));
             current_material_program->apply_uniform(ctx, "gua_normal_matrix", math::mat4f(scm_normal_matrix));
             current_material_program->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
-
+#endif
             // lowfi shadows dont need material input
-            // if (rendering_mode != 1) {
-            mlod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-            //}
+            if(rendering_mode != 1)
+            {
+                mlod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+            }
 
             current_rasterizer_state = mlod_node->get_material()->get_show_back_faces() ? rs_cull_none_ : rs_cull_back_;
 
@@ -390,7 +433,10 @@ void MLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     //////////////////////////////////////////////////////////////////////////
     target.unbind(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+    pipe.end_gpu_query(ctx, gpu_query_name);
     pipe.end_cpu_query(cpu_query_name_plod_total);
+#endif
 
     // dispatch cut updates
     if(previous_frame_count_ != ctx.framecount)

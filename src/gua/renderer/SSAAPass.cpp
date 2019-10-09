@@ -33,11 +33,11 @@ SSAAPassDescription::SSAAPassDescription() : PipelinePassDescription()
 {
     vertex_shader_ = "shaders/common/fullscreen_quad.vert";
     fragment_shader_ = "shaders/ssaa.frag";
-    needs_color_buffer_as_input_ = true;
-    writes_only_color_buffer_ = true;
-    rendermode_ = RenderMode::Quad;
-    name_ = "SSAAPassDescription";
-    depth_stencil_state_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
+    private_.needs_color_buffer_as_input_ = true;
+    private_.writes_only_color_buffer_ = true;
+    private_.rendermode_ = RenderMode::Quad;
+    private_.name_ = "SSAAPassDescription";
+    private_.depth_stencil_state_desc_ = boost::make_optional(scm::gl::depth_stencil_state_desc(false, false));
 
     uniforms["gua_ssaa_mode"] = static_cast<int>(SSAAMode::FAST_FXAA);
     uniforms["gua_fxaa_quality_subpix"] = 0.75f;
@@ -48,7 +48,7 @@ SSAAPassDescription::SSAAPassDescription() : PipelinePassDescription()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SSAAPassDescription &SSAAPassDescription::mode(SSAAMode mode)
+SSAAPassDescription& SSAAPassDescription::mode(SSAAMode mode)
 {
     uniforms["gua_ssaa_mode"] = static_cast<int>(mode);
     ;
@@ -63,7 +63,7 @@ SSAAPassDescription::SSAAMode SSAAPassDescription::mode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SSAAPassDescription &SSAAPassDescription::fxaa_quality_subpix(float quality)
+SSAAPassDescription& SSAAPassDescription::fxaa_quality_subpix(float quality)
 {
     uniforms["gua_fxaa_quality_subpix"] = quality;
     return *this;
@@ -77,7 +77,7 @@ float SSAAPassDescription::fxaa_quality_subpix() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SSAAPassDescription &SSAAPassDescription::fxaa_edge_threshold(float threshold)
+SSAAPassDescription& SSAAPassDescription::fxaa_edge_threshold(float threshold)
 {
     uniforms["gua_fxaa_quality_subpix"] = threshold;
     return *this;
@@ -91,7 +91,7 @@ float SSAAPassDescription::fxaa_edge_threshold() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SSAAPassDescription &SSAAPassDescription::fxaa_threshold_min(float minimum)
+SSAAPassDescription& SSAAPassDescription::fxaa_threshold_min(float minimum)
 {
     uniforms["gua_fxaa_threshold_min"] = minimum;
     return *this;
@@ -105,7 +105,7 @@ float SSAAPassDescription::fxaa_threshold_min() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-SSAAPassDescription &SSAAPassDescription::enable_pinhole_correction(bool enable)
+SSAAPassDescription& SSAAPassDescription::enable_pinhole_correction(bool enable)
 {
     uniforms["gua_enable_pinhole_correction"] = enable;
     return *this;
@@ -122,7 +122,7 @@ bool SSAAPassDescription::enable_pinhole_correction() const
 std::shared_ptr<PipelinePassDescription> SSAAPassDescription::make_copy() const { return std::make_shared<SSAAPassDescription>(*this); }
 
 ////////////////////////////////////////////////////////////////////////////////
-PipelinePass SSAAPassDescription::make_pass(RenderContext const &ctx, SubstitutionMap &substitution_map)
+PipelinePass SSAAPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

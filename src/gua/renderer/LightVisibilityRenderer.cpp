@@ -14,11 +14,11 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::render(PipelinePass &pass, Pipeline &pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback)
+void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback)
 {
-    auto const &ctx(pipe.get_context());
-    auto const &glapi = ctx.render_context->opengl_api();
-    auto const &camera = pipe.current_viewstate().camera;
+    auto const& ctx(pipe.get_context());
+    auto const& glapi = ctx.render_context->opengl_api();
+    auto const& camera = pipe.current_viewstate().camera;
 
     std::vector<math::mat4> transforms;
     LightTable::array_type lights;
@@ -38,7 +38,7 @@ void LightVisibilityRenderer::render(PipelinePass &pass, Pipeline &pipe, int til
         empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
 #else
         // TODO: ideally, FBOs with no attachments should be implemented in schism
-        auto const &glapi = ctx.render_context->opengl_api();
+        auto const& glapi = ctx.render_context->opengl_api();
 
         glapi.glNamedFramebufferParameteriEXT(empty_fbo_->object_id(), GL_FRAMEBUFFER_DEFAULT_WIDTH, rasterizer_resolution.x);
 
@@ -52,14 +52,14 @@ void LightVisibilityRenderer::render(PipelinePass &pass, Pipeline &pipe, int til
 
     ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution));
 
-    if(pass.depth_stencil_state_)
-        ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state_);
+    if(pass.depth_stencil_state())
+        ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state());
 
-    if(pass.rasterizer_state_)
-        ctx.render_context->set_rasterizer_state(pass.rasterizer_state_);
+    if(pass.rasterizer_state())
+        ctx.render_context->set_rasterizer_state(pass.rasterizer_state());
 
-    pass.shader_->use(ctx);
-    pipe.bind_light_table(pass.shader_);
+    pass.shader()->use(ctx);
+    pipe.bind_light_table(pass.shader());
 
     if(enable_conservative)
     {
@@ -86,15 +86,15 @@ void LightVisibilityRenderer::render(PipelinePass &pass, Pipeline &pipe, int til
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::prepare_light_table(Pipeline &pipe, std::vector<math::mat4> &transforms, LightTable::array_type &lights, unsigned &sun_lights_num) const
+void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& sun_lights_num) const
 {
     sun_lights_num = 0u;
     std::vector<math::mat4> sun_transforms;
     std::vector<LightTable::LightBlock> sun_lights;
 
-    for(auto const &l : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))])
+    for(auto const& l : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))])
     {
-        auto light(reinterpret_cast<node::LightNode *>(l));
+        auto light(reinterpret_cast<node::LightNode*>(l));
 
         LightTable::LightBlock light_block{};
         light_block.brightness = light->data.get_brightness();
@@ -127,8 +127,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline &pipe, std::vector<ma
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LightVisibilityRenderer::add_pointlight(Pipeline &pipe, node::LightNode &light, LightTable::LightBlock &light_block, LightTable::array_type &lights,
-                                             std::vector<math::mat4> &light_transforms) const
+void LightVisibilityRenderer::add_pointlight(
+    Pipeline& pipe, node::LightNode& light, LightTable::LightBlock& light_block, LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const
 {
     auto model_mat = light.get_cached_world_transform();
     math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 0.f, 1.f);
@@ -158,8 +158,8 @@ void LightVisibilityRenderer::add_pointlight(Pipeline &pipe, node::LightNode &li
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LightVisibilityRenderer::add_spotlight(Pipeline &pipe, node::LightNode &light, LightTable::LightBlock &light_block, LightTable::array_type &lights,
-                                            std::vector<math::mat4> &light_transforms) const
+void LightVisibilityRenderer::add_spotlight(
+    Pipeline& pipe, node::LightNode& light, LightTable::LightBlock& light_block, LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const
 {
     auto model_mat = light.get_cached_world_transform();
 
@@ -191,8 +191,8 @@ void LightVisibilityRenderer::add_spotlight(Pipeline &pipe, node::LightNode &lig
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void LightVisibilityRenderer::add_sunlight(Pipeline &pipe, node::LightNode &light, LightTable::LightBlock &light_block, LightTable::array_type &sun_lights,
-                                           std::vector<math::mat4> &sunlight_transforms) const
+void LightVisibilityRenderer::add_sunlight(
+    Pipeline& pipe, node::LightNode& light, LightTable::LightBlock& light_block, LightTable::array_type& sun_lights, std::vector<math::mat4>& sunlight_transforms) const
 {
     auto model_mat = light.get_cached_world_transform();
     math::vec3 light_position = model_mat * math::vec4(0.f, 0.f, 1.f, 0.f);
@@ -214,14 +214,18 @@ void LightVisibilityRenderer::add_sunlight(Pipeline &pipe, node::LightNode &ligh
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::draw_lights(Pipeline &pipe, std::vector<math::mat4> &transforms, LightTable::array_type &lights) const
+void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights) const
 {
-    auto const &ctx(pipe.get_context());
+    auto const& ctx(pipe.get_context());
     auto gl_program(ctx.render_context->current_program());
 
     // proxy geometries
     auto light_sphere = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
     auto light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
+
+    auto& scene = *pipe.current_viewstate().scene;
+
+    math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
 
     // draw lights
     for(size_t i = 0; i < lights.size(); ++i)
@@ -230,7 +234,11 @@ void LightVisibilityRenderer::draw_lights(Pipeline &pipe, std::vector<math::mat4
             continue;
 
         math::mat4f light_transform(transforms[i]);
-        gl_program->uniform("gua_model_matrix", 0, light_transform);
+
+        auto light_mvp_mat = view_projection_mat * light_transform;
+
+        gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
+        
         gl_program->uniform("light_id", 0, int(i));
         ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
         ctx.render_context->apply();

@@ -17,13 +17,9 @@
 out vec2 pass_uvs;
 //out vec3 pass_point_color;
 
-layout(binding=1) uniform sampler3D inv_xyz_volumes[4];
-layout(binding=5) uniform sampler3D uv_volumes[4];
-
 //uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_model_matrix;
-uniform mat4 kinect_mv_matrix;
-uniform mat4 kinect_mvp_matrix;
+
+uniform mat4 mvp_matrix;
 
 uniform mat4 inv_vol_to_world_matrix;
 
@@ -59,17 +55,13 @@ const uvec2 uv_shift_vec = uvec2(12u, 0u);
 uniform int texture_space_triangle_size;
 
 
-struct uncompressed_vertex_struct {
-  vec3 pos;
-  vec2 uvs;
-};
+
 
 layout (std430, binding = 3) buffer Out_Sorted_Vertex_Tri_Data{
-  uncompressed_vertex_struct[] in_uncompressed_vertices;
+  float[] in_uncompressed_vertices;
 };
 
 
-vec2 viewport_offsets[4] = {{0.0, 0.0}, {0.5, 0.0}, {0.0, 0.5}, {0.5, 0.5}};
 
 
 
@@ -77,25 +69,28 @@ void main() {
 
   @material_input@
   
-  uncompressed_vertex_struct current_vertex = in_uncompressed_vertices[gl_VertexID];
+  float x = in_uncompressed_vertices[gl_VertexID * 5 + 0];
+  float y = in_uncompressed_vertices[gl_VertexID * 5 + 1];
+  float z = in_uncompressed_vertices[gl_VertexID * 5 + 2];
+  float u = in_uncompressed_vertices[gl_VertexID * 5 + 3];
+  float v = in_uncompressed_vertices[gl_VertexID * 5 + 4];
+  //uncompressed_vertex_struct current_vertex = in_uncompressed_vertices[gl_VertexID];
 
-  vec4 extracted_vertex_pos = vec4(current_vertex.pos,
+  vec4 extracted_vertex_pos = vec4(x, y, z,
                                    1.0);
+
 
   //vec4 extracted_vertex_pos = vec4(tri_positions[gl_VertexID % 3], 1.0);
 
-  gua_world_position = (kinect_model_matrix * extracted_vertex_pos).xyz;
-  gua_view_position  = (kinect_mv_matrix * extracted_vertex_pos).xyz;
+  gua_world_position = (gua_model_matrix * extracted_vertex_pos).xyz;
+  gua_view_position  = (gua_model_view_matrix * extracted_vertex_pos).xyz;
   
   @material_method_calls_vert@
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = kinect_mvp_matrix * extracted_vertex_pos;
+  gl_Position = gua_projection_matrix * gua_model_view_matrix * extracted_vertex_pos;
 
-  vec3 calib_sample_pos = (inv_vol_to_world_matrix * extracted_vertex_pos).xyz;
 
-  //vec3 pos_calib = texture(inv_xyz_volumes[current_sensor_layer], calib_sample_pos.xyz ).rgb;
-  //vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy / scaling_factor;
 
-  pass_uvs = current_vertex.uvs;
+  pass_uvs = vec2(u, v);
 }

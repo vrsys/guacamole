@@ -24,6 +24,7 @@
 
 #include <scm/core/math.h>
 #include <scm/gl_core/math.h>
+#include <cmath>
 #include <tuple>
 
 template <class TReal>
@@ -139,6 +140,19 @@ inline math::mat4 get_rotation(math::mat4 const& m)
 {
     auto q = ::scm::math::quat<math::mat4d::value_type>::from_matrix(m);
     return q.to_matrix();
+}
+
+inline math::mat4 get_yaw_matrix(math::mat4 const& m)
+{
+	math::mat4 forward_matrix = m * scm::math::make_translation(0.0, 0.0, -1.0);
+	math::vec4 m_trans = math::vec3(m.column(3));
+	math::vec4 forward_trans = math::vec3(forward_matrix.column(3));
+
+	math::vec3 diff = math::vec3(forward_trans.x - m_trans.x, 0.0, 
+		                         forward_trans.z - m_trans.z);
+	
+	double yaw = (atan2(-1.0, 0.0) - atan2(diff.z, diff.x)) * 180.0/3.14159265;
+	return scm::math::make_translation(m_trans.x, m_trans.y, m_trans.z) * scm::math::make_rotation(yaw, 0.0, 1.0, 0.0);
 }
 
 inline math::vec4 get_scale(math::mat4 const& m)

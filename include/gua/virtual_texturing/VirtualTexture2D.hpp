@@ -45,12 +45,14 @@
 
 namespace gua
 {
+class VTRenderer;
 class GUA_DLL VirtualTexture2D : public Texture
 {
   public:
-    VirtualTexture2D(std::string const& file,
-                     std::size_t physical_texture_tile_slot_size,
-                     scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
+    friend VTRenderer;
+
+    explicit VirtualTexture2D(std::string const& file,
+                              scm::gl::sampler_state_desc const& state_descripton = scm::gl::sampler_state_desc(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_REPEAT, scm::gl::WRAP_REPEAT));
 
     unsigned width() const override { return 0; }
     unsigned height() const override { return 0; }
@@ -92,7 +94,6 @@ class GUA_DLL VirtualTexture2D : public Texture
     // unsigned layers_;
 
   private:
-    std::string ini_file_path_;
     std::string atlas_file_path_;
     uint32_t lamure_texture_id_;
 

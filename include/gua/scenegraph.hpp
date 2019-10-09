@@ -29,6 +29,9 @@
 #include <gua/node/GeometryNode.hpp>
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/node/LineStripNode.hpp>
+#include <gua/node/DynamicGeometryNode.hpp>
+#include <gua/node/DynamicLineNode.hpp>
+#include <gua/node/DynamicTriangleNode.hpp>
 #include <gua/node/TransformNode.hpp>
 #include <gua/node/LightNode.hpp>
 #include <gua/node/CameraNode.hpp>

@@ -42,26 +42,6 @@ SPointsLoader::SPointsLoader() : _supported_file_extensions() { _supported_file_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string SPointsLoader::_strip_whitespace(std::string const& in_string) const { return std::regex_replace(in_string, std::regex("^ +| +$|( ) +"), "$1"); }
-
-void SPointsLoader::_split_filename(std::string const& in_line_buffer, std::vector<std::string> const& registered_tokens, std::map<std::string, std::string>& tokens) const
-{
-    std::string whitespace_removed_line_buffer = _strip_whitespace(in_line_buffer);
-
-    std::regex non_negative_number_regex("[[:digit:]]+");
-
-    for(auto const& potentially_matching_token : registered_tokens)
-    {
-        if(whitespace_removed_line_buffer.find(potentially_matching_token) == 0)
-        {
-            uint64_t length_of_token = potentially_matching_token.size();
-            std::string remaining_string = whitespace_removed_line_buffer.substr(length_of_token + 1);
-
-            tokens[potentially_matching_token] = remaining_string.c_str();
-            break;
-        }
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,43 +65,8 @@ SPointsLoader::create_geometry_from_file(std::string const& node_name, std::stri
     {
         GeometryDescription desc("SPoints", spoints_resource_filepath, 0, flags);
 
-        std::string serversocket_string("");
-        std::string feedbacksocket_string("");
 
-        {
-            std::string line_buffer;
-            std::ifstream in_spoints_resource_file(spoints_resource_filepath, std::ios::in);
-
-            std::string const serversocket_identifier("serversocket");
-            std::string const feedbacksocket_identifier("feedbacksocket");
-
-            std::vector<std::string> registered_resource_file_tokens = {serversocket_identifier, feedbacksocket_identifier};
-
-            while(std::getline(in_spoints_resource_file, line_buffer))
-            {
-                std::map<std::string, std::string> parsed_line_tokens;
-                _split_filename(line_buffer, registered_resource_file_tokens, parsed_line_tokens);
-
-                auto map_iterator = parsed_line_tokens.end();
-
-                map_iterator = parsed_line_tokens.find(serversocket_identifier);
-                if(map_iterator != parsed_line_tokens.end())
-                {
-                    serversocket_string = map_iterator->second;
-                }
-
-                map_iterator = parsed_line_tokens.find(feedbacksocket_identifier);
-                if(map_iterator != parsed_line_tokens.end())
-                {
-                    feedbacksocket_string = map_iterator->second;
-                }
-            }
-        }
-
-        std::cout << "Used receive socket:" << serversocket_string << "\n";
-        std::cout << "Used feedback socket:" << feedbacksocket_string << "\n";
-
-        auto resource = std::make_shared<SPointsResource>(serversocket_string, feedbacksocket_string, flags);
+        auto resource = std::make_shared<SPointsResource>(spoints_resource_filepath, flags);
         GeometryDatabase::instance()->add(desc.unique_key(), resource);
 
         auto result = std::shared_ptr<node::SPointsNode>(new node::SPointsNode(node_name, desc.unique_key()));

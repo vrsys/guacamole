@@ -31,11 +31,11 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-MaterialShaderDescription::MaterialShaderDescription(std::string const &file) { load_from_file(file); }
+MaterialShaderDescription::MaterialShaderDescription(std::string const& file) { load_from_file(file); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDescription::load_from_file(std::string const &file_name)
+void MaterialShaderDescription::load_from_file(std::string const& file_name)
 {
     if(file_name != "")
     {
@@ -57,7 +57,7 @@ void MaterialShaderDescription::load_from_file(std::string const &file_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MaterialShaderDescription::load_from_json(std::string const &json)
+void MaterialShaderDescription::load_from_json(std::string const& json)
 {
     Json::Value value;
     Json::Reader reader;
@@ -113,34 +113,34 @@ void MaterialShaderDescription::load_from_json(std::string const &json)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription &MaterialShaderDescription::add_vertex_method(std::shared_ptr<MaterialShaderMethod> const &method)
+MaterialShaderDescription& MaterialShaderDescription::add_vertex_method(std::shared_ptr<MaterialShaderMethod> const& method)
 {
     vertex_methods_.push_back(method);
     return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription &MaterialShaderDescription::add_fragment_method(std::shared_ptr<MaterialShaderMethod> const &method)
+MaterialShaderDescription& MaterialShaderDescription::add_fragment_method(std::shared_ptr<MaterialShaderMethod> const& method)
 {
     fragment_methods_.push_back(method);
     return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<std::shared_ptr<MaterialShaderMethod>> const &MaterialShaderDescription::get_vertex_methods() const { return vertex_methods_; }
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShaderDescription::get_vertex_methods() const { return vertex_methods_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-std::list<std::shared_ptr<MaterialShaderMethod>> const &MaterialShaderDescription::get_fragment_methods() const { return fragment_methods_; }
+std::list<std::shared_ptr<MaterialShaderMethod>> const& MaterialShaderDescription::get_fragment_methods() const { return fragment_methods_; }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription &MaterialShaderDescription::clear_vertex_methods()
+MaterialShaderDescription& MaterialShaderDescription::clear_vertex_methods()
 {
     vertex_methods_.clear();
     return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MaterialShaderDescription &MaterialShaderDescription::clear_fragment_methods()
+MaterialShaderDescription& MaterialShaderDescription::clear_fragment_methods()
 {
     fragment_methods_.clear();
     return *this;

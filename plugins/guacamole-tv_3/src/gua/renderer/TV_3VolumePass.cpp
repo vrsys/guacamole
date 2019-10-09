@@ -44,10 +44,10 @@ namespace gua
 
 TV_3VolumePassDescription::TV_3VolumePassDescription() : PipelinePassDescription()
 {
-    needs_color_buffer_as_input_ = false;
-    writes_only_color_buffer_ = false;
-    enable_for_shadows_ = false;
-    rendermode_ = RenderMode::Custom;
+    private_.needs_color_buffer_as_input_ = false;
+    private_.writes_only_color_buffer_ = false;
+    private_.enable_for_shadows_ = false;
+    private_.rendermode_ = RenderMode::Custom;
 }
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,12 +69,11 @@ std::shared_ptr<PipelinePassDescription> TV_3VolumePassDescription::make_copy() 
 
 PipelinePass TV_3VolumePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    PipelinePass pass{*this, ctx, substitution_map};
-
     auto renderer = std::make_shared<TV_3VolumeRenderer>(ctx, substitution_map);
 
-    pass.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
 
+    PipelinePass pass{*this, ctx, substitution_map};
     return pass;
 }
 

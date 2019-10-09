@@ -90,8 +90,10 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
     std::shared_ptr<ShaderProgram> current_material_program;
 
     {
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::AccumulationPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
+#endif
 
         // set accumulation pass states
         ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
@@ -152,7 +154,9 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
         current_material_program->unuse(ctx);
 
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);
+#endif
     }
 }
 
