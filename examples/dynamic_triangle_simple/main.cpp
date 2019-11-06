@@ -152,7 +152,9 @@ int main(int argc, char** argv)
     atlas_material->set_uniform("atlas_material", std::string("/opt/3d_models/lamure/provenance/salem/salem.atlas"));
 
     // VT STEP 3/5: - enable virtual texturing for this material
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     atlas_material->set_enable_virtual_texturing(true);
+#endif
     std::shared_ptr<gua::node::DynamicTriangleNode> dynamic_tri_node = std::dynamic_pointer_cast<gua::node::DynamicTriangleNode>(create_dynamic_triangle_quad(atlas_material));
     auto dl_node = create_dynamic_lines();
 
@@ -228,10 +230,11 @@ int main(int argc, char** argv)
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     auto vt_backend = &gua::VTBackend::get_instance();
     vt_backend->add_camera(camera);
     vt_backend->start_backend();
-
+#endif
     gua::Renderer renderer;
 
     // application loop
@@ -259,7 +262,9 @@ int main(int argc, char** argv)
             renderer.stop();
             window->close();
             loop.stop();
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
             vt_backend->stop_backend();
+#endif
         }
         else
         {
