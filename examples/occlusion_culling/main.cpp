@@ -29,7 +29,168 @@
 #include <gua/utils/Trackball.hpp>
 
 
-void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, std::shared_ptr<gua::node::TransformNode> const& nav_node) {
+struct WASD_state {
+    bool moving_forward = false;
+    bool moving_left = false;
+    bool moving_backward = false;
+    bool moving_right = false;
+    bool moving_upward = false;
+    bool moving_downward = false;
+
+    bool rotate_around_y_pos = false;
+    bool rotate_around_y_neg = false;
+
+    bool rotate_around_x_pos = false;
+    bool rotate_around_x_neg = false;
+
+    scm::math::mat4 accumulated_translation_world_space = scm::math::mat4::identity();
+
+    scm::math::mat4 accumulated_rotation_around_y_world_space = scm::math::mat4::identity();
+    //scm::math::vec3f accumulated_translation = scm::math::vec3(0.0, 0.0, 0.0);
+    double accumulated_rotation_around_up = 0.0;
+    double accumulated_rotation_around_right = 0.0;
+
+    double cam_translation_speed = 5.0;
+    double cam_rotation_speed = 50.0;
+};
+
+WASD_state cam_navigation_state;
+
+scm::math::mat4 cam_translation;
+
+
+
+void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, std::shared_ptr<gua::node::TransformNode>& nav_node, float elapsed_milliseconds) {
+
+
+    auto cam_world_matrix = cam_node->get_world_transform();
+
+    /*
+    std::cout << "Camera World Transform: " << std::endl;
+    std::cout << cam_world_matrix << std::endl;
+
+    auto right_cam_vector = cam_world_matrix.column(0);
+    std::cout << "Cam right vector: " << right_cam_vector << std::endl;
+
+    auto up_cam_vector = cam_world_matrix.column(1);
+    std::cout << "Cam up vector: " << up_cam_vector << std::endl;
+
+    auto forward_cam_vector = cam_world_matrix.column(2);
+    std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;
+
+    auto cam_position = cam_world_matrix.column(3);
+    std::cout << "Cam position: " << cam_position << std::endl;
+    */
+
+    if(cam_navigation_state.moving_forward ) {
+        std::cout << "Moving Upward" << std::endl;
+
+        auto forward_cam_vector = -cam_world_matrix.column(2);
+
+        auto delta = forward_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+    if(cam_navigation_state.moving_backward ) {
+        std::cout << "Moving Upward" << std::endl;
+
+        auto backward_cam_vector = cam_world_matrix.column(2);
+
+        auto delta = backward_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+    if(cam_navigation_state.moving_left) {
+
+        auto left_cam_vector = -cam_world_matrix.column(0);
+
+        auto delta = left_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+    if(cam_navigation_state.moving_right) {
+
+        auto right_cam_vector = cam_world_matrix.column(0);
+
+        auto delta = right_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+
+    if(cam_navigation_state.moving_upward) {
+        auto up_cam_vector = cam_world_matrix.column(1);
+
+        auto delta = up_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+    if(cam_navigation_state.moving_downward) {
+        auto down_cam_vector = cam_world_matrix.column(1);
+
+        auto delta = down_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
+
+        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
+    }
+
+
+    if(cam_navigation_state.rotate_around_y_pos) {
+
+        auto up_axis = cam_world_matrix.column(1);
+
+        //nav
+        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
+
+        auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
+    }
+    
+    if(cam_navigation_state.rotate_around_y_neg) {
+
+        auto up_axis = cam_world_matrix.column(1);
+
+        //nav
+        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
+
+        auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
+    }
+
+    if(cam_navigation_state.rotate_around_x_pos) {
+
+        auto right_axis = cam_world_matrix.column(0);
+
+        //nav
+        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
+
+        auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
+    }
+    
+    if(cam_navigation_state.rotate_around_x_neg) {
+
+        auto right_axis = cam_world_matrix.column(0);
+
+        //nav
+        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
+
+        auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
+    }
+
+    nav_node->set_transform( gua::math::mat4( cam_navigation_state.accumulated_translation_world_space * cam_navigation_state.accumulated_rotation_around_y_world_space) );
 
 }
 
@@ -65,22 +226,8 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
     trackball.mouse(button, state, trackball.posx(), trackball.posy());
 }
 
-//   7654 3210 
-//-------------
-// 0bxxxx xxxx
-//           ^is moving forwrad?
-//          ^is moving left?
-//         ^is moving backward?
-//        ^is moving right?
-//      ^is moving upward?
-//     ^is moving downward?
-//    ^rotate around local x axis?
-//   ^rotate around local y axis?
-struct WASD_state {
-    uint8_t is_moving = 0x0f;
-};
 
-WASD_state cam_navigation_state;
+
 
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
@@ -91,9 +238,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     switch(std::tolower(key)) {
         case 'w': { //moves the camera forward with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.is_moving |= 0b00000001; //set least significant bit to "true"
+                cam_navigation_state.moving_forward  = true;
             } else if(0 == action) {
-                cam_navigation_state.is_moving &= 0b11111110; //set least significant bit to "false"                
+                cam_navigation_state.moving_forward  = false;               
             }
 
             break;
@@ -101,9 +248,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'a': { //moves the camera to the left with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.is_moving |= 0b00000010; //set least significant bit to "true"
+                cam_navigation_state.moving_left = true;
             } else if(0 == action) {
-                cam_navigation_state.is_moving &= 0b11111101; //set least significant bit to "false"                
+                cam_navigation_state.moving_left = false;          
             }
 
             break;
@@ -111,9 +258,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 's': { //moves the camera downward with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.is_moving |= 0b00000100; //set least significant bit to "true"
+                cam_navigation_state.moving_backward = true;
             } else if(0 == action) {
-                cam_navigation_state.is_moving &= 0b11111011; //set least significant bit to "false"                
+                cam_navigation_state.moving_backward = false;            
             }
 
             break;
@@ -121,9 +268,69 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'd': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.is_moving |= 0b00001000; //set least significant bit to "true"
+                cam_navigation_state.moving_right = true;
             } else if(0 == action) {
-                cam_navigation_state.is_moving &= 0b11110011; //set least significant bit to "false"                
+                cam_navigation_state.moving_right = false;            
+            }
+
+            break;
+        }
+
+        case 'q': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.moving_upward = true;
+            } else if(0 == action) {
+                cam_navigation_state.moving_upward = false;            
+            }
+
+            break;
+        }
+
+        case 'e': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.moving_downward = true;
+            } else if(0 == action) {
+                cam_navigation_state.moving_downward = false;            
+            }
+
+            break;
+        }
+
+        case 'l': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.rotate_around_y_neg = true;
+            } else if(0 == action) {
+                cam_navigation_state.rotate_around_y_neg = false;            
+            }
+
+            break;
+        }
+
+        case 'j': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.rotate_around_y_pos = true;
+            } else if(0 == action) {
+                cam_navigation_state.rotate_around_y_pos = false;            
+            }
+
+            break;
+        }
+
+        case 'i': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.rotate_around_x_pos = true;
+            } else if(0 == action) {
+                cam_navigation_state.rotate_around_x_pos = false;            
+            }
+
+            break;
+        }
+
+        case 'k': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.rotate_around_x_neg = true;
+            } else if(0 == action) {
+                cam_navigation_state.rotate_around_x_neg = false;            
             }
 
             break;
@@ -143,157 +350,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     if(action == 0)
         return;
 
-    float v = 0.0f;
+    
 
-    /*
 
-    switch(std::tolower(key))
-    {
-    case 'm': // toggle environment lighting mode
-
-        if(pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR)
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP" << std::endl;
-            pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP);
-        }
-        else if(pipe.get_resolve_pass()->environment_lighting_mode() == gua::ResolvePassDescription::EnvironmentLightingMode::SPHEREMAP)
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP" << std::endl;
-            pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::CUBEMAP);
-        }
-        else
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR" << std::endl;
-            pipe.get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
-        }
-
-        pipe.get_resolve_pass()->touch();
-        break;
-
-    case 'b': // toggle background mode
-
-        if(pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::COLOR)
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE" << std::endl;
-            pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-        }
-        else if(pipe.get_resolve_pass()->background_mode() == gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE)
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE" << std::endl;
-            pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
-        }
-        else
-        {
-            std::cout << "Setting to gua::ResolvePassDescription::BackgroundMode::AMBIENT_COLOR" << std::endl;
-            pipe.get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::COLOR);
-        }
-
-        pipe.get_resolve_pass()->touch();
-        break;
-
-    case 'a': // toggle screen space shadows
-        pipe.get_resolve_pass()->screen_space_shadows(!pipe.get_resolve_pass()->screen_space_shadows());
-        break;
-
-    case 'q':
-        pipe.get_resolve_pass()->screen_space_shadow_radius(std::min(10.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
-        break;
-
-    case 'z':
-        pipe.get_resolve_pass()->screen_space_shadow_radius(std::max(0.005f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_radius()));
-        break;
-
-    case 'w':
-        pipe.get_resolve_pass()->screen_space_shadow_intensity(std::min(1.0f, 1.1f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
-        break;
-
-    case 'x':
-        pipe.get_resolve_pass()->screen_space_shadow_intensity(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->screen_space_shadow_intensity()));
-        break;
-
-    case 's': // toggle SSAO
-        pipe.get_resolve_pass()->ssao_enable(!pipe.get_resolve_pass()->ssao_enable());
-        break;
-
-    case '1':
-        pipe.get_resolve_pass()->ssao_intensity(std::min(5.0f, 1.1f * pipe.get_resolve_pass()->ssao_intensity()));
-        break;
-    case '2':
-        pipe.get_resolve_pass()->ssao_intensity(std::max(0.02f, 0.9f * pipe.get_resolve_pass()->ssao_intensity()));
-        break;
-
-    case '3':
-        pipe.get_resolve_pass()->ssao_radius(std::min(64.0f, 1.1f * pipe.get_resolve_pass()->ssao_radius()));
-        break;
-    case '4':
-        pipe.get_resolve_pass()->ssao_radius(std::max(1.0f, 0.9f * pipe.get_resolve_pass()->ssao_radius()));
-        break;
-
-    case '5':
-        pipe.get_resolve_pass()->ssao_falloff(std::min(256.0f, 1.1f * pipe.get_resolve_pass()->ssao_falloff()));
-        break;
-    case '6':
-        pipe.get_resolve_pass()->ssao_falloff(std::max(0.1f, 0.9f * pipe.get_resolve_pass()->ssao_falloff()));
-        break;
-
-    case 'f':
-        if(pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FXAA311)
-        {
-            std::cout << "Switching to simple FAST_FXAA\n" << std::endl;
-            pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FAST_FXAA);
-        }
-        else if(pipe.get_ssaa_pass()->mode() == gua::SSAAPassDescription::SSAAMode::FAST_FXAA)
-        {
-            std::cout << "Switching to No FXAA\n" << std::endl;
-            pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::DISABLED);
-        }
-        else
-        {
-            std::cout << "Switching to FXAA 3.11\n" << std::endl;
-            pipe.get_ssaa_pass()->mode(gua::SSAAPassDescription::SSAAMode::FXAA311);
-        }
-        break;
-
-    case '7':
-        v = std::min(1.0f, 1.1f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
-        std::cout << "Setting quality_subpix to " << v << std::endl;
-        pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
-        break;
-    case '8':
-        v = std::max(0.2f, 0.9f * pipe.get_ssaa_pass()->fxaa_quality_subpix());
-        std::cout << "Setting quality_subpix to " << v << std::endl;
-        pipe.get_ssaa_pass()->fxaa_quality_subpix(v);
-        break;
-
-    case '9':
-        v = std::min(0.333f, 1.1f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
-        std::cout << "Setting edge_threshold to " << v << std::endl;
-        pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
-        break;
-    case '0':
-        v = std::max(0.063f, 0.9f * pipe.get_ssaa_pass()->fxaa_edge_threshold());
-        std::cout << "Setting edge_threshold to " << v << std::endl;
-        pipe.get_ssaa_pass()->fxaa_edge_threshold(v);
-        break;
-
-    case 't':
-        pipe.get_resolve_pass()->touch();
-        break;
-
-    case ' ':
-        animate_light = !animate_light;
-        break;
-
-    // recompile shaders
-    case 'r':
-        pipe.get_resolve_pass()->touch();
-        break;
-
- 
-    default:
-        break;
-    }
-   */
 
 }
 
@@ -345,44 +404,45 @@ int main(int argc, char** argv)
     model_mat->set_show_back_faces(false);
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto example_model(
-        loader.create_geometry_from_file("example_model", model_path, model_mat, 0));
+    auto model(
+        loader.create_geometry_from_file("model", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE ));
 
-    graph.add_node("/transform", example_model);
-    example_model->set_draw_bounding_box(true);
+    graph.add_node("/transform", model);
+    model->set_draw_bounding_box(true);
 
-    auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
-    portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
-    portal->data.set_texture("portal");
-    portal->translate(0.5f, 0.f, -0.2f);
-    portal->rotate(-30, 0.f, 1.f, 0.f);
 
-    auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
-    light2->data.set_type(gua::node::LightNode::Type::POINT);
-    light2->data.brightness = 150.0f;
-    light2->scale(12.f);
-    light2->translate(-3.f, 5.f, 5.f);
 
-    auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+    auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
+    light->data.set_type(gua::node::LightNode::Type::POINT);
+    light->data.brightness = 150.0f;
+    light->scale(12.f);
+    light->translate(-3.f, 5.f, 5.f);
+
+
+
+    auto navigation_node = graph.add_node<gua::node::TransformNode>("/", "navigation_node");
+
+
+    auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-    screen->translate(0, 0, 1.0);
+    screen->translate(0, 0, -3.0);
 
 
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1920, 1080);
+    auto resolution = gua::math::vec2ui(960, 540);
 
 
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
     resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
     resolve_pass->tone_mapping_exposure(1.0f);
 
-    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
-    camera->translate(0, 0, 2.0);
+    auto camera = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam");
+    camera->translate(0, 0, 0);
     camera->config.set_resolution(resolution);
-    camera->config.set_screen_path("/screen");
+    camera->config.set_screen_path("/navigation_node/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
@@ -417,9 +477,16 @@ int main(int argc, char** argv)
     gua::events::MainLoop loop;
     gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
+
+
     ticker.on_tick.connect([&]() {
+
+        std::cout << std::endl;
+
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
+
+
 
 
         //void update_navigation_node(cam_world_matrix) {
@@ -429,24 +496,9 @@ int main(int argc, char** argv)
         //camera = 1;
 
 
-        auto cam_world_matrix = camera->get_world_transform();
-
-        std::cout << "Camera World Transform: " << cam_world_matrix << std::endl;
-
-        auto right_cam_vector = cam_world_matrix.column(0);
-        std::cout << "Cam right vector: " << right_cam_vector << std::endl;
-
-        auto up_cam_vector = cam_world_matrix.column(1);
-        std::cout << "Cam up vector: " << up_cam_vector << std::endl;
-
-        auto forward_cam_vector = cam_world_matrix.column(2);
-        std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;
-
-        auto cam_position = cam_world_matrix.column(3);
-        std::cout << "Cam position: " << cam_position << std::endl;
 
         transform->set_transform(modelmatrix);
-
+        transform->translate(0.0f, 0.0f, -5.0f);
 
 
 
@@ -471,6 +523,9 @@ int main(int argc, char** argv)
 
         std::cout << "elapsed rendering time ms: " << elapsed_rendering_time_milliseconds << " ms" << std::endl;
 
+
+
+        update_cam_matrix(camera, navigation_node, elapsed_application_time_milliseconds);
 
         if(window->should_close())
         {
