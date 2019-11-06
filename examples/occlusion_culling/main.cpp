@@ -29,7 +29,7 @@
 #include <gua/utils/Trackball.hpp>
 
 
-void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> scm::math::mat4& cam_mat) {
+void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, std::shared_ptr<gua::node::TransformNode> const& nav_node) {
 
 }
 
@@ -426,7 +426,7 @@ int main(int argc, char** argv)
             
         //}
 
-        camera = 1;
+        //camera = 1;
 
 
         auto cam_world_matrix = camera->get_world_transform();

@@ -11,6 +11,7 @@ find_path(FBX_INCLUDE_DIR fbxsdk.h
             PATHS
              /opt/fbx/fbx20160/include
              /opt/fbx20151/include
+	     /opt/fbxsdk/include
              /opt/project_animation/fbx20151/include
              /usr/include/fbx20151
             PATH_SUFFIXES FBX fbx fbxdsk FBXSDK
@@ -29,6 +30,7 @@ find_library(FBX_LIBRARY
             PATHS
              /opt/fbx/fbx20160/lib/gcc4/x64
              /opt/fbx20151/lib/gcc4/x64
+             /opt/fbxsdk/lib/gcc4/x64
              /opt/project_animation/fbx20151/lib/gcc4/x64
              /usr/lib
              PATH_SUFFIXES release
@@ -41,6 +43,7 @@ find_library(FBX_LIBRARY_DEBUG
             PATHS 
              /opt/fbx/fbx20160/lib/gcc4/x64
              /opt/fbx20151/lib/gcc4/x64
+             /opt/fbxsdk/lib/gcc4/x64
              /opt/project_animation/fbx20151/lib/gcc4/x64
              /usr/lib
              PATH_SUFFIXES debug
