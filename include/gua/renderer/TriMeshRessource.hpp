@@ -76,6 +76,15 @@ class GUA_DLL TriMeshRessource : public GeometryResource
      */
     void draw(RenderContext& context) const;
 
+   /**
+     * Draws the kD-tree of the Mesh.
+     *
+     * Draws the kD-tree Mesh to the given context.
+     *
+     * \param context          The RenderContext to draw onto.
+     */
+    void draw_kdtree(RenderContext& context) const;
+
     void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits) override;
 
     inline unsigned int num_vertices() const { return mesh_.num_vertices; }
@@ -86,7 +95,8 @@ class GUA_DLL TriMeshRessource : public GeometryResource
 
   private:
     void upload_to(RenderContext& context) const;
-
+    void upload_kdtree_to(RenderContext& context) const;
+    
     KDTree kd_tree_;
     Mesh mesh_;
 };

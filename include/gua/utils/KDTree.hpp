@@ -44,6 +44,9 @@ class KDTree
   public:
     KDTree();
 
+    //copies bounding box positions into the gpu buffer
+    void copy_to_buffer(float* data) const;
+
     /**
      * Initializes the KDTree with the given triangles.
      *
@@ -51,6 +54,11 @@ class KDTree
      */
     void generate(Mesh const& mesh);
 
+    //returns the number of nodes in the tree
+    int get_num_nodes() const;
+
+
+    mutable std::vector<uint32_t> indices;
     /**
      * Checks for intersections with the KDTree.
      *
@@ -102,7 +110,10 @@ class KDTree
     };
 
     // constructs the tree
-    KDNode* build(std::vector<std::vector<LeafData>> const& sorted_triangles, math::BoundingBox<math::vec3> const& bounds);
+    KDNode* build(std::vector<std::vector<LeafData>> const& sorted_triangles, math::BoundingBox<math::vec3> const& bounds );
+
+
+
 
     // ray test against the tree, returns upon the first intersection
     bool intersect_one(KDNode* node, Ray const& ray, Mesh const& mesh, int options, std::vector<Triangle> const& triangles, std::set<PickResult>& hits) const;
@@ -110,12 +121,16 @@ class KDTree
     // ray test against the tree, searches for all intersections
     void intersect_all(KDNode* node, Ray const& ray, Mesh const& mesh, int options, std::vector<Triangle> const& triangles, std::set<PickResult>& hits) const;
 
+
     KDNode* root_;
     std::vector<Triangle> triangles_;
 
     mutable node::Node* current_owner_;
     mutable int current_options_;
     mutable unsigned current_visit_flag_;
+    mutable int num_nodes_in_tree_;
+
+
 };
 
 } // namespace gua

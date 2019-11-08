@@ -29,6 +29,35 @@
 #include <gua/utils/Trackball.hpp>
 
 
+
+
+void place_objects_randomly(std::string const& model_path, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
+
+
+    for(int i = 0; i < 1000; ++i) {
+        std::string const random_object_name = "obj_" + std::to_string(i);
+        gua::TriMeshLoader loader;
+        auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+
+
+        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+        
+        float rand_x_trans = 100000 * std::rand() / (float)RAND_MAX;
+        float rand_y_trans = 100000 * std::rand() / (float)RAND_MAX;
+        float rand_z_trans = 100 * std::rand() / (float)RAND_MAX;
+
+        float rand_angle = 360 * std::rand() / (float)RAND_MAX;
+        float rand_x_rot = 360 * std::rand() / (float)RAND_MAX;
+        float rand_y_rot = 360 * std::rand() / (float)RAND_MAX;
+        float rand_z_rot = 360 * std::rand() / (float)RAND_MAX;
+
+        new_model->rotate(i, 0.0, 1.0, 0.0);
+        new_model->translate(rand_x_trans, rand_y_trans, rand_z_trans);
+        //new_model->set_draw_bounding_box(true);
+        scene_root_node->add_child(new_model);
+    }
+}
+
 struct WASD_state {
     bool moving_forward = false;
     bool moving_left = false;
@@ -403,13 +432,25 @@ int main(int argc, char** argv)
     model_mat->set_render_wireframe(false);
     model_mat->set_show_back_faces(false);
 
-    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto model(
-        loader.create_geometry_from_file("model", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE ));
 
-    graph.add_node("/transform", model);
+    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+    transform->set_draw_bounding_box(false);
+    auto model(
+        loader.create_geometry_from_file("model", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+
+    auto scene = graph.add_node<gua::node::TransformNode>("/transform", "scene");
+    scene->set_draw_bounding_box(true);
+
+    graph.add_node("/transform/scene", model);
     model->set_draw_bounding_box(true);
 
+    auto model2(loader.create_geometry_from_file("model2", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+    model2->translate(1.0, 0.0, 0.0);
+    model2->set_draw_bounding_box(true);
+    graph.add_node("/transform/scene", model2);
+
+
+    place_objects_randomly(model_path, scene);
 
 
     auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
