@@ -130,7 +130,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     }
 
     if(cam_navigation_state.moving_downward) {
-        auto down_cam_vector = cam_world_matrix.column(1);
+        auto down_cam_vector = -cam_world_matrix.column(1);
 
         auto delta = down_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
 
