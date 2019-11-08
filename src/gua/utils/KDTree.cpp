@@ -25,33 +25,34 @@
 #include <gua/platform.hpp>
 
 #include <iostream>
+#include <queue>
 
 namespace gua
 {
-KDTree::KDTree() : root_(nullptr), current_visit_flag_(0) {}
+KDTree::KDTree() : root_(nullptr), current_visit_flag_(0), num_nodes_in_tree_(0) {}
 
 void KDTree::generate(Mesh const& mesh)
 {
     triangles_.resize(mesh.num_triangles);
 
-    for(unsigned i(0); i < mesh.num_triangles; ++i)
+    for(unsigned int tri_idx = 0; tri_idx < mesh.num_triangles; ++tri_idx)
     {
-        triangles_[i] = Triangle(i);
+        triangles_[tri_idx] = Triangle(tri_idx);
     }
 
     std::vector<std::vector<LeafData>> sorted_triangles(3);
 
-    for(unsigned i(0); i < 3; ++i)
-        sorted_triangles[i] = std::vector<LeafData>(triangles_.size());
+    for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx)
+        sorted_triangles[dim_idx] = std::vector<LeafData>(triangles_.size());
 
     math::BoundingBox<math::vec3> root_bounds;
 
-    for(unsigned i(0); i < triangles_.size(); ++i)
+    for(unsigned int tri_idx = 0; tri_idx < triangles_.size(); ++tri_idx)
     {
-        for(unsigned j(0); j < 3; ++j)
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx)
         {
-            sorted_triangles[j][i] = LeafData(mesh, triangles_[i], i);
-            root_bounds.expandBy(triangles_[i].get_vertex(mesh, j));
+            sorted_triangles[dim_idx][tri_idx] = LeafData(mesh, triangles_[tri_idx], tri_idx);
+            root_bounds.expandBy(triangles_[tri_idx].get_vertex(mesh, dim_idx));
         }
     }
 
@@ -63,13 +64,44 @@ void KDTree::generate(Mesh const& mesh)
     root_bounds.min -= 0.01f * dim;
     root_bounds.max += 0.01f * dim;
 
-    for(unsigned i(0); i < 3; ++i)
+    for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx)
     {
-        LeafData::Comparator comp(i);
-        std::sort(sorted_triangles[i].begin(), sorted_triangles[i].end(), comp);
+        LeafData::Comparator comp(dim_idx);
+        std::sort(sorted_triangles[dim_idx].begin(), sorted_triangles[dim_idx].end(), comp);
     }
 
+
+
     root_ = build(sorted_triangles, root_bounds);
+
+
+    //fill indices (14 indices for triangle strip rendering of cube per node)
+    //https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
+    indices.resize(14 * num_nodes_in_tree_);
+
+    for(int32_t node_idx = 0; node_idx < num_nodes_in_tree_; ++node_idx) {
+        int const& index_base_offset = node_idx * 14;
+        int const& vertex_base_offset = node_idx * 8;
+        // 3 2 6 7 4 2 0 3 1 6 5 4 1 0
+        indices[index_base_offset +  0] = vertex_base_offset + 3;
+        indices[index_base_offset +  1] = vertex_base_offset + 2;
+        indices[index_base_offset +  2] = vertex_base_offset + 6;
+        indices[index_base_offset +  3] = vertex_base_offset + 7;
+        indices[index_base_offset +  4] = vertex_base_offset + 4;
+        indices[index_base_offset +  5] = vertex_base_offset + 2;
+        indices[index_base_offset +  6] = vertex_base_offset + 0;
+        indices[index_base_offset +  7] = vertex_base_offset + 3;
+        indices[index_base_offset +  8] = vertex_base_offset + 1;
+        indices[index_base_offset +  9] = vertex_base_offset + 6;
+        indices[index_base_offset + 10] = vertex_base_offset + 5;
+        indices[index_base_offset + 11] = vertex_base_offset + 4;
+        indices[index_base_offset + 12] = vertex_base_offset + 1;
+        indices[index_base_offset + 13] = vertex_base_offset + 0;
+    }
+}
+
+int KDTree::get_num_nodes() const {
+    return num_nodes_in_tree_;
 }
 
 void KDTree::ray_test(Ray const& ray, Mesh const& mesh, int options, node::Node* owner, std::set<PickResult>& hits) const
@@ -118,29 +150,31 @@ void KDTree::ray_test(Ray const& ray, Mesh const& mesh, int options, node::Node*
 
 KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_triangles, math::BoundingBox<math::vec3> const& bounds)
 {
+    ++num_nodes_in_tree_;
+
     // determine splitting dimension
-    unsigned dim(0);
-    for(unsigned i(1); i < 3; ++i)
+    unsigned current_dim = 0;
+    for(unsigned dim_idx = (1); dim_idx < 3; ++dim_idx)
     {
-        if(bounds.size(i) > bounds.size(dim))
-            dim = i;
+        if(bounds.size(dim_idx) > bounds.size(current_dim))
+            current_dim = dim_idx;
     }
 
     // return empty leaf if there are no triangles left
-    if(sorted_triangles[dim].size() == 0)
+    if(sorted_triangles[current_dim].size() == 0)
     {
         return new KDNode;
     }
 
     // return leaf with one triangle if there is only one left
-    if(sorted_triangles[dim].size() == 1)
+    if(sorted_triangles[current_dim].size() == 1)
     {
-        return new KDNode(std::vector<LeafData>({sorted_triangles[dim].front()}));
+        return new KDNode(std::vector<LeafData>({sorted_triangles[current_dim].front()}));
     }
 
     // select splitting position as minimum point of median triangles bounding
     // box
-    float split_position(sorted_triangles[dim][sorted_triangles[dim].size() / 2].bbox_.min[dim]);
+    float split_position(sorted_triangles[current_dim][sorted_triangles[current_dim].size() / 2].bbox_.min[current_dim]);
 
     // list for children
     std::vector<std::vector<LeafData>> left_list(3);
@@ -155,13 +189,13 @@ KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_t
     {
         for(unsigned j(0); j < sorted_triangles[i].size(); ++j)
         {
-            if(sorted_triangles[i][j].bbox_.max[dim] <= split_position)
+            if(sorted_triangles[i][j].bbox_.max[current_dim] <= split_position)
             {
                 // if triangle is entirely to the left
                 left_list[i].push_back(sorted_triangles[i][j]);
                 left_bounds.expandBy(sorted_triangles[i][j].bbox_);
             }
-            else if(sorted_triangles[i][j].bbox_.min[dim] >= split_position)
+            else if(sorted_triangles[i][j].bbox_.min[current_dim] >= split_position)
             {
                 // if triangle is entirely to the right
                 right_list[i].push_back(sorted_triangles[i][j]);
@@ -172,14 +206,14 @@ KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_t
                 // if triangle overlaps splitting point, split its bounding box
                 // into two halfs
                 math::vec3 left_max(sorted_triangles[i][j].bbox_.max);
-                left_max[dim] = split_position;
+                left_max[current_dim] = split_position;
                 math::BoundingBox<math::vec3> left_box;
                 left_box.expandBy(sorted_triangles[i][j].bbox_.min);
                 left_box.expandBy(left_max);
                 LeafData left_half(left_box, sorted_triangles[i][j].id_);
 
                 math::vec3 right_min(sorted_triangles[i][j].bbox_.min);
-                right_min[dim] = split_position;
+                right_min[current_dim] = split_position;
                 math::BoundingBox<math::vec3> right_box;
                 right_box.expandBy(sorted_triangles[i][j].bbox_.max);
                 right_box.expandBy(right_min);
@@ -197,18 +231,18 @@ KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_t
     KDNode* right_child(nullptr);
 
     // return children with mutlitple triangles if there were no separations
-    if(left_list[dim].empty())
+    if(left_list[current_dim].empty())
     {
-        right_child = new KDNode(right_list[dim]);
+        right_child = new KDNode(right_list[current_dim]);
     }
-    else if(right_list[dim].empty())
+    else if(right_list[current_dim].empty())
     {
-        left_child = new KDNode(left_list[dim]);
+        left_child = new KDNode(left_list[current_dim]);
     }
-    else if(right_list[dim].size() == sorted_triangles[dim].size() || left_list[dim].size() == sorted_triangles[dim].size())
+    else if(right_list[current_dim].size() == sorted_triangles[current_dim].size() || left_list[current_dim].size() == sorted_triangles[current_dim].size())
     {
-        right_child = new KDNode(right_list[dim]);
-        left_child = new KDNode(left_list[dim]);
+        right_child = new KDNode(right_list[current_dim]);
+        left_child = new KDNode(left_list[current_dim]);
     }
     else
     {
@@ -217,8 +251,41 @@ KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_t
         right_child = build(right_list, right_bounds);
     }
 
-    return new KDNode(left_child, right_child, dim, split_position, bounds);
+    return new KDNode(left_child, right_child, current_dim, split_position, bounds);
 }
+
+void KDTree::copy_to_buffer(float* data) const {
+    std::queue<KDNode*> node_traversal_queue;
+    node_traversal_queue.push(root_);
+
+    uint32_t current_bb_index_offset = 0;
+
+    while(!node_traversal_queue.empty()) {
+        auto current_node = node_traversal_queue.front();
+        node_traversal_queue.pop();
+
+        auto const& current_bb = current_node->bounds_;
+
+        int const box_coords_base_offset = 6 * current_bb_index_offset;
+
+        for(int32_t min_dim_idx = 0; min_dim_idx < 3; ++min_dim_idx) {
+           // data[box_coords_base_offset + min_dim_idx] = current_bb.min[min_dim_idx];
+        }
+        for(int32_t max_dim_idx = 0; max_dim_idx < 3; ++max_dim_idx) {
+            //data[box_coords_base_offset + 3 + max_dim_idx] = current_bb.max[max_dim_idx];
+        }
+
+        if(!current_node->is_leaf_) {
+            node_traversal_queue.push(current_node->left_child_);
+            node_traversal_queue.push(current_node->right_child_);
+        }
+
+        ++current_bb_index_offset;
+
+    }
+}
+
+
 
 bool KDTree::intersect_one(KDNode* node, Ray const& ray, Mesh const& mesh, int options, std::vector<Triangle> const& triangles, std::set<PickResult>& hits) const
 {
