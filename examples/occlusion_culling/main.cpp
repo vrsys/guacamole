@@ -19,6 +19,10 @@
  *                                                                            *
  ******************************************************************************/
 
+#include "glfw_callbacks.hpp"
+#include "scene_utils.hpp"
+#include "navigation.hpp"
+
 #include <functional>
 
 #include <gua/guacamole.hpp>
@@ -29,362 +33,8 @@
 #include <gua/utils/Trackball.hpp>
 
 
-
-
-void place_objects_randomly(std::string const& model_path, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
-
-
-    for(int i = 0; i < 1000; ++i) {
-        std::string const random_object_name = "obj_" + std::to_string(i);
-        gua::TriMeshLoader loader;
-        auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-
-
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
-        
-        float rand_x_trans = 100000 * std::rand() / (float)RAND_MAX;
-        float rand_y_trans = 100000 * std::rand() / (float)RAND_MAX;
-        float rand_z_trans = 100 * std::rand() / (float)RAND_MAX;
-
-        float rand_angle = 360 * std::rand() / (float)RAND_MAX;
-        float rand_x_rot = 360 * std::rand() / (float)RAND_MAX;
-        float rand_y_rot = 360 * std::rand() / (float)RAND_MAX;
-        float rand_z_rot = 360 * std::rand() / (float)RAND_MAX;
-
-        new_model->rotate(i, 0.0, 1.0, 0.0);
-        new_model->translate(rand_x_trans, rand_y_trans, rand_z_trans);
-        //new_model->set_draw_bounding_box(true);
-        scene_root_node->add_child(new_model);
-    }
-}
-
-struct WASD_state {
-    bool moving_forward = false;
-    bool moving_left = false;
-    bool moving_backward = false;
-    bool moving_right = false;
-    bool moving_upward = false;
-    bool moving_downward = false;
-
-    bool rotate_around_y_pos = false;
-    bool rotate_around_y_neg = false;
-
-    bool rotate_around_x_pos = false;
-    bool rotate_around_x_neg = false;
-
-    scm::math::mat4 accumulated_translation_world_space = scm::math::mat4::identity();
-
-    scm::math::mat4 accumulated_rotation_around_y_world_space = scm::math::mat4::identity();
-    //scm::math::vec3f accumulated_translation = scm::math::vec3(0.0, 0.0, 0.0);
-    double accumulated_rotation_around_up = 0.0;
-    double accumulated_rotation_around_right = 0.0;
-
-    double cam_translation_speed = 5.0;
-    double cam_rotation_speed = 50.0;
-};
-
-WASD_state cam_navigation_state;
-
-scm::math::mat4 cam_translation;
-
-
-
-void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, std::shared_ptr<gua::node::TransformNode>& nav_node, float elapsed_milliseconds) {
-
-
-    auto cam_world_matrix = cam_node->get_world_transform();
-
-    /*
-    std::cout << "Camera World Transform: " << std::endl;
-    std::cout << cam_world_matrix << std::endl;
-
-    auto right_cam_vector = cam_world_matrix.column(0);
-    std::cout << "Cam right vector: " << right_cam_vector << std::endl;
-
-    auto up_cam_vector = cam_world_matrix.column(1);
-    std::cout << "Cam up vector: " << up_cam_vector << std::endl;
-
-    auto forward_cam_vector = cam_world_matrix.column(2);
-    std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;
-
-    auto cam_position = cam_world_matrix.column(3);
-    std::cout << "Cam position: " << cam_position << std::endl;
-    */
-
-    if(cam_navigation_state.moving_forward ) {
-        std::cout << "Moving Upward" << std::endl;
-
-        auto forward_cam_vector = -cam_world_matrix.column(2);
-
-        auto delta = forward_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-    if(cam_navigation_state.moving_backward ) {
-        std::cout << "Moving Upward" << std::endl;
-
-        auto backward_cam_vector = cam_world_matrix.column(2);
-
-        auto delta = backward_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-    if(cam_navigation_state.moving_left) {
-
-        auto left_cam_vector = -cam_world_matrix.column(0);
-
-        auto delta = left_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-    if(cam_navigation_state.moving_right) {
-
-        auto right_cam_vector = cam_world_matrix.column(0);
-
-        auto delta = right_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-
-    if(cam_navigation_state.moving_upward) {
-        auto up_cam_vector = cam_world_matrix.column(1);
-
-        auto delta = up_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-    if(cam_navigation_state.moving_downward) {
-        auto down_cam_vector = -cam_world_matrix.column(1);
-
-        auto delta = down_cam_vector * cam_navigation_state.cam_translation_speed * elapsed_milliseconds;;
-
-        cam_navigation_state.accumulated_translation_world_space = scm::math::mat4f(scm::math::make_translation( delta[0], delta[1], delta[2])) * cam_navigation_state.accumulated_translation_world_space;
-    }
-
-
-    if(cam_navigation_state.rotate_around_y_pos) {
-
-        auto up_axis = cam_world_matrix.column(1);
-
-        //nav
-        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
-
-        auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
-
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
-        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
-    }
-    
-    if(cam_navigation_state.rotate_around_y_neg) {
-
-        auto up_axis = cam_world_matrix.column(1);
-
-        //nav
-        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
-
-        auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
-
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
-        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
-    }
-
-    if(cam_navigation_state.rotate_around_x_pos) {
-
-        auto right_axis = cam_world_matrix.column(0);
-
-        //nav
-        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
-
-        auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
-
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
-        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
-    }
-    
-    if(cam_navigation_state.rotate_around_x_neg) {
-
-        auto right_axis = cam_world_matrix.column(0);
-
-        //nav
-        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
-
-        auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
-
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
-        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
-    }
-
-    nav_node->set_transform( gua::math::mat4( cam_navigation_state.accumulated_translation_world_space * cam_navigation_state.accumulated_rotation_around_y_world_space) );
-
-}
-
-// forward mouse interaction to trackball
-void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
-{
-    gua::utils::Trackball::button_type button;
-    gua::utils::Trackball::state_type state;
-
-    switch(mousebutton)
-    {
-    case 0:
-        button = gua::utils::Trackball::left;
-        break;
-    case 2:
-        button = gua::utils::Trackball::middle;
-        break;
-    case 1:
-        button = gua::utils::Trackball::right;
-        break;
-    };
-
-    switch(action)
-    {
-    case 0:
-        state = gua::utils::Trackball::released;
-        break;
-    case 1:
-        state = gua::utils::Trackball::pressed;
-        break;
-    };
-
-    trackball.mouse(button, state, trackball.posx(), trackball.posy());
-}
-
-
-
-
-void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
-{
-
-    //action == 1: key was pressed
-    //action == 0: key was released
-
-    switch(std::tolower(key)) {
-        case 'w': { //moves the camera forward with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_forward  = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_forward  = false;               
-            }
-
-            break;
-        }
-
-        case 'a': { //moves the camera to the left with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_left = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_left = false;          
-            }
-
-            break;
-        }
-
-        case 's': { //moves the camera downward with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_backward = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_backward = false;            
-            }
-
-            break;
-        }
-
-        case 'd': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_right = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_right = false;            
-            }
-
-            break;
-        }
-
-        case 'q': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_upward = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_upward = false;            
-            }
-
-            break;
-        }
-
-        case 'e': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.moving_downward = true;
-            } else if(0 == action) {
-                cam_navigation_state.moving_downward = false;            
-            }
-
-            break;
-        }
-
-        case 'l': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.rotate_around_y_neg = true;
-            } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_neg = false;            
-            }
-
-            break;
-        }
-
-        case 'j': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.rotate_around_y_pos = true;
-            } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_pos = false;            
-            }
-
-            break;
-        }
-
-        case 'i': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.rotate_around_x_pos = true;
-            } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_pos = false;            
-            }
-
-            break;
-        }
-
-        case 'k': { //moves the camera to the right with respect to the camera vector described in global coordinates
-            if(1 == action) {
-                cam_navigation_state.rotate_around_x_neg = true;
-            } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_neg = false;            
-            }
-
-            break;
-        }
-
-        default: { //no assigned key
-            break;
-        }
-    }
-
-    if(action == 1) {
-        std::cout << "On" << std::endl;
-    } else if(action == 0) {
-        std::cout << "Off" << std::endl;
-    }
-
-    if(action == 0)
-        return;
-
-    
-
-
-
-}
-
+// global state variables
+extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
 
 
 void adjust_arguments(int& argc, char**& argv)
@@ -395,6 +45,8 @@ void adjust_arguments(int& argc, char**& argv)
     argv = argv_tmp;
 }
 
+
+// helper for command line parsing
 std::string parse_model_from_cmd_line(int argc, char** argv)
 {
     std::string model_path = "data/objects/teapot.obj";
@@ -417,42 +69,49 @@ std::string parse_model_from_cmd_line(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    std::string model_path = parse_model_from_cmd_line(argc, argv);
+    // contains the model's obj path - path to the teapot if no argument is supplied, otherwise it is the path that the user provides
+    std::string const model_path = parse_model_from_cmd_line(argc, argv);
 
+    // guacamole is rewriting the arguments, so we need this additiona call
     adjust_arguments(argc, argv);
+    // init the guacamole backend
     gua::init(argc, argv);
 
-    // setup scene
+    // initialize an empty scene graph, only containing a root node. We will attach nodes to other nodes to build the entire graph
     gua::SceneGraph graph("main_scenegraph");
 
+    // for every type of geometry, there is a loader that knows how to deal with it
     gua::TriMeshLoader loader;
 
-    auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-
-    model_mat->set_render_wireframe(false);
-    model_mat->set_show_back_faces(false);
+    // we provide our model with the gua-default material
+    auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
 
-    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    transform->set_draw_bounding_box(false);
-    auto model(
-        loader.create_geometry_from_file("model", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+    model_material->set_render_wireframe(false);
+    model_material->set_show_back_faces(false);
+
+
+    auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform");
+    transform_node->set_draw_bounding_box(false);
+    auto teapot_model(
+        loader.create_geometry_from_file("teapot", model_path, model_material,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
 
     auto scene = graph.add_node<gua::node::TransformNode>("/transform", "scene");
     scene->set_draw_bounding_box(true);
 
-    graph.add_node("/transform/scene", model);
-    model->set_draw_bounding_box(true);
+    graph.add_node("/transform/scene", teapot_model);
+    teapot_model->set_draw_bounding_box(true);
 
-    auto model2(loader.create_geometry_from_file("model2", model_path, model_mat,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
-    model2->translate(1.0, 0.0, 0.0);
-    model2->set_draw_bounding_box(true);
-    graph.add_node("/transform/scene", model2);
+    auto teapot_model2(loader.create_geometry_from_file("teapot_2", model_path, model_material,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+    teapot_model2->translate(1.0, 0.0, 0.0);
+    teapot_model2->set_draw_bounding_box(true);
+    graph.add_node("/transform/scene", teapot_model2);
 
 
+    // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
     place_objects_randomly(model_path, scene);
 
-
+    // add a point light source to the scene and attach it to the tranform node
     auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
     light->data.set_type(gua::node::LightNode::Type::POINT);
     light->data.brightness = 150.0f;
@@ -460,11 +119,14 @@ int main(int argc, char** argv)
     light->translate(-3.f, 5.f, 5.f);
 
 
-
+    // we put a transform node above camera and screen, because we want to keep the relative orientation and position between constant
+    // when we navigate, we change the transformation of the navigation node instead the transformation of the camera!
     auto navigation_node = graph.add_node<gua::node::TransformNode>("/", "navigation_node");
 
 
+    // Screen nodes are special nodes which allow us to model a "window into the virtual world"
     auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen");
+    // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, -3.0);
 
@@ -473,7 +135,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(960, 540);
+    auto resolution = gua::math::vec2ui(1920, 1080);
 
 
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
@@ -516,30 +178,23 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
+    // set up the ticker that tries to executes the main loop every of 1.0 / 500.0 s. T
+    // he application thread triggers the rendering, so our rendering framerate can never be higher than our application framerate
     gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
 
+    // define the callback for the ticker - this is basically the content of the mainloop
 
     ticker.on_tick.connect([&]() {
 
         std::cout << std::endl;
 
         // apply trackball matrix to object
-        gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
+        gua::math::mat4 transform_node_model_matrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
 
 
-
-
-        //void update_navigation_node(cam_world_matrix) {
-            
-        //}
-
-        //camera = 1;
-
-
-
-        transform->set_transform(modelmatrix);
-        transform->translate(0.0f, 0.0f, -5.0f);
+        transform_node->set_transform(transform_node_model_matrix);
+        transform_node->translate(0.0f, 0.0f, -5.0f);
 
 
 
@@ -565,21 +220,25 @@ int main(int argc, char** argv)
         std::cout << "elapsed rendering time ms: " << elapsed_rendering_time_milliseconds << " ms" << std::endl;
 
 
-
+        // apply changes to the current navigation node, such that the scene graph will see the change
         update_cam_matrix(camera, navigation_node, elapsed_application_time_milliseconds);
 
         if(window->should_close())
         {
+            // clean up
             renderer.stop();
             window->close();
             loop.stop();
         }
         else
         {
+            // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});
         }
     });
 
+
+    // start the rendering loop
     loop.start();
 
     return 0;
