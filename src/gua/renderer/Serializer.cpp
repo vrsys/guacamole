@@ -58,7 +58,7 @@ void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, M
     rendering_frustum_ = output.rendering_frustum;
     culling_frustum_ = output.culling_frustum;
 
-    for(auto plane : scene_graph.get_clipping_plane_nodes())
+    for(auto const& plane : scene_graph.get_clipping_plane_nodes())
     {
         if(plane->is_visible(view_id) && render_mask_.check(plane->get_tags()))
         {
@@ -93,11 +93,11 @@ void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, M
         {
             child_index = node->get_children().size();
 
-            for(unsigned i(0); i < node->data.get_lod_distances().size(); ++i)
+            for(unsigned node_idx = 0; node_idx < node->data.get_lod_distances().size(); ++node_idx)
             {
-                if(node->data.get_lod_distances()[i] > distance_to_camera)
+                if(node->data.get_lod_distances()[node_idx] > distance_to_camera)
                 {
-                    child_index = i;
+                    child_index = node_idx;
                     break;
                 }
             }
