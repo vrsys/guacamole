@@ -2,6 +2,7 @@
 #include "navigation.hpp" //include WASD_state type
 
 extern WASD_state cam_navigation_state;
+extern bool print_times;
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -145,15 +146,17 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
+        case 'p': {
+            //toggle print state on keypress
+            if(1 == action) {
+                print_times = !print_times;
+            }
+            break;
+        }
+
         default: { //no assigned key
             break;
         }
-    }
-
-    if(action == 1) {
-        std::cout << "On" << std::endl;
-    } else if(action == 0) {
-        std::cout << "Off" << std::endl;
     }
 
     if(action == 0)

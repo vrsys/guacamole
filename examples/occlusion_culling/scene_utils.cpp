@@ -3,6 +3,31 @@
 
 
 
+void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window) {
+
+    float application_fps = renderer.get_application_fps();
+    float rendering_fps   = window->get_rendering_fps();
+
+    float elapsed_application_time_milliseconds = 0.0;
+
+    if(application_fps > 0.0f) {
+        elapsed_application_time_milliseconds = 1.0 / application_fps;
+    }
+
+    std::cout << "elapsed application time ms: " << elapsed_application_time_milliseconds << " ms" << std::endl;
+
+    float elapsed_rendering_time_milliseconds = 0.0;
+
+    if(rendering_fps > 0.0f) {
+        elapsed_rendering_time_milliseconds = 1.0 / rendering_fps;
+    }
+
+    std::cout << "elapsed rendering time ms: " << elapsed_rendering_time_milliseconds << " ms" << std::endl;
+
+    std::cout << std::endl;
+}
+
+
 void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
 
     for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
@@ -32,7 +57,6 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
                                         gua::math::mat4(scm::math::make_rotation(rand_angle_x, 1.0f, 0.0f, 0.0f))   // 2. we rotate the model around x
                                         * norm_scale_mat;                                                           // 1. we scale the model such that the longest size is unit size
 
-                                        //std::cout << "Rand angle: " << rand_angle << std::endl;
 
         // override the model's transform with our calculated transformation
         new_model->set_transform(model_trans);

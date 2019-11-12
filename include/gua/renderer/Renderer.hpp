@@ -82,7 +82,7 @@ class GUA_DLL Renderer
 
     void stop();
 
-    inline float get_application_fps() { return application_fps_.fps; }
+    inline float get_application_fps() const { return application_fps_.fps; }
 
   private:
     void send_renderclient(std::string const& window, std::shared_ptr<const Renderer::SceneGraphs> sgs, node::CameraNode* cam, bool alternate_frame_rendering);

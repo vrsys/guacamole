@@ -30,12 +30,15 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
 #include <gua/renderer/DebugViewPass.hpp>
+#include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
+
+bool print_times = false;
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
@@ -79,6 +82,8 @@ void parse_model_from_cmd_line(int argc, char** argv)
     
 }
 
+
+
 int main(int argc, char** argv)
 {
     // contains the model's obj path - path to the teapot if no argument is supplied, otherwise it is the path that the user provides
@@ -105,20 +110,9 @@ int main(int argc, char** argv)
 
     auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform");
     transform_node->set_draw_bounding_box(false);
-    auto teapot_model(
-        loader.create_geometry_from_file("teapot", model_path, model_material,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
 
     auto scene = graph.add_node<gua::node::TransformNode>("/transform", "scene");
     scene->set_draw_bounding_box(true);
-
-    graph.add_node("/transform/scene", teapot_model);
-    teapot_model->set_draw_bounding_box(true);
-
-    auto teapot_model2(loader.create_geometry_from_file("teapot_2", model_path, model_material,  gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
-    teapot_model2->translate(1.0, 0.0, 0.0);
-    teapot_model2->set_draw_bounding_box(true);
-    graph.add_node("/transform/scene", teapot_model2);
-
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
     place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene);
@@ -159,7 +153,7 @@ int main(int argc, char** argv)
 
     */
     auto pipeline_description = std::make_shared<gua::PipelineDescription>();     
-    pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
     pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
     pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
@@ -222,9 +216,6 @@ int main(int argc, char** argv)
     // define the callback for the ticker - this is basically the content of the mainloop
 
     ticker.on_tick.connect([&]() {
-
-        std::cout << std::endl;
-
         // apply trackball matrix to object
         // we update the model transformatin according to the internal state of the trackball.
         gua::math::mat4 transform_node_model_matrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
@@ -237,24 +228,16 @@ int main(int argc, char** argv)
 
         //we ask the renderer for the currently averaged applicatin fps and the window for the rendering fps
         float application_fps = renderer.get_application_fps();
-        float rendering_fps   = window->get_rendering_fps();
 
+        if(print_times) {
+            print_draw_times(renderer, window);
+        }
 
         float elapsed_application_time_milliseconds = 0.0;
 
         if(application_fps > 0.0f) {
             elapsed_application_time_milliseconds = 1.0 / application_fps;
         }
-
-        std::cout << "elapsed application time ms: " << elapsed_application_time_milliseconds << " ms" << std::endl;
-
-        float elapsed_rendering_time_milliseconds = 0.0;
-
-        if(rendering_fps > 0.0f) {
-            elapsed_rendering_time_milliseconds = 1.0 / rendering_fps;
-        }
-
-        std::cout << "elapsed rendering time ms: " << elapsed_rendering_time_milliseconds << " ms" << std::endl;
 
 
         // apply changes to the current navigation node, such that the scene graph will see the change
