@@ -3,9 +3,10 @@
 
 
 
-void place_objects_randomly(std::string const& model_path, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
-    for(int i = 0; i < 1000; ++i) {
-        std::string const random_object_name = "obj_" + std::to_string(i);
+void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
+    
+    for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
+        std::string const random_object_name = "obj_" + std::to_string(model_index);
         gua::TriMeshLoader loader;
         auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
@@ -16,12 +17,9 @@ void place_objects_randomly(std::string const& model_path, std::shared_ptr<gua::
         float rand_y_trans = 8.0 * std::rand() / (float)RAND_MAX - 4.0;
         float rand_z_trans = 8.0 * std::rand() / (float)RAND_MAX - 4.0;
 
-        float rand_angle  = 360.0 * std::rand() / (float)RAND_MAX;
+        float rand_angle_1 = 360.0 * std::rand() / (float)RAND_MAX;
         float rand_angle_2 = 360.0 * std::rand() / (float)RAND_MAX;
         float rand_angle_3 = 360.0 * std::rand() / (float)RAND_MAX;
-
-        //new_model->rotate(i, 0.0, 1.0, 0.0);
-        //new_model->translate(rand_x_trans, rand_y_trans, rand_z_trans);
 
         auto norm_scale_mat = new_model->get_transform();
 
@@ -29,7 +27,7 @@ void place_objects_randomly(std::string const& model_path, std::shared_ptr<gua::
                                         gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans)) *
                                         gua::math::mat4(scm::math::make_rotation(rand_angle_3, 0.0f, 0.0f, 1.0f)) *
                                         gua::math::mat4(scm::math::make_rotation(rand_angle_2, 0.0f, 1.0f, 0.0f)) *
-                                        gua::math::mat4(scm::math::make_rotation(rand_angle, 1.0f, 0.0f, 0.0f)) * norm_scale_mat;
+                                        gua::math::mat4(scm::math::make_rotation(rand_angle_1, 1.0f, 0.0f, 0.0f)) * norm_scale_mat;
 
                                         //std::cout << "Rand angle: " << rand_angle << std::endl;
 
