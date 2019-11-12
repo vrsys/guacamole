@@ -30,6 +30,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
 #include <gua/renderer/DebugViewPass.hpp>
+#include <gua/renderer/FullscreenColorBufferViewPass.hpp>
 #include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -39,6 +40,9 @@
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
 
 bool print_times = false;
+
+bool visualize_depth_complexity = false;
+bool was_set_to_visualize_depth_complexity = visualize_depth_complexity;
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
@@ -152,17 +156,33 @@ int main(int argc, char** argv)
        After the resolve pass, we may add post processing passes (or a DebugView)
 
     */
-    auto pipeline_description = std::make_shared<gua::PipelineDescription>();     
-    pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    auto depth_complexity_vis_pipeline_description = std::make_shared<gua::PipelineDescription>();     
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
-    pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
-    pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
+    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
 
     // configure the resolve pass
-    pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
-    pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
+    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+
+
+
+    auto default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    //----------------------------------------------------------------------------------------
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
+
+    // configure the resolve pass
+    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
+    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
 
     //add a camera node. Without a camera, we can not render
@@ -179,7 +199,7 @@ int main(int argc, char** argv)
     //for now, we do not render in stereo
     camera->config.set_enable_stereo(false);
     //we associate our current pipeline description with the camera
-    camera->set_pipeline_description(pipeline_description);
+    camera->set_pipeline_description(default_trimesh_pipeline_description);
 
 
     //create the window and configure it with correct resolution, stereo mode and window events
@@ -214,7 +234,6 @@ int main(int argc, char** argv)
 
 
     // define the callback for the ticker - this is basically the content of the mainloop
-
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         // we update the model transformatin according to the internal state of the trackball.
@@ -252,6 +271,17 @@ int main(int argc, char** argv)
         }
         else
         {
+
+            if(visualize_depth_complexity != was_set_to_visualize_depth_complexity) {
+                if(visualize_depth_complexity) {
+                    camera->set_pipeline_description(depth_complexity_vis_pipeline_description);
+                } else {
+                    camera->set_pipeline_description(default_trimesh_pipeline_description);                    
+                }
+
+                was_set_to_visualize_depth_complexity = visualize_depth_complexity;
+            }
+
             // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});
         }
