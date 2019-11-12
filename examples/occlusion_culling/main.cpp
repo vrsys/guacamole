@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, scene);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene);
 
     // add a point light source to the scene and attach it to the tranform node
     auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
