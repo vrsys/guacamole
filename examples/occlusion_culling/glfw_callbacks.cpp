@@ -3,6 +3,7 @@
 
 extern WASD_state cam_navigation_state;
 extern bool print_times;
+extern bool visualize_depth_complexity;
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -153,6 +154,16 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             }
             break;
         }
+
+        case 'v': {
+            //toggle print state on keypress
+            if(1 == action) {
+                visualize_depth_complexity = !visualize_depth_complexity;
+            }
+            break;
+        }
+
+        
 
         default: { //no assigned key
             break;

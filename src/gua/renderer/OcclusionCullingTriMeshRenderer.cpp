@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/TriMeshRenderer.hpp>
+#include <gua/renderer/OcclusionCullingTriMeshRenderer.hpp>
 
 #include <gua/config.hpp>
 #include <gua/node/TriMeshNode.hpp>
@@ -48,7 +48,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
+OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
     :
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
       VTRenderer(ctx, smap),
@@ -56,24 +56,30 @@ TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const
       rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK)),
       rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),
       rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK)),
-      rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)), program_stages_(), programs_(), global_substitution_map_(smap)
+      rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)),
+      default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)),
+      depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
+      default_blend_state_(ctx.render_device->create_blend_state(true)),
+      color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
+      depth_complexity_vis_program_stages_(), depth_complexity_vis_programs_(), 
+      global_substitution_map_(smap)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
     std::string v_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-    std::string f_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+    std::string f_shader = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
 #else
     std::string v_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-    std::string f_shader = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+    std::string f_shader = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
 #endif
 
-    program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_shader);
-    program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_shader);
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_shader);
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_shader);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
     RenderContext const& ctx(pipe.get_context());
 
@@ -103,6 +109,9 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         target.bind(ctx, write_depth);
         target.set_viewport(ctx);
 
+        scm::math::vec2ui render_target_dims(target.get_width(), target.get_height());
+
+
         int view_id(camera.config.get_view_id());
 
         MaterialShader* current_material(nullptr);
@@ -111,8 +120,6 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
-
-        std::cout << "Num TriMeshNodes: " <<  sorted_objects->second.size() << std::endl;
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -131,8 +138,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_material = tri_mesh_node->get_material()->get_shader();
                 if(current_material)
                 {
-                    auto shader_iterator = programs_.find(current_material);
-                    if(shader_iterator != programs_.end())
+                    auto shader_iterator = depth_complexity_vis_programs_.find(current_material);
+                    if(shader_iterator != depth_complexity_vis_programs_.end())
                     {
                         current_shader = shader_iterator->second;
                     }
@@ -145,17 +152,17 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                         current_shader = std::make_shared<ShaderProgram>();
 
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                        current_shader->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, smap);
 #else
                         bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        current_shader->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
 #endif
-                        programs_[current_material] = current_shader;
+                        depth_complexity_vis_programs_[current_material] = current_shader;
                     }
                 }
                 else
                 {
-                    Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
+                    Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
                 }
                 if(current_shader)
                 {
@@ -166,6 +173,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
                     // hack
                     current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
                     if(!pipe.current_viewstate().shadow_mode)
@@ -233,6 +241,15 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     ctx.render_context->apply_state_objects();
                 }
 
+                if(    ctx.render_context->current_blend_state() != color_accumulation_state_
+                    || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
+                {
+                    ctx.render_context->set_blend_state(color_accumulation_state_);
+                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
+                    ctx.render_context->apply_state_objects();
+                }
+
+                
                 ctx.render_context->apply_program();
 
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());

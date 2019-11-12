@@ -33,10 +33,10 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
         std::string const random_object_name = "obj_" + std::to_string(model_index);
         gua::TriMeshLoader loader;
-        auto model_matterial(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+        auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+        model_material->set_show_back_faces(true);
 
-
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_matterial, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_material, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
         
 
         float rand_x_trans = random_pos_cube_dimensions * std::rand() / (float)RAND_MAX - random_pos_cube_dimensions / 2.0f;
@@ -61,11 +61,13 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
         // override the model's transform with our calculated transformation
         new_model->set_transform(model_trans);
 
-        //new_model->set_draw_bounding_box(true);
+        new_model->set_draw_bounding_box(true);
 
         //add this below our reference group node
         scene_root_node->add_child(new_model);
     }
+
+    scene_root_node->set_draw_bounding_box(true);
 }
 
 
