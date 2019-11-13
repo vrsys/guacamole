@@ -49,10 +49,55 @@ bool was_set_to_visualize_depth_complexity = visualize_depth_complexity;
 
 bool print_scenegraph_once = false;
 
+gua::OcclusionCullingMode current_culling_mode;
+
+
+std::shared_ptr<gua::PipelineDescription> depth_complexity_vis_pipeline_description = std::make_shared<gua::PipelineDescription>();     
+std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
 float one_d_cube_size = 8.0; //8m*8m*8m cube for random object placement
+
+void configure_pipeline_descriptions() {
+    /* guacamole supports different rendering primitives - Triangle Meshes, LOD-PointClouds, Volumes, RGBD Streams, etc.
+       It is our responsibility to keep the rendering stages minimal by describing the geometry that we actually plan to render
+       
+       In addition to the Geoemtry passes, we usually want to have shading in the scene. 
+       For this, we add the LightVisibilityPass and ResolvePassDescription after the geometry passes.
+       After the resolve pass, we may add post processing passes (or a DebugView)
+
+    */
+
+    // first pipe
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    //----------------------------------------------------------------------------------------
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
+    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
+
+    // configure the resolve pass
+    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
+    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+
+
+
+    // second pipe
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    //----------------------------------------------------------------------------------------
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
+    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
+
+    // configure the resolve pass
+    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
+    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+
+}
 
 
 void adjust_arguments(int& argc, char**& argv)
@@ -172,42 +217,7 @@ int main(int argc, char** argv)
     auto resolution = gua::math::vec2ui(2560, 1440);
 
 
-    /* guacamole supports different rendering primitives - Triangle Meshes, LOD-PointClouds, Volumes, RGBD Streams, etc.
-       It is our responsibility to keep the rendering stages minimal by describing the geometry that we actually plan to render
-       
-       In addition to the Geoemtry passes, we usually want to have shading in the scene. 
-       For this, we add the LightVisibilityPass and ResolvePassDescription after the geometry passes.
-       After the resolve pass, we may add post processing passes (or a DebugView)
-
-    */
-    auto depth_complexity_vis_pipeline_description = std::make_shared<gua::PipelineDescription>();     
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
-    //----------------------------------------------------------------------------------------
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-
-    // configure the resolve pass
-    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
-    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
-
-
-
-    auto default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
-    //----------------------------------------------------------------------------------------
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
-    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-
-    // configure the resolve pass
-    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
-    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
-
+    configure_pipeline_descriptions();
 
     //add a camera node. Without a camera, we can not render
     auto camera_node = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam_node");

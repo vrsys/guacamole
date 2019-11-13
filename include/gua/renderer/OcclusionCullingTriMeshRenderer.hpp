@@ -42,13 +42,17 @@ class Pipeline;
 class PipelinePassDescription;
 
 
+enum class OcclusionCullingMode;
+
+
+/*
 enum class OcclusionCullingMode {
     NO_CULLING = 0,
     HIERARCHICAL_STOP_AND_WAIT = 1,
     COHRERENT_HIERARCHICAL_CULLING = 2,
 
     NUM_OCCLUSION_CULLING_MODES = 3
-};
+};*/
 
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
@@ -58,21 +62,37 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
   public:
     OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
+    /* main render call which internally calls the different occlusion culling supported render functions
+       based on the set render mode 
+    */
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
+    // occlusion culling supported render functions
     void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc);
     void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc);
 
+
+
   private:
+
+    // different rasterizer states for different render modes
     scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
     scm::gl::rasterizer_state_ptr rs_cull_none_ = nullptr;
     scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_ = nullptr;
     scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_ = nullptr;
 
+    // different depth stencil states for different effects
+        // default state enables depth testing and depth writing
     scm::gl::depth_stencil_state_ptr default_depth_test_ = nullptr;
+        // this depth stencil state disables depth testing and depth writing for the depth complexity visualization
     scm::gl::depth_stencil_state_ptr depth_stencil_state_no_test_no_writing_state_ = nullptr;
 
-    scm::gl::blend_state_ptr default_blend_state_ = nullptr;   
+    // blend states telling opengl what to do with new fragments
+        // default state just writes the attributes of the latest accepted fragment over the previous one
+    scm::gl::blend_state_ptr default_blend_state_ = nullptr;
+
+        // this accumulation state adds the color of all fragments on top of each other.
+        // we use this in combination with disabled depth tests to do the depth complexity visualization
     scm::gl::blend_state_ptr color_accumulation_state_ = nullptr;
 
     std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
@@ -83,7 +103,6 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     SubstitutionMap global_substitution_map_;
 
-    OcclusionCullingMode occlusion_culling_mode_ = OcclusionCullingMode::NO_CULLING;
 };
 
 } // namespace gua
