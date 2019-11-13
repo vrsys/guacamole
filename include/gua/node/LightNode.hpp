@@ -176,6 +176,7 @@ class GUA_DLL LightNode : public SerializableNode
      */
     void update_bounding_box() const override;
 
+    inline virtual std::string get_type_string() const {return "<LightNode>";}
   private:
     std::shared_ptr<Node> copy() const override;
 };

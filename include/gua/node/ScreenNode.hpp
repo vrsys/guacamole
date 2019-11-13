@@ -101,6 +101,8 @@ class GUA_DLL ScreenNode : public Node
      */
     void accept(NodeVisitor& visitor) override;
 
+    inline virtual std::string get_type_string() const {return "<ScreenNode>";}
+
   private:
     std::shared_ptr<Node> copy() const override;
 };

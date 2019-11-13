@@ -90,6 +90,8 @@ class GUA_DLL TriMeshNode : public GeometryNode
      */
     void accept(NodeVisitor& visitor) override;
 
+    inline virtual std::string get_type_string() const {return "<TriMeshNode>";}
+
   protected:
     std::shared_ptr<Node> copy() const override;
 

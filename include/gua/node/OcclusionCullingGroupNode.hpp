@@ -70,6 +70,7 @@ class GUA_DLL OcclusionCullingGroupNode : public TransformNode
      */
     void accept(NodeVisitor& visitor) override;
 
+    inline virtual std::string get_type_string() const {return "<OcclusionCullingGroupNode>";}
   private:
     std::shared_ptr<Node> copy() const override;
 };
