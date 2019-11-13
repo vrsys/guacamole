@@ -20,7 +20,7 @@ struct WASD_state {
 
     scm::math::mat4 accumulated_translation_world_space = scm::math::mat4::identity();
 
-    scm::math::mat4 accumulated_rotation_around_y_world_space = scm::math::mat4::identity();
+    scm::math::mat4 accumulated_rotation_world_space = scm::math::mat4::identity();
     //scm::math::vec3f accumulated_translation = scm::math::vec3(0.0, 0.0, 0.0);
     double accumulated_rotation_around_up = 0.0;
     double accumulated_rotation_around_right = 0.0;

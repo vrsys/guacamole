@@ -37,10 +37,14 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
         std::string const random_object_name = obj_name + "_" + std::to_string(model_index);
         gua::TriMeshLoader loader;
-        auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-        model_material->set_show_back_faces(true);
 
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_material, gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::MAKE_PICKABLE));
+        // we provide our model with the gua-default material
+        auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+        model_material->set_show_back_faces(false);
+        model_material->set_render_wireframe(false);
+
+
+        auto new_model(loader.create_geometry_from_file(random_object_name, model_path, model_material, gua::TriMeshLoader::NORMALIZE_SCALE));
         
 
         float rand_x_trans = random_pos_cube_dimensions * std::rand() / (float)RAND_MAX - random_pos_cube_dimensions / 2.0f;
@@ -51,7 +55,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
         float rand_angle_y = 360.0f * std::rand() / (float)RAND_MAX;
         float rand_angle_z = 360.0f * std::rand() / (float)RAND_MAX;
 
-        // we want to have controle over the scaleing for now, so we get the matrix that was used to create the normalizatin in scaling 
+        // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling 
         auto norm_scale_mat = new_model->get_transform();
 
         gua::math::mat4 model_trans =   
@@ -64,6 +68,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
         // override the model's transform with our calculated transformation
         new_model->set_transform(model_trans);
+
 
         new_model->set_draw_bounding_box(false);
 
@@ -86,8 +91,6 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_roo
 void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int depth) {
     
     //see https://en.wikipedia.org/wiki/Box-drawing_character#Unicode for ascii table characters
-
-
     for(int dash_index = 0; dash_index < depth; ++dash_index) {
         std::cout <<" ";
     }

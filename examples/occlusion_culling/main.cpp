@@ -63,7 +63,7 @@ void configure_pipeline_descriptions() {
     /* guacamole supports different rendering primitives - Triangle Meshes, LOD-PointClouds, Volumes, RGBD Streams, etc.
        It is our responsibility to keep the rendering stages minimal by describing the geometry that we actually plan to render
        
-       In addition to the Geoemtry passes, we usually want to have shading in the scene. 
+       In addition to the Geometry passes, we usually want to have shading in the scene. 
        For this, we add the LightVisibilityPass and ResolvePassDescription after the geometry passes.
        After the resolve pass, we may add post processing passes (or a DebugView)
 
@@ -90,7 +90,7 @@ void configure_pipeline_descriptions() {
     //----------------------------------------------------------------------------------------
     default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
     //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
 
     // configure the resolve pass
@@ -149,7 +149,10 @@ void print_keyboard_controls() {
 
     std::cout << "V: toggle depth complexity visualization" << std::endl;
     std::cout << "B: toggle bounding boxes" << std::endl;
-    std::cout << "N: toggle debug view" << std::endl;
+    std::cout << "P: print scenegraph (once)" << std::endl;
+    std::cout << "T: toggle printing of elapsed time (application & render time)" << std::endl;
+
+    std::cout << std::endl;
 }
 
 
@@ -163,19 +166,13 @@ int main(int argc, char** argv)
     // init the guacamole backend
     gua::init(argc, argv);
 
+    print_keyboard_controls();
+
     // initialize an empty scene graph, only containing a root node. We will attach nodes to other nodes to build the entire graph
     gua::SceneGraph graph("main_scenegraph");
 
     // for every type of geometry, there is a loader that knows how to deal with it
     gua::TriMeshLoader loader;
-
-    // we provide our model with the gua-default material
-    auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-
-
-    model_material->set_render_wireframe(false);
-    model_material->set_show_back_faces(false);
-
 
     auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform_node");
     transform_node->set_draw_bounding_box(false);
@@ -214,7 +211,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(2560, 1440);
+    auto resolution = gua::math::vec2ui(1280, 720);
 
 
     configure_pipeline_descriptions();

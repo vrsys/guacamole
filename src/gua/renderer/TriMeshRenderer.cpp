@@ -238,20 +238,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         }
 
 
-        //draw kd-tree if pass is configured that way
-        // loop through all objects, sorted by material ----------------------------
-        
-/*
-        for(auto const& object : sorted_objects->second)
-        {
-            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
 
-            std::cout << "Drawing kdtree" << std::endl;
-            tri_mesh_node->get_geometry()->draw_kdtree(pipe.get_context());
-
-        }
-
-*/
 
         target.unbind(ctx);
 
