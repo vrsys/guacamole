@@ -19,6 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <queue>
+
 // class header
 #include <gua/renderer/OcclusionCullingTriMeshRenderer.hpp>
 
