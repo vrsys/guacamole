@@ -3,7 +3,10 @@
 
 extern WASD_state cam_navigation_state;
 extern bool print_times;
+extern bool show_bounding_boxes;
 extern bool visualize_depth_complexity;
+
+extern bool print_scenegraph_once;
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -147,13 +150,22 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
-        case 'p': {
+        case 't': {
             //toggle print state on keypress
             if(1 == action) {
                 print_times = !print_times;
             }
             break;
         }
+
+        case 'p': {
+            //toggle print state on keypress
+            if(1 == action) {
+                print_scenegraph_once = true;
+            }
+            break;
+        }
+
 
         case 'v': {
             //toggle print state on keypress
@@ -162,6 +174,15 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             }
             break;
         }
+
+        case 'b': {
+            //toggle print state on keypress
+            if(1 == action) {
+                show_bounding_boxes = !show_bounding_boxes;
+            }
+            break;
+        }
+
 
         
 

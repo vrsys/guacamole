@@ -120,6 +120,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
+        std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_objects->second.size() << std::endl; 
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));

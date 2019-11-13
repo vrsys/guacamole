@@ -41,8 +41,14 @@ extern WASD_state cam_navigation_state;  //only declared in main - definition is
 
 bool print_times = false;
 
+bool show_bounding_boxes = false;
+bool was_set_to_show_bounding_boxes = false;
+
 bool visualize_depth_complexity = false;
 bool was_set_to_visualize_depth_complexity = visualize_depth_complexity;
+
+bool print_scenegraph_once = false;
+
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
@@ -87,6 +93,20 @@ void parse_model_from_cmd_line(int argc, char** argv)
 }
 
 
+void print_keyboard_controls() {
+    std::cout << "Keyboard Controls:" << std::endl;
+    std::cout << "==================" << std::endl;
+    std::cout << "W/S: move camera forward/backward" << std::endl;
+    std::cout << "A/D: move camera left/right" << std::endl;
+
+    std::cout << "I/K: rotate camera around right-axis" << std::endl;
+    std::cout << "J/L: rotate camera around up-axis" << std::endl;
+
+    std::cout << "V: toggle depth complexity visualization" << std::endl;
+    std::cout << "B: toggle bounding boxes" << std::endl;
+    std::cout << "N: toggle debug view" << std::endl;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -112,21 +132,21 @@ int main(int argc, char** argv)
     model_material->set_show_back_faces(false);
 
 
-    auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform");
+    auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform_node");
     transform_node->set_draw_bounding_box(false);
 
-    auto scene = graph.add_node<gua::node::TransformNode>("/transform", "scene");
-    scene->set_draw_bounding_box(true);
+    auto scene_group_node = graph.add_node<gua::node::TransformNode>("/transform_node", "scene_node");
+    scene_group_node->set_draw_bounding_box(true);
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene_group_node);
 
     // add a point light source to the scene and attach it to the tranform node
-    auto light = graph.add_node<gua::node::LightNode>("/transform", "light");
-    light->data.set_type(gua::node::LightNode::Type::POINT);
-    light->data.brightness = 350.0f;
-    light->scale(12.f);
-    light->translate(-3.f, 5.f, 5.f);
+    auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
+    light_node->data.set_type(gua::node::LightNode::Type::POINT);
+    light_node->data.brightness = 350.0f;
+    light_node->scale(12.f);
+    light_node->translate(-3.f, 5.f, 5.f);
 
 
     // we put a transform node above camera and screen, because we want to keep the relative orientation and position between constant
@@ -135,7 +155,7 @@ int main(int argc, char** argv)
 
 
     // Screen nodes are special nodes which allow us to model a "window into the virtual world"
-    auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen");
+    auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen_node");
     // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, -3.0);
@@ -158,7 +178,7 @@ int main(int argc, char** argv)
     */
     auto depth_complexity_vis_pipeline_description = std::make_shared<gua::PipelineDescription>();     
     depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
     depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
@@ -177,7 +197,7 @@ int main(int argc, char** argv)
     //----------------------------------------------------------------------------------------
     default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
     //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
 
     // configure the resolve pass
@@ -186,20 +206,20 @@ int main(int argc, char** argv)
 
 
     //add a camera node. Without a camera, we can not render
-    auto camera = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam");
+    auto camera_node = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam_node");
     //we just leave the camera in 0, 0, 0 in its local coordinates
-    camera->translate(0, 0, 0);
-    camera->config.set_resolution(resolution);
+    camera_node->translate(0, 0, 0);
+    camera_node->config.set_resolution(resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
-    camera->config.set_screen_path("/navigation_node/screen");
+    camera_node->config.set_screen_path("/navigation_node/screen_node");
     //we associate the camera with our scenegraph
-    camera->config.set_scene_graph_name("main_scenegraph");
+    camera_node->config.set_scene_graph_name("main_scenegraph");
     //and finally tell it in which window to render
-    camera->config.set_output_window_name("main_window");
+    camera_node->config.set_output_window_name("main_window");
     //for now, we do not render in stereo
-    camera->config.set_enable_stereo(false);
+    camera_node->config.set_enable_stereo(false);
     //we associate our current pipeline description with the camera
-    camera->set_pipeline_description(default_trimesh_pipeline_description);
+    camera_node->set_pipeline_description(default_trimesh_pipeline_description);
 
 
     //create the window and configure it with correct resolution, stereo mode and window events
@@ -213,14 +233,14 @@ int main(int argc, char** argv)
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
-        camera->config.set_resolution(new_size);
+        camera_node->config.set_resolution(new_size);
         screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
     });
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     window->on_key_press.connect(
-        std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+        std::bind(key_press, std::ref(*(camera_node->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
 
     // the renderer triggers the execution of the pipeline according t our description
@@ -260,7 +280,7 @@ int main(int argc, char** argv)
 
 
         // apply changes to the current navigation node, such that the scene graph will see the change
-        update_cam_matrix(camera, navigation_node, elapsed_application_time_milliseconds);
+        update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
 
         if(window->should_close())
         {
@@ -274,13 +294,27 @@ int main(int argc, char** argv)
 
             if(visualize_depth_complexity != was_set_to_visualize_depth_complexity) {
                 if(visualize_depth_complexity) {
-                    camera->set_pipeline_description(depth_complexity_vis_pipeline_description);
+                    camera_node->set_pipeline_description(depth_complexity_vis_pipeline_description);
                 } else {
-                    camera->set_pipeline_description(default_trimesh_pipeline_description);                    
+                    camera_node->set_pipeline_description(default_trimesh_pipeline_description);                    
                 }
 
                 was_set_to_visualize_depth_complexity = visualize_depth_complexity;
             }
+
+            if(show_bounding_boxes != was_set_to_show_bounding_boxes) {
+
+                show_scene_bounding_boxes(scene_group_node, show_bounding_boxes);
+
+                was_set_to_show_bounding_boxes = show_bounding_boxes;
+            }
+
+            if(print_scenegraph_once) {
+                print_graph(graph.get_root());
+
+                print_scenegraph_once = false;
+            }
+
 
             // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});
