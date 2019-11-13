@@ -138,6 +138,8 @@ int main(int argc, char** argv)
     auto scene_group_node = graph.add_node<gua::node::TransformNode>("/transform_node", "scene_node");
     scene_group_node->set_draw_bounding_box(true);
 
+
+
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
     place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene_group_node);
 

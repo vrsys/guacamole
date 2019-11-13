@@ -69,6 +69,8 @@ class GUA_DLL TransformNode : public Node
      */
     void accept(NodeVisitor& visitor) override;
 
+    inline virtual std::string get_type_string() const override {return "<TransformNode>";}
+
   private:
     std::shared_ptr<Node> copy() const override;
 };

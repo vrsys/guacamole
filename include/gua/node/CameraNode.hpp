@@ -169,6 +169,7 @@ class GUA_DLL CameraNode : public Node
     friend class Node;
     friend struct SerializedCameraNode;
 
+    inline virtual std::string get_type_string() const {return "<CameraNode>";}
   private:
     static Frustum make_frustum(SceneGraph const& graph, math::mat4 const& camera_transform, CameraNode::Configuration const& config, CameraMode mode, bool use_alternative_culling_screen);
 

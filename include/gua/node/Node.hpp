@@ -208,6 +208,8 @@ class GUA_DLL Node
 
   public:
 
+    inline virtual std::string get_type_string() const {return "<Node>";}
+
     events::Signal<math::mat4 const&> on_world_transform_changed;
 
     /**

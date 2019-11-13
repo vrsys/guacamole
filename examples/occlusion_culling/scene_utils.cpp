@@ -30,8 +30,12 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
 
 void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
 
+    std::size_t found = model_path.find_last_of("/\\");
+    
+    std::string obj_name = model_path.substr(found+1);
+
     for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
-        std::string const random_object_name = "obj_" + std::to_string(model_index);
+        std::string const random_object_name = obj_name + "_" + std::to_string(model_index);
         gua::TriMeshLoader loader;
         auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
         model_material->set_show_back_faces(true);
@@ -88,9 +92,11 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
         std::cout <<" ";
     }
 
+    //2 unicode characters for the table elements
     std::cout << "\u2517";
     std::cout << "\u2501";
-    std::cout << scene_root_node->get_name() << std::endl;
+    // name, tabs, typestring
+    std::cout << scene_root_node->get_name() << "\t\t" << scene_root_node->get_type_string() << std::endl;
 
     //print
 
