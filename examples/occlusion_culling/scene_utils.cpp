@@ -61,18 +61,51 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
         // override the model's transform with our calculated transformation
         new_model->set_transform(model_trans);
 
-        new_model->set_draw_bounding_box(true);
+        new_model->set_draw_bounding_box(false);
 
         //add this below our reference group node
         scene_root_node->add_child(new_model);
     }
 
-    scene_root_node->set_draw_bounding_box(true);
+    scene_root_node->set_draw_bounding_box(false);
 }
 
+void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
+    scene_root_node->set_draw_bounding_box(enable);
+
+    // recursively call show_scene_bounding_boxes for children
+    for(auto const& child : scene_root_node->get_children()) {
+        show_scene_bounding_boxes(child, enable);
+    }
+}
+
+void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int depth) {
+    
+    //see https://en.wikipedia.org/wiki/Box-drawing_character#Unicode for ascii table characters
 
 
-void rebuild_object_hierarchy_SAH_based(std::shared_ptr<gua::node::TransformNode>& scene_root_node, 
-                                        std::vector<std::shared_ptr<gua::node::TransformNode>>& geometry_nodes) {
+    for(int dash_index = 0; dash_index < depth; ++dash_index) {
+        std::cout <<" ";
+    }
 
+    std::cout << "\u2517";
+    std::cout << "\u2501";
+    std::cout << scene_root_node->get_name() << std::endl;
+
+    //print
+
+    //std::cout << std::endl;
+
+    for(auto const& child : scene_root_node->get_children()) {
+        print_graph(child, depth+1);
+    }
+
+/*
+    scene_root_node->set_draw_bounding_box(enable);
+
+    // recursively call show_scene_bounding_boxes for children
+    for(auto const& child : scene_root_node->get_children()) {
+        show_scene_bounding_boxes(child, enable);
+    }
+*/
 }
