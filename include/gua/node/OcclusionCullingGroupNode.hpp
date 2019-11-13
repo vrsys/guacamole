@@ -23,7 +23,7 @@
 #define GUA_OCCLUSION_CULLING_GROUP_NODE_HPP
 
 #include <gua/platform.hpp>
-#include <gua/node/TransformNode.hpp>
+#include <gua/node/Node.hpp>
 
 namespace gua
 {
@@ -39,7 +39,7 @@ namespace node
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL OcclusionCullingGroupNode : public TransformNode
+class GUA_DLL OcclusionCullingGroupNode : public Node
 {
   public:
     /**
@@ -70,7 +70,7 @@ class GUA_DLL OcclusionCullingGroupNode : public TransformNode
      */
     void accept(NodeVisitor& visitor) override;
 
-    inline virtual std::string get_type_string() const {return "<OcclusionCullingGroupNode>";}
+    inline virtual std::string get_type_string() const override {return "<OcclusionCullingGroupNode>";}
   private:
     std::shared_ptr<Node> copy() const override;
 };

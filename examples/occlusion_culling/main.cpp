@@ -135,7 +135,9 @@ int main(int argc, char** argv)
     auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform_node");
     transform_node->set_draw_bounding_box(false);
 
-    auto scene_group_node = graph.add_node<gua::node::TransformNode>("/transform_node", "scene_node");
+    auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
+
+    auto scene_group_node = graph.add_node<gua::node::TransformNode>("/transform_node/occlusion_group_node", "scene_node");
     scene_group_node->set_draw_bounding_box(true);
 
 
