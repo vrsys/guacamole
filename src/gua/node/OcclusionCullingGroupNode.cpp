@@ -29,7 +29,7 @@ namespace gua
 {
 namespace node
 {
-OcclusionCullingGroupNode::OcclusionCullingGroupNode(std::string const& name, math::mat4 const& transform) : Node(name, transform) {}
+OcclusionCullingGroupNode::OcclusionCullingGroupNode(std::string const& name, math::mat4 const& transform) : GeometryNode(name, transform) {}
 
 /* virtual */ void OcclusionCullingGroupNode::accept(NodeVisitor& visitor) { visitor.visit(this); }
 

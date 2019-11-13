@@ -11,7 +11,7 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     float elapsed_application_time_milliseconds = 0.0;
 
     if(application_fps > 0.0f) {
-        elapsed_application_time_milliseconds = 1.0 / application_fps;
+        elapsed_application_time_milliseconds = 1000.0 / application_fps;
     }
 
     std::cout << "elapsed application time ms: " << elapsed_application_time_milliseconds << " ms" << std::endl;
@@ -19,7 +19,7 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     float elapsed_rendering_time_milliseconds = 0.0;
 
     if(rendering_fps > 0.0f) {
-        elapsed_rendering_time_milliseconds = 1.0 / rendering_fps;
+        elapsed_rendering_time_milliseconds = 1000.0 / rendering_fps;
     }
 
     std::cout << "elapsed rendering time ms: " << elapsed_rendering_time_milliseconds << " ms" << std::endl;
