@@ -71,6 +71,8 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
     void accept(NodeVisitor& visitor) override;
 
     inline virtual std::string get_type_string() const override {return "<OcclusionCullingGroupNode>";}
+
+
   private:
     std::shared_ptr<Node> copy() const override;
 };

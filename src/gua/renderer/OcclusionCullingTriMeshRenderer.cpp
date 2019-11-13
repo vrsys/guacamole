@@ -87,11 +87,11 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         
     switch(pipe.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::NO_CULLING: {
-            render_without_oc(pipe, desc);
-            break;
-        }
+        //    render_without_oc(pipe, desc);
+        //    break;
+        //}
 
-        case OcclusionCullingMode::HIERARCHICAL_STOP_AND_WAIT: {
+        //case OcclusionCullingMode::HIERARCHICAL_STOP_AND_WAIT: {
             render_hierarchical_stop_and_wait_oc(pipe, desc);
             break;
         }
@@ -352,9 +352,17 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
             // if we never checked set the visibility status for this node, it will be 0.
             // in this case, we recursively set the entire hierarchy to visible
-            if( 0 != occlusion_group_node->get_last_visibility_check_frame_id(current_cam_node.uuid)) {
+
+            int32_t frame_id = occlusion_group_node->get_last_visibility_check_frame_id(current_cam_node.uuid);
+
+            std::cout << "FRAME ID: " << frame_id << std::endl;
+
+            if( 0 != frame_id) {
                 continue;
             }
+
+
+
             std::cout << "Setting hierarchy to visible" << std::endl;
             // use a queue for breadth first search (stack would do breadth first search)
             std::queue<gua::node::Node*> traversal_queue;
@@ -400,10 +408,9 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
                 // work on it (CHC-Style)
-                    std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
+                std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
 
-                    //current_node-> ctx.framecount; //render context and frame count (that is automatically incremented)
-                    occlusion_group_node->set_last_visibility_check_frame_id(current_cam_node.uuid, ctx.framecount);
+
                 //remove this node from the queue
                 traversal_queue.pop();
 

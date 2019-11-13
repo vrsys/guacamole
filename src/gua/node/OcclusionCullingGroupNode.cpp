@@ -35,5 +35,12 @@ OcclusionCullingGroupNode::OcclusionCullingGroupNode(std::string const& name, ma
 
 std::shared_ptr<Node> OcclusionCullingGroupNode::copy() const { return std::make_shared<OcclusionCullingGroupNode>(*this); }
 
+
+
+void OcclusionCullingGroupNode::build_tree_across_children() {
+
+	
+}
+
 } // namespace node
 } // namespace gua
