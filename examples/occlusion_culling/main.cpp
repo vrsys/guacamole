@@ -175,17 +175,11 @@ int main(int argc, char** argv)
     gua::TriMeshLoader loader;
 
     auto transform_node = graph.add_node<gua::node::TransformNode>("/", "transform_node");
-    transform_node->set_draw_bounding_box(false);
 
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
-    auto scene_group_node = graph.add_node<gua::node::TransformNode>("/transform_node/occlusion_group_node", "scene_node");
-    scene_group_node->set_draw_bounding_box(true);
-
-
-
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, scene_group_node);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
@@ -211,7 +205,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1280, 720);
+    auto resolution = gua::math::vec2ui(2560, 1440);
 
 
     configure_pipeline_descriptions();
@@ -315,7 +309,7 @@ int main(int argc, char** argv)
 
             if(show_bounding_boxes != was_set_to_show_bounding_boxes) {
 
-                show_scene_bounding_boxes(scene_group_node, show_bounding_boxes);
+                show_scene_bounding_boxes(occlusion_group_node, show_bounding_boxes);
 
                 was_set_to_show_bounding_boxes = show_bounding_boxes;
             }

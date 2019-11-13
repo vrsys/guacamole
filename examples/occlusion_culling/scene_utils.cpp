@@ -28,7 +28,7 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
 }
 
 
-void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::TransformNode>& scene_root_node) {
+void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::Node> scene_root_node) {
 
     std::size_t found = model_path.find_last_of("/\\");
     
@@ -55,15 +55,19 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
         float rand_angle_y = 360.0f * std::rand() / (float)RAND_MAX;
         float rand_angle_z = 360.0f * std::rand() / (float)RAND_MAX;
 
+        float rand_scale = ( 50.0f * std::rand() / (float)RAND_MAX ) / 10.0f;
+
+
         // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling 
         auto norm_scale_mat = new_model->get_transform();
 
         gua::math::mat4 model_trans =   
                                         gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans)) * // 5. we apply the random translation
-                                        gua::math::mat4(scm::math::make_rotation(rand_angle_z, 0.0f, 0.0f, 1.0f)) * // 4. we rotate the model around x
-                                        gua::math::mat4(scm::math::make_rotation(rand_angle_y, 0.0f, 1.0f, 0.0f)) * // 3. we rotate the model around y
-                                        gua::math::mat4(scm::math::make_rotation(rand_angle_x, 1.0f, 0.0f, 0.0f))   // 2. we rotate the model around x
-                                        * norm_scale_mat;                                                           // 1. we scale the model such that the longest size is unit size
+                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_z, 0.0f, 0.0f, 1.0f)) * // 4. we rotate the model around x
+                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_y, 0.0f, 1.0f, 0.0f)) * // 3. we rotate the model around y
+                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_x, 1.0f, 0.0f, 0.0f)) *  // 2. we rotate the model around x
+                                        //gua::math::mat4(scm::math::make_scale(rand_scale, rand_scale, rand_scale)) *   // final
+                                        norm_scale_mat;                                                           // 1. we scale the model such that the longest size is unit size
 
 
         // override the model's transform with our calculated transformation
@@ -78,6 +82,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
     scene_root_node->set_draw_bounding_box(false);
 }
+
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
     scene_root_node->set_draw_bounding_box(enable);
