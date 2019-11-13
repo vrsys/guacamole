@@ -28,6 +28,7 @@
 // node headers
 #include <gua/node/GeometryNode.hpp>
 #include <gua/node/TriMeshNode.hpp>
+#include <gua/node/OcclusionCullingGroupNode.hpp>
 #include <gua/node/LineStripNode.hpp>
 #include <gua/node/DynamicGeometryNode.hpp>
 #include <gua/node/DynamicLineNode.hpp>

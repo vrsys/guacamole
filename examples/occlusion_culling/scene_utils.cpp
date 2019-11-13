@@ -96,7 +96,7 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
     std::cout << "\u2517";
     std::cout << "\u2501";
     // name, tabs, typestring
-    std::cout << scene_root_node->get_name() << "\t\t" << scene_root_node->get_type_string() << std::endl;
+    std::cout << " " << scene_root_node->get_name() << "\t\t" << scene_root_node->get_type_string() << std::endl;
 
     //print
 
