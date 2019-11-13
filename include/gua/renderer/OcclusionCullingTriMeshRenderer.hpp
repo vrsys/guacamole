@@ -41,6 +41,15 @@ class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
+
+enum class OcclusionCullingMode {
+    NO_CULLING = 0,
+    HIERARCHICAL_STOP_AND_WAIT = 1,
+    COHRERENT_HIERARCHICAL_CULLING = 2,
+
+    NUM_OCCLUSION_CULLING_MODES = 3
+};
+
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
@@ -73,6 +82,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> standard_programs_;
 
     SubstitutionMap global_substitution_map_;
+
+    OcclusionCullingMode occlusion_culling_mode_ = OcclusionCullingMode::NO_CULLING;
 };
 
 } // namespace gua
