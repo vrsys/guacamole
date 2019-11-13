@@ -71,6 +71,15 @@ struct GUA_DLL PipelineViewState
     bool shadow_mode = false;
 };
 
+enum class OcclusionCullingMode {
+    NO_CULLING = 0,
+    HIERARCHICAL_STOP_AND_WAIT = 1,
+    COHRERENT_HIERARCHICAL_CULLING = 2,
+    
+    NUM_OCCLUSION_CULLING_MODES = 3
+};
+
+
 class GUA_DLL Pipeline
 {
   public:
@@ -117,6 +126,11 @@ class GUA_DLL Pipeline
     void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
     void draw_quad();
 
+
+    // getter and setter for occlusion culling render modes
+    OcclusionCullingMode get_occlusion_culling_mode() const;
+    void set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode);
+
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     // time queries
     void begin_gpu_query(RenderContext const& ctx, std::string const& query_name);
@@ -153,6 +167,9 @@ class GUA_DLL Pipeline
     math::vec2ui last_resolution_;
     PipelineDescription last_description_;
     SubstitutionMap global_substitution_map_;
+
+    // global occlusion mode for the entire pipeline. can be queried in the renderer
+    OcclusionCullingMode occlusion_culling_mode_ = OcclusionCullingMode::NO_CULLING;
 
     std::vector<PipelinePass> passes_;
     std::vector<PipelineResponsibility> responsibilities_pre_render_;

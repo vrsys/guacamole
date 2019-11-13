@@ -83,7 +83,7 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
         
-    switch(occlusion_culling_mode_) {
+    switch(pipe.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::NO_CULLING: {
             render_without_oc(pipe, desc);
             break;
@@ -97,7 +97,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         case OcclusionCullingMode::COHRERENT_HIERARCHICAL_CULLING: {
             
             std::cout << "CHC not implemented" << std::endl;
-            //render_hierarchical_stop_and_wait_oc(pipe, desc);
+            //render_CHC_base(pipe, desc);
             break;
         }
 
@@ -105,10 +105,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
             std::cout << "Unknown occlusion culling mode" << std::endl;
         }
 
-    }//if(occlusion_culling_mode_ )
-        //
-
-        //render_hierarchical_stop_and_wait_oc(pipe, desc);
+    }
 }
 
 
@@ -154,12 +151,6 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
 
             // loop through all objects, sorted by material ----------------------------
             //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
-
-
-            // get a (serialized) cam node (see: guacamole/src/gua/node/CameraNode.cpp and guacamole/src/gua/node/CameraNode.hpp)
-            auto const& current_cam_node = pipe.current_viewstate().camera;
-            std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
-
 
             
         for(auto const& object : sorted_objects->second)
@@ -441,7 +432,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         ctx.render_context->sync();
     }
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

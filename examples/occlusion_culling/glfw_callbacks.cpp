@@ -8,6 +8,9 @@ extern bool visualize_depth_complexity;
 
 extern bool print_scenegraph_once;
 
+extern std::shared_ptr<gua::PipelineDescription> depth_complexity_vis_pipeline_description;     
+extern std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description;   
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -184,6 +187,13 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         }
 
 
+        case 'o': {
+            //toggle print state on keypress
+            if(1 == action) {
+                //todo: switch occlusion culling mode on pipe
+            }
+            break;
+        }
         
 
         default: { //no assigned key

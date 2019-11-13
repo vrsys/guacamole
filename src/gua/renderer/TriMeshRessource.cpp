@@ -51,8 +51,6 @@ TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree) : kd_tr
         if(build_kd_tree)
         {
             kd_tree_.generate(mesh);
-
-            std::cout << "NUM KDTREE NODES: " << kd_tree_.get_num_nodes() << std::endl;
         }
     }
 }
