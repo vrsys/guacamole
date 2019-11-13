@@ -23,7 +23,7 @@
 #define GUA_OCCLUSION_CULLING_GROUP_NODE_HPP
 
 #include <gua/platform.hpp>
-#include <gua/node/Node.hpp>
+#include <gua/node/GeometryNode.hpp>
 
 namespace gua
 {
@@ -39,7 +39,7 @@ namespace node
  *
  * \ingroup gua_scenegraph
  */
-class GUA_DLL OcclusionCullingGroupNode : public Node
+class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
 {
   public:
     /**

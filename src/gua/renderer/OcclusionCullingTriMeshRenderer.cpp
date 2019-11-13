@@ -24,6 +24,7 @@
 
 #include <gua/config.hpp>
 #include <gua/node/TriMeshNode.hpp>
+#include <gua/node/OcclusionCullingGroupNode.hpp>
 
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Pipeline.hpp>
@@ -84,18 +85,13 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
     RenderContext const& ctx(pipe.get_context());
 
     auto& scene = *pipe.current_viewstate().scene;
-    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+    auto sorted_occlusion_group_nodes(scene.nodes.find(std::type_index(typeid(node::OcclusionCullingGroupNode))));
 
 
-
-    if(sorted_objects != scene.nodes.end() && !sorted_objects->second.empty())
+    if(sorted_occlusion_group_nodes != scene.nodes.end() && !sorted_occlusion_group_nodes->second.empty())
     {
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
-
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
-        });
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -120,7 +116,46 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         ctx.render_context->apply();
 
         // loop through all objects, sorted by material ----------------------------
-        std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_objects->second.size() << std::endl; 
+        std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
+
+
+        //each of the occlusion group nodes models an entire object hierarchy
+        for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second) {
+
+            // use a queue for breadth first search (stack would do breadth first search)
+            std::queue<gua::node::Node*> traversal_queue;
+
+            // add root node of our occlusion hierarchy to the traversal queue 
+            traversal_queue.push(occlusion_group_node);
+
+
+            while(!traversal_queue.empty()) {
+                // get next node
+                gua::node::Node* current_node = traversal_queue.front();
+                // work on it (CHC-Style)
+                    std::cout << "Visited node: " << current_node->get_name() << std::endl;
+
+                //remove this node from the queue
+                traversal_queue.pop();
+
+                //push all children (currently in arbitrary order)
+                for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
+
+                    // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
+                    // the serializer however creates raw prts. Calling ".get()" on a shared ptr provides us with the
+                    // raw ptr that is referenced by the manager object 
+                    gua::node::Node* raw_child_node_ptr = shared_child_node_ptr.get();
+                    traversal_queue.push(raw_child_node_ptr);
+                }
+
+
+
+            }
+
+        }
+
+
+        /*
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -257,21 +292,8 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
             }
         }
 
+        */
 
-        //draw kd-tree if pass is configured that way
-        // loop through all objects, sorted by material ----------------------------
-        
-/*
-        for(auto const& object : sorted_objects->second)
-        {
-            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-
-            std::cout << "Drawing kdtree" << std::endl;
-            tri_mesh_node->get_geometry()->draw_kdtree(pipe.get_context());
-
-        }
-
-*/
 
         target.unbind(ctx);
 
