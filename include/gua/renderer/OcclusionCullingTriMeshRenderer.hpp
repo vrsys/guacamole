@@ -51,6 +51,9 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
+    void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc);
+    void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc);
+
   private:
     scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
     scm::gl::rasterizer_state_ptr rs_cull_none_ = nullptr;
