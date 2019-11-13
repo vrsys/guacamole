@@ -10,7 +10,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     //get the camera matrix after it is transformed in world, a.k.a. all matrices of the nodes above have been applied to it
     auto cam_world_matrix = cam_node->get_world_transform();
 
-    if(cam_navigation_state.moving_forward ) {
+    if(cam_navigation_state.moving_forward) {
     	// the third column corresponds to the forward vector
         auto forward_cam_vector = -cam_world_matrix.column(2);
         //frame rate independent movement is achieved by multiplying our offset with the elapsed time. If the application is twice as slow, we move twice as much
@@ -68,7 +68,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
         auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
 
         //rotation takes 4 arguments: the amount of rotation in degree, and 3 scalar components corresponding to an axis of rotation
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
     }
     
     // same as before but negative
@@ -77,7 +77,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
         auto up_axis = cam_world_matrix.column(1);
         auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
 
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, up_axis[0], up_axis[1], up_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
     }
 
     // here we rotate around the x-Axis
@@ -86,7 +86,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
         auto right_axis = cam_world_matrix.column(0);
         auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
 
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
     }
     
      // same as before but negative
@@ -99,7 +99,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
 
         auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
 
-        cam_navigation_state.accumulated_rotation_around_y_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_around_y_world_space;
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
         //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
     }
 
@@ -109,6 +109,6 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     // correct to call set_transform (which updates the local transform) with the information accumulated in world space. If navigation would have been
     // located deeper in the hierarchy, we would have needed to transform our deltas into the reference frame of the navigation node explicitly.
     ///////
-    nav_node->set_transform( gua::math::mat4( cam_navigation_state.accumulated_translation_world_space * cam_navigation_state.accumulated_rotation_around_y_world_space) );
+    nav_node->set_transform( gua::math::mat4( cam_navigation_state.accumulated_translation_world_space * cam_navigation_state.accumulated_rotation_world_space) );
 
 }
