@@ -87,11 +87,11 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         
     switch(pipe.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::NO_CULLING: {
-        //    render_without_oc(pipe, desc);
-        //    break;
-        //}
+            render_without_oc(pipe, desc);
+            break;
+        }
 
-        //case OcclusionCullingMode::HIERARCHICAL_STOP_AND_WAIT: {
+        case OcclusionCullingMode::HIERARCHICAL_STOP_AND_WAIT: {
             render_hierarchical_stop_and_wait_oc(pipe, desc);
             break;
         }
