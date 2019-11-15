@@ -73,6 +73,8 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
     inline virtual std::string get_type_string() const override {return "<OcclusionCullingGroupNode>";}
 
 
+    void build_tree_across_children();
+
   private:
     std::shared_ptr<Node> copy() const override;
 };

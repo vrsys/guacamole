@@ -30,6 +30,7 @@
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
 #include <gua/renderer/DebugViewPass.hpp>
+
 #include <gua/renderer/FullscreenColorBufferViewPass.hpp>
 #include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 #include <gua/utils/Logger.hpp>
@@ -180,6 +181,8 @@ int main(int argc, char** argv)
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
     place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+
+    //Add function to redesign scene_graph here***********
 
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
