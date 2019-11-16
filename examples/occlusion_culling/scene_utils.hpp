@@ -10,4 +10,7 @@ void place_objects_randomly(std::string const& model_path, int32_t num_models_to
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_root_node);
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable);
+
+double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node);
+
 #endif
