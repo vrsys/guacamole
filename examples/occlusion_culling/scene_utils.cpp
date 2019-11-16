@@ -83,24 +83,31 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     scene_root_node->set_draw_bounding_box(false);
 }
 
-void split_scene_graph(std::shared_ptr<gua::node::Node> scene_root_node){
-    auto root_node_bounding_box = scene_root_node->get_bounding_box();
-    auto children_nodes = scene_root_node->get_children();
+void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
+    auto root_node_bounding_box = scene_occlusion_group_node->get_bounding_box();
+    auto children_sorted_x = scene_occlusion_group_node->get_children();
+    auto children_sorted_y = scene_occlusion_group_node->get_children();
+    auto children_sorted_z = scene_occlusion_group_node->get_children();
 
-
-
-    std::cout<<  "SORTING" << std::endl;
-
-
-    std::sort(children_nodes.begin(), children_nodes.end(),
+    //Vector nach x sortieren - Evtl eine generische Funktion schreiben?
+    std::sort(children_sorted_x.begin(), children_sorted_x.end(),
         [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
         return (a->get_world_position().x > b->get_world_position().x);
     });
 
-    for(auto it = children_nodes.begin(); it != children_nodes.end(); ++it) {
-        std::cout << (*it)->get_world_position().x << std::endl; //returns a vec3
-    }
+    //Vector nach y sortieren - Evtl eine generische Funktion schreiben?
+    std::sort(children_sorted_y.begin(), children_sorted_y.end(),
+        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+        return (a->get_world_position().x > b->get_world_position().x);
+    });
 
+    //Vector nach z sortieren - Evtl eine generische Funktion schreiben?
+    std::sort(children_sorted_z.begin(), children_sorted_z.end(),
+        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+        return (a->get_world_position().x > b->get_world_position().x);
+    });
+
+    scene_occlusion_group_node->clear_children();
 }
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
