@@ -83,9 +83,27 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     scene_root_node->set_draw_bounding_box(false);
 }
 
+void split_scene_graph(std::shared_ptr<gua::node::Node> scene_root_node){
+    auto root_node_bounding_box = scene_root_node->get_bounding_box();
+    auto children_nodes = scene_root_node->get_children();
+
+
+
+    /***
+    std::cout<<  sort(children_nodes.begin(), children_nodes.end(),
+        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+        return (a->get_world_position().x > b->get_world_position().x);
+    });
+    /***
+    for(auto it = children_nodes.begin(); it != children_nodes.end(); ++it) {
+        std::cout << (*it)->get_world_position() + '\n'; //returns a vec3
+    }
+    ***/
+
+}
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
-    scene_root_node->set_draw_bounding_box(enable);
+     scene_root_node->set_draw_bounding_box(enable);
 
     // recursively call show_scene_bounding_boxes for children
     for(auto const& child : scene_root_node->get_children()) {
