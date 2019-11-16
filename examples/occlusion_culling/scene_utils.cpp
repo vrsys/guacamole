@@ -84,10 +84,13 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 }
 
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
-    auto root_node_bounding_box = scene_occlusion_group_node->get_bounding_box();
+    //auto root_node_bounding_box = scene_occlusion_group_node->get_bounding_box();
     auto children_sorted_x = scene_occlusion_group_node->get_children();
     auto children_sorted_y = scene_occlusion_group_node->get_children();
     auto children_sorted_z = scene_occlusion_group_node->get_children();
+    auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
+
+    std::cout<<AP_origin <<std::endl;
 
     //Vector nach x sortieren - Evtl eine generische Funktion schreiben?
     std::sort(children_sorted_x.begin(), children_sorted_x.end(),
@@ -127,9 +130,25 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         }
         index ++;
     }
+    auto AP_L = surface_area_bounding_box(transform_node_L);
+    auto AP_R = surface_area_bounding_box(transform_node_R);
+    auto AP_root = surface_area_bounding_box(scene_occlusion_group_node);
 
-    transform_node_L->update_bounding_box();
-    std::cout<< transform_node_L->get_bounding_box().min <<std::endl;
+    std::cout<< AP_L << "; "<< AP_R << "; "<< AP_root <<std::endl;
+
+
+}
+
+double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node){
+    node->update_bounding_box();
+
+    auto min = node->get_bounding_box().min;
+    auto max = node->get_bounding_box().max;
+
+    return 2*(((max.x - min.x)* (max.y - min.y)) + 
+        ((max.x - min.x)* (max.z - min.z)) + 
+        ((max.y - min.y)* (max.z - min.z)));
+
 
 }
 
