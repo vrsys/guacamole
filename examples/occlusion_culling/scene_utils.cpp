@@ -1,6 +1,9 @@
 
 #include "scene_utils.hpp"
-
+struct cost_vector{
+    double cost;
+    std::vector<std::shared_ptr<gua::node::Node>> split_vector;
+};
 
 
 void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window) {
@@ -98,15 +101,24 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
 
     split_children(scene_occlusion_group_node, children_sorted_x);
     double cost_x = calculate_cost(scene_occlusion_group_node);
+    cost_vector cost_vector_x = cost_vector{cost_x, children_sorted_x};
     std::cout<< cost_x <<std::endl;
 
     split_children(scene_occlusion_group_node, children_sorted_y);
     double cost_y = calculate_cost(scene_occlusion_group_node);
+    cost_vector cost_vector_y = cost_vector{cost_y, children_sorted_y};
     std::cout<< cost_y <<std::endl;
 
     split_children(scene_occlusion_group_node, children_sorted_z);
     double cost_z = calculate_cost(scene_occlusion_group_node);
+    cost_vector cost_vector_z = cost_vector{cost_z, children_sorted_z};
     std::cout<< cost_z <<std::endl;
+
+
+    std::vector<cost_vector> joined_cost_vector= {cost_vector_x, cost_vector_y, cost_vector_z};
+    auto min = std::min_element(joined_cost_vector.begin(), joined_cost_vector.end(), [] (const cost_vector & a, const cost_vector & b) -> bool {return a.cost < b.cost;});
+
+    split_children(scene_occlusion_group_node, (*min).split_vector);
 
 }
 
