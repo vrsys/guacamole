@@ -98,13 +98,13 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
     //Vector nach y sortieren - Evtl eine generische Funktion schreiben?
     std::sort(children_sorted_y.begin(), children_sorted_y.end(),
         [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-        return (a->get_world_position().x > b->get_world_position().x);
+        return (a->get_world_position().y > b->get_world_position().y);
     });
 
     //Vector nach z sortieren - Evtl eine generische Funktion schreiben?
     std::sort(children_sorted_z.begin(), children_sorted_z.end(),
         [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-        return (a->get_world_position().x > b->get_world_position().x);
+        return (a->get_world_position().z > b->get_world_position().z);
     });
 
     scene_occlusion_group_node->clear_children();
@@ -114,15 +114,22 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
 
     int vector_size = children_sorted_x.size();
     int index = 0;
+    int count_left = 0;
+    int count_right = 0;
 
     for(auto i = children_sorted_x.begin(); i != children_sorted_x.end(); ++i) {
         if(index<vector_size/2) {
             transform_node_L->add_child(*i);
+            count_left++;
         } else {
             transform_node_R->add_child(*i);
+            count_right++;
         }
         index ++;
     }
+
+    transform_node_L->update_bounding_box();
+    std::cout<< transform_node_L->get_bounding_box().min <<std::endl;
 
 }
 
