@@ -108,6 +108,22 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
     });
 
     scene_occlusion_group_node->clear_children();
+
+    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
+    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+
+    int vector_size = children_sorted_x.size();
+    int index = 0;
+
+    for(auto i = children_sorted_x.begin(); i != children_sorted_x.end(); ++i) {
+        if(index<vector_size/2) {
+            transform_node_L->add_child(*i);
+        } else {
+            transform_node_R->add_child(*i);
+        }
+        index ++;
+    }
+
 }
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
