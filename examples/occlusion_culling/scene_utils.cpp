@@ -87,39 +87,47 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 }
 
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
-    auto children_sorted_x = scene_occlusion_group_node->get_children();
-    auto children_sorted_y = scene_occlusion_group_node->get_children();
-    auto children_sorted_z = scene_occlusion_group_node->get_children();
+    if (scene_occlusion_group_node->get_children().size() > 2) {
+        auto children_sorted_x = scene_occlusion_group_node->get_children();
+        auto children_sorted_y = scene_occlusion_group_node->get_children();
+        auto children_sorted_z = scene_occlusion_group_node->get_children();
 
-    sorting_based_on_axis(children_sorted_x, 1);
-    sorting_based_on_axis(children_sorted_y, 2);
-    sorting_based_on_axis(children_sorted_z, 3);
+        sorting_based_on_axis(children_sorted_x, 1);
+        sorting_based_on_axis(children_sorted_y, 2);
+        sorting_based_on_axis(children_sorted_z, 3);
 
-    auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
+        auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
 
-    std::cout<<AP_origin <<std::endl;
+        std::cout<<AP_origin <<std::endl;
 
-    split_children(scene_occlusion_group_node, children_sorted_x);
-    double cost_x = calculate_cost(scene_occlusion_group_node);
-    cost_vector cost_vector_x = cost_vector{cost_x, children_sorted_x};
-    std::cout<< cost_x <<std::endl;
+        split_children(scene_occlusion_group_node, children_sorted_x);
+        double cost_x = calculate_cost(scene_occlusion_group_node);
+        cost_vector cost_vector_x = cost_vector{cost_x, children_sorted_x};
+        std::cout<< cost_x <<std::endl;
 
-    split_children(scene_occlusion_group_node, children_sorted_y);
-    double cost_y = calculate_cost(scene_occlusion_group_node);
-    cost_vector cost_vector_y = cost_vector{cost_y, children_sorted_y};
-    std::cout<< cost_y <<std::endl;
+        split_children(scene_occlusion_group_node, children_sorted_y);
+        double cost_y = calculate_cost(scene_occlusion_group_node);
+        cost_vector cost_vector_y = cost_vector{cost_y, children_sorted_y};
+        std::cout<< cost_y <<std::endl;
 
-    split_children(scene_occlusion_group_node, children_sorted_z);
-    double cost_z = calculate_cost(scene_occlusion_group_node);
-    cost_vector cost_vector_z = cost_vector{cost_z, children_sorted_z};
-    std::cout<< cost_z <<std::endl;
+        split_children(scene_occlusion_group_node, children_sorted_z);
+        double cost_z = calculate_cost(scene_occlusion_group_node);
+        cost_vector cost_vector_z = cost_vector{cost_z, children_sorted_z};
+        std::cout<< cost_z <<std::endl;
 
 
-    std::vector<cost_vector> joined_cost_vector= {cost_vector_x, cost_vector_y, cost_vector_z};
-    auto min = std::min_element(joined_cost_vector.begin(), joined_cost_vector.end(), [] (const cost_vector & a, const cost_vector & b) -> bool {return a.cost < b.cost;});
+        std::vector<cost_vector> joined_cost_vector= {cost_vector_x, cost_vector_y, cost_vector_z};
+        auto min = std::min_element(joined_cost_vector.begin(), joined_cost_vector.end(), [] (const cost_vector & a, const cost_vector & b) -> bool {return a.cost < b.cost;});
 
-    split_children(scene_occlusion_group_node, (*min).split_vector);
+        split_children(scene_occlusion_group_node, (*min).split_vector);
 
+        auto children =  scene_occlusion_group_node->get_children();
+        auto child_L = children[0];
+        auto child_R = children[1];
+
+        split_scene_graph(child_L);
+        split_scene_graph(child_R);
+    }
 }
 
 // input i = 1 for x axis, i = 2 for y axis, i = 3 for z axis
@@ -156,17 +164,17 @@ void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int
 void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector){
     scene_occlusion_group_node->clear_children();
 
-    auto transform_node_0 = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_0");
-    auto transform_node_1 = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_1");
+    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
+    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
 
     int vector_size = sorted_vector.size();
     int index = 0;
 
     for(auto i = sorted_vector.begin(); i != sorted_vector.end(); ++i) {
         if(index<vector_size/2) {
-            transform_node_0->add_child(*i);
+            transform_node_L->add_child(*i);
         } else {
-            transform_node_1->add_child(*i);
+            transform_node_R->add_child(*i);
         }
         index ++;
     }
