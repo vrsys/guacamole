@@ -89,16 +89,17 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_root_node){
 
 
 
-    /***
-    std::cout<<  sort(children_nodes.begin(), children_nodes.end(),
+    std::cout<<  "SORTING" << std::endl;
+
+
+    std::sort(children_nodes.begin(), children_nodes.end(),
         [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
         return (a->get_world_position().x > b->get_world_position().x);
     });
-    /***
+
     for(auto it = children_nodes.begin(); it != children_nodes.end(); ++it) {
-        std::cout << (*it)->get_world_position() + '\n'; //returns a vec3
+        std::cout << (*it)->get_world_position().x << std::endl; //returns a vec3
     }
-    ***/
 
 }
 
