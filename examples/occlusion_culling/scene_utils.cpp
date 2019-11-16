@@ -84,57 +84,81 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 }
 
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
-    //auto root_node_bounding_box = scene_occlusion_group_node->get_bounding_box();
     auto children_sorted_x = scene_occlusion_group_node->get_children();
     auto children_sorted_y = scene_occlusion_group_node->get_children();
     auto children_sorted_z = scene_occlusion_group_node->get_children();
+
+    sorting_based_on_axis(children_sorted_x, 1);
+    sorting_based_on_axis(children_sorted_y, 2);
+    sorting_based_on_axis(children_sorted_z, 3);
+
     auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
 
     std::cout<<AP_origin <<std::endl;
 
-    //Vector nach x sortieren - Evtl eine generische Funktion schreiben?
-    std::sort(children_sorted_x.begin(), children_sorted_x.end(),
-        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-        return (a->get_world_position().x > b->get_world_position().x);
-    });
+    split_children(scene_occlusion_group_node, children_sorted_x);
+    double cost_x = calculate_cost(scene_occlusion_group_node);
+    std::cout<< cost_x <<std::endl;
 
-    //Vector nach y sortieren - Evtl eine generische Funktion schreiben?
-    std::sort(children_sorted_y.begin(), children_sorted_y.end(),
-        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-        return (a->get_world_position().y > b->get_world_position().y);
-    });
+    split_children(scene_occlusion_group_node, children_sorted_y);
+    double cost_y = calculate_cost(scene_occlusion_group_node);
+    std::cout<< cost_y <<std::endl;
 
-    //Vector nach z sortieren - Evtl eine generische Funktion schreiben?
-    std::sort(children_sorted_z.begin(), children_sorted_z.end(),
-        [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-        return (a->get_world_position().z > b->get_world_position().z);
-    });
+    split_children(scene_occlusion_group_node, children_sorted_z);
+    double cost_z = calculate_cost(scene_occlusion_group_node);
+    std::cout<< cost_z <<std::endl;
 
+}
+
+// input i = 1 for x axis, i = 2 for y axis, i = 3 for z axis
+void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
+
+        // scene_occlusion_group_node->clear_children();
+        switch(axis)
+        {
+            case 1:
+            // sort according to x position
+            std::sort(v.begin(), v.end(), 
+                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+                    return (a->get_world_position().x > b->get_world_position().x);
+                });
+
+            case 2:
+            // sort according to y position
+            std::sort(v.begin(), v.end(),
+                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+                    return (a->get_world_position().y > b->get_world_position().y);
+                });
+
+            case 3:
+            // sort according to z position
+            std::sort(v.begin(), v.end(),
+                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+                    return (a->get_world_position().z > b->get_world_position().z);
+                });  
+
+        } 
+}
+
+
+void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector){
     scene_occlusion_group_node->clear_children();
 
-    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
-    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+    auto transform_node_0 = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_0");
+    auto transform_node_1 = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_1");
 
-    int vector_size = children_sorted_x.size();
+    int vector_size = sorted_vector.size();
     int index = 0;
-    int count_left = 0;
-    int count_right = 0;
 
-    for(auto i = children_sorted_x.begin(); i != children_sorted_x.end(); ++i) {
+    for(auto i = sorted_vector.begin(); i != sorted_vector.end(); ++i) {
         if(index<vector_size/2) {
-            transform_node_L->add_child(*i);
-            count_left++;
+            transform_node_0->add_child(*i);
         } else {
-            transform_node_R->add_child(*i);
-            count_right++;
+            transform_node_1->add_child(*i);
         }
         index ++;
     }
-    auto AP_L = surface_area_bounding_box(transform_node_L);
-    auto AP_R = surface_area_bounding_box(transform_node_R);
-    auto AP_root = surface_area_bounding_box(scene_occlusion_group_node);
 
-    std::cout<< AP_L << "; "<< AP_R << "; "<< AP_root <<std::endl;
 
 
 }
@@ -151,6 +175,22 @@ double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node){
 
 
 }
+
+double calculate_cost(std::shared_ptr<gua::node::Node> node){
+    auto ap = surface_area_bounding_box(node);
+    auto children = node->get_children();
+
+    auto child0 = children[0];
+    auto surface_area0 = surface_area_bounding_box(child0) * (child0->get_children()).size();
+
+
+    auto child1 = children[1];
+    auto surface_area1 = surface_area_bounding_box(child1) * (child1->get_children()).size();
+
+    return (surface_area0 + surface_area1)/ap;
+
+}
+
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
      scene_root_node->set_draw_bounding_box(enable);
