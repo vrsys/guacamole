@@ -45,6 +45,8 @@ bool print_times = false;
 bool show_bounding_boxes = false;
 bool was_set_to_show_bounding_boxes = false;
 
+
+
 bool visualize_depth_complexity = false;
 bool was_set_to_visualize_depth_complexity = visualize_depth_complexity;
 
@@ -59,6 +61,8 @@ std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description =
 std::string model_path = "data/objects/teapot.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
 float one_d_cube_size = 8.0; //8m*8m*8m cube for random object placement
+
+int current_bb_level_to_visualize = -1;
 
 void configure_pipeline_descriptions() {
     /* guacamole supports different rendering primitives - Triangle Meshes, LOD-PointClouds, Volumes, RGBD Streams, etc.
@@ -314,7 +318,7 @@ int main(int argc, char** argv)
 
             if(show_bounding_boxes != was_set_to_show_bounding_boxes) {
 
-                show_scene_bounding_boxes(occlusion_group_node, show_bounding_boxes);
+                show_scene_bounding_boxes(occlusion_group_node, show_bounding_boxes, current_bb_level_to_visualize);
 
                 was_set_to_show_bounding_boxes = show_bounding_boxes;
             }

@@ -92,9 +92,9 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         auto children_sorted_y = scene_occlusion_group_node->get_children();
         auto children_sorted_z = scene_occlusion_group_node->get_children();
 
-        sorting_based_on_axis(children_sorted_x, 1);
-        sorting_based_on_axis(children_sorted_y, 2);
-        sorting_based_on_axis(children_sorted_z, 3);
+        sorting_based_on_axis(children_sorted_x, 0);
+        sorting_based_on_axis(children_sorted_y, 1);
+        sorting_based_on_axis(children_sorted_z, 2);
 
         auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
 
@@ -132,32 +132,12 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
 
 // input i = 1 for x axis, i = 2 for y axis, i = 3 for z axis
 void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
+        // sort according to positions
+        std::sort(v.begin(), v.end(), 
+            [axis] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
+                return (a->get_world_position()[axis] < b->get_world_position()[axis]);
+            });
 
-        // scene_occlusion_group_node->clear_children();
-        switch(axis)
-        {
-            case 1:
-            // sort according to x position
-            std::sort(v.begin(), v.end(), 
-                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-                    return (a->get_world_position().x > b->get_world_position().x);
-                });
-
-            case 2:
-            // sort according to y position
-            std::sort(v.begin(), v.end(),
-                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-                    return (a->get_world_position().y > b->get_world_position().y);
-                });
-
-            case 3:
-            // sort according to z position
-            std::sort(v.begin(), v.end(),
-                [] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
-                    return (a->get_world_position().z > b->get_world_position().z);
-                });  
-
-        } 
 }
 
 
@@ -189,9 +169,13 @@ double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node){
     auto min = node->get_bounding_box().min;
     auto max = node->get_bounding_box().max;
 
-    return 2*(((max.x - min.x)* (max.y - min.y)) + 
-        ((max.x - min.x)* (max.z - min.z)) + 
-        ((max.y - min.y)* (max.z - min.z)));
+    float x_dim = max.x - min.x;
+    float y_dim = max.y - min.y;
+    float z_dim = max.z - min.z;
+
+    return 2 * ((x_dim * y_dim) + 
+                (x_dim * z_dim) + 
+                (y_dim * z_dim) );
 
 
 }
@@ -212,12 +196,25 @@ double calculate_cost(std::shared_ptr<gua::node::Node> node){
 }
 
 
-void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable) {
-     scene_root_node->set_draw_bounding_box(enable);
+void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable, int bb_vis_level, int current_node_level) {
+     
+    if(enable) {
+        if(bb_vis_level == -1 || bb_vis_level == current_node_level) {
+            scene_root_node->set_draw_bounding_box(true);
+        } else {
+            scene_root_node->set_draw_bounding_box(false);
+        }
+    } else {
+        scene_root_node->set_draw_bounding_box(false);
+    }
 
     // recursively call show_scene_bounding_boxes for children
     for(auto const& child : scene_root_node->get_children()) {
-        show_scene_bounding_boxes(child, enable);
+
+
+            show_scene_bounding_boxes(child, enable, bb_vis_level, current_node_level + 1);
+        
+
     }
 }
 
