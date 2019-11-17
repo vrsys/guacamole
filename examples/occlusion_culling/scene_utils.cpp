@@ -1,9 +1,6 @@
 
 #include "scene_utils.hpp"
-struct cost_vector{
-    double cost;
-    std::vector<std::shared_ptr<gua::node::Node>> split_vector;
-};
+
 
 
 void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window) {
@@ -103,26 +100,44 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
 
         std::cout<<AP_origin <<std::endl;
 
+        int best_splitting_axis = -1;
+        double best_splitting_cost = std::numeric_limits<double>::max(); // get the maximal value for our type
+
         split_children(scene_occlusion_group_node, children_sorted_x);
         double cost_x = calculate_cost(scene_occlusion_group_node);
-        cost_vector cost_vector_x = cost_vector{cost_x, children_sorted_x};
-        std::cout<< cost_x <<std::endl;
+
+        if(cost_x < best_splitting_cost) {
+            best_splitting_cost = cost_x;
+            best_splitting_axis = 0;
+        }
+
+        std::cout<< cost_x << std::endl;
 
         split_children(scene_occlusion_group_node, children_sorted_y);
         double cost_y = calculate_cost(scene_occlusion_group_node);
-        cost_vector cost_vector_y = cost_vector{cost_y, children_sorted_y};
+
+        if(cost_y < best_splitting_cost) {
+            best_splitting_cost = cost_x;
+            best_splitting_axis = 1;
+        }
+
+
         std::cout<< cost_y <<std::endl;
 
         split_children(scene_occlusion_group_node, children_sorted_z);
         double cost_z = calculate_cost(scene_occlusion_group_node);
-        cost_vector cost_vector_z = cost_vector{cost_z, children_sorted_z};
+        if(cost_z < best_splitting_cost) {
+            best_splitting_cost = cost_z;
+            best_splitting_axis = 2;
+        }
+
         std::cout<< cost_z <<std::endl;
 
 
-        std::vector<cost_vector> joined_cost_vector= {cost_vector_x, cost_vector_y, cost_vector_z};
-        auto min = std::min_element(joined_cost_vector.begin(), joined_cost_vector.end(), [] (const cost_vector & a, const cost_vector & b) -> bool {return a.cost < b.cost;});
-
-        split_children(scene_occlusion_group_node, (*min).split_vector);
+ 
+        if(best_splitting_axis == 0 || best_splitting_axis == 1) {
+            split_children(scene_occlusion_group_node, best_splitting_axis == 0 ? children_sorted_x : children_sorted_y);
+        }
 
         auto children =  scene_occlusion_group_node->get_children();
         auto child_L = children[0];
@@ -186,20 +201,20 @@ double calculate_cost(std::shared_ptr<gua::node::Node> node){
 }
 
 
-void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable, int bb_vis_level, int current_node_level) {
+void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& current_node, bool enable, int bb_vis_level, int current_node_level) {
      
     if(enable) {
-        if(bb_vis_level == -1 || bb_vis_level == current_node_level) {
-            scene_root_node->set_draw_bounding_box(true);
+        if(bb_vis_level == -1 || bb_vis_level == current_node_level || current_node->get_children().empty()) {
+            current_node->set_draw_bounding_box(true);
         } else {
-            scene_root_node->set_draw_bounding_box(false);
+            current_node->set_draw_bounding_box(false);
         }
     } else {
-        scene_root_node->set_draw_bounding_box(false);
+        current_node->set_draw_bounding_box(false);
     }
 
     // recursively call show_scene_bounding_boxes for children
-    for(auto const& child : scene_root_node->get_children()) {
+    for(auto const& child : current_node->get_children()) {
         show_scene_bounding_boxes(child, enable, bb_vis_level, current_node_level + 1);
     }
 }
