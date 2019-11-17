@@ -206,7 +206,7 @@ double calculate_cost(std::shared_ptr<gua::node::Node> node){
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& current_node, bool enable, int bb_vis_level, int current_node_level) {
      
     if(enable) {
-        if(bb_vis_level == -1 || bb_vis_level == current_node_level || current_node->get_children().empty()) {
+        if(bb_vis_level == -1 || bb_vis_level == current_node_level || (current_node->get_children().empty() && current_node_level < bb_vis_level ) ) {
             current_node->set_draw_bounding_box(true);
         } else {
             current_node->set_draw_bounding_box(false);
