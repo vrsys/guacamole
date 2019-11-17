@@ -88,6 +88,8 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
     if (scene_occlusion_group_node->get_children().size() > 2) {
+        scene_occlusion_group_node->update_cache();
+
         auto children_sorted_x = scene_occlusion_group_node->get_children();
         auto children_sorted_y = scene_occlusion_group_node->get_children();
         auto children_sorted_z = scene_occlusion_group_node->get_children();
@@ -96,7 +98,8 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         sorting_based_on_axis(children_sorted_y, 1);
         sorting_based_on_axis(children_sorted_z, 2);
 
-        auto AP_origin = surface_area_bounding_box(scene_occlusion_group_node);
+        std::cout << std::endl;
+        auto AP_origin = scene_occlusion_group_node->get_bounding_box().surface_area();
 
         std::cout<<AP_origin <<std::endl;
 
@@ -147,51 +150,38 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
     auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
     auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
 
-    int vector_size = sorted_vector.size();
+    int vector_size_half = sorted_vector.size()/2;
     int index = 0;
 
     for(auto i = sorted_vector.begin(); i != sorted_vector.end(); ++i) {
-        if(index<vector_size/2) {
+        if(index<vector_size_half) {
             transform_node_L->add_child(*i);
         } else {
             transform_node_R->add_child(*i);
         }
-        index ++;
+        ++index;
     }
 
 
 
 }
 
-double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node){
-    node->update_bounding_box();
 
-    auto min = node->get_bounding_box().min;
-    auto max = node->get_bounding_box().max;
-
-    float x_dim = max.x - min.x;
-    float y_dim = max.y - min.y;
-    float z_dim = max.z - min.z;
-
-    return 2 * ((x_dim * y_dim) + 
-                (x_dim * z_dim) + 
-                (y_dim * z_dim) );
-
-
-}
 
 double calculate_cost(std::shared_ptr<gua::node::Node> node){
-    auto ap = surface_area_bounding_box(node);
+    node->update_cache();
+    auto parent_surface_area = node->get_bounding_box().surface_area();
+    std::cout << "Surface area Parent: " << parent_surface_area << std::endl;
     auto children = node->get_children();
 
-    auto child0 = children[0];
-    auto surface_area0 = surface_area_bounding_box(child0) * (child0->get_children()).size();
+    float summed_weighted_surface_area = 0.0f;
 
+    for(auto& child : children) {
+        child->update_cache();
+        summed_weighted_surface_area += child->get_bounding_box().surface_area() * (child->get_children()).size();;
+    }
 
-    auto child1 = children[1];
-    auto surface_area1 = surface_area_bounding_box(child1) * (child1->get_children()).size();
-
-    return (surface_area0 + surface_area1)/ap;
+    return (summed_weighted_surface_area) / parent_surface_area;
 
 }
 
@@ -210,11 +200,7 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_roo
 
     // recursively call show_scene_bounding_boxes for children
     for(auto const& child : scene_root_node->get_children()) {
-
-
-            show_scene_bounding_boxes(child, enable, bb_vis_level, current_node_level + 1);
-        
-
+        show_scene_bounding_boxes(child, enable, bb_vis_level, current_node_level + 1);
     }
 }
 

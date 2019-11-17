@@ -15,8 +15,6 @@ void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int
 
 void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector);
 
-double surface_area_bounding_box(std::shared_ptr<gua::node::Node> node);
-
 double calculate_cost(std::shared_ptr<gua::node::Node> node);
 
 #endif
