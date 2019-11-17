@@ -69,6 +69,30 @@ struct BoundingBox
 
     scalar_type size(unsigned dimension) const { return std::abs(max[dimension] - min[dimension]); }
 
+    scalar_type surface_area() const {
+        scalar_type bb_dims[3] = {0.0f, 0.0f, 0.0f};
+
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+            bb_dims[dim_idx] = max[dim_idx] - min[dim_idx];
+        }
+
+        return 2 * ((bb_dims[0] * bb_dims[1]) + 
+                    (bb_dims[0] * bb_dims[2]) + 
+                    (bb_dims[1] * bb_dims[2]) );
+    };
+
+    scalar_type volume() const {
+        scalar_type bb_dims[3] = {0.0f, 0.0f, 0.0f};
+
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+            bb_dims[dim_idx] = max[dim_idx] - min[dim_idx];
+        }
+
+        return     ((bb_dims[0] * bb_dims[1]) *
+                    (bb_dims[0] * bb_dims[2]) * 
+                    (bb_dims[1] * bb_dims[2]) );
+    };
+
     /** Lower and upper corners */
     std::pair<point_type, point_type> corners() const { return std::make_pair(min, max); }
 
