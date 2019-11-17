@@ -4,7 +4,10 @@
 extern WASD_state cam_navigation_state;
 extern bool print_times;
 extern bool show_bounding_boxes;
+extern bool was_set_to_show_bounding_boxes;
 extern bool visualize_depth_complexity;
+
+extern int current_bb_level_to_visualize;
 
 extern bool print_scenegraph_once;
 
@@ -49,6 +52,39 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
 
+    //std::cout << "scancode: " << scancode << std::endl;
+    switch(scancode) {
+
+        //scancode for up arrow key
+        case 111: {
+            if(action == 1) {
+
+                if(show_bounding_boxes) {
+                    current_bb_level_to_visualize = std::max(-1, current_bb_level_to_visualize - 1); 
+                    was_set_to_show_bounding_boxes = !show_bounding_boxes;
+                    std::cout << "Switching BB-Vis level to: " << current_bb_level_to_visualize << std::endl;
+                }
+            }
+            break;
+        }
+
+        //scancode for down arrow key
+        case 116: {
+            if(action == 1) {
+                if(show_bounding_boxes) {
+                    current_bb_level_to_visualize = current_bb_level_to_visualize + 1; 
+                    was_set_to_show_bounding_boxes = !show_bounding_boxes;
+
+                    std::cout << "Switching BB-Vis level to: " << current_bb_level_to_visualize << std::endl;
+                }
+            }
+
+            break;
+        }
+
+        default:
+            break;
+    }
     //action == 1: key was pressed
     //action == 0: key was released
 
@@ -194,7 +230,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             }
             break;
         }
-        
+     
+
 
         default: { //no assigned key
             break;
