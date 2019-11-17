@@ -87,6 +87,8 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
     if (scene_occlusion_group_node->get_children().size() > 2) {
         scene_occlusion_group_node->update_cache();
 
+
+
         auto children_sorted_x = scene_occlusion_group_node->get_children();
         auto children_sorted_y = scene_occlusion_group_node->get_children();
         auto children_sorted_z = scene_occlusion_group_node->get_children();
@@ -117,7 +119,7 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         double cost_y = calculate_cost(scene_occlusion_group_node);
 
         if(cost_y < best_splitting_cost) {
-            best_splitting_cost = cost_x;
+            best_splitting_cost = cost_y;
             best_splitting_axis = 1;
         }
 
