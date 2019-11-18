@@ -47,15 +47,15 @@ bool was_set_to_show_bounding_boxes = false;
 
 
 
-bool visualize_depth_complexity = false;
-bool was_set_to_visualize_depth_complexity = visualize_depth_complexity;
+bool use_occlusion_culling_pass = false;
+bool was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
 
 bool print_scenegraph_once = false;
 
 gua::OcclusionCullingMode current_culling_mode;
 
 
-std::shared_ptr<gua::PipelineDescription> depth_complexity_vis_pipeline_description = std::make_shared<gua::PipelineDescription>();     
+std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description = std::make_shared<gua::PipelineDescription>();     
 std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
@@ -75,19 +75,19 @@ void configure_pipeline_descriptions() {
     */
 
     // first pipe
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
-    depth_complexity_vis_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
+    //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
 
     // configure the resolve pass
-    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
-    depth_complexity_vis_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+    occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
+    occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
-
+    //occlusion_culling_pipeline_description->
 
     // second pipe
     default_trimesh_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
@@ -306,14 +306,14 @@ int main(int argc, char** argv)
         else
         {
 
-            if(visualize_depth_complexity != was_set_to_visualize_depth_complexity) {
-                if(visualize_depth_complexity) {
-                    camera_node->set_pipeline_description(depth_complexity_vis_pipeline_description);
+            if(use_occlusion_culling_pass != was_set_use_occlusion_culling_pass) {
+                if(use_occlusion_culling_pass) {
+                    camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
                 } else {
                     camera_node->set_pipeline_description(default_trimesh_pipeline_description);                    
                 }
 
-                was_set_to_visualize_depth_complexity = visualize_depth_complexity;
+                was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
             }
 
             if(show_bounding_boxes != was_set_to_show_bounding_boxes) {
