@@ -1,6 +1,7 @@
-
+    
 #include "scene_utils.hpp"
 
+#include <queue>
 
 
 void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window) {
@@ -84,75 +85,108 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 }
 
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
-    if (scene_occlusion_group_node->get_children().size() > 2) {
-        scene_occlusion_group_node->update_cache();
+
+
+    std::queue<std::shared_ptr<gua::node::Node> > splitting_queue;
+
+
+    //if we have less than 3 children, then the grouping is as good as it gets
+    if(scene_occlusion_group_node->get_children().size() > 2) {
+        splitting_queue.push(scene_occlusion_group_node);
+    }
+
+    while(!splitting_queue.empty() ) {
+        //get next node to split
+        auto current_node_to_split = splitting_queue.front();
+        splitting_queue.pop();
+
+
+        auto children_sorted_x = current_node_to_split->get_children();
+        auto children_sorted_y = current_node_to_split->get_children();
+        auto children_sorted_z = current_node_to_split->get_children();
 
 
 
-        auto children_sorted_x = scene_occlusion_group_node->get_children();
-        auto children_sorted_y = scene_occlusion_group_node->get_children();
-        auto children_sorted_z = scene_occlusion_group_node->get_children();
 
         sorting_based_on_axis(children_sorted_x, 0);
         sorting_based_on_axis(children_sorted_y, 1);
         sorting_based_on_axis(children_sorted_z, 2);
 
+        current_node_to_split->update_cache();
         std::cout << std::endl;
-        auto AP_origin = scene_occlusion_group_node->get_bounding_box().surface_area();
+        auto AP_origin = current_node_to_split->get_bounding_box().surface_area();
 
         std::cout<<AP_origin <<std::endl;
 
         int best_splitting_axis = -1;
         double best_splitting_cost = std::numeric_limits<double>::max(); // get the maximal value for our type
 
-        split_children(scene_occlusion_group_node, children_sorted_x);
-        double cost_x = calculate_cost(scene_occlusion_group_node);
+        split_children(current_node_to_split, children_sorted_x);
+        double cost_x = calculate_cost(current_node_to_split);
 
         if(cost_x < best_splitting_cost) {
             best_splitting_cost = cost_x;
             best_splitting_axis = 0;
         }
+        cleanup_intermediate_nodes(current_node_to_split);
 
         std::cout<< cost_x << std::endl;
 
-        split_children(scene_occlusion_group_node, children_sorted_y);
-        double cost_y = calculate_cost(scene_occlusion_group_node);
+        split_children(current_node_to_split, children_sorted_y);
+        double cost_y = calculate_cost(current_node_to_split);
 
         if(cost_y < best_splitting_cost) {
             best_splitting_cost = cost_y;
             best_splitting_axis = 1;
         }
-
+        cleanup_intermediate_nodes(current_node_to_split);
 
         std::cout<< cost_y <<std::endl;
 
-        split_children(scene_occlusion_group_node, children_sorted_z);
-        double cost_z = calculate_cost(scene_occlusion_group_node);
+        split_children(current_node_to_split, children_sorted_z);
+        double cost_z = calculate_cost(current_node_to_split);
         if(cost_z < best_splitting_cost) {
             best_splitting_cost = cost_z;
             best_splitting_axis = 2;
         }
+        cleanup_intermediate_nodes(current_node_to_split);
 
         std::cout<< cost_z <<std::endl;
 
 
  
-        if(best_splitting_axis == 0 || best_splitting_axis == 1) {
-            split_children(scene_occlusion_group_node, best_splitting_axis == 0 ? children_sorted_x : children_sorted_y);
+  
+
+        if(0 == best_splitting_axis) {
+            split_children(current_node_to_split, children_sorted_x);
+        } else if(1 == best_splitting_axis) {
+            split_children(current_node_to_split, children_sorted_y);
+        } else if(2 == best_splitting_axis) {
+            split_children(current_node_to_split, children_sorted_z);
         }
+        
 
-        auto children =  scene_occlusion_group_node->get_children();
-        auto child_L = children[0];
-        auto child_R = children[1];
+        auto children =  current_node_to_split->get_children();
 
-        split_scene_graph(child_L);
-        split_scene_graph(child_R);
+        for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
+            auto& current_child = children[child_idx];
+
+            if(current_child->get_children().size() > 2) {
+                splitting_queue.push(children[child_idx]);
+            }
+
+        }
     }
+
 }
 
 // input i = 1 for x axis, i = 2 for y axis, i = 3 for z axis
 void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
         // sort according to positions
+
+        //std::for_each(v.begin(), v.end(), 
+        //              [](const std::shared_ptr<gua::node::Node> & current_node){current_node->update_cache();} );
+
         std::sort(v.begin(), v.end(), 
             [axis] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
                 return (a->get_world_position()[axis] < b->get_world_position()[axis]);
@@ -160,8 +194,15 @@ void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int
 
 }
 
+void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node) {
 
-void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector){
+    for(auto& intermediate_node : scene_occlusion_group_node->get_children()) {
+        intermediate_node->clear_children();
+    }   
+}
+
+
+void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector) {
     scene_occlusion_group_node->clear_children();
 
     auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
@@ -242,12 +283,4 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
         print_graph(child, depth+1);
     }
 
-/*
-    scene_root_node->set_draw_bounding_box(enable);
-
-    // recursively call show_scene_bounding_boxes for children
-    for(auto const& child : scene_root_node->get_children()) {
-        show_scene_bounding_boxes(child, enable);
-    }
-*/
 }

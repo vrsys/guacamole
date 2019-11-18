@@ -2,6 +2,9 @@
 #define GUA_OCCLUSION_CULLING_APP_SCENE_UTILS_HPP
 
 #include <gua/guacamole.hpp>
+
+void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node);
+
 void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window);
 void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int depth = 0);
 
