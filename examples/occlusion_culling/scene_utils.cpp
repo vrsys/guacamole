@@ -64,10 +64,10 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
         gua::math::mat4 model_trans =   
                                         gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans)) * // 5. we apply the random translation
-                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_z, 0.0f, 0.0f, 1.0f)) * // 4. we rotate the model around x
-                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_y, 0.0f, 1.0f, 0.0f)) * // 3. we rotate the model around y
-                                        //gua::math::mat4(scm::math::make_rotation(rand_angle_x, 1.0f, 0.0f, 0.0f)) *  // 2. we rotate the model around x
-                                        //gua::math::mat4(scm::math::make_scale(rand_scale, rand_scale, rand_scale)) *   // final
+                                        gua::math::mat4(scm::math::make_rotation(rand_angle_z, 0.0f, 0.0f, 1.0f)) * // 4. we rotate the model around x
+                                        gua::math::mat4(scm::math::make_rotation(rand_angle_y, 0.0f, 1.0f, 0.0f)) * // 3. we rotate the model around y
+                                        gua::math::mat4(scm::math::make_rotation(rand_angle_x, 1.0f, 0.0f, 0.0f)) *  // 2. we rotate the model around x
+                                        gua::math::mat4(scm::math::make_scale(rand_scale, rand_scale, rand_scale)) *   // final
                                         norm_scale_mat;                                                           // 1. we scale the model such that the longest size is unit size
 
 
@@ -135,6 +135,7 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
             sorting_based_on_axis(children_sorted_by_xyz[dim_idx], dim_idx);
 
             split_children(current_node_to_split, children_sorted_by_xyz[dim_idx]);
+            
             double cost_for_current_axis = calculate_cost(current_node_to_split);
 
 #ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
@@ -178,7 +179,7 @@ void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion
 
     for(auto& intermediate_node : scene_occlusion_group_node->get_children()) {
         intermediate_node->clear_children();
-    }   
+    }
 }
 
 
@@ -199,9 +200,6 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
         }
         ++index;
     }
-
-
-
 }
 
 
