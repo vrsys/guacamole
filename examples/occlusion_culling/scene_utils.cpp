@@ -95,78 +95,64 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         splitting_queue.push(scene_occlusion_group_node);
     }
 
+
+
+    std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
+
+
+
+
     while(!splitting_queue.empty() ) {
         //get next node to split
         auto current_node_to_split = splitting_queue.front();
         splitting_queue.pop();
 
 
-        auto children_sorted_x = current_node_to_split->get_children();
-        auto children_sorted_y = current_node_to_split->get_children();
-        auto children_sorted_z = current_node_to_split->get_children();
-
-
-
-
-        sorting_based_on_axis(children_sorted_x, 0);
-        sorting_based_on_axis(children_sorted_y, 1);
-        sorting_based_on_axis(children_sorted_z, 2);
-
         current_node_to_split->update_cache();
-        std::cout << std::endl;
-        auto AP_origin = current_node_to_split->get_bounding_box().surface_area();
 
-        std::cout<<AP_origin <<std::endl;
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
+        std::cout << std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
+        auto AP_origin = current_node_to_split->get_bounding_box().surface_area();
 
         int best_splitting_axis = -1;
         double best_splitting_cost = std::numeric_limits<double>::max(); // get the maximal value for our type
 
-        split_children(current_node_to_split, children_sorted_x);
-        double cost_x = calculate_cost(current_node_to_split);
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
+        std::cout<<AP_origin <<std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
 
-        if(cost_x < best_splitting_cost) {
-            best_splitting_cost = cost_x;
-            best_splitting_axis = 0;
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+            children_sorted_by_xyz[dim_idx] = current_node_to_split->get_children();
         }
-        cleanup_intermediate_nodes(current_node_to_split);
 
-        std::cout<< cost_x << std::endl;
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
 
-        split_children(current_node_to_split, children_sorted_y);
-        double cost_y = calculate_cost(current_node_to_split);
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
+            std::cout << "Evaluating axis: " << dim_idx << std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
+            
+            sorting_based_on_axis(children_sorted_by_xyz[dim_idx], dim_idx);
 
-        if(cost_y < best_splitting_cost) {
-            best_splitting_cost = cost_y;
-            best_splitting_axis = 1;
+            split_children(current_node_to_split, children_sorted_by_xyz[dim_idx]);
+            double cost_for_current_axis = calculate_cost(current_node_to_split);
+
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
+            std::cout << "Cost for current axis: " << cost_for_current_axis << std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
+
+            if(cost_for_current_axis < best_splitting_cost) {
+                best_splitting_cost = cost_for_current_axis;
+                best_splitting_axis = dim_idx;
+            }
+
+            cleanup_intermediate_nodes(current_node_to_split);
         }
-        cleanup_intermediate_nodes(current_node_to_split);
-
-        std::cout<< cost_y <<std::endl;
-
-        split_children(current_node_to_split, children_sorted_z);
-        double cost_z = calculate_cost(current_node_to_split);
-        if(cost_z < best_splitting_cost) {
-            best_splitting_cost = cost_z;
-            best_splitting_axis = 2;
-        }
-        cleanup_intermediate_nodes(current_node_to_split);
-
-        std::cout<< cost_z <<std::endl;
 
 
- 
-  
+        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis]);
 
-        if(0 == best_splitting_axis) {
-            split_children(current_node_to_split, children_sorted_x);
-        } else if(1 == best_splitting_axis) {
-            split_children(current_node_to_split, children_sorted_y);
-        } else if(2 == best_splitting_axis) {
-            split_children(current_node_to_split, children_sorted_z);
-        }
-        
-
-        auto children =  current_node_to_split->get_children();
+        auto children = current_node_to_split->get_children();
 
         for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
             auto& current_child = children[child_idx];
@@ -180,13 +166,7 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
 
 }
 
-// input i = 1 for x axis, i = 2 for y axis, i = 3 for z axis
 void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
-        // sort according to positions
-
-        //std::for_each(v.begin(), v.end(), 
-        //              [](const std::shared_ptr<gua::node::Node> & current_node){current_node->update_cache();} );
-
         std::sort(v.begin(), v.end(), 
             [axis] (const std::shared_ptr<gua::node::Node> & a, const std::shared_ptr<gua::node::Node> & b) -> bool {
                 return (a->get_world_position()[axis] < b->get_world_position()[axis]);
@@ -229,7 +209,11 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
 double calculate_cost(std::shared_ptr<gua::node::Node> node){
     node->update_cache();
     auto parent_surface_area = node->get_bounding_box().surface_area();
+
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
     std::cout << "Surface area Parent: " << parent_surface_area << std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
+
     auto children = node->get_children();
 
     float summed_weighted_surface_area = 0.0f;

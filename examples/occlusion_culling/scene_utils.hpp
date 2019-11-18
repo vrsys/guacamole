@@ -3,6 +3,8 @@
 
 #include <gua/guacamole.hpp>
 
+//#define MAKE_OCCLUSION_CULLING_APP_VERBOSE
+
 void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node);
 
 void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWindow> const& window);
