@@ -32,6 +32,7 @@
 #include <gua/renderer/TexturedQuadPass.hpp>
 #include <gua/renderer/TexturedScreenSpaceQuadPass.hpp>
 #include <gua/renderer/ResolvePass.hpp>
+#include <gua/renderer/FullscreenColorBufferViewPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/renderer/SSAAPass.hpp>
 
@@ -123,6 +124,9 @@ std::shared_ptr<ResolvePassDescription> const PipelineDescription::get_resolve_p
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const PipelineDescription::get_textured_screen_space_quad_pass() const { return get_pass_by_type<TexturedScreenSpaceQuadPassDescription>(); }
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<FullscreenColorBufferViewPassDescription> const PipelineDescription::get_full_screen_color_buffer_view_pass() const { return get_pass_by_type<FullscreenColorBufferViewPassDescription>(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<DebugViewPassDescription> const PipelineDescription::get_debug_view_pass() const { return get_pass_by_type<DebugViewPassDescription>(); }

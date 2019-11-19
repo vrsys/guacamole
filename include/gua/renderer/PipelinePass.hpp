@@ -60,6 +60,8 @@ class GUA_DLL PipelinePassPrivate
     bool needs_color_buffer_as_input_{false};
     bool writes_only_color_buffer_{false};
     bool enable_for_shadows_{false};
+    bool is_enabled_{true}; //for toggling passes on or off
+
     RenderMode rendermode_{RenderMode::Custom};
     std::string name_{"PipelinePass"};
 
@@ -79,7 +81,7 @@ class GUA_DLL PipelinePassDescription
     std::string const& name() const;
     unsigned mod_count() const;
 
-  protected:
+  protected:    
     virtual PipelinePass make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map) = 0;
     friend bool operator!=(PipelinePassDescription const& lhs, PipelinePassDescription const& rhs) { return lhs.mod_count_ != rhs.mod_count_; };
 
@@ -110,6 +112,8 @@ class GUA_DLL PipelinePassDescription
     OcclusionCullingMode get_occlusion_culling_mode() const;
     void set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode);
 
+    void enable(bool enable);
+    bool is_enabled() const;
   private:
     void* user_data_ = nullptr;
 
