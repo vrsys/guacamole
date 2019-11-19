@@ -41,7 +41,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
         // we provide our model with the gua-default material
         auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-        model_material->set_show_back_faces(false);
+        model_material->set_show_back_faces(true);
         model_material->set_render_wireframe(false);
 
 
