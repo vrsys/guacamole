@@ -823,13 +823,5 @@ void Pipeline::clear_frame_cache()
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// getter and setter for occlusion culling render modes
-OcclusionCullingMode Pipeline::get_occlusion_culling_mode() const {
-    return occlusion_culling_mode_;
-}
-
-void Pipeline::set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode) {
-    occlusion_culling_mode_ = oc_mode;
-}
 
 } // namespace gua

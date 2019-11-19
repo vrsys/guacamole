@@ -85,21 +85,21 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
         
-    switch(pipe.get_occlusion_culling_mode()) {
-        case OcclusionCullingMode::NO_CULLING: {
+    switch(desc.get_occlusion_culling_mode()) {
+        case OcclusionCullingMode::No_Culling: {
             render_without_oc(pipe, desc);
             break;
         }
 
-        case OcclusionCullingMode::HIERARCHICAL_STOP_AND_WAIT: {
+        case OcclusionCullingMode::Hierarchical_Stop_And_Wait: {
             render_hierarchical_stop_and_wait_oc(pipe, desc);
             break;
         }
 
-        case OcclusionCullingMode::COHRERENT_HIERARCHICAL_CULLING: {
+        case OcclusionCullingMode::Coherent_Hierarchical_Culling: {
             
             std::cout << "CHC not implemented" << std::endl;
-            //render_CHC_base(pipe, desc);
+            //render_CHC_base(desc, desc);
             break;
         }
 
