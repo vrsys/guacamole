@@ -266,6 +266,8 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
 
 
+        uint64_t object_render_count = 0;
+
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -281,13 +283,15 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             //get the address of 
 
-         if(!depth_complexity_vis) {
+            if(!depth_complexity_vis) {
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
                 switch_state_for_depth_complexity_vis(ctx, current_shader);
 
             }
+
+
 
 
             auto current_node_path = tri_mesh_node->get_path();
@@ -315,9 +319,16 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 }
 
                 ctx.render_context->collect_query_results(occlusion_query_iterator->second);
-                std::cout << "Query Result: " << (*occlusion_query_iterator).second->result() << std::endl;
 
+                int64_t query_result = (*occlusion_query_iterator).second->result();
+
+                std::cout << "Query Result: " << query_result << std::endl;
+
+                if(query_result > 0) {
+                    ++object_render_count;
+                }
             }
+
 
 
    
@@ -331,6 +342,9 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         }
 
         
+        std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
+        
+
         target.unbind(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
