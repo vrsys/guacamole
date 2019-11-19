@@ -3,7 +3,7 @@
 
 #include <gua/guacamole.hpp>
 
-#define MAKE_OCCLUSION_CULLING_APP_VERBOSE
+//#define MAKE_OCCLUSION_CULLING_APP_VERBOSE
 
 void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node);
 
