@@ -2,12 +2,15 @@
 #include "navigation.hpp" //include WASD_state type
 
 #include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
+#include <gua/renderer/FullscreenColorBufferViewPass.hpp>
 
 extern WASD_state cam_navigation_state;
 extern bool print_times;
 extern bool show_bounding_boxes;
 extern bool was_set_to_show_bounding_boxes;
 extern bool use_occlusion_culling_pass;
+
+//extern bool enable_depth_complexity_vis;
 
 extern int current_bb_level_to_visualize;
 
@@ -54,7 +57,7 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
 
-    std::cout << "scancode: " << scancode << std::endl;
+    //std::cout << "scancode: " << scancode << std::endl;
     switch(scancode) {
         
         //scancode for 1 key
@@ -238,13 +241,42 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         }
 
 
-        case 'v': {
+        case 'o': {
             //toggle print state on keypress
             if(1 == action) {
                 use_occlusion_culling_pass = !use_occlusion_culling_pass;
             }
             break;
         }
+
+        case 'v': {
+            //toggle print state on keypress
+            if(1 == action) {
+                // get occlusion culling tri mesh pass and toggle rendering mode
+                auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                bool current_dcv_status = occlusion_culling_tri_mesh_pass->get_enable_depth_complexity_vis();
+                occlusion_culling_tri_mesh_pass->set_enable_depth_complexity_vis(!current_dcv_status);
+
+
+                // get light visibility pass and toggle pass on and off
+                auto& light_visibility_pass = occlusion_culling_pipeline_description->get_light_visibility_pass();
+                bool is_light_visibility_pass_enabled = light_visibility_pass->is_enabled();
+                light_visibility_pass->enable(!is_light_visibility_pass_enabled);
+
+                // get resolve pass and toggle pass on and off
+                auto& resolve_pass = occlusion_culling_pipeline_description->get_resolve_pass();
+                bool is_resolve_pass_enabled = resolve_pass->is_enabled();
+                resolve_pass->enable(!is_resolve_pass_enabled);
+
+                // get fullscreen color visibility pass and toggle pass on and off
+                auto& fullscreen_color_buffer_view_pass = occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass();
+                bool is_fullscreen_color_view_enabled = fullscreen_color_buffer_view_pass->is_enabled();
+                fullscreen_color_buffer_view_pass->enable(!is_fullscreen_color_view_enabled);
+                occlusion_culling_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
 
         case 'b': {
             //toggle print state on keypress
@@ -253,16 +285,6 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             }
             break;
         }
-
-
-        case 'o': {
-            //toggle print state on keypress
-            if(1 == action) {
-                //todo: switch occlusion culling mode on pipe
-            }
-            break;
-        }
-     
 
 
         default: { //no assigned key

@@ -38,8 +38,13 @@ class GUA_DLL OcclusionCullingTriMeshPassDescription : public PipelinePassDescri
     std::shared_ptr<PipelinePassDescription> make_copy() const override;
     friend class Pipeline;
 
+    void set_enable_depth_complexity_vis(bool enable);
+    bool get_enable_depth_complexity_vis() const;
+  
   protected:
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+
+    bool enable_depth_complexity_vis_;
 };
 
 } // namespace gua
