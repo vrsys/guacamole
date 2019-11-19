@@ -76,6 +76,9 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
     
     std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+
+    //std::string v_occl = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+    //std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 #else
     std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
     std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
@@ -96,9 +99,6 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
         
-    auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
-    //std::cout << occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis() << std::endl;
-
     switch(desc.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::No_Culling: {
             render_without_oc(pipe, desc);
@@ -168,6 +168,10 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
 
             
+        auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
+        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
+
+
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -181,39 +185,70 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 continue;
             }
 
-            if(current_material != tri_mesh_node->get_material()->get_shader())
-            {
-                current_material = tri_mesh_node->get_material()->get_shader();
-                if(current_material)
+            if(!depth_complexity_vis) {
+                if(current_material != tri_mesh_node->get_material()->get_shader())
                 {
-                    auto shader_iterator = default_rendering_programs_.find(current_material);
-                    if(shader_iterator != default_rendering_programs_.end())
+                    current_material = tri_mesh_node->get_material()->get_shader();
+                    if(current_material)
                     {
-                        current_shader = shader_iterator->second;
+                        auto shader_iterator = default_rendering_programs_.find(current_material);
+                        if(shader_iterator != default_rendering_programs_.end())
+                        {
+                            current_shader = shader_iterator->second;
+                        }
+                        else
+                        {
+                            auto smap = global_substitution_map_;
+                            for(const auto& i : current_material->generate_substitution_map())
+                                smap[i.first] = i.second;
+
+                            current_shader = std::make_shared<ShaderProgram>();
+
+    #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+                            current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
+    #else
+                            bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
+                            current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+    #endif
+                            default_rendering_programs_[current_material] = current_shader;
+                        }
                     }
                     else
                     {
-                        auto smap = global_substitution_map_;
-                        for(const auto& i : current_material->generate_substitution_map())
-                            smap[i.first] = i.second;
+                        Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
+                    }
+                    if(current_shader)
+                    {
+                        current_shader->use(ctx);
+                        current_shader->set_uniform(ctx, math::vec2ui(target.get_width(), target.get_height()),
+                                                    "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
+                        current_shader->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
+                        current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+                        // hack
+                        current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
 
-                        current_shader = std::make_shared<ShaderProgram>();
 
-#ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
-#else
-                        bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
-#endif
-                        default_rendering_programs_[current_material] = current_shader;
+    #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+                        if(!pipe.current_viewstate().shadow_mode)
+                        {
+                            VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+
+                            if(vt_state && vt_state->has_camera_)
+                            {
+                                current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
+                            }
+                        }
+    #endif
                     }
                 }
-                else
-                {
-                    Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
+            } else {
+                if(nullptr == depth_complexity_vis_program_) {
+                    depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
+                    depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
                 }
-                if(current_shader)
-                {
+
+                if(current_shader != depth_complexity_vis_program_) {
+                    current_shader = depth_complexity_vis_program_;
                     current_shader->use(ctx);
                     current_shader->set_uniform(ctx, math::vec2ui(target.get_width(), target.get_height()),
                                                 "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
@@ -221,20 +256,19 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                     current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
                     // hack
                     current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
-
-
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                    if(!pipe.current_viewstate().shadow_mode)
-                    {
-                        VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
-
-                        if(vt_state && vt_state->has_camera_)
-                        {
-                            current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
-                        }
-                    }
-#endif
                 }
+
+         
+                if(    ctx.render_context->current_blend_state() != color_accumulation_state_
+                    || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
+                {
+                    ctx.render_context->set_blend_state(color_accumulation_state_);
+                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
+                    ctx.render_context->apply_state_objects();
+                }
+                
+                
+
             }
 
             if(current_shader && tri_mesh_node->get_geometry())
@@ -283,24 +317,6 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                     }
                 }
 
-       /*
-                if(ctx.render_context->current_rasterizer_state() != current_rasterizer_state)
-                {
-                    ctx.render_context->set_rasterizer_state(current_rasterizer_state);
-                    ctx.render_context->apply_state_objects();
-                }
-
-
-         
-                if(    ctx.render_context->current_blend_state() != color_accumulation_state_
-                    || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
-                {
-                    ctx.render_context->set_blend_state(color_accumulation_state_);
-                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
-                    ctx.render_context->apply_state_objects();
-                }
-                */
-                
                 ctx.render_context->apply_program();
                 
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());
