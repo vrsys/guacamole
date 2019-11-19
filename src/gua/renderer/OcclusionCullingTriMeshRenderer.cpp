@@ -105,6 +105,11 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
             break;
         }
 
+        case OcclusionCullingMode::Naive_Stop_And_Wait: {
+            render_naive_stop_and_wait_oc(pipe, desc);
+            break;
+        }
+
         case OcclusionCullingMode::Hierarchical_Stop_And_Wait: {
             render_hierarchical_stop_and_wait_oc(pipe, desc);
             break;
@@ -126,6 +131,95 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 
 
 void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
+   
+        RenderContext const& ctx(pipe.get_context());
+
+        auto& scene = *pipe.current_viewstate().scene;
+        auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+
+
+        if(sorted_objects != scene.nodes.end() && !sorted_objects->second.empty())
+        {
+            auto& target = *pipe.current_viewstate().target;
+            auto const& camera = pipe.current_viewstate().camera;
+
+            std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+                return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
+            });
+
+    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+
+            pipe.begin_gpu_query(ctx, gpu_query_name);
+            pipe.begin_cpu_query(cpu_query_name);
+    #endif
+
+            bool write_depth = true;
+            target.bind(ctx, write_depth);
+            target.set_viewport(ctx);
+
+            scm::math::vec2ui render_target_dims(target.get_width(), target.get_height());
+
+
+            int view_id(camera.config.get_view_id());
+
+            MaterialShader* current_material(nullptr);
+            std::shared_ptr<ShaderProgram> current_shader;
+            auto current_rasterizer_state = rs_cull_back_;
+            ctx.render_context->apply();
+
+            // loop through all objects, sorted by material ----------------------------
+            //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
+
+            
+        auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
+        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
+
+
+        for(auto const& object : sorted_objects->second)
+        {
+            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
+            if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
+            {
+                continue;
+            }
+
+            if(!tri_mesh_node->get_render_to_gbuffer())
+            {
+                continue;
+            }
+
+            if(!depth_complexity_vis) {
+                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+            } else {
+                switch_state_for_depth_complexity_vis(ctx, current_shader);
+
+            }
+
+            if(current_shader && tri_mesh_node->get_geometry())
+            {
+                upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+                
+                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+            }
+        }
+
+        
+        target.unbind(ctx);
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+        pipe.end_gpu_query(ctx, gpu_query_name);
+        pipe.end_cpu_query(cpu_query_name);
+#endif
+        ctx.render_context->reset_state_objects();
+        ctx.render_context->sync();
+    }
+}
+
+
+void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
    
         RenderContext const& ctx(pipe.get_context());
 
