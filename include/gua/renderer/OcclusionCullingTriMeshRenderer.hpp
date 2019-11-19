@@ -83,13 +83,19 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
         // this depth stencil state disables depth testing and depth writing for the depth complexity visualization
     scm::gl::depth_stencil_state_ptr depth_stencil_state_no_test_no_writing_state_ = nullptr;
 
+    //this depth stencil state is supposed to be used for issueing occlusion queries
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_test_without_writing_state_ = nullptr;
+    
     // blend states telling opengl what to do with new fragments
-        // default state just writes the attributes of the latest accepted fragment over the previous one
+    // default state just writes the attributes of the latest accepted fragment over the previous one
     scm::gl::blend_state_ptr default_blend_state_ = nullptr;
-
-        // this accumulation state adds the color of all fragments on top of each other.
-        // we use this in combination with disabled depth tests to do the depth complexity visualization
+    // this accumulation state adds the color of all fragments on top of each other.
+    // we use this in combination with disabled depth tests to do the depth complexity visualization
     scm::gl::blend_state_ptr color_accumulation_state_ = nullptr;
+
+    // this accumulation state adds the color of all fragments on top of each other.
+    // we use this in combination with disabled depth tests to do the depth complexity visualization
+    scm::gl::blend_state_ptr color_masks_disabled_state_ = nullptr;
 
     // these shaders are used when we decide to actually draw geometry
     // there map contains one shader program for any material that we encounter
@@ -107,7 +113,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
     std::shared_ptr<ShaderProgram> depth_complexity_vis_program_;
 
-    
+
 
     SubstitutionMap global_substitution_map_;
 

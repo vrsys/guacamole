@@ -65,8 +65,13 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)),
       default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)),
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
-      default_blend_state_(ctx.render_device->create_blend_state(true)),
+
+      depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ),
+
+      default_blend_state_(ctx.render_device->create_blend_state(false)),
       color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
+      color_masks_disabled_state_(ctx.render_device->create_blend_state(false, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD, scm::gl::color_mask::COLOR_ALPHA)), 
+
       default_rendering_program_stages_(), default_rendering_programs_(),
       depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr), 
       global_substitution_map_(smap)
@@ -285,18 +290,13 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             //get the address of 
 
-            if(!depth_complexity_vis) {
-                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
-                                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
-            } else {
-                switch_state_for_depth_complexity_vis(ctx, current_shader);
-
-            }
 
 
 
 
             auto current_node_path = tri_mesh_node->get_path();
+
+            bool render_current_node = true;
 
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
@@ -313,12 +313,23 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 std::cout << "Found Occlusion Query!" << std::endl;
 #endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
+                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+
                 ctx.render_context->begin_query(occlusion_query_iterator->second);
+
                 if(current_shader && tri_mesh_node->get_geometry())
                 {
+
+
                     upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
                 
+
+                    ctx.render_context->set_blend_state(default_blend_state_);
+                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
+
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());
+
                 }
                 ctx.render_context->end_query(occlusion_query_iterator->second);
 
@@ -335,19 +346,28 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 #endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 if(query_result > 0) {
                     ++object_render_count;
+                } else {
+                    render_current_node = false;
                 }
             }
 
+            if(render_current_node) {
+                if(!depth_complexity_vis) {
+                    switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                                                        pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+                } else {
+                    switch_state_for_depth_complexity_vis(ctx, current_shader);
 
+                }
 
-   
+                if(current_shader && tri_mesh_node->get_geometry())
+                {
+                    upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                }
 
-            if(current_shader && tri_mesh_node->get_geometry())
-            {
-                upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
-                
-                tri_mesh_node->get_geometry()->draw(pipe.get_context());
             }
+
         }
 
         
