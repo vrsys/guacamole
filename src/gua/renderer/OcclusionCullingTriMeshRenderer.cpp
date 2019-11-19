@@ -23,6 +23,7 @@
 
 // class header
 #include <gua/renderer/OcclusionCullingTriMeshRenderer.hpp>
+#include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 
 #include <gua/config.hpp>
 #include <gua/node/TriMeshNode.hpp>
@@ -64,20 +65,20 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
       default_blend_state_(ctx.render_device->create_blend_state(true)),
       color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
-      depth_complexity_vis_program_stages_(), depth_complexity_vis_programs_(), 
+      depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr), 
       global_substitution_map_(smap)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
-    std::string v_shader = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-    std::string f_shader = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
+    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+    std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
 #else
-    std::string v_shader = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-    std::string f_shader = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
+    std::string v_shader_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+    std::string f_shader_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
 #endif
 
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_shader);
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_shader);
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +86,9 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
         
+    auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
+    std::cout << occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis() << std::endl;
+
     switch(desc.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::No_Culling: {
             render_without_oc(pipe, desc);
@@ -114,6 +118,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
    
 
+/*
         RenderContext const& ctx(pipe.get_context());
 
         auto& scene = *pipe.current_viewstate().scene;
@@ -303,6 +308,8 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
+
+    */
 }
 
 void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc) {

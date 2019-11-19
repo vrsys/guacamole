@@ -95,11 +95,23 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
         // we use this in combination with disabled depth tests to do the depth complexity visualization
     scm::gl::blend_state_ptr color_accumulation_state_ = nullptr;
 
-    std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
-    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> depth_complexity_vis_programs_;
-
+    // these shaders are used when we decide to actually draw geometry
+    // there map contains one shader program for any material that we encounter
     std::vector<ShaderProgramStage> standard_program_stages_;
-    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> standard_programs_;
+    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> default_rendering_programs_;
+
+
+    // these shaders and the compilshaders are used in combination with hardware occlusion queries
+    std::vector<ShaderProgramStage> occlusion_query_program_stages_;
+    std::shared_ptr<ShaderProgram> occlusion_query_programs_;
+
+
+    // these shaders are used only for visualizing the depth complexity in our system, together with disabled
+    // depth tests and color accumulation blend states (expensive, but nevertheless only used for debug purposes)
+    std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
+    std::shared_ptr<ShaderProgram> depth_complexity_vis_program_;
+
+
 
     SubstitutionMap global_substitution_map_;
 
