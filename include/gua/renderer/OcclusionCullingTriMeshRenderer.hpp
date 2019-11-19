@@ -71,7 +71,12 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc);
     void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc);
 
+    void switch_state_for_depth_complexity_vis(RenderContext const& ctx, std::shared_ptr<ShaderProgram>& active_shader);
+    void switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 
+                                             MaterialShader* current_material, RenderTarget const& target, bool shadow_mode, std::size_t cam_uuid);
 
+    void upload_uniforms_for_node(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 
+                                  Pipeline& pipe, scm::gl::rasterizer_state_ptr& current_rasterizer_state);
 
   private:
 
