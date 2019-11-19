@@ -97,7 +97,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     // these shaders are used when we decide to actually draw geometry
     // there map contains one shader program for any material that we encounter
-    std::vector<ShaderProgramStage> standard_program_stages_;
+    std::vector<ShaderProgramStage> default_rendering_program_stages_;
     std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> default_rendering_programs_;
 
 
