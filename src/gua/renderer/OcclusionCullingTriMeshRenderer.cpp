@@ -34,6 +34,8 @@
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
+//#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+
 namespace
 {
 gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
@@ -298,12 +300,18 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
+                
+#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 std::cout << "Would create new query for ID: " << current_node_path << "\t\t" << (tri_mesh_node->get_name()) << std::endl;
+#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
                 auto new_occlusion_query_object = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
                 ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(new_occlusion_query_object) ) );
             } else {
+
+#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 std::cout << "Found Occlusion Query!" << std::endl;
+#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
                 ctx.render_context->begin_query(occlusion_query_iterator->second);
                 if(current_shader && tri_mesh_node->get_geometry())
@@ -322,8 +330,9 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
                 int64_t query_result = (*occlusion_query_iterator).second->result();
 
+#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 std::cout << "Query Result: " << query_result << std::endl;
-
+#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 if(query_result > 0) {
                     ++object_render_count;
                 }
