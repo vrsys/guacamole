@@ -87,7 +87,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
 
 
-    std::queue<std::shared_ptr<gua::node::Node> > splitting_queue;
+    std::queue<std::shared_ptr<gua::node::Node>> splitting_queue;
 
 
     //if we have less than 3 children, then the grouping is as good as it gets
@@ -95,18 +95,13 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         splitting_queue.push(scene_occlusion_group_node);
     }
 
-
-
     std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
-
-
 
 
     while(!splitting_queue.empty() ) {
         //get next node to split
         auto current_node_to_split = splitting_queue.front();
         splitting_queue.pop();
-
 
         current_node_to_split->update_cache();
 
@@ -145,7 +140,7 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
             for(unsigned int candidate_index = 1; candidate_index < num_candidates; ++candidate_index) { 
                 sorting_based_on_axis(children_sorted_by_xyz[dim_idx], dim_idx);
 
-                split_children(current_node_to_split, children_sorted_by_xyz[dim_idx], candidate_index, candidate_element_offset);
+                split_children(current_node_to_split, children_sorted_by_xyz[dim_idx], candidate_index, candidate_element_offset, false);
                 
                 double cost_for_current_axis = calculate_cost(current_node_to_split);
 
@@ -167,7 +162,7 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         std::cout << "Best split: " << best_splitting_axis << " at index: " << best_candidate_index << std::endl;
     #endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
         // restore best candidate configuration by splitting once more
-        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
+        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset, true);
 
         auto children = current_node_to_split->get_children();
 
@@ -200,24 +195,54 @@ void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion
 
 
 void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector, 
-                    unsigned int candidate_index, unsigned int candidate_element_offset) {
+                    unsigned int candidate_index, unsigned int candidate_element_offset, bool mode) {
     scene_occlusion_group_node->clear_children();
 
-    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
-    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
-
     unsigned int index = 0;
-
     unsigned int pivot = candidate_index * candidate_element_offset;
 
-
-    for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
-        if(index < pivot) {
-            transform_node_L->add_child(*it);
+    if(mode == true) {
+        if (pivot == 1) {
+            auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+            scene_occlusion_group_node->add_child(sorted_vector[0]);
+            for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+                if(index >= pivot) {
+                    transform_node_R->add_child(*it);
+                }
+                ++index;
+            }
+        } else if (pivot == sorted_vector.size()-1){
+            auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
+            scene_occlusion_group_node->add_child(sorted_vector[pivot]);
+            for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+                if(index < pivot) {
+                    transform_node_L->add_child(*it);
+                }
+                ++index;
+            }
         } else {
-            transform_node_R->add_child(*it);
+            auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
+            auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+            for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+                if(index < pivot) {
+                    transform_node_L->add_child(*it);
+                } else {
+                    transform_node_R->add_child(*it);
+                }
+                ++index;
+            }
         }
-        ++index;
+    } else {
+        auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
+        auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+        for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+            if(index < pivot) {
+                transform_node_L->add_child(*it);
+            } else {
+                transform_node_R->add_child(*it);
+            }
+            ++index;
+        }
     }
 }
 
