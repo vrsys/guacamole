@@ -189,8 +189,48 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
     auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
     auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
 
-    int vector_size_half = sorted_vector.size()/2;
+// min_cost
+    double current_min_cost = std::numeric_limits<double>::max();
+    int current_min_split = 0;
+
+// for big vector 
+    int delta_for_split = sorted_vector.size()/32;
+
+    for (int i = 1; i <= 32; ++i)
+    {
+        int index = 0;
+
+        for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+            if(index<(i*delta_for_split)) {
+                transform_node_L->add_child(*it);
+            } else {
+                transform_node_R->add_child(*it);
+            }
+            index ++;
+        }
+
+        double min = calculate_cost(scene_occlusion_group_node);
+        if (current_min_cost > min)
+        {
+            current_min_cost = min;    
+            current_min_split = i;
+        }
+
+        transform_node_L->clear_children(); 
+        transform_node_R->clear_children();        
+    }
+
     int index = 0;
+
+    for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+        if(index<(current_min_split)) {
+            transform_node_L->add_child(*it);
+        } else {
+            transform_node_R->add_child(*it);
+        }
+        index ++;
+    }
+/**
 
     for(auto i = sorted_vector.begin(); i != sorted_vector.end(); ++i) {
         if(index<vector_size_half) {
@@ -198,8 +238,10 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
         } else {
             transform_node_R->add_child(*i);
         }
-        ++index;
-    }
+        index ++;
+    } **/
+
+   // 
 }
 
 
