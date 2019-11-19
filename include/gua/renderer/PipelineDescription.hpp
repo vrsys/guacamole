@@ -42,6 +42,7 @@ class LightVisibilityPassDescription;
 class BBoxPassDescription;
 class ResolvePassDescription;
 class TexturedScreenSpaceQuadPassDescription;
+class FullscreenColorBufferViewPassDescription;
 class DebugViewPassDescription;
 class SSAAPassDescription;
 
@@ -73,6 +74,7 @@ class GUA_DLL PipelineDescription
     std::shared_ptr<BBoxPassDescription> const get_bbox_pass() const;
     std::shared_ptr<ResolvePassDescription> const get_resolve_pass() const;
     std::shared_ptr<TexturedScreenSpaceQuadPassDescription> const get_textured_screen_space_quad_pass() const;
+    std::shared_ptr<FullscreenColorBufferViewPassDescription> const get_full_screen_color_buffer_view_pass() const;
     std::shared_ptr<DebugViewPassDescription> const get_debug_view_pass() const;
     std::shared_ptr<SSAAPassDescription> const get_ssaa_pass() const;
 

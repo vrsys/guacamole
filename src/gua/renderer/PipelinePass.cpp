@@ -32,8 +32,19 @@
 
 namespace gua
 {
+
 ////////////////////////////////////////////////////////////////////////////////
 void PipelinePassDescription::touch() { ++mod_count_; }
+
+////////////////////////////////////////////////////////////////////////////////
+void PipelinePassDescription::enable(bool enable) {
+    private_.is_enabled_ = enable;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PipelinePassDescription::is_enabled() const {
+    return private_.is_enabled_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 std::string const& PipelinePassDescription::name() const { return private_.name_; }
@@ -79,60 +90,63 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
 }
 void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 {
-    auto const& ctx(pipe.get_context());
+    if(private_.is_enabled_) {
+        auto const& ctx(pipe.get_context());
 
-    if(desc.recompile_shaders_)
-    {
-        upload_program(desc, ctx);
-        desc.recompile_shaders_ = false;
-    }
-
-    if(RenderMode::Custom == private_.rendermode_)
-    {
-        private_.process_(*this, desc, pipe);
-    }
-    else
-    {
-        auto& target = *pipe.current_viewstate().target;
-
-        target.bind(ctx, !private_.writes_only_color_buffer_);
-        target.set_viewport(ctx);
-        if(depth_stencil_state_)
-            ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
-        if(blend_state_)
-            ctx.render_context->set_blend_state(blend_state_);
-        if(rasterizer_state_)
-            ctx.render_context->set_rasterizer_state(rasterizer_state_);
-        shader_->use(ctx);
-
-        for(auto const& u : desc.uniforms)
+        if(desc.recompile_shaders_)
         {
-            u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+            upload_program(desc, ctx);
+            desc.recompile_shaders_ = false;
         }
 
-        pipe.bind_gbuffer_input(shader_);
-        pipe.bind_light_table(shader_);
-
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + private_->name_;
-        pipe.begin_gpu_query(ctx, gpu_query_name);
-#endif
-
-        if(RenderMode::Callback == private_.rendermode_)
+        if(RenderMode::Custom == private_.rendermode_)
         {
             private_.process_(*this, desc, pipe);
         }
         else
-        { // RenderMode::Quad
-            pipe.draw_quad();
+        {
+            auto& target = *pipe.current_viewstate().target;
+
+            target.bind(ctx, !private_.writes_only_color_buffer_);
+            target.set_viewport(ctx);
+            if(depth_stencil_state_)
+                ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
+            if(blend_state_)
+                ctx.render_context->set_blend_state(blend_state_);
+            if(rasterizer_state_)
+                ctx.render_context->set_rasterizer_state(rasterizer_state_);
+            shader_->use(ctx);
+
+            for(auto const& u : desc.uniforms)
+            {
+                u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
+            }
+
+            pipe.bind_gbuffer_input(shader_);
+            pipe.bind_light_table(shader_);
+
+    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+            std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + private_->name_;
+            pipe.begin_gpu_query(ctx, gpu_query_name);
+    #endif
+
+            if(RenderMode::Callback == private_.rendermode_)
+            {
+                private_.process_(*this, desc, pipe);
+            }
+            else
+            { // RenderMode::Quad
+                pipe.draw_quad();
+            }
+
+    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+            pipe.end_gpu_query(ctx, gpu_query_name);
+    #endif
+
+            target.unbind(ctx);
+            ctx.render_context->reset_state_objects();
         }
 
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        pipe.end_gpu_query(ctx, gpu_query_name);
-#endif
-
-        target.unbind(ctx);
-        ctx.render_context->reset_state_objects();
     }
 }
 
