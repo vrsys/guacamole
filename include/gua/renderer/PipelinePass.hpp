@@ -41,6 +41,15 @@ enum class RenderMode
     Quad
 };
 
+enum class OcclusionCullingMode {
+    No_Culling,
+    Hierarchical_Stop_And_Wait,
+    Coherent_Hierarchical_Culling,
+    
+    Num_Occlusion_Culling_Modes
+};
+
+
 class GUA_DLL PipelinePassPrivate
 {
   public:
@@ -97,8 +106,16 @@ class GUA_DLL PipelinePassDescription
 
     const std::vector<std::shared_ptr<PipelineResponsibilityDescription>>& get_responsibilities() const;
 
+    // getter and setter for occlusion culling render modes
+    OcclusionCullingMode get_occlusion_culling_mode() const;
+    void set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode);
+
   private:
     void* user_data_ = nullptr;
+
+
+    // global occlusion mode for the entire pipeline. can be queried in the renderer
+    OcclusionCullingMode occlusion_culling_mode_ = OcclusionCullingMode::No_Culling;
 };
 
 class GUA_DLL PipelinePass

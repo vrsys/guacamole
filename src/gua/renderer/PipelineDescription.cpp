@@ -25,6 +25,7 @@
 // guacamole headers
 #include <gua/renderer/StencilPass.hpp>
 #include <gua/renderer/TriMeshPass.hpp>
+#include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 #include <gua/renderer/LineStripPass.hpp>
 #include <gua/renderer/LightVisibilityPass.hpp>
 #include <gua/renderer/BBoxPass.hpp>
@@ -92,6 +93,10 @@ std::shared_ptr<PipelinePassDescription> const& PipelineDescription::get_pass(st
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<TriMeshPassDescription> const PipelineDescription::get_tri_mesh_pass() const { return get_pass_by_type<TriMeshPassDescription>(); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<OcclusionCullingTriMeshPassDescription> const PipelineDescription::get_occlusion_culling_tri_mesh_pass() const { return get_pass_by_type<OcclusionCullingTriMeshPassDescription>(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,5 +179,14 @@ PipelineDescription& PipelineDescription::operator=(PipelineDescription const& o
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// getter and setter for occlusion culling render modes
+OcclusionCullingMode PipelinePassDescription::get_occlusion_culling_mode() const {
+    return occlusion_culling_mode_;
+}
+
+void PipelinePassDescription::set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode) {
+    occlusion_culling_mode_ = oc_mode;
+}
 
 } // namespace gua

@@ -31,6 +31,7 @@
 namespace gua
 {
 class TriMeshPassDescription;
+class OcclusionCullingTriMeshPassDescription;
 class LineStripPassDescription;
 class DynamicGeometryPassDescription;
 class DynamicLinePassDescription;
@@ -61,6 +62,7 @@ class GUA_DLL PipelineDescription
     std::shared_ptr<PipelinePassDescription> const& get_pass(std::size_t index) const;
 
     std::shared_ptr<TriMeshPassDescription> const get_tri_mesh_pass() const;
+    std::shared_ptr<OcclusionCullingTriMeshPassDescription> const get_occlusion_culling_tri_mesh_pass() const;
     std::shared_ptr<LineStripPassDescription> const get_line_strip_pass() const;
     std::shared_ptr<DynamicGeometryPassDescription> const get_dynamic_geometry_pass() const;
     std::shared_ptr<DynamicLinePassDescription> const get_dynamic_line_pass() const;

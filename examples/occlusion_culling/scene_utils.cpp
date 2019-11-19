@@ -56,7 +56,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
         float rand_angle_y = 360.0f * std::rand() / (float)RAND_MAX;
         float rand_angle_z = 360.0f * std::rand() / (float)RAND_MAX;
 
-        float rand_scale = ( 50.0f * std::rand() / (float)RAND_MAX ) / 10.0f;
+        float rand_scale = ( 20.0f * std::rand() / (float)RAND_MAX ) / 10.0f;
 
 
         // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling 
