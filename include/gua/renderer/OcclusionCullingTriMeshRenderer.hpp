@@ -40,7 +40,7 @@ namespace gua
 class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
-
+class RenderTarget;
 
 enum class OcclusionCullingMode;
 
