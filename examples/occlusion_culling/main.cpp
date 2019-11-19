@@ -46,11 +46,6 @@ bool show_bounding_boxes = false;
 bool was_set_to_show_bounding_boxes = false;
 
 
-
-bool use_occlusion_culling_pass = false;
-bool was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
-
-
 bool print_scenegraph_once = false;
 
 gua::OcclusionCullingMode current_culling_mode;
@@ -295,13 +290,6 @@ int main(int argc, char** argv)
         }
         else
         {
-
-            if(use_occlusion_culling_pass != was_set_use_occlusion_culling_pass) {
-                camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
-
-                was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
-            }
-
             if(show_bounding_boxes != was_set_to_show_bounding_boxes) {
 
                 show_scene_bounding_boxes(occlusion_group_node, show_bounding_boxes, current_bb_level_to_visualize);
