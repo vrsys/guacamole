@@ -63,7 +63,7 @@ void main()
 
       vec4 virtual_texturing_color = traverse_idx_hierarchy(sampled_uv_coords, index_texture_mip_map_to_sample, max_level);
       gua_color = virtual_texturing_color.rgb;
-      //gua_alpha = virtual_texturing_color.a;
+      gua_alpha = virtual_texturing_color.a;
       //gua_alpha = 1.0;
       //gua_alpha = 0.7;
       //gua_alpha = 0.7;
