@@ -65,20 +65,30 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
       default_blend_state_(ctx.render_device->create_blend_state(true)),
       color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
+      default_rendering_program_stages_(), default_rendering_programs_(),
       depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr), 
       global_substitution_map_(smap)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
-    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader_no_programmable_material.vert");
     std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
+    
+    std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+    std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 #else
-    std::string v_shader_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-    std::string f_shader_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
+    std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
+    std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
+
+    std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+    std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
 #endif
 
     depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
     depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
+
+    default_rendering_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_default_rendering_vis);
+    default_rendering_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_default_rendering_vis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +127,6 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 
 void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
    
-
-/*
         RenderContext const& ctx(pipe.get_context());
 
         auto& scene = *pipe.current_viewstate().scene;
@@ -178,8 +186,8 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 current_material = tri_mesh_node->get_material()->get_shader();
                 if(current_material)
                 {
-                    auto shader_iterator = depth_complexity_vis_programs_.find(current_material);
-                    if(shader_iterator != depth_complexity_vis_programs_.end())
+                    auto shader_iterator = default_rendering_programs_.find(current_material);
+                    if(shader_iterator != default_rendering_programs_.end())
                     {
                         current_shader = shader_iterator->second;
                     }
@@ -192,12 +200,12 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                         current_shader = std::make_shared<ShaderProgram>();
 
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, smap);
+                        current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
 #else
                         bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
 #endif
-                        depth_complexity_vis_programs_[current_material] = current_shader;
+                        default_rendering_programs_[current_material] = current_shader;
                     }
                 }
                 else
@@ -275,12 +283,15 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                     }
                 }
 
+       /*
                 if(ctx.render_context->current_rasterizer_state() != current_rasterizer_state)
                 {
                     ctx.render_context->set_rasterizer_state(current_rasterizer_state);
                     ctx.render_context->apply_state_objects();
                 }
 
+
+         
                 if(    ctx.render_context->current_blend_state() != color_accumulation_state_
                     || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
                 {
@@ -288,17 +299,15 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                     ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
                     ctx.render_context->apply_state_objects();
                 }
-
+                */
                 
                 ctx.render_context->apply_program();
-
+                
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());
             }
         }
 
         
-
-
         target.unbind(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -308,8 +317,6 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
-
-    */
 }
 
 void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
