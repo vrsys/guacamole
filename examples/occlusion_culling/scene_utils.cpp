@@ -87,7 +87,7 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_node){
 
 
-    std::queue<std::shared_ptr<gua::node::Node> > splitting_queue;
+    std::queue<std::shared_ptr<gua::node::Node>> splitting_queue;
 
 
     //if we have less than 3 children, then the grouping is as good as it gets
@@ -95,18 +95,13 @@ void split_scene_graph(std::shared_ptr<gua::node::Node> scene_occlusion_group_no
         splitting_queue.push(scene_occlusion_group_node);
     }
 
-
-
     std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
-
-
 
 
     while(!splitting_queue.empty() ) {
         //get next node to split
         auto current_node_to_split = splitting_queue.front();
         splitting_queue.pop();
-
 
         current_node_to_split->update_cache();
 
@@ -210,14 +205,31 @@ void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node,
 
     unsigned int pivot = candidate_index * candidate_element_offset;
 
-
-    for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
-        if(index < pivot) {
-            transform_node_L->add_child(*it);
-        } else {
-            transform_node_R->add_child(*it);
+    if (pivot == 1) {
+        scene_occlusion_group_node->add_child(sorted_vector[0]);
+        for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+            if(index > pivot) {
+                transform_node_R->add_child(*it);
+            }
+            ++index;
         }
-        ++index;
+    } else if (pivot == sorted_vector.size()-1){
+                scene_occlusion_group_node->add_child(sorted_vector[pivot-1]);
+        for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+            if(index < pivot) {
+                transform_node_L->add_child(*it);
+            }
+            ++index;
+        }
+    } else {
+        for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
+            if(index < pivot) {
+                transform_node_L->add_child(*it);
+            } else {
+                transform_node_R->add_child(*it);
+            }
+            ++index;
+        }
     }
 }
 
