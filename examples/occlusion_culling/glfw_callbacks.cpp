@@ -8,16 +8,12 @@ extern WASD_state cam_navigation_state;
 extern bool print_times;
 extern bool show_bounding_boxes;
 extern bool was_set_to_show_bounding_boxes;
-extern bool use_occlusion_culling_pass;
-
-//extern bool enable_depth_complexity_vis;
 
 extern int current_bb_level_to_visualize;
 
 extern bool print_scenegraph_once;
 
-extern std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description;     
-extern std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description;   
+extern std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description;
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -62,30 +58,31 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         
         //scancode for 1 key
         case 10:
-            if(use_occlusion_culling_pass) {
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::No_Culling);
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::No_Culling);
 
-                //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
-            }
+            //calling touch is necessary for guacamole to notice that the pass has changed
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
             break;
-        //scancode for 1 key
+        //scancode for 2 key
         case 11:
-            if(use_occlusion_culling_pass) {
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Hierarchical_Stop_And_Wait);
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Naive_Stop_And_Wait);
 
-                //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
-            }
+            //calling touch is necessary for guacamole to notice that the pass has changed
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
             break;
-        //scancode for 1 key
+        //scancode for 3 key
         case 12:
-            if(use_occlusion_culling_pass) {
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Coherent_Hierarchical_Culling);
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Hierarchical_Stop_And_Wait);
 
-                //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
-            }
+            //calling touch is necessary for guacamole to notice that the pass has changed
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            break;
+        //scancode for 4 key
+        case 13:
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Coherent_Hierarchical_Culling);
+
+            //calling touch is necessary for guacamole to notice that the pass has changed
+            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
             break;
 
 
@@ -241,13 +238,6 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         }
 
 
-        case 'o': {
-            //toggle print state on keypress
-            if(1 == action) {
-                use_occlusion_culling_pass = !use_occlusion_culling_pass;
-            }
-            break;
-        }
 
         case 'v': {
             //toggle print state on keypress
