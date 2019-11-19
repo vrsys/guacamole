@@ -24,6 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/GeometryNode.hpp>
+#include <queue>
 
 namespace gua
 {
@@ -74,6 +75,15 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
 
 
     void build_tree_across_children();
+
+    void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis);
+
+    void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector, 
+                        unsigned int candidate_index, unsigned int candidate_element_offset, bool mode);
+
+    double calculate_cost(std::shared_ptr<gua::node::Node> node);
+
+    void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node);
 
   private:
     std::shared_ptr<Node> copy() const override;
