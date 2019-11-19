@@ -43,6 +43,7 @@ enum class RenderMode
 
 enum class OcclusionCullingMode {
     No_Culling,
+    Naive_Stop_And_Wait,
     Hierarchical_Stop_And_Wait,
     Coherent_Hierarchical_Culling,
     
