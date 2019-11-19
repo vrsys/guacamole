@@ -173,11 +173,7 @@ int main(int argc, char** argv)
 
 
     //call function to redesign graph
-    //split_scene_graph(occlusion_group_node);
-
-    //migration has not yet been functional
-    //occlusion_group_node->build_tree_across_children();
-
+    split_scene_graph(occlusion_group_node);
 
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");

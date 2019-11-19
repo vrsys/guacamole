@@ -3,7 +3,7 @@
 
 #include <gua/guacamole.hpp>
 
-//#define MAKE_OCCLUSION_CULLING_APP_VERBOSE
+#define MAKE_OCCLUSION_CULLING_APP_VERBOSE
 
 void cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node);
 
@@ -19,7 +19,7 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_roo
 void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis);
 
 void split_children(std::shared_ptr<gua::node::Node> scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector, 
-					unsigned int candidate_index, unsigned int candidate_element_offset, bool mode);
+					unsigned int candidate_index, unsigned int candidate_element_offset);
 
 double calculate_cost(std::shared_ptr<gua::node::Node> node);
 
