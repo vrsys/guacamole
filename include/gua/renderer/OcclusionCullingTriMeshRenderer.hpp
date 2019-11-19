@@ -107,7 +107,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
     std::shared_ptr<ShaderProgram> depth_complexity_vis_program_;
 
-
+    
 
     SubstitutionMap global_substitution_map_;
 

@@ -148,8 +148,8 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             });
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
+            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
 
             pipe.begin_gpu_query(ctx, gpu_query_name);
             pipe.begin_cpu_query(cpu_query_name);
@@ -237,8 +237,8 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             });
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
+            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
+            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
 
             pipe.begin_gpu_query(ctx, gpu_query_name);
             pipe.begin_cpu_query(cpu_query_name);
@@ -279,13 +279,48 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 continue;
             }
 
-            if(!depth_complexity_vis) {
+            //get the address of 
+
+         if(!depth_complexity_vis) {
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
                 switch_state_for_depth_complexity_vis(ctx, current_shader);
 
             }
+
+
+            auto current_node_path = tri_mesh_node->get_path();
+
+            auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+            if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
+                std::cout << "Would create new query for ID: " << current_node_path << "\t\t" << (tri_mesh_node->get_name()) << std::endl;
+
+                auto new_occlusion_query_object = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
+                ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(new_occlusion_query_object) ) );
+            } else {
+                std::cout << "Found Occlusion Query!" << std::endl;
+
+                ctx.render_context->begin_query(occlusion_query_iterator->second);
+                if(current_shader && tri_mesh_node->get_geometry())
+                {
+                    upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+                
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                }
+                ctx.render_context->end_query(occlusion_query_iterator->second);
+
+                while(!ctx.render_context->query_result_available(occlusion_query_iterator->second)) {
+                    ;
+                }
+
+                ctx.render_context->collect_query_results(occlusion_query_iterator->second);
+                std::cout << "Query Result: " << (*occlusion_query_iterator).second->result() << std::endl;
+
+            }
+
+
+   
 
             if(current_shader && tri_mesh_node->get_geometry())
             {
