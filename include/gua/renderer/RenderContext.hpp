@@ -35,6 +35,7 @@
 #include <scm/gl_core/data_formats.h>
 #include <scm/core.h>
 #include <scm/gl_core.h>
+#include <scm/gl_core/query_objects/occlusion_query.h>
 #include <scm/gl_core/window_management/context.h>
 #include <scm/gl_core/window_management/display.h>
 #include <scm/gl_core/window_management/surface.h>
@@ -49,6 +50,7 @@ namespace node
 {
 class Node;
 }
+
 
 /**
  * Abstract base class for plugin ressources
@@ -222,6 +224,8 @@ struct GUA_DLL RenderContext
      */
     mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_2d_ptr>> texture_2d_arrays;
     mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> texture_3d_arrays;
+
+    mutable std::unordered_map<std::string, scm::gl::occlusion_query_ptr> occlusion_query_objects;
 
     /**
      * Resources associated with this context
