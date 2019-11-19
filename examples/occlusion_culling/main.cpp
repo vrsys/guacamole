@@ -76,9 +76,9 @@ void configure_pipeline_descriptions() {
     //----------------------------------------------------------------------------------------
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
+       // visualizes the GBuffer-content
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass()->enable(false);
     // configure the resolve pass

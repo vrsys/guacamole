@@ -34,6 +34,8 @@
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
+
+#include <scm/gl_core/render_device/opengl/gl_core.h>
 //#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
 namespace
@@ -70,7 +72,7 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 
       default_blend_state_(ctx.render_device->create_blend_state(false)),
       color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
-      color_masks_disabled_state_(ctx.render_device->create_blend_state(false, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD, scm::gl::color_mask::COLOR_ALPHA)), 
+      color_masks_disabled_state_(ctx.render_device->create_blend_state(false, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD, scm::gl::color_mask::COLOR_RED)), 
 
       default_rendering_program_stages_(), default_rendering_programs_(),
       depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr), 
@@ -184,6 +186,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
         bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
 
 
+        uint object_render_count = 0;
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -210,9 +213,13 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
                 
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());
+
+                ++object_render_count;
             }
         }
 
+
+        std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
         
         target.unbind(ctx);
 
@@ -274,9 +281,10 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
 
         uint64_t object_render_count = 0;
+        int rendered_nodes = 0;
+        
 
-        for(auto const& object : sorted_objects->second)
-        {
+        for(auto const& object : sorted_objects->second) {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
             if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
             {
@@ -300,19 +308,14 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
-                
-#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-                std::cout << "Would create new query for ID: " << current_node_path << "\t\t" << (tri_mesh_node->get_name()) << std::endl;
-#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-
                 auto new_occlusion_query_object = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
                 ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(new_occlusion_query_object) ) );
-            } else {
+            
+                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+            } 
 
-#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-                std::cout << "Found Occlusion Query!" << std::endl;
-#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
+            {
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
 
@@ -325,13 +328,19 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                     upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
                 
 
-                    ctx.render_context->set_blend_state(default_blend_state_);
+
+                    //ctx.render_context->set_blend_state(color_masks_disabled_state_);
                     ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
 
-                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                    auto const& glapi = ctx.render_context->opengl_api();
+                    glapi.glColorMask(false, false, false, false);
 
+                    ctx.render_context->apply();
+
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
                 }
                 ctx.render_context->end_query(occlusion_query_iterator->second);
+
 
                 while(!ctx.render_context->query_result_available(occlusion_query_iterator->second)) {
                     ;
@@ -351,7 +360,16 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 }
             }
 
+
+
+            
             if(render_current_node) {
+                auto const& glapi = ctx.render_context->opengl_api();
+                glapi.glColorMask(true, true, true, true);
+                ctx.render_context->set_depth_stencil_state(default_depth_test_);
+                ctx.render_context->set_blend_state(default_blend_state_);
+                ctx.render_context->apply();
+
                 if(!depth_complexity_vis) {
                     switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
                                                         pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
@@ -366,13 +384,21 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());
                 }
 
+
+                ++rendered_nodes;
             }
 
         }
-
+        std::cout << "Rendered Nodes: " << rendered_nodes << std::endl;
         
         std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
         
+
+        // it might happen that schism does not expose some functionality - then we can ask schism directly
+        // for the api object
+        auto const& glapi = ctx.render_context->opengl_api();
+        glapi.glColorMask(true, true, true, true);
+        ctx.render_context->apply();
 
         target.unbind(ctx);
 
