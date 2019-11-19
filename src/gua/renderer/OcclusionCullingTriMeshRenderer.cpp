@@ -97,7 +97,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 {
         
     auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
-    std::cout << occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis() << std::endl;
+    //std::cout << occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis() << std::endl;
 
     switch(desc.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::No_Culling: {

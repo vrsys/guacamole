@@ -84,24 +84,12 @@ void configure_pipeline_descriptions() {
     //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
 
+
+    occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass()->enable(false);
     // configure the resolve pass
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
-    //occlusion_culling_pipeline_description->
-
-    // second pipe
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
-    //----------------------------------------------------------------------------------------
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
-    default_trimesh_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());       // visualizes the GBuffer-content
-    //default_trimesh_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-
-    // configure the resolve pass
-    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
-    default_trimesh_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
 }
 
@@ -235,7 +223,7 @@ int main(int argc, char** argv)
     //for now, we do not render in stereo
     camera_node->config.set_enable_stereo(false);
     //we associate our current pipeline description with the camera
-    camera_node->set_pipeline_description(default_trimesh_pipeline_description);
+    camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
 
 
     //create the window and configure it with correct resolution, stereo mode and window events
@@ -309,11 +297,7 @@ int main(int argc, char** argv)
         {
 
             if(use_occlusion_culling_pass != was_set_use_occlusion_culling_pass) {
-                if(use_occlusion_culling_pass) {
-                    camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
-                } else {
-                    camera_node->set_pipeline_description(default_trimesh_pipeline_description);                    
-                }
+                camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
 
                 was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
             }
