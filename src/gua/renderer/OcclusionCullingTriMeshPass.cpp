@@ -35,7 +35,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-OcclusionCullingTriMeshPassDescription::OcclusionCullingTriMeshPassDescription() : PipelinePassDescription()
+OcclusionCullingTriMeshPassDescription::OcclusionCullingTriMeshPassDescription() : PipelinePassDescription(), enable_depth_complexity_vis_(false)
 {
     vertex_shader_ = "";   // "shaders/tri_mesh_shader.vert";
     fragment_shader_ = ""; // "shaders/tri_mesh_shader.frag";
@@ -71,6 +71,16 @@ PipelinePass OcclusionCullingTriMeshPassDescription::make_pass(RenderContext con
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+void OcclusionCullingTriMeshPassDescription::set_enable_depth_complexity_vis(bool enable) {
+    enable_depth_complexity_vis_ = enable;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+bool OcclusionCullingTriMeshPassDescription::get_enable_depth_complexity_vis() const {
+    return enable_depth_complexity_vis_;
 }
 
 } // namespace gua

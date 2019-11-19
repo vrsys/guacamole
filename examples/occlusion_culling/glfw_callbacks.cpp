@@ -9,6 +9,8 @@ extern bool show_bounding_boxes;
 extern bool was_set_to_show_bounding_boxes;
 extern bool use_occlusion_culling_pass;
 
+//extern bool enable_depth_complexity_vis;
+
 extern int current_bb_level_to_visualize;
 
 extern bool print_scenegraph_once;
@@ -238,13 +240,25 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         }
 
 
-        case 'v': {
+        case 'o': {
             //toggle print state on keypress
             if(1 == action) {
                 use_occlusion_culling_pass = !use_occlusion_culling_pass;
             }
             break;
         }
+
+        case 'v': {
+            //toggle print state on keypress
+            if(1 == action) {
+                auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                bool current_dcv_status = occlusion_culling_tri_mesh_pass->get_enable_depth_complexity_vis();
+                occlusion_culling_tri_mesh_pass->set_enable_depth_complexity_vis(!current_dcv_status);
+                occlusion_culling_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
 
         case 'b': {
             //toggle print state on keypress
@@ -253,16 +267,6 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             }
             break;
         }
-
-
-        case 'o': {
-            //toggle print state on keypress
-            if(1 == action) {
-                //todo: switch occlusion culling mode on pipe
-            }
-            break;
-        }
-     
 
 
         default: { //no assigned key

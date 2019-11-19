@@ -50,6 +50,7 @@ bool was_set_to_show_bounding_boxes = false;
 bool use_occlusion_culling_pass = false;
 bool was_set_use_occlusion_culling_pass = use_occlusion_culling_pass;
 
+
 bool print_scenegraph_once = false;
 
 gua::OcclusionCullingMode current_culling_mode;
@@ -159,6 +160,7 @@ void print_keyboard_controls() {
 
     std::cout << std::endl;
 }
+
 
 
 int main(int argc, char** argv)
