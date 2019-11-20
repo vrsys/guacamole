@@ -173,9 +173,9 @@ int main(int argc, char** argv)
 
 
     //call function to redesign graph
-    //split_scene_graph(occlusion_group_node);
+    split_scene_graph(occlusion_group_node);
 
-    //migration has not yet been functional
+    //migration has not yet been functional 
     //occlusion_group_node->build_tree_across_children();
 
 
