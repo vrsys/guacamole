@@ -80,9 +80,9 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_ = nullptr;
 
     // different depth stencil states for different effects
-        // default state enables depth testing and depth writing
+    // default state enables depth testing and depth writing
     scm::gl::depth_stencil_state_ptr default_depth_test_ = nullptr;
-        // this depth stencil state disables depth testing and depth writing for the depth complexity visualization
+    // this depth stencil state disables depth testing and depth writing for the depth complexity visualization
     scm::gl::depth_stencil_state_ptr depth_stencil_state_no_test_no_writing_state_ = nullptr;
 
     scm::gl::depth_stencil_state_ptr depth_stencil_state_writing_without_test_state_ = nullptr;
@@ -97,9 +97,6 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     // we use this in combination with disabled depth tests to do the depth complexity visualization
     scm::gl::blend_state_ptr color_accumulation_state_ = nullptr;
 
-    // this accumulation state adds the color of all fragments on top of each other.
-    // we use this in combination with disabled depth tests to do the depth complexity visualization
-    scm::gl::blend_state_ptr color_masks_disabled_state_ = nullptr;
 
     // these shaders are used when we decide to actually draw geometry
     // there map contains one shader program for any material that we encounter
