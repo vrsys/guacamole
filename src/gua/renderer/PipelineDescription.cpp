@@ -185,12 +185,28 @@ PipelineDescription& PipelineDescription::operator=(PipelineDescription const& o
 ////////////////////////////////////////////////////////////////////////////////
 
 // getter and setter for occlusion culling render modes
-OcclusionCullingMode PipelinePassDescription::get_occlusion_culling_mode() const {
-    return occlusion_culling_mode_;
+OcclusionCullingStrategy PipelinePassDescription::get_occlusion_culling_strategy() const {
+    return occlusion_culling_strategy_;
 }
 
-void PipelinePassDescription::set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode) {
-    occlusion_culling_mode_ = oc_mode;
+void PipelinePassDescription::set_occlusion_culling_strategy(OcclusionCullingStrategy const& oc_strategy) {
+    occlusion_culling_strategy_ = oc_strategy;
+}
+
+OcclusionQueryType PipelinePassDescription::get_occlusion_query_type() const {
+    return occlusion_query_type_;
+}
+
+void PipelinePassDescription::set_occlusion_query_type(OcclusionQueryType const& occlusion_query_type) {
+    occlusion_query_type_ = occlusion_query_type;
+}
+
+uint64_t PipelinePassDescription::get_occlusion_culling_fragment_threshold() const {
+    return occlusion_culling_fragment_threshold_;
+}
+
+void PipelinePassDescription::set_occlusion_culling_fragment_threshold(uint64_t fragment_threshold) {
+    occlusion_culling_fragment_threshold_ = fragment_threshold;
 }
 
 } // namespace gua

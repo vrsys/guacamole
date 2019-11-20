@@ -48,7 +48,7 @@ bool was_set_to_show_bounding_boxes = false;
 
 bool print_scenegraph_once = false;
 
-gua::OcclusionCullingMode current_culling_mode;
+gua::OcclusionCullingStrategy current_culling_mode;
 
 
 std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description = std::make_shared<gua::PipelineDescription>();     
@@ -85,6 +85,9 @@ void configure_pipeline_descriptions() {
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
+
+    auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 
 }
 

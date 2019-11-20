@@ -41,14 +41,23 @@ enum class RenderMode
     Quad
 };
 
-enum class OcclusionCullingMode {
-    No_Culling,
-    Naive_Stop_And_Wait,
-    Hierarchical_Stop_And_Wait,
-    Coherent_Hierarchical_Culling,
+enum class OcclusionCullingStrategy {
+    No_Culling,                     //Baseline (plus overhead for tree traversal)
+    Naive_Stop_And_Wait,            //Slowest Occlusion Query Mode for Comparison
+    Hierarchical_Stop_And_Wait,     //Exploiting Spatial Coherence 
+    Coherent_Hierarchical_Culling,  //Exploiting Spatial and Temporal Coherence
     
     Num_Occlusion_Culling_Modes
 };
+
+enum class OcclusionQueryType {
+    Any_Samples_Passed,     // checks whether any fragment was visible (faster)
+    Number_Of_Samples_Passed,  // checks how many fragments were created (slower)
+
+    Num_OcclusionQueryType
+};
+
+
 
 
 class GUA_DLL PipelinePassPrivate
@@ -110,17 +119,31 @@ class GUA_DLL PipelinePassDescription
     const std::vector<std::shared_ptr<PipelineResponsibilityDescription>>& get_responsibilities() const;
 
     // getter and setter for occlusion culling render modes
-    OcclusionCullingMode get_occlusion_culling_mode() const;
-    void set_occlusion_culling_mode(OcclusionCullingMode const& oc_mode);
+    OcclusionCullingStrategy get_occlusion_culling_strategy() const;
+    void set_occlusion_culling_strategy(OcclusionCullingStrategy const& oc_mode);
+
+    OcclusionQueryType get_occlusion_query_type() const;
+    void set_occlusion_query_type(OcclusionQueryType const& oc_type);
+
+    uint64_t get_occlusion_culling_fragment_threshold() const;
+    void set_occlusion_culling_fragment_threshold(uint64_t fragment_threshold);
 
     void enable(bool enable);
     bool is_enabled() const;
+
   private:
     void* user_data_ = nullptr;
 
 
-    // global occlusion mode for the entire pipeline. can be queried in the renderer
-    OcclusionCullingMode occlusion_culling_mode_ = OcclusionCullingMode::No_Culling;
+    // describes the occlusion culling strategy
+    OcclusionCullingStrategy occlusion_culling_strategy_ = OcclusionCullingStrategy::No_Culling;
+
+    // describes the mode with wich the hardware occlusion queries are created
+    OcclusionQueryType occlusion_query_type_     = OcclusionQueryType::Any_Samples_Passed;
+
+    // if the occlusion query mode is set to Number_Of_Samples_Passed, culling geometry which creates less
+    // than occlusion_culling_fragment_threshold_ of fragments is not rendered
+    uint64_t occlusion_culling_fragment_threshold_ = 10;
 };
 
 class GUA_DLL PipelinePass

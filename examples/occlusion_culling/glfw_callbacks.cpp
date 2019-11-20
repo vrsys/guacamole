@@ -15,6 +15,10 @@ extern bool print_scenegraph_once;
 
 extern std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description;
 
+uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
+
+uint64_t num_occlusion_culling_fragment_threshold = 100;
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -56,34 +60,113 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     //std::cout << "scancode: " << scancode << std::endl;
     switch(scancode) {
         
+        // NUMPAD 8
+        case 80: {
+            if(action == 1) {
+                auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                uint64_t current_occlusion_threshold = oc_tri_mesh_pass->get_occlusion_culling_fragment_threshold();
+
+                uint64_t new_num_occlusion_threshold = std::min(max_occlusion_culling_fragment_treshold, current_occlusion_threshold * 2);
+
+                oc_tri_mesh_pass->set_occlusion_culling_fragment_threshold(new_num_occlusion_threshold);
+
+                std::cout << "Set Approximate Culling Fragment Threshold to: " << new_num_occlusion_threshold << std::endl; 
+
+                oc_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
+        // NUMPAD 5
+        case 84: {
+            if(action == 1) {
+                auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                uint64_t current_occlusion_threshold = oc_tri_mesh_pass->get_occlusion_culling_fragment_threshold();
+
+                uint64_t new_num_occlusion_threshold = std::max(uint64_t(1), current_occlusion_threshold / 2);
+
+                oc_tri_mesh_pass->set_occlusion_culling_fragment_threshold(new_num_occlusion_threshold);
+
+                std::cout << "Set Approximate Culling Fragment Threshold to: " << new_num_occlusion_threshold << std::endl; 
+
+                oc_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
         //scancode for 1 key
-        case 10:
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::No_Culling);
+        case 10: {
+            if(action == 1) {
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::No_Culling);
 
-            //calling touch is necessary for guacamole to notice that the pass has changed
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                std::cout << "Set Occlusion_Culling_Strategy to 'No Culling'" << std::endl;
+                //calling touch is necessary for guacamole to notice that the pass has changed
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            }
             break;
+        }
         //scancode for 2 key
-        case 11:
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Naive_Stop_And_Wait);
+        case 11: {
+            if(action == 1) {
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Naive_Stop_And_Wait);
 
-            //calling touch is necessary for guacamole to notice that the pass has changed
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+
+                std::cout << "Set Occlusion_Culling_Strategy to 'Naive Stop and Wait'" << std::endl;
+                //calling touch is necessary for guacamole to notice that the pass has changed
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            }
             break;
+        }
+
         //scancode for 3 key
-        case 12:
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Hierarchical_Stop_And_Wait);
+        case 12: {
+            if(action == 1) {
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Hierarchical_Stop_And_Wait);
 
-            //calling touch is necessary for guacamole to notice that the pass has changed
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+
+                std::cout << "Set Occlusion_Culling_Strategy to 'Hierarchical Stop and Wait'" << std::endl;
+                //calling touch is necessary for guacamole to notice that the pass has changed
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            }
             break;
+        }
+
         //scancode for 4 key
-        case 13:
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_mode(gua::OcclusionCullingMode::Coherent_Hierarchical_Culling);
+        case 13: {
+            if(action == 1) {
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling);
 
-            //calling touch is necessary for guacamole to notice that the pass has changed
-            occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                std::cout << "Set Occlusion_Culling_Strategy to 'Coherent Hierarchical Culling (TO BE IMPLEMENTED)'" << std::endl;
+                //calling touch is necessary for guacamole to notice that the pass has changed
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            }
             break;
+        }
+
+        //scancode for "enter"
+        case 36: {
+            if(action == 1) {
+
+                auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                gua::OcclusionQueryType current_oc_query_type = oc_tri_mesh_pass->get_occlusion_query_type();
+                
+                if(gua::OcclusionQueryType::Any_Samples_Passed == current_oc_query_type) {
+                    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
+                    std::cout << "Set Occlusion Query Type to: Number_Of_Samples_Passed (Approximate)" << std::endl; 
+
+                } else if (gua::OcclusionQueryType::Number_Of_Samples_Passed == current_oc_query_type) {
+                    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Any_Samples_Passed);
+                    std::cout << "Set Occlusion Query Type to: Any_Samples_Passed (Conservative)" << std::endl; 
+
+
+                }
+
+                oc_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
+
 
 
 
@@ -114,8 +197,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
-        default:
+        default: {
             break;
+        }
     }
     //action == 1: key was pressed
     //action == 0: key was released
