@@ -55,7 +55,6 @@ void OcclusionCullingGroupNode::regroup_children(){
         auto current_node_to_split = splitting_queue.front();
         splitting_queue.pop();
 
-
         current_node_to_split->update_cache();
 
         int best_splitting_axis = -1;

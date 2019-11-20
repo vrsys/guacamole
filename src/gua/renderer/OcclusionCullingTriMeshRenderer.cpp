@@ -65,15 +65,13 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),   // if backface culling is disabled
       rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK)),  //if backface culling is enabled and the object is supposed to be rendered as wireframe
       rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)),  //if backface culling is enabled and the object is supposed to be rendered as wireframe
-      default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)),
+      default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)), /* < for rendering > */
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
+      depth_stencil_state_writing_without_test_state_(ctx.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_LESS) ),
+      depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ), /* < for occlusion querying > */
 
-      depth_stencil_state_writing_without_test_state_(ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS) ),
-      depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ),
-
-      default_blend_state_(ctx.render_device->create_blend_state(false)),
-      color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
-      color_masks_disabled_state_(ctx.render_device->create_blend_state(false, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD, scm::gl::color_mask::COLOR_RED)), 
+      default_blend_state_(ctx.render_device->create_blend_state(false)),  /* < for rendering > */
+      color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)),  
 
       default_rendering_program_stages_(), default_rendering_programs_(), //a map that stores as many shaders as nodes with different material are encountered. The material input is substituted
       depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr),//only one shader that is independent of the actual node material
@@ -234,7 +232,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 continue;
             }
 
-            if(!depth_complexity_vis) {
+            if(!depth_complexity_vis) { // we render the scene normally
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
@@ -342,19 +340,34 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             bool render_current_node = true;
 
+            // get iterator to occlusion query associated with node (currently by path)
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+
+            // if we didn't create an occlusion query for this node (based on path) for this context
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
-                auto new_occlusion_query_object = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
-                ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(new_occlusion_query_object) ) );
+
+                // get occlusion query mode
+
+                //default: Number of Sampled Passed
+                auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
+
+
+                // change occlusion query type if we only want to know whether any fragment was visible
+                if( OcclusionQueryType::Any_Samples_Passed == desc.get_occlusion_query_type() ) {
+                    occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
+                }
+
+                ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
             
                 occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
             } 
 
 
+            // now we can be sure that the occlusion query object was created. Start occlusion querying
             {
                 current_shader = occlusion_query_box_program_;
 
-                occlusion_query_box_program_->use(ctx);
+                current_shader->use(ctx);
                 auto vp_mat = view_projection_matrix;
                 //retrieve_world_space_bounding_box
                 auto world_space_bounding_box = tri_mesh_node_ptr->get_bounding_box();
@@ -364,23 +377,25 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
 
                 if(!occlusion_culling_geometry_vis) {
+
+                    // IMPORTANT! IN THIS FUNCTION THE COLOR CHANNELS ARE DISABLED AND DEPTH MASK IS DISABLED AS WELL
                     set_occlusion_query_states(ctx);
                 } else {
                     ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
                 }
 
-
+                ////////////////////// OCCLUSION QUERIES BEGIN -- SUBMIT TO GPU
                 ctx.render_context->begin_query(occlusion_query_iterator->second);
-
+                //pipe knows context
                 pipe.draw_box();
-                
                 ctx.render_context->end_query(occlusion_query_iterator->second);
-
+  
                 // busy waiting - instead of doing something meaningful, we stall the CPU and therefore starve the GPU
                 while(!ctx.render_context->query_result_available(occlusion_query_iterator->second)) {
                     ;
                 }
 
+                // get query results
                 ctx.render_context->collect_query_results(occlusion_query_iterator->second);
 
                 // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
@@ -415,6 +430,8 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             
             if(render_current_node) {
                 auto const& glapi = ctx.render_context->opengl_api();
+
+                //enable all color channels again (otherwise we would see nothing)
                 glapi.glColorMask(true, true, true, true);
                 ctx.render_context->set_depth_stencil_state(default_depth_test_);
                 ctx.render_context->set_blend_state(default_blend_state_);
@@ -623,6 +640,14 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         pipe.end_gpu_query(ctx, gpu_query_name);
         pipe.end_cpu_query(cpu_query_name);
 #endif
+
+
+        auto const& glapi = ctx.render_context->opengl_api();
+        glapi.glColorMask(true, true, true, true);
+        ctx.render_context->set_depth_stencil_state(default_depth_test_);
+        ctx.render_context->set_blend_state(default_blend_state_);
+        ctx.render_context->apply();
+
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
@@ -690,9 +715,12 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext con
 ////////////////////////////////////////////////////////////////////////////////
 void OcclusionCullingTriMeshRenderer::set_occlusion_query_states(RenderContext const& ctx) {
     auto const& glapi = ctx.render_context->opengl_api();
-    glapi.glColorMask(false, false, false, false);
-    ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
 
+    // we disable all color channels to save rasterization time
+    glapi.glColorMask(false, false, false, false);
+
+    // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
     ctx.render_context->apply();
 }
 
