@@ -36,7 +36,7 @@
 
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
-//#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
 namespace
 {
@@ -68,6 +68,7 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)),
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
 
+      depth_stencil_state_writing_without_test_state_(ctx.render_device->create_depth_stencil_state(true, true, scm::gl::COMPARISON_LESS) ),
       depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ),
 
       default_blend_state_(ctx.render_device->create_blend_state(false)),
@@ -79,36 +80,38 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       occlusion_query_box_program_stages_(), occlusion_query_box_program_(nullptr), //only one shader that is independent of the actual node material
       global_substitution_map_(smap)
 {
+
+// define all our shader sources for our 3 different shader programs we need/want to use here
+// 1
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
     ResourceFactory factory;
-    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader_no_programmable_material.vert");
-    std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
-    
+    std::string v_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.vert");
+    std::string f_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.frag");
+
     std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
                                                           
-    std::string v_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.vert");
-    std::string f_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.frag");
+    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader_no_programmable_material.vert");
+    std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
 #else
-    std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
-    std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
+    std::string v_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.vert");
+    std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.frag");
 
     std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
 
-    std::string v_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.vert");
-    std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.frag");
-
+    std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
+    std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
 #endif
-
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
 
     default_rendering_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_default_rendering_vis);
     default_rendering_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_default_rendering_vis);
 
     occlusion_query_box_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_occlusion_query_box);
     occlusion_query_box_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_occlusion_query_box);
+
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
+    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,20 +128,38 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
         depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
         depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
     }
-        
+
+
+    auto const& frustum = pipe.current_viewstate().frustum;
+    scm::math::mat4d const view_matrix = frustum.get_view();
+    scm::math::mat4d const projection_matrix = frustum.get_projection();
+    scm::math::mat4d view_projection_matrix = projection_matrix * view_matrix;
+
+
+    scm::math::mat4d const camera_matrix = scm::math::inverse(view_matrix);
+
+    gua::math::vec4f camera_space_cam_pos_homogeneous(0.0f, 0.0f, 0.0f, 1.0f);
+    gua::math::vec4f world_space_cam_pos = gua::math::mat4f(camera_matrix) * camera_space_cam_pos_homogeneous;
+
+    gua::math::vec3f world_space_cam_pos_euclidean(world_space_cam_pos[0], world_space_cam_pos[1], world_space_cam_pos[2]);
+
+
+//  std::cout << "World space cam pos: " << world_space_cam_pos << std::endl;
+
+
     switch(desc.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::No_Culling: {
-            render_without_oc(pipe, desc);
+            render_without_oc(pipe, desc, view_projection_matrix, world_space_cam_pos_euclidean);
             break;
         }
 
         case OcclusionCullingMode::Naive_Stop_And_Wait: {
-            render_naive_stop_and_wait_oc(pipe, desc);
+            render_naive_stop_and_wait_oc(pipe, desc, view_projection_matrix, world_space_cam_pos_euclidean);
             break;
         }
 
         case OcclusionCullingMode::Hierarchical_Stop_And_Wait: {
-            render_hierarchical_stop_and_wait_oc(pipe, desc);
+            render_hierarchical_stop_and_wait_oc(pipe, desc, view_projection_matrix, world_space_cam_pos_euclidean);
             break;
         }
 
@@ -157,39 +178,34 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 }
 
 
-void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
+void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
+                                                        scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
    
         RenderContext const& ctx(pipe.get_context());
 
-        auto& scene = *pipe.current_viewstate().scene;
-        auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+        SerializedScene& scene = *pipe.current_viewstate().scene;
+        auto type_sorted_tri_mesh_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
 
-        if(sorted_objects != scene.nodes.end() && !sorted_objects->second.empty())
+        if(type_sorted_tri_mesh_node_ptrs_iterator != scene.nodes.end() && !type_sorted_tri_mesh_node_ptrs_iterator->second.empty())
         {
-            auto& target = *pipe.current_viewstate().target;
+            RenderTarget& render_target = *pipe.current_viewstate().target;
             auto const& camera = pipe.current_viewstate().camera;
 
-            std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+            std::sort(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [](node::Node* a, node::Node* b) {
                 return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
             });
 
-    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
-            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
-
-            pipe.begin_gpu_query(ctx, gpu_query_name);
-            pipe.begin_cpu_query(cpu_query_name);
-    #endif
 
             bool write_depth = true;
-            target.bind(ctx, write_depth);
-            target.set_viewport(ctx);
+            render_target.bind(ctx, write_depth);
+            render_target.set_viewport(ctx);
 
-            scm::math::vec2ui render_target_dims(target.get_width(), target.get_height());
+            scm::math::vec2ui render_target_dims(render_target.get_width(), render_target.get_height());
 
 
-            int view_id(camera.config.get_view_id());
+            // currently not needed
+            //int view_id(camera.config.get_view_id());
 
             MaterialShader* current_material(nullptr);
             std::shared_ptr<ShaderProgram> current_shader;
@@ -205,7 +221,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
 
 
         uint object_render_count = 0;
-        for(auto const& object : sorted_objects->second)
+        for(auto const& object : type_sorted_tri_mesh_node_ptrs_iterator->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
             if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
@@ -219,7 +235,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             }
 
             if(!depth_complexity_vis) {
-                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
                 switch_state_for_depth_complexity_vis(ctx, current_shader);
@@ -236,47 +252,59 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             }
         }
 
+#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+        std::cout << "Rendered " << object_render_count << "/" << type_sorted_tri_mesh_node_ptrs_iterator->second.size() << " objects" << std::endl; 
+#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
-        std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
-        
-        target.unbind(ctx);
+        render_target.unbind(ctx);
 
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        pipe.end_gpu_query(ctx, gpu_query_name);
-        pipe.end_cpu_query(cpu_query_name);
-#endif
+
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
 }
 
 
-void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
+void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
+                                                                    scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
    
+        // the gua::RenderContext object contains the render_context (~ gl) and the render_device wrapped by schism.
+        // the render_device is associated wit the render_context it created.
+        //see: include/gua/RenderContext.hpp
         RenderContext const& ctx(pipe.get_context());
 
-        auto& scene = *pipe.current_viewstate().scene;
-        auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+        // this is pretty much a standard mechanism of guacamole. You get the Serialized scene and filter the (sorted serialized) nodes by its dynamic type.
+        // since we are prototyping the naive stop and wait algorithm without our occlusion culling group node in mind, we look for all trimesh nodes
+        SerializedScene& scene = *pipe.current_viewstate().scene;
+
+        // iter
+        auto type_sorted_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
 
-        if(sorted_objects != scene.nodes.end() && !sorted_objects->second.empty())
+
+
+        // check if any nodes at all were serialized (nodes that are frustum culled would not appear here)
+        if(type_sorted_node_ptrs_iterator != scene.nodes.end() && !type_sorted_node_ptrs_iterator->second.empty())
         {
-            auto& target = *pipe.current_viewstate().target;
+            // the RenderTarget object target 
+            RenderTarget& render_target = *pipe.current_viewstate().target;
             auto const& camera = pipe.current_viewstate().camera;
 
-            std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+
+            std::sort(type_sorted_node_ptrs_iterator->second.begin(), type_sorted_node_ptrs_iterator->second.end(), [](node::Node* a, node::Node* b) {
                 return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
             });
 
 
             bool write_depth = true;
-            target.bind(ctx, write_depth);
-            target.set_viewport(ctx);
+            render_target.bind(ctx, write_depth);
+            render_target.set_viewport(ctx);
 
-            scm::math::vec2ui render_target_dims(target.get_width(), target.get_height());
+            scm::math::vec2ui render_target_dims(render_target.get_width(), render_target.get_height());
 
 
-            int view_id(camera.config.get_view_id());
+            // not needed currently
+            //int view_id(camera.config.get_view_id());
 
             MaterialShader* current_material(nullptr);
             std::shared_ptr<ShaderProgram> current_shader;
@@ -295,10 +323,11 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         int rendered_nodes = 0;
         
 
-        auto const& frustum = pipe.current_viewstate().frustum;
-        auto view_projection_matrix = frustum.get_projection() * frustum.get_view();
 
-        for(auto const& object : sorted_objects->second) {
+
+
+
+        for(auto const& object : type_sorted_node_ptrs_iterator->second) {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
             if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
             {
@@ -309,10 +338,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             {
                 continue;
             }
-
-            //get the address of 
-
-
 
 
 
@@ -331,22 +356,15 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             {
                 current_shader = occlusion_query_box_program_;
-                
+
                 occlusion_query_box_program_->use(ctx);
-                ctx.render_context->begin_query(occlusion_query_iterator->second);
-
                 auto vp_mat = view_projection_matrix;
-
-                //upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
-
-
                 //retrieve_world_space_bounding_box
                 auto world_space_bounding_box = tri_mesh_node->get_bounding_box();
 
                 current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
                 current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
                 current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
-
 
                 if(!occlusion_culling_geometry_vis) {
                     auto const& glapi = ctx.render_context->opengl_api();
@@ -358,26 +376,24 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
                 ctx.render_context->apply();
 
+                ctx.render_context->begin_query(occlusion_query_iterator->second);
+
                 pipe.draw_box();
                 
 
                 ctx.render_context->end_query(occlusion_query_iterator->second);
 
-
+                // busy waiting - instead of doing something meaningful, we stall the CPU and therefore starve the GPU
                 while(!ctx.render_context->query_result_available(occlusion_query_iterator->second)) {
                     ;
                 }
 
                 ctx.render_context->collect_query_results(occlusion_query_iterator->second);
 
+                // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                 int64_t query_result = (*occlusion_query_iterator).second->result();
 
-#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-                std::cout << "Query Result: " << query_result << std::endl;
-#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-
-                // 
-                if(query_result > 100) {
+                if(query_result > 0) {
                     ++object_render_count;
                 } else {
                     render_current_node = false;
@@ -395,7 +411,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 ctx.render_context->apply();
 
                 if(!depth_complexity_vis) {
-                    switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                    switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
                                                         pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
                 } else {
                     switch_state_for_depth_complexity_vis(ctx, current_shader);
@@ -414,24 +430,24 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
         }
         
-        std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
-        
+#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+        std::cout << "Rendered " << object_render_count << "/" << type_sorted_node_ptrs_iterator->second.size() << " objects" << std::endl; 
+#endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE   
 
         auto const& glapi = ctx.render_context->opengl_api();
-        
-
         //reset state before we leave the pass. Direct calls to the glapi object can not be reset by 
         glapi.glColorMask(true, true, true, true);
         ctx.render_context->apply();
 
-        target.unbind(ctx);
+        render_target.unbind(ctx);
 
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
 }
 
-void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc) {
+void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
+                                                                           scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
     RenderContext const& ctx(pipe.get_context());
 
     auto& scene = *pipe.current_viewstate().scene;
@@ -440,7 +456,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
     if(sorted_occlusion_group_nodes != scene.nodes.end() && !sorted_occlusion_group_nodes->second.empty())
     {
-        auto& target = *pipe.current_viewstate().target;
+        auto& render_target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -452,10 +468,10 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 #endif
 
         bool write_depth = true;
-        target.bind(ctx, write_depth);
-        target.set_viewport(ctx);
+        render_target.bind(ctx, write_depth);
+        render_target.set_viewport(ctx);
 
-        scm::math::vec2ui render_target_dims(target.get_width(), target.get_height());
+        scm::math::vec2ui render_target_dims(render_target.get_width(), render_target.get_height());
 
 
         int view_id(camera.config.get_view_id());
@@ -508,6 +524,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 //push all children (currently in arbitrary order)
                 for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
 
+
+
                     // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
                     // the serializer however creates raw prts. Calling ".get()" on a shared ptr provides us with the
                     // raw ptr that is referenced by the manager object 
@@ -534,8 +552,40 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
                 // work on it (CHC-Style)
-                std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
+            //    std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
 
+
+         
+                auto const& glapi = ctx.render_context->opengl_api();
+                glapi.glColorMask(true, true, true, true);
+                ctx.render_context->set_depth_stencil_state(default_depth_test_);
+                ctx.render_context->set_blend_state(default_blend_state_);
+                ctx.render_context->apply();
+
+                //make sure that we currently have a trimesh node in our hands
+                if( (std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) ) {
+
+                    //std::cout << "ASSUMING THAT " << current_node->get_name() << " is a trimeshnode" << std::endl;
+                    auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_node));
+
+                    //if(!depth_complexity_vis) {
+                        switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
+                                                            pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+                    //} else {
+                      //  switch_state_for_depth_complexity_vis(ctx, current_shader);
+
+                    //}
+
+                    if(current_shader && tri_mesh_node->get_geometry())
+                    {
+                        upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+                        tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                    }
+
+
+                    //++rendered_nodes;
+            
+                }
 
                 //remove this node from the queue
                 traversal_queue.pop();
@@ -557,7 +607,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
 
 
-        target.unbind(ctx);
+        render_target.unbind(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name);
@@ -629,7 +679,7 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext con
 ////////////////////////////////////////////////////////////////////////////////
 
 void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 
-                                                                          MaterialShader* current_material, RenderTarget const& target, bool shadow_mode, std::size_t cam_uuid) {
+                                                                          MaterialShader* current_material, RenderTarget const& render_target, bool shadow_mode, std::size_t cam_uuid) {
             if(current_material != tri_mesh_node->get_material()->get_shader())
             {
                 current_material = tri_mesh_node->get_material()->get_shader();
@@ -664,12 +714,12 @@ void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(Render
                 if(current_shader)
                 {
                     current_shader->use(ctx);
-                    current_shader->set_uniform(ctx, math::vec2ui(target.get_width(), target.get_height()),
+                    current_shader->set_uniform(ctx, math::vec2ui(render_target.get_width(), render_target.get_height()),
                                                 "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
-                    current_shader->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
-                    current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
+                    current_shader->set_uniform(ctx, 1.0f / render_target.get_width(), "gua_texel_width");
+                    current_shader->set_uniform(ctx, 1.0f / render_target.get_height(), "gua_texel_height");
                     // hack
-                    current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+                    current_shader->set_uniform(ctx, ::get_handle(render_target.get_depth_buffer()), "gua_gbuffer_depth");
 
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
@@ -697,10 +747,10 @@ void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(Rend
 
 
     if(    ctx.render_context->current_blend_state() != color_accumulation_state_
-        || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
+        || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_writing_without_test_state_)
     {
         ctx.render_context->set_blend_state(color_accumulation_state_);
-        ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
+        ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
         ctx.render_context->apply_state_objects();
     }
 }

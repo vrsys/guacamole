@@ -58,9 +58,9 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
 
     // occlusion culling supported render functions
-    void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc);
-    void render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc);
-    void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc);
+    void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+    void render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+    void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
 
     void switch_state_for_depth_complexity_vis(RenderContext const& ctx, std::shared_ptr<ShaderProgram>& active_shader);
     void switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 
@@ -82,6 +82,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     scm::gl::depth_stencil_state_ptr default_depth_test_ = nullptr;
         // this depth stencil state disables depth testing and depth writing for the depth complexity visualization
     scm::gl::depth_stencil_state_ptr depth_stencil_state_no_test_no_writing_state_ = nullptr;
+
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_writing_without_test_state_ = nullptr;
 
     //this depth stencil state is supposed to be used for issueing occlusion queries
     scm::gl::depth_stencil_state_ptr depth_stencil_state_test_without_writing_state_ = nullptr;
