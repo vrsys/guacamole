@@ -268,13 +268,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
             });
 
-    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-            std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
-            std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / OcclusionCullingTrimeshPass";
-
-            pipe.begin_gpu_query(ctx, gpu_query_name);
-            pipe.begin_cpu_query(cpu_query_name);
-    #endif
 
             bool write_depth = true;
             target.bind(ctx, write_depth);
@@ -337,39 +330,36 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
 
             {
-                //switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
-                //                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
-
-
+                current_shader = occlusion_query_box_program_;
+                
                 occlusion_query_box_program_->use(ctx);
                 ctx.render_context->begin_query(occlusion_query_iterator->second);
 
                 auto vp_mat = view_projection_matrix;
-                if(tri_mesh_node->get_geometry())
-                {
-                    //upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+
+                //upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
 
 
-                    //retrieve_world_space_bounding_box
-                    auto world_space_bounding_box = tri_mesh_node->get_bounding_box();
+                //retrieve_world_space_bounding_box
+                auto world_space_bounding_box = tri_mesh_node->get_bounding_box();
 
-                    occlusion_query_box_program_->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
-                    occlusion_query_box_program_->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
-                    occlusion_query_box_program_->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+                current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
+                current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+                current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
 
 
-                    if(!occlusion_culling_geometry_vis) {
-                        auto const& glapi = ctx.render_context->opengl_api();
-                        glapi.glColorMask(false, false, false, false);
-                        ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
-                    } else {
-                        ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
-                    }
-
-                    ctx.render_context->apply();
-
-                    pipe.draw_box();
+                if(!occlusion_culling_geometry_vis) {
+                    auto const& glapi = ctx.render_context->opengl_api();
+                    glapi.glColorMask(false, false, false, false);
+                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
+                } else {
+                    ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
                 }
+
+                ctx.render_context->apply();
+
+                pipe.draw_box();
+                
 
                 ctx.render_context->end_query(occlusion_query_iterator->second);
 
@@ -385,7 +375,9 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 #ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
                 std::cout << "Query Result: " << query_result << std::endl;
 #endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-                if(query_result > 0) {
+
+                // 
+                if(query_result > 100) {
                     ++object_render_count;
                 } else {
                     render_current_node = false;
@@ -421,7 +413,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             }
 
         }
-        std::cout << "Rendered Nodes: " << rendered_nodes << std::endl;
         
         std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
         
@@ -435,10 +426,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
         target.unbind(ctx);
 
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        pipe.end_gpu_query(ctx, gpu_query_name);
-        pipe.end_cpu_query(cpu_query_name);
-#endif
         ctx.render_context->reset_state_objects();
         ctx.render_context->sync();
     }
