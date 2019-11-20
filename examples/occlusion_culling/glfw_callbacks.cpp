@@ -245,7 +245,12 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 // get occlusion culling tri mesh pass and toggle rendering mode
                 auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
                 bool current_dcv_status = occlusion_culling_tri_mesh_pass->get_enable_depth_complexity_vis();
-                occlusion_culling_tri_mesh_pass->set_enable_depth_complexity_vis(!current_dcv_status);
+                bool new_dcv_status = !current_dcv_status;
+                occlusion_culling_tri_mesh_pass->set_enable_depth_complexity_vis(new_dcv_status);
+
+                if(true == new_dcv_status) {
+                    occlusion_culling_tri_mesh_pass->set_enable_culling_geometry_vis(false);
+                }
 
 
                 // get light visibility pass and toggle pass on and off
@@ -268,6 +273,19 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         }
 
 
+        case 'n': {
+            //toggle print state on keypress
+            if(1 == action) {
+                // get occlusion culling tri mesh pass and toggle occlusion culling vis mode
+                auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                bool current_occlusion_culling_geometry_vis_status = occlusion_culling_tri_mesh_pass->get_enable_culling_geometry_vis();
+                occlusion_culling_tri_mesh_pass->set_enable_culling_geometry_vis(!current_occlusion_culling_geometry_vis_status);
+
+                occlusion_culling_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
         case 'b': {
             //toggle print state on keypress
             if(1 == action) {
@@ -276,6 +294,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
+  
 
         default: { //no assigned key
             break;
