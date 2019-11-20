@@ -144,7 +144,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
     gua::math::vec3f world_space_cam_pos_euclidean(world_space_cam_pos_homogeneous[0], world_space_cam_pos_homogeneous[1], world_space_cam_pos_homogeneous[2]);
 
 
-//  std::cout << "World space cam pos: " << world_space_cam_pos << std::endl;
+    //std::cout << "World space cam pos: " << world_space_cam_pos_euclidean << std::endl;
 
 
     switch(desc.get_occlusion_culling_strategy()) {
@@ -767,10 +767,10 @@ void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(Rend
 
 
     if(    ctx.render_context->current_blend_state() != color_accumulation_state_
-        || ctx.render_context->current_depth_stencil_state() != depth_stencil_state_no_test_no_writing_state_)
+        || ctx.render_context->current_depth_stencil_state() != default_depth_test_)
     {
         ctx.render_context->set_blend_state(color_accumulation_state_);
-        ctx.render_context->set_depth_stencil_state(depth_stencil_state_no_test_no_writing_state_);
+        ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->apply_state_objects();
     }
 }
