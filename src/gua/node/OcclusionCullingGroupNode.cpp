@@ -211,7 +211,7 @@ void OcclusionCullingGroupNode::sorting_based_on_axis(std::vector<std::shared_pt
 
 }
 
-void OcclusionCullingGroupNode::cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> scene_occlusion_group_node) {
+void OcclusionCullingGroupNode::cleanup_intermediate_nodes(std::shared_ptr<gua::node::Node> parent_node) {
 
     for(auto& intermediate_node : parent_node->get_children()) {
         intermediate_node->clear_children();
