@@ -73,11 +73,24 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
     inline virtual std::string get_type_string() const override {return "<OcclusionCullingGroupNode>";}
 
 
-    void build_tree_across_children();
+    void regroup_children();
 
   private:
     std::shared_ptr<Node> copy() const override;
+
+    // helper functions for regroup hierarchy
+    void cleanup_intermediate_nodes(gua::node::Node* scene_occlusion_group_node);
+
+    void sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis);
+
+    void split_children(gua::node::Node* scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector, 
+                        unsigned int candidate_index, unsigned int candidate_element_offset);
+    double calculate_cost(gua::node::Node* node);
 };
+
+
+
+
 
 } // namespace node
 } // namespace gua

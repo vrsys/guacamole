@@ -175,8 +175,8 @@ int main(int argc, char** argv)
     place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
-    //call function to redesign graph
-    split_scene_graph(occlusion_group_node);
+    occlusion_group_node->regroup_children();
+
 
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
@@ -202,7 +202,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(2560, 1440);
+    auto resolution = gua::math::vec2ui(1280, 720);
 
 
     configure_pipeline_descriptions();
