@@ -58,7 +58,8 @@ namespace gua
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
     : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution)), camera_block_(ctx.render_device), light_table_(new LightTable), last_resolution_(0, 0), last_description_(),
       global_substitution_map_(), passes_(), responsibilities_pre_render_(), responsibilities_post_render_(),
-      quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f)))
+      quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f))),
+      box_(new scm::gl::box_geometry(ctx.render_device, scm::math::vec3f(0.f, 0.f, 0.f), scm::math::vec3f(1.f, 1.f, 1.f)))
 {
     const float th = last_description_.get_blending_termination_threshold();
     global_substitution_map_["enable_abuffer"] = "0";
@@ -678,6 +679,10 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const { get_context(
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::draw_quad() { quad_->draw(context_.render_context); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::draw_box() { box_->draw(context_.render_context); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES

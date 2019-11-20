@@ -104,8 +104,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
 
     // these shaders and the compilshaders are used in combination with hardware occlusion queries
-    std::vector<ShaderProgramStage> occlusion_query_program_stages_;
-    std::shared_ptr<ShaderProgram> occlusion_query_programs_;
+    std::vector<ShaderProgramStage> occlusion_query_box_program_stages_;
+    std::shared_ptr<ShaderProgram> occlusion_query_box_program_;
 
 
     // these shaders are used only for visualizing the depth complexity in our system, together with disabled

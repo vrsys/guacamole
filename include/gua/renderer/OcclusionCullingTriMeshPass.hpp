@@ -41,10 +41,14 @@ class GUA_DLL OcclusionCullingTriMeshPassDescription : public PipelinePassDescri
     void set_enable_depth_complexity_vis(bool enable);
     bool get_enable_depth_complexity_vis() const;
   
+    void set_enable_culling_geometry_vis(bool enable);
+    bool get_enable_culling_geometry_vis() const;
+
   protected:
     PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
 
     bool enable_depth_complexity_vis_;
+    bool enable_culling_geometry_vis_;
 };
 
 } // namespace gua

@@ -117,6 +117,7 @@ class GUA_DLL Pipeline
     void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
     void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
     void draw_quad();
+    void draw_box();
 
 
 
@@ -161,6 +162,7 @@ class GUA_DLL Pipeline
     std::vector<PipelineResponsibility> responsibilities_pre_render_;
     std::vector<PipelineResponsibility> responsibilities_post_render_;
     scm::gl::quad_geometry_ptr quad_;
+    scm::gl::box_geometry_ptr box_;
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
 #define GUA_ENABLE_PROFILING_TIME_QUERIES
     time_query_collection queries_;

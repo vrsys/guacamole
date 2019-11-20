@@ -61,10 +61,10 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
       VTRenderer(ctx, smap),
 #endif
-      rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK)),
-      rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),
-      rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK)),
-      rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)),
+      rs_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_BACK)),   // if backface culling is enabled
+      rs_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE)),   // if backface culling is disabled
+      rs_wireframe_cull_back_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_BACK)),  //if backface culling is enabled and the object is supposed to be rendered as wireframe
+      rs_wireframe_cull_none_(ctx.render_device->create_rasterizer_state(scm::gl::FILL_WIREFRAME, scm::gl::CULL_NONE)),  //if backface culling is enabled and the object is supposed to be rendered as wireframe
       default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)),
       depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
 
@@ -74,8 +74,9 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)), 
       color_masks_disabled_state_(ctx.render_device->create_blend_state(false, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD, scm::gl::color_mask::COLOR_RED)), 
 
-      default_rendering_program_stages_(), default_rendering_programs_(),
-      depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr), 
+      default_rendering_program_stages_(), default_rendering_programs_(), //a map that stores as many shaders as nodes with different material are encountered. The material input is substituted
+      depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr),//only one shader that is independent of the actual node material
+      occlusion_query_box_program_stages_(), occlusion_query_box_program_(nullptr), //only one shader that is independent of the actual node material
       global_substitution_map_(smap)
 {
 #ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
@@ -85,15 +86,19 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
     
     std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
-
-    //std::string v_occl = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-    //std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+                                                          
+    std::string v_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.vert");
+    std::string f_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.frag");
 #else
     std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
     std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
 
     std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+
+    std::string v_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.vert");
+    std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.frag");
+
 #endif
 
     depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
@@ -101,12 +106,25 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 
     default_rendering_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_default_rendering_vis);
     default_rendering_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_default_rendering_vis);
+
+    occlusion_query_box_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_occlusion_query_box);
+    occlusion_query_box_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_occlusion_query_box);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+
+    if(nullptr == occlusion_query_box_program_) {
+        occlusion_query_box_program_ = std::make_shared<ShaderProgram>();
+        occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+    }
+
+    if(nullptr == depth_complexity_vis_program_) {
+        depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
+        depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+    }
         
     switch(desc.get_occlusion_culling_mode()) {
         case OcclusionCullingMode::No_Culling: {
@@ -278,11 +296,14 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             
         auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
         bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
-
+        bool occlusion_culling_geometry_vis = occlusion_culling_pipeline_pass_description->get_enable_culling_geometry_vis();
 
         uint64_t object_render_count = 0;
         int rendered_nodes = 0;
         
+
+        auto const& frustum = pipe.current_viewstate().frustum;
+        auto view_projection_matrix = frustum.get_projection() * frustum.get_view();
 
         for(auto const& object : sorted_objects->second) {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
@@ -316,29 +337,40 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
 
             {
-                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
-                                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+                //switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, target, 
+                //                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
 
+
+                occlusion_query_box_program_->use(ctx);
                 ctx.render_context->begin_query(occlusion_query_iterator->second);
 
-                if(current_shader && tri_mesh_node->get_geometry())
+                auto vp_mat = view_projection_matrix;
+                if(tri_mesh_node->get_geometry())
                 {
+                    //upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
 
 
-                    upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
-                
+                    //retrieve_world_space_bounding_box
+                    auto world_space_bounding_box = tri_mesh_node->get_bounding_box();
+
+                    occlusion_query_box_program_->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
+                    occlusion_query_box_program_->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+                    occlusion_query_box_program_->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
 
 
-                    //ctx.render_context->set_blend_state(color_masks_disabled_state_);
-                    ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
-
-                    auto const& glapi = ctx.render_context->opengl_api();
-                    glapi.glColorMask(false, false, false, false);
+                    if(!occlusion_culling_geometry_vis) {
+                        auto const& glapi = ctx.render_context->opengl_api();
+                        glapi.glColorMask(false, false, false, false);
+                        ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
+                    } else {
+                        ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
+                    }
 
                     ctx.render_context->apply();
 
-                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                    pipe.draw_box();
                 }
+
                 ctx.render_context->end_query(occlusion_query_iterator->second);
 
 
@@ -394,9 +426,10 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         std::cout << "Rendered " << object_render_count << "/" << sorted_objects->second.size() << " objects" << std::endl; 
         
 
-        // it might happen that schism does not expose some functionality - then we can ask schism directly
-        // for the api object
         auto const& glapi = ctx.render_context->opengl_api();
+        
+
+        //reset state before we leave the pass. Direct calls to the glapi object can not be reset by 
         glapi.glColorMask(true, true, true, true);
         ctx.render_context->apply();
 
@@ -670,11 +703,6 @@ void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(Render
 ////////////////////////////////////////////////////////////////////////////////
 
 void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(RenderContext const& ctx, std::shared_ptr<ShaderProgram>& current_shader) {
-    if(nullptr == depth_complexity_vis_program_) {
-        depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
-        depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
-    }
-
     if(current_shader != depth_complexity_vis_program_) {
         current_shader = depth_complexity_vis_program_;
         current_shader->use(ctx);
