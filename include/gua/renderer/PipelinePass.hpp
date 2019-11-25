@@ -128,12 +128,16 @@ class GUA_DLL PipelinePassDescription
     uint64_t get_occlusion_culling_fragment_threshold() const;
     void set_occlusion_culling_fragment_threshold(uint64_t fragment_threshold);
 
+    void set_enable_coarse_depth_sorting(bool enable);
+    bool get_enable_coarse_depth_sorting() const;
+
     void enable(bool enable);
     bool is_enabled() const;
 
   private:
     void* user_data_ = nullptr;
 
+    bool enable_coarse_depth_sorting_ = false;
 
     // describes the occlusion culling strategy
     OcclusionCullingStrategy occlusion_culling_strategy_ = OcclusionCullingStrategy::No_Culling;
