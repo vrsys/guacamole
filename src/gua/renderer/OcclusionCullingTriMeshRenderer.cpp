@@ -190,10 +190,44 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             RenderTarget& render_target = *pipe.current_viewstate().target;
             auto const& camera = pipe.current_viewstate().camera;
 
-            std::sort(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [](node::Node* a, node::Node* b) {
-                return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
-            });
 
+            auto start = std::chrono::system_clock::now();
+
+
+
+            if(desc.get_enable_coarse_depth_sorting()) {
+
+
+                std::for_each(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), 
+                              type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [this, &world_space_cam_pos] (node::Node* n) {
+                                precomputed_distances_[n] = scm::math::length_sqr(world_space_cam_pos - n->get_world_position());
+                              } );
+
+                std::sort(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [&](node::Node* a, node::Node* b) {
+
+                    double dist_to_cam_node_a = precomputed_distances_[a];
+                    double dist_to_cam_node_b = precomputed_distances_[b];
+
+                    auto const& MaterialShader_a = reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader();
+                    auto const& MaterialShader_b = reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();                
+
+                    return (MaterialShader_a < MaterialShader_b) || 
+                         ( (MaterialShader_a == MaterialShader_b) && (dist_to_cam_node_a < dist_to_cam_node_b) ) //if the shaders are the same, sort 
+                        
+                        ;
+                });
+            } else {
+                std::sort(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [&](node::Node* a, node::Node* b) {
+                    auto const& MaterialShader_a = reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader();
+                    auto const& MaterialShader_b = reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();                
+
+                    return (MaterialShader_a < MaterialShader_b);
+                });                
+            }
+            auto end = std::chrono::system_clock::now();
+
+            std::chrono::duration<double> diff = end-start;
+            std::cout << "Sorting time " << diff.count() << " s\n";
 
             bool write_depth = true;
             render_target.bind(ctx, write_depth);

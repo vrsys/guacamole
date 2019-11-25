@@ -118,6 +118,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     SubstitutionMap global_substitution_map_;
 
+    std::map<node::Node*, double> precomputed_distances_;
+
 };
 
 } // namespace gua

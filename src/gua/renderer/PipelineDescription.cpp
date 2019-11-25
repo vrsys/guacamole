@@ -209,4 +209,12 @@ void PipelinePassDescription::set_occlusion_culling_fragment_threshold(uint64_t 
     occlusion_culling_fragment_threshold_ = fragment_threshold;
 }
 
+void PipelinePassDescription::set_enable_coarse_depth_sorting(bool enable) {
+    enable_coarse_depth_sorting_ = enable;
+}
+
+bool PipelinePassDescription::get_enable_coarse_depth_sorting() const {
+    return enable_coarse_depth_sorting_;
+}
+
 } // namespace gua
