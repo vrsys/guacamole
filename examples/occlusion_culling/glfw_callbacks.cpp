@@ -57,7 +57,7 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
 
-    //std::cout << "scancode: " << scancode << std::endl;
+    std::cout << "scancode: " << scancode << std::endl;
     switch(scancode) {
         
         // NUMPAD 8
@@ -88,6 +88,22 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 oc_tri_mesh_pass->set_occlusion_culling_fragment_threshold(new_num_occlusion_threshold);
 
                 std::cout << "Set Approximate Culling Fragment Threshold to: " << new_num_occlusion_threshold << std::endl; 
+
+                oc_tri_mesh_pass->touch();
+            }
+            break;
+        }
+
+        // NUMPAD 1
+        case 87: {
+            if(action == 1) {
+                auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+                bool was_enabled = oc_tri_mesh_pass->get_enable_coarse_depth_sorting();
+
+                bool will_be_enabled = !was_enabled;
+                oc_tri_mesh_pass->set_enable_coarse_depth_sorting(will_be_enabled);
+
+                std::cout << "Enable depth sorting: " << will_be_enabled << std::endl; 
 
                 oc_tri_mesh_pass->touch();
             }
