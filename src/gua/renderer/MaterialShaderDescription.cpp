@@ -69,7 +69,7 @@ void MaterialShaderDescription::load_from_json(std::string const& json)
 
     if(value["vertex_methods"] != Json::Value::null && value["vertex_methods"].isArray())
     {
-        for(int i(0); i < value["vertex_methods"].size(); ++i)
+        for(unsigned int i = 0; i < value["vertex_methods"].size(); ++i)
         {
             auto method(value["vertex_methods"][i]);
             auto vertex_method(std::make_shared<MaterialShaderMethod>());
@@ -91,7 +91,7 @@ void MaterialShaderDescription::load_from_json(std::string const& json)
 
     if(value["fragment_methods"] != Json::Value::null && value["fragment_methods"].isArray())
     {
-        for(int i(0); i < value["fragment_methods"].size(); ++i)
+        for(unsigned int i = 0; i < value["fragment_methods"].size(); ++i)
         {
             auto method(value["fragment_methods"][i]);
             auto fragment_method(std::make_shared<MaterialShaderMethod>());
