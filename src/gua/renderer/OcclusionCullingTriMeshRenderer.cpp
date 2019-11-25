@@ -179,43 +179,46 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
                                                         scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
    
+        //context means, we are working with the gpu
         RenderContext const& ctx(pipe.get_context());
 
         SerializedScene& scene = *pipe.current_viewstate().scene;
-        auto type_sorted_tri_mesh_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
+        auto type_sorted_tri_mesh_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode)))); //What does this look for?
 
-
+        //binding G-Buffer and sorting nodes by material->shader??
         if(type_sorted_tri_mesh_node_ptrs_iterator != scene.nodes.end() && !type_sorted_tri_mesh_node_ptrs_iterator->second.empty())
         {
             RenderTarget& render_target = *pipe.current_viewstate().target;
             auto const& camera = pipe.current_viewstate().camera;
 
+            //nach Material sortiert um weniger State Changes zu haben
             std::sort(type_sorted_tri_mesh_node_ptrs_iterator->second.begin(), type_sorted_tri_mesh_node_ptrs_iterator->second.end(), [](node::Node* a, node::Node* b) {
                 return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
             });
 
 
-            bool write_depth = true;
+            bool write_depth = true; //if we set to false, it is all in light greyscale and has a black square projected. Why do we see a bit depth still?
             render_target.bind(ctx, write_depth);
             render_target.set_viewport(ctx);
 
             scm::math::vec2ui render_target_dims(render_target.get_width(), render_target.get_height());
 
 
-            // currently not needed
+            // currently not needed - for different views?
             //int view_id(camera.config.get_view_id());
 
             MaterialShader* current_material(nullptr);
             std::shared_ptr<ShaderProgram> current_shader;
-            auto current_rasterizer_state = rs_cull_back_;
+            auto current_rasterizer_state = rs_cull_back_; //backface culling
             ctx.render_context->apply();
 
+            // Why by material? Because materials are just pointers and we need less state changes?
             // loop through all objects, sorted by material ----------------------------
             //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
 
-            
-        auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
-        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
+        //What is the reinterpret cast doing here (converts between types by reinterpreting underlying bit pattern)    
+        auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc); 
+        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis(); //check if true or false by keyboard?
 
 
         uint object_render_count = 0;
@@ -227,24 +230,24 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 continue;
             }
 
-            if(!tri_mesh_node->get_render_to_gbuffer())
+            if(!tri_mesh_node->get_render_to_gbuffer()) //sometimes nodes should be invisible and we can get with this function
             {
                 continue;
             }
 
-            if(!depth_complexity_vis) { // we render the scene normally
+            if(!depth_complexity_vis) { // we render the scene normally if depth complexity visualisation is false
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
-                switch_state_for_depth_complexity_vis(ctx, current_shader);
+                switch_state_for_depth_complexity_vis(ctx, current_shader); //rendering with depth complexity on
 
             }
 
-            if(current_shader && tri_mesh_node->get_geometry())
+            if(current_shader && tri_mesh_node->get_geometry()) //How does this work? current_shader is a pointer to a Shader Program? What do we do here?
             {
                 upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
                 
-                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                tri_mesh_node->get_geometry()->draw(pipe.get_context()); //Here we draw!!! 
 
                 ++object_render_count;
             }
@@ -254,10 +257,10 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
         std::cout << "Rendered " << object_render_count << "/" << type_sorted_tri_mesh_node_ptrs_iterator->second.size() << " objects" << std::endl; 
 #endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 
-        render_target.unbind(ctx);
+        render_target.unbind(ctx); 
 
 
-        ctx.render_context->reset_state_objects();
+        ctx.render_context->reset_state_objects(); //We just reset the state? 
         ctx.render_context->sync();
     }
 }
@@ -275,20 +278,20 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         // since we are prototyping the naive stop and wait algorithm without our occlusion culling group node in mind, we look for all trimesh nodes
         SerializedScene& scene = *pipe.current_viewstate().scene;
 
-        // iter
+        // Here we go in the map (of serialize scene) and look for all nodes from the Type TriMesh??? 
         auto type_sorted_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
 
 
 
-        // check if any nodes at all were serialized (nodes that are frustum culled would not appear here)
+        // check if any nodes at all were serialized (nodes that are frustum culled would not appear here) !! Important !!
         if(type_sorted_node_ptrs_iterator != scene.nodes.end() && !type_sorted_node_ptrs_iterator->second.empty())
         {
-            // the RenderTarget object target 
+            // the RenderTarget object target - binding GBuffer
             RenderTarget& render_target = *pipe.current_viewstate().target;
             auto const& camera = pipe.current_viewstate().camera;
 
-
+            //Sorting based on material to minimize state-changes
             std::sort(type_sorted_node_ptrs_iterator->second.begin(), type_sorted_node_ptrs_iterator->second.end(), [](node::Node* a, node::Node* b) {
                 return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
             });
@@ -318,7 +321,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         bool occlusion_culling_geometry_vis = occlusion_culling_pipeline_pass_description->get_enable_culling_geometry_vis();
 
         uint64_t object_render_count = 0;
-        int rendered_nodes = 0;
+        int rendered_nodes = 0; //will be interesting once we use the OCGroup Node Tree
         
 
 
@@ -334,8 +337,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 continue;
             }
 
-
-
             auto current_node_path = tri_mesh_node_ptr->get_path();
 
             bool render_current_node = true;
@@ -344,15 +345,16 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
 
             // if we didn't create an occlusion query for this node (based on path) for this context
+            // but we did? So doing it 2 times?
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
 
                 // get occlusion query mode
 
-                //default: Number of Sampled Passed
+                //default: Number of Sampled Passed -> if 0 it is invisible?
                 auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
 
 
-                // change occlusion query type if we only want to know whether any fragment was visible
+                // change occlusion query type if we only want to know whether any fragment was visible -> a bool?
                 if( OcclusionQueryType::Any_Samples_Passed == desc.get_occlusion_query_type() ) {
                     occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
                 }
@@ -365,13 +367,14 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             // now we can be sure that the occlusion query object was created. Start occlusion querying
             {
-                current_shader = occlusion_query_box_program_;
+                current_shader = occlusion_query_box_program_; //Where is this coming from? What does it do?
 
                 current_shader->use(ctx);
                 auto vp_mat = view_projection_matrix;
                 //retrieve_world_space_bounding_box
                 auto world_space_bounding_box = tri_mesh_node_ptr->get_bounding_box();
 
+                //Why do we apply this to the shader? Maybe revisit what a shader does?
                 current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
                 current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
                 current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
@@ -379,13 +382,14 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 if(!occlusion_culling_geometry_vis) {
 
                     // IMPORTANT! IN THIS FUNCTION THE COLOR CHANNELS ARE DISABLED AND DEPTH MASK IS DISABLED AS WELL
+                    // -> checks for bool from pp-desc,  disables color channels, tests but doesnt write depth
                     set_occlusion_query_states(ctx);
                 } else {
                     ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
                 }
 
                 ////////////////////// OCCLUSION QUERIES BEGIN -- SUBMIT TO GPU
-                ctx.render_context->begin_query(occlusion_query_iterator->second);
+                ctx.render_context->begin_query(occlusion_query_iterator->second); //second again?
                 //pipe knows context
                 pipe.draw_box();
                 ctx.render_context->end_query(occlusion_query_iterator->second);
@@ -404,6 +408,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
                 switch( desc.get_occlusion_query_type() ) {
                     case OcclusionQueryType::Number_Of_Samples_Passed:
+                        //So if we define a certain threshold, then check if the number of returned fragments is higher than threshold, only then render (not conservative?)
                         if(query_result > desc.get_occlusion_culling_fragment_threshold()) {
                             ++object_render_count;
                         } else {
@@ -411,6 +416,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                         }
                     break;
 
+                    //conservative approach. If any passed we render
                     case OcclusionQueryType::Any_Samples_Passed:
                         if(query_result > 0) {
                             ++object_render_count;
@@ -427,11 +433,11 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
 
 
-            
+            //be default true, only after occlusion query set to false, if threshold(or any) didnt pass
             if(render_current_node) {
                 auto const& glapi = ctx.render_context->opengl_api();
 
-                //enable all color channels again (otherwise we would see nothing)
+                //enable all color channels again (otherwise we would see nothing) --> resetting states?
                 glapi.glColorMask(true, true, true, true);
                 ctx.render_context->set_depth_stencil_state(default_depth_test_);
                 ctx.render_context->set_blend_state(default_blend_state_);
@@ -445,7 +451,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
                 }
 
-                if(current_shader && tri_mesh_node_ptr->get_geometry())
+                if(current_shader && tri_mesh_node_ptr->get_geometry()) //still dont understand this part
                 {
                     upload_uniforms_for_node(ctx, tri_mesh_node_ptr, current_shader, pipe, current_rasterizer_state);
                     tri_mesh_node_ptr->get_geometry()->draw(pipe.get_context());
@@ -462,7 +468,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 #endif //OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE   
 
         auto const& glapi = ctx.render_context->opengl_api();
-        //reset state before we leave the pass. Direct calls to the glapi object can not be reset by 
+        //reset state before we leave the pass. Direct calls to the glapi object can not be reset by --> this is at the very end of each what? frame?
         glapi.glColorMask(true, true, true, true);
         ctx.render_context->apply();
 
