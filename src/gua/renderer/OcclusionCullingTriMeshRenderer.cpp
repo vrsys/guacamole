@@ -205,7 +205,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             scm::math::vec2ui render_target_dims(render_target.get_width(), render_target.get_height());
 
 
-            // currently not needed - for different views?
+            // currently not needed - in case we make effects with different cameras
             //int view_id(camera.config.get_view_id());
 
             MaterialShader* current_material(nullptr); //set current material to null for first comparison
@@ -213,13 +213,13 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             auto current_rasterizer_state = rs_cull_back_; //backface culling
             ctx.render_context->apply();
 
-            // Why by material? Because materials are just pointers and we need less state changes?
+
             // loop through all objects, sorted by material ----------------------------
             //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
 
-        //What is the reinterpret cast doing here? (converts between types by reinterpreting underlying bit pattern)    
+        //What is the reinterpret cast doing here? / if not reinterpret cast, the depth compl vis will not be found in pipeline pass (converts between types by reinterpreting underlying bit pattern)    
         auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc); 
-        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis(); //check if true or false by keyboard?
+        bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis(); 
 
 
         uint object_render_count = 0;
@@ -238,7 +238,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
             }
 
             if(!depth_complexity_vis) { // we render the scene normally if depth complexity visualisation is false. 
-                //We check if the material is the same as before and only then initiate state change(?) -> updates current shader (reference) and material (pointer)
+                //We check if the material is the same as before and only then initiate state change-> updates current shader (reference) and material (pointer)
                 switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
                                                     pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
             } else {
@@ -252,7 +252,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 //setting backface, wireframe and normals. current shader as reference
                 upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
                 
-                tri_mesh_node->get_geometry()->draw(pipe.get_context()); //Here we draw!!! Why dont we use ctx?
+                tri_mesh_node->get_geometry()->draw(pipe.get_context()); //Here we draw!!!
 
                 ++object_render_count;
             }
@@ -265,7 +265,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
         render_target.unbind(ctx); 
 
 
-        ctx.render_context->reset_state_objects(); //We just reset the state? 
+        ctx.render_context->reset_state_objects(); 
         ctx.render_context->sync();
     }
 }
@@ -283,13 +283,13 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
         // since we are prototyping the naive stop and wait algorithm without our occlusion culling group node in mind, we look for all trimesh nodes
         SerializedScene& scene = *pipe.current_viewstate().scene;
 
-        // Here we go in the map (of serialize scene) and look for all nodes from the Type TriMesh??? 
+        // Here we go in the map (of serialize scene) and look for all nodes from the Type TriMesh
         auto type_sorted_node_ptrs_iterator(scene.nodes.find(std::type_index(typeid(node::TriMeshNode))));
 
 
 
 
-        // check if any nodes at all were serialized (nodes that are frustum culled would not appear here) !! Important !! -where does frustrum culling take place?
+        // check if any nodes at all were serialized (nodes that are frustum culled would not appear here) !! Important !! 
         if(type_sorted_node_ptrs_iterator != scene.nodes.end() && !type_sorted_node_ptrs_iterator->second.empty())
         {
             // the RenderTarget object target - binding GBuffer
@@ -342,7 +342,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 continue;
             }
 
-            //is this only useful for when using a graph?
+
             auto current_node_path = tri_mesh_node_ptr->get_path();
 
             bool render_current_node = true;
@@ -351,7 +351,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
 
             // if we didn't create an occlusion query for this node (based on path) for this context
-            // does this check if map is empty?
+            // should only happen if a node has not been in frustum, because in map there is no oc-query object yet 
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
 
                 // get occlusion query mode
@@ -365,23 +365,23 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                     occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
                 }
 
-                //Fuegen neues object (path, query object) zur map im ctx hinzu
+                //Fuegen neues object (path, query object) zur map im ctx hinzu    //Damit wir Iterator an der Hand haben
                 ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
             
-                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path); //warum nochmal machen wie in Zeile 351?
+                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
             } 
 
 
             // now we can be sure that the occlusion query object was created. Start occlusion querying
             {
-                current_shader = occlusion_query_box_program_; //Where is this coming from? What does it do?
+                current_shader = occlusion_query_box_program_; //Red boxes
 
                 current_shader->use(ctx);
                 auto vp_mat = view_projection_matrix;
                 //retrieve_world_space_bounding_box
                 auto world_space_bounding_box = tri_mesh_node_ptr->get_bounding_box();
 
-                //We want to render the bounding boxes (?)
+                //We want to render the red boxes
                 current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
                 current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
                 current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
@@ -397,8 +397,8 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
                 ////////////////////// OCCLUSION QUERIES BEGIN -- SUBMIT TO GPU
                 ctx.render_context->begin_query(occlusion_query_iterator->second); //second is the query object from the map
-                //pipe knows context --> send a bb and thats why we draw a box?
-                pipe.draw_box();
+                //pipe knows context 
+                pipe.draw_box(); // when we draw, the query is admitted for all drawn objects. in current_shader we create bb
                 ctx.render_context->end_query(occlusion_query_iterator->second);
   
                 // busy waiting - instead of doing something meaningful, we stall the CPU and therefore starve the GPU
@@ -488,24 +488,21 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
 void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
                                                                            scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
+    
+    //REMEMBER > can get distance to camera already do not implement ourselves. get from ctx or viewstate
     RenderContext const& ctx(pipe.get_context());
 
     auto& scene = *pipe.current_viewstate().scene;
+
     auto sorted_occlusion_group_nodes(scene.nodes.find(std::type_index(typeid(node::OcclusionCullingGroupNode))));
 
 
+    //if oc-group note existed in map of serialized scene and is not empty
     if(sorted_occlusion_group_nodes != scene.nodes.end() && !sorted_occlusion_group_nodes->second.empty())
     {
         auto& render_target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-        std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-
-        pipe.begin_gpu_query(ctx, gpu_query_name);
-        pipe.begin_cpu_query(cpu_query_name);
-#endif
 
         bool write_depth = true;
         render_target.bind(ctx, write_depth);
@@ -530,6 +527,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
 
         // reset visibility status if the node was never visited
+        // only one element is in the vector. is it necessary to do a for loop here? Or for the case we have more than one oc-group_node
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second ) {
 
             // if we never checked set the visibility status for this node, it will be 0.
@@ -543,8 +541,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 continue;
             }
 
-
-
             std::cout << "Setting hierarchy to visible" << std::endl;
             // use a queue for breadth first search (stack would do breadth first search)
             std::queue<gua::node::Node*> traversal_queue;
@@ -552,6 +548,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
             // add root node of our occlusion hierarchy to the traversal queue 
             traversal_queue.push(occlusion_group_node);
 
+            //this parts traverses the tree and sets all nodes to visible
             while(!traversal_queue.empty()) {
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
@@ -563,8 +560,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
                 //push all children (currently in arbitrary order)
                 for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
-
-
 
                     // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
                     // the serializer however creates raw prts. Calling ".get()" on a shared ptr provides us with the
@@ -593,9 +588,22 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 gua::node::Node* current_node = traversal_queue.front();
                 // work on it (CHC-Style)
             //    std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
+                /***
+                    Here we make our query:
+                        - Check if visible (in first frame it will be true)
+                        - get BB from current node
+                        - set state changes (set_occlusion_query_states)
+                        - make Query for BB
+                        - wait for result
+                        - receive result
+                            -> if invisible, dont traverse more, if visible
+                            -> if visible: check if interior or leaf 
+                                -> if interior node -> sort children front to back, do all over (line 643 cont.)
+                                -> if leaf - render node (line 606 cont.)
+                ***/
 
 
-         
+                //Resetting states for drawing for leaf nodes
                 auto const& glapi = ctx.render_context->opengl_api();
                 glapi.glColorMask(true, true, true, true);
                 ctx.render_context->set_depth_stencil_state(default_depth_test_);
@@ -630,7 +638,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 //remove this node from the queue
                 traversal_queue.pop();
 
-                //push all children (currently in arbitrary order)
+                //push all children (currently in arbitrary order - preferred in front to back sort via distance)
+                //here we redo for visible interior nodes
                 for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
 
                     // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
@@ -648,12 +657,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
 
         render_target.unbind(ctx);
-
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        pipe.end_gpu_query(ctx, gpu_query_name);
-        pipe.end_cpu_query(cpu_query_name);
-#endif
-
 
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);

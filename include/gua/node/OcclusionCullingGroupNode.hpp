@@ -91,7 +91,6 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
 
 
 
-
 } // namespace node
 } // namespace gua
 
