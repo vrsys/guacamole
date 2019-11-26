@@ -29,7 +29,65 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
 }
 
 
-void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::Node> scene_root_node) {
+void create_occlusion_scene(std::string const& model_path_plane, std::string const& model_path_objects, std::shared_ptr<gua::node::Node> scene_root_node) {
+    //create a plane which is standing vertically in the world.
+    std::size_t found = model_path_plane.find_last_of("/\\"); //could be entered directly by path
+    std::string obj_name = model_path_plane.substr(found+1);
+
+    std::string const random_object_name = obj_name;
+    gua::TriMeshLoader loader;
+
+    auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    model_material->set_show_back_faces(true);
+    model_material->set_render_wireframe(false);
+
+    auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
+
+    auto norm_scale_mat = new_model->get_transform();
+
+    gua::math::mat4 model_trans =   
+                                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, 0.0f)) * // 5. we apply the random translation
+                                gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
+                                norm_scale_mat;  
+
+    // override the model's transform with our calculated transformation
+    new_model->set_transform(model_trans);
+    new_model->set_draw_bounding_box(false);
+    scene_root_node->add_child(new_model);
+    scene_root_node->set_draw_bounding_box(false);
+
+    //creating teapots
+    std::size_t found_pot = model_path_objects.find_last_of("/\\"); //could be entered directly by path
+    std::string obj_name_pot = model_path_objects.substr(found+1);
+
+    for (int i = 0; i < 10; ++i) {
+        std::string const random_object_name_pot = obj_name_pot;
+        gua::TriMeshLoader loader_pot;
+
+        auto model_material_pot(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+        model_material_pot->set_show_back_faces(true);
+        model_material_pot->set_render_wireframe(false);
+
+        auto new_model_pot(loader.create_geometry_from_file(random_object_name_pot, model_path_objects, model_material, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
+
+        auto norm_scale_mat_pot = new_model_pot->get_transform();
+
+        gua::math::mat4 model_trans_pot =   
+                                    gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, float(-5.0f+i))) * // 5. we apply the random translation
+                                    gua::math::mat4(scm::math::make_scale(0.5f, 0.5f, 0.5f)) *
+                                    norm_scale_mat_pot;  
+
+        // override the model's transform with our calculated transformation
+        new_model_pot->set_transform(model_trans_pot);
+        new_model_pot->set_draw_bounding_box(false);
+        scene_root_node->add_child(new_model_pot);
+    }
+
+    scene_root_node->set_draw_bounding_box(false);
+}
+
+void place_objects_randomly(std::string const& model_path,  int32_t num_models_to_place, float random_pos_cube_dimensions,
+    std::shared_ptr<gua::node::Node> scene_root_node) {
 
     std::size_t found = model_path.find_last_of("/\\");
     

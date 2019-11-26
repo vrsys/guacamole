@@ -55,6 +55,7 @@ std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description
 std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
+std::string model_path_plane = "data/objects/plane.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
 float one_d_cube_size = 8.0; //8m*8m*8m cube for random object placement
 
@@ -172,8 +173,9 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
+    create_occlusion_scene(model_path_plane, model_path, occlusion_group_node);
 
     occlusion_group_node->regroup_children();
 
