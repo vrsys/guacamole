@@ -227,6 +227,8 @@ struct GUA_DLL RenderContext
 
     mutable std::unordered_map<std::string, scm::gl::occlusion_query_ptr> occlusion_query_objects;
 
+    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> shader_storage_buffer_objects;
+
     /**
      * Resources associated with this context
      */

@@ -30,9 +30,9 @@ void CameraUniformBlock::update(
         uniform_block_->position = math::vec4(camera_position, 1.0);
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
-        for(unsigned i(0); i < 64 && i < clipping_planes.size(); ++i)
+        for(unsigned int clipping_plane_idx = 0; clipping_plane_idx < 64 && clipping_plane_idx < clipping_planes.size(); ++clipping_plane_idx)
         {
-            uniform_block_->clipping_planes[i] = math::vec4f(clipping_planes[i]);
+            uniform_block_->clipping_planes[clipping_plane_idx] = math::vec4f(clipping_planes[clipping_plane_idx]);
         }
         uniform_block_->clipping_plane_count = clipping_planes.size();
         uniform_block_->cyclops_position = math::vec4(cyclops_position, 1.0);
@@ -79,9 +79,9 @@ void CameraUniformBlock::updateHMD(RenderContext const &context, Frustum const &
         uniform_block_->position = camera_position;
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
-        for(unsigned i(0); i < 64 && i < clipping_planes.size(); ++i)
+        for(unsigned int clipping_plane_idx = 0; clipping_plane_idx < 64 && clipping_plane_idx < clipping_planes.size(); ++clipping_plane_idx)
         {
-            uniform_block_->clipping_planes[i] = math::vec4f(clipping_planes[i]);
+            uniform_block_->clipping_planes[clipping_plane_idx] = math::vec4f(clipping_planes[clipping_plane_idx]);
         }
         uniform_block_->clipping_plane_count = clipping_planes.size();
         uniform_block_->cyclops_position = math::vec4(cyclops_position, 1.0);

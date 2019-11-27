@@ -31,6 +31,7 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/renderer/LodResource.hpp>
+#include <gua/renderer/ProgrammableLodResource.hpp>
 
 // external headers
 #include <lamure/ren/dataset.h>
