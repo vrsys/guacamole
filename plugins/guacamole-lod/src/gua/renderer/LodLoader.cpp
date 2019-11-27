@@ -54,6 +54,9 @@ LodLoader::LodLoader() : _supported_file_extensions_model_file(), _supported_fil
 
 
 std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_vis_file(std::string const& group_node_name, std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
+    
+    std::vector<std::string> model_files_to_load;
+
     try {
         if(!is_supported_vis_file(vis_file_name)) {
             throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
@@ -67,13 +70,22 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
                 boost::trim(line_buffer);
 
                 if(is_supported_model_file(line_buffer)) {
-                    auto const& current_point_cloud_shared_ptr = load_lod_pointcloud(group_node_name + "_" + std::to_string(model_count), line_buffer, fallback_material, flags);
-                    loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
+                    model_files_to_load.push_back(line_buffer);
                 }
   
             }
 
             in_vis_filestream.close();
+
+            // after the vis file was parsed, load all models and set the common properties
+
+            for(auto const& model_path : model_files_to_load) {
+                auto const& current_point_cloud_shared_ptr = load_lod_pointcloud(group_node_name + "_" + std::to_string(model_count), model_path, fallback_material, flags);
+                    
+                loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
+
+                //set attributes here
+            }
 
             return loaded_point_cloud_models;
         }
