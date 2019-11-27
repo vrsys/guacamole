@@ -72,8 +72,10 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
 
         auto norm_scale_mat_pot = new_model_pot->get_transform();
 
+        float y_pos = std::sin(i / 30.0);
+
         gua::math::mat4 model_trans_pot =   
-                                    gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, float(-5.0f+i))) * // 5. we apply the random translation
+                                    gua::math::mat4(scm::math::make_translation(0.0f, 0.5f * y_pos , float(-5.0f+i))) * // 5. we apply the random translation
                                     gua::math::mat4(scm::math::make_scale(0.5f, 0.5f, 0.5f)) *
                                     norm_scale_mat_pot;  
 
