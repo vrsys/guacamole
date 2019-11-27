@@ -140,6 +140,11 @@ void PLodNode::set_enable_backface_culling_by_normal(bool const enable_backface_
 bool PLodNode::get_enable_backface_culling_by_normal() const { return enable_backface_culling_by_normal_; }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_data_collection_file_path(std::string const& map_file_path) {
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
 {
     // first of all, check bbox

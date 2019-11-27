@@ -53,7 +53,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform)
+LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform), data_collection_per_context_({})
 {
     //compute bounds
     auto bvh = lamure::ren::model_database::get_instance()->get_model(model_id)->get_bvh();
