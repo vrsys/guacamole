@@ -345,6 +345,8 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             auto current_node_path = tri_mesh_node_ptr->get_path();
 
+
+
             bool render_current_node = true;
 
             // get iterator to occlusion query associated with node (currently by path)
@@ -355,7 +357,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
 
                 // get occlusion query mode
-
+                std::cout << "Creating occlusion query for node with path: " << current_node_path << std::endl;
                 //default: Number of Sampled Passed -> if 0 it is invisible?
                 auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
 
@@ -591,6 +593,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 /***
                     Here we make our query:
                         - Check if visible (in first frame it will be true)
+                        - wichtig uniforms setzen -> da wir sie in die Welt setzen
                         - get BB from current node
                         - set state changes (set_occlusion_query_states)
                         - make Query for BB
@@ -599,6 +602,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                             -> if invisible, dont traverse more, if visible
                             -> if visible: check if interior or leaf 
                                 -> if interior node -> sort children front to back, do all over (line 643 cont.)
+                                   --> push all children depth sorted (distance to cam) into traversal queue --> save distance during serialization to node and sort based on this
                                 -> if leaf - render node (line 606 cont.)
                 ***/
 

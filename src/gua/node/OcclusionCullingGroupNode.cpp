@@ -41,6 +41,32 @@ std::shared_ptr<Node> OcclusionCullingGroupNode::copy() const { return std::make
 
 
 void OcclusionCullingGroupNode::regroup_children(){
+
+    uint32_t global_node_renaming_index = 0;
+
+    std::queue< std::shared_ptr<gua::node::Node> > renaming_queue;
+
+    for(auto& child : get_children() ) {
+        renaming_queue.push(child);
+    }
+
+    while(!renaming_queue.empty()) {
+
+        auto& current_node_to_rename = renaming_queue.front();
+        renaming_queue.pop();
+
+        std::string new_node_name = current_node_to_rename->get_name() + "_" + std::to_string(global_node_renaming_index);
+        current_node_to_rename->set_name(new_node_name);
+        ++global_node_renaming_index;
+
+        for(auto& child : current_node_to_rename->get_children()) {
+            renaming_queue.push(child); 
+        }
+    }
+
+
+
+
     std::queue<gua::node::Node*> splitting_queue;
 
     //if we have less than 3 children, then the grouping is as good as it gets
@@ -49,6 +75,7 @@ void OcclusionCullingGroupNode::regroup_children(){
     }
 
     std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
+
 
     while(!splitting_queue.empty() ) {
         //get next node to split
@@ -96,6 +123,8 @@ void OcclusionCullingGroupNode::regroup_children(){
         // restore best candidate configuration by splitting once more
         split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
 
+
+
         auto children = current_node_to_split->get_children();
 
         for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
@@ -103,6 +132,9 @@ void OcclusionCullingGroupNode::regroup_children(){
 
             if(current_child->get_children().size() > 2) {
             	gua::node::Node* child_ptr = children[child_idx].get();
+
+
+
                 splitting_queue.push(child_ptr);
             }
 
@@ -130,8 +162,8 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
                     unsigned int candidate_index, unsigned int candidate_element_offset) {
     scene_occlusion_group_node->clear_children();
 
-    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
-    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_L");
+    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_R");
 
     unsigned int index = 0;
 
