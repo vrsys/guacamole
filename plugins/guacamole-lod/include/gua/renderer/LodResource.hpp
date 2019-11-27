@@ -95,6 +95,9 @@ class GUA_LOD_DLL LodResource : public GeometryResource
     bool is_pickable_;
     lamure::model_t model_id_;
     math::mat4 local_transform_;
+
+    // data collection per context
+    std::unordered_map<std::size_t, scm::gl::buffer_ptr > data_collection_per_context_;
 };
 
 } // namespace gua

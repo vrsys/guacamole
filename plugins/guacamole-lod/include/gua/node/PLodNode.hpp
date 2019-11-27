@@ -85,6 +85,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool get_enable_backface_culling_by_normal() const;
     void set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
+    void set_data_collection_file_path(std::string const& map_file_path);
+
   public:
     /**
      * Implements ray picking for a point cloud
@@ -113,6 +115,10 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     float max_surfel_size_;
     float error_threshold_;
     bool enable_backface_culling_by_normal_;
+
+
+    std::string data_collection_file_path_;
+
 };
 
 } // namespace node

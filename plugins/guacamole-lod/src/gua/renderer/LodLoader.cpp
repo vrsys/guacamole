@@ -38,21 +38,58 @@
 #include <lamure/ren/policy.h>
 #include <lamure/ren/ray.h>
 
+#include <boost/algorithm/string.hpp>
+
 namespace gua
 {
 /////////////////////////////////////////////////////////////////////////////
-LodLoader::LodLoader() : _supported_file_extensions()
+LodLoader::LodLoader() : _supported_file_extensions_model_file(), _supported_file_extensions_vis_file()
 {
-    _supported_file_extensions.insert("bvh");
-    _supported_file_extensions.insert("BVH");
+    _supported_file_extensions_model_file.insert("bvh");
+    _supported_file_extensions_model_file.insert("BVH");
+
+    _supported_file_extensions_vis_file.insert("vis");
+    _supported_file_extensions_vis_file.insert("VIS");
 }
+
+
+std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_vis_file(std::string const& group_node_name, std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
+    try {
+        if(!is_supported_vis_file(vis_file_name)) {
+            throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
+        } else {
+            std::ifstream in_vis_filestream(vis_file_name, std::ios::in);
+            std::string line_buffer;
+
+            int model_count = 0;
+            std::vector<std::shared_ptr<node::PLodNode>> loaded_point_cloud_models;
+            while(std::getline(in_vis_filestream, line_buffer) ) {
+                boost::trim(line_buffer);
+
+                if(is_supported_model_file(line_buffer)) {
+                    auto const& current_point_cloud_shared_ptr = load_lod_pointcloud(group_node_name + "_" + std::to_string(model_count), line_buffer, fallback_material, flags);
+                    loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
+                }
+  
+            }
+
+            in_vis_filestream.close();
+
+            return loaded_point_cloud_models;
+        }
+    } catch(std::exception& e) {
+        Logger::LOG_WARNING << "Failed to parse vis file object \"" << vis_file_name << "\": " << e.what() << std::endl;
+        return {};
+    }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
 {
     try
     {
-        if(!is_supported(filename))
+        if(!is_supported_model_file(filename))
         {
             throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
         }
@@ -112,7 +149,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& n
 {
     try
     {
-        if(!is_supported(filename))
+        if(!is_supported_model_file(filename))
         {
             throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
         }
@@ -207,10 +244,16 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& f
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool LodLoader::is_supported(std::string const& file_name) const
+bool LodLoader::is_supported_model_file(std::string const& file_name) const
 {
     std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty() ? false : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+    return filename_decomposition.empty() ? false : _supported_file_extensions_model_file.count(filename_decomposition.back()) > 0;
+}
+
+bool LodLoader::is_supported_vis_file(std::string const& file_name) const
+{
+    std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty() ? false : _supported_file_extensions_vis_file.count(filename_decomposition.back()) > 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
