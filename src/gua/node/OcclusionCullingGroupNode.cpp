@@ -120,12 +120,11 @@ void OcclusionCullingGroupNode::regroup_children(){
             }
         }
 
+
         // restore best candidate configuration by splitting once more
         split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
 
-
-
-        //here we apparently dont get children as tri mesh nodes?
+        
         auto children = current_node_to_split->get_children();
 
         for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
@@ -134,12 +133,11 @@ void OcclusionCullingGroupNode::regroup_children(){
             if(current_child->get_children().size() > 2) {
             	gua::node::Node* child_ptr = children[child_idx].get();
 
-
-
                 splitting_queue.push(child_ptr);
             }
 
         }
+
     }
 
 }
@@ -170,7 +168,7 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
 
     unsigned int pivot = candidate_index * candidate_element_offset;
 
-
+     std::cout<< " I am " << scene_occlusion_group_node->get_name() << " I have kids: " << scene_occlusion_group_node->get_children().size()<<std::endl;
     for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
         if(index < pivot) {
             transform_node_L->add_child(*it);
