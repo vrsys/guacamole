@@ -22,6 +22,7 @@
 #ifndef GUA_OCCLUSION_CULLING_TRIMESH_RENDERER_HPP
 #define GUA_OCCLUSION_CULLING_TRIMESH_RENDERER_HPP
 
+#include <algorithm>
 #include <map>
 #include <unordered_map>
 
@@ -43,6 +44,8 @@ class PipelinePassDescription;
 class RenderTarget;
 
 enum class OcclusionCullingMode;
+
+
 
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING

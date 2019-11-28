@@ -52,44 +52,49 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
     std::size_t found = model_path_plane.find_last_of("/\\"); //could be entered directly by path
     std::string obj_name = model_path_plane.substr(found+1);
 
+
+    auto model_material_backface_culling_off(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    model_material_backface_culling_off->set_show_back_faces(true);
+    model_material_backface_culling_off->set_render_wireframe(false);
+    
     for (int i = 0; i < 5; ++i)
     {
         std::string const random_object_name = obj_name;
         gua::TriMeshLoader loader;
 
-        auto model_material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-        model_material->set_show_back_faces(true);
-        model_material->set_render_wireframe(false);
 
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
+
+
+        auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material_backface_culling_off, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
 
         auto norm_scale_mat = new_model->get_transform();
         
         gua::math::mat4 model_trans;
                     
+        gua::math::mat4 turn_plane_around_mat =  gua::math::mat4(scm::math::make_scale(4.0f, 4.0f, -4.0f));
 
         if (i != 4)
         {
             if (i%2 == 0)
             {
                 model_trans =   
-                            gua::math::mat4(scm::math::make_translation(1.0f*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
+                            gua::math::mat4(scm::math::make_translation(2.0f*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
                             gua::math::mat4(scm::math::make_rotation(90.0f*(1-i), 0.0f, 0.0f, 1.0f)) *
-                            norm_scale_mat;  
+                            turn_plane_around_mat * norm_scale_mat;  
             } else {
                 
                 model_trans =   
-                            gua::math::mat4(scm::math::make_translation(0.0f, 1.0f*(2-i), 0.0f)) * // 5. we apply the random translation
+                            gua::math::mat4(scm::math::make_translation(0.0f, 2.0f*(2-i), 0.0f)) * // 5. we apply the random translation
                             gua::math::mat4(scm::math::make_rotation(180.0f*(i%3), 0.0f, 0.0f, 1.0f)) *
-                            norm_scale_mat;             
+                            turn_plane_around_mat * norm_scale_mat;             
             } 
 
         } else {
                 
             model_trans = 
-                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -1.0f)) * // 5. we apply the random translation
+                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -2.0f)) * // 5. we apply the random translation
                 gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
-                norm_scale_mat; ;
+                turn_plane_around_mat * norm_scale_mat;
             
         }
 

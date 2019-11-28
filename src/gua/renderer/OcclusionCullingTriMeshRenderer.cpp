@@ -488,6 +488,17 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
     }
 }
 
+struct NodeDistancePairComparator
+{
+  bool operator()(std::pair<gua::node::Node*, double> const& lhs, std::pair<gua::node::Node*, double> const& rhs)
+  {
+    return true;//lhs.second < rhs.second;
+  }
+};
+
+//#define USE_PRIORITY_QUEUE
+
+
 void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
                                                                            scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
     
@@ -583,20 +594,45 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
             //if(occlusion_group_node->)
 
+ 
             // use a queue for breadth first search (stack would do breadth first search)
-            std::queue<gua::node::Node*> traversal_queue;
 
+            #ifdef USE_PRIORITY_QUEUE
+            std::priority_queue<std::pair<gua::node::Node*, double>, 
+                                std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator > traversal_priority_queue;
+                            //    { return lhs.second < rhs.second;> traversal_queue;
+            #else
+            std::queue<std::pair<gua::node::Node*, double> > traversal_priority_queue;
+            #endif
+
+            int rendered_nodes = 0;
+            int tested_nodes = 0;
+
+            int total_num_nodes = 0;
             // add root node of our occlusion hierarchy to the traversal queue 
-            traversal_queue.push(occlusion_group_node);
 
+            auto node_distance_pair_to_insert = std::make_pair(occlusion_group_node, scm::math::length_sqr(world_space_cam_pos - occlusion_group_node->get_world_position()) );
+            
+            #ifdef USE_PRIORITY_QUEUE
+            traversal_priority_queue.push(node_distance_pair_to_insert);
+            #else
 
-            while(!traversal_queue.empty()) {
+            #endif
 
+            while(!traversal_priority_queue.empty()) {
                 // get next node
-                gua::node::Node* current_node = traversal_queue.front();
 
+                #ifdef USE_PRIORITY_QUEUE
+                std::pair<gua::node::Node*, double> current_node_dist_pair = traversal_priority_queue.top();
+                #else
+                std::pair<gua::node::Node*, double> current_node_dist_pair = traversal_priority_queue.front();
+                #endif
+                //remove this node from the queue
+                traversal_priority_queue.pop();
 
-                auto current_node_path = current_node->get_path();
+                gua::node::Node* current_node = current_node_dist_pair.first;
+
+                auto current_node_path = current_node_dist_pair.first->get_path();
                 bool render_current_node = true;
 
                 // get iterator to occlusion query associated with node (currently by path)
@@ -627,7 +663,12 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 // work on it (CHC-Style)
                 //std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
                 bool visibility_current_node = current_node->get_visibility(current_cam_node.uuid);
+
+
+
                 if (visibility_current_node) {
+                    ++tested_nodes;
+
                     current_shader = occlusion_query_box_program_; //define a new shader of type occlusion query box program
 
                     current_shader->use(ctx);
@@ -668,15 +709,18 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     } else {
                         if (current_node->get_children().size()>0) {
                             //interior node
-                            for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
 
-                            // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
-                            // the serializer however creates raw prts. Calling ".get()" on a shared ptr provides us with the
-                            // raw ptr that is referenced by the manager object 
-                            gua::node::Node* raw_child_node_ptr = shared_child_node_ptr.get();
-                            traversal_queue.push(raw_child_node_ptr);
-                                }
+
+
+                            for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
+                                auto child_node_distance_pair 
+                                    = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - shared_child_node_ptr->get_world_position()) );
+                                traversal_priority_queue.push(child_node_distance_pair);
+                            }
+
+   
                         } else {
+                            ++rendered_nodes;
                             //leaf node
                             //Resetting states for drawing for leaf nodes
                             auto const& glapi = ctx.render_context->opengl_api();
@@ -729,16 +773,17 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
 
                 
-                //remove this node from the queue
-                traversal_queue.pop();
+
 
                 //push all children (currently in arbitrary order - preferred in front to back sort via distance)
                 //here we redo for visible interior nodes
                 
             }
+            std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
+            
 
+            std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
         }
-        
 
 
         render_target.unbind(ctx);
@@ -784,6 +829,7 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext con
     bool show_backfaces = tri_mesh_node->get_material()->get_show_back_faces();
     bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
 
+
     if(show_backfaces)
     {
         if(render_wireframe)
@@ -806,6 +852,9 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext con
             current_rasterizer_state = rs_cull_back_;
         }
     }
+
+    ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+    ctx.render_context->apply();
 
     ctx.render_context->apply_program();
 
