@@ -520,16 +520,12 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
-        // loop through all objects, sorted by material ----------------------------
         std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
-
 
         auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
         bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
         bool occlusion_culling_geometry_vis = occlusion_culling_pipeline_pass_description->get_enable_culling_geometry_vis();
 
-        uint64_t object_render_count = 0;
-        
         // get a (serialized) cam node (see: guacamole/src/gua/node/CameraNode.cpp and guacamole/src/gua/node/CameraNode.hpp)
         auto const& current_cam_node = pipe.current_viewstate().camera;
         std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
@@ -555,6 +551,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
             // add root node of our occlusion hierarchy to the traversal queue 
             traversal_queue.push(occlusion_group_node);
+
+
 
             //this parts traverses the tree and sets all nodes to visible
             while(!traversal_queue.empty()) {
@@ -582,40 +580,23 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         //each of the occlusion group nodes models an entire object hierarchy
         for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second) {
 
+
             //if(occlusion_group_node->)
 
             // use a queue for breadth first search (stack would do breadth first search)
             std::queue<gua::node::Node*> traversal_queue;
-
-
 
             // add root node of our occlusion hierarchy to the traversal queue 
             traversal_queue.push(occlusion_group_node);
 
 
             while(!traversal_queue.empty()) {
+
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
-                // work on it (CHC-Style)
-            //    std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
-                /***
-                    Here we make our query:
-                        - Check if visible (in first frame it will be true)
-                        - wichtig uniforms setzen -> da wir sie in die Welt setzen
-                        - get BB from current node
-                        - set state changes (set_occlusion_query_states)
-                        - make Query for BB
-                        - wait for result
-                        - receive result
-                            -> if invisible, dont traverse more, if visible
-                            -> if visible: check if interior or leaf 
-                                -> if interior node -> sort children front to back, do all over (line 643 cont.)
-                                   --> push all children depth sorted (distance to cam) into traversal queue --> save distance during serialization to node and sort based on this
-                                -> if leaf - render node (line 606 cont.)
-                ***/
+
 
                 auto current_node_path = current_node->get_path();
-
                 bool render_current_node = true;
 
                 // get iterator to occlusion query associated with node (currently by path)
@@ -636,15 +617,18 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
                     }
 
+                    //Fuegen neues object (path, query object) zur map im ctx hinzu    //Damit wir Iterator an der Hand haben
                     ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
                 
                     occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
                 } 
 
 
-
-                {
-                    current_shader = occlusion_query_box_program_; //Red boxes
+                // work on it (CHC-Style)
+                //std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
+                bool visibility_current_node = current_node->get_visibility(current_cam_node.uuid);
+                if (visibility_current_node) {
+                    current_shader = occlusion_query_box_program_; //define a new shader of type occlusion query box program
 
                     current_shader->use(ctx);
                     auto vp_mat = view_projection_matrix;
@@ -657,13 +641,11 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
 
                     if(!occlusion_culling_geometry_vis) {
-
-                        // IMPORTANT! IN THIS FUNCTION THE COLOR CHANNELS ARE DISABLED AND DEPTH MASK IS DISABLED AS WELL
-                        // -> checks for bool from pp-desc,  disables color channels, tests but doesnt write depth
                         set_occlusion_query_states(ctx);
                     } else {
                         ctx.render_context->set_depth_stencil_state(default_depth_test_);                        
                     }
+
 
                     ////////////////////// OCCLUSION QUERIES BEGIN -- SUBMIT TO GPU
                     ctx.render_context->begin_query(occlusion_query_iterator->second); //second is the query object from the map
@@ -676,103 +658,87 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         ;
                     }
 
-                    // get query results
                     ctx.render_context->collect_query_results(occlusion_query_iterator->second);
-                    std::cout<< "query result "<< ctx.render_context->query_result_available(occlusion_query_iterator->second)<< std::endl;
 
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = (*occlusion_query_iterator).second->result();
 
-
-                    switch( desc.get_occlusion_query_type() ) {
-                        case OcclusionQueryType::Number_Of_Samples_Passed:
-                            //So if we define a certain threshold, then check if the number of returned fragments is higher than threshold, only then render (not conservative?)
-                            if(query_result > desc.get_occlusion_culling_fragment_threshold()) {
-                                ++object_render_count;
-                            } else {
-                                render_current_node = false;
-                            }
-                        break;
-
-                        //conservative approach. If any passed we render
-                        case OcclusionQueryType::Any_Samples_Passed:
-                            if(query_result > 0) {
-                                ++object_render_count;
-                            } else {
-                                render_current_node = false;
-                            }
-                        break;
-
-                        default: 
-                            Logger::LOG_WARNING << "OcclusionCullingTriMeshPass:: unknown occlusion query type encountered." << std::endl;
-                        break;
-                    }
-            }
-
-                if (render_current_node)
-                {
-                    auto current_node_children = current_node->get_children();
-
-                    if (!current_node_children.empty())
-                    {
-                        //push all children (currently in arbitrary order - preferred in front to back sort via distance)
-                        //here we redo for visible interior nodes
-                        for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node_children) {
+                    if (query_result == 0) {
+                        current_node->set_visibility(current_cam_node.uuid, false);
+                    } else {
+                        if (current_node->get_children().size()>0) {
+                            //interior node
+                            for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
 
                             // the vector returned by "get_children" unfortunately contains shared_ptrs instead of raw ptrs.
                             // the serializer however creates raw prts. Calling ".get()" on a shared ptr provides us with the
                             // raw ptr that is referenced by the manager object 
                             gua::node::Node* raw_child_node_ptr = shared_child_node_ptr.get();
                             traversal_queue.push(raw_child_node_ptr);
-                        }
-                    }
+                                }
+                        } else {
+                            //leaf node
+                            //Resetting states for drawing for leaf nodes
+                            auto const& glapi = ctx.render_context->opengl_api();
+                            glapi.glColorMask(true, true, true, true);
+                            ctx.render_context->set_depth_stencil_state(default_depth_test_);
+                            ctx.render_context->set_blend_state(default_blend_state_);
+                            ctx.render_context->apply();
 
-                    else{
-                        //Resetting states for drawing for leaf nodes
-                        auto const& glapi = ctx.render_context->opengl_api();
-                        glapi.glColorMask(true, true, true, true);
-                        ctx.render_context->set_depth_stencil_state(default_depth_test_);
-                        ctx.render_context->set_blend_state(default_blend_state_);
-                        ctx.render_context->apply();
+                            //make sure that we currently have a trimesh node in our hands
+                            if(std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) {
 
-                        //make sure that we currently have a trimesh node in our hands
-                        if( (std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) ) {
+                                //std::cout << "ASSUMING THAT " << current_node->get_name() << " is a trimeshnode" << std::endl;
+                                auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_node));
 
-                            //std::cout << "ASSUMING THAT " << current_node->get_name() << " is a trimeshnode" << std::endl;
-                            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_node));
+                                if(!depth_complexity_vis) {
+                                    switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
+                                                                        pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
+                                } else {
+                                    switch_state_for_depth_complexity_vis(ctx, current_shader);
+                                }
 
-                            //if(!depth_complexity_vis) {
-                                switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target, 
-                                                                    pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
-                            //} else {
-                              //  switch_state_for_depth_complexity_vis(ctx, current_shader);
-
-                            //}
-
-                            if(current_shader && tri_mesh_node->get_geometry())
-                            {
-                                upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
-                                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                                if(current_shader && tri_mesh_node->get_geometry())
+                                {
+                                    upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
+                                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                                }
+                        
                             }
 
-
-                            //++rendered_nodes;
-
-
                         }
-                
                     }
 
-                    //remove this node from the queue
-                    traversal_queue.pop();
-                } 
+                }
 
+                /***
+                    Here we make our query:
+                        - Check if visible (in first frame it will be true) *
+                        - wichtig uniforms setzen -> da wir sie in die Welt setzen *
+                        - get BB from current node *
+                        - set state changes (set_occlusion_query_states)*
+                        - make Query for BB*
+                        - wait for result*
+                        - receive result *
+                            -> if invisible, dont traverse more, if visible
+                            -> if visible: check if interior or leaf 
+                                -> if interior node -> sort children front to back, do all over (line 643 cont.)
+                                   --> push all children depth sorted (distance to cam) into traversal queue --> save distance during serialization to node and sort based on this
+                                -> if leaf - render node (line 606 cont.)
+                ***/
+
+
+                
+                //remove this node from the queue
+                traversal_queue.pop();
+
+                //push all children (currently in arbitrary order - preferred in front to back sort via distance)
+                //here we redo for visible interior nodes
+                
             }
 
         }
         
-
-
 
 
         render_target.unbind(ctx);

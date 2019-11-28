@@ -42,6 +42,8 @@ std::shared_ptr<Node> OcclusionCullingGroupNode::copy() const { return std::make
 
 void OcclusionCullingGroupNode::regroup_children(){
 
+
+    //this is only for renaming the children so we can access them via a unqiue path
     uint32_t global_node_renaming_index = 0;
 
     std::queue< std::shared_ptr<gua::node::Node> > renaming_queue;
@@ -63,8 +65,6 @@ void OcclusionCullingGroupNode::regroup_children(){
             renaming_queue.push(child); 
         }
     }
-
-
 
 
     std::queue<gua::node::Node*> splitting_queue;
@@ -125,6 +125,7 @@ void OcclusionCullingGroupNode::regroup_children(){
 
 
 
+        //here we apparently dont get children as tri mesh nodes?
         auto children = current_node_to_split->get_children();
 
         for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
