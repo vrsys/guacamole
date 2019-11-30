@@ -54,6 +54,12 @@ void AccumSubRenderer::create_gpu_resources(gua::RenderContext const& ctx, scm::
     _register_shared_resources(shared_resources);
 }
 
+float dummy_generator() {
+    static float gen = 0.0f;
+    return gen += 1.0f;
+}
+
+
 void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                        PipelinePassDescription const& desc,
                                        gua::plod_shared_resources& shared_resources,
@@ -62,10 +68,30 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                        lamure::context_t context_id,
                                        lamure::view_t lamure_view_id)
 {
+
     auto const& camera = pipe.current_viewstate().camera;
     RenderContext const& ctx(pipe.get_context());
     lamure::ren::controller* controller = lamure::ren::controller::get_instance();
 
+/*
+    if(ctx.shader_storage_buffer_objects.begin() == ctx.shader_storage_buffer_objects.end()) {
+        auto programmable_data_ssbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, 1000, 0);
+
+        ctx.shader_storage_buffer_objects.insert(std::make_pair(0, programmable_data_ssbo));
+
+        std::cout << "CREATED SSBO: " << std::endl;
+
+        ctx.render_context->bind_storage_buffer(programmable_data_ssbo, 20, 0, 1000);
+
+        ctx.render_context->apply_storage_buffer_bindings();
+        float* fem_simulation_data = (float*)ctx.render_context->map_buffer(programmable_data_ssbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
+        std::vector<float> data(250);
+        std::generate(data.begin(), data.end(), dummy_generator);
+
+        memcpy((char*)fem_simulation_data, data.data(), 1000);
+        ctx.render_context->unmap_buffer(programmable_data_ssbo);
+    }
+*/
     scm::gl::context_all_guard context_guard(ctx.render_context);
 
     if(!custom_FBO_ptr_)
@@ -87,7 +113,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
     ctx.render_context->clear_color_buffer(custom_FBO_ptr_, 3, scm::math::vec2f(0.0f, 0.0f));
 
     MaterialShader* current_material(nullptr);
-    std::shared_ptr<ShaderProgram> current_material_program;
+    std::shared_ptr<ShaderProgram> current_material_program = nullptr;
 
     {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -113,9 +139,18 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
             current_material = plod_node->get_material()->get_shader();
 
-            current_material_program = _get_material_dependent_shader_program(current_material, current_material_program, program_changed);
+            auto new_plod_node_material = _get_material_dependent_shader_program(current_material, current_material_program, program_changed);
 
-            current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+            if(current_material_program != new_plod_node_material) {
+
+                current_material_program = new_plod_node_material;
+                current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+
+                //current_material_program->set_uniform(ctx, int(20), "dummy_value_ssbo_layout");
+
+                //ctx.render_context->bind_storage_buffer( ctx.shader_storage_buffer_objects.begin()->second, 20, 0, 1000);
+                //ctx.render_context->apply_storage_buffer_bindings();
+            }
 
             ctx.render_context->apply();
 

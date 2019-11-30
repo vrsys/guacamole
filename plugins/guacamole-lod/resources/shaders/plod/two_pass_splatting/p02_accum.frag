@@ -57,6 +57,11 @@ float weight = 0;
 @material_method_declarations_frag@
 
 
+//layout (std430, binding = 20) buffer dummy_value_ssbo_layout{
+//  float[] dummy_values;
+//};
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // main
 ///////////////////////////////////////////////////////////////////////////////
@@ -98,6 +103,10 @@ void main() {
   out_accumulated_color  = vec3(weight * gua_color);
   out_accumulated_normal = vec3(weight * face_forward_normal);
   out_accumulated_pbr    = vec3(gua_metalness, gua_roughness, gua_emissivity) * weight;
+
+
+
+  //out_accumulated_color = vec3(dummy_values[int(gl_FragCoord.x) % 250] / 250, 0.0, 0.0);
 
   //out_accumulated_normal = vec3(0.0, 0.0, 1.0);
 

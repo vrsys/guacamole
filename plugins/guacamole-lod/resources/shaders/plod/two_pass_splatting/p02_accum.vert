@@ -18,6 +18,8 @@ uniform uint gua_material_id;
 uniform float radius_scaling;
 uniform float max_surfel_radius;
 
+
+
 out VertexData {
   //output to geometry shader
   vec3 pass_ms_u;
@@ -33,4 +35,5 @@ void main() {
 
   VertexOut.pass_point_color = vec3(in_r, in_g, in_b);
   VertexOut.pass_normal = in_normal;
+
 }
