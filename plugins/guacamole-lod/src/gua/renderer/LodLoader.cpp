@@ -22,6 +22,8 @@
 // class header
 #include <gua/renderer/LodLoader.hpp>
 
+#include <gua/utils/vis_settings.hpp>
+
 // guacamole headers
 #include <gua/utils.hpp>
 #include <gua/utils/Logger.hpp>
@@ -57,6 +59,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
     
     std::vector<std::string> model_files_to_load;
 
+    //bool load_vis_
+
+
     try {
         if(!is_supported_vis_file(vis_file_name)) {
             throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
@@ -75,7 +80,28 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
   
             }
 
+            
+
             in_vis_filestream.close();
+
+            vis_settings settings;
+            load_vis_settings(vis_file_name, settings);
+
+            //assertions
+            if (settings.provenance_ != 0) {
+                if (settings.json_.size() > 0) {
+                    if (settings.json_.substr(settings.json_.size()-5) != ".json") {
+                        std::cout << "unsupported json file: " << settings.json_ << std::endl;
+                        exit(-1);
+                    } else {
+                        std::cout << "Loading Provenance-Layout-Description from JSON: " << settings.json_ << std::endl;
+                        lamure::ren::data_provenance::get_instance()->parse_json(settings.json_);     
+                    }
+                }
+
+            } 
+
+            
 
             // after the vis file was parsed, load all models and set the common properties
 
@@ -112,6 +138,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
             GeometryDescription desc("PLod", filename, 0, flags);
 
             lamure::model_t model_id = database->add_model(filename, desc.unique_key());
+
             if(database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::POINTCLOUD)
             {
                 Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":"
