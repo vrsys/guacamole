@@ -19,7 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+//global Variables
 
+#define THRESHHOLD 10
 
 
 // class header
@@ -69,12 +71,14 @@ void OcclusionCullingGroupNode::regroup_children(){
     
     std::vector<std::shared_ptr<Node>> children = get_children();
     for(auto& child : get_children() ) {
-        std::queue<gua::node::Node*> splitting_queue_multiple_nodes_for_object;
-        std::vector<std::shared_ptr<Node>> grandchildren = child->get_children();
-        if (grandchildren.size()>2) {
-            splitting_queue_multiple_nodes_for_object.push(child.get());
-        }
-        determine_best_split(splitting_queue_multiple_nodes_for_object);
+        if (child->num_grouped_faces()>THRESHHOLD) {
+            std::queue<gua::node::Node*> splitting_queue_multiple_nodes_for_object;
+            std::vector<std::shared_ptr<Node>> grandchildren = child->get_children();
+            if (grandchildren.size()>2) {
+                splitting_queue_multiple_nodes_for_object.push(child.get());
+            }
+            determine_best_split(splitting_queue_multiple_nodes_for_object);
+        } 
     }
 
 
@@ -146,7 +150,7 @@ void OcclusionCullingGroupNode::determine_best_split(std::queue<gua::node::Node*
         for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
             auto& current_child = children[child_idx];
 
-            if(current_child->get_children().size() > 2) {
+            if(current_child->get_children().size() > 2 && current_child->num_grouped_faces()>THRESHHOLD) {
                 gua::node::Node* child_ptr = children[child_idx].get();
                 splitting_queue.push(child_ptr);
             }
@@ -190,6 +194,7 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
         }
         ++index;
     }
+
 }
 
 
