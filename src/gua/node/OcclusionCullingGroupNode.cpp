@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-#include <queue>
+
 
 // class header
 #include <gua/node/OcclusionCullingGroupNode.hpp>
@@ -66,18 +66,33 @@ void OcclusionCullingGroupNode::regroup_children(){
         }
     }
 
+    
+    std::vector<std::shared_ptr<Node>> children = get_children();
+    for(auto& child : get_children() ) {
+        std::queue<gua::node::Node*> splitting_queue_multiple_nodes_for_object;
+        std::vector<std::shared_ptr<Node>> grandchildren = child->get_children();
+        if (grandchildren.size()>2) {
+            splitting_queue_multiple_nodes_for_object.push(child.get());
+        }
+        determine_best_split(splitting_queue_multiple_nodes_for_object);
+    }
+
 
     std::queue<gua::node::Node*> splitting_queue;
 
-    
     //if we have less than 3 children, then the grouping is as good as it gets
     if( get_children().size() > 2) {
         splitting_queue.push(this);
 
     } 
 
-    std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
+    determine_best_split(splitting_queue);
+}
 
+//TODO: Still errors for single child for one Transform Node. Remove to optimize graph
+//TODO: Include number of faces to stop splitting at reasonable depth
+void OcclusionCullingGroupNode::determine_best_split(std::queue<gua::node::Node*> splitting_queue) {
+    std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
 
     while(!splitting_queue.empty() ) {
         //get next node to split
@@ -132,24 +147,13 @@ void OcclusionCullingGroupNode::regroup_children(){
             auto& current_child = children[child_idx];
 
             if(current_child->get_children().size() > 2) {
-            	gua::node::Node* child_ptr = children[child_idx].get();
+                gua::node::Node* child_ptr = children[child_idx].get();
                 splitting_queue.push(child_ptr);
-            } else {
-                for (auto const& grandchild : current_child->get_children()) {
-                    if (grandchild->get_children().size() > 2) {
-                        for (auto const& great_grandchild : grandchild->get_children()) {
-                            std::cout<<great_grandchild->get_name()<<std::endl;
-                            gua::node::Node* child_ptr = great_grandchild.get();
-                        }
-
-                    }
-                }
             }
 
         }
 
     }
-
 }
 
 void OcclusionCullingGroupNode::sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
