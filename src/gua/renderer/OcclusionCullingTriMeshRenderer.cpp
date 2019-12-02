@@ -655,8 +655,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 } 
 
 
-                // work on it (CHC-Style)
-                //std::cout << "Visited node: " << current_node->get_name() <<  "\t\t Visibility Status: " << current_node->get_visibility(current_cam_node.uuid) << std::endl; 
                 bool visibility_current_node = current_node->get_visibility(current_cam_node.uuid);
 
 
@@ -709,9 +707,10 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
                             for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
                                 auto child_node_distance_pair 
-                                    = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - shared_child_node_ptr->get_world_position()) );
+                                    = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f ) );
                                 traversal_priority_queue.push(child_node_distance_pair);
-                                //std::cout<<child_node_distance_pair.first->get_name() << " has distance of" << child_node_distance_pair.second << std::endl;
+                                //std::cout<<shared_child_node_ptr->get_name()<< " has bb mid point of " <<
+                                    //(shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f << std::endl;
                             }
 
    
@@ -749,31 +748,9 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         }
                     }
 
-                }
-
-                /***
-                    Here we make our query:
-                        - Check if visible (in first frame it will be true) *
-                        - wichtig uniforms setzen -> da wir sie in die Welt setzen *
-                        - get BB from current node *
-                        - set state changes (set_occlusion_query_states)*
-                        - make Query for BB*
-                        - wait for result*
-                        - receive result *
-                            -> if invisible, dont traverse more, if visible
-                            -> if visible: check if interior or leaf 
-                                -> if interior node -> sort children front to back, do all over (line 643 cont.)
-                                   --> push all children depth sorted (distance to cam) into traversal queue --> save distance during serialization to node and sort based on this
-                                -> if leaf - render node (line 606 cont.)
-                ***/
-
-                //push all children (currently in arbitrary order - preferred in front to back sort via distance)
-                //here we redo for visible interior nodes
-                
+                }             
             }
-            //std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
-            
-
+            std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
             std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
         }
 
