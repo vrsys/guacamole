@@ -112,6 +112,8 @@ int main(int argc, char** argv)
     graph.add_node("/transform", example_model);
     example_model->set_draw_bounding_box(true);
 
+    std::cout << "Hierarchy below teapot contains: " << example_model->num_grouped_faces() << " Triangles" << std::endl;
+
     auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
     portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
     portal->data.set_texture("portal");

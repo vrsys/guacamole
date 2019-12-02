@@ -100,6 +100,15 @@ class GUA_DLL Node
      */
     inline std::string const& get_name() const { return name_; }
 
+
+    /**
+     * Returns the accumulated number of Triangles contained in all of the Nodes
+     * grouped below this node (including the node itself).
+     *
+     * \return std::size_t  Number of faces contained in hierarchy below this node.
+     */
+    virtual std::size_t num_grouped_faces() const; 
+
     /**
      * Sets the Node's name.
      *
