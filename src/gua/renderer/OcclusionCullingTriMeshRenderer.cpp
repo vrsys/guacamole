@@ -703,14 +703,12 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         if (current_node->get_children().size()>0) {
                             //interior node
 
-
-
                             for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
                                 auto child_node_distance_pair 
                                     = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f ) );
                                 traversal_priority_queue.push(child_node_distance_pair);
-                                //std::cout<<shared_child_node_ptr->get_name()<< " has bb mid point of " <<
-                                    //(shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f << std::endl;
+                                std::cout<<shared_child_node_ptr->get_name()<< " has bb mid point of " <<
+                                    (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f << std::endl;
                             }
 
    
@@ -750,8 +748,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
                 }             
             }
-            std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
-            std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
+            //std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
+            //std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
         }
 
 
@@ -768,7 +766,31 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
     }
 }
 
+void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDescription const& desc, 
+                                                                           scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
 
+    //TODO:     
+    /*
+        - define Termination and Open Node set
+        - for each node in termination nodes check if previously visible
+                -if yes:
+                    -immediately render
+                -issue occlusion query by storing in query queue
+                -if query queue empty
+                    -break
+                -if not empty
+                    -if result of oldest query available (front)
+                            - fetch result and set visibility for node
+                            - pop query queue
+                            -if result == visible
+                                - push child of current node to query queue
+                            -if result != visible
+                                - whole subtree is invisble
+                    - if not
+                        - break
+    */
+
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 

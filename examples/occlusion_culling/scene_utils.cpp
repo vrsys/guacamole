@@ -43,7 +43,12 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
     model_material_central->set_render_wireframe(false);
 
     auto new_model_central(loader_central.create_geometry_from_file(random_object_name_central, model_path_central, model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
+    auto new_model_matrix = new_model_central->get_transform();
+    new_model_matrix =   
+            gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, 0.0f)) * 
+            gua::math::mat4(scm::math::make_rotation(0.0f, 0.0f, 0.0f, 1.0f)) *
+            gua::math::mat4(scm::math::make_scale(20.0f, 20.0f, 20.0f)) *
+            new_model_matrix;  
     // override the model's transform with our calculated transformation
     new_model_central->set_draw_bounding_box(false);
     scene_root_node->add_child(new_model_central);
@@ -67,6 +72,7 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
         auto norm_scale_mat = new_model->get_transform();
         
         gua::math::mat4 model_trans;
+        float translation_offset = 10.0f;
                     
         gua::math::mat4 turn_plane_around_mat =  gua::math::mat4(scm::math::make_scale(4.0f, 4.0f, -4.0f));
 
@@ -75,13 +81,13 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
             if (i%2 == 0)
             {
                 model_trans =   
-                            gua::math::mat4(scm::math::make_translation(2.0f*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
+                            gua::math::mat4(scm::math::make_translation(translation_offset*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
                             gua::math::mat4(scm::math::make_rotation(90.0f*(1-i), 0.0f, 0.0f, 1.0f)) *
                             turn_plane_around_mat * norm_scale_mat;  
             } else {
                 
                 model_trans =   
-                            gua::math::mat4(scm::math::make_translation(0.0f, 2.0f*(2-i), 0.0f)) * // 5. we apply the random translation
+                            gua::math::mat4(scm::math::make_translation(0.0f, translation_offset*(2-i), 0.0f)) * // 5. we apply the random translation
                             gua::math::mat4(scm::math::make_rotation(180.0f*(i%3), 0.0f, 0.0f, 1.0f)) *
                             turn_plane_around_mat * norm_scale_mat;             
             } 
@@ -89,7 +95,7 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
         } else {
                 
             model_trans = 
-                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -2.0f)) * // 5. we apply the random translation
+                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -translation_offset)) * // 5. we apply the random translation
                 gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
                 turn_plane_around_mat * norm_scale_mat;
             

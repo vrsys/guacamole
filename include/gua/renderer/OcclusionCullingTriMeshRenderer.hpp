@@ -64,6 +64,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
     void render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
     void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+    void render_CHC(Pipeline& pipe, PipelinePassDescription const& desc, 
+                                                                           scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
 
     void set_occlusion_query_states(RenderContext const& ctx);
 
