@@ -62,9 +62,6 @@ void create_occlusion_scene(std::string const& model_path_plane, std::string con
         std::string const random_object_name = obj_name;
         gua::TriMeshLoader loader;
 
-
-
-
         auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material_backface_culling_off, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
 
         auto norm_scale_mat = new_model->get_transform();

@@ -531,7 +531,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
-        std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
+        //std::cout << "Num TriMeshNodes in Occlusion Pass: " << sorted_occlusion_group_nodes->second.size() << std::endl; 
 
         auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
         bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
@@ -539,7 +539,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
         // get a (serialized) cam node (see: guacamole/src/gua/node/CameraNode.cpp and guacamole/src/gua/node/CameraNode.hpp)
         auto const& current_cam_node = pipe.current_viewstate().camera;
-        std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
+        //std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
 
         // reset visibility status if the node was never visited
         // only one element is in the vector. is it necessary to do a for loop here? Or for the case we have more than one oc-group_node
@@ -550,13 +550,13 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
             int32_t frame_id = occlusion_group_node->get_last_visibility_check_frame_id(current_cam_node.uuid);
 
-            std::cout << "FRAME ID: " << frame_id << std::endl;
+            //std::cout << "FRAME ID: " << frame_id << std::endl;
 
             if( 0 != frame_id) {
                 continue;
             }
 
-            std::cout << "Setting hierarchy to visible" << std::endl;
+            //std::cout << "Setting hierarchy to visible" << std::endl;
             // use a queue for breadth first search (stack would do breadth first search)
             std::queue<gua::node::Node*> traversal_queue;
 
@@ -592,9 +592,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
         for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second) {
 
 
-            //if(occlusion_group_node->)
-
- 
             // use a queue for breadth first search (stack would do breadth first search)
 
             #ifdef USE_PRIORITY_QUEUE
@@ -613,11 +610,9 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
             auto node_distance_pair_to_insert = std::make_pair(occlusion_group_node, scm::math::length_sqr(world_space_cam_pos - occlusion_group_node->get_world_position()) );
             
-            #ifdef USE_PRIORITY_QUEUE
+ 
             traversal_priority_queue.push(node_distance_pair_to_insert);
-            #else
 
-            #endif
 
             while(!traversal_priority_queue.empty()) {
                 // get next node
@@ -643,7 +638,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
 
                     // get occlusion query mode
-                    std::cout << "Creating occlusion query for node with path: " << current_node_path << std::endl;
+                    //std::cout << "Creating occlusion query for node with path: " << current_node_path << std::endl;
                     //default: Number of Sampled Passed -> if 0 it is invisible?
                     auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
 
@@ -716,6 +711,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                                 auto child_node_distance_pair 
                                     = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - shared_child_node_ptr->get_world_position()) );
                                 traversal_priority_queue.push(child_node_distance_pair);
+                                //std::cout<<child_node_distance_pair.first->get_name() << " has distance of" << child_node_distance_pair.second << std::endl;
                             }
 
    
@@ -771,15 +767,11 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                                 -> if leaf - render node (line 606 cont.)
                 ***/
 
-
-                
-
-
                 //push all children (currently in arbitrary order - preferred in front to back sort via distance)
                 //here we redo for visible interior nodes
                 
             }
-            std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
+            //std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
             
 
             std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;

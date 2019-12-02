@@ -50,6 +50,16 @@ Node::~Node() {
 }
 #endif
 
+std::size_t Node::num_grouped_faces() const {
+    std::size_t accumulated_face_count = 0;
+
+    for(auto const& child : children_) {
+        accumulated_face_count += child->num_grouped_faces();
+    }
+
+    return accumulated_face_count;
+} 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void Node::update_cache()
