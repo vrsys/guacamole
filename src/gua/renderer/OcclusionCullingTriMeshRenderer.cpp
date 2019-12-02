@@ -707,8 +707,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                                 auto child_node_distance_pair 
                                     = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f ) );
                                 traversal_priority_queue.push(child_node_distance_pair);
-                                std::cout<<shared_child_node_ptr->get_name()<< " has bb mid point of " <<
-                                    (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f << std::endl;
                             }
 
    
