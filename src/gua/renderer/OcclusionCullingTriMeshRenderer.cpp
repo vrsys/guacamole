@@ -110,6 +110,9 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 
     depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
     depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
+
+
+    std::cout << "Recreated trimesh renderer" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -548,13 +551,17 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
             // if we never checked set the visibility status for this node, it will be 0.
             // in this case, we recursively set the entire hierarchy to visible
 
-            int32_t frame_id = occlusion_group_node->get_last_visibility_check_frame_id(current_cam_node.uuid);
 
-            //std::cout << "FRAME ID: " << frame_id << std::endl;
+            std::cout << "Camera UUID: " << current_cam_node.uuid << std::endl;
+            int32_t frame_id = get_last_visibility_check_frame_id(occlusion_group_node->get_path(), current_cam_node.uuid);
+
+            std::cout << "FRAME ID: " << frame_id << std::endl;
 
             if( 0 != frame_id) {
                 continue;
             }
+
+            std::cout << "RESET VISIBILITY " << std::endl;
 
             //std::cout << "Setting hierarchy to visible" << std::endl;
             // use a queue for breadth first search (stack would do breadth first search)
@@ -570,7 +577,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
                 // work on it (CHC-Style)
-                current_node->set_visibility(current_cam_node.uuid, true);
+                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
 
                 //remove this node from the queue
                 traversal_queue.pop();
@@ -614,6 +621,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
 
+            bool is_first_traversed_node = true;
+
             while(!traversal_priority_queue.empty()) {
                 // get next node
 
@@ -655,7 +664,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 } 
 
 
-                bool visibility_current_node = current_node->get_visibility(current_cam_node.uuid);
+                bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
 
 
 
@@ -697,8 +706,25 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = (*occlusion_query_iterator).second->result();
 
+
+
+                    set_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid, ctx.framecount);
+                    int32_t frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
+    
+                      
+                    if(is_first_traversed_node) {
+                        is_first_traversed_node = false;
+                        std::cout << "Camera UUID 2: " << current_cam_node.uuid << std::endl;
+                        std::cout << "current frame_id: " << frame_id << std::endl;
+                    }
+
+                    //std::cout << "Camera UUID 2: " << current_cam_node.uuid << std::endl;
+
+
+
+
                     if (query_result == 0) {
-                        current_node->set_visibility(current_cam_node.uuid, false);
+                        set_visibility(current_node->get_path(), current_cam_node.uuid, false);
                     } else {
                         if (current_node->get_children().size()>0) {
                             //interior node
@@ -750,6 +776,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
             //std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
         }
 
+        std::cout << ctx.framecount << std::endl;
 
         render_target.unbind(ctx);
 
@@ -769,7 +796,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
     //TODO:     
     /*
-        - define Termination and Open Node set
+        - define Termination and Open Node set// traverse and check 
         - for each node in termination nodes check if previously visible
                 -if yes:
                     -immediately render
@@ -842,10 +869,12 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(RenderContext con
         }
     }
 
-    ctx.render_context->set_rasterizer_state(current_rasterizer_state);
-    ctx.render_context->apply();
+    ctx.render_context->set_rasterizer_state(rs_cull_back_ );
+    ctx.render_context->apply_state_objects();
 
     ctx.render_context->apply_program();
+
+    ctx.render_context->apply();
 
 }
 
@@ -859,6 +888,7 @@ void OcclusionCullingTriMeshRenderer::set_occlusion_query_states(RenderContext c
     glapi.glColorMask(false, false, false, false);
 
     // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
+    ctx.render_context->set_rasterizer_state(rs_cull_none_);
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
     ctx.render_context->apply();
 }
@@ -933,6 +963,7 @@ void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(Rend
     }
 
 
+
     if(    ctx.render_context->current_blend_state() != color_accumulation_state_
         || ctx.render_context->current_depth_stencil_state() != default_depth_test_)
     {
@@ -940,6 +971,30 @@ void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(Rend
         ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->apply_state_objects();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool OcclusionCullingTriMeshRenderer::get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const {
+    return is_visible_for_camera_[node_path][in_camera_uuid];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void OcclusionCullingTriMeshRenderer::set_visibility(std::string const& node_path, std::size_t in_camera_uuid, bool is_visible) {
+    is_visible_for_camera_[node_path][in_camera_uuid] = is_visible;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int32_t OcclusionCullingTriMeshRenderer::get_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid) const {
+    return last_visibility_check_frame_id_[node_path][in_camera_uuid];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void OcclusionCullingTriMeshRenderer::set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id) {
+    last_visibility_check_frame_id_[node_path][in_camera_uuid] = current_frame_id;
 }
 
 

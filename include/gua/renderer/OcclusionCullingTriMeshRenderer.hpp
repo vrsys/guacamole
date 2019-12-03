@@ -76,6 +76,20 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void upload_uniforms_for_node(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader, 
                                   Pipeline& pipe, scm::gl::rasterizer_state_ptr& current_rasterizer_state);
 
+
+
+
+  // helper functions to manage visibility of nodes
+    bool get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const;
+
+    void set_visibility(std::string const& node_path, std::size_t in_camera_uuid, bool is_visible);
+
+    int32_t get_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid) const;
+
+    void set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id);
+
+
+
   private:
 
     // different rasterizer states for different render modes
@@ -122,6 +136,10 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
 
     SubstitutionMap global_substitution_map_;
+
+    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
+    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> >is_visible_for_camera_;
+    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
 
 };
 
