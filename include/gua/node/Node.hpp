@@ -440,7 +440,7 @@ class GUA_DLL Node
      *
      * \return bool   The visibility status for the node (0 = invisible, 1 = visible).
      */
-    bool get_visibility(std::size_t in_camera_uuid) const;
+    //bool get_visibility(std::size_t in_camera_uuid) const;
 
     /**
      * Updates the visibility status of a node.
@@ -449,7 +449,7 @@ class GUA_DLL Node
      * \param in_camera_uuid  The uuid of the serialized camera node for which the visibility is established
      * \param is_visible      The visibility status to set for the node
      */
-    void set_visibility(std::size_t in_camera_uuid, bool is_visible);
+    //void set_visibility(std::size_t in_camera_uuid, bool is_visible);
 
    /**
      * Returns the frame id in which the node's visibility status was updated last.
@@ -459,7 +459,7 @@ class GUA_DLL Node
      *
      * \return bool   The id of the frame in which the node was queried last.
      */
-    int32_t get_last_visibility_check_frame_id(std::size_t in_camera_uuid) const;
+    //int32_t get_last_visibility_check_frame_id(std::size_t in_camera_uuid) const;
 
     /**
      * Updates the id of the frame in which the node's visibility status was updated last.
@@ -468,7 +468,7 @@ class GUA_DLL Node
      * \param in_camera_uuid  The uuid of the serialized camera node for which the frame id is set.
      * \param current_frame_id  The id of the current frame.
      */
-    void set_last_visibility_check_frame_id(std::size_t in_camera_uuid, int32_t current_frame_id);
+    //void set_last_visibility_check_frame_id(std::size_t in_camera_uuid, int32_t current_frame_id);
 
 
     /**
@@ -546,9 +546,9 @@ class GUA_DLL Node
     math::mat4 transform_ = math::mat4::identity(); // invertible affine transformation
     mutable math::mat4 world_transform_ = math::mat4::identity();
 
-    mutable std::unordered_map<std::size_t, bool> was_not_frustum_culled_;
-    mutable std::unordered_map<std::size_t, bool> is_visible_for_camera_;
-    mutable std::unordered_map<std::size_t, uint32_t> last_visibility_check_frame_id_;
+    //mutable std::unordered_map<std::size_t, bool> was_not_frustum_culled_;
+    //mutable std::unordered_map<std::size_t, bool> is_visible_for_camera_;
+    //mutable std::unordered_map<std::size_t, uint32_t> last_visibility_check_frame_id_;
 
     SceneGraph* scenegraph_ = nullptr;
     std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());

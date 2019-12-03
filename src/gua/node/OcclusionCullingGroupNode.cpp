@@ -21,7 +21,7 @@
 
 //global Variables
 
-#define THRESHHOLD 10
+#define THRESHHOLD 1
 
 
 // class header
