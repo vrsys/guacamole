@@ -48,8 +48,13 @@ int main(int argc, char** argv)
       model_file = argv[1];
       atlas_file = argv[2];
     }
+    else if(2 == argc){
+      model_file = argv[1];
+    }
     else {
-      std::cout << "usage: " << argv[0] << " filename.obj filename.atlas" << std::endl;
+      std::cout << "usage: " << argv[0] << " filename_vt.obj filename.atlas" << std::endl;
+      std::cout << "or" << std::endl;
+      std::cout << "usage: " << argv[0] << " filename.obj" << std::endl;
       return 0;  
     }
     
@@ -62,38 +67,54 @@ int main(int argc, char** argv)
     // setup scenegraph
     gua::SceneGraph graph("main_scenegraph");
 
-
-    gua::VTBackend::set_physical_texture_size(2048);
-    gua::VTBackend::set_update_throughput_size(4);
-    gua::VTBackend::set_ram_cache_size(32768);
-
-
-    auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
-        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
-        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
-        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
-    
-    vt_mat->set_uniform("Metalness", 0.25f);
-    vt_mat->set_uniform("Roughness", 0.75f);
-    vt_mat->set_uniform("Emissivity", 0.5f);
-    vt_mat->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
-    vt_mat->set_uniform("vt_test", atlas_file);
-    vt_mat->set_enable_virtual_texturing(true);
-    vt_mat->set_show_back_faces(false);
-
-
-
     auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
     auto model_transform = graph.add_node<gua::node::TransformNode>("/transform", "model_transform");
-
-    std::cout << "start loading " << model_file << std::endl;
-    gua::TriMeshLoader loader;
-    auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), vt_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    std::cout << model_file << " ready" << std::endl;
-
-    graph.add_node("/transform/model_transform", model_node);
-
     model_transform->translate(0.0, 0.0, 0.0);
+
+
+    if(atlas_file != ""){
+        gua::VTBackend::set_physical_texture_size(2048);
+        gua::VTBackend::set_update_throughput_size(4);
+        gua::VTBackend::set_ram_cache_size(32768);
+
+        auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+            gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+            gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+            gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+        
+        vt_mat->set_uniform("Metalness", 0.25f);
+        vt_mat->set_uniform("Roughness", 0.75f);
+        vt_mat->set_uniform("Emissivity", 0.5f);
+        vt_mat->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+        vt_mat->set_uniform("vt_test", atlas_file);
+        vt_mat->set_enable_virtual_texturing(true);
+        vt_mat->set_show_back_faces(false);
+
+        std::cout << "start loading " << model_file << std::endl;
+        gua::TriMeshLoader loader;
+        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), vt_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+        std::cout << model_file << " ready" << std::endl;
+        graph.add_node("/transform/model_transform", model_node);
+    }
+    else{
+#if 1
+        auto load_mat = [](std::string const& file) {
+            auto desc(std::make_shared<gua::MaterialShaderDescription>());
+            desc->load_from_file(file);
+            auto shader(std::make_shared<gua::MaterialShader>(file, desc));
+            gua::MaterialShaderDatabase::instance()->add(shader);
+            return shader->make_new_material();
+        };
+
+        auto mat_textured(load_mat("data/materials/textured.gmd"));
+#endif
+        std::cout << "start loading " << model_file << std::endl;
+        gua::TriMeshLoader loader;
+        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), mat_textured, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+        std::cout << model_file << " ready" << std::endl;
+        graph.add_node("/transform/model_transform", model_node);   
+    }
+    
 
 
     // create a lightsource
