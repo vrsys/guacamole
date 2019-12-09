@@ -984,10 +984,11 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         ++total_num_trimesh_nodes;
                     }
 
+                    //is it so easy?
                     if (query_result > desc.get_occlusion_culling_fragment_threshold() )
                     {
 
-                        // pull up visibility --------------------------------does the order make a difference here? Because we reset the current queue front node
+                        // pull up visibility
 
                         auto pull_up_temp_node = current_query_node;
                         while(!get_visibility(pull_up_temp_node->get_path(), current_cam_node.uuid)){
@@ -1000,11 +1001,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         {
                             // Traverse the interior Nodes
                             for(auto& child: current_query_node->get_children()){
-
                                 //auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - child->get_world_position()) );
 
                                 auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
-
                                 traversal_priority_queue.push(child_node_distance_pair_to_insert);
                             }
                         } else {
@@ -1056,12 +1055,11 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         traversal_priority_queue.pop();
 
                         bool is_in_frustum = culling_frustum.intersects(current_node->get_bounding_box());
-              
+
 
                         if (is_in_frustum)
                         {
                             bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
-
 
                             int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
 
@@ -1092,12 +1090,11 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
                                 if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
                                     // get occlusion query mode
-                                    //std::cout << "Creating occlusion query for node with path: " << current_node_path << std::endl;
                                     //default: Number of Sampled Passed -> if 0 it is invisible?
                                     auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
 
 
-                                    // change occlusion query type if we only want to know whether any fragment was visible -> a bool?
+                                    // change occlusion query type if we only want to know whether any fragment was visible
                                     if( OcclusionQueryType::Any_Samples_Passed == desc.get_occlusion_query_type() ) {
                                         occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
                                     }
