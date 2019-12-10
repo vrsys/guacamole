@@ -49,7 +49,7 @@ struct NodeDistancePairComparator
 {
   bool operator()(std::pair<gua::node::Node*, double> const& lhs, std::pair<gua::node::Node*, double> const& rhs)
   {
-    return lhs.second < rhs.second;
+    return lhs.second > rhs.second;
   }
 };
 

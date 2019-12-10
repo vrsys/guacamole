@@ -56,6 +56,7 @@ std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description =
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 std::string model_path_bus = "/opt/3d_models/vehicle/cars/autobus/auobus.obj"; //place this object
+std::string model_path_hairball_room = "data/objects/hairball_room.obj";
 std::string model_path_town = "/opt/3d_models/architecture/medieval_harbour/town.obj"; //town obj path
 std::string model_path_plane = "data/objects/plane.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
@@ -74,7 +75,14 @@ void configure_pipeline_descriptions() {
     */
 
     // first pipe
+
+#if 1 // USE OCCLUSION
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
+#else
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());  
+#endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
@@ -89,8 +97,7 @@ void configure_pipeline_descriptions() {
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
 
-    auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
-    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
+
 
 }
 
@@ -177,8 +184,10 @@ int main(int argc, char** argv)
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
     //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
-    create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
 
+    create_simple_debug_scene(occlusion_group_node);
+    //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
+    
     occlusion_group_node->regroup_children();
 
 
