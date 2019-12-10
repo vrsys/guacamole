@@ -45,7 +45,13 @@ class RenderTarget;
 
 enum class OcclusionCullingMode;
 
-
+struct NodeDistancePairComparator
+{
+  bool operator()(std::pair<gua::node::Node*, double> const& lhs, std::pair<gua::node::Node*, double> const& rhs)
+  {
+    return lhs.second < rhs.second;
+  }
+};
 
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
@@ -79,7 +85,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
 
 
-  // helper functions to manage visibility of nodes
+    // helper functions to manage visibility of nodes
     bool get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const;
 
     void set_visibility(std::string const& node_path, std::size_t in_camera_uuid, bool is_visible);
@@ -88,9 +94,17 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     void set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id);
 
-
-
-  private:
+    // helper functions for CHC
+    void pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid);
+    void render_visible_leaf(gua::node::Node* current_query_node, 
+                        RenderContext const& ctx, 
+                        Pipeline& pipe, 
+                        RenderTarget& render_target,
+                        MaterialShader* current_material, 
+                        std::shared_ptr<ShaderProgram> current_shader,
+                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                        bool& depth_complexity_vis);
+    private:
 
     // different rasterizer states for different render modes
     scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
