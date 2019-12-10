@@ -43,16 +43,19 @@ int main(int argc, char** argv)
 {
     std::string model_file = "";
     std::string atlas_file = "";
-
-    if (argc == 3) {
-      model_file = argv[1];
-      atlas_file = argv[2];
+    std::vector<std::string> model_files;
+    if (argc > 2) {
+        for(int i = 1; i < (argc - 1); ++i){
+            model_files.push_back(argv[i]);
+        }
+      
+      atlas_file = argv[argc - 1];
     }
-    else if(2 == argc){
+    else if(2 == argc){ // only a single obj is provided
       model_file = argv[1];
     }
     else {
-      std::cout << "usage: " << argv[0] << " filename_vt.obj filename.atlas" << std::endl;
+      std::cout << "usage: " << argv[0] << " filename_vt.obj ... filename.atlas" << std::endl;
       std::cout << "or" << std::endl;
       std::cout << "usage: " << argv[0] << " filename.obj" << std::endl;
       return 0;  
@@ -69,7 +72,7 @@ int main(int argc, char** argv)
 
     auto scene_transform = graph.add_node<gua::node::TransformNode>("/", "transform");
     auto model_transform = graph.add_node<gua::node::TransformNode>("/transform", "model_transform");
-    model_transform->translate(0.0, 0.0, 0.0);
+    auto view_transform = graph.add_node<gua::node::TransformNode>("/", "view_transform");
 
 
     if(atlas_file != ""){
@@ -90,14 +93,40 @@ int main(int argc, char** argv)
         vt_mat->set_enable_virtual_texturing(true);
         vt_mat->set_show_back_faces(false);
 
-        std::cout << "start loading " << model_file << std::endl;
         gua::TriMeshLoader loader;
-        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), vt_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+        for(unsigned i = 0; i <  model_files.size(); ++i){
+
+            std::cout << "start loading " << model_files[i] << std::endl;
+            auto model_node(loader.create_geometry_from_file("model_node" /*shoudl be unique*/ , model_files[i].c_str(), vt_mat, 0));
+            std::cout << model_file << "...ready" << std::endl;
+            graph.add_node("/transform/model_transform", model_node);
+
+            if(0 == i){
+                //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)
+                auto bb = model_node->get_bounding_box();
+                auto model_dim = scm::math::length(bb.max - bb.min);
+                auto center = (bb.max + bb.min) / 2.f; 
+                view_transform->translate(center.x, center.y, center.z + model_dim); 
+            }
+
+        }
+
+
+       
+
+#if 0
+        model_file = "/mnt/confidential/profiling/shared_atlas_test/04_Ottoaltar_LQ/04_Ottoaltar_LQ_vt.obj";
+        std::cout << "start loading " << model_file << std::endl;
+        
+        auto model_node2(loader.create_geometry_from_file("model_node2", model_file.c_str(), vt_mat, 0));
         std::cout << model_file << " ready" << std::endl;
-        graph.add_node("/transform/model_transform", model_node);
+        graph.add_node("/transform/model_transform", model_node2);
+#endif
+
     }
     else{
 #if 1
+        // this has to be profiled
         auto load_mat = [](std::string const& file) {
             auto desc(std::make_shared<gua::MaterialShaderDescription>());
             desc->load_from_file(file);
@@ -110,9 +139,15 @@ int main(int argc, char** argv)
 #endif
         std::cout << "start loading " << model_file << std::endl;
         gua::TriMeshLoader loader;
-        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), mat_textured, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), mat_textured, gua::TriMeshLoader::LOAD_MATERIALS));
         std::cout << model_file << " ready" << std::endl;
-        graph.add_node("/transform/model_transform", model_node);   
+        graph.add_node("/transform/model_transform", model_node);
+
+        //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)
+        auto bb = model_node->get_bounding_box();
+        auto model_dim = scm::math::length(bb.max - bb.min);
+        auto center = (bb.max + bb.min) / 2.f; 
+        view_transform->translate(center.x, center.y, center.z + model_dim);
     }
     
 
@@ -149,17 +184,12 @@ int main(int argc, char** argv)
     light2->translate(0.f, 1.5f, -2.0f);
 
 
-    auto view_transform = graph.add_node<gua::node::TransformNode>("/", "view_transform");
-
-
-#if 0
-    //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)
-    auto bb = model_node->get_bounding_box();
-    auto model_dim = scm::math::length(bb.max - bb.min);
-    auto center = (bb.max + bb.min) / 2.f;
     
-    view_transform->translate(center.x, center.y, center.z + model_dim);
-#endif
+
+
+
+
+
 
     auto screen = graph.add_node<gua::node::ScreenNode>("/view_transform", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
@@ -168,8 +198,8 @@ int main(int argc, char** argv)
     // add mouse interaction
     scm::gl::trackball_manipulator trackball;
     trackball.transform_matrix() * scm::math::make_translation(0.01f, 0.002f, 0.2f);
-    trackball.dolly(0.2f);
-    float dolly_sens = 1.5f;
+    trackball.dolly(0.5f);
+    float dolly_sens = 2.5f;
     gua::math::vec2 trackball_init_pos(0.f);
     gua::math::vec2 last_mouse_pos(0.f);
     int button_state = -1;
