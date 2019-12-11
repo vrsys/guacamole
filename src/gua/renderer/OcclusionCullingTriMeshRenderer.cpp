@@ -619,8 +619,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                                                                scm::math::length_sqr(world_space_cam_pos - (occlusion_group_node->get_bounding_box().max + occlusion_group_node->get_bounding_box().min)/2.0f ) );
 
         
-            
- 
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
 
@@ -709,8 +707,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = (*occlusion_query_iterator).second->result();
 
-
-
                     set_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid, ctx.framecount);
                     int32_t frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
     
@@ -751,8 +747,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                                                 current_shader,
                                                 current_rasterizer_state,
                                                 depth_complexity_vis);
-
-
                         }
                     }
 
@@ -785,7 +779,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
     {
         auto& render_target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
-
 
         bool write_depth = true;
         render_target.bind(ctx, write_depth);
@@ -1068,9 +1061,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                                     
                                 query_queue.push(std::make_pair(current_node, current_occlusion_query_object) );
     
-
                             } 
-
 
 
                             if (was_visible)
@@ -1115,25 +1106,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
         unbind_and_reset(ctx, render_target);
 
-/*        render_target.unbind(ctx);
-
-        auto const& glapi = ctx.render_context->opengl_api();
-        glapi.glColorMask(true, true, true, true);
-        ctx.render_context->set_depth_stencil_state(default_depth_test_);
-        ctx.render_context->set_blend_state(default_blend_state_);
-        ctx.render_context->apply();
-
-        ctx.render_context->reset_state_objects();
-        ctx.render_context->sync();*/
-    
     }
 
-
 }
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1317,16 +1292,17 @@ void OcclusionCullingTriMeshRenderer::set_last_visibility_check_frame_id(std::st
 ////////////////////////////////////////////////////////////////////////////////
 void OcclusionCullingTriMeshRenderer::pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid)
 {
+
     // store the node pointer
     auto temp_node = current_node;
-
     // pull up algorithm as stated by CHC paper
-    while(!get_visibility(temp_node->get_path(), in_camera_uuid)){
+    while(!get_visibility(temp_node->get_path(), in_camera_uuid) && temp_node->get_parent_shared() != nullptr){
 
         set_visibility(temp_node->get_path(), in_camera_uuid, true);
         temp_node = temp_node->get_parent_shared().get();
 
     }
+
 
 }
 ////////////////////////////////////////////////////////////////////////////////
