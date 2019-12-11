@@ -764,17 +764,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
         // also the current
         std::cout << ctx.framecount << std::endl;
+        unbind_and_reset(ctx, render_target);
 
-        render_target.unbind(ctx);
-
-        auto const& glapi = ctx.render_context->opengl_api();
-        glapi.glColorMask(true, true, true, true);
-        ctx.render_context->set_depth_stencil_state(default_depth_test_);
-        ctx.render_context->set_blend_state(default_blend_state_);
-        ctx.render_context->apply();
-
-        ctx.render_context->reset_state_objects();
-        ctx.render_context->sync();
     }
 }
 
@@ -1122,7 +1113,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 #endif
         }
 
-        render_target.unbind(ctx);
+        unbind_and_reset(ctx, render_target);
+
+/*        render_target.unbind(ctx);
 
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);
@@ -1131,7 +1124,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
         ctx.render_context->apply();
 
         ctx.render_context->reset_state_objects();
-        ctx.render_context->sync();
+        ctx.render_context->sync();*/
     
     }
 
@@ -1374,6 +1367,19 @@ void OcclusionCullingTriMeshRenderer::render_visible_leaf(gua::node::Node* curre
 
     }
 
+}
+////////////////////////////////////////////////////////////////////////////////
+void OcclusionCullingTriMeshRenderer::unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target){
+    render_target.unbind(ctx);
+
+    auto const& glapi = ctx.render_context->opengl_api();
+    glapi.glColorMask(true, true, true, true);
+    ctx.render_context->set_depth_stencil_state(default_depth_test_);
+    ctx.render_context->set_blend_state(default_blend_state_);
+    ctx.render_context->apply();
+
+    ctx.render_context->reset_state_objects();
+    ctx.render_context->sync();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
