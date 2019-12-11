@@ -28,145 +28,7 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     std::cout << std::endl;
 }
 
-
-void create_occlusion_scene(std::string const& model_path_plane, std::string const& model_path_central, std::shared_ptr<gua::node::Node> scene_root_node) {
-    
-
-    // create a first central object 
-
-
-    // create a second central object 
-    std::size_t found_central = model_path_central.find_last_of("/\\"); //could be entered directly by path
-    std::string obj_name_central = model_path_central.substr(found_central+1);
-
-    std::string const random_object_name_central = obj_name_central;
-    gua::TriMeshLoader loader_central;
-
-    auto model_material_central(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    model_material_central->set_show_back_faces(false);
-    model_material_central->set_render_wireframe(false);
-
-    auto new_model_central(loader_central.create_geometry_from_file(random_object_name_central, model_path_central, model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-    auto new_model_matrix = new_model_central->get_transform();
-    
-    gua::math::mat4 model_trans_central;
-    
-    model_trans_central =   
-            gua::math::mat4(scm::math::make_translation(-5.0f, 2.0f, -15.0f)) * 
-            gua::math::mat4(scm::math::make_rotation(0.0f, 0.0f, 0.0f, 1.0f)) *
-            gua::math::mat4(scm::math::make_scale(10.0f, 10.0f, 10.0f)) *
-            new_model_matrix;  
-    // override the model's transform with our calculated transformation
-    new_model_central->set_transform(model_trans_central);
-    new_model_central->set_draw_bounding_box(false);
-    scene_root_node->add_child(new_model_central);
-
-    /*/create 5 walls surrounding a central object
-    std::size_t found = model_path_plane.find_last_of("/\\"); //could be entered directly by path
-    std::string obj_name = model_path_plane.substr(found+1);
-
-
-    auto model_material_backface_culling_off(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    model_material_backface_culling_off->set_show_back_faces(false);
-    model_material_backface_culling_off->set_render_wireframe(false);
-    
-    for (int i = 0; i < 5; ++i)
-    {
-        std::string const random_object_name = obj_name;
-        gua::TriMeshLoader loader;
-
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material_backface_culling_off, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-        auto norm_scale_mat = new_model->get_transform();
-        
-        gua::math::mat4 model_trans;
-        float translation_offset = 7.0f;
-                    
-        gua::math::mat4 turn_plane_around_mat =  gua::math::mat4(scm::math::make_scale(4.0f, 4.0f, -4.0f));
-
-        if (i != 4)
-        {
-            if (i%2 == 0)
-            {
-                model_trans =   
-                            gua::math::mat4(scm::math::make_translation(translation_offset*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
-                            gua::math::mat4(scm::math::make_rotation(90.0f*(1-i), 0.0f, 0.0f, 1.0f)) *
-                            gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                            turn_plane_around_mat * norm_scale_mat;  
-            } else {
-                
-                model_trans =   
-                            gua::math::mat4(scm::math::make_translation(0.0f, translation_offset*(2-i), 0.0f)) * // 5. we apply the random translation
-                            gua::math::mat4(scm::math::make_rotation(180.0f*(i%3), 0.0f, 0.0f, 1.0f)) *
-                            gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                            turn_plane_around_mat * norm_scale_mat;             
-            } 
-
-        } else {
-                
-            model_trans = 
-                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -translation_offset)) * // 5. we apply the random translation
-                gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
-                gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                turn_plane_around_mat * norm_scale_mat;
-            
-        }
-
-        // override the model's transform with our calculated transformation
-        new_model->set_transform(model_trans);
-        new_model->set_draw_bounding_box(false);
-        scene_root_node->add_child(new_model);
-    }
-    */
-    scene_root_node->set_draw_bounding_box(false);
-
-    //creating teacentrals
-    /**
-    std::size_t found_central = model_path_objects.find_last_of("/\\"); //could be entered directly by path
-    std::string obj_name_central = model_path_objects.substr(found+1);
-
-    for (int i = 0; i < 10; ++i) {
-        std::string const random_object_name_central = obj_name_central;
-        gua::TriMeshLoader loader_central;
-
-        auto model_material_central(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-        model_material_central->set_show_back_faces(true);
-        model_material_central->set_render_wireframe(false);
-
-        auto new_model_central(loader.create_geometry_from_file(random_object_name_central, model_path_objects, model_material, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-        auto norm_scale_mat_central = new_model_central->get_transform();
-
-        float y_pos = std::sin(i / 30.0);
-
-        gua::math::mat4 model_trans_central =   
-                                    gua::math::mat4(scm::math::make_translation(0.0f, 0.5f * y_pos , float(-5.0f+i))) * // 5. we apply the random translation
-                                    gua::math::mat4(scm::math::make_scale(0.5f, 0.5f, 0.5f)) *
-                                    norm_scale_mat_central;  
-
-        // override the model's transform with our calculated transformation
-        new_model_central->set_transform(model_trans_central);
-        new_model_central->set_draw_bounding_box(false);
-        scene_root_node->add_child(new_model_central);
-    }
-
-    scene_root_node->set_draw_bounding_box(false);
-        **/
-}
-
-
-
 void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node) {
-    
-
-    // create a first central object 
-
-
-    // create a second central object 
-    //std::size_t found_central = model_path_central.find_last_of("/\\"); //could be entered directly by path
-    //std::string obj_name_central = model_path_central.substr(found_central+1);
-
-    //std::string const random_object_name_central = obj_name_central;
     gua::TriMeshLoader loader_central;
 
     auto model_material_central(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -185,7 +47,7 @@ void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node
     auto new_model_central4(loader_central.create_geometry_from_file("teapot_4", "/opt/3d_models/hairball/hairball.dae", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
 
 
-    auto plane(loader_central.create_geometry_from_file("plane_obj", "/home/voxu7843/programming/guacamole/examples/occlusion_culling/data/objects/plane.obj", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto plane(loader_central.create_geometry_from_file("plane", "./data/objects/plane.obj", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
    // auto new_plane_model = new_model_central->get_transform();
 
     float plane_scaling = 30.0f;
@@ -230,98 +92,79 @@ void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node
     scene_root_node->add_child(new_model_central4);
     
     scene_root_node->add_child(plane);
-
-    /*/create 5 walls surrounding a central object
-    std::size_t found = model_path_plane.find_last_of("/\\"); //could be entered directly by path
-    std::string obj_name = model_path_plane.substr(found+1);
+}
 
 
-    auto model_material_backface_culling_off(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    model_material_backface_culling_off->set_show_back_faces(false);
-    model_material_backface_culling_off->set_render_wireframe(false);
-    
-    for (int i = 0; i < 5; ++i)
+
+void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node,
+                             std::string const& name, 
+                             std::string const& path, 
+                             gua::TriMeshLoader& loader,
+                             bool const is_behind,
+                             bool const randomized,
+                             float x_trans,
+                             float y_trans,
+                             float z_trans,
+                             float angle_x,
+                             float angle_y,
+                             float angle_z,
+                             float scale)
+{
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    auto trimesh_model(
+        loader.create_geometry_from_file(name, path, material , 
+                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto trimesh_model_matrix = trimesh_model->get_transform();
+
+    if (is_behind && randomized)
     {
-        std::string const random_object_name = obj_name;
-        gua::TriMeshLoader loader;
-
-        auto new_model(loader.create_geometry_from_file(random_object_name, model_path_plane, model_material_backface_culling_off, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-        auto norm_scale_mat = new_model->get_transform();
         
-        gua::math::mat4 model_trans;
-        float translation_offset = 7.0f;
-                    
-        gua::math::mat4 turn_plane_around_mat =  gua::math::mat4(scm::math::make_scale(4.0f, 4.0f, -4.0f));
+        x_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
+        y_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
+        z_trans = 100.0f * std::rand() / (float)RAND_MAX - 100.0f;
 
-        if (i != 4)
-        {
-            if (i%2 == 0)
-            {
-                model_trans =   
-                            gua::math::mat4(scm::math::make_translation(translation_offset*(1-i), 0.0f, 0.0f)) * // 5. we apply the random translation
-                            gua::math::mat4(scm::math::make_rotation(90.0f*(1-i), 0.0f, 0.0f, 1.0f)) *
-                            gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                            turn_plane_around_mat * norm_scale_mat;  
-            } else {
-                
-                model_trans =   
-                            gua::math::mat4(scm::math::make_translation(0.0f, translation_offset*(2-i), 0.0f)) * // 5. we apply the random translation
-                            gua::math::mat4(scm::math::make_rotation(180.0f*(i%3), 0.0f, 0.0f, 1.0f)) *
-                            gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                            turn_plane_around_mat * norm_scale_mat;             
-            } 
-
-        } else {
-                
-            model_trans = 
-                gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -translation_offset)) * // 5. we apply the random translation
-                gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
-                gua::math::mat4(scm::math::make_scale(8.0f, 8.0f, 8.0f)) *
-                turn_plane_around_mat * norm_scale_mat;
-            
-        }
-
-        // override the model's transform with our calculated transformation
-        new_model->set_transform(model_trans);
-        new_model->set_draw_bounding_box(false);
-        scene_root_node->add_child(new_model);
-    }
-    */
-    scene_root_node->set_draw_bounding_box(false);
-
-    //creating teacentrals
-    /**
-    std::size_t found_central = model_path_objects.find_last_of("/\\"); //could be entered directly by path
-    std::string obj_name_central = model_path_objects.substr(found+1);
-
-    for (int i = 0; i < 10; ++i) {
-        std::string const random_object_name_central = obj_name_central;
-        gua::TriMeshLoader loader_central;
-
-        auto model_material_central(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-        model_material_central->set_show_back_faces(true);
-        model_material_central->set_render_wireframe(false);
-
-        auto new_model_central(loader.create_geometry_from_file(random_object_name_central, model_path_objects, model_material, gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-        auto norm_scale_mat_central = new_model_central->get_transform();
-
-        float y_pos = std::sin(i / 30.0);
-
-        gua::math::mat4 model_trans_central =   
-                                    gua::math::mat4(scm::math::make_translation(0.0f, 0.5f * y_pos , float(-5.0f+i))) * // 5. we apply the random translation
-                                    gua::math::mat4(scm::math::make_scale(0.5f, 0.5f, 0.5f)) *
-                                    norm_scale_mat_central;  
-
-        // override the model's transform with our calculated transformation
-        new_model_central->set_transform(model_trans_central);
-        new_model_central->set_draw_bounding_box(false);
-        scene_root_node->add_child(new_model_central);
+/*        angle_x = 360.0f * std::rand() / (float)RAND_MAX;
+        angle_y = 360.0f * std::rand() / (float)RAND_MAX;
+        angle_z = 360.0f * std::rand() / (float)RAND_MAX;
+        scale = ( 20.0f * std::rand() / (float)RAND_MAX ) / 10.0f;
+*/
     }
 
-    scene_root_node->set_draw_bounding_box(false);
-        **/
+
+    gua::math::mat4 trimesh_model_trans =   
+                                        gua::math::mat4(scm::math::make_translation(x_trans, y_trans, z_trans)) *
+                                        gua::math::mat4(scm::math::make_rotation(angle_z, 0.0f, 0.0f, 1.0f)) * 
+                                        gua::math::mat4(scm::math::make_rotation(angle_y, 0.0f, 1.0f, 0.0f)) * 
+                                        gua::math::mat4(scm::math::make_rotation(angle_x, 1.0f, 0.0f, 0.0f)) *  
+                                        gua::math::mat4(scm::math::make_scale(scale, scale, scale)) * 
+                                        trimesh_model_matrix;  
+    trimesh_model->set_transform(trimesh_model_trans);
+    trimesh_model->set_draw_bounding_box(false);
+    scene_root_node->add_child(trimesh_model);
+
+
+}
+
+void create_simple_debug_scene_01(std::shared_ptr<gua::node::Node> scene_root_node) {
+
+    gua::TriMeshLoader trimesh_loader;
+
+    for (unsigned int i = 0; i < 150; ++i)
+    {
+
+        transform_trimesh_model(scene_root_node,  
+                            "hb" + i, 
+                            "/opt/3d_models/hairball/hairball.dae", 
+                            trimesh_loader, true, true);
+    }
+
+    transform_trimesh_model(scene_root_node, "plane1", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,0,-5.0f,90.0f,0,0,10.0f);
+    transform_trimesh_model(scene_root_node, "plane2", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,1.0f,-20.0f,90.0f,0,0,3.0f);
+    transform_trimesh_model(scene_root_node, "plane3", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,-2.0f,-50.0f,90.0f,0,0,4.0f);
+
 }
 
 
@@ -371,7 +214,6 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
 
         // override the model's transform with our calculated transformation
         new_model->set_transform(model_trans);
-
 
         new_model->set_draw_bounding_box(false);
 

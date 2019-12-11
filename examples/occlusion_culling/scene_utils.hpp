@@ -12,7 +12,20 @@ void place_objects_randomly(std::string const& model_path, int32_t num_models_to
 void create_occlusion_scene(std::string const& model_path_plane, std::string const& model_path_objects, std::shared_ptr<gua::node::Node> scene_root_node);
 
 void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node);
-    
+void create_simple_debug_scene_01( std::shared_ptr<gua::node::Node> scene_root_node);
+void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node, 
+							 std::string const& name, 
+							 std::string const& path, 
+							 gua::TriMeshLoader& loader, 
+							 bool const is_behind,
+                             bool const randomized, 
+							 float x_trans = 0,
+    						 float y_trans = 0,
+						     float z_trans = 0,
+						     float angle_x = 0,
+						     float angle_y = 0,
+						     float angle_z = 0,
+						     float scale = 1);
 
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable, int bb_vis_level = -1, int current_node_level = 0);
 

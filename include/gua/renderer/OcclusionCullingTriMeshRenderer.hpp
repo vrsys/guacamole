@@ -83,6 +83,16 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                                   Pipeline& pipe, scm::gl::rasterizer_state_ptr& current_rasterizer_state);
 
 
+    // helper functions for all rendering techniques
+    void render_visible_leaf(gua::node::Node* current_query_node, 
+                        RenderContext const& ctx, 
+                        Pipeline& pipe, 
+                        RenderTarget& render_target,
+                        MaterialShader* current_material, 
+                        std::shared_ptr<ShaderProgram> current_shader,
+                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                        bool& depth_complexity_vis);
+    void unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target);
 
 
     // helper functions to manage visibility of nodes
@@ -96,14 +106,6 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     // helper functions for CHC
     void pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid);
-    void render_visible_leaf(gua::node::Node* current_query_node, 
-                        RenderContext const& ctx, 
-                        Pipeline& pipe, 
-                        RenderTarget& render_target,
-                        MaterialShader* current_material, 
-                        std::shared_ptr<ShaderProgram> current_shader,
-                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
-                        bool& depth_complexity_vis);
     private:
 
     // different rasterizer states for different render modes
