@@ -124,7 +124,7 @@ void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node,
         
         x_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
         y_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
-        z_trans = 100.0f * std::rand() / (float)RAND_MAX - 120.0f;
+        z_trans = 10.0f * std::rand() / (float)RAND_MAX - 20.0f;
 
 /*        angle_x = 360.0f * std::rand() / (float)RAND_MAX;
         angle_y = 360.0f * std::rand() / (float)RAND_MAX;
@@ -152,7 +152,7 @@ void create_simple_debug_scene_01(std::shared_ptr<gua::node::Node> scene_root_no
 
     gua::TriMeshLoader trimesh_loader;
 
-    for (unsigned int i = 0; i < 250; ++i)
+    for (unsigned int i = 0; i < 40; ++i)
     {
 
         transform_trimesh_model(scene_root_node,  
@@ -161,9 +161,9 @@ void create_simple_debug_scene_01(std::shared_ptr<gua::node::Node> scene_root_no
                             trimesh_loader, true, true);
     }
 
-    //transform_trimesh_model(scene_root_node, "plane1", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,0,-5.0f,90.0f,0,0,10.0f);
-    //transform_trimesh_model(scene_root_node, "plane2", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,1.0f,-20.0f,90.0f,0,0,3.0f);
-    //ransform_trimesh_model(scene_root_node, "plane3", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,-2.0f,-50.0f,90.0f,0,0,4.0f);
+    transform_trimesh_model(scene_root_node, "plane1", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,0,-5.0f,90.0f,0,0,10.0f);
+    transform_trimesh_model(scene_root_node, "plane2", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,1.0f,-20.0f,90.0f,0,0,3.0f);
+    transform_trimesh_model(scene_root_node, "plane3", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,-2.0f,-50.0f,90.0f,0,0,4.0f);
 
 }
 

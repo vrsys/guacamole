@@ -1296,10 +1296,14 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(gua::node::Node* curren
     // store the node pointer
     auto temp_node = current_node;
     // pull up algorithm as stated by CHC paper
-    while(!get_visibility(temp_node->get_path(), in_camera_uuid) && temp_node->get_parent_shared() != nullptr){
+    while(!get_visibility(temp_node->get_path(), in_camera_uuid)){
 
         set_visibility(temp_node->get_path(), in_camera_uuid, true);
-        temp_node = temp_node->get_parent_shared().get();
+
+        if (temp_node->get_parent_shared() != nullptr)
+        {
+            temp_node = temp_node->get_parent_shared().get();
+        }
 
     }
 
