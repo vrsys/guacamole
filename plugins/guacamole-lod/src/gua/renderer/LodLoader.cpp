@@ -95,7 +95,13 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
                         exit(-1);
                     } else {
                         std::cout << "Loading Provenance-Layout-Description from JSON: " << settings.json_ << std::endl;
-                        lamure::ren::data_provenance::get_instance()->parse_json(settings.json_);     
+                        lamure::ren::data_provenance::get_instance()->parse_json(settings.json_);
+                    
+
+                        std::cout << "Loading mapping file: " << std::endl;
+
+                        
+                        std::cout << settings.fem_value_mapping_file_ << std::endl;
                     }
                 }
 
