@@ -395,8 +395,10 @@ std::shared_ptr<Node> Node::deep_copy() const
     copied_node->world_transform_ = world_transform_;
 
     // the id should be unique, so we do not copy it
-    copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
+    //copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
+    //copying of uuid -> will not be unique anymore
+    copied_node->uuid_=uuid_;
 
     for(int i(0); i < children_.size(); ++i)
     {

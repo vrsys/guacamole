@@ -182,11 +182,11 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
     // create_simple_debug_scene(occlusion_group_node);
-    create_simple_debug_scene_01(occlusion_group_node);
+    //create_simple_debug_scene_01(occlusion_group_node);
 
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
     
