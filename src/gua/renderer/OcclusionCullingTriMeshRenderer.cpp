@@ -724,6 +724,9 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 
                     //std::cout << "Camera UUID 2: " << current_cam_node.uuid << std::endl;
 
+
+
+
                     if (query_result == 0) {
                         set_visibility(current_node->get_path(), current_cam_node.uuid, false);
                     } else {
@@ -923,9 +926,45 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     }
 
                     //is it so easy? YES it is!
-                    if (query_result > 0 /*desc.get_occlusion_culling_fragment_threshold()*/ )
-                    {
 
+
+
+
+
+
+                    bool render_current_node = false;
+
+
+                    switch( desc.get_occlusion_query_type() ) {
+                        case OcclusionQueryType::Number_Of_Samples_Passed:
+                            //So if we define a certain threshold, then check if the number of returned fragments is higher than threshold, only then render (not conservative?)
+                            if(query_result > desc.get_occlusion_culling_fragment_threshold()) {
+                                render_current_node = true;
+                            } else {
+                                render_current_node = false;
+                            }
+                        break;
+
+                        //conservative approach. If any passed we render
+                        case OcclusionQueryType::Any_Samples_Passed:
+                            if(query_result > 0) {
+                                render_current_node = true;
+                            } else {
+                                render_current_node = false;
+                            }
+                        break;
+
+                        default: 
+                            Logger::LOG_WARNING << "OcclusionCullingTriMeshPass:: unknown occlusion query type encountered." << std::endl;
+                        break;
+                    }
+
+
+
+
+
+                    if (render_current_node) //query_result > 0 /*desc.get_occlusion_culling_fragment_threshold()*/ )
+                    {
                         // pull up visibility
                         pull_up_visibility(current_query_node, current_cam_node.uuid);
 
@@ -1179,7 +1218,7 @@ void OcclusionCullingTriMeshRenderer::set_occlusion_query_states(RenderContext c
     // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
     ctx.render_context->set_rasterizer_state(rs_cull_none_);
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
-    ctx.render_context->apply();
+    ctx.render_context->apply_state_objects();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

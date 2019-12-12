@@ -89,7 +89,7 @@ void configure_pipeline_descriptions() {
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
        // visualizes the GBuffer-content
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass()->enable(false);
     // configure the resolve pass
@@ -182,11 +182,12 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
     // create_simple_debug_scene(occlusion_group_node);
     //create_simple_debug_scene_01(occlusion_group_node);
+    create_city_scene(occlusion_group_node);
 
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
     
@@ -217,7 +218,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1280, 720);
+    auto resolution = gua::math::vec2ui(2*1280, 2*720);
 
 
     configure_pipeline_descriptions();
