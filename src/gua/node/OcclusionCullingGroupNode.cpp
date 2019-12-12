@@ -142,21 +142,30 @@ void OcclusionCullingGroupNode::determine_best_split(std::queue<gua::node::Node*
         }
 
 
-        // restore best candidate configuration by splitting once more
-        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
+        if(best_splitting_axis > -1) {
+            // restore best candidate configuration by splitting once more
+            split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
 
-        auto children = current_node_to_split->get_children();
+            auto children = current_node_to_split->get_children();
 
-        for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
-            auto& current_child = children[child_idx];
+            for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
+                auto& current_child = children[child_idx];
 
-            if(current_child->get_children().size() > 2 && current_child->num_grouped_faces()>THRESHHOLD) {
-                gua::node::Node* child_ptr = children[child_idx].get();
-                splitting_queue.push(child_ptr);
+                if(current_child->get_children().size() > 2 /*&& current_child->num_grouped_faces()>THRESHHOLD*/) {
+                    gua::node::Node* child_ptr = children[child_idx].get();
+                    splitting_queue.push(child_ptr);
+                }
+
             }
+        } else {
+            current_node_to_split->clear_children();
 
+            for(auto const& child : children_sorted_by_xyz[0]) {
+                current_node_to_split->add_child(child);
+            }
+            
+            std::cout << "DID NOT SPLIT FURTHER!" << std::endl;
         }
-
     }
 }
 
@@ -206,9 +215,19 @@ double OcclusionCullingGroupNode::calculate_cost(gua::node::Node* node){
 
     float summed_weighted_surface_area = 0.0f;
 
+    float parent_cost = parent_surface_area * node->num_grouped_faces();
+
+
+
     for(auto& child : children) {
         child->update_cache();
-        summed_weighted_surface_area += child->get_bounding_box().surface_area() * (child->get_children()).size();;
+        summed_weighted_surface_area += child->get_bounding_box().surface_area() * child->num_grouped_faces();//(child->get_children()).size();;
+    }
+
+    if(parent_cost < summed_weighted_surface_area * 1.5) {
+        std::cout << "PARENT COSTS ARE SMALLER: " << parent_cost << "    " << summed_weighted_surface_area << std::endl;
+
+        return std::numeric_limits<double>::max();
     }
 
     return (summed_weighted_surface_area) / parent_surface_area;

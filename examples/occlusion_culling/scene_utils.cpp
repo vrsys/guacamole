@@ -148,16 +148,56 @@ void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node,
 
 }
 
+void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+
+    for(int grid_position_z = 0; grid_position_z < 50; ++grid_position_z) {
+        for(int grid_position_x = 0; grid_position_x < 50; ++grid_position_x) {
+            auto trimesh_model(
+                loader.create_geometry_from_file(std::string("house") + std::to_string(grid_position_x) + "__" + std::to_string(grid_position_z), 
+                                                "/opt/3d_models/paperHouses/paper-houses/house3.obj", 
+                                                //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
+                                                material, 
+                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+            auto trimesh_model_matrix = trimesh_model->get_transform();
+
+
+            scene_root_node->add_child(trimesh_model);
+
+
+            float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
+
+            trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
+            trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
+            trimesh_model->translate(0.0, 0.0, -30.0f);
+        }
+    }
+
+
+
+
+
+}
+
 void create_simple_debug_scene_01(std::shared_ptr<gua::node::Node> scene_root_node) {
 
     gua::TriMeshLoader trimesh_loader;
 
-    for (unsigned int i = 0; i < 40; ++i)
+    for (unsigned int i = 0; i < 50; ++i)
     {
 
         transform_trimesh_model(scene_root_node,  
-                            "hb" + i, 
-                            "/opt/3d_models/hairball/hairball.dae", 
+                            "hb" + std::to_string(i), 
+                            //"/opt/3d_models/hairball/hairball.dae",
+                            "./data/objects/teapot.obj",
+                            
+                            //"/opt/3d_models/paperHouses/paper-houses/house3.obj",
                             trimesh_loader, true, true);
     }
 
