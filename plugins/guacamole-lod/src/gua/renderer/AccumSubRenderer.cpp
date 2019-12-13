@@ -72,7 +72,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 {
 
     auto const& camera = pipe.current_viewstate().camera;
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
     lamure::ren::controller* controller = lamure::ren::controller::get_instance();
 
 /*
@@ -169,6 +169,9 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 if(looked_up_time_series_data_item) {
                     std::cout << "FOUND DATA ITEM" << std::endl;
                     std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+
+
+                    looked_up_time_series_data_item->upload_time_range_to(ctx);
                 }
             }
 
@@ -186,6 +189,34 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
 
                 plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+
+
+
+                if( !plod_node->get_time_series_data_descriptions().empty() ) {
+
+                    for(auto const& data_description : time_series_data_descriptions) {
+
+
+
+                        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+
+
+                        auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
+
+                        current_material_program->set_uniform(ctx, int(4), "time_series_data_ssbo");
+
+
+                        ctx.render_context->bind_storage_buffer( current_ssbo_ptr_it->second, 4, 0, sizeof(float) * looked_up_time_series_data_item->data.size());
+                        //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+
+                        ctx.render_context->apply_storage_buffer_bindings();
+                        ctx.render_context->apply();
+
+                        std::cout << "BINDING SSBO!!!" << std::endl;
+
+                    }
+
+                }
 
                 plod_resource->draw(ctx,
                                     context_id,

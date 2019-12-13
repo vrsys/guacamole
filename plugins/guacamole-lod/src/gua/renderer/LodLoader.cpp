@@ -129,6 +129,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
                                 std::ifstream in_attribute_file(shared_time_series_dataset->name, std::ios::in | std::ios::binary | std::ios::ate);
 
                                 size_t total_num_byte_in_file = in_attribute_file.tellg();
+
+                                std::cout << "TOTAL NUM BYTE IN FILE: " << total_num_byte_in_file << std::endl;
+
                                 in_attribute_file.clear();
                                 in_attribute_file.seekg(0, std::ios::beg);
 
@@ -142,6 +145,8 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
                                 in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file );
 
                                 std::cout << "Read " << total_num_byte_in_file << " byte" << std::endl;
+
+                                //exit(-1);
                                 std::cout << "Vertices per file: " << num_vertices_per_file << std::endl;
 
                                 in_attribute_file.close();
