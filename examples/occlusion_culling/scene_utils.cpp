@@ -170,6 +170,90 @@ void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
 
 }
 
+
+void create_street_cars(std::shared_ptr<gua::node::Node> scene_root_node, 
+                         int const start_position_x, 
+                         int const end_position_x,
+                         int const start_position_z,
+                         int const end_position_z){
+
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    std::srand(std::time(NULL));
+
+
+
+    for(int grid_position_z = start_position_z; grid_position_z < end_position_z; ++grid_position_z) {
+        for(int grid_position_x = start_position_x; grid_position_x < end_position_x; ++grid_position_x) {
+            int car_type = std::floor((std::rand() / (float)RAND_MAX) * 4)+ 1;
+            std::string car_path = "/opt/3d_models/vehicle/cars/autobus/auobus.obj";
+
+            auto trimesh_model(
+                loader.create_geometry_from_file(std::string("cars") + std::to_string(grid_position_x) + "__" + std::to_string(grid_position_z), 
+                                                car_path, 
+                                                //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
+                                                material, 
+                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+            auto trimesh_model_matrix = trimesh_model->get_transform();
+
+
+            scene_root_node->add_child(trimesh_model);
+
+            //float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
+            trimesh_model->rotate(180.0f*(2+grid_position_x), 0, 1.0f, 0);
+            trimesh_model->scale(0.02f, 0.02f, 0.02f);
+            trimesh_model->translate(12.0f*grid_position_x, 0.0, 20.0f*grid_position_z);
+            trimesh_model->translate(0.0, -5.0, -100.0f);
+
+        }
+    }
+
+}
+
+
+void create_street_trees(std::shared_ptr<gua::node::Node> scene_root_node, 
+                         int const start_position_z,
+                         int const end_position_z){
+
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    std::srand(std::time(NULL));
+
+
+
+    for(int grid_position_z = start_position_z; grid_position_z < end_position_z; ++grid_position_z) {
+            //int car_type = std::floor((std::rand() / (float)RAND_MAX) * 4)+ 1;
+            std::string tree_path = "/opt/3d_models/trees/lindenTree/lindenTree.obj";
+
+            auto trimesh_model(
+                loader.create_geometry_from_file(std::string("trees")+ std::to_string(grid_position_z), 
+                                                tree_path, 
+                                                //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
+                                                material, 
+                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+            auto trimesh_model_matrix = trimesh_model->get_transform();
+
+
+            scene_root_node->add_child(trimesh_model);
+
+            //float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
+            trimesh_model->rotate(-90, 1.0f, 0.0f, 0);
+            trimesh_model->scale(0.4f, 0.4f, 0.4f);
+            trimesh_model->translate(-10.0f, 0.0, 40.0f*grid_position_z);
+            trimesh_model->translate(0.0, -5.0, -100.0f);
+        
+    }
+
+}
+
 void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
     // city square 1
@@ -183,8 +267,10 @@ void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) 
 
     // city square 4
     create_city_quarter(scene_root_node, 1, 25, -25, -10);
-    //create_trees(scene_root_node);
+
+    create_street_cars(scene_root_node, -1, 1, -30, -10);
 }
+
 
 
 
