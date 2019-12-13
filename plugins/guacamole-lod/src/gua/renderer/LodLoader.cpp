@@ -32,6 +32,7 @@
 #include <gua/node/MLodNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
 #include <gua/renderer/LodResource.hpp>
 
 // external headers
@@ -61,7 +62,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
 
     //bool load_vis_
 
-
+    std::vector<std::string> parsed_time_series_data_description;
     try {
         if(!is_supported_vis_file(vis_file_name)) {
             throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
@@ -102,6 +103,67 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
 
                         
                         std::cout << settings.fem_value_mapping_file_ << std::endl;
+
+                        std::string line_buffer;
+                        std::ifstream in_mapping_file_stream(settings.fem_value_mapping_file_);
+
+
+
+                        while( std::getline(in_mapping_file_stream, line_buffer) ) {
+                            boost::trim(line_buffer);
+                            if (! (line_buffer.rfind("#", 0) == 0 ) ) {
+                                std::cout << "Parsing data collection" << std::endl;
+                                std::cout << line_buffer << std::endl;
+
+                                std::istringstream data_item_description_strstream(line_buffer);
+
+
+                                std::shared_ptr<TimeSeriesDataSet> shared_time_series_dataset = std::make_shared<TimeSeriesDataSet>();
+                
+
+                                data_item_description_strstream >> shared_time_series_dataset->name; 
+                                data_item_description_strstream >> shared_time_series_dataset->num_attributes;
+                                data_item_description_strstream >> shared_time_series_dataset->num_timesteps; 
+                                data_item_description_strstream >> shared_time_series_dataset->sequence_length; 
+
+                                std::ifstream in_attribute_file(shared_time_series_dataset->name, std::ios::in | std::ios::binary | std::ios::ate);
+
+                                size_t total_num_byte_in_file = in_attribute_file.tellg();
+                                in_attribute_file.clear();
+                                in_attribute_file.seekg(0, std::ios::beg);
+
+
+                                std::size_t num_vertices_per_file = total_num_byte_in_file / (shared_time_series_dataset->num_attributes * shared_time_series_dataset->num_timesteps );
+
+                                std::size_t num_elements_to_read = total_num_byte_in_file / sizeof(float);
+                                
+                                shared_time_series_dataset->data.resize(num_elements_to_read);
+
+                                in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file );
+
+                                std::cout << "Read " << total_num_byte_in_file << " byte" << std::endl;
+                                std::cout << "Vertices per file: " << num_vertices_per_file << std::endl;
+
+                                in_attribute_file.close();
+
+                                TimeSeriesDataSetDatabase::instance()->add(shared_time_series_dataset->name, shared_time_series_dataset);
+
+                                parsed_time_series_data_description.push_back(shared_time_series_dataset->name);
+
+                                //data_collection_resource.named_item
+                                
+                                /*
+                                  std::cout << "Splitting: " << str << '\n';
+                                  std::size_t found = str.find_last_of("/\\");
+                                  std::cout << " path: " << str.substr(0,found) << '\n';
+                                  std::cout << " file: " << str.substr(found+1) << '\n';
+                                */
+                            }
+                        }
+
+                        in_mapping_file_stream.close();
+
+
                     }
                 }
 
@@ -114,9 +176,11 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
             for(auto const& model_path : model_files_to_load) {
                 auto const& current_point_cloud_shared_ptr = load_lod_pointcloud(group_node_name + "_" + std::to_string(model_count), model_path, fallback_material, flags);
                     
+                current_point_cloud_shared_ptr->set_time_series_data_descriptions(parsed_time_series_data_description);
+
                 loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
 
-                //set attributes here
+    
             }
 
             return loaded_point_cloud_models;
