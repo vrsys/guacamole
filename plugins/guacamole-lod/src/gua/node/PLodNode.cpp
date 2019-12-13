@@ -139,10 +139,6 @@ void PLodNode::set_enable_backface_culling_by_normal(bool const enable_backface_
 ////////////////////////////////////////////////////////////////////////////////
 bool PLodNode::get_enable_backface_culling_by_normal() const { return enable_backface_culling_by_normal_; }
 
-////////////////////////////////////////////////////////////////////////////////
-void PLodNode::set_data_collection_file_path(std::string const& map_file_path) {
-    
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
@@ -287,5 +283,15 @@ std::shared_ptr<Node> PLodNode::copy() const
 
     return result;
 }
+
+
+void PLodNode::set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions) {
+    associated_time_series_data_descriptions_ = time_series_data_descriptions;
+}
+
+std::vector<std::string> PLodNode::get_time_series_data_descriptions() {
+    return associated_time_series_data_descriptions_;
+}
+
 } // namespace node
 } // namespace gua

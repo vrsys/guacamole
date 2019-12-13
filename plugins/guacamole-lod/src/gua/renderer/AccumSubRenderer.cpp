@@ -26,6 +26,8 @@
 #include <gua/renderer/AccumSubRenderer.hpp>
 #include <lamure/ren/controller.h>
 
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
+
 namespace gua
 {
 AccumSubRenderer::AccumSubRenderer() : PLodSubRenderer() { _load_shaders(); }
@@ -155,6 +157,20 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             ctx.render_context->apply();
 
             auto plod_resource = plod_node->get_geometry();
+
+
+            auto time_series_data_descriptions = plod_node->get_time_series_data_descriptions();
+
+            std::cout << "Time series data description size: " << time_series_data_descriptions.size() << std::endl;
+
+            for(auto const& data_description : time_series_data_descriptions) {
+                auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+
+                if(looked_up_time_series_data_item) {
+                    std::cout << "FOUND DATA ITEM" << std::endl;
+                    std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+                }
+            }
 
             // retrieve frustum culling results
             std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];

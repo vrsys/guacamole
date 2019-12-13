@@ -5,7 +5,7 @@ provenance: 1
 json: /mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/Scherkondetalbruecke_Gelaende.json
 
 
-fem_value_mapping_file: /mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/fem_value_mapping_mat.map
+fem_value_mapping_file: /mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/gua_fem_value_mapping_mat.map
 
 max_radius: 0.3
 

@@ -85,8 +85,9 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool get_enable_backface_culling_by_normal() const;
     void set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
-    void set_data_collection_file_path(std::string const& map_file_path);
-
+    void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
+    std::vector<std::string> get_time_series_data_descriptions();
+    
   public:
     /**
      * Implements ray picking for a point cloud
@@ -117,7 +118,7 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool enable_backface_culling_by_normal_;
 
 
-    std::string data_collection_file_path_;
+    std::vector<std::string> associated_time_series_data_descriptions_;
 
 };
 

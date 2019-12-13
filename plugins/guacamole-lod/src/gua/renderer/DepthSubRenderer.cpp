@@ -25,6 +25,7 @@
 
 #include <gua/renderer/DepthSubRenderer.hpp>
 #include <lamure/ren/controller.h>
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
 
 namespace gua
 {
@@ -90,6 +91,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
         std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];
 
         auto const& plod_resource = plod_node->get_geometry();
+
 
         if(plod_resource && shader_program_)
         {
