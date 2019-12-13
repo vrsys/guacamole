@@ -272,7 +272,6 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
     }
 }
 
-
 void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, 
                                                                     scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos) {
    
@@ -445,6 +444,17 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                         //So if we define a certain threshold, then check if the number of returned fragments is higher than threshold, only then render (not conservative?)
                         if(query_result > desc.get_occlusion_culling_fragment_threshold()) {
                             ++object_render_count;
+                            if (current_node->get_children().size()>0) {
+                            //interior node
+
+                                for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
+                                    auto child_node_distance_pair 
+                                        = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f ) );
+                                    traversal_priority_queue.push(child_node_distance_pair);
+                                }
+
+       
+                            }
                         } else {
                             render_current_node = false;
                         }
@@ -454,6 +464,18 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                     case OcclusionQueryType::Any_Samples_Passed:
                         if(query_result > 0) {
                             ++object_render_count;
+                            if (current_node->get_children().size()>0) {
+                            //interior node
+
+                                for(std::shared_ptr<gua::node::Node> const& shared_child_node_ptr : current_node->get_children()) {
+                                    auto child_node_distance_pair 
+                                        = std::make_pair(shared_child_node_ptr.get(), scm::math::length_sqr(world_space_cam_pos - (shared_child_node_ptr->get_bounding_box().max + shared_child_node_ptr->get_bounding_box().min)/2.0f ) );
+                                    traversal_priority_queue.push(child_node_distance_pair);
+                                }
+
+       
+                            }
+                            
                         } else {
                             render_current_node = false;
                         }
@@ -504,7 +526,6 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
     }
 }
-
 
 
 #define USE_PRIORITY_QUEUE

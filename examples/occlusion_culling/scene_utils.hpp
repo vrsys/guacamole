@@ -20,6 +20,11 @@ void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
 						 int const start_position_z,
 						 int const end_position_z);
 
+void create_street_cars(std::shared_ptr<gua::node::Node> scene_root_node, 
+                         int const start_position_x, 
+                         int const end_position_x,
+                         int const start_position_z,
+                         int const end_position_z);
 //void create_trees(std::shared_ptr<gua::node::Node> scene_root_node);
 
 void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node);
