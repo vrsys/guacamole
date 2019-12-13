@@ -676,14 +676,6 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 } 
 
 
-                bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
-
-
-
-                if (visibility_current_node) {
-                    ++tested_nodes;
-
-
                     current_shader = occlusion_query_box_program_; //define a new shader of type occlusion query box program
 
                     current_shader->use(ctx);
@@ -719,10 +711,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = (*occlusion_query_iterator).second->result();
 
-                    set_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid, ctx.framecount);
-                    int32_t frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
     
-                      
+
                     if(is_first_traversed_node) {
                         is_first_traversed_node = false;
 
@@ -734,14 +724,8 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
 #endif
                     }
 
-                    //std::cout << "Camera UUID 2: " << current_cam_node.uuid << std::endl;
 
-
-
-
-                    if (query_result == 0) {
-                        set_visibility(current_node->get_path(), current_cam_node.uuid, false);
-                    } else {
+                    if (query_result > 0) {
                         if (current_node->get_children().size()>0) {
                             //interior node
 
@@ -765,7 +749,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         }
                     }
 
-                }             
+            
             }
             //std::cout << "# tested nodes: " << tested_nodes << "/" << total_num_nodes  << std::endl;
             //std::cout<< "all rendered nodes " << rendered_nodes <<std::endl;
