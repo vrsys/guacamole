@@ -148,7 +148,7 @@ void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node,
 
 }
 
-void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node, int const start_position_x, int const end_position_x) {
 
     gua::TriMeshLoader loader;
 
@@ -156,12 +156,14 @@ void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
     material->set_show_back_faces(false);
     material->set_render_wireframe(false);
 
+    std::srand(std::time(NULL));
 
-    for(int grid_position_z = 0; grid_position_z < 50; ++grid_position_z) {
-        for(int grid_position_x = 0; grid_position_x < 50; ++grid_position_x) {
+    for(int grid_position_z = -50; grid_position_z < 0; ++grid_position_z) {
+        for(int grid_position_x = start_position_x; grid_position_x < end_position_x; ++grid_position_x) {
+            int house_type = std::floor((std::rand() / (float)RAND_MAX) * 4)+ 1;
             auto trimesh_model(
                 loader.create_geometry_from_file(std::string("house") + std::to_string(grid_position_x) + "__" + std::to_string(grid_position_z), 
-                                                "/opt/3d_models/paperHouses/paper-houses/house3.obj", 
+                                                "/opt/3d_models/paperHouses/paper-houses/house" + std::to_string(std::abs(house_type)) + ".obj", 
                                                 //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
                                                 material, 
                                                  gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
@@ -170,41 +172,64 @@ void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
             scene_root_node->add_child(trimesh_model);
 
-
             float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
-
+            
+            trimesh_model->rotate(180.0f/house_type, 0, 1.0f, 0);
             trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
             trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
-            trimesh_model->translate(0.0, 0.0, -30.0f);
+            trimesh_model->translate(0.0, 5.0, -80.0f);
+
         }
     }
 
 
+}
 
 
+void create_trees(std::shared_ptr<gua::node::Node> scene_root_node){
+
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    std::srand(std::time(NULL));
+
+    for(int grid_position_z = 0; grid_position_z < 500; ++grid_position_z) {
+        //for(int grid_position_x = -1; grid_position_x <= 1; grid_position_x++) {
+            int rotate = (std::rand() / (float)RAND_MAX);
+            auto trimesh_model(
+                loader.create_geometry_from_file(std::string("tree") + /*std::to_string(grid_position_z) + "__" +*/ std::to_string(grid_position_z), 
+                                                "/opt/3d_models/trees/lindenTree/lindenTree.obj",
+                                                material, 
+                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+            auto trimesh_model_matrix = trimesh_model->get_transform();
+
+
+            scene_root_node->add_child(trimesh_model);
+
+            //float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
+            
+            trimesh_model->rotate(180.0f/rotate, 0, 1.0f, 0);
+            trimesh_model->scale(10.0f, 10.0f, 10.0f);
+            trimesh_model->translate(0, 0.0, grid_position_z);
+            trimesh_model->translate(0.0, 0.0, -100.0f);
+            //grid_position_x++;
+        //}
+    }
 
 }
 
-void create_simple_debug_scene_01(std::shared_ptr<gua::node::Node> scene_root_node) {
+void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
-    gua::TriMeshLoader trimesh_loader;
+    // city square 1
+    create_city_scene(scene_root_node, -25, -1);
 
-    for (unsigned int i = 0; i < 50; ++i)
-    {
+    // city square 2
+    create_city_scene(scene_root_node, 1, 25);
 
-        transform_trimesh_model(scene_root_node,  
-                            "hb" + std::to_string(i), 
-                            //"/opt/3d_models/hairball/hairball.dae",
-                            "./data/objects/teapot.obj",
-                            
-                            //"/opt/3d_models/paperHouses/paper-houses/house3.obj",
-                            trimesh_loader, true, true);
-    }
-
-    transform_trimesh_model(scene_root_node, "plane1", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,0,-5.0f,90.0f,0,0,10.0f);
-    transform_trimesh_model(scene_root_node, "plane2", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,1.0f,-20.0f,90.0f,0,0,3.0f);
-    transform_trimesh_model(scene_root_node, "plane3", "./data/objects/plane.obj", trimesh_loader, false, false, 0.0f,-2.0f,-50.0f,90.0f,0,0,4.0f);
-
+    create_trees(scene_root_node);
 }
 
 

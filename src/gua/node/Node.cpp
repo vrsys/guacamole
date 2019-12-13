@@ -39,7 +39,7 @@ namespace node
 
 Node::Node(std::string const& name, math::mat4 const& transform) : children_(), name_(name), transform_(transform), bounding_box_(), user_data_() {
 
-    std::cout << "Recreated node: " << name_ << std::endl;
+    //std::cout << "Recreated node: " << name_ << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
