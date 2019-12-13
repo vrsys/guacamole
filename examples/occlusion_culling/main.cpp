@@ -186,9 +186,8 @@ int main(int argc, char** argv)
 
 
     //create_simple_debug_scene(occlusion_group_node);
-    //create_simple_debug_scene_01(occlusion_group_node);
-    create_city_scene(occlusion_group_node,-50, 50);
-    //create_simple_demo_scene(occlusion_group_node);
+    // create_city_scene(occlusion_group_node);
+    create_simple_demo_scene(occlusion_group_node);
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
     
     occlusion_group_node->regroup_children();

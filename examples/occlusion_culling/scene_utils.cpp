@@ -94,61 +94,46 @@ void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node
     scene_root_node->add_child(plane);
 }
 
+void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
+    gua::TriMeshLoader loader;
 
-void transform_trimesh_model(std::shared_ptr<gua::node::Node>& scene_root_node,
-                             std::string const& name, 
-                             std::string const& path, 
-                             gua::TriMeshLoader& loader,
-                             bool const is_behind,
-                             bool const randomized,
-                             float x_trans,
-                             float y_trans,
-                             float z_trans,
-                             float angle_x,
-                             float angle_y,
-                             float angle_z,
-                             float scale)
-{
     auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
     material->set_show_back_faces(false);
     material->set_render_wireframe(false);
 
-    auto trimesh_model(
-        loader.create_geometry_from_file(name, path, material , 
-                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-    auto trimesh_model_matrix = trimesh_model->get_transform();
 
-    if (is_behind && randomized)
-    {
-        
-        x_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
-        y_trans = 10.0f * std::rand() / (float)RAND_MAX - 10.0f  / 2.0f;
-        z_trans = 10.0f * std::rand() / (float)RAND_MAX - 20.0f;
+    for(int grid_position_z = 0; grid_position_z < 50; ++grid_position_z) {
+        for(int grid_position_x = 0; grid_position_x < 50; ++grid_position_x) {
+            auto trimesh_model(
+                loader.create_geometry_from_file(std::string("house") + std::to_string(grid_position_x) + "__" + std::to_string(grid_position_z), 
+                                                "/opt/3d_models/paperHouses/paper-houses/house3.obj", 
+                                                //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
+                                                material, 
+                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+            auto trimesh_model_matrix = trimesh_model->get_transform();
 
-/*        angle_x = 360.0f * std::rand() / (float)RAND_MAX;
-        angle_y = 360.0f * std::rand() / (float)RAND_MAX;
-        angle_z = 360.0f * std::rand() / (float)RAND_MAX;
-        scale = ( 20.0f * std::rand() / (float)RAND_MAX ) / 10.0f;
-*/
+
+            scene_root_node->add_child(trimesh_model);
+
+
+            float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
+
+            trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
+            trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
+            trimesh_model->translate(0.0, 0.0, -30.0f);
+        }
     }
-
-
-    gua::math::mat4 trimesh_model_trans =   
-                                        gua::math::mat4(scm::math::make_translation(x_trans, y_trans, z_trans)) *
-                                        gua::math::mat4(scm::math::make_rotation(angle_z, 0.0f, 0.0f, 1.0f)) * 
-                                        gua::math::mat4(scm::math::make_rotation(angle_y, 0.0f, 1.0f, 0.0f)) * 
-                                        gua::math::mat4(scm::math::make_rotation(angle_x, 1.0f, 0.0f, 0.0f)) *  
-                                        gua::math::mat4(scm::math::make_scale(scale, scale, scale)) * 
-                                        trimesh_model_matrix;  
-    trimesh_model->set_transform(trimesh_model_trans);
-    trimesh_model->set_draw_bounding_box(false);
-    scene_root_node->add_child(trimesh_model);
-
 
 }
 
-void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node, int const start_position_x, int const end_position_x) {
+
+void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node, 
+                         int const start_position_x, 
+                         int const end_position_x,
+                         int const start_position_z,
+                         int const end_position_z) 
+{
 
     gua::TriMeshLoader loader;
 
@@ -158,7 +143,7 @@ void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node, int con
 
     std::srand(std::time(NULL));
 
-    for(int grid_position_z = -50; grid_position_z < 0; ++grid_position_z) {
+    for(int grid_position_z = start_position_z; grid_position_z < end_position_z; ++grid_position_z) {
         for(int grid_position_x = start_position_x; grid_position_x < end_position_x; ++grid_position_x) {
             int house_type = std::floor((std::rand() / (float)RAND_MAX) * 4)+ 1;
             auto trimesh_model(
@@ -177,7 +162,7 @@ void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node, int con
             trimesh_model->rotate(180.0f/house_type, 0, 1.0f, 0);
             trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
             trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
-            trimesh_model->translate(0.0, 5.0, -80.0f);
+            trimesh_model->translate(0.0, -5.0, -100.0f);
 
         }
     }
@@ -185,51 +170,20 @@ void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node, int con
 
 }
 
-
-void create_trees(std::shared_ptr<gua::node::Node> scene_root_node){
-
-    gua::TriMeshLoader loader;
-
-    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    material->set_show_back_faces(false);
-    material->set_render_wireframe(false);
-
-    std::srand(std::time(NULL));
-
-    for(int grid_position_z = 0; grid_position_z < 500; ++grid_position_z) {
-        //for(int grid_position_x = -1; grid_position_x <= 1; grid_position_x++) {
-            int rotate = (std::rand() / (float)RAND_MAX);
-            auto trimesh_model(
-                loader.create_geometry_from_file(std::string("tree") + /*std::to_string(grid_position_z) + "__" +*/ std::to_string(grid_position_z), 
-                                                "/opt/3d_models/trees/lindenTree/lindenTree.obj",
-                                                material, 
-                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
-            auto trimesh_model_matrix = trimesh_model->get_transform();
-
-
-            scene_root_node->add_child(trimesh_model);
-
-            //float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
-            
-            trimesh_model->rotate(180.0f/rotate, 0, 1.0f, 0);
-            trimesh_model->scale(10.0f, 10.0f, 10.0f);
-            trimesh_model->translate(0, 0.0, grid_position_z);
-            trimesh_model->translate(0.0, 0.0, -100.0f);
-            //grid_position_x++;
-        //}
-    }
-
-}
-
 void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
     // city square 1
-    create_city_scene(scene_root_node, -25, -1);
+    create_city_quarter(scene_root_node, -25, -1, -40, -28);
 
     // city square 2
-    create_city_scene(scene_root_node, 1, 25);
+    create_city_quarter(scene_root_node, 1, 25, 40, -28);
 
-    create_trees(scene_root_node);
+    // city square 3
+    create_city_quarter(scene_root_node, -25, -1, -25, -10);
+
+    // city square 4
+    create_city_quarter(scene_root_node, 1, 25, -25, -10);
+    //create_trees(scene_root_node);
 }
 
 
