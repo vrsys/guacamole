@@ -1236,37 +1236,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     {
 
                         set_visibility(current_query_node->get_path(), current_cam_node.uuid, true); 
-                        // pull up visibility
-                        //pull_up_visibility(current_query_node, current_cam_node.uuid);
 
-                        /*
-
-                        // For interior Nodes
-                        if (!current_query_node->get_children().empty())
-                        {
-                            // Traverse the interior Nodes
-                            for(auto& child: current_query_node->get_children()){
-
-                                auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
-                                traversal_priority_queue.push(child_node_distance_pair_to_insert);
-                            }
-                        } else {
-
-                            
-                            // render curent_node
-                             ++rendered_nodes;
-                             render_visible_leaf(current_query_node, 
-                                                    ctx, pipe, 
-                                                    render_target,  
-                                                    current_material,
-                                                    current_shader,
-                                                    current_rasterizer_state,
-                                                    depth_complexity_vis);
-                            
-                        }
-
-
-                        */
 
                     }
 

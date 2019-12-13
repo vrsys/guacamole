@@ -96,8 +96,15 @@ void configure_pipeline_descriptions() {
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_intensity(4.0);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_enable(true);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_falloff(1.0);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_radius(4.0);
+    occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+    occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_texture("data/textures/skymap_5k.jpg");
 
-
+    occlusion_culling_pipeline_description->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    occlusion_culling_pipeline_description->get_resolve_pass()->background_texture("data/textures/skymap_5k.jpg");
 
 }
 
@@ -196,9 +203,9 @@ int main(int argc, char** argv)
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
     light_node->data.set_type(gua::node::LightNode::Type::POINT);
-    light_node->data.brightness = 350.0f;
-    light_node->scale(12.f);
-    light_node->translate(-3.f, 5.f, 5.f);
+    light_node->data.brightness = 35000.0f;
+    light_node->scale(1200.f);
+    light_node->translate(0.f, 50.f, 0.f);
 
 
     // we put a transform node above camera and screen, because we want to keep the relative orientation and position between constant
