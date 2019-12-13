@@ -225,7 +225,7 @@ double OcclusionCullingGroupNode::calculate_cost(gua::node::Node* node){
     }
 
     if(parent_cost < summed_weighted_surface_area * 1.5) {
-        std::cout << "PARENT COSTS ARE SMALLER: " << parent_cost << "    " << summed_weighted_surface_area << std::endl;
+        // std::cout << "PARENT COSTS ARE SMALLER: " << parent_cost << "    " << summed_weighted_surface_area << std::endl;
 
         return std::numeric_limits<double>::max();
     }
