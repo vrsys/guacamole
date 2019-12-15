@@ -263,16 +263,16 @@ void create_street_trees(std::shared_ptr<gua::node::Node> scene_root_node,
 void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
     // city square 1
-    create_city_quarter(scene_root_node, -25, -1, -40, -28);
+    create_city_quarter(scene_root_node, -15, -1, -40, -28);
 
     // city square 2
-    create_city_quarter(scene_root_node, 1, 25, 40, -28);
+    create_city_quarter(scene_root_node, 1, 15, -40, -28);
 
     // city square 3
-    create_city_quarter(scene_root_node, -25, -1, -25, -10);
+    create_city_quarter(scene_root_node, -15, -1, -25, -10);
 
     // city square 4
-    create_city_quarter(scene_root_node, 1, 25, -25, -10);
+    create_city_quarter(scene_root_node, 1, 15, -25, -10);
 
     create_street_cars(scene_root_node, -1, 1, -30, -10);
 }
