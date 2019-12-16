@@ -928,12 +928,13 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     std::cout<<"beginning query queue :"<< " current node name " << current_query_node->get_name() <<
                     " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
                     */
-                    // busy waiting - instead of doing something meaningful, we stall the CPU and therefore starve the GPU
-                    /*while(!result_available) 
+
+                    // waiting for the result of the previously invisible node
+                    while(!result_available) 
                     {
                         result_available = ctx.render_context->query_result_available(front_query_obj_queue);   
                     }
-                    */
+                    
                     /*
                     std::cout<<"after waiting :"<< " current node name " << current_query_node->get_name() <<
                     " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
@@ -1254,9 +1255,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
             }
 
 
-#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-            std::cout<<" rendered nodes " << rendered_nodes << "/" << total_num_trimesh_nodes << std::endl;
-#endif
+//#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+            //std::cout<<" rendered nodes " << rendered_nodes << "/" << total_num_trimesh_nodes << std::endl;
+//#endif
         }
 
 
