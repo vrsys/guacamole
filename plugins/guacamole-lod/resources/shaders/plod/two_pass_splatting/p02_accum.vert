@@ -30,7 +30,10 @@ uniform uint gua_material_id;
 uniform float radius_scaling;
 uniform float max_surfel_radius;
 
+uniform int floats_per_timestep;
 
+uniform float min_ssbo_value;
+uniform float max_ssbo_value;
 
 out VertexData {
   //output to geometry shader
@@ -49,19 +52,35 @@ void main() {
 
 
   //if(fem_vert_w_0 != 0.0) {
-  if(    fem_vert_w_0 != 0 
-      || fem_vert_w_1 != 0 
-      || fem_vert_w_2 != 0) {
+  if( ! (    (fem_vert_w_0 <= 0.0)  
+          || (fem_vert_w_1 <= 0.0)  
+          || (fem_vert_w_2 <= 0.0)
+      )
+     ) {
     
-    float mixed_value =   fem_vert_w_0 * time_series_data[fem_vert_id_0]
-                        + fem_vert_w_1 * time_series_data[fem_vert_id_1]
-                        + fem_vert_w_2 * time_series_data[fem_vert_id_2];
+    int timestep_offset = 30 * floats_per_timestep;
 
-    VertexOut.pass_point_color = vec3(0.5 * (mixed_value), 0.0, 0.0);
+    int attribute_offset = floats_per_timestep / 6;
+
+    int access_id = gl_VertexID;
+
+    float mixed_value =   fem_vert_w_0 * time_series_data[/*timestep_offset + attribute_offset * 3 +*/ fem_vert_id_0]
+                        + fem_vert_w_1 * time_series_data[/*timestep_offset + attribute_offset * 3 +*/ fem_vert_id_1]
+                        + fem_vert_w_2 * time_series_data[/*timestep_offset + attribute_offset * 3 +*/ fem_vert_id_2];
+
+    //VertexOut.pass_point_color = vec3(0.01 * (mixed_value), 0.0, 0.0);
+    //VertexOut.pass_point_color = vec3(1.0, 0.0, 0.0);
+    
+    float normalized_value = (mixed_value) / (max_ssbo_value );
+    VertexOut.pass_point_color = vec3(normalized_value, 0.0, 0.0);
+
+    if(mixed_value > 0.0 && mixed_value < max_ssbo_value / 2.0) {
+      VertexOut.pass_point_color = vec3(0.0, 1.0, 1.0);
+    }
 
   } else {
 
-    VertexOut.pass_point_color = vec3(0.0, 1.0, 0.0);
+    //VertexOut.pass_point_color = vec3(0.0, 1.0, 0.0);
   }
 
 

@@ -144,6 +144,32 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_point_clouds_from_v
 
                                 in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file );
 
+                                shared_time_series_dataset->extreme_values.resize(1);
+
+                                shared_time_series_dataset->extreme_values[0].first = std::numeric_limits<float>::max();
+                                shared_time_series_dataset->extreme_values[0].second = std::numeric_limits<float>::min();                        
+
+                                for(int i = 0; i < shared_time_series_dataset->data.size(); ++i) {
+                                    shared_time_series_dataset->extreme_values[0].first = std::min(shared_time_series_dataset->extreme_values[0].first,
+                                                                                                   shared_time_series_dataset->data[i]);
+
+                                    shared_time_series_dataset->extreme_values[0].second = std::max(shared_time_series_dataset->extreme_values[0].second,
+                                                                                                   shared_time_series_dataset->data[i]);
+
+   
+                                }
+
+/*
+                                shared_time_series_dataset->extreme_values[0].first
+                                    = *std::min_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());
+
+                                shared_time_series_dataset->extreme_values[0].second
+                                    = *std::max_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());                 
+*/
+                                std::cout << "Extreme values: " << shared_time_series_dataset->extreme_values[0].first << " " 
+                                                                << shared_time_series_dataset->extreme_values[0].second << "\n"; 
+                                //extreme_values
+
                                 std::cout << "Read " << total_num_byte_in_file << " byte" << std::endl;
 
                                 //exit(-1);

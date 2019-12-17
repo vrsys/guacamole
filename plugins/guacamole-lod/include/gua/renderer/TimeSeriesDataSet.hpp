@@ -49,7 +49,9 @@ struct GUA_DLL TimeSeriesDataSet {
     std::string name = "";
     uint32_t num_attributes = 0;
     uint32_t num_timesteps = 0;
-    float sequence_length = 0;    
+    float sequence_length = 0;
+
+    std::vector<std::pair<float, float> > extreme_values;    
     std::vector<float> data; //for now we only allow float attributes
 
     std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
