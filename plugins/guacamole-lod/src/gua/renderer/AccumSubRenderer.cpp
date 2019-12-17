@@ -195,16 +195,28 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 if( !plod_node->get_time_series_data_descriptions().empty() ) {
 
                     for(auto const& data_description : time_series_data_descriptions) {
-
-
-
                         auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
-
-
                         auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
 
                         current_material_program->set_uniform(ctx, int(4), "time_series_data_ssbo");
 
+
+                
+                        size_t num_timesteps = looked_up_time_series_data_item->num_timesteps;
+
+                        std::cout << "Num elements: " << looked_up_time_series_data_item->data.size() << std::endl;
+
+                        std::cout << "Num timesteps: " << num_timesteps << std::endl;
+
+                        size_t num_attributes = looked_up_time_series_data_item->num_attributes;
+                        std::cout << "Num attributes: " << num_attributes << std::endl;
+
+
+                        int32_t floats_per_timestep = num_attributes * num_timesteps;
+
+                        current_material_program->set_uniform(ctx, floats_per_timestep, "floats_per_timestep");              
+                        current_material_program->set_uniform(ctx, looked_up_time_series_data_item->extreme_values[0].first, "min_ssbo_value");          
+                        current_material_program->set_uniform(ctx, looked_up_time_series_data_item->extreme_values[0].second, "max_ssbo_value"); 
 
                         ctx.render_context->bind_storage_buffer( current_ssbo_ptr_it->second, 4, 0, sizeof(float) * looked_up_time_series_data_item->data.size());
                         //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
@@ -212,8 +224,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                         ctx.render_context->apply_storage_buffer_bindings();
                         ctx.render_context->apply();
 
-                        std::cout << "BINDING SSBO!!!" << std::endl;
-
+                        std::cout << "BINDING SSBO!!!" << std::endl;    
                     }
 
                 }
