@@ -197,8 +197,8 @@ int main(int argc, char** argv)
     create_simple_demo_scene(occlusion_group_node);
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
     
-    //occlusion_group_node->regroup_children();
-    occlusion_group_node->median_regroup_children();
+    occlusion_group_node->regroup_children();
+    //occlusion_group_node->median_regroup_children();
 
 
     // add a point light source to the scene and attach it to the tranform node

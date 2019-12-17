@@ -981,10 +981,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         break;
                     }
 
-
-
-
-
                     if (render_current_node) //query_result > 0 /*desc.get_occlusion_culling_fragment_threshold()*/ )
                     {
                         // pull up visibility
@@ -1240,17 +1236,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
 
                     }
-
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////
             }
 
