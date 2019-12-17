@@ -24,6 +24,7 @@
 
 #include <gua/platform.hpp>
 #include <gua/node/GeometryNode.hpp>
+#include <queue>
 
 namespace gua
 {
@@ -74,6 +75,7 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
 
 
     void regroup_children();
+    void median_regroup_children();
 
   private:
     std::shared_ptr<Node> copy() const override;
@@ -86,8 +88,11 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
     void split_children(gua::node::Node* scene_occlusion_group_node, std::vector<std::shared_ptr<gua::node::Node>> & sorted_vector, 
                         unsigned int candidate_index, unsigned int candidate_element_offset);
     double calculate_cost(gua::node::Node* node);
-};
 
+    void determine_best_split(std::queue<gua::node::Node*> splitting_queue);
+
+    double calculate_median_cost(gua::node::Node* node);
+};
 
 
 

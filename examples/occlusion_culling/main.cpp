@@ -37,6 +37,8 @@
 #include <gua/utils/Trackball.hpp>
 
 
+#define AUTO_ANIMATION
+
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
 
@@ -55,6 +57,10 @@ std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description
 std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
+std::string model_path_bus = "/opt/3d_models/vehicle/cars/autobus/auobus.obj"; //place this object
+// std::string model_path_hairball_room = "data/objects/hairball_room.obj";
+std::string model_path_town = "/opt/3d_models/architecture/medieval_harbour/town.obj"; //town obj path
+// std::string model_path_plane = "data/objects/plane.obj"; //place this object
 int32_t num_models_to_place = 1000; //place 1000 objects
 float one_d_cube_size = 8.0; //8m*8m*8m cube for random object placement
 
@@ -71,23 +77,37 @@ void configure_pipeline_descriptions() {
     */
 
     // first pipe
+
+#if 1 // USE OCCLUSION
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
+    auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
+#else
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());  
+#endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
        // visualizes the GBuffer-content
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass()->enable(false);
     // configure the resolve pass
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+/*
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_intensity(4.0);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_enable(true);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_falloff(1.0);
+    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_radius(2.0);
+*/
+    occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
+    occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_texture("data/textures/skymap_5k.jpg");
 
-
-    auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
-    oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
+    occlusion_culling_pipeline_description->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    occlusion_culling_pipeline_description->get_resolve_pass()->background_texture("data/textures/skymap_5k.jpg");
 
 }
 
@@ -133,7 +153,7 @@ void parse_model_from_cmd_line(int argc, char** argv)
 void print_keyboard_controls() {
     std::cout << "Keyboard Controls:" << std::endl;
     std::cout << "==================" << std::endl;
-    std::cout << "W/S: move camera forward/backward" << std::endl;
+    std::cout  << "W/S: move camera forward/backward" << std::endl;
     std::cout << "A/D: move camera left/right" << std::endl;
 
     std::cout << "I/K: rotate camera around right-axis" << std::endl;
@@ -172,18 +192,27 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
+    //create_simple_debug_scene(occlusion_group_node);
+    // create_city_scene(occlusion_group_node);
+    create_simple_demo_scene(occlusion_group_node);
+    //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
+    
     occlusion_group_node->regroup_children();
+
+    //occlusion_group_node->scale(0.2, 0.2, 0.2);
+    //occlusion_group_node->translate(0.0, 0.0, -400);
+    //occlusion_group_node->median_regroup_children();
 
 
     // add a point light source to the scene and attach it to the tranform node
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
     light_node->data.set_type(gua::node::LightNode::Type::POINT);
-    light_node->data.brightness = 350.0f;
-    light_node->scale(12.f);
-    light_node->translate(-3.f, 5.f, 5.f);
+    light_node->data.brightness = 35000.0f;
+    light_node->scale(1200.f);
+    light_node->translate(0.f, 50.f, 0.f);
 
 
     // we put a transform node above camera and screen, because we want to keep the relative orientation and position between constant
@@ -195,14 +224,14 @@ int main(int argc, char** argv)
     auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen_node");
     // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-    screen->translate(0, 0, -3.0);
+    screen->translate(0, 10, -3.0);
 
 
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1280, 720);
+    auto resolution = gua::math::vec2ui(2*1280, 2*720);
 
 
     configure_pipeline_descriptions();
@@ -210,7 +239,7 @@ int main(int argc, char** argv)
     //add a camera node. Without a camera, we can not render
     auto camera_node = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam_node");
     //we just leave the camera in 0, 0, 0 in its local coordinates
-    camera_node->translate(0, 0, 0);
+    camera_node->translate(0, 10, 0);
     camera_node->config.set_resolution(resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
     camera_node->config.set_screen_path("/navigation_node/screen_node");
@@ -252,6 +281,10 @@ int main(int argc, char** argv)
     gua::events::MainLoop loop;
     // set up the ticker that tries to executes the main loop every of 1.0 / 500.0 s. T
     // he application thread triggers the rendering, so our rendering framerate can never be higher than our application framerate
+
+    float frametime = 1.0 / 500.0;
+
+    float accumulated_frametime = 0.0;
     gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
 
@@ -259,13 +292,15 @@ int main(int argc, char** argv)
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         // we update the model transformatin according to the internal state of the trackball.
+
+        #ifndef AUTO_ANIMATION
         gua::math::mat4 transform_node_model_matrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
 
         // set transform completely overrides the old transformation of this node
         transform_node->set_transform(transform_node_model_matrix);
         //translate, rotate, and scale apply a corresponding matrix to the current matrix stored in the node
         transform_node->translate(0.0f, 0.0f, -5.0f);
-
+        #endif
 
         //we ask the renderer for the currently averaged applicatin fps and the window for the rendering fps
         float application_fps = renderer.get_application_fps();
@@ -282,7 +317,18 @@ int main(int argc, char** argv)
 
 
         // apply changes to the current navigation node, such that the scene graph will see the change
-        update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
+        //update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
+
+
+        double x_trans = std::sin(accumulated_frametime/7);
+
+        auto nav_trans = scm::math::make_translation(200*x_trans, 0.0, 0.0);
+
+        #ifdef AUTO_ANIMATION
+        navigation_node->set_transform(nav_trans);
+        #endif
+
+        //occlusion_group_node->rotate(0.1, 0.0, 1.0, 0.0);
 
         if(window->should_close())
         {
@@ -310,6 +356,10 @@ int main(int argc, char** argv)
             // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});
         }
+
+
+        accumulated_frametime += frametime;
+
     });
 
 
