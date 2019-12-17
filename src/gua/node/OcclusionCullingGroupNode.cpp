@@ -104,56 +104,6 @@ void OcclusionCullingGroupNode::median_regroup_children(){
 
         }
     }
-/*
-    while(!splitting_queue.empty() ) {
-        //get next node to split
-        auto current_node_to_split = splitting_queue.front();
-        splitting_queue.pop();
-
-
-        current_node_to_split->update_cache();
-
-        int best_splitting_axis = -1;
-        double best_splitting_cost = std::numeric_limits<double>::max(); // get the maximal value for our type
-
-
-        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-            children_sorted_by_xyz[dim_idx] = current_node_to_split->get_children();
-        }
-
-        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-
-            sorting_based_on_axis(children_sorted_by_xyz[dim_idx], dim_idx);
-
-            split_children(current_node_to_split, children_sorted_by_xyz[dim_idx],children_sorted_by_xyz[dim_idx].size()/2, 1);
-            
-            double cost_for_current_axis = calculate_cost(current_node_to_split);
-
-            if(cost_for_current_axis < best_splitting_cost) {
-                best_splitting_cost = cost_for_current_axis;
-                best_splitting_axis = dim_idx;
-            }
-
-            cleanup_intermediate_nodes(current_node_to_split);
-        }
-
-
-        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis],children_sorted_by_xyz[best_splitting_axis].size()/2, 1);
-
-        auto children = current_node_to_split->get_children();
-
-        for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
-            auto& current_child = children[child_idx];
-
-            if(current_child->get_children().size() > 2) {
-                gua::node::Node* child_ptr = children[child_idx].get();
-                splitting_queue.push(child_ptr);
-            }
-
-        }
-    }
-*/
-
 }
 
 void OcclusionCullingGroupNode::regroup_children(){
