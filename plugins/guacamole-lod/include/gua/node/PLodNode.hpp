@@ -85,8 +85,13 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool get_enable_backface_culling_by_normal() const;
     void set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
+    void set_time_cursor_position(float time_cursor);
+    float get_time_cursor_position() const;
+
     void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
-    std::vector<std::string> get_time_series_data_descriptions();
+    std::vector<std::string> get_time_series_data_descriptions() const;
+
+    void set_up_programmable_attributes(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program);
     
   public:
     /**

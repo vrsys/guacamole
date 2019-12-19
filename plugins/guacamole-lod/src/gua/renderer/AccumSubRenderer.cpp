@@ -159,22 +159,6 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             auto plod_resource = plod_node->get_geometry();
 
 
-            auto time_series_data_descriptions = plod_node->get_time_series_data_descriptions();
-
-            std::cout << "Time series data description size: " << time_series_data_descriptions.size() << std::endl;
-
-            for(auto const& data_description : time_series_data_descriptions) {
-                auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
-
-                if(looked_up_time_series_data_item) {
-                    std::cout << "FOUND DATA ITEM" << std::endl;
-                    std::cout << looked_up_time_series_data_item->data.size() << std::endl;
-
-
-                    looked_up_time_series_data_item->upload_time_range_to(ctx);
-                }
-            }
-
             // retrieve frustum culling results
             std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];
 
@@ -191,55 +175,26 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
 
 
+                auto time_series_data_descriptions = plod_node->get_time_series_data_descriptions();
 
-                if( !plod_node->get_time_series_data_descriptions().empty() ) {
+                if( !time_series_data_descriptions.empty() ) {
 
                     for(auto const& data_description : time_series_data_descriptions) {
                         auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
-                        auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
-                        if(ctx.shader_storage_buffer_objects.end() == current_ssbo_ptr_it) {
-                            exit(-1);
+
+                        if(looked_up_time_series_data_item) {
+                            //std::cout << "FOUND DATA ITEM" << std::endl;
+                            std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+
+
+                            looked_up_time_series_data_item->upload_time_range_to(ctx);
                         }
 
-                        size_t num_timesteps = looked_up_time_series_data_item->num_timesteps;
-
-                        //std::cout << "Num elements: " << looked_up_time_series_data_item->data.size() << std::endl;
-
-                        //std::cout << "Num timesteps: " << num_timesteps << std::endl;
-
-                        size_t num_attributes = looked_up_time_series_data_item->num_attributes;
-                        //std::cout << "Num attributes: " << num_attributes << std::endl;
-
-
-                        int32_t floats_per_timestep    = looked_up_time_series_data_item->data.size() / (num_attributes * num_timesteps);
-                        int32_t attribute_element_offset = looked_up_time_series_data_item->data.size() / num_attributes;
-
-
-                        //std::cout << "Floats per timestep: " << floats_per_timestep << std::endl;
-                        //std::cout << "Attribute offset: " << attribute_offset << std::endl;
-
-                        current_material_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
-                        current_material_program->set_uniform(ctx, attribute_element_offset, "attribute_offset");                
-                        current_material_program->set_uniform(ctx, looked_up_time_series_data_item->extreme_values[0].first, "min_ssbo_value");        
-                        current_material_program->set_uniform(ctx, looked_up_time_series_data_item->extreme_values[0].second, "max_ssbo_value"); 
-                        current_material_program->set_uniform(ctx, int(11), "time_series_data_ssbo");
-
-                        
+                        looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program);
                         int32_t current_timestep_offset = int(ctx.framecount % 100);
 
-                        std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
-
+                        //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
                         current_material_program->set_uniform(ctx, current_timestep_offset, "current_timestep");
-
-                        //std::vector<float> dummy_data(100000, 5.2);
-
-                        // current_ssbo_ptr_it->second = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, sizeof(float) * 100000, dummy_data.data());
-
-                        ctx.render_context->bind_storage_buffer( current_ssbo_ptr_it->second, 11, 0, looked_up_time_series_data_item->data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
-                        //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
-                        ctx.render_context->apply_storage_buffer_bindings();
-
-
                     }
 
                 }
