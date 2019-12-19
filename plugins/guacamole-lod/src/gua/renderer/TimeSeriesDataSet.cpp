@@ -46,20 +46,41 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_
 
 	std::size_t num_bytes_per_timestep = data.size() * sizeof(float) / (num_attributes * num_timesteps);
 
-	std::cout << "NUM BYTES PER TIMESTEP: " << num_bytes_per_timestep << std::endl;
+	/*
+	for(int i = 0; i < data.size(); ++i) {
+		if(data[i] != 0.0) {
+			std::cout << data[i] << "\t\ti: " << i << std::endl;
+		}
+	}*/
 
-	std::cout << "Num timesteps to upload: " << num_timesteps_to_upload << std::endl;
+
+
+	//std::cout << "NUM BYTES PER TIMESTEP: " << num_bytes_per_timestep << std::endl;
+
+	//std::cout << "Num timesteps to upload: " << num_timesteps_to_upload << std::endl;
 
 	std::size_t read_offset_in_timesteps = num_bytes_per_timestep * start_time_step_id / sizeof(float); 
+
+	size_t num_bytes_to_upload = num_timesteps_to_upload * num_bytes_per_timestep;
 
 
 	if(time_series_data_set_ssbo_iterator == ctx.shader_storage_buffer_objects.end()) {
 
-		std::cout << "GOING TO READ " << num_bytes_per_timestep * num_timesteps_to_upload << " BYTES" << std::endl;
-		ctx.shader_storage_buffer_objects[uuid] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_bytes_per_timestep * num_timesteps_to_upload, &data[read_offset_in_timesteps]);
+		//std::cout << "CREATING SSBO FOR BOUND BUFFER" << std::endl;
+
+		//std::cout << "GOING TO READ " << num_bytes_per_timestep * num_timesteps_to_upload << " BYTES" << std::endl;
+
+        //std::vector<float> dummy_data(600000, 5.2);
+
+		//ctx.shader_storage_buffer_objects[uuid] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, sizeof(float) * 600000, dummy_data.data());
 		//create new ssbo
 
-		std::cout << "Created new SSBO!" << std::endl;
+		//std::cout << "Num bytes to upload xxx: " << num_bytes_to_upload << std::endl;
+
+		ctx.shader_storage_buffer_objects[uuid] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STATIC_DRAW, data.size() * sizeof(float), data.data());
+		//create new ssbo
+
+		//std::cout << "Created new SSBO!" << std::endl;
 
 	}
 

@@ -174,7 +174,6 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
         else
         {
 
-
             if(  (!is_vbo_created_per_context_[ctx.id]) ) {
                 return;
             }
