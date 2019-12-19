@@ -51,12 +51,16 @@ struct GUA_DLL TimeSeriesDataSet {
     uint32_t num_timesteps = 0;
     float sequence_length = 0;
 
+    float time_cursor_position = 0.0f;
+
     std::vector<std::pair<float, float> > extreme_values;    
     std::vector<float> data; //for now we only allow float attributes
 
     std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
     void upload_time_range_to(RenderContext& ctx, int start_time_step_id = -1, int end_time_step_id = -1) const;
+
+    void bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program);
 
 };
 

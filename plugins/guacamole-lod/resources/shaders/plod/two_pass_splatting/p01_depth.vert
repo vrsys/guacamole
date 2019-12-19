@@ -17,7 +17,7 @@ layout(location = 10) in float fem_vert_w_0;
 layout(location = 11) in float fem_vert_w_1;
 layout(location = 12) in float fem_vert_w_2;
 
-layout (std430, binding = 11) coherent readonly buffer time_series_data_ssbo {
+layout (std430, binding = 20) coherent readonly buffer time_series_data_ssbo {
   float[] time_series_data;
 };
 
@@ -61,9 +61,9 @@ void main() {
 
   vec4 deform = vec4(deformation, 0.0);
 
-  mat4 transform = mat4(0.867211, 0.497952, 0.00774202, -276.714, 0.498012, -0.867097, -0.0136602, 2758.97, -9.0027e-05, 0.0157017, -0.999951, 202.809, 0, 0, 0, 1);
+  //mat4 transform = mat4(0.867211, 0.497952, 0.00774202, -276.714, 0.498012, -0.867097, -0.0136602, 2758.97, -9.0027e-05, 0.0157017, -0.999951, 202.809, 0, 0, 0, 1);
 
-  deform = transform * deform;
+  //deform = transform * deform;
 
 
   gl_Position = vec4( 4000 * deform.xyz + in_position, 1.0);

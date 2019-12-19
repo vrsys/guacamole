@@ -24,6 +24,8 @@
 
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
+
 #include <gua/node/RayNode.hpp>
 #include <gua/renderer/LodLoader.hpp>
 #include <gua/renderer/LodResource.hpp>
@@ -139,6 +141,41 @@ void PLodNode::set_enable_backface_culling_by_normal(bool const enable_backface_
 ////////////////////////////////////////////////////////////////////////////////
 bool PLodNode::get_enable_backface_culling_by_normal() const { return enable_backface_culling_by_normal_; }
 
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_time_cursor_position(float time_cursor) {
+    if( !associated_time_series_data_descriptions_.empty() ) {
+
+        for(auto const& data_description : associated_time_series_data_descriptions_) {
+            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+
+            if(looked_up_time_series_data_item) {
+                looked_up_time_series_data_item->time_cursor_position = time_cursor;
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLodNode::get_time_cursor_position() const {
+    if( !associated_time_series_data_descriptions_.empty() ) {
+
+        for(auto const& data_description : associated_time_series_data_descriptions_) {
+            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+
+            if(looked_up_time_series_data_item) {
+                return looked_up_time_series_data_item->time_cursor_position;
+            }
+        }
+        return -1.0f;
+    } else {
+        return -1.0f;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_up_programmable_attributes(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program) {
+    
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
@@ -289,7 +326,7 @@ void PLodNode::set_time_series_data_descriptions(std::vector<std::string> const&
     associated_time_series_data_descriptions_ = time_series_data_descriptions;
 }
 
-std::vector<std::string> PLodNode::get_time_series_data_descriptions() {
+std::vector<std::string> PLodNode::get_time_series_data_descriptions() const{
     return associated_time_series_data_descriptions_;
 }
 

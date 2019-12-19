@@ -19,7 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/TimeSeriesDataSet.hpp>
+
 
 namespace gua
 {
@@ -91,5 +93,25 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_
 	//    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> shader_storage_buffer_objects;
 }
 
+void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program) {
+    int32_t floats_per_timestep    = data.size() / (num_attributes * num_timesteps);
+    int32_t attribute_element_offset = data.size() / num_attributes;
+
+    shader_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
+    shader_program->set_uniform(ctx, attribute_element_offset, "attribute_offset");                
+    shader_program->set_uniform(ctx, extreme_values[0].first, "min_ssbo_value");        
+    shader_program->set_uniform(ctx, extreme_values[0].second, "max_ssbo_value"); 
+    shader_program->set_uniform(ctx, int(buffer_binding_point), "time_series_data_ssbo");
+
+    auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(uuid);
+
+    if(ctx.shader_storage_buffer_objects.end() == current_ssbo_ptr_it) {
+        exit(-1);
+    }
+
+    ctx.render_context->bind_storage_buffer( current_ssbo_ptr_it->second, buffer_binding_point, 0, data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
+    //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+    ctx.render_context->apply_storage_buffer_bindings();
+}
 
 }

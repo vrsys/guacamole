@@ -87,7 +87,8 @@ void LodResource::draw(RenderContext const& ctx,
                        std::unordered_set<lamure::node_t> const& nodes_in_frustum,
                        scm::gl::primitive_topology const type,
                        scm::math::mat4d model_view_matrix,
-                       bool draw_sorted) const
+                       bool draw_sorted
+                       ) const
 {
     lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
     lamure::ren::cut_database* cuts = lamure::ren::cut_database::get_instance();
