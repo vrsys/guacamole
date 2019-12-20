@@ -41,6 +41,31 @@
 #define USE_POINTCLOUD_LOD_MODEL 1
 #define USE_REGULAR_TRIMESH_MODEL 1
 
+
+void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int depth = 0) {
+    
+    //see https://en.wikipedia.org/wiki/Box-drawing_character#Unicode for ascii table characters
+    for(int dash_index = 0; dash_index < depth; ++dash_index) {
+        std::cout <<" ";
+    }
+
+    //2 unicode characters for the table elements
+    std::cout << "\u2517";
+    std::cout << "\u2501";
+    // name, tabs, typestring
+    std::cout << " " << scene_root_node->get_name() << "\t\t" << scene_root_node->get_type_string() << std::endl;
+
+    //print
+
+    //std::cout << std::endl;
+
+    for(auto const& child : scene_root_node->get_children()) {
+        print_graph(child, depth+1);
+    }
+
+}
+
+
 void adjust_arguments(int& argc, char**& argv)
 {
     char* argv_tmp[] = {argv[0], NULL};
@@ -105,9 +130,9 @@ int main(int argc, char** argv)
     auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
     auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
-    auto vector_of_lod_nodes = lod_loader.load_point_clouds_from_vis_file("pointcloud_group_node", vis_file_path,
-                                                                           lod_rough,
-                                                                           gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
+    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file(vis_file_path,
+                                                                             lod_rough,
+                                                                             gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
     for(auto const& node : vector_of_lod_nodes) {
         graph.add_node("/transform/plod_transform", node);
@@ -337,6 +362,15 @@ int main(int argc, char** argv)
                     std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
                 }
                 break;
+
+            case 'p':
+       
+                    print_graph( graph.get_root() );
+
+
+                
+                break;
+
             default:
                 break;
             }

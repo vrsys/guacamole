@@ -63,7 +63,7 @@ class GUA_LOD_DLL LodLoader
 
   public:
 
-    std::vector<std::shared_ptr<node::PLodNode>> load_point_clouds_from_vis_file(std::string const& group_node_name, std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags);
+    std::vector<std::shared_ptr<node::PLodNode>> load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags);
     
     std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& file_name, unsigned flags = DEFAULTS);
 
