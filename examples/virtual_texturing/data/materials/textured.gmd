@@ -1,0 +1,28 @@
+{
+  "vertex_methods" :
+  [],
+
+  "fragment_methods" :
+  [
+    {
+      "name" : "FragmentColor",
+      "source" : "
+        // texturing ----------------------------------------------------
+        void FragmentColor() {
+          vec4 color = texture(sampler2D(map_Kd), gua_texcoords);
+          gua_color = color.rgb;
+          gua_metalness = 0.0;
+          gua_emissivity = 1.0;
+        }
+      ",
+      "uniforms" :
+      [
+        {
+          "name" : "map_Kd",
+          "type" : "sampler2D",
+          "value" : "0"
+        }
+      ]
+    }
+   ]
+}
