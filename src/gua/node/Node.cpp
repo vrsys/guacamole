@@ -186,7 +186,7 @@ math::mat4 Node::get_latest_cached_world_transform(const WindowBase* w) const {
   math::mat4 world_transform = world_transform_;
   world_transform_ = get_latest_world_transform(w);
   update_bounding_box();
-  return world_transform_;
+  return world_transform;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
