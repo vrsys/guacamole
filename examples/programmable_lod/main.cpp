@@ -131,7 +131,7 @@ int main(int argc, char** argv)
     auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
     auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file(vis_file_path,
-                                                                             lod_rough,
+                                                                             //lod_rough,
                                                                              gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
     for(auto const& node : vector_of_lod_nodes) {
