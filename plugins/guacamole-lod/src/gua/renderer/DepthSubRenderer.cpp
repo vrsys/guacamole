@@ -101,14 +101,14 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
 
             auto time_series_data_descriptions = plod_node->get_time_series_data_descriptions();
 
-            std::cout << "Time series data description size: " << time_series_data_descriptions.size() << std::endl;
+            //std::cout << "Time series data description size: " << time_series_data_descriptions.size() << std::endl;
 
             for(auto const& data_description : time_series_data_descriptions) {
                 auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
 
                 if(looked_up_time_series_data_item) {
-                    std::cout << "FOUND DATA ITEM" << std::endl;
-                    std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+                    //std::cout << "FOUND DATA ITEM" << std::endl;
+                    //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
 
 
                     looked_up_time_series_data_item->upload_time_range_to(ctx);

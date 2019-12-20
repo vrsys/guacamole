@@ -56,6 +56,25 @@ LodLoader::LodLoader() : _supported_file_extensions_model_file(), _supported_fil
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
+std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, unsigned flags)
+{
+    auto desc = std::make_shared<gua::MaterialShaderDescription>();
+    auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
+    gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+    auto cached_nodes(load_lod_pointclouds_from_vis_file(vis_file_name, material_shader->make_new_material(), flags));
+
+    if(!cached_nodes.empty())
+    {
+        return cached_nodes;
+    }
+
+    Logger::LOG_WARNING << "LodLoader::load_lod_pointclouds_from_vis_file() : unable to create Lod Nodes" << std::endl;
+    return std::vector<std::shared_ptr<node::PLodNode>>();
+}
+
+/////////////////////////////////////////////////////////////////////////////
 std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
     
     std::vector<std::string> model_files_to_load;

@@ -184,7 +184,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
                         if(looked_up_time_series_data_item) {
                             //std::cout << "FOUND DATA ITEM" << std::endl;
-                            std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+                            //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
 
 
                             looked_up_time_series_data_item->upload_time_range_to(ctx);
