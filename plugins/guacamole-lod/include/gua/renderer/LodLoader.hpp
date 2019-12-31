@@ -29,6 +29,7 @@
 #include <set>
 #include <unordered_set>
 #include <memory>
+#include <vector>
 
 namespace gua
 {
