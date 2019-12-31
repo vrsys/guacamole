@@ -52,9 +52,9 @@ void main() {
   vec3 deformation = vec3(0.0, 0.0, 0.0);
 
   for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-  	deformation[dim_idx] = 	  fem_vert_w_0 * time_series_data[attribute_offset * 0 + timestep_offset + fem_vert_id_0]
-                       		+ fem_vert_w_1 * time_series_data[attribute_offset * 0 + timestep_offset + fem_vert_id_1]
-                       		+ fem_vert_w_2 * time_series_data[attribute_offset * 0 + timestep_offset + fem_vert_id_2];
+  	deformation[dim_idx] = 	  fem_vert_w_0 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_0]
+                       		+ fem_vert_w_1 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_1]
+                       		+ fem_vert_w_2 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_2];
   }
 
 
@@ -66,7 +66,7 @@ void main() {
   //deform = transform * deform;
 
 
-  gl_Position = vec4( 4000 * deform.xyz + in_position, 1.0);
+  gl_Position = vec4( 1000 * deform.xyz + in_position, 1.0);
 
 
 
