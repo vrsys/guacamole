@@ -132,6 +132,11 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
                     int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % 100;
 
                     shader_program_->set_uniform(ctx, current_timestep_offset, "current_timestep");
+
+                    shader_program_->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
+                    shader_program_->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");    
+
+
                 }
 
             }

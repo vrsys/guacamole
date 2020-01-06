@@ -94,6 +94,20 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_time_cursor_position(float time_cursor);
     float get_time_cursor_position() const;
 
+    void set_enable_time_series_deformation(bool deformation);
+    bool get_enable_time_series_deformation() const;
+    void set_enable_time_series_coloring(bool coloring);
+    bool get_enable_time_series_coloring() const;
+
+    void set_enable_automatic_playback(bool enable_automatic_playback);
+    bool get_enable_automatic_playback() const;
+
+    void set_time_series_playback_speed(float time_series_playback_speed);
+    float get_time_series_playback_speed() const;
+
+    void set_time_series_deform_factor(float time_series_deform_factor);
+    float get_time_series_deform_factor() const;
+
     void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
     std::vector<std::string> get_time_series_data_descriptions() const;
 
@@ -128,6 +142,12 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     float error_threshold_;
     bool enable_backface_culling_by_normal_;
 
+
+    bool enable_time_series_coloring_ = true;
+    bool enable_time_series_deformation_ = true;
+    bool enable_automatic_playback_ = true;
+    float time_series_playback_speed_ = 1.0f;
+    float time_series_deform_factor_  = 1.0f;
 
     int attribute_to_visualize_index_ = 0;
     std::vector<std::string> associated_time_series_data_descriptions_;

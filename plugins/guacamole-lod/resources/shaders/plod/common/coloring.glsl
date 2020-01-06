@@ -1,3 +1,5 @@
+
+
 // --------------------------
 const float GAMMA        = 0.80;
 const float INTENSITY_MAX = 255.0;

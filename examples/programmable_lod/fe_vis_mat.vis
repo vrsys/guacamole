@@ -9,4 +9,4 @@ fem_value_mapping_file: /mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Ser
 
 max_radius: 0.3
 
-fem_to_pcl_transform: 0.867211 0.497952 0.00774202 -276.714 0.498012 -0.867097 -0.0136602 2758.97 -9.0027e-05 0.0157017 -0.999951 202.809 0 0 0 1
+#fem_to_pcl_transform: 0.867211 0.497952 0.00774202 -276.714 0.498012 -0.867097 -0.0136602 2758.97 -9.0027e-05 0.0157017 -0.999951 202.809 0 0 0 1

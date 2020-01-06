@@ -112,6 +112,26 @@ void PLodNode::set_radius_scale(float scale)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_enable_time_series_deformation(bool enable_deformation) {
+    enable_time_series_deformation_ = enable_deformation;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PLodNode::get_enable_time_series_deformation() const {
+    return enable_time_series_deformation_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_enable_time_series_coloring(bool enable_coloring) {
+    enable_time_series_coloring_ = enable_coloring;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PLodNode::get_enable_time_series_coloring() const {
+    return enable_time_series_coloring_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 float PLodNode::get_max_surfel_radius() const { return max_surfel_size_; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,17 +163,16 @@ bool PLodNode::get_enable_backface_culling_by_normal() const { return enable_bac
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::update_time_cursor(float elapsed_frame_time_seconds) {
-   if( !associated_time_series_data_descriptions_.empty() ) {
+  if(enable_automatic_playback_) {
+       if( !associated_time_series_data_descriptions_.empty() ) {
 
-        for(auto const& data_description : associated_time_series_data_descriptions_) {
-            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+            for(auto const& data_description : associated_time_series_data_descriptions_) {
+                auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
 
-            if(looked_up_time_series_data_item) {
-                looked_up_time_series_data_item->time_cursor_position += elapsed_frame_time_seconds;
-
-
-                std::cout << "Sequence length: " << looked_up_time_series_data_item->sequence_length << std::endl;
-                looked_up_time_series_data_item->time_cursor_position = fmod(looked_up_time_series_data_item->time_cursor_position, looked_up_time_series_data_item->sequence_length);
+                if(looked_up_time_series_data_item) {
+                    looked_up_time_series_data_item->time_cursor_position += time_series_playback_speed_ * elapsed_frame_time_seconds;
+                    looked_up_time_series_data_item->time_cursor_position = fmod(looked_up_time_series_data_item->time_cursor_position, looked_up_time_series_data_item->sequence_length);
+                }
             }
         }
     }
@@ -202,9 +221,42 @@ float PLodNode::get_time_cursor_position() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_enable_automatic_playback(bool enable_automatic_playback) {
+    enable_automatic_playback_ = enable_automatic_playback;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PLodNode::get_enable_automatic_playback() const {
+    return enable_automatic_playback_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_time_series_playback_speed(float time_series_playback_speed) {
+    time_series_playback_speed_ = std::max(0.0f, time_series_playback_speed);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLodNode::get_time_series_playback_speed() const {
+    return time_series_playback_speed_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_time_series_deform_factor(float time_series_deform_factor) {
+    time_series_deform_factor_ = time_series_deform_factor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLodNode::get_time_series_deform_factor() const {
+    return time_series_deform_factor_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_up_programmable_attributes(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program) {
     
 }
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
