@@ -325,12 +325,39 @@ int main(int argc, char** argv)
             button_state = -1;
     });
 
+
+    float elapsed_frame_time = 0.0f;
+
+
+
     window->on_key_press.connect(std::bind(
         [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
            
             
+            std::cout << "SCANCODE: " << scancode << std::endl;
+
             if(action == 0)
                 return;
+
+            switch(scancode) {
+                //ARROW UP
+                case 111: {
+                    for(auto& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_attribute_to_visualize_index( plod_node->get_attribute_to_visualize_index() + 1);
+                    }
+                    break;
+                }
+
+                //ARROW DOWN
+                case 116: {
+                    for(auto& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_attribute_to_visualize_index( plod_node->get_attribute_to_visualize_index() - 1);
+                    }
+                    break;
+                }
+
+            }
+
             switch(std::tolower(key))
             {
             case '1':
@@ -348,7 +375,6 @@ int main(int argc, char** argv)
                     plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
                 }
                 break;
-             //change max surfel size
             case '4':
                 for(auto& plod_node : vector_of_lod_nodes) {
                     plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_radius()));
@@ -363,12 +389,20 @@ int main(int argc, char** argv)
                 }
                 break;
 
+            case 's':
+                for(auto& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_time_cursor_position(plod_node->get_time_cursor_position() + 1.0f);
+
+                    //std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
+                }
+                break;
+            case 'u':
+                for(auto const& plod_node : vector_of_lod_nodes) {
+                    plod_node->update_time_cursor(elapsed_frame_time);
+                }
+                break;
             case 'p':
-       
                     print_graph( graph.get_root() );
-
-
-                
                 break;
 
             default:
@@ -405,6 +439,12 @@ int main(int argc, char** argv)
         }
         else
         {
+
+
+            for(auto const& plod_node : vector_of_lod_nodes) {
+                plod_node->update_time_cursor(0.1f);
+            }
+
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)
             {

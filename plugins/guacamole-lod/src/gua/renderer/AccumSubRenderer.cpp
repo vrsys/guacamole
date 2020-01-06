@@ -190,9 +190,12 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                             looked_up_time_series_data_item->upload_time_range_to(ctx);
                         }
 
-                        looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program);
-                        int32_t current_timestep_offset = int(ctx.framecount % 100);
+                        int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
 
+                        looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program, attribute_to_visualize_index);
+                        //int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+                        int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % 100;
                         //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
                         current_material_program->set_uniform(ctx, current_timestep_offset, "current_timestep");
                     }

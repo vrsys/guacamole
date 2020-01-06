@@ -122,9 +122,14 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
                 for(auto const& data_description : time_series_data_descriptions) {
                     auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
                     //auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
-                    looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_);
 
-                    int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+                    int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
+                    looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_, attribute_to_visualize_index);
+
+                    //int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+                    int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % 100;
 
                     shader_program_->set_uniform(ctx, current_timestep_offset, "current_timestep");
                 }

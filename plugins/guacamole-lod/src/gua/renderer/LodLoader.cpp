@@ -178,22 +178,35 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                                 //}
                                 //memcpy((char*) shared_time_series_dataset->data.data(), (char*) dummy_data.data(),dummy_data.size() * sizeof(float));
 
-                                shared_time_series_dataset->extreme_values.resize(1);
+                                uint64_t total_num_attributes = shared_time_series_dataset->data.size() / num_elements_per_attribute_over_time;
 
-                                shared_time_series_dataset->extreme_values[0].first = std::numeric_limits<float>::max();
-                                shared_time_series_dataset->extreme_values[0].second = std::numeric_limits<float>::min();                        
+                                shared_time_series_dataset->extreme_values.resize(total_num_attributes);
 
-                                uint32_t base_offset = num_elements_per_attribute_over_time * 3;
-
-                                for(uint32_t i = 0; i < num_elements_per_attribute_over_time; ++i) {
-                                    shared_time_series_dataset->extreme_values[0].first = std::min(shared_time_series_dataset->extreme_values[0].first,
-                                                                                                   shared_time_series_dataset->data[base_offset + i]);
-
-                                    shared_time_series_dataset->extreme_values[0].second = std::max(shared_time_series_dataset->extreme_values[0].second,
-                                                                                                   shared_time_series_dataset->data[base_offset + i]);
-
+                                for(uint64_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {
+                                    shared_time_series_dataset->extreme_values[attribute_idx].first = std::numeric_limits<float>::max();
+                                    shared_time_series_dataset->extreme_values[attribute_idx].second = std::numeric_limits<float>::min();                        
                                 }
 
+
+
+
+                                std::cout << "Total num attributes: " << total_num_attributes << std::endl;
+
+                                std::cout << "NUM ATTRIBUTES PER ELEMENT OVER TIME: " << num_elements_per_attribute_over_time << std::endl;
+
+                                for(uint32_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {
+                                    uint32_t base_offset = num_elements_per_attribute_over_time * attribute_idx;
+                                    
+                                    std::cout << "Setting extreme values for attribute " << attribute_idx << ": " << std::endl;
+
+                                    for(uint32_t element_idx = 0; element_idx < num_elements_per_attribute_over_time; ++element_idx) {
+
+                                        shared_time_series_dataset->extreme_values[attribute_idx].first = std::min(shared_time_series_dataset->extreme_values[attribute_idx].first,
+                                                                                                       shared_time_series_dataset->data[base_offset + element_idx]);
+                                        shared_time_series_dataset->extreme_values[attribute_idx].second = std::max(shared_time_series_dataset->extreme_values[attribute_idx].second,
+                                                                                                       shared_time_series_dataset->data[base_offset + element_idx]);
+                                    }
+                                }
 /*
                                 shared_time_series_dataset->extreme_values[0].first
                                     = *std::min_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());
@@ -201,8 +214,13 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                                 shared_time_series_dataset->extreme_values[0].second
                                     = *std::max_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());                 
 */
-                                std::cout << "Extreme values: " << shared_time_series_dataset->extreme_values[0].first << " " 
-                                                                << shared_time_series_dataset->extreme_values[0].second << "\n"; 
+
+
+                                for(uint32_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {                                
+                                    std::cout << "Extreme values: " << shared_time_series_dataset->extreme_values[attribute_idx].first << " " 
+                                                                    << shared_time_series_dataset->extreme_values[attribute_idx].second << "\n";
+                                }
+                                 
                                 //extreme_values
 
                                 std::cout << "Read " << total_num_byte_in_file << " byte" << std::endl;
