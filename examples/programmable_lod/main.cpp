@@ -277,6 +277,11 @@ int main(int argc, char** argv)
         screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
     });
 
+    for(auto& plod_node : vector_of_lod_nodes) {
+        plod_node->set_time_series_playback_speed(0.1f);
+        plod_node->set_time_series_deform_factor(500.0f);
+    }
+
     // trackball controls
     bool drag_mode = false;
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -375,6 +380,16 @@ int main(int argc, char** argv)
                     plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
                 }
                 break;
+            case 'd':
+                for(auto& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_enable_time_series_deformation(!plod_node->get_enable_time_series_deformation());
+                }
+                break;
+            case 'c':
+                for(auto& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_enable_time_series_coloring(!plod_node->get_enable_time_series_coloring());
+                }
+                break;
             case '4':
                 for(auto& plod_node : vector_of_lod_nodes) {
                     plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_radius()));
@@ -425,8 +440,16 @@ int main(int argc, char** argv)
     gua::events::MainLoop loop;
     gua::events::Ticker ticker(loop, 1.0 / 500.0);
     std::size_t framecount = 0;
-
+    
+    std::chrono::time_point<std::chrono::system_clock> start, end;
     ticker.on_tick.connect([&]() {
+
+
+
+        end = std::chrono::system_clock::now();
+
+        elapsed_frame_time = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+        start = std::chrono::system_clock::now();
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
         light_transform->rotate(0.1, 0.f, 1.f, 0.f);
@@ -442,7 +465,7 @@ int main(int argc, char** argv)
 
 
             for(auto const& plod_node : vector_of_lod_nodes) {
-                plod_node->update_time_cursor(0.1f);
+                plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
             }
 
             renderer.queue_draw({&graph});
@@ -451,6 +474,14 @@ int main(int argc, char** argv)
                 std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
             }
         }
+
+
+
+
+
+
+        std::cout << "Elapsed frame time: " << elapsed_frame_time << std::endl; 
+
     });
 
     loop.start();

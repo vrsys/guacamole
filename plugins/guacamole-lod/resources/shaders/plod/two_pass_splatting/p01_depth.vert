@@ -38,7 +38,7 @@ uniform float max_ssbo_value;
 uniform float deform_factor = 500.0;
 
 uniform bool use_programmable_attributes = true;
-uniform bool use_programmable_deformation = true;
+uniform bool enable_time_series_deformation = true;
 
 @include "../common/deformation.glsl"
 
@@ -59,7 +59,7 @@ void main() {
 
   if(use_programmable_attributes) {
 
-  	if(use_programmable_deformation) {
+  	if(enable_time_series_deformation) {
       deform_position(read_position);
   	}
   }

@@ -44,6 +44,9 @@ uniform float mix_in_factor = 0.7;
 
 uniform bool use_programmable_attributes = true;
 
+uniform bool enable_time_series_deformation = true;
+uniform bool enable_time_series_coloring = true;
+
 @include "../common/coloring.glsl"
 @include "../common/deformation.glsl"
 
@@ -72,23 +75,28 @@ void main() {
 
   vec3 raw_point_color = vec3(in_r, in_g, in_b); 
 
-  if( use_programmable_attributes && (! (    (fem_vert_w_0 <= 0.0)  
-                                          || (fem_vert_w_1 <= 0.0)  
-                                          || (fem_vert_w_2 <= 0.0) ) )
+  if( use_programmable_attributes && 
+      (! (    (fem_vert_w_0 <= 0.0)  
+           || (fem_vert_w_1 <= 0.0)  
+           || (fem_vert_w_2 <= 0.0) ) )
     ) {
     
     int timestep_offset = current_timestep * floats_per_attribute_timestep;
 
-    deform_position(read_position);
+    if(enable_time_series_deformation) {
+      deform_position(read_position);
+    }
 
-    float mixed_value =   fem_vert_w_0 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_0]
-                        + fem_vert_w_1 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_1]
-                        + fem_vert_w_2 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_2];
+    if( enable_time_series_coloring ) {
+      float mixed_value =   fem_vert_w_0 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_0]
+                          + fem_vert_w_1 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_1]
+                          + fem_vert_w_2 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_2];
 
+      VertexOut.pass_point_color = mix(data_value_to_rainbow(mixed_value, min_ssbo_value, max_ssbo_value), raw_point_color, mix_in_factor);
+    } else {
+      VertexOut.pass_point_color = raw_point_color;
+    }
 
-
-
-    VertexOut.pass_point_color = mix(data_value_to_rainbow(mixed_value, min_ssbo_value, max_ssbo_value), raw_point_color, mix_in_factor);
   } else {
     VertexOut.pass_point_color = raw_point_color;
   }
