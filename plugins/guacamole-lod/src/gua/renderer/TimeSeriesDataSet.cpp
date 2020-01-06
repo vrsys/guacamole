@@ -93,14 +93,15 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_
 	//    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> shader_storage_buffer_objects;
 }
 
-void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program) {
+void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_visualize = 0) {
     int32_t floats_per_timestep    = data.size() / (num_attributes * num_timesteps);
     int32_t attribute_element_offset = data.size() / num_attributes;
 
+    shader_program->set_uniform(ctx, attribute_to_visualize, "attribute_to_visualize");
     shader_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
     shader_program->set_uniform(ctx, attribute_element_offset, "attribute_offset");                
-    shader_program->set_uniform(ctx, extreme_values[0].first, "min_ssbo_value");        
-    shader_program->set_uniform(ctx, extreme_values[0].second, "max_ssbo_value"); 
+    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].first, "min_ssbo_value");        
+    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].second, "max_ssbo_value"); 
     shader_program->set_uniform(ctx, int(buffer_binding_point), "time_series_data_ssbo");
 
     auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(uuid);

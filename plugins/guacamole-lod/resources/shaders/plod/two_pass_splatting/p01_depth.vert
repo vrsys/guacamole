@@ -35,6 +35,12 @@ uniform int current_timestep;
 uniform float min_ssbo_value;
 uniform float max_ssbo_value;
 
+uniform float deform_factor = 500.0;
+
+uniform bool use_programmable_attributes = true;
+uniform bool use_programmable_deformation = true;
+
+@include "../common/deformation.glsl"
 
 out VertexData {
   vec3 pass_ms_u;
@@ -49,24 +55,16 @@ void main() {
 
   int timestep_offset = current_timestep * floats_per_attribute_timestep;
 
-  vec3 deformation = vec3(0.0, 0.0, 0.0);
+  vec3 read_position = in_position;
 
-  for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
-  	deformation[dim_idx] = 	  fem_vert_w_0 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_0]
-                       		+ fem_vert_w_1 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_1]
-                       		+ fem_vert_w_2 * time_series_data[attribute_offset * dim_idx + timestep_offset + fem_vert_id_2];
+  if(use_programmable_attributes) {
+
+  	if(use_programmable_deformation) {
+      deform_position(read_position);
+  	}
   }
 
-
-
-  vec4 deform = vec4(deformation, 0.0);
-
-  //mat4 transform = mat4(0.867211, 0.497952, 0.00774202, -276.714, 0.498012, -0.867097, -0.0136602, 2758.97, -9.0027e-05, 0.0157017, -0.999951, 202.809, 0, 0, 0, 1);
-
-  //deform = transform * deform;
-
-
-  gl_Position = vec4( 1000 * deform.xyz + in_position, 1.0);
+  gl_Position = vec4(read_position, 1.0);
 
 
 

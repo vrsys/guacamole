@@ -85,6 +85,12 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool get_enable_backface_culling_by_normal() const;
     void set_enable_backface_culling_by_normal(bool const enable_backface_culling);
 
+    void set_attribute_to_visualize_index(int attribute_to_visualize_index);
+    int get_attribute_to_visualize_index() const;
+
+    //update the time cursor with the elapsed seconds since the last frame
+    void update_time_cursor(float elapsed_frame_time_seconds);
+
     void set_time_cursor_position(float time_cursor);
     float get_time_cursor_position() const;
 
@@ -123,6 +129,7 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool enable_backface_culling_by_normal_;
 
 
+    int attribute_to_visualize_index_ = 0;
     std::vector<std::string> associated_time_series_data_descriptions_;
 
 };

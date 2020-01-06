@@ -142,6 +142,35 @@ void PLodNode::set_enable_backface_culling_by_normal(bool const enable_backface_
 bool PLodNode::get_enable_backface_culling_by_normal() const { return enable_backface_culling_by_normal_; }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::update_time_cursor(float elapsed_frame_time_seconds) {
+   if( !associated_time_series_data_descriptions_.empty() ) {
+
+        for(auto const& data_description : associated_time_series_data_descriptions_) {
+            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+
+            if(looked_up_time_series_data_item) {
+                looked_up_time_series_data_item->time_cursor_position += elapsed_frame_time_seconds;
+
+
+                std::cout << "Sequence length: " << looked_up_time_series_data_item->sequence_length << std::endl;
+                looked_up_time_series_data_item->time_cursor_position = fmod(looked_up_time_series_data_item->time_cursor_position, looked_up_time_series_data_item->sequence_length);
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_attribute_to_visualize_index(int attribute_to_visualize_index) {
+    attribute_to_visualize_index_ = attribute_to_visualize_index;  
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+int PLodNode::get_attribute_to_visualize_index() const {
+    return attribute_to_visualize_index_;   
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_time_cursor_position(float time_cursor) {
     if( !associated_time_series_data_descriptions_.empty() ) {
 
