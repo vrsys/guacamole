@@ -97,9 +97,11 @@ int main(int argc, char** argv)
         for(unsigned i = 0; i <  model_files.size(); ++i){
 
             std::cout << "start loading " << model_files[i] << std::endl;
-            auto model_node(loader.create_geometry_from_file("model_node" /*shoudl be unique*/ , model_files[i].c_str(), vt_mat, 0));
-            std::cout << model_file << "...ready" << std::endl;
+            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat, /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
+            std::cout << model_files[i] << "...ready with " << model_node->get_children().size() << " children" << std::endl;
             graph.add_node("/transform/model_transform", model_node);
+
+
 
             if(0 == i){
                 //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)

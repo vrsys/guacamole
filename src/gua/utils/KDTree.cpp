@@ -32,6 +32,9 @@ KDTree::KDTree() : root_(nullptr), current_visit_flag_(0) {}
 
 void KDTree::generate(Mesh const& mesh)
 {
+
+    std::cout << "KDTree::generate(Mesh const& mesh)" << std::endl;
+    
     triangles_.resize(mesh.num_triangles);
 
     for(unsigned i(0); i < mesh.num_triangles; ++i)

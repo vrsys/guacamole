@@ -157,9 +157,20 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
 
     if(file.is_valid())
     {
-#ifdef GUACAMOLE_FBX
         auto point_pos(file_name.find_last_of("."));
-        if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX")
+        if(file_name.substr(point_pos + 1) == "gua_trimesh" )
+        {
+            GeometryDescription desc("TriMesh", file_name, 0, flags);
+            GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{(const char* ) file_name.c_str()}, flags & TriMeshLoader::MAKE_PICKABLE));
+
+            if(flags & TriMeshLoader::LOAD_MATERIALS)
+            {
+                std::cout << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+            }
+            return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), nullptr));
+        }
+#ifdef GUACAMOLE_FBX
+        else if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX")
         {
             // The first thing to do is to create the FBX Manager which is the object
             // allocator for almost all the classes in the SDK
@@ -283,6 +294,9 @@ bool TriMeshLoader::is_supported(std::string const& file_name) const
     {
         return false;
     }
+    else if(file_name.substr(point_pos + 1) == "gua_trimesh"){
+        return true;
+    }
 #ifdef GUACAMOLE_FBX
     else if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX")
     {
@@ -365,15 +379,20 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
     // creates a geometry node and returns it
     auto load_geometry = [&](aiNode* ai_current, int i) {
+
+        //std::cout << "mesh_count: " << mesh_count << std::endl;
+
         GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
         GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
 
         // load material
         std::shared_ptr<Material> material = nullptr;
-        unsigned material_index(ai_scene->mMeshes[ai_current->mMeshes[i]]->mMaterialIndex);
-
+        
         if(flags & TriMeshLoader::LOAD_MATERIALS)
         {
+
+            std::cout << "using TriMeshLoader::LOAD_MATERIALS" << std::endl;
+            const unsigned material_index(ai_scene->mMeshes[ai_current->mMeshes[i]]->mMaterialIndex);
             MaterialLoader material_loader;
             aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
             material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
@@ -399,14 +418,15 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
         // there is only one geometry --- return it!
         if(ai_root->mNumChildren == 0 && ai_root->mNumMeshes == 1)
         {
-            // std::cout << "no children, one mesh" << std::endl;
+
+            //std::cout << "single mesh" << std::endl;
 
             auto node = load_geometry(ai_root, 0);
             // apply_transformation(node, ai_root->mTransformation); we do this already in group transform
             return node;
         }
 
-        // std::cout << "multiple children" << std::endl;
+        //std::cout << "multiple meshes" << std::endl;
 
         // else: there are multiple children and meshes
         auto group(std::make_shared<node::TransformNode>());
