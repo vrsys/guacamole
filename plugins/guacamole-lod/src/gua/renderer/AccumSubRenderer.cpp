@@ -75,25 +75,6 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
     RenderContext& ctx(pipe.get_context());
     lamure::ren::controller* controller = lamure::ren::controller::get_instance();
 
-/*
-    if(ctx.shader_storage_buffer_objects.begin() == ctx.shader_storage_buffer_objects.end()) {
-        auto programmable_data_ssbo = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, 1000, 0);
-
-        ctx.shader_storage_buffer_objects.insert(std::make_pair(0, programmable_data_ssbo));
-
-        std::cout << "CREATED SSBO: " << std::endl;
-
-        ctx.render_context->bind_storage_buffer(programmable_data_ssbo, 20, 0, 1000);
-
-        ctx.render_context->apply_storage_buffer_bindings();
-        float* fem_simulation_data = (float*)ctx.render_context->map_buffer(programmable_data_ssbo, scm::gl::access_mode::ACCESS_WRITE_ONLY);
-        std::vector<float> data(250);
-        std::generate(data.begin(), data.end(), dummy_generator);
-
-        memcpy((char*)fem_simulation_data, data.data(), 1000);
-        ctx.render_context->unmap_buffer(programmable_data_ssbo);
-    }
-*/
     scm::gl::context_all_guard context_guard(ctx.render_context);
 
     if(!custom_FBO_ptr_)
@@ -179,45 +160,43 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
                 if( !time_series_data_descriptions.empty() ) {
 
-                    for(auto const& data_description : time_series_data_descriptions) {
-                        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+                    auto active_time_series_index = plod_node->get_active_time_series_index();
 
-                        if(looked_up_time_series_data_item) {
-                            //std::cout << "FOUND DATA ITEM" << std::endl;
-                            //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+                    auto const& active_time_series_description = time_series_data_descriptions[active_time_series_index];
+
+                    //for(auto const& data_description : time_series_data_descriptions) {
+                    auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
+
+                    if(looked_up_time_series_data_item) {
+                        //std::cout << "FOUND DATA ITEM" << std::endl;
+                        //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
 
 
-                            looked_up_time_series_data_item->upload_time_range_to(ctx);
-                        }
-
-                        int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
-
-                        looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program, attribute_to_visualize_index);
-                        //int32_t current_timestep_offset = int(ctx.framecount % 100);
-
-                        //int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % plod_node;
-                        float current_timecursor_position = plod_node->get_time_cursor_position();
-
-                        if( (looked_up_time_series_data_item->num_timesteps != 1) && (looked_up_time_series_data_item->sequence_length != 0.0f) ) {
-                            if(current_timecursor_position >  looked_up_time_series_data_item->sequence_length) {
-                                current_timecursor_position = std::fmod(current_timecursor_position, looked_up_time_series_data_item->sequence_length);
-                            } 
-
-                            current_timecursor_position /= (looked_up_time_series_data_item->sequence_length/looked_up_time_series_data_item->num_timesteps );
-
-                        } else {
-                            current_timecursor_position = 0.0f;
-                        }
-
-                        //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
-                        current_material_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
-
-                        current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
-                        current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_coloring(), "enable_time_series_coloring");
-                        current_material_program->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");               
+                        looked_up_time_series_data_item->upload_time_range_to(ctx);
                     }
 
+                    int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
+
+                    looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program, attribute_to_visualize_index);
+                    //int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+                    float current_timecursor_position = plod_node->get_time_cursor_position();
+
+                    std::cout << "CURRENT TCP: " << current_timecursor_position << std::endl;
+
+                    current_timecursor_position = looked_up_time_series_data_item->calculate_active_cursor_position(current_timecursor_position);
+
+
+    
+                    //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
+                    current_material_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
+
+                    current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
+                    current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_coloring(), "enable_time_series_coloring");
+                    current_material_program->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");               
                 }
+
+                //}
 
                 ctx.render_context->apply();
 

@@ -62,6 +62,8 @@ struct GUA_DLL TimeSeriesDataSet {
 
     void bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_render);
 
+    float calculate_active_cursor_position(float in_node_time_cursor) const;
+
 };
 
 /**
