@@ -32,7 +32,7 @@ uniform float radius_scaling;
 uniform float max_surfel_radius;
 
 uniform int floats_per_attribute_timestep;
-uniform int current_timestep;
+uniform float current_timestep;
 
 uniform float min_ssbo_value;
 uniform float max_ssbo_value;
@@ -81,7 +81,7 @@ void main() {
            || (fem_vert_w_2 <= 0.0) ) )
     ) {
     
-    int timestep_offset = current_timestep * floats_per_attribute_timestep;
+    int timestep_offset = int(current_timestep) * floats_per_attribute_timestep;
 
     if(enable_time_series_deformation) {
       deform_position(read_position);

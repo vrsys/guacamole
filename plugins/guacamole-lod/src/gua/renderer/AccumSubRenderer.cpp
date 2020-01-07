@@ -195,9 +195,22 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                         looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program, attribute_to_visualize_index);
                         //int32_t current_timestep_offset = int(ctx.framecount % 100);
 
-                        int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % 100;
+                        //int32_t current_timestep_offset = int(plod_node->get_time_cursor_position()) % plod_node;
+                        float current_timecursor_position = plod_node->get_time_cursor_position();
+
+                        if( (looked_up_time_series_data_item->num_timesteps != 1) && (looked_up_time_series_data_item->sequence_length != 0.0f) ) {
+                            if(current_timecursor_position >  looked_up_time_series_data_item->sequence_length) {
+                                current_timecursor_position = std::fmod(current_timecursor_position, looked_up_time_series_data_item->sequence_length);
+                            } 
+
+                            current_timecursor_position /= (looked_up_time_series_data_item->sequence_length/looked_up_time_series_data_item->num_timesteps );
+
+                        } else {
+                            current_timecursor_position = 0.0f;
+                        }
+
                         //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
-                        current_material_program->set_uniform(ctx, current_timestep_offset, "current_timestep");
+                        current_material_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
 
                         current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
                         current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_coloring(), "enable_time_series_coloring");
