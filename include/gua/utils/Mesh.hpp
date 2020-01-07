@@ -41,8 +41,18 @@ namespace gua
  */
 struct GUA_DLL Mesh
 {
+  public: // typedefs, enums
+    enum Flags
+    {
+        DEFAULTS = 0,
+        SAVE_TANGENTS = 1 << 0,
+        SAVE_BITANGENTS = 1 << 1
+    };
+
   public:
     Mesh();
+
+    Mesh(const char* filename);
 
     Mesh(aiMesh const& mesh);
 
@@ -74,6 +84,13 @@ struct GUA_DLL Mesh
      * @return schism vertex format
      */
     virtual scm::gl::vertex_format get_vertex_format() const;
+
+    /**
+     * @brief saves this mesh as binary file
+     * @return true on success
+     */
+    bool save_to_binary(const char* filename, unsigned flags = DEFAULTS) const;
+
 
     std::vector<scm::math::vec3f> positions;
     std::vector<scm::math::vec3f> normals;
