@@ -30,7 +30,7 @@ uniform int floats_per_attribute_timestep;
 
 uniform int attribute_offset;
 
-uniform int current_timestep;
+uniform float current_timestep;
 
 uniform float min_ssbo_value;
 uniform float max_ssbo_value;
@@ -53,7 +53,7 @@ void main() {
   @include "../common_LOD/PLOD_vertex_pass_through.glsl"
 
 
-  int timestep_offset = current_timestep * floats_per_attribute_timestep;
+  int timestep_offset = int(current_timestep) * floats_per_attribute_timestep;
 
   vec3 read_position = in_position;
 

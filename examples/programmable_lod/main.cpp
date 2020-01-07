@@ -278,8 +278,8 @@ int main(int argc, char** argv)
     });
 
     for(auto& plod_node : vector_of_lod_nodes) {
-        plod_node->set_time_series_playback_speed(0.1f);
-        plod_node->set_time_series_deform_factor(500.0f);
+        plod_node->set_time_series_playback_speed(1.0f);
+        plod_node->set_time_series_deform_factor(5000.0f);
     }
 
     // trackball controls
@@ -477,7 +477,10 @@ int main(int argc, char** argv)
 
 
 
-
+        for(auto& plod_node : vector_of_lod_nodes) {
+            //plod_node->set_time_series_playback_speed(0.1f);
+            //plod_node->set_time_series_deform_factor( std::sin(framecount/1000.0f) * 2500.0f + 2500.0f);
+        }
 
 
         std::cout << "Elapsed frame time: " << elapsed_frame_time << std::endl; 
