@@ -166,14 +166,18 @@ void PLodNode::update_time_cursor(float elapsed_frame_time_seconds) {
   if(enable_automatic_playback_) {
        if( !associated_time_series_data_descriptions_.empty() ) {
 
-            for(auto const& data_description : associated_time_series_data_descriptions_) {
-                auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+            auto const& active_time_series_data_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_data_description);
 
-                if(looked_up_time_series_data_item) {
+            if(looked_up_time_series_data_item) {
+                if(1 != looked_up_time_series_data_item->num_timesteps) {
                     looked_up_time_series_data_item->time_cursor_position += time_series_playback_speed_ * elapsed_frame_time_seconds;
-                    looked_up_time_series_data_item->time_cursor_position = fmod(looked_up_time_series_data_item->time_cursor_position, looked_up_time_series_data_item->sequence_length);
+                    looked_up_time_series_data_item->time_cursor_position = std::fmod(looked_up_time_series_data_item->time_cursor_position, looked_up_time_series_data_item->sequence_length);
+                } else {
+                   looked_up_time_series_data_item->time_cursor_position = 0.0f; 
                 }
             }
+            //}
         }
     }
 }
@@ -192,27 +196,25 @@ int PLodNode::get_attribute_to_visualize_index() const {
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_time_cursor_position(float time_cursor) {
     if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_data_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
 
-        for(auto const& data_description : associated_time_series_data_descriptions_) {
-            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_data_description);
 
-            if(looked_up_time_series_data_item) {
-                looked_up_time_series_data_item->time_cursor_position = time_cursor;
-            }
+        if(looked_up_time_series_data_item) {
+            looked_up_time_series_data_item->time_cursor_position = time_cursor;
         }
+        
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 float PLodNode::get_time_cursor_position() const {
     if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_data_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_data_description);
 
-        for(auto const& data_description : associated_time_series_data_descriptions_) {
-            auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
-
-            if(looked_up_time_series_data_item) {
-                return looked_up_time_series_data_item->time_cursor_position;
-            }
+        if(looked_up_time_series_data_item) {
+            return looked_up_time_series_data_item->time_cursor_position;
         }
         return -1.0f;
     } else {
@@ -251,10 +253,14 @@ float PLodNode::get_time_series_deform_factor() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void PLodNode::set_up_programmable_attributes(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program) {
-    
+void PLodNode::set_active_time_series_index(unsigned int time_series_index) {
+    active_time_series_data_description_index_ = std::max(0u, std::min(time_series_index, unsigned(associated_time_series_data_descriptions_.size()) ) );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+int PLodNode::get_active_time_series_index() const {
+    return active_time_series_data_description_index_;
+}
 
 
 

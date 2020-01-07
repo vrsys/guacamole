@@ -108,11 +108,13 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_time_series_deform_factor(float time_series_deform_factor);
     float get_time_series_deform_factor() const;
 
+    void set_active_time_series_index(unsigned int time_series_index);
+    int get_active_time_series_index() const;
+
     void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
     std::vector<std::string> get_time_series_data_descriptions() const;
 
-    void set_up_programmable_attributes(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program);
-    
+
   public:
     /**
      * Implements ray picking for a point cloud
@@ -150,6 +152,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     float time_series_deform_factor_  = 1.0f;
 
     int attribute_to_visualize_index_ = 0;
+
+    int active_time_series_data_description_index_ = 0;
     std::vector<std::string> associated_time_series_data_descriptions_;
 
 };

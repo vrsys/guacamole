@@ -115,4 +115,33 @@ void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, st
     ctx.render_context->apply_storage_buffer_bindings();
 }
 
+float TimeSeriesDataSet::calculate_active_cursor_position(float in_node_time_cursor) const {
+    //int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
+    //looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_, attribute_to_visualize_index);
+
+    //int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+	std::cout << "In node time cursor: " << in_node_time_cursor << std::endl;
+
+    float current_timecursor_position = in_node_time_cursor;
+
+    if( (num_timesteps != 1) && (sequence_length != 0.0f) ) {
+        if(current_timecursor_position >  sequence_length) {
+            current_timecursor_position = std::fmod(current_timecursor_position, sequence_length);
+        }
+
+        std::cout << "Current timecursor position: " << current_timecursor_position << std::endl;
+        std::cout << "Sequence Length: " << sequence_length << std::endl;
+        std::cout << "Num Timesteps: " << num_timesteps << std::endl;        
+
+        current_timecursor_position /= (sequence_length/num_timesteps );
+    } else {
+        current_timecursor_position = 0.0f;
+    }
+
+    return current_timecursor_position;
+    //std::cout << "GOING TO UPLOAD TIMECURSOR POSITION: " << current_timecursor_position << std::endl;
+
+}
+
 }

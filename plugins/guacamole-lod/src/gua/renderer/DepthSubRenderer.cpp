@@ -119,37 +119,51 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
             
             if( !plod_node->get_time_series_data_descriptions().empty() ) {
 
-                for(auto const& data_description : time_series_data_descriptions) {
-                    auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(data_description);
-                    //auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
+                auto active_time_series_index = plod_node->get_active_time_series_index();
+
+                auto const& active_time_series_description = time_series_data_descriptions[active_time_series_index];
+
+                //for(auto const& data_description : time_series_data_descriptions) {
+                //auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
 
 
-                    int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
-                    looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_, attribute_to_visualize_index);
+                //for(auto const& data_description : time_series_data_descriptions) {
+                auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
+                //auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(looked_up_time_series_data_item->uuid);
 
-                    //int32_t current_timestep_offset = int(ctx.framecount % 100);
 
-                    float current_timecursor_position = plod_node->get_time_cursor_position();
+                int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
+                looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_, attribute_to_visualize_index);
 
-                    if( (looked_up_time_series_data_item->num_timesteps != 1) && (looked_up_time_series_data_item->sequence_length != 0.0f) ) {
-                        if(current_timecursor_position >  looked_up_time_series_data_item->sequence_length) {
-                            current_timecursor_position = std::fmod(current_timecursor_position, looked_up_time_series_data_item->sequence_length);
-                        }
+                //int32_t current_timestep_offset = int(ctx.framecount % 100);
 
-                        current_timecursor_position /= (looked_up_time_series_data_item->sequence_length/looked_up_time_series_data_item->num_timesteps );
-                    } else {
-                        current_timecursor_position = 0.0f;
+                float current_timecursor_position = plod_node->get_time_cursor_position();
+
+                current_timecursor_position = looked_up_time_series_data_item->calculate_active_cursor_position(current_timecursor_position);
+
+
+                /*
+                if( (looked_up_time_series_data_item->num_timesteps != 1) && (looked_up_time_series_data_item->sequence_length != 0.0f) ) {
+                    if(current_timecursor_position >  looked_up_time_series_data_item->sequence_length) {
+                        current_timecursor_position = std::fmod(current_timecursor_position, looked_up_time_series_data_item->sequence_length);
                     }
-    
-                    std::cout << "GOING TO UPLOAD TIMECURSOR POSITION: " << current_timecursor_position << std::endl;
 
-                    shader_program_->set_uniform(ctx, current_timecursor_position, "current_timestep");
-
-                    shader_program_->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
-                    shader_program_->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");    
-
-
+                    current_timecursor_position /= (looked_up_time_series_data_item->sequence_length/looked_up_time_series_data_item->num_timesteps );
+                } else {
+                    current_timecursor_position = 0.0f;
                 }
+
+                */
+
+                std::cout << "GOING TO UPLOAD TIMECURSOR POSITION: " << current_timecursor_position << std::endl;
+
+                shader_program_->set_uniform(ctx, current_timecursor_position, "current_timestep");
+
+                shader_program_->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
+                shader_program_->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");    
+
+
+                //}
 
             }
 

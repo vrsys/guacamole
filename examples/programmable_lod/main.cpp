@@ -279,7 +279,7 @@ int main(int argc, char** argv)
 
     for(auto& plod_node : vector_of_lod_nodes) {
         plod_node->set_time_series_playback_speed(1.0f);
-        plod_node->set_time_series_deform_factor(5000.0f);
+        plod_node->set_time_series_deform_factor(1000.0f);
     }
 
     // trackball controls
@@ -404,6 +404,14 @@ int main(int argc, char** argv)
                 }
                 break;
 
+            case '9':
+                for(auto const& plod_node : vector_of_lod_nodes) {
+                    uint32_t new_active_index = (plod_node->get_active_time_series_index() + 1) %  plod_node->get_time_series_data_descriptions().size();
+
+                    plod_node->set_active_time_series_index(new_active_index);
+                }
+                break;
+
             case 's':
                 for(auto& plod_node : vector_of_lod_nodes) {
                     plod_node->set_time_cursor_position(plod_node->get_time_cursor_position() + 1.0f);
@@ -463,11 +471,11 @@ int main(int argc, char** argv)
         else
         {
 
-
+            
             for(auto const& plod_node : vector_of_lod_nodes) {
                 plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
             }
-
+            
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)
             {
@@ -475,12 +483,6 @@ int main(int argc, char** argv)
             }
         }
 
-
-
-        for(auto& plod_node : vector_of_lod_nodes) {
-            //plod_node->set_time_series_playback_speed(0.1f);
-            //plod_node->set_time_series_deform_factor( std::sin(framecount/1000.0f) * 2500.0f + 2500.0f);
-        }
 
 
         std::cout << "Elapsed frame time: " << elapsed_frame_time << std::endl; 
