@@ -229,8 +229,8 @@ int main(int argc, char** argv)
     int button_state = -1;
 
     // setup rendering pipeline and window
-    // auto resolution = gua::math::vec2ui(3840, 2160);
-    auto resolution = gua::math::vec2ui(1920, 1080);
+     auto resolution = gua::math::vec2ui(3840, 2160);
+    //auto resolution = gua::math::vec2ui(1920, 1080);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0.0f, 0, 2.5f);
