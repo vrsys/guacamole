@@ -1,3 +1,25 @@
+
+
+
+vec3 sample_timestep_deformation(int current_integer_timestep) {
+      int timestep_offset = current_integer_timestep * floats_per_attribute_timestep;
+
+      vec3 deformation = vec3(0.0, 0.0, 0.0);
+
+      for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+
+        int deformation_base_offset = attribute_offset * dim_idx + timestep_offset;
+        deformation[dim_idx] =    fem_vert_w_0 * time_series_data[deformation_base_offset + fem_vert_id_0]
+                                + fem_vert_w_1 * time_series_data[deformation_base_offset + fem_vert_id_1]
+                                + fem_vert_w_2 * time_series_data[deformation_base_offset + fem_vert_id_2];
+      }
+
+      //gl_Position = vec4( deform_factor * deformation + in_position, 1.0);
+
+     return deformation;
+
+}
+
 void deform_position(in out vec3 position) {
   if( ! (    (fem_vert_w_0 <= 0.0)  
           || (fem_vert_w_1 <= 0.0)  
@@ -5,22 +27,23 @@ void deform_position(in out vec3 position) {
       )
      ) {
     
-    int timestep_offset = int(current_timestep) * floats_per_attribute_timestep;
+    int timestep_one = int(current_timestep);
 
-    vec3 deformation = vec3(0.0, 0.0, 0.0);
+    vec3 deformation_t0 = sample_timestep_deformation(timestep_one);
 
-    for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+    vec3 final_deformation = deformation_t0;
 
-      int deformation_base_offset = attribute_offset * dim_idx + timestep_offset;
-      deformation[dim_idx] =    fem_vert_w_0 * time_series_data[deformation_base_offset + fem_vert_id_0]
-                              + fem_vert_w_1 * time_series_data[deformation_base_offset + fem_vert_id_1]
-                              + fem_vert_w_2 * time_series_data[deformation_base_offset + fem_vert_id_2];
+    if(enable_linear_temporal_interpolation) {
+      int timestep_two = timestep_one + 1;
+      vec3 deformation_t1 = sample_timestep_deformation(timestep_two);
+
+      float timestep_mixing_ratio = current_timestep - timestep_one;
+
+      final_deformation = mix(deformation_t0, deformation_t1, timestep_mixing_ratio);
+
+
     }
 
-    //gl_Position = vec4( deform_factor * deformation + in_position, 1.0);
-
-    position += deformation * deform_factor;
-
-    //VertexOut.pass_point_color = mix(data_value_to_rainbow(mixed_value, min_ssbo_value, max_ssbo_value), VertexOut.pass_point_color, 0.7);
+    position += final_deformation * deform_factor;
   }
 }

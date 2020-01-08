@@ -19,63 +19,53 @@ float adjust(in float color, in float factor){
 }
 
 vec3 wavelength_to_RGB(in float wavelength){
-  float Blue;
-  float factor;
-  float Green;
-  float Red;
+
+  float factor = 0.0;
+
+  vec3 RGB = vec3(0.0);
+
   if(380.0 <= wavelength && wavelength <= 440.0){
-    Red   = -(wavelength - 440.0) / (440.0 - 380.0);
-    Green = 0.0;
-    Blue  = 1.0;
+    RGB.r  = -0.016666666666666666 * (wavelength - 440.0);
+    RGB.b  = 1.0;
   }
   else if(440.0 < wavelength && wavelength <= 490.0){
-    Red   = 0.0;
-    Green = (wavelength - 440.0) / (490.0 - 440.0);
-    Blue  = 1.0;
+
+    RGB.g = 0.02 * (wavelength - 440.0);
+    RGB.b = 1.0;
   }
   else if(490.0 < wavelength && wavelength <= 510.0){
-    Red   = 0.0;
-    Green = 1.0;
-    Blue  = -(wavelength - 510.0) / (510.0 - 490.0);
+    RGB.g = 1.0;
+    RGB.b = -(wavelength - 510.0) / (510.0 - 490.0);
   }
   else if(510.0 < wavelength && wavelength <= 580.0){
-    Red   = (wavelength - 510.0) / (580.0 - 510.0);
-    Green = 1.0;
-    Blue  = 0.0;
+    RGB.r = 0.014285714285714285 * (wavelength - 510.0);
+    RGB.g = 1.0;
   }
   else if(580.0 < wavelength && wavelength <= 645.0){   
-    Red   = 1.0;
-    Green = -(wavelength - 645.0) / (645.0 - 580.0);
-    Blue  = 0.0;
+    RGB.r = 1.0;
+    RGB.g = -0.015384615384615385 * (wavelength - 645.0);
   }
   else if(645.0 < wavelength && wavelength <= 780.0){
-    Red   = 1.0;
-    Green = 0.0;
-    Blue  = 0.0;
+    RGB.r = 1.0;
   }
-  else{
-    Red   = 0.0;
-    Green = 0.0;
-    Blue  = 0.0;
-  }
-  
+
   
   if(380.0 <= wavelength && wavelength <= 420.0){
-    factor = 0.3 + 0.7*(wavelength - 380.0) / (420.0 - 380.0);
+    factor = 0.3 + 0.0175 * (wavelength - 380.0);
   }
   else if(420.0 < wavelength && wavelength <= 701.0){
     factor = 1.0;
   }
   else if(701.0 < wavelength && wavelength <= 780.0){
-    factor = 0.3 + 0.7*(780.0 - wavelength) / (780.0 - 701.0);
+    factor = 0.008860759493670885 * (780.0 - wavelength) + 0.3;
   }
-  else{
-    factor = 0.0;
-  }
-  float R = adjust(Red,   factor);
-  float G = adjust(Green, factor);
-  float B = adjust(Blue,  factor);
-  return vec3(R/255.0,G/255.0,B/255.0);
+
+  RGB = vec3(adjust(RGB.r, factor), 
+             adjust(RGB.g, factor),
+             adjust(RGB.b, factor)
+            );
+
+  return 0.00392156862745098 * vec3(RGB);
 }
   
   
