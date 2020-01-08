@@ -79,6 +79,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
     
     std::vector<std::string> model_files_to_load;
 
+    float initial_max_surfel_radius = -1.0f;
     //bool load_vis_
 
     std::vector<std::string> parsed_time_series_data_description;
@@ -96,6 +97,14 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
                 if(is_supported_model_file(line_buffer)) {
                     model_files_to_load.push_back(line_buffer);
+                } else {
+                    std::istringstream attribute_parser_stringstream(line_buffer);
+
+                    std::string attribute_string_dummy_buffer("");
+                    if(0 == line_buffer.rfind("max_radius:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        attribute_parser_stringstream >> initial_max_surfel_radius;
+                    }
                 }
   
             }
@@ -268,6 +277,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
                 loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
 
+                if(initial_max_surfel_radius > 0.0f) {
+                    current_point_cloud_shared_ptr->set_max_surfel_radius(initial_max_surfel_radius);
+                }
     
             }
 

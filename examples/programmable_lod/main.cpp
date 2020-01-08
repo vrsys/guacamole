@@ -19,9 +19,12 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <algorithm>
+#include <fstream>
 #include <functional>
 #include <memory>
-#include <algorithm>
+#include <sstream>
+
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
@@ -134,67 +137,65 @@ int main(int argc, char** argv)
                                                                              //lod_rough,
                                                                              gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
 
+
+
+
+
     for(auto const& node : vector_of_lod_nodes) {
         graph.add_node("/transform/plod_transform", node);
     }
 
 /*
-#if USE_POINTCLOUD_LOD_MODEL
-    // load a sample pointcloud
-    auto plod_node = lod_loader.load_lod_pointcloud("pointcloud",
-#if WIN32
-                                                    "data/objects/plod/pig_pr.bvh",
-    //"data/objects/Tempelherrenhaus/Pointcloud_Ruine_xyz_parts_00001.bvh",
-    //"data/objects/wappen_local.bvh",
-#else
-                                                    "/opt/3d_models/lamure/plod/pig_pr.bvh",
-#endif
-                                                    lod_rough,
-                                                    gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
-
-    graph.add_node("/transform/plod_transform", plod_node);
-
-    plod_transform->rotate(90.0, 0.0, 1.0, 0.0);
-    // plod_transform->rotate(180.0, 0.0, 1.0, 0.0);
-    plod_transform->translate(0.3, 0.08, 0.0);
-#endif
-*/
-#if USE_MESH_LOD_MODEL
-    // load a sample mesh-based lod model
-    auto mlod_node = lod_loader.load_lod_trimesh(
-    //"tri_mesh",
-#if WIN32
-        "data/objects/mlod/xyzrgb_dragon_7219k.bvh",
-#else
-        "/opt/3d_models/lamure/mlod/xyzrgb_dragon_7219k.bvh",
-#endif
-        // plod_rough,
-        gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE /* | gua::LodLoader::MAKE_PICKABLE*/
-    );
-
-    mlod_node->set_error_threshold(0.25);
-    graph.add_node("/transform/mlod_transform", mlod_node);
-
-    mlod_transform->translate(-0.4, 0.0, 0.0);
-#endif
-
-#if USE_REGULAR_TRIMESH_MODEL
     gua::TriMeshLoader loader;
-    auto ground(loader.create_geometry_from_file("teapot", "data/objects/plane.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
-    auto teapot(loader.create_geometry_from_file("teapot", "data/objects/teapot.obj", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
 
-    graph.add_node("/transform/tri_transform", ground);
-    graph.add_node("/transform/tri_transform", teapot);
+    auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
-    teapot->translate(0.0, -0.17, 0.0);
+    model_mat->set_render_wireframe(false);
+    model_mat->set_show_back_faces(false);
 
-    ground->scale(10.0, 1.0, 10.0);
-    ground->translate(0.0, -0.4, 0.0);
+    auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
+    auto example_model(
+        loader.create_geometry_from_file("example_model", "./data/objects/teapot.obj", model_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
-    tri_transform->scale(0.3);
-    tri_transform->translate(0.0, 0.0, 0.5);
-#endif
+    graph.add_node("/transform/plod_transform", example_model);
 
+    std::ifstream in_train_positions("/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_Data_Collection_Mat_Files/2020_01_06/ZugachsenBLZ56_Track1_DirPull_V300/all_train_positions.train_pos");
+
+    int line_index = 0;
+    std::string line_buffer = "";
+    int num_train_positions_per_line = 0;
+
+    std::vector<scm::math::vec3f> train_positions;
+
+    while(std::getline(in_train_positions, line_buffer)) {
+        std::istringstream in_sstream(line_buffer);
+
+        if(0 == line_index) {
+            in_sstream >> num_train_positions_per_line; 
+        } else {
+            float force = 0.0f;
+            in_sstream >> force;
+
+            scm::math::vec3f new_train_pos;
+
+            in_sstream >> new_train_pos[0];
+            in_sstream >> new_train_pos[1];
+            in_sstream >> new_train_pos[2];
+
+            train_positions.push_back(new_train_pos);
+            break;
+        }
+
+        ++line_index;
+    }
+
+    in_train_positions.close();
+
+    std::cout << "Translation: " << train_positions.back() << std::endl;
+
+    example_model->scale(0.05f);
+    example_model->translate(train_positions.back()[0]/1000.0, train_positions.back()[1]/1000.0, train_positions.back()[2]/1000.0 );
+*/
     // create a lightsource
     auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
     auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
@@ -279,7 +280,7 @@ int main(int argc, char** argv)
 
     for(auto& plod_node : vector_of_lod_nodes) {
         plod_node->set_time_series_playback_speed(1.0f);
-        plod_node->set_time_series_deform_factor(1000.0f);
+        plod_node->set_time_series_deform_factor(3000.0f);
     }
 
     // trackball controls
@@ -470,8 +471,6 @@ int main(int argc, char** argv)
         }
         else
         {
-
-            
             for(auto const& plod_node : vector_of_lod_nodes) {
                 plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
             }
@@ -482,8 +481,6 @@ int main(int argc, char** argv)
                 std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
             }
         }
-
-
 
         std::cout << "Elapsed frame time: " << elapsed_frame_time << std::endl; 
 
