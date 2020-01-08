@@ -67,6 +67,8 @@ class GUA_DLL TriMeshNode : public GeometryNode
     inline bool get_render_to_stencil_buffer() const { return render_to_stencil_buffer_; }
     inline void set_render_to_stencil_buffer(bool enable) { render_to_stencil_buffer_ = enable; }
 
+    virtual std::size_t num_grouped_faces() const override; 
+
     /**
      * Implements ray picking for a triangular mesh
      */

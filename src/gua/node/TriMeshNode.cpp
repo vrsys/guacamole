@@ -55,6 +55,17 @@ void TriMeshNode::set_geometry_description(std::string const& v)
 std::shared_ptr<Material> const& TriMeshNode::get_material() const { return material_; }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::size_t TriMeshNode::num_grouped_faces() const  {
+  std::size_t node_count_of_children = Node::num_grouped_faces();
+  
+  if(geometry_) {
+    node_count_of_children += geometry_->num_faces();
+  }
+
+  return node_count_of_children;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void TriMeshNode::set_material(std::shared_ptr<Material> const& material)
 {
     material_ = material;
