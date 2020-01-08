@@ -1,5 +1,8 @@
 
 
+uniform float min_active_attribute_value;
+uniform float max_active_attribute_value;
+
 // --------------------------
 const float GAMMA        = 0.80;
 const float INTENSITY_MAX = 255.0;
@@ -81,7 +84,7 @@ vec3 data_value_to_rainbow(float value, float min_value, float max_value) {
   return wavelength_to_RGB(wavelength);   
 }
 
-vec3 sample_attribute_color(float min_value, float max_value) {
+vec3 sample_attribute_color( ) {
   vec3 vertex_weights = vec3(fem_vert_w_0, fem_vert_w_1, fem_vert_w_2);
   ivec3 vertex_ids    = ivec3(fem_vert_id_0, fem_vert_id_1, fem_vert_id_2);
 
@@ -116,5 +119,5 @@ vec3 sample_attribute_color(float min_value, float max_value) {
     final_mixed_value = mix(mixed_value_t0, mixed_value_t1, timestep_mixing_ratio);
   }
   
-  return data_value_to_rainbow(final_mixed_value, min_value, max_value);
+  return data_value_to_rainbow(final_mixed_value, min_active_attribute_value, max_active_attribute_value);
 }

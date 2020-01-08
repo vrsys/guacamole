@@ -20,8 +20,7 @@ uniform float max_surfel_radius;
 uniform int floats_per_attribute_timestep;
 uniform float current_timestep;
 
-uniform float min_ssbo_value;
-uniform float max_ssbo_value;
+
 
 uniform int attribute_to_visualize = 0;
 uniform float deform_factor = 500.0;
@@ -69,7 +68,7 @@ void main() {
     }
 
     if( enable_time_series_coloring ) {
-      vec3 attribute_color = sample_attribute_color(min_ssbo_value, max_ssbo_value);
+      vec3 attribute_color = sample_attribute_color();
 
       VertexOut.pass_point_color = mix(attribute_color, raw_point_color, mix_in_factor);
     } else {
