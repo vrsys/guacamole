@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         graph.add_node("/transform/plod_transform", node);
     }
 
-/*
+
     gua::TriMeshLoader loader;
 
     auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -159,6 +159,8 @@ int main(int argc, char** argv)
 
     graph.add_node("/transform/plod_transform", example_model);
 
+    example_model->translate(0.0, -1.0, 0.0);
+    /*
     std::ifstream in_train_positions("/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_Data_Collection_Mat_Files/2020_01_06/ZugachsenBLZ56_Track1_DirPull_V300/all_train_positions.train_pos");
 
     int line_index = 0;
@@ -426,7 +428,11 @@ int main(int argc, char** argv)
                 }
                 break;
             case 'p':
-                    print_graph( graph.get_root() );
+                for(auto& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_enable_automatic_playback(!plod_node->get_enable_automatic_playback() );
+                }
+                    //
+                    //print_graph( graph.get_root() );
                 break;
 
             default:
@@ -451,6 +457,11 @@ int main(int argc, char** argv)
     std::size_t framecount = 0;
     
     std::chrono::time_point<std::chrono::system_clock> start, end;
+
+
+
+    light_transform->rotate(90.0f, 0.f, 1.f, 0.f);
+
     ticker.on_tick.connect([&]() {
 
 
@@ -461,7 +472,7 @@ int main(int argc, char** argv)
         start = std::chrono::system_clock::now();
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
-        light_transform->rotate(0.1, 0.f, 1.f, 0.f);
+        //light_transform->rotate(0.1, 0.f, 1.f, 0.f);
         window->process_events();
         if(window->should_close())
         {
