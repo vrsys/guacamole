@@ -74,9 +74,10 @@ void main() {
 	      VertexOut.pass_point_color = raw_point_color;
 	    }
 
-	  } else {
-	    VertexOut.pass_point_color = raw_point_color;
-  }
+	} else {
+	  VertexOut.pass_point_color = raw_point_color;
+
+    }
 
   gl_Position = vec4(read_position, 1.0);
 
