@@ -55,11 +55,11 @@ NURBSResource::NURBSResource(
 void NURBSResource::predraw(RenderContext const& context) const
 {
     // upload to GPU if neccessary
-    auto iter = context.plugin_ressources.find(uuid());
-    if(iter == context.plugin_ressources.end())
+    auto iter = context.plugin_resources.find(uuid());
+    if(iter == context.plugin_resources.end())
     {
         upload_to(context);
-        iter = context.plugin_ressources.find(uuid());
+        iter = context.plugin_resources.find(uuid());
     }
 
     auto in_context = context.render_context;
@@ -69,9 +69,9 @@ void NURBSResource::predraw(RenderContext const& context) const
     scm::gl::context_image_units_guard cig(in_context);
     scm::gl::context_texture_units_guard ctg(in_context);
 
-    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
-    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
-    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
+    auto resource = std::dynamic_pointer_cast<NURBSGPUResource>(iter->second);
+    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_resources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
+    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_resources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
 
     // Transform Feedback Stage Begins
     in_context->begin_transform_feedback(xfb_ptr->_transform_feedback, scm::gl::PRIMITIVE_POINTS);
@@ -116,8 +116,8 @@ void NURBSResource::predraw(RenderContext const& context) const
 void NURBSResource::draw(RenderContext const& context, bool pretessellation) const
 {
     // upload to GPU if neccessary
-    auto iter = context.plugin_ressources.find(uuid());
-    assert(iter != context.plugin_ressources.end());
+    auto iter = context.plugin_resources.find(uuid());
+    assert(iter != context.plugin_resources.end());
 
     auto in_context = context.render_context;
 
@@ -126,9 +126,9 @@ void NURBSResource::draw(RenderContext const& context, bool pretessellation) con
     scm::gl::context_image_units_guard cig1(in_context);
     scm::gl::context_texture_units_guard ctg1(in_context);
 
-    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(iter->second);
-    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
-    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
+    auto resource = std::dynamic_pointer_cast<NURBSGPUResource>(iter->second);
+    auto xfb_ptr = std::dynamic_pointer_cast<NURBSTransformFeedbackBuffer>(context.plugin_resources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID]);
+    auto state_ptr = std::dynamic_pointer_cast<NURBSRasterizationState>(context.plugin_resources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID]);
 
     in_context->bind_vertex_array(xfb_ptr->_transform_feedback_vao);
 
@@ -192,8 +192,8 @@ void NURBSResource::draw(RenderContext const& context, bool pretessellation) con
 void NURBSResource::upload_to(RenderContext const& context) const
 {
     // create, if neccessary
-    auto resource = std::make_shared<NURBSGPURessource>();
-    context.plugin_ressources[uuid()] = resource;
+    auto resource = std::make_shared<NURBSGPUResource>();
+    context.plugin_resources[uuid()] = resource;
 
     // create state
     initialize_states(context);
@@ -209,7 +209,7 @@ void NURBSResource::upload_to(RenderContext const& context) const
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::initialize_states(RenderContext const& context) const
 {
-    if(context.plugin_ressources.count(NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID))
+    if(context.plugin_resources.count(NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID))
         return;
 
     std::lock_guard<std::mutex> lock(_upload_mutex);
@@ -217,7 +217,7 @@ void NURBSResource::initialize_states(RenderContext const& context) const
     auto in_device = context.render_device;
 
     auto state_ptr = std::make_shared<NURBSRasterizationState>();
-    context.plugin_ressources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID] = state_ptr;
+    context.plugin_resources[NURBSRasterizationState::GUA_RASTERIZATION_BASE_CACHE_ID] = state_ptr;
 
     state_ptr->_sstate = in_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_CLAMP_TO_EDGE);
 
@@ -237,8 +237,8 @@ void NURBSResource::initialize_texture_buffers(RenderContext const& context) con
 
     auto in_device = context.render_device;
 
-    assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
-    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
+    assert(context.plugin_resources.find(uuid()) != context.plugin_resources.end());
+    auto resource = std::dynamic_pointer_cast<NURBSGPUResource>(context.plugin_resources.find(uuid())->second);
 
     // surface tesselation data
     resource->_surface_tesselation_data.parametric_texture_buffer =
@@ -289,8 +289,8 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
 
     auto in_device = context.render_device;
 
-    assert(context.plugin_ressources.find(uuid()) != context.plugin_ressources.end());
-    auto resource = std::dynamic_pointer_cast<NURBSGPURessource>(context.plugin_ressources.find(uuid())->second);
+    assert(context.plugin_resources.find(uuid()) != context.plugin_resources.end());
+    auto resource = std::dynamic_pointer_cast<NURBSGPUResource>(context.plugin_resources.find(uuid())->second);
 
     // initialize vertex input for adaptive tesselation
     int stride = sizeof(scm::math::vec3f) + sizeof(unsigned) + sizeof(scm::math::vec4f);
@@ -321,13 +321,13 @@ void NURBSResource::initialize_vertex_data(RenderContext const& context) const
 ////////////////////////////////////////////////////////////////////////////////
 void NURBSResource::initialize_transform_feedback(RenderContext const& context) const
 {
-    if(context.plugin_ressources.count(NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID))
+    if(context.plugin_resources.count(NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID))
         return;
 
     std::lock_guard<std::mutex> lock(_upload_mutex);
 
     auto transform_feedback_buffer = std::make_shared<NURBSTransformFeedbackBuffer>();
-    context.plugin_ressources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID] = transform_feedback_buffer;
+    context.plugin_resources[NURBSTransformFeedbackBuffer::GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID] = transform_feedback_buffer;
 
     auto in_device = context.render_device;
 

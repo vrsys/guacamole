@@ -19,8 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
-#ifndef GUA_TIME_SERIES_DATA_HPP
-#define GUA_TIME_SERIES_DATA_HPP
+#ifndef GUA_TIME_SERIES_GPU_RESOURCE_HPP
+#define GUA_TIME_SERIES_GPU_RESOURCE_HPP
 
 // guacamole_headers
 #include <gua/platform.hpp>
@@ -36,46 +36,14 @@
 
 namespace gua
 {
-class RessourceRenderer;
 
-
-namespace node
-{
-class GeometryNode;
+struct TimeSeriesGPUResource : public PluginResource {
+	scm::gl::buffer_ptr ssbo = nullptr;
+	uint currently_uploaded_time_step_slot_0 = -1;
+	uint currently_uploaded_time_step_slot_1 = -1;
 };
 
 
-struct GUA_DLL TimeSeriesDataSet {
-    std::string name = "";
-    uint32_t num_attributes = 0;
-    uint32_t num_timesteps = 0;
-    float sequence_length = 0;
+}
 
-    float time_cursor_position = 0.0f;
-
-    std::vector<std::pair<float, float> > extreme_values;    
-    std::vector<float> data; //for now we only allow float attributes
-
-    std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
-
-    void upload_time_range_to(RenderContext& ctx, int start_time_step_id = -1, int end_time_step_id = -1) const;
-
-    void bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_render);
-
-    float calculate_active_cursor_position(float in_node_time_cursor) const;
-
-};
-
-/**
- * 
- *
-class GUA_DLL TimeSeriesDataSetCollectionResource
-{
-  public:
-    std::vector<TimeSeriesItem> data_sets;
-};
-*/
-
-} // namespace gua
-
-#endif // GUA_TIME_SERIES_DATA_HPP
+#endif //GUA_TIME_SERIES_GPU_RESOURCE_HPP

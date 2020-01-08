@@ -139,7 +139,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
             if(nurbs_ressource && pre_tesselation_program_ && current_material_program)
             {
-                auto resource_upload_required = ctx.plugin_ressources.end() == ctx.plugin_ressources.find(nurbs_ressource->uuid());
+                auto resource_upload_required = ctx.plugin_resources.end() == ctx.plugin_resources.find(nurbs_ressource->uuid());
                 if(_pretessellation || resource_upload_required)
                 {
                     // render using two-pass tesselation approach
