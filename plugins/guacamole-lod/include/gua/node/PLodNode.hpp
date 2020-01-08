@@ -130,6 +130,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
 
     void accept(NodeVisitor& visitor) override;
 
+    void bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<ShaderProgram>& current_program);
+
   protected:
     std::shared_ptr<Node> copy() const override;
 

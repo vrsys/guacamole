@@ -509,7 +509,6 @@ int main(int argc, char** argv)
             }
         }
 
-        std::cout << "Elapsed frame time: " << elapsed_frame_time << std::endl; 
 
     });
 

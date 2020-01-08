@@ -154,52 +154,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
 
                 plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
-
-
-                auto time_series_data_descriptions = plod_node->get_time_series_data_descriptions();
-
-                if( !time_series_data_descriptions.empty() ) {
-
-                    auto active_time_series_index = plod_node->get_active_time_series_index();
-
-                    auto const& active_time_series_description = time_series_data_descriptions[active_time_series_index];
-
-                    //for(auto const& data_description : time_series_data_descriptions) {
-                    auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
-
-                    if(looked_up_time_series_data_item) {
-                        //std::cout << "FOUND DATA ITEM" << std::endl;
-                        //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
-
-
-                        looked_up_time_series_data_item->upload_time_range_to(ctx);
-                    }
-
-                    int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
-
-                    looked_up_time_series_data_item->bind_to(ctx, 20, current_material_program, attribute_to_visualize_index);
-                    //int32_t current_timestep_offset = int(ctx.framecount % 100);
-
-                    float current_timecursor_position = plod_node->get_time_cursor_position();
-
-                    std::cout << "CURRENT TCP: " << current_timecursor_position << std::endl;
-
-                    current_timecursor_position = looked_up_time_series_data_item->calculate_active_cursor_position(current_timecursor_position);
-
-
-    
-                    //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
-                    current_material_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
-
-                    current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
-                    current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_coloring(), "enable_time_series_coloring");
-                    current_material_program->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");               
-                
-
-                    current_material_program->set_uniform(ctx, plod_node->get_enable_temporal_interpolation(), "enable_linear_temporal_interpolation");
-                }
-
-                //}
+                plod_node->bind_time_series_data_to(ctx, current_material_program);
 
                 ctx.render_context->apply();
 
