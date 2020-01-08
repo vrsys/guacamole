@@ -8,7 +8,7 @@ vec3 sample_timestep_deformation(int current_integer_timestep) {
 
       for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
 
-        int deformation_base_offset = attribute_offset * dim_idx + timestep_offset;
+        int deformation_base_offset = floats_per_attribute_timestep * 2 * dim_idx + timestep_offset;
         deformation[dim_idx] =    fem_vert_w_0 * time_series_data[deformation_base_offset + fem_vert_id_0]
                                 + fem_vert_w_1 * time_series_data[deformation_base_offset + fem_vert_id_1]
                                 + fem_vert_w_2 * time_series_data[deformation_base_offset + fem_vert_id_2];
@@ -29,15 +29,15 @@ void deform_position(in out vec3 position) {
     
     int timestep_one = int(current_timestep);
 
-    vec3 deformation_t0 = sample_timestep_deformation(timestep_one);
+    vec3 deformation_t0 = sample_timestep_deformation(0);
 
     vec3 final_deformation = deformation_t0;
 
     if(enable_linear_temporal_interpolation) {
       int timestep_two = timestep_one + 1;
-      vec3 deformation_t1 = sample_timestep_deformation(timestep_two);
+      vec3 deformation_t1 = sample_timestep_deformation(1);
 
-      float timestep_mixing_ratio = current_timestep - timestep_one;
+      float timestep_mixing_ratio = mod(current_timestep, 1.0);// - timestep_one;
 
       final_deformation = mix(deformation_t0, deformation_t1, timestep_mixing_ratio);
 

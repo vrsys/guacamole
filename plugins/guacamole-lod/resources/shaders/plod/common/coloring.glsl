@@ -85,12 +85,12 @@ vec3 sample_attribute_color(float min_value, float max_value) {
   vec3 vertex_weights = vec3(fem_vert_w_0, fem_vert_w_1, fem_vert_w_2);
   ivec3 vertex_ids    = ivec3(fem_vert_id_0, fem_vert_id_1, fem_vert_id_2);
 
-  int timestep_0 = int(current_timestep);
+  int timestep_0 = int(0);
 
   int timestep_offset_0 = timestep_0 * floats_per_attribute_timestep;
 
-
-  uint precomputed_attribute_offset_0 = attribute_offset * attribute_to_visualize + timestep_offset_0;
+  //attribute to visualize will always be in slot 4 from now on
+  uint precomputed_attribute_offset_0 = floats_per_attribute_timestep * 2 * 3 + timestep_offset_0;
   vec3 looked_up_vertex_values_0 = vec3(time_series_data[precomputed_attribute_offset_0 + vertex_ids.x],
                                         time_series_data[precomputed_attribute_offset_0 + vertex_ids.y],
                                         time_series_data[precomputed_attribute_offset_0 + vertex_ids.z]);
@@ -98,22 +98,23 @@ vec3 sample_attribute_color(float min_value, float max_value) {
   float mixed_value_t0 = dot(vertex_weights, looked_up_vertex_values_0);
   float final_mixed_value = mixed_value_t0;
 
+
   if(enable_linear_temporal_interpolation) {
     int timestep_1 = timestep_0 + 1;
 
     int timestep_offset_1 = timestep_offset_0 + floats_per_attribute_timestep;
 
-
-    uint precomputed_attribute_offset_1 = attribute_offset * attribute_to_visualize + timestep_offset_1;
+    //attribute to visualize will always be in slot 4 from now on
+    uint precomputed_attribute_offset_1 = floats_per_attribute_timestep * 2 * 3 + timestep_offset_1;
     vec3 looked_up_vertex_values_1 = vec3(time_series_data[precomputed_attribute_offset_1 + vertex_ids.x],
                                           time_series_data[precomputed_attribute_offset_1 + vertex_ids.y],
                                           time_series_data[precomputed_attribute_offset_1 + vertex_ids.z]);
 
     float mixed_value_t1 = dot(vertex_weights, looked_up_vertex_values_1);
-    float timestep_mixing_ratio = current_timestep - timestep_0;
+    float timestep_mixing_ratio = mod(current_timestep, 1.0);
 
     final_mixed_value = mix(mixed_value_t0, mixed_value_t1, timestep_mixing_ratio);
   }
-
+  
   return data_value_to_rainbow(final_mixed_value, min_value, max_value);
 }

@@ -340,10 +340,7 @@ int main(int argc, char** argv)
 
     window->on_key_press.connect(std::bind(
         [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
-           
-            
-            std::cout << "SCANCODE: " << scancode << std::endl;
-
+        
             if(action == 0)
                 return;
 
@@ -435,16 +432,43 @@ int main(int argc, char** argv)
                     //print_graph( graph.get_root() );
                 break;
 
-            case 'o':
-                for(auto const& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_time_series_playback_speed(std::min(1.0f, plod_node->get_time_series_playback_speed() * 2.0f) );
+            case 'o': {
+                    float current_playback_speed = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_time_series_playback_speed(std::min(1.0f, plod_node->get_time_series_playback_speed() * 2.0f) );
+                        current_playback_speed = plod_node->get_time_series_playback_speed();
+                    }
+                    std::cout << "Set playback speed to: " << current_playback_speed << std::endl;
                 }
                 break;
-            case 'l':
-                for(auto const& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_time_series_playback_speed(std::max(0.01f, plod_node->get_time_series_playback_speed()/2.0f) );
+            case 'l': {
+                    float current_playback_speed = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_time_series_playback_speed(std::max(0.01f, plod_node->get_time_series_playback_speed()/2.0f) );
+                        current_playback_speed = plod_node->get_time_series_playback_speed();
+                    }
+                    std::cout << "Set playback speed to: " << current_playback_speed << std::endl;
                 }
                 break;
+            case 'i': {
+                    float current_deform_factor = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_time_series_deform_factor(std::min(3000.0f, plod_node->get_time_series_deform_factor() * 2.0f) );
+                        current_deform_factor = plod_node->get_time_series_deform_factor();
+                    }
+                    std::cout << "Set deform factor to: " << current_deform_factor << std::endl;
+                }
+                break;
+            case 'k': {
+                    float current_deform_factor = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_time_series_deform_factor(std::max(1.0f, plod_node->get_time_series_deform_factor()/2.0f) );
+
+                        current_deform_factor = plod_node->get_time_series_deform_factor();
+                    }
+                    std::cout << "Set deform factor to: " << current_deform_factor << std::endl;
+                }
+            break;
             case 't':
                 for(auto const& plod_node : vector_of_lod_nodes) {
                     plod_node->set_enable_temporal_interpolation( !plod_node->get_enable_temporal_interpolation() );
@@ -479,9 +503,6 @@ int main(int argc, char** argv)
     light_transform->rotate(90.0f, 0.f, 1.f, 0.f);
 
     ticker.on_tick.connect([&]() {
-
-
-
         end = std::chrono::system_clock::now();
 
         elapsed_frame_time = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();

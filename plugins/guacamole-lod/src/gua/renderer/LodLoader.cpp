@@ -106,7 +106,6 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                         attribute_parser_stringstream >> initial_max_surfel_radius;
                     }
                 }
-  
             }
 
             
@@ -126,10 +125,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                         std::cout << "Loading Provenance-Layout-Description from JSON: " << settings.json_ << std::endl;
                         lamure::ren::data_provenance::get_instance()->parse_json(settings.json_);
                     
-
                         std::cout << "Loading mapping file: " << std::endl;
-
-                        
                         std::cout << settings.fem_value_mapping_file_ << std::endl;
 
                         std::string line_buffer;
@@ -140,7 +136,6 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                         while( std::getline(in_mapping_file_stream, line_buffer) ) {
                             boost::trim(line_buffer);
                             if (! (line_buffer.rfind("#", 0) == 0 ) ) {
-                                std::cout << "Parsing data collection" << std::endl;
                                 std::cout << line_buffer << std::endl;
 
                                 std::istringstream data_item_description_strstream(line_buffer);
@@ -158,33 +153,18 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
                                 size_t total_num_byte_in_file = in_attribute_file.tellg();
 
-                                std::cout << "TOTAL NUM BYTE IN FILE: " << total_num_byte_in_file << std::endl;
-
                                 in_attribute_file.clear();
                                 in_attribute_file.seekg(0, std::ios::beg);
 
 
                                 std::size_t num_vertices_per_file = (total_num_byte_in_file / sizeof(float) ) / (shared_time_series_dataset->num_attributes * shared_time_series_dataset->num_timesteps );
-
                                 std::size_t num_elements_to_read = total_num_byte_in_file / sizeof(float);
-                                
                                 std::size_t num_elements_per_attribute_over_time = num_vertices_per_file * shared_time_series_dataset->num_timesteps;
-
-
-                                std::cout << "NUM ELEMENTS TO READ: " << num_elements_to_read << std::endl;
 
                                 shared_time_series_dataset->data.resize(num_elements_to_read);
 
-                                //std::vector<float> dummy_data(10000000, 5.6f);
+                                in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file);
 
-                                //in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file);
-
-
-                                //std::vector<float> dummy_data(100000, 5.6f);
-
-                                //for(int i = 0; i < 50; ++i) {
-                                    in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file);
-                                //}
                                 //memcpy((char*) shared_time_series_dataset->data.data(), (char*) dummy_data.data(),dummy_data.size() * sizeof(float));
 
                                 uint64_t total_num_attributes = shared_time_series_dataset->data.size() / num_elements_per_attribute_over_time;
@@ -196,18 +176,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                                     shared_time_series_dataset->extreme_values[attribute_idx].second = std::numeric_limits<float>::min();                        
                                 }
 
-
-
-
-                                std::cout << "Total num attributes: " << total_num_attributes << std::endl;
-
-                                std::cout << "NUM ATTRIBUTES PER ELEMENT OVER TIME: " << num_elements_per_attribute_over_time << std::endl;
-
                                 for(uint32_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {
                                     uint32_t base_offset = num_elements_per_attribute_over_time * attribute_idx;
                                     
-                                    std::cout << "Setting extreme values for attribute " << attribute_idx << ": " << std::endl;
-
                                     for(uint32_t element_idx = 0; element_idx < num_elements_per_attribute_over_time; ++element_idx) {
 
                                         shared_time_series_dataset->extreme_values[attribute_idx].first = std::min(shared_time_series_dataset->extreme_values[attribute_idx].first,
@@ -216,26 +187,6 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                                                                                                        shared_time_series_dataset->data[base_offset + element_idx]);
                                     }
                                 }
-/*
-                                shared_time_series_dataset->extreme_values[0].first
-                                    = *std::min_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());
-
-                                shared_time_series_dataset->extreme_values[0].second
-                                    = *std::max_element(shared_time_series_dataset->data.begin(), shared_time_series_dataset->data.end());                 
-*/
-
-
-                                for(uint32_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {                                
-                                    std::cout << "Extreme values: " << shared_time_series_dataset->extreme_values[attribute_idx].first << " " 
-                                                                    << shared_time_series_dataset->extreme_values[attribute_idx].second << "\n";
-                                }
-                                 
-                                //extreme_values
-
-                                std::cout << "Read " << total_num_byte_in_file << " byte" << std::endl;
-
-                                //exit(-1);
-                                std::cout << "Vertices per file: " << num_vertices_per_file << std::endl;
 
                                 in_attribute_file.close();
 
@@ -243,14 +194,6 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
                                 parsed_time_series_data_description.push_back(shared_time_series_dataset->name);
 
-                                //data_collection_resource.named_item
-                                
-                                /*
-                                  std::cout << "Splitting: " << str << '\n';
-                                  std::size_t found = str.find_last_of("/\\");
-                                  std::cout << " path: " << str.substr(0,found) << '\n';
-                                  std::cout << " file: " << str.substr(found+1) << '\n';
-                                */
                             }
                         }
 

@@ -58,7 +58,7 @@ struct GUA_DLL TimeSeriesDataSet {
 
     std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
-    void upload_time_range_to(RenderContext& ctx, int start_time_step_id = -1, int end_time_step_id = -1) const;
+    void upload_time_range_to(RenderContext& ctx, bool deformation_enabled, bool coloring_enabled, int vis_attribut_id, int start_time_step_id = -1, int end_time_step_id = -1) const;
 
     void bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_render);
 
