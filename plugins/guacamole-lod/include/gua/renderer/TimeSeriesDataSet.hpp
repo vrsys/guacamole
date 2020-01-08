@@ -56,6 +56,8 @@ struct GUA_DLL TimeSeriesDataSet {
     std::vector<std::pair<float, float> > extreme_values;    
     std::vector<float> data; //for now we only allow float attributes
 
+    scm::math::mat4f time_series_transform_matrix;
+
     std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
     void upload_time_range_to(RenderContext& ctx, bool deformation_enabled, bool coloring_enabled, int vis_attribut_id, int start_time_step_id = -1, int end_time_step_id = -1) const;
