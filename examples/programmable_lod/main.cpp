@@ -133,18 +133,6 @@ int main(int argc, char** argv)
     auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
     auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
-    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file(vis_file_path,
-                                                                             //lod_rough,
-                                                                             gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
-
-
-
-
-
-    for(auto const& node : vector_of_lod_nodes) {
-        graph.add_node("/transform/plod_transform", node);
-    }
-
 
     gua::TriMeshLoader loader;
 
@@ -154,38 +142,60 @@ int main(int argc, char** argv)
     model_mat->set_show_back_faces(false);
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto example_model(
-        loader.create_geometry_from_file("example_model", "./data/objects/teapot.obj", model_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
+    auto fem_model(
+        loader.create_geometry_from_file("fem_model", "/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_OBJS/2020_01_06/Scherkonde_Geom_registered_2020_01_06.obj", model_mat, 
+                                                       gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
-    graph.add_node("/transform/plod_transform", example_model);
 
-    example_model->translate(0.0, -1.0, 0.0);
-    /*
+
+    graph.add_node("/transform/plod_transform", fem_model);
+
+    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file(vis_file_path,
+                                                                             //lod_rough,
+                                                                              gua::LodLoader::MAKE_PICKABLE);
+
+
+
+
+
+    for(auto const& node : vector_of_lod_nodes) {
+        graph.add_node("/transform/plod_transform/fem_model", node);
+    }
+
+
+    //fem_model->scale(0.01);
+
+    //example_model->translate(0.0, -1.0, 0.0);
+    
     std::ifstream in_train_positions("/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_Data_Collection_Mat_Files/2020_01_06/ZugachsenBLZ56_Track1_DirPull_V300/all_train_positions.train_pos");
 
     int line_index = 0;
     std::string line_buffer = "";
     int num_train_positions_per_line = 0;
 
-    std::vector<scm::math::vec3f> train_positions;
+    std::vector<std::vector<scm::math::vec3f>> train_positions_per_axis;
 
     while(std::getline(in_train_positions, line_buffer)) {
         std::istringstream in_sstream(line_buffer);
 
         if(0 == line_index) {
-            in_sstream >> num_train_positions_per_line; 
+            in_sstream >> num_train_positions_per_line;
+
+            train_positions_per_axis.resize(num_train_positions_per_line);
         } else {
-            float force = 0.0f;
-            in_sstream >> force;
+            for(int train_axis_index = 0; train_axis_index < num_train_positions_per_line; ++train_axis_index) {
 
-            scm::math::vec3f new_train_pos;
+                float force = 0.0f;
+                in_sstream >> force;
 
-            in_sstream >> new_train_pos[0];
-            in_sstream >> new_train_pos[1];
-            in_sstream >> new_train_pos[2];
+                scm::math::vec3f new_train_pos;
 
-            train_positions.push_back(new_train_pos);
-            break;
+                in_sstream >> new_train_pos[0];
+                in_sstream >> new_train_pos[1];
+                in_sstream >> new_train_pos[2];
+
+                train_positions_per_axis[train_axis_index].push_back(new_train_pos);
+            }
         }
 
         ++line_index;
@@ -193,11 +203,29 @@ int main(int argc, char** argv)
 
     in_train_positions.close();
 
-    std::cout << "Translation: " << train_positions.back() << std::endl;
+    //std::cout << "Translation: " << train_positions.back() << std::endl;
 
-    example_model->scale(0.05f);
-    example_model->translate(train_positions.back()[0]/1000.0, train_positions.back()[1]/1000.0, train_positions.back()[2]/1000.0 );
-*/
+    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes(train_positions_per_axis.size() );
+
+    for(uint32_t train_axis_index = 0; train_axis_index < train_axis_geodes.size(); ++train_axis_index) {
+        //train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
+    
+        train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "/opt/3d_models/dinosaurs/langhals.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
+    
+
+        graph.add_node("/transform/plod_transform/fem_model", train_axis_geodes[train_axis_index]);
+    }
+
+
+
+
+
+    //example_model->translate(0.0, -1.0, 0.0);
+    
+
+    //example_model->scale(0.05f);
+    //example_model->translate(train_positions.back()[0]/1000.0, train_positions.back()[1]/1000.0, train_positions.back()[2]/1000.0 );
+
     // create a lightsource
     auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
     auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
@@ -413,7 +441,7 @@ int main(int argc, char** argv)
                 break;
 
             case 's':
-                for(auto& plod_node : vector_of_lod_nodes) {
+                for(auto const& plod_node : vector_of_lod_nodes) {
                     plod_node->set_time_cursor_position(plod_node->get_time_cursor_position() + 1.0f);
 
                     //std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
@@ -536,6 +564,29 @@ int main(int argc, char** argv)
                 plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
             }
             
+
+            float train_axis_scaling = 35.5;
+
+            auto current_train_scaling = scm::math::make_scale(train_axis_scaling, train_axis_scaling, train_axis_scaling);
+
+
+            int current_train_position_index = int(framecount/10) % train_positions_per_axis[0].size();
+
+            
+            for(uint32_t train_axis_index = 0; train_axis_index < train_positions_per_axis.size(); ++train_axis_index) {
+                auto current_train_translation = scm::math::make_translation(train_positions_per_axis[train_axis_index][current_train_position_index][0], 
+                                                                             train_positions_per_axis[train_axis_index][current_train_position_index][1], 
+                                                                             train_positions_per_axis[train_axis_index][current_train_position_index][2] );
+
+                auto train_axis_transformation = current_train_translation * current_train_scaling;
+
+                train_axis_geodes[train_axis_index]->set_transform( gua::math::mat4(train_axis_transformation) );
+            }
+            
+            //train_axis_1->scale(0.05);
+            //train_axis_1->scale(train_axis_scaling);
+            //train_axis_1->translate(train_positions.back()[0], train_positions.back()[1], train_positions.back()[2] );
+
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)
             {
