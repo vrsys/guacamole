@@ -445,6 +445,12 @@ int main(int argc, char** argv)
                     plod_node->set_time_series_playback_speed(std::max(0.01f, plod_node->get_time_series_playback_speed()/2.0f) );
                 }
                 break;
+            case 't':
+                for(auto const& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_enable_temporal_interpolation( !plod_node->get_enable_temporal_interpolation() );
+                }
+                break;
+
             default:
                 break;
             }

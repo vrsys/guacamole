@@ -160,8 +160,9 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
                 shader_program_->set_uniform(ctx, current_timecursor_position, "current_timestep");
 
                 shader_program_->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
-                shader_program_->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");    
+                shader_program_->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");
 
+                shader_program_->set_uniform(ctx, plod_node->get_enable_temporal_interpolation(), "enable_linear_temporal_interpolation"); 
 
                 //}
 

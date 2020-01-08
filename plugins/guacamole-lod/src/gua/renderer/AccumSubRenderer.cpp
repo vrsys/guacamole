@@ -194,6 +194,9 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                     current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_deformation(), "enable_time_series_deformation");
                     current_material_program->set_uniform(ctx, plod_node->get_enable_time_series_coloring(), "enable_time_series_coloring");
                     current_material_program->set_uniform(ctx, plod_node->get_time_series_deform_factor(), "deform_factor");               
+                
+
+                    current_material_program->set_uniform(ctx, plod_node->get_enable_temporal_interpolation(), "enable_linear_temporal_interpolation");
                 }
 
                 //}
