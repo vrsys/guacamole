@@ -74,7 +74,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
     bool program_changed = false;
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
+    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LowQualitySplattingSubRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 #endif
 
@@ -122,7 +122,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
         }
         else
         {
-            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "LowQualitySplattingSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
     }
     target.unbind(ctx);

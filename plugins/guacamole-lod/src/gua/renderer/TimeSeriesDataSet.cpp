@@ -116,11 +116,6 @@ void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, st
 }
 
 float TimeSeriesDataSet::calculate_active_cursor_position(float in_node_time_cursor) const {
-    //int32_t attribute_to_visualize_index = plod_node->get_attribute_to_visualize_index();
-    //looked_up_time_series_data_item->bind_to(ctx, 20, shader_program_, attribute_to_visualize_index);
-
-    //int32_t current_timestep_offset = int(ctx.framecount % 100);
-
 	std::cout << "In node time cursor: " << in_node_time_cursor << std::endl;
 
     float current_timecursor_position = in_node_time_cursor;
@@ -140,8 +135,6 @@ float TimeSeriesDataSet::calculate_active_cursor_position(float in_node_time_cur
     }
 
     return current_timecursor_position;
-    //std::cout << "GOING TO UPLOAD TIMECURSOR POSITION: " << current_timecursor_position << std::endl;
-
 }
 
 }

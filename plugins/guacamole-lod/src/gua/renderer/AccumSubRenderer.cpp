@@ -100,7 +100,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
     {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::AccumulationPass";
+        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / AccumSubRenderer::AccumulationPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 #endif
 
@@ -170,7 +170,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             }
             else
             {
-                Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+                Logger::LOG_WARNING << "AccumSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
             }
         }
 
