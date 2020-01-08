@@ -67,11 +67,9 @@ void main() {
 	    }
 
 	    if( enable_time_series_coloring ) {
-	      float mixed_value =   fem_vert_w_0 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_0]
-	                          + fem_vert_w_1 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_1]
-	                          + fem_vert_w_2 * time_series_data[attribute_offset * attribute_to_visualize + timestep_offset + fem_vert_id_2];
+	      vec3 attribute_color = sample_attribute_color(min_ssbo_value, max_ssbo_value);
 
-	      VertexOut.pass_point_color = mix(data_value_to_rainbow(mixed_value, min_ssbo_value, max_ssbo_value), raw_point_color, mix_in_factor);
+	      VertexOut.pass_point_color = mix(attribute_color, raw_point_color, mix_in_factor);
 	    } else {
 	      VertexOut.pass_point_color = raw_point_color;
 	    }
