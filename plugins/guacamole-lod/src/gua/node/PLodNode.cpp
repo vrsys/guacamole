@@ -265,6 +265,16 @@ float PLodNode::get_time_series_deform_factor() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_attribute_color_mix_in_factor(float attribute_color_mix_in_factor) {
+    attribute_color_mix_in_factor_ = std::max(0.0f,  std::min(1.0f, attribute_color_mix_in_factor) );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+float PLodNode::get_attribute_color_mix_in_factor() const {
+    return attribute_color_mix_in_factor_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_active_time_series_index(unsigned int time_series_index) {
     active_time_series_data_description_index_ = std::max(0u, std::min(time_series_index, unsigned(associated_time_series_data_descriptions_.size()) ) );
 }
@@ -299,7 +309,7 @@ void PLodNode::bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<Shad
             looked_up_time_series_data_item->upload_time_range_to(ctx, enable_time_series_deformation_, enable_time_series_coloring_, attribute_to_visualize_index_, timerange_to_upload_start, timerange_to_upload_end);
         }
 
-        looked_up_time_series_data_item->bind_to(ctx, 20, current_program, attribute_to_visualize_index_);
+        looked_up_time_series_data_item->bind_to(ctx, 20, current_program, attribute_to_visualize_index_, attribute_color_mix_in_factor_);
 
         current_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
         current_program->set_uniform(ctx, enable_time_series_deformation_, "enable_time_series_deformation");

@@ -111,6 +111,10 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_time_series_deform_factor(float time_series_deform_factor);
     float get_time_series_deform_factor() const;
 
+    void set_attribute_color_mix_in_factor(float attribute_color_mix_in_factor);
+    float get_attribute_color_mix_in_factor() const;
+
+
     void set_active_time_series_index(unsigned int time_series_index);
     int get_active_time_series_index() const;
 
@@ -157,6 +161,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     float time_series_deform_factor_  = 1.0f;
 
     bool enable_temporal_interpolation_ = true;
+
+    float attribute_color_mix_in_factor_ = 0.7f;
 
     int attribute_to_visualize_index_ = 0;
 
