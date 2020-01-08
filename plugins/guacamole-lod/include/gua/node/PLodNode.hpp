@@ -102,6 +102,9 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_enable_automatic_playback(bool enable_automatic_playback);
     bool get_enable_automatic_playback() const;
 
+    void set_enable_temporal_interpolation(bool enable_temporal_interpolation);
+    bool get_enable_temporal_interpolation() const;
+
     void set_time_series_playback_speed(float time_series_playback_speed);
     float get_time_series_playback_speed() const;
 
@@ -150,6 +153,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     bool enable_automatic_playback_ = true;
     float time_series_playback_speed_ = 1.0f;
     float time_series_deform_factor_  = 1.0f;
+
+    bool enable_temporal_interpolation_ = true;
 
     int attribute_to_visualize_index_ = 0;
 

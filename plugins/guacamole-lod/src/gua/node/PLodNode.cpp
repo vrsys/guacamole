@@ -233,6 +233,16 @@ bool PLodNode::get_enable_automatic_playback() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_enable_temporal_interpolation(bool enable_temporal_interpolation) {
+    enable_temporal_interpolation_ = enable_temporal_interpolation;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PLodNode::get_enable_temporal_interpolation() const {
+    return enable_temporal_interpolation_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_time_series_playback_speed(float time_series_playback_speed) {
     time_series_playback_speed_ = std::max(0.0f, time_series_playback_speed);
 }
