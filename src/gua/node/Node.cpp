@@ -37,7 +37,10 @@ namespace node
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-Node::Node(std::string const& name, math::mat4 const& transform) : children_(), name_(name), transform_(transform), bounding_box_(), user_data_() {}
+Node::Node(std::string const& name, math::mat4 const& transform) : children_(), name_(name), transform_(transform), bounding_box_(), user_data_() {
+
+    //std::cout << "Recreated node: " << name_ << std::endl;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +52,16 @@ Node::~Node() {
   }
 }
 #endif
+
+std::size_t Node::num_grouped_faces() const {
+    std::size_t accumulated_face_count = 0;
+
+    for(auto const& child : children_) {
+        accumulated_face_count += child->num_grouped_faces();
+    }
+
+    return accumulated_face_count;
+} 
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -380,7 +393,12 @@ std::shared_ptr<Node> Node::deep_copy() const
     copied_node->bounding_box_ = bounding_box_;
     copied_node->user_data_ = user_data_;
     copied_node->world_transform_ = world_transform_;
-    copied_node->uuid_ = uuid_;
+
+    // the id should be unique, so we do not copy it
+    //copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
+
+    //copying of uuid -> will not be unique anymore
+    copied_node->uuid_=uuid_;
 
     for(int i(0); i < children_.size(); ++i)
     {
@@ -454,6 +472,7 @@ void Node::set_scenegraph(SceneGraph* scenegraph)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 bool Node::get_visibility(std::size_t in_camera_uuid) const {
     return is_visible_for_camera_[in_camera_uuid];
 }
@@ -476,6 +495,7 @@ void Node::set_last_visibility_check_frame_id(std::size_t in_camera_uuid, int32_
     last_visibility_check_frame_id_[in_camera_uuid] = current_frame_id;
 }
 
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 } // namespace node

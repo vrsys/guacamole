@@ -19,8 +19,10 @@
  *                                                                            *
  ******************************************************************************/
 
+//global Variables
 
-#include <queue>
+#define THRESHHOLD 1
+
 
 // class header
 #include <gua/node/OcclusionCullingGroupNode.hpp>
@@ -40,14 +42,124 @@ OcclusionCullingGroupNode::OcclusionCullingGroupNode(std::string const& name, ma
 std::shared_ptr<Node> OcclusionCullingGroupNode::copy() const { return std::make_shared<OcclusionCullingGroupNode>(*this); }
 
 
+
+void OcclusionCullingGroupNode::median_regroup_children(){
+    std::queue<gua::node::Node*> splitting_queue;
+
+
+    //if we have less than 3 children, then the grouping is as good as it gets
+    std::vector<std::shared_ptr<Node>> children = get_children();
+
+    if(children.size() > 2) {
+        splitting_queue.push(this);
+    }
+
+    while(!splitting_queue.empty()) {
+
+        std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
+        auto current_node_to_split = splitting_queue.front();
+        splitting_queue.pop();
+
+        current_node_to_split->update_cache();
+
+        int best_splitting_axis = -1;
+        double best_splitting_cost = std::numeric_limits<double>::max(); // get the maximal value for our type
+
+
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+            children_sorted_by_xyz[dim_idx] = current_node_to_split->get_children();
+        }
+
+        for(unsigned int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+
+            sorting_based_on_axis(children_sorted_by_xyz[dim_idx], dim_idx);
+            unsigned int const median = children_sorted_by_xyz[dim_idx].size()/2;
+            split_children(current_node_to_split, children_sorted_by_xyz[dim_idx],median, 1);
+            
+            double cost_for_current_axis = calculate_median_cost(current_node_to_split);
+
+            if(cost_for_current_axis < best_splitting_cost) {
+                best_splitting_cost = cost_for_current_axis;
+                best_splitting_axis = dim_idx;
+            }
+
+            cleanup_intermediate_nodes(current_node_to_split);
+        }
+
+        unsigned int const best_median = children_sorted_by_xyz[best_splitting_axis].size()/2;
+
+        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis],best_median, 1);
+        auto children = current_node_to_split->get_children();
+
+        for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
+            auto& current_child = children[child_idx];
+
+            auto& current_grandchildren = current_child->get_children();
+
+            if(current_grandchildren.size() > 2) {
+                gua::node::Node* child_ptr = children[child_idx].get();
+                splitting_queue.push(child_ptr);
+
+            }
+
+        }
+    }
+}
+
 void OcclusionCullingGroupNode::regroup_children(){
+
+
+    //this is only for renaming the children so we can access them via a unqiue path
+    uint32_t global_node_renaming_index = 0;
+
+    std::queue< std::shared_ptr<gua::node::Node> > renaming_queue;
+
+    for(auto& child : get_children() ) {
+        renaming_queue.push(child);
+    }
+
+    while(!renaming_queue.empty()) {
+
+        auto& current_node_to_rename = renaming_queue.front();
+        renaming_queue.pop();
+
+        std::string new_node_name = current_node_to_rename->get_name() + "_" + std::to_string(global_node_renaming_index);
+        current_node_to_rename->set_name(new_node_name);
+        ++global_node_renaming_index;
+
+        for(auto& child : current_node_to_rename->get_children()) {
+            renaming_queue.push(child); 
+        }
+    }
+
+    
+    std::vector<std::shared_ptr<Node>> children = get_children();
+    for(auto& child : get_children() ) {
+        if (child->num_grouped_faces()>THRESHHOLD) {
+            std::queue<gua::node::Node*> splitting_queue_multiple_nodes_for_object;
+            std::vector<std::shared_ptr<Node>> grandchildren = child->get_children();
+            if (grandchildren.size()>2) {
+                splitting_queue_multiple_nodes_for_object.push(child.get());
+            }
+            determine_best_split(splitting_queue_multiple_nodes_for_object);
+        } 
+    }
+
+
     std::queue<gua::node::Node*> splitting_queue;
 
     //if we have less than 3 children, then the grouping is as good as it gets
     if( get_children().size() > 2) {
         splitting_queue.push(this);
-    }
 
+    } 
+
+    determine_best_split(splitting_queue);
+}
+
+//TODO: Still errors for single child for one Transform Node. Remove to optimize graph
+//TODO: Include number of faces to stop splitting at reasonable depth
+void OcclusionCullingGroupNode::determine_best_split(std::queue<gua::node::Node*> splitting_queue) {
     std::array<std::vector<std::shared_ptr<gua::node::Node> >, 3> children_sorted_by_xyz;
 
     while(!splitting_queue.empty() ) {
@@ -93,22 +205,32 @@ void OcclusionCullingGroupNode::regroup_children(){
             }
         }
 
-        // restore best candidate configuration by splitting once more
-        split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
 
-        auto children = current_node_to_split->get_children();
+        if(best_splitting_axis > -1) {
+            // restore best candidate configuration by splitting once more
+            split_children(current_node_to_split, children_sorted_by_xyz[best_splitting_axis], best_candidate_index, candidate_element_offset);
 
-        for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
-            auto& current_child = children[child_idx];
+            auto children = current_node_to_split->get_children();
 
-            if(current_child->get_children().size() > 2) {
-            	gua::node::Node* child_ptr = children[child_idx].get();
-                splitting_queue.push(child_ptr);
+            for(unsigned int child_idx = 0; child_idx < 2; ++child_idx) {
+                auto& current_child = children[child_idx];
+
+                if(current_child->get_children().size() > 2 /*&& current_child->num_grouped_faces()>THRESHHOLD*/) {
+                    gua::node::Node* child_ptr = children[child_idx].get();
+                    splitting_queue.push(child_ptr);
+                }
+
             }
+        } else {
+            current_node_to_split->clear_children();
 
+            for(auto const& child : children_sorted_by_xyz[0]) {
+                current_node_to_split->add_child(child);
+            }
+            
+            std::cout << "DID NOT SPLIT FURTHER!" << std::endl;
         }
     }
-
 }
 
 void OcclusionCullingGroupNode::sorting_based_on_axis(std::vector<std::shared_ptr<gua::node::Node>>& v, int axis){
@@ -130,13 +252,12 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
                     unsigned int candidate_index, unsigned int candidate_element_offset) {
     scene_occlusion_group_node->clear_children();
 
-    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_L");
-    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("transform_node_R");
+    auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_L");
+    auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_R");
 
     unsigned int index = 0;
 
     unsigned int pivot = candidate_index * candidate_element_offset;
-
 
     for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
         if(index < pivot) {
@@ -146,6 +267,7 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
         }
         ++index;
     }
+
 }
 
 
@@ -157,15 +279,44 @@ double OcclusionCullingGroupNode::calculate_cost(gua::node::Node* node){
 
     float summed_weighted_surface_area = 0.0f;
 
+    float parent_cost = parent_surface_area * node->num_grouped_faces();
+
+
+
     for(auto& child : children) {
         child->update_cache();
-        summed_weighted_surface_area += child->get_bounding_box().surface_area() * (child->get_children()).size();;
+        summed_weighted_surface_area += child->get_bounding_box().surface_area() * child->num_grouped_faces();//(child->get_children()).size();;
+    }
+
+    if(parent_cost < summed_weighted_surface_area * 1.5) {
+        // std::cout << "PARENT COSTS ARE SMALLER: " << parent_cost << "    " << summed_weighted_surface_area << std::endl;
+
+        return std::numeric_limits<double>::max();
     }
 
     return (summed_weighted_surface_area) / parent_surface_area;
 
 }
 
+double OcclusionCullingGroupNode::calculate_median_cost(gua::node::Node* node){
+    node->update_cache();
+    auto parent_surface_area = node->get_bounding_box().surface_area();
 
+#ifdef MAKE_OCCLUSION_CULLING_APP_VERBOSE
+    std::cout << "Surface area Parent: " << parent_surface_area << std::endl;
+#endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
+
+    auto children = node->get_children();
+
+    float summed_weighted_surface_area = 0.0f;
+
+    for(auto& child : children) {
+        child->update_cache();
+        summed_weighted_surface_area += child->get_bounding_box().surface_area() * child->num_grouped_faces();
+    }
+
+    return (summed_weighted_surface_area) / parent_surface_area;
+
+}
 } // namespace node
 } // namespace gua

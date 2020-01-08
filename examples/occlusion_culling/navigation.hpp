@@ -25,7 +25,7 @@ struct WASD_state {
     double accumulated_rotation_around_up = 0.0;
     double accumulated_rotation_around_right = 0.0;
 
-    double cam_translation_speed = 5.0;
+    double cam_translation_speed = 50.0;
     double cam_rotation_speed = 50.0;
 };
 
