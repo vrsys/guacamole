@@ -419,9 +419,22 @@ int main(int argc, char** argv)
                     //std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
                 }
                 break;
-            case 'u':
-                for(auto const& plod_node : vector_of_lod_nodes) {
-                    plod_node->update_time_cursor(elapsed_frame_time);
+            case 'j': {
+                float current_attribute_color_mix_in_factor = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_attribute_color_mix_in_factor( plod_node->get_attribute_color_mix_in_factor() + 0.1f );
+                        current_attribute_color_mix_in_factor = plod_node->get_attribute_color_mix_in_factor();
+                    }
+                    std::cout << "Set color mix in factor to: " << 1.0 - current_attribute_color_mix_in_factor << std::endl;
+                }
+                break;
+            case 'u': {
+                float current_attribute_color_mix_in_factor = 0.0f;
+                    for(auto const& plod_node : vector_of_lod_nodes) {
+                        plod_node->set_attribute_color_mix_in_factor( plod_node->get_attribute_color_mix_in_factor() - 0.1f );
+                        current_attribute_color_mix_in_factor = plod_node->get_attribute_color_mix_in_factor();
+                    }
+                    std::cout << "Set color mix in factor to: " << 1.0 - current_attribute_color_mix_in_factor << std::endl;
                 }
                 break;
             case 'p':

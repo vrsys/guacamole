@@ -120,15 +120,15 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformatio
 	//    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> shader_storage_buffer_objects;
 }
 
-void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_visualize = 0) {
+void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_visualize = 0, float mix_in_factor = 0.7) {
     int32_t floats_per_timestep    = data.size() / (num_attributes * num_timesteps);
     int32_t attribute_element_offset = data.size() / num_attributes;
 
     attribute_to_visualize = std::max(int(0), std::min(int(num_attributes-1), int(attribute_to_visualize) ) );
 
+    shader_program->set_uniform(ctx, mix_in_factor, "mix_in_factor");
     shader_program->set_uniform(ctx, attribute_to_visualize, "attribute_to_visualize");
     shader_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
-    shader_program->set_uniform(ctx, attribute_element_offset, "attribute_offset");                
     shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].first, "min_ssbo_value");        
     shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].second, "max_ssbo_value"); 
     shader_program->set_uniform(ctx, int(buffer_binding_point), "time_series_data_ssbo");
