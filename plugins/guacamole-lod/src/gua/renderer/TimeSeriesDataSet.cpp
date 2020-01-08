@@ -23,6 +23,8 @@
 #include <gua/renderer/TimeSeriesDataSet.hpp>
 #include <gua/renderer/TimeSeriesGPUResource.hpp>
 
+//#include <memory>
+
 namespace gua
 {
 
@@ -53,11 +55,18 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_
 
 	size_t num_bytes_to_upload = num_timesteps_to_upload * num_bytes_per_timestep;
 
-//TimeSeriesGPUResource
+	
 
-	auto time_series_data_set_ssbo_iterator = ctx.shader_storage_buffer_objects.find(uuid);
-	if(time_series_data_set_ssbo_iterator == ctx.shader_storage_buffer_objects.end()) {
-		ctx.shader_storage_buffer_objects[uuid] = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, data.size() * sizeof(float), data.data());
+	auto time_series_data_set_ssbo_iterator = ctx.plugin_resources.find(uuid);
+	if(time_series_data_set_ssbo_iterator == ctx.plugin_resources.end()) {
+
+
+		auto new_time_series_gpu_resource = std::make_shared<TimeSeriesGPUResource>();
+		new_time_series_gpu_resource->ssbo = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, data.size() * sizeof(float), data.data());
+		
+//		TimeSeriesGPUResource{ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, data.size() * sizeof(float), data.data()),
+//																				   						  0, 0});
+		ctx.plugin_resources[uuid] = new_time_series_gpu_resource;
 	}
 
 
@@ -78,13 +87,16 @@ void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, st
     shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].second, "max_ssbo_value"); 
     shader_program->set_uniform(ctx, int(buffer_binding_point), "time_series_data_ssbo");
 
-    auto current_ssbo_ptr_it = ctx.shader_storage_buffer_objects.find(uuid);
+    auto current_ssbo_ptr_it = ctx.plugin_resources.find(uuid);
 
-    if(ctx.shader_storage_buffer_objects.end() == current_ssbo_ptr_it) {
+    if(ctx.plugin_resources.end() == current_ssbo_ptr_it) {
         exit(-1);
     }
 
-    ctx.render_context->bind_storage_buffer( current_ssbo_ptr_it->second, buffer_binding_point, 0, data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
+
+    auto time_series_data_gpu_resource = std::dynamic_pointer_cast<TimeSeriesGPUResource>(ctx.plugin_resources.find(uuid)->second);
+
+    ctx.render_context->bind_storage_buffer( time_series_data_gpu_resource->ssbo, buffer_binding_point, 0, data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
     //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
     ctx.render_context->apply_storage_buffer_bindings();
 }
