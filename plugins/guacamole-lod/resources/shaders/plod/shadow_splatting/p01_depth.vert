@@ -19,6 +19,8 @@ uniform bool use_programmable_attributes = true;
 
 uniform bool enable_time_series_deformation = true;
 
+uniform bool enable_linear_temporal_interpolation = true;
+
 uniform float radius_scaling;
 uniform float max_surfel_radius;
 

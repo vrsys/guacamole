@@ -435,6 +435,16 @@ int main(int argc, char** argv)
                     //print_graph( graph.get_root() );
                 break;
 
+            case 'o':
+                for(auto const& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_time_series_playback_speed(std::min(1.0f, plod_node->get_time_series_playback_speed() * 2.0f) );
+                }
+                break;
+            case 'l':
+                for(auto const& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_time_series_playback_speed(std::max(0.01f, plod_node->get_time_series_playback_speed()/2.0f) );
+                }
+                break;
             default:
                 break;
             }

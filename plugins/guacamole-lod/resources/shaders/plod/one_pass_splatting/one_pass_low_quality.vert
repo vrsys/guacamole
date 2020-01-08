@@ -29,6 +29,8 @@ uniform bool enable_time_series_deformation = true;
 uniform bool enable_time_series_coloring = true;
 
 
+uniform bool enable_linear_temporal_interpolation = true;
+
 uniform int attribute_offset;
 
 
