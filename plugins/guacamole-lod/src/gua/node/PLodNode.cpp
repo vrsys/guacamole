@@ -30,6 +30,8 @@
 #include <gua/renderer/LodLoader.hpp>
 #include <gua/renderer/LodResource.hpp>
 #include <gua/renderer/Material.hpp>
+#include <gua/renderer/ShaderProgram.hpp>
+
 #include <gua/math/BoundingBoxAlgo.hpp>
 
 #include <lamure/ren/policy.h>
@@ -272,7 +274,40 @@ int PLodNode::get_active_time_series_index() const {
     return active_time_series_data_description_index_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+void PLodNode::bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<ShaderProgram>& current_program) {
 
+    if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+
+        //for(auto const& data_description : time_series_data_descriptions) {
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
+
+        if(looked_up_time_series_data_item) {
+            //std::cout << "FOUND DATA ITEM" << std::endl;
+            //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
+
+
+            looked_up_time_series_data_item->upload_time_range_to(ctx);
+        }
+
+        looked_up_time_series_data_item->bind_to(ctx, 20, current_program, attribute_to_visualize_index_);
+        //int32_t current_timestep_offset = int(ctx.framecount % 100);
+
+        float current_timecursor_position = get_time_cursor_position();
+        current_timecursor_position = looked_up_time_series_data_item->calculate_active_cursor_position(current_timecursor_position);
+
+
+
+        //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
+        current_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
+        current_program->set_uniform(ctx, enable_time_series_deformation_, "enable_time_series_deformation");
+        current_program->set_uniform(ctx, enable_time_series_coloring_, "enable_time_series_coloring");
+        current_program->set_uniform(ctx, time_series_deform_factor_, "deform_factor");               
+        current_program->set_uniform(ctx, enable_temporal_interpolation_, "enable_linear_temporal_interpolation");
+    }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set<PickResult>& hits)
