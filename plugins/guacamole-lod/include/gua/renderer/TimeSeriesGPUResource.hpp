@@ -39,8 +39,13 @@ namespace gua
 
 struct TimeSeriesGPUResource : public PluginResource {
 	scm::gl::buffer_ptr ssbo = nullptr;
-	uint currently_uploaded_time_step_slot_0 = -1;
-	uint currently_uploaded_time_step_slot_1 = -1;
+	int currently_uploaded_time_step_slot_0 = -1;
+	int currently_uploaded_time_step_slot_1 = -1;
+
+	bool currently_enabled_deformation = true;
+	bool currently_enabled_coloring = true;
+
+	int currently_attribute_to_visualize = -1;
 };
 
 

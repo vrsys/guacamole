@@ -283,23 +283,24 @@ void PLodNode::bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<Shad
         //for(auto const& data_description : time_series_data_descriptions) {
         auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
 
-        if(looked_up_time_series_data_item) {
-            //std::cout << "FOUND DATA ITEM" << std::endl;
-            //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
-
-
-            looked_up_time_series_data_item->upload_time_range_to(ctx);
-        }
-
-        looked_up_time_series_data_item->bind_to(ctx, 20, current_program, attribute_to_visualize_index_);
-        //int32_t current_timestep_offset = int(ctx.framecount % 100);
 
         float current_timecursor_position = get_time_cursor_position();
         current_timecursor_position = looked_up_time_series_data_item->calculate_active_cursor_position(current_timecursor_position);
 
+        if(looked_up_time_series_data_item) {
+            //std::cout << "FOUND DATA ITEM" << std::endl;
+            //std::cout << looked_up_time_series_data_item->data.size() << std::endl;
 
+            unsigned int timerange_to_upload_start = int(current_timecursor_position);
+            unsigned int timerange_to_upload_end = timerange_to_upload_start + 1;
+            if(looked_up_time_series_data_item->num_timesteps <= timerange_to_upload_end) {
+                timerange_to_upload_end = timerange_to_upload_start;
+            }
+            looked_up_time_series_data_item->upload_time_range_to(ctx, enable_time_series_deformation_, enable_time_series_coloring_, attribute_to_visualize_index_, timerange_to_upload_start, timerange_to_upload_end);
+        }
 
-        //std::cout << "Current timestep" << " " << current_timestep_offset << std::endl;
+        looked_up_time_series_data_item->bind_to(ctx, 20, current_program, attribute_to_visualize_index_);
+
         current_program->set_uniform(ctx, current_timecursor_position, "current_timestep");
         current_program->set_uniform(ctx, enable_time_series_deformation_, "enable_time_series_deformation");
         current_program->set_uniform(ctx, enable_time_series_coloring_, "enable_time_series_coloring");

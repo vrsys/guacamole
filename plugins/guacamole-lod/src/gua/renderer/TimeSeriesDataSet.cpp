@@ -28,45 +28,89 @@
 namespace gua
 {
 
-void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_step_id, int end_time_step_id) const {
+void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformation_enabled, bool coloring_enabled, 
+											 int vis_attribut_id, int start_time_step_id, int end_time_step_id) const {
 
-
-
-	//inclusive ranges for uploading time steps
-	int upload_time_step_id_start = start_time_step_id;
-	int upload_time_step_id_end   = end_time_step_id;
-
-	if(	   (start_time_step_id < 0)
-	    || (start_time_step_id >  (num_timesteps - 1) )
-		|| (start_time_step_id > end_time_step_id) 
-		|| end_time_step_id > (num_timesteps - 1) ) {
-		
-		upload_time_step_id_start = 0;
-		upload_time_step_id_end   = num_timesteps - 1;
+	if((!deformation_enabled) && (!coloring_enabled) ) {
+		return;
 	}
 
-
-	int num_timesteps_to_upload = (upload_time_step_id_end - upload_time_step_id_start) + 1;
-
 	std::size_t num_bytes_per_timestep = data.size() * sizeof(float) / (num_attributes * num_timesteps);
-
-
-	std::size_t read_offset_in_timesteps = num_bytes_per_timestep * start_time_step_id / sizeof(float); 
-
-	size_t num_bytes_to_upload = num_timesteps_to_upload * num_bytes_per_timestep;
-
-	
 
 	auto time_series_data_set_ssbo_iterator = ctx.plugin_resources.find(uuid);
 	if(time_series_data_set_ssbo_iterator == ctx.plugin_resources.end()) {
 
 
 		auto new_time_series_gpu_resource = std::make_shared<TimeSeriesGPUResource>();
-		new_time_series_gpu_resource->ssbo = ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, data.size() * sizeof(float), data.data());
 		
-//		TimeSeriesGPUResource{ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, scm::gl::USAGE_DYNAMIC_DRAW, data.size() * sizeof(float), data.data()),
-//																				   						  0, 0});
+		int num_simultaneously_uploaded_timesteps = 2;
+		int num_attributes_per_timestep = 4;
+
+		new_time_series_gpu_resource->ssbo 
+			= ctx.render_device->create_buffer(scm::gl::BIND_UNIFORM_BUFFER, 
+											   scm::gl::USAGE_DYNAMIC_DRAW, 
+											   num_bytes_per_timestep * num_simultaneously_uploaded_timesteps * num_attributes_per_timestep, 
+											   0);
+
 		ctx.plugin_resources[uuid] = new_time_series_gpu_resource;
+	} else {
+    	auto time_series_data_gpu_resource = std::dynamic_pointer_cast<TimeSeriesGPUResource>(ctx.plugin_resources.find(uuid)->second);
+
+
+    	vis_attribut_id = std::max(int(0), std::min(int(num_attributes-1), int(vis_attribut_id) ) );
+
+    	if( (start_time_step_id != time_series_data_gpu_resource->currently_uploaded_time_step_slot_0) ||
+    		(end_time_step_id != time_series_data_gpu_resource->currently_uploaded_time_step_slot_1) ||
+
+    		deformation_enabled != time_series_data_gpu_resource->currently_enabled_deformation || 
+    		coloring_enabled != time_series_data_gpu_resource->currently_enabled_coloring ||
+    		vis_attribut_id != time_series_data_gpu_resource->currently_attribute_to_visualize 
+    	) {
+    		size_t x_pos_offset_0 = num_bytes_per_timestep * start_time_step_id;
+    		size_t x_pos_offset_1 = num_bytes_per_timestep * end_time_step_id;
+
+       		size_t y_pos_offset_0 = num_bytes_per_timestep * 1 * num_timesteps + num_bytes_per_timestep * start_time_step_id;
+    		size_t y_pos_offset_1 = num_bytes_per_timestep * 1 * num_timesteps + num_bytes_per_timestep * end_time_step_id;
+
+         	size_t z_pos_offset_0 = num_bytes_per_timestep * 2 * num_timesteps + num_bytes_per_timestep * start_time_step_id;
+    		size_t z_pos_offset_1 = num_bytes_per_timestep * 2 * num_timesteps + num_bytes_per_timestep * end_time_step_id;
+
+         	size_t vis_attribute_offset_0 = num_bytes_per_timestep * vis_attribut_id * num_timesteps + num_bytes_per_timestep * start_time_step_id;
+    		size_t vis_attribute_offset_1 = num_bytes_per_timestep * vis_attribut_id * num_timesteps + num_bytes_per_timestep * end_time_step_id;
+
+    		float* mapped_time_series_ssbo 
+    			= static_cast<float*>(ctx.render_context->map_buffer(time_series_data_gpu_resource->ssbo, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
+
+    		size_t write_offset = 0;
+    		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + x_pos_offset_0, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+      		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + x_pos_offset_1, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+    		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + y_pos_offset_0, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+      		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + y_pos_offset_1, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+    		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + z_pos_offset_0, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+      		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + z_pos_offset_1, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+    		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + vis_attribute_offset_0, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+      		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + vis_attribute_offset_1, num_bytes_per_timestep);
+    		write_offset += num_bytes_per_timestep;
+    		// ...
+
+    		ctx.render_context->unmap_buffer(time_series_data_gpu_resource->ssbo);
+
+    		time_series_data_gpu_resource->currently_uploaded_time_step_slot_0 = start_time_step_id;
+    		time_series_data_gpu_resource->currently_uploaded_time_step_slot_1 = end_time_step_id;
+
+    		time_series_data_gpu_resource->currently_enabled_deformation = deformation_enabled; 
+    		time_series_data_gpu_resource->currently_enabled_coloring = coloring_enabled;
+    		time_series_data_gpu_resource->currently_attribute_to_visualize = vis_attribut_id;
+    	}
+    	
+
 	}
 
 
@@ -79,6 +123,8 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, int start_time_
 void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_visualize = 0) {
     int32_t floats_per_timestep    = data.size() / (num_attributes * num_timesteps);
     int32_t attribute_element_offset = data.size() / num_attributes;
+
+    attribute_to_visualize = std::max(int(0), std::min(int(num_attributes-1), int(attribute_to_visualize) ) );
 
     shader_program->set_uniform(ctx, attribute_to_visualize, "attribute_to_visualize");
     shader_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
@@ -96,25 +142,18 @@ void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, st
 
     auto time_series_data_gpu_resource = std::dynamic_pointer_cast<TimeSeriesGPUResource>(ctx.plugin_resources.find(uuid)->second);
 
-    ctx.render_context->bind_storage_buffer( time_series_data_gpu_resource->ssbo, buffer_binding_point, 0, data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
+    ctx.render_context->bind_storage_buffer(time_series_data_gpu_resource->ssbo, buffer_binding_point, 0, data.size() * sizeof(float) );// looked_up_time_series_data_item->data.size());
     //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
     ctx.render_context->apply_storage_buffer_bindings();
 }
 
 float TimeSeriesDataSet::calculate_active_cursor_position(float in_node_time_cursor) const {
-	std::cout << "In node time cursor: " << in_node_time_cursor << std::endl;
-
     float current_timecursor_position = in_node_time_cursor;
 
     if( (num_timesteps != 1) && (sequence_length != 0.0f) ) {
         if(current_timecursor_position >  sequence_length) {
             current_timecursor_position = std::fmod(current_timecursor_position, sequence_length);
         }
-
-        std::cout << "Current timecursor position: " << current_timecursor_position << std::endl;
-        std::cout << "Sequence Length: " << sequence_length << std::endl;
-        std::cout << "Num Timesteps: " << num_timesteps << std::endl;        
-
         current_timecursor_position /= (sequence_length/num_timesteps );
     } else {
         current_timecursor_position = 0.0f;
