@@ -224,6 +224,31 @@ float PLodNode::get_time_cursor_position() const {
     }
 }
 
+
+
+float PLodNode::get_current_time_step() const {
+    if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_data_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_data_description);
+
+
+
+        if(looked_up_time_series_data_item) {
+
+            if(1 == looked_up_time_series_data_item->num_timesteps) {
+                return 0.0f;
+            } else {
+                return looked_up_time_series_data_item->time_cursor_position / (looked_up_time_series_data_item->sequence_length / looked_up_time_series_data_item->num_timesteps); 
+            }
+
+        }
+        return -1.0f;
+    } else {
+        return -1.0f;
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 void PLodNode::set_enable_automatic_playback(bool enable_automatic_playback) {
     enable_automatic_playback_ = enable_automatic_playback;
