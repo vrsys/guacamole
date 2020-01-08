@@ -120,6 +120,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_active_time_series_index(unsigned int time_series_index);
     int get_active_time_series_index() const;
 
+    scm::math::mat4f get_active_time_series_transform() const;
+
     void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
     std::vector<std::string> get_time_series_data_descriptions() const;
 

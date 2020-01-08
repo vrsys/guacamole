@@ -80,7 +80,8 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
     std::vector<std::string> model_files_to_load;
 
     float initial_max_surfel_radius = -1.0f;
-    //bool load_vis_
+
+    scm::math::mat4f fem_transform_matrix;
 
     std::vector<std::string> parsed_time_series_data_description;
     try {
@@ -104,6 +105,13 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                     if(0 == line_buffer.rfind("max_radius:", 0)) {
                         attribute_parser_stringstream >> attribute_string_dummy_buffer;
                         attribute_parser_stringstream >> initial_max_surfel_radius;
+                    }
+
+                    if(0 == line_buffer.rfind("fem_to_pcl_transform:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        for(int transform_matrix_element = 0; transform_matrix_element < 16; ++transform_matrix_element) {
+                            attribute_parser_stringstream >> fem_transform_matrix[transform_matrix_element];
+                        }
                     }
                 }
             }
@@ -191,6 +199,8 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                                 in_attribute_file.close();
 
                                 TimeSeriesDataSetDatabase::instance()->add(shared_time_series_dataset->name, shared_time_series_dataset);
+
+                                shared_time_series_dataset->time_series_transform_matrix = fem_transform_matrix;
 
                                 parsed_time_series_data_description.push_back(shared_time_series_dataset->name);
 

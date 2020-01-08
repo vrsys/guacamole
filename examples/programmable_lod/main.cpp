@@ -210,7 +210,7 @@ int main(int argc, char** argv)
     for(uint32_t train_axis_index = 0; train_axis_index < train_axis_geodes.size(); ++train_axis_index) {
         //train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
     
-        train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "/opt/3d_models/dinosaurs/langhals.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
+        train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow_270deg_x_rotated.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
     
 
         graph.add_node("/transform/plod_transform/fem_model", train_axis_geodes[train_axis_index]);
@@ -565,12 +565,10 @@ int main(int argc, char** argv)
             }
             
 
-            float train_axis_scaling = 35.5;
+            float train_axis_scaling = 1.0f;
 
             auto current_train_scaling = scm::math::make_scale(train_axis_scaling, train_axis_scaling, train_axis_scaling);
 
-
-            int current_train_position_index = int(framecount/10) % train_positions_per_axis[0].size();
             
             float current_timestep = vector_of_lod_nodes[0]->get_current_time_step();
 
@@ -582,6 +580,7 @@ int main(int argc, char** argv)
                 fraction = int(fraction);
             }
 
+            auto node_pretransform = gua::math::get_rotation(scm::math::mat4d(vector_of_lod_nodes[0]->get_active_time_series_transform()) );
 
             for(uint32_t train_axis_index = 0; train_axis_index < train_positions_per_axis.size(); ++train_axis_index) {
 
@@ -595,7 +594,7 @@ int main(int argc, char** argv)
                                                                              mixed_translation[1], 
                                                                              mixed_translation[2] );
 
-                auto train_axis_transformation = current_train_translation * current_train_scaling;
+                auto train_axis_transformation =  current_train_translation * current_train_scaling * scm::math::mat4f(node_pretransform);// * scm::math::make_rotation(-90.0f, 1.0f, 0.0f, 0.0f);
 
                 train_axis_geodes[train_axis_index]->set_transform( gua::math::mat4(train_axis_transformation) );
             }

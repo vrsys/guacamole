@@ -310,6 +310,19 @@ int PLodNode::get_active_time_series_index() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+scm::math::mat4f PLodNode::get_active_time_series_transform() const {
+    if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
+
+        return looked_up_time_series_data_item->time_series_transform_matrix;
+    } else {
+        Logger::LOG_ERROR << "PLodNode::get_active_time_series_transform(): Cannot find associated time series " << std::endl;
+        throw std::exception();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void PLodNode::bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<ShaderProgram>& current_program) {
 
     if( !associated_time_series_data_descriptions_.empty() ) {
