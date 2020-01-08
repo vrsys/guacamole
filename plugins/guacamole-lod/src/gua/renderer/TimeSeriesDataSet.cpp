@@ -129,8 +129,8 @@ void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, st
     shader_program->set_uniform(ctx, mix_in_factor, "mix_in_factor");
     shader_program->set_uniform(ctx, attribute_to_visualize, "attribute_to_visualize");
     shader_program->set_uniform(ctx, floats_per_timestep, "floats_per_attribute_timestep");
-    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].first, "min_ssbo_value");        
-    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].second, "max_ssbo_value"); 
+    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].first, "min_active_attribute_value");        
+    shader_program->set_uniform(ctx, extreme_values[attribute_to_visualize].second, "max_active_attribute_value"); 
     shader_program->set_uniform(ctx, int(buffer_binding_point), "time_series_data_ssbo");
 
     auto current_ssbo_ptr_it = ctx.plugin_resources.find(uuid);
