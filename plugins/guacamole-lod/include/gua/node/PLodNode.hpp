@@ -94,6 +94,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_time_cursor_position(float time_cursor);
     float get_time_cursor_position() const;
 
+    float get_current_time_step() const;
+
     void set_enable_time_series_deformation(bool deformation);
     bool get_enable_time_series_deformation() const;
     void set_enable_time_series_coloring(bool coloring);

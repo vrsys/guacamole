@@ -571,12 +571,29 @@ int main(int argc, char** argv)
 
 
             int current_train_position_index = int(framecount/10) % train_positions_per_axis[0].size();
-
             
+            float current_timestep = vector_of_lod_nodes[0]->get_current_time_step();
+
+            int timestep_t0 = int(current_timestep);
+            int timestep_t1 = int(ceil(current_timestep));
+
+            float fraction = current_timestep - timestep_t0;
+            if( !vector_of_lod_nodes[0]->get_enable_temporal_interpolation() ) {
+                fraction = int(fraction);
+            }
+
+
             for(uint32_t train_axis_index = 0; train_axis_index < train_positions_per_axis.size(); ++train_axis_index) {
-                auto current_train_translation = scm::math::make_translation(train_positions_per_axis[train_axis_index][current_train_position_index][0], 
-                                                                             train_positions_per_axis[train_axis_index][current_train_position_index][1], 
-                                                                             train_positions_per_axis[train_axis_index][current_train_position_index][2] );
+
+                scm::math::vec3f mixed_translation = scm::math::vec3f( 
+                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][0] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][0],
+                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][1] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][1] ,
+                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][2] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][2] 
+                );
+
+                auto current_train_translation = scm::math::make_translation(mixed_translation[0], 
+                                                                             mixed_translation[1], 
+                                                                             mixed_translation[2] );
 
                 auto train_axis_transformation = current_train_translation * current_train_scaling;
 
