@@ -470,33 +470,7 @@ void Node::set_scenegraph(SceneGraph* scenegraph)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
-/*
-bool Node::get_visibility(std::size_t in_camera_uuid) const {
-    return is_visible_for_camera_[in_camera_uuid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Node::set_visibility(std::size_t in_camera_uuid, bool is_visible) {
-    is_visible_for_camera_[in_camera_uuid] = is_visible;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int32_t Node::get_last_visibility_check_frame_id(std::size_t in_camera_uuid) const {
-    return last_visibility_check_frame_id_[in_camera_uuid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Node::set_last_visibility_check_frame_id(std::size_t in_camera_uuid, int32_t current_frame_id) {
-    last_visibility_check_frame_id_[in_camera_uuid] = current_frame_id;
-}
-
-*/
-////////////////////////////////////////////////////////////////////////////////
 
 } // namespace node
 } // namespace gua
