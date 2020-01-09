@@ -87,8 +87,33 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+#define USE_DISTANCE_SORTING
+#ifdef USE_DISTANCE_SORTING
+
+        auto const& frustum = pipe.current_viewstate().frustum;
+        scm::math::mat4d const view_matrix = frustum.get_view();
+
+        scm::math::mat4d const camera_matrix = scm::math::inverse(view_matrix);
+
+        gua::math::vec4f camera_space_cam_pos_homogeneous(0.0f, 0.0f, 0.0f, 1.0f);
+        gua::math::vec4f world_space_cam_pos_homogeneous = gua::math::mat4f(camera_matrix) * camera_space_cam_pos_homogeneous;
+
+        gua::math::vec3f world_space_cam_pos_euclidean(world_space_cam_pos_homogeneous[0], world_space_cam_pos_homogeneous[1], world_space_cam_pos_homogeneous[2]);
+
+        std::map<node::Node*, double> node_distances;
+
+        for(auto start_iterator = sorted_objects->second.begin(); start_iterator < sorted_objects->second.end(); ++start_iterator) {
+            auto const& current_bb = (*start_iterator)->get_bounding_box();
+            node_distances[(*start_iterator)] = scm::math::length_sqr(world_space_cam_pos_euclidean - (current_bb.max + current_bb.min)/2.0f ) ;
+        } 
+#endif
+
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [&](node::Node* a, node::Node* b) {
+#ifdef USE_DISTANCE_SORTING
+            return node_distances[a] < node_distances[b];
+#else
             return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
+#endif
         });
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -191,7 +216,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-                current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+                //current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)

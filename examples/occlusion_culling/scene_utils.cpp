@@ -287,6 +287,8 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     
     std::string obj_name = model_path.substr(found+1);
 
+    std::srand(0);
+
     for(int model_index = 0; model_index < num_models_to_place; ++model_index) {
         std::string const random_object_name = obj_name + "_" + std::to_string(model_index);
         gua::TriMeshLoader loader;
