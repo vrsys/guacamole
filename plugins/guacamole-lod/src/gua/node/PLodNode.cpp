@@ -310,6 +310,11 @@ int PLodNode::get_active_time_series_index() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+int PLodNode::get_number_of_simulation_positions() const {
+    return get_current_simulation_positions().size();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 std::vector<scm::math::vec3f> PLodNode::get_current_simulation_positions() const {
     if( !associated_time_series_data_descriptions_.empty() ) {
         auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];

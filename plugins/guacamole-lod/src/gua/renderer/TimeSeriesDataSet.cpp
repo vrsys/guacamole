@@ -31,9 +31,6 @@ namespace gua
 void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformation_enabled, bool coloring_enabled, 
 											 int vis_attribut_id, int start_time_step_id, int end_time_step_id) const {
 
-	if((!deformation_enabled) && (!coloring_enabled) ) {
-		return;
-	}
 
 	std::size_t num_bytes_per_timestep = data.size() * sizeof(float) / (num_attributes * num_timesteps);
 
@@ -54,6 +51,11 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformatio
 
 		ctx.plugin_resources[uuid] = new_time_series_gpu_resource;
 	} else {
+
+        if((!deformation_enabled) && (!coloring_enabled) ) {
+            return;
+        }
+        
     	auto time_series_data_gpu_resource = std::dynamic_pointer_cast<TimeSeriesGPUResource>(ctx.plugin_resources.find(uuid)->second);
 
 
