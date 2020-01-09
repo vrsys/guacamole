@@ -320,7 +320,7 @@ int main(int argc, char** argv)
     float elapsed_frame_time = 0.0f;
 
 
-    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes( vector_of_lod_nodes[0]->get_current_simulation_positions().size() );
+    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes( vector_of_lod_nodes[0]->get_number_of_simulation_positions() );
     std::vector<std::shared_ptr<gua::node::TriMeshNode>> arrow_nodes;
 
     auto model_mat_arrows(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -523,7 +523,10 @@ int main(int argc, char** argv)
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
 
-
+                for(auto& plod_node : vector_of_lod_nodes) {
+                    plod_node->set_enable_time_series_deformation(false);
+                    plod_node->set_enable_time_series_coloring(false);
+                }
 
 
 
@@ -557,9 +560,6 @@ int main(int argc, char** argv)
             }
             
 
-            float train_axis_scaling = 1.0f;
-
-            auto current_train_scaling = scm::math::make_scale(train_axis_scaling, train_axis_scaling, train_axis_scaling);
 
             auto node_pretransform = gua::math::get_rotation(scm::math::mat4d(vector_of_lod_nodes[0]->get_active_time_series_transform()) );
 
@@ -573,7 +573,7 @@ int main(int argc, char** argv)
                                                                              current_sim_position[1], 
                                                                              current_sim_position[2] );
 
-                auto train_axis_transformation =  current_train_translation * current_train_scaling * scm::math::mat4f(node_pretransform);// * scm::math::make_rotation(-90.0f, 1.0f, 0.0f, 0.0f);
+                auto train_axis_transformation =  current_train_translation * scm::math::mat4f(node_pretransform);// * scm::math::make_rotation(-90.0f, 1.0f, 0.0f, 0.0f);
 
                 train_axis_geodes[train_axis_index]->set_transform( gua::math::mat4(train_axis_transformation) );
             }

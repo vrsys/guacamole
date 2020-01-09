@@ -125,6 +125,7 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_time_series_data_descriptions(std::vector<std::string> const& time_series_data_descriptions);
     std::vector<std::string> get_time_series_data_descriptions() const;
 
+    int get_number_of_simulation_positions() const;
     std::vector<scm::math::vec3f> get_current_simulation_positions() const;
   public:
     /**
