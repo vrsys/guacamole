@@ -37,7 +37,7 @@
 #include <gua/utils/Trackball.hpp>
 
 
-#define AUTO_ANIMATION
+//#define AUTO_ANIMATION
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -78,7 +78,7 @@ void configure_pipeline_descriptions() {
 
     // first pipe
 
-#if 1 // USE OCCLUSION
+#if 0 // USE OCCLUSION
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
     auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
@@ -192,12 +192,12 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
     //create_simple_debug_scene(occlusion_group_node);
     // create_city_scene(occlusion_group_node);
-    create_simple_demo_scene(occlusion_group_node);
+    //create_simple_demo_scene(occlusion_group_node);
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);
     
     occlusion_group_node->regroup_children();
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
     auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen_node");
     // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-    screen->translate(0, 10, -3.0);
+    screen->translate(0, 0, -3.0);
 
 
     // add mouse interaction
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
     //add a camera node. Without a camera, we can not render
     auto camera_node = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam_node");
     //we just leave the camera in 0, 0, 0 in its local coordinates
-    camera_node->translate(0, 10, 0);
+    camera_node->translate(0, 0, 0);
     camera_node->config.set_resolution(resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
     camera_node->config.set_screen_path("/navigation_node/screen_node");
