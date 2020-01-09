@@ -17,6 +17,50 @@ namespace gua
 {
 Mesh::Mesh() : positions{}, normals{}, texCoords{}, tangents{}, bitangents{}, indices{} {}
 
+
+Mesh::Mesh(const char* filename) : positions{}, normals{}, texCoords{}, tangents{}, bitangents{}, indices{}, num_vertices{}, num_triangles{}
+{
+    FILE* f = fopen( filename, "rb");
+    if(nullptr == f){
+        std::cout << "ERROR: Mesh: could not open file " << filename << " Mesh will remain empty" << std::endl;
+        return;
+    }
+
+    // header
+    unsigned int num_positions(0);
+    unsigned int num_normals(0);
+    unsigned int num_texCoords(0);
+    unsigned int num_tangents(0);
+    unsigned int num_bitangents(0);
+    unsigned int num_indices(0);
+    fread(&num_vertices, sizeof(unsigned), 1, f);
+    fread(&num_triangles, sizeof(unsigned), 1, f);
+    fread(&num_positions, sizeof(unsigned), 1, f);
+    fread(&num_normals, sizeof(unsigned), 1, f);
+    fread(&num_texCoords, sizeof(unsigned), 1, f);
+    fread(&num_tangents, sizeof(unsigned), 1, f);
+    fread(&num_bitangents, sizeof(unsigned), 1, f);
+    fread(&num_indices, sizeof(unsigned), 1, f);
+
+    positions.resize(num_positions);
+    normals.resize(num_normals);
+    texCoords.resize(num_texCoords);
+    tangents.resize(num_tangents);
+    bitangents.resize(num_bitangents);
+    indices.resize(num_indices);
+
+    // data
+    fread(&positions[0], sizeof(scm::math::vec3f), num_positions, f);
+    fread(&normals[0], sizeof(scm::math::vec3f), num_normals, f);
+    fread(&texCoords[0], sizeof(scm::math::vec2f), num_texCoords, f);
+    fread(&tangents[0], sizeof(scm::math::vec3f), num_tangents, f);        
+    fread(&bitangents[0], sizeof(scm::math::vec3f), num_bitangents, f);
+    fread(&indices[0], sizeof(unsigned), num_indices, f);
+
+    fclose(f);
+
+}
+
 #ifdef GUACAMOLE_FBX
 Mesh::Mesh(FbxMesh& mesh, int material_index) { construct(mesh, material_index); }
 
@@ -419,6 +463,7 @@ std::function<unsigned(Mesh::temp_vert const&)> Mesh::get_access_function(FbxLay
 
 Mesh::Mesh(aiMesh const& mesh)
 {
+
     num_triangles = mesh.mNumFaces;
     num_vertices = mesh.mNumVertices;
 
@@ -479,6 +524,7 @@ Mesh::Mesh(aiMesh const& mesh)
             indices.push_back(face.mIndices[j]);
         }
     }
+
 }
 
 void Mesh::copy_to_buffer(Vertex* vertex_buffer) const
@@ -491,16 +537,86 @@ void Mesh::copy_to_buffer(Vertex* vertex_buffer) const
 
         vertex_buffer[v].normal = normals[v];
 
-        vertex_buffer[v].tangent = tangents[v];
-
-        vertex_buffer[v].bitangent = bitangents[v];
+        if((!tangents.empty()) && (!bitangents.empty())){
+            vertex_buffer[v].tangent = tangents[v];
+            vertex_buffer[v].bitangent = bitangents[v];    
+        }
+        else if(!tangents.empty()){
+            vertex_buffer[v].tangent = tangents[v];    
+        }
+        
     }
 }
 
 scm::gl::vertex_format Mesh::get_vertex_format() const
 {
-    return scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
+    if((!tangents.empty()) && (!bitangents.empty())){
+        //std::cout << "Mesh::get_vertex_format() TANGETS + BITANGENTS" << std::endl;
+        return scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))(0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))(0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))(
         0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex))(0, 4, scm::gl::TYPE_VEC3F, sizeof(Vertex));
+    }
+    else if(!tangents.empty()){
+        //std::cout << "Mesh::get_vertex_format() TANGETS" << std::endl;
+        return scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                     (0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))
+                                     (0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                     (0, 3, scm::gl::TYPE_VEC3F, sizeof(Vertex));
+    }
+    else{
+        //std::cout << "Mesh::get_vertex_format()" << std::endl;
+        return scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, sizeof(Vertex))
+                                     (0, 1, scm::gl::TYPE_VEC2F, sizeof(Vertex))
+                                     (0, 2, scm::gl::TYPE_VEC3F, sizeof(Vertex));
+    }
+}
+
+
+bool Mesh::save_to_binary(const char* filename, unsigned flags) const
+{
+
+    FILE* f = fopen( filename, "wb");
+    if(nullptr == f){
+        return false;
+    }
+
+    // header
+    const unsigned int num_positions(positions.size());
+    const unsigned int num_normals(normals.size());
+    const unsigned int num_texCoords(texCoords.size());
+    unsigned int num_tangents(tangents.size());
+    unsigned int num_bitangents(bitangents.size());
+    const unsigned int num_indices(indices.size());
+
+    if(!(flags & Mesh::SAVE_TANGENTS)){
+        num_tangents = 0;
+        num_bitangents = 0; // BITANGENTS WITHOUT TANGENTS IS NOT SUPPORTED
+    }
+
+    if(!(flags & Mesh::SAVE_BITANGENTS)){
+        num_bitangents = 0;
+    }
+
+
+    fwrite(&num_vertices, sizeof(unsigned), 1, f);
+    fwrite(&num_triangles, sizeof(unsigned), 1, f);
+    fwrite(&num_positions, sizeof(unsigned), 1, f);
+    fwrite(&num_normals, sizeof(unsigned), 1, f);
+    fwrite(&num_texCoords, sizeof(unsigned), 1, f);
+    fwrite(&num_tangents, sizeof(unsigned), 1, f);
+    fwrite(&num_bitangents, sizeof(unsigned), 1, f);
+    fwrite(&num_indices, sizeof(unsigned), 1, f);
+
+    // data
+    fwrite(&positions[0], sizeof(scm::math::vec3f), num_positions, f);
+    fwrite(&normals[0], sizeof(scm::math::vec3f), num_normals, f);
+    fwrite(&texCoords[0], sizeof(scm::math::vec2f), num_texCoords, f);
+    fwrite(&tangents[0], sizeof(scm::math::vec3f), num_tangents, f);        
+    fwrite(&bitangents[0], sizeof(scm::math::vec3f), num_bitangents, f);
+    fwrite(&indices[0], sizeof(unsigned), num_indices, f);
+
+    fclose(f);
+
+    return true;
 }
 
 } // namespace gua

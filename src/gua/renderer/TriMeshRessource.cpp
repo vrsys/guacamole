@@ -183,4 +183,11 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool TriMeshRessource::save_to_binary(const char* filename, unsigned flags)
+{
+    return mesh_.save_to_binary(filename, flags);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 } // namespace gua
