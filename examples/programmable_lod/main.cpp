@@ -68,7 +68,6 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
 
 }
 
-
 void adjust_arguments(int& argc, char**& argv)
 {
     char* argv_tmp[] = {argv[0], NULL};
@@ -133,20 +132,29 @@ int main(int argc, char** argv)
     auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
     auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
+    bool show_arrows = false;
 
     gua::TriMeshLoader loader;
 
-    auto model_mat(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    //auto model_mat_fem_model(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
 
-    model_mat->set_render_wireframe(false);
-    model_mat->set_show_back_faces(false);
+    //model_mat_fem_model->set_render_wireframe(false);
+    //model_mat_fem_model->set_show_back_faces(true);
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
     auto fem_model(
-        loader.create_geometry_from_file("fem_model", "/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_OBJS/2020_01_06/Scherkonde_Geom_registered_2020_01_06.obj", model_mat, 
+        loader.create_geometry_from_file("fem_model", "/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_OBJS/2020_01_06/flipped_normals_Scherkonde_Geom_registered_2020_01_06.obj", 
                                                        gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
+    //auto fem_model(
+    //    loader.create_geometry_from_file("fem_model", "./data/objects/arrow.obj",
+    //                                                   gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
+
+
+    //auto fem_trimesh_model = (std::dynamic_pointer_cast<gua::node::TriMeshNode>(fem_model));//->get_material();
+
+    //(fem_trimesh_model)->get_material()->set_show_back_faces(true);
 
     graph.add_node("/transform/plod_transform", fem_model);
 
@@ -163,70 +171,17 @@ int main(int argc, char** argv)
     }
 
 
-    //fem_model->scale(0.01);
 
-    //example_model->translate(0.0, -1.0, 0.0);
-    
-    std::ifstream in_train_positions("/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_Data_Collection_Mat_Files/2020_01_06/ZugachsenBLZ56_Track1_DirPull_V300/all_train_positions.train_pos");
+    for(auto child : fem_model->get_children()) {
 
-    int line_index = 0;
-    std::string line_buffer = "";
-    int num_train_positions_per_line = 0;
-
-    std::vector<std::vector<scm::math::vec3f>> train_positions_per_axis;
-
-    while(std::getline(in_train_positions, line_buffer)) {
-        std::istringstream in_sstream(line_buffer);
-
-        if(0 == line_index) {
-            in_sstream >> num_train_positions_per_line;
-
-            train_positions_per_axis.resize(num_train_positions_per_line);
-        } else {
-            for(int train_axis_index = 0; train_axis_index < num_train_positions_per_line; ++train_axis_index) {
-
-                float force = 0.0f;
-                in_sstream >> force;
-
-                scm::math::vec3f new_train_pos;
-
-                in_sstream >> new_train_pos[0];
-                in_sstream >> new_train_pos[1];
-                in_sstream >> new_train_pos[2];
-
-                train_positions_per_axis[train_axis_index].push_back(new_train_pos);
-            }
-        }
-
-        ++line_index;
-    }
-
-    in_train_positions.close();
-
-    //std::cout << "Translation: " << train_positions.back() << std::endl;
-
-    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes(train_positions_per_axis.size() );
-
-    for(uint32_t train_axis_index = 0; train_axis_index < train_axis_geodes.size(); ++train_axis_index) {
-        //train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
-    
-        train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow_270deg_x_rotated.obj", model_mat,  gua::TriMeshLoader::LOAD_MATERIALS);
-    
-
-        graph.add_node("/transform/plod_transform/fem_model", train_axis_geodes[train_axis_index]);
+        auto trimesh_node = (std::dynamic_pointer_cast<gua::node::TriMeshNode>(fem_model));
+        trimesh_node->set_render_to_gbuffer(false);
+        //trimesh_node->translate(additional_fem_model_translation, additional_fem_model_translation, additional_fem_model_translation);
     }
 
 
 
 
-
-    //example_model->translate(0.0, -1.0, 0.0);
-    
-
-    //example_model->scale(0.05f);
-    //example_model->translate(train_positions.back()[0]/1000.0, train_positions.back()[1]/1000.0, train_positions.back()[2]/1000.0 );
-
-    // create a lightsource
     auto light_transform = graph.add_node<gua::node::TransformNode>("/transform", "light_transform");
     auto light = graph.add_node<gua::node::LightNode>("/transform/light_transform", "light");
     light->data.set_type(gua::node::LightNode::Type::SPOT);
@@ -365,6 +320,26 @@ int main(int argc, char** argv)
     float elapsed_frame_time = 0.0f;
 
 
+    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes( vector_of_lod_nodes[0]->get_current_simulation_positions().size() );
+    std::vector<std::shared_ptr<gua::node::TriMeshNode>> arrow_nodes;
+
+    auto model_mat_arrows(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+
+
+    for(uint32_t train_axis_index = 0; train_axis_index < train_axis_geodes.size(); ++train_axis_index) {
+        train_axis_geodes[train_axis_index] = loader.create_geometry_from_file( std::string("train_axis") + std::to_string(train_axis_index) , "./data/objects/arrow_270deg_x_rotated.obj", model_mat_arrows,  gua::TriMeshLoader::LOAD_MATERIALS);
+    
+        arrow_nodes.push_back((std::dynamic_pointer_cast<gua::node::TriMeshNode>(train_axis_geodes[train_axis_index]) ) );
+        graph.add_node("/transform/plod_transform/fem_model", train_axis_geodes[train_axis_index]);
+    }
+
+
+    for(auto const& node : arrow_nodes) {
+        node->set_render_to_gbuffer(show_arrows);
+    }
+
+
+
 
     window->on_key_press.connect(std::bind(
         [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
@@ -431,6 +406,14 @@ int main(int argc, char** argv)
                     std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
                 }
                 break;
+
+            case 'a':
+                show_arrows = !show_arrows;
+                for(auto arrow_node : arrow_nodes) {
+                    arrow_node->set_render_to_gbuffer(show_arrows);
+                }
+                break;
+
 
             case '9':
                 for(auto const& plod_node : vector_of_lod_nodes) {
@@ -541,6 +524,15 @@ int main(int argc, char** argv)
 
 
 
+
+
+
+
+    model_mat_arrows->set_render_wireframe(false);
+    model_mat_arrows->set_show_back_faces(false);
+
+
+
     light_transform->rotate(90.0f, 0.f, 1.f, 0.f);
 
     ticker.on_tick.connect([&]() {
@@ -569,39 +561,22 @@ int main(int argc, char** argv)
 
             auto current_train_scaling = scm::math::make_scale(train_axis_scaling, train_axis_scaling, train_axis_scaling);
 
-            
-            float current_timestep = vector_of_lod_nodes[0]->get_current_time_step();
-
-            int timestep_t0 = int(current_timestep);
-            int timestep_t1 = int(ceil(current_timestep));
-
-            float fraction = current_timestep - timestep_t0;
-            if( !vector_of_lod_nodes[0]->get_enable_temporal_interpolation() ) {
-                fraction = int(fraction);
-            }
-
             auto node_pretransform = gua::math::get_rotation(scm::math::mat4d(vector_of_lod_nodes[0]->get_active_time_series_transform()) );
 
-            for(uint32_t train_axis_index = 0; train_axis_index < train_positions_per_axis.size(); ++train_axis_index) {
 
-                scm::math::vec3f mixed_translation = scm::math::vec3f( 
-                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][0] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][0],
-                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][1] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][1] ,
-                    (1.0 - fraction) * train_positions_per_axis[train_axis_index][timestep_t0][2] + (fraction) * train_positions_per_axis[train_axis_index][timestep_t1][2] 
-                );
+            auto current_simulation_positions = vector_of_lod_nodes[0]->get_current_simulation_positions();
 
-                auto current_train_translation = scm::math::make_translation(mixed_translation[0], 
-                                                                             mixed_translation[1], 
-                                                                             mixed_translation[2] );
+            for(uint32_t train_axis_index = 0; train_axis_index < current_simulation_positions.size(); ++train_axis_index) {
+
+                auto const& current_sim_position = current_simulation_positions[train_axis_index];
+                auto current_train_translation = scm::math::make_translation(current_sim_position[0], 
+                                                                             current_sim_position[1], 
+                                                                             current_sim_position[2] );
 
                 auto train_axis_transformation =  current_train_translation * current_train_scaling * scm::math::mat4f(node_pretransform);// * scm::math::make_rotation(-90.0f, 1.0f, 0.0f, 0.0f);
 
                 train_axis_geodes[train_axis_index]->set_transform( gua::math::mat4(train_axis_transformation) );
             }
-            
-            //train_axis_1->scale(0.05);
-            //train_axis_1->scale(train_axis_scaling);
-            //train_axis_1->translate(train_positions.back()[0], train_positions.back()[1], train_positions.back()[2] );
 
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)

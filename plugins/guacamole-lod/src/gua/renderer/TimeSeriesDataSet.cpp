@@ -98,8 +98,7 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformatio
     		write_offset += num_bytes_per_timestep;
       		memcpy((char*)mapped_time_series_ssbo + write_offset, (char*) data.data() + vis_attribute_offset_1, num_bytes_per_timestep);
     		write_offset += num_bytes_per_timestep;
-    		// ...
-
+   
     		ctx.render_context->unmap_buffer(time_series_data_gpu_resource->ssbo);
 
     		time_series_data_gpu_resource->currently_uploaded_time_step_slot_0 = start_time_step_id;
@@ -122,8 +121,6 @@ void TimeSeriesDataSet::upload_time_range_to(RenderContext& ctx, bool deformatio
 
 void TimeSeriesDataSet::bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_visualize = 0, float mix_in_factor = 0.7) {
     int32_t floats_per_timestep    = data.size() / (num_attributes * num_timesteps);
-    int32_t attribute_element_offset = data.size() / num_attributes;
-
     attribute_to_visualize = std::max(int(0), std::min(int(num_attributes-1), int(attribute_to_visualize) ) );
 
     shader_program->set_uniform(ctx, mix_in_factor, "mix_in_factor");

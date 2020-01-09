@@ -315,8 +315,10 @@ void load_vis_settings(std::string const& vis_file_name, vis_settings& settings)
           else if (key == "max_radius") {
             settings.max_radius_ = std::max(atof(value.c_str()), 0.0);
           }
+          else if (key == "simulation_positions_filename") {
+            settings.max_radius_ = std::max(atof(value.c_str()), 0.0);
+          }
           else if (key == "fem_to_pcl_transform") {
-            std::cout << "TRANSFORM STRING: " <<  value << std::endl;
             std::istringstream in_transform(value);
 
             for(int element_idx = 0; element_idx < 16; ++element_idx) {
