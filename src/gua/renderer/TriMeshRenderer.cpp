@@ -87,7 +87,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-#define USE_DISTANCE_SORTING
+//#define USE_DISTANCE_SORTING
 #ifdef USE_DISTANCE_SORTING
 
         auto const& frustum = pipe.current_viewstate().frustum;
@@ -216,7 +216,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
                 current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-                //current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+                current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)
