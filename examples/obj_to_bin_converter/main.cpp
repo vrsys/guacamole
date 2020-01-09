@@ -25,19 +25,6 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-#include <gua/renderer/DebugViewPass.hpp>
-#include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/SSAAPass.hpp>
-#include <gua/renderer/BBoxPass.hpp>
-#include <gua/renderer/ScreenGrabPass.hpp>
-#include <gua/renderer/DebugViewPass.hpp>
-#include <scm/gl_util/manipulators/trackball_manipulator.h>
-
-#include <gua/virtual_texturing/VTBackend.hpp>
-#include <lamure/vt/VTConfig.h>
-#include <lamure/ren/model_database.h>
-#include <gua/renderer/PBSMaterialFactory.hpp>
-
 
 template <class T>
 inline std::string
