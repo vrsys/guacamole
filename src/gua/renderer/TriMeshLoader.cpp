@@ -165,7 +165,7 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
 
             if(flags & TriMeshLoader::LOAD_MATERIALS)
             {
-                std::cout << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+                Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
             }
             return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), nullptr));
         }
@@ -390,8 +390,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
         
         if(flags & TriMeshLoader::LOAD_MATERIALS)
         {
-
-            std::cout << "using TriMeshLoader::LOAD_MATERIALS" << std::endl;
             const unsigned material_index(ai_scene->mMeshes[ai_current->mMeshes[i]]->mMaterialIndex);
             MaterialLoader material_loader;
             aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
