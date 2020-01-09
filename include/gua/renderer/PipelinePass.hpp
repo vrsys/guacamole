@@ -46,7 +46,8 @@ enum class OcclusionCullingStrategy {
     Naive_Stop_And_Wait,            //Slowest Occlusion Query Mode for Comparison
     Hierarchical_Stop_And_Wait,     //Exploiting Spatial Coherence 
     Coherent_Hierarchical_Culling,  //Exploiting Spatial and Temporal Coherence
-    
+    Coherent_Hierarchical_Culling_PlusPlus, //Follow up on Coherent Hierarchical Culling
+
     Num_Occlusion_Culling_Modes
 };
 

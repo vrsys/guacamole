@@ -166,7 +166,11 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 
         case OcclusionCullingStrategy::Coherent_Hierarchical_Culling: {
             render_CHC(pipe, desc, view_projection_matrix, world_space_cam_pos_euclidean);
-            //render_CHC_base(desc, desc);
+            break;
+        }
+
+        case OcclusionCullingStrategy::Coherent_Hierarchical_Culling_PlusPlus: {
+            render_CHC_plusplus(pipe, desc, view_projection_matrix, world_space_cam_pos_euclidean);
             break;
         }
 

@@ -152,7 +152,19 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             if(action == 1) {
                 occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling);
 
-                std::cout << "Set Occlusion_Culling_Strategy to 'Coherent Hierarchical Culling (TO BE IMPLEMENTED)'" << std::endl;
+                std::cout << "Set Occlusion_Culling_Strategy to 'Coherent Hierarchical Culling'" << std::endl;
+                //calling touch is necessary for guacamole to notice that the pass has changed
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+            }
+            break;
+        }
+
+        //scancode for 5 key
+        case 14: {
+            if(action == 1) {
+                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling_PlusPlus);
+
+                std::cout << "Set Occlusion_Culling_Strategy to 'CHC++'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
                 occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
             }
