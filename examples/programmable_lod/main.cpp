@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     auto plod_transform = graph.add_node<gua::node::TransformNode>("/transform", "plod_transform");
     auto tri_transform = graph.add_node<gua::node::TransformNode>("/transform", "tri_transform");
 
-    bool show_arrows = false;
+    bool show_arrows = true;
 
     gua::TriMeshLoader loader;
 
@@ -524,8 +524,8 @@ int main(int argc, char** argv)
 
 
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_time_series_deformation(false);
-                    plod_node->set_enable_time_series_coloring(false);
+                    plod_node->set_enable_time_series_deformation(true);
+                    plod_node->set_enable_time_series_coloring(true);
                 }
 
 
