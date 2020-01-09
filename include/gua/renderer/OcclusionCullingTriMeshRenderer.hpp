@@ -95,6 +95,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                         scm::gl::rasterizer_state_ptr current_rasterizer_state,
                         bool& depth_complexity_vis);
     void unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target);
+    void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* current_node);
 
 
     // helper functions to manage visibility of nodes
