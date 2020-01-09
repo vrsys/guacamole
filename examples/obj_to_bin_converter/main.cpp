@@ -25,7 +25,7 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
-
+ 
 template <class T>
 inline std::string
 toString(T value){
