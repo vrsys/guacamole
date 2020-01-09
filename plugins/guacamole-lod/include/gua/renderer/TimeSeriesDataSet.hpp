@@ -58,6 +58,10 @@ struct GUA_DLL TimeSeriesDataSet {
 
     scm::math::mat4f time_series_transform_matrix;
 
+    std::string simulation_positions_filename = "";
+    uint32_t num_simulation_positions_per_timestep = 0;
+    std::vector<std::vector<scm::math::vec3f>> simulation_positions;
+
     std::size_t uuid = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
     void upload_time_range_to(RenderContext& ctx, bool deformation_enabled, bool coloring_enabled, int vis_attribut_id, int start_time_step_id = -1, int end_time_step_id = -1) const;
@@ -65,7 +69,6 @@ struct GUA_DLL TimeSeriesDataSet {
     void bind_to(RenderContext& ctx, int buffer_binding_point, std::shared_ptr<ShaderProgram>& shader_program, int attribute_to_render, float mix_in_factor);
 
     float calculate_active_cursor_position(float in_node_time_cursor) const;
-
 };
 
 /**

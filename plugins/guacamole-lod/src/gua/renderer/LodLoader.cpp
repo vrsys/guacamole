@@ -75,6 +75,44 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 }
 
 /////////////////////////////////////////////////////////////////////////////
+void parse_simulation_positions(std::string const& simulation_positions_file_path, std::shared_ptr<TimeSeriesDataSet> const& current_time_series_dataset) {
+    std::cout << "simulation_position_file: " <<  simulation_positions_file_path << std::endl;
+
+
+    std::ifstream in_simulation_positions_file(simulation_positions_file_path);
+
+    int line_index = 0;
+    std::string line_buffer = "";
+    int num_simulations_positions_per_line = 0;
+
+
+    while(std::getline(in_simulation_positions_file, line_buffer)) {
+        std::istringstream in_sstream(line_buffer);
+
+        if(0 == line_index) {
+            in_sstream >> num_simulations_positions_per_line;
+            std::cout << num_simulations_positions_per_line << std::endl;
+            current_time_series_dataset->simulation_positions.resize(num_simulations_positions_per_line);
+        } else {
+            for(int position_index = 0; position_index < num_simulations_positions_per_line; ++position_index) {
+                scm::math::vec3f current_simulation_position;
+
+                in_sstream >> current_simulation_position[0];
+                in_sstream >> current_simulation_position[1];
+                in_sstream >> current_simulation_position[2];
+                current_time_series_dataset->simulation_positions[position_index].push_back(current_simulation_position);
+            }
+        }
+
+        ++line_index;
+    }
+    in_simulation_positions_file.close();
+
+    current_time_series_dataset->num_simulation_positions_per_timestep = num_simulations_positions_per_line;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
     
     std::vector<std::string> model_files_to_load;
@@ -84,6 +122,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
     scm::math::mat4f fem_transform_matrix;
 
     std::vector<std::string> parsed_time_series_data_description;
+
+    std::string simulation_positions_filename = "";
+
     try {
         if(!is_supported_vis_file(vis_file_name)) {
             throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
@@ -113,6 +154,12 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                             attribute_parser_stringstream >> fem_transform_matrix[transform_matrix_element];
                         }
                     }
+
+                    if(0 == line_buffer.rfind("simulation_positions_filename:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        attribute_parser_stringstream >> simulation_positions_filename;
+                    }
+
                 }
             }
 
@@ -135,6 +182,9 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                     
                         std::cout << "Loading mapping file: " << std::endl;
                         std::cout << settings.fem_value_mapping_file_ << std::endl;
+
+
+
 
                         std::string line_buffer;
                         std::ifstream in_mapping_file_stream(settings.fem_value_mapping_file_);
@@ -198,8 +248,24 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
                                 in_attribute_file.close();
 
+
+                                if(!simulation_positions_filename.empty()) {
+
+                                    std::string directory;
+                                    std::size_t const last_slash_idx = shared_time_series_dataset->name.find_last_of("\\/");
+                                    if (std::string::npos != last_slash_idx)
+                                    {
+                                        directory = shared_time_series_dataset->name.substr(0, last_slash_idx);
+                                    }
+
+                                    std::string simulation_positions_source = (directory) + "/" + simulation_positions_filename;
+                                    parse_simulation_positions(simulation_positions_source,  shared_time_series_dataset);
+                                }
+
+
                                 TimeSeriesDataSetDatabase::instance()->add(shared_time_series_dataset->name, shared_time_series_dataset);
 
+                                shared_time_series_dataset->simulation_positions_filename = simulation_positions_filename;
                                 shared_time_series_dataset->time_series_transform_matrix = fem_transform_matrix;
 
                                 parsed_time_series_data_description.push_back(shared_time_series_dataset->name);
@@ -208,8 +274,6 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                         }
 
                         in_mapping_file_stream.close();
-
-
                     }
                 }
 

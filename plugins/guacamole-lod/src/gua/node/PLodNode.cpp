@@ -310,6 +310,47 @@ int PLodNode::get_active_time_series_index() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::vector<scm::math::vec3f> PLodNode::get_current_simulation_positions() const {
+    if( !associated_time_series_data_descriptions_.empty() ) {
+        auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
+        auto looked_up_time_series_data_item = TimeSeriesDataSetDatabase::instance()->lookup(active_time_series_description);
+
+
+        auto& active_simulation_positions = looked_up_time_series_data_item->simulation_positions;
+
+        float current_timestep = get_current_time_step();
+
+        int timestep_t0 = int(current_timestep);
+        int timestep_t1 = int(ceil(current_timestep));
+
+        float fraction = current_timestep - timestep_t0;
+        if( get_enable_temporal_interpolation() ) {
+            fraction = int(fraction);
+        }
+
+        std::vector<scm::math::vec3f> current_simulation_positions(looked_up_time_series_data_item->num_simulation_positions_per_timestep);
+
+        for(uint32_t sim_position_index = 0; sim_position_index < looked_up_time_series_data_item->num_simulation_positions_per_timestep; ++sim_position_index) {
+            float w_0 = 1.0 - fraction;
+            float w_1 = fraction;
+            for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+                current_simulation_positions[sim_position_index][dim_idx] =  
+                  w_0 * active_simulation_positions[sim_position_index][timestep_t0][dim_idx] 
+                + w_1 * active_simulation_positions[sim_position_index][timestep_t1][dim_idx];  
+            }
+        }
+
+
+
+        return current_simulation_positions;
+
+    } else {
+        Logger::LOG_ERROR << "PLodNode::get_current_simulation_positions(): Cannot find associated time series " << std::endl;
+        throw std::exception();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 scm::math::mat4f PLodNode::get_active_time_series_transform() const {
     if( !associated_time_series_data_descriptions_.empty() ) {
         auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
