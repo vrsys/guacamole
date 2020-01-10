@@ -19,6 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+#include "glfw_callbacks.hpp"
+#include "navigation.hpp"
+
 #include <functional>
 #include <memory>
 #include <algorithm>
@@ -38,6 +41,9 @@
 #include <lamure/ren/model_database.h>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 
+extern WASD_state cam_navigation_state;
+
+bool print_frame_times = true;
 
 int main(int argc, char** argv)
 {
@@ -87,6 +93,8 @@ int main(int argc, char** argv)
 
     std::vector<std::shared_ptr<gua::node::TriMeshNode>> model_nodes; 
 
+
+
     if(atlas_file != ""){
         gua::VTBackend::set_physical_texture_size(2048);
         gua::VTBackend::set_update_throughput_size(4);
@@ -131,6 +139,8 @@ int main(int argc, char** argv)
                 auto model_dim = scm::math::length(bb.max - bb.min);
                 auto center = (bb.max + bb.min) / 2.f; 
                 view_transform->translate(center.x, center.y, center.z + model_dim); 
+
+                cam_navigation_state.accumulated_translation_world_space = scm::math::make_translation(center.x, center.y, center.z + model_dim);
             }
 
         }
@@ -327,36 +337,9 @@ int main(int argc, char** argv)
             button_state = -1;
     });
 
-    window->on_key_press.connect(std::bind(
-        [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
-            if(action == 0)
-                return;
+    window->on_key_press.connect(
+        std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
-            std::cout << "Switched depth testing state" << std::endl;
-
-            for(auto const& trimesh_node : model_nodes) {
-                if(trimesh_node->get_material()->get_enable_early_fragment_test()) {
-                    trimesh_node->set_material(vt_mat_wo_early_depth_test);
-                } else {
-                    trimesh_node->set_material(vt_mat_with_early_depth_test);                    
-                }
-                
-            }
-
-            //vt_mat->set_enable_early_fragment_test(!vt_mat->get_enable_early_fragment_test());
-
-            switch(std::tolower(key))
-            {
-            default:
-                break;
-            }
-        },
-        std::ref(*(camera->get_pipeline_description())),
-        std::ref(graph),
-        std::placeholders::_1,
-        std::placeholders::_2,
-        std::placeholders::_3,
-        std::placeholders::_4));
 
     window->open();
 
@@ -376,6 +359,18 @@ int main(int argc, char** argv)
     ticker.on_tick.connect([&]() {
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
+        //we ask the renderer for the currently averaged applicatin fps and the window for the rendering fps
+        float application_fps = renderer.get_application_fps();
+
+
+        float elapsed_application_time_milliseconds = 0.0;
+
+        if(application_fps > 0.0f) {
+            elapsed_application_time_milliseconds = 1.0 / application_fps;
+        }
+
+        update_cam_matrix(camera, view_transform, elapsed_application_time_milliseconds);
+
         light_transform->rotate(0.05, 0.f, 1.f, 0.f);
         window->process_events();
         if(window->should_close())
@@ -393,8 +388,9 @@ int main(int argc, char** argv)
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)
             {
-                std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
-                // screen_grab_pass->set_grab_next(true);
+                if(print_frame_times) {
+                    std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+                }
             }
         }
     });

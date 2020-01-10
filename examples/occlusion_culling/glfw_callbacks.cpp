@@ -281,7 +281,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
-        case 'l': { //moves the camera to the right with respect to the camera vector described in global coordinates
+        case 'l': { //rotates the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
                 cam_navigation_state.rotate_around_y_neg = true;
             } else if(0 == action) {
