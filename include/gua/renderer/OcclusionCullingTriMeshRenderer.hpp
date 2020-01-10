@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <map>
 #include <unordered_map>
+#include <queue>
 
 #include <gua/platform.hpp>
 #include <gua/config.hpp>
@@ -51,6 +52,11 @@ struct NodeDistancePairComparator
   {
     return lhs.second > rhs.second;
   }
+};
+
+struct MultiQuery{
+    scm::gl::occlusion_query_ptr occlusion_query_pointer;
+    std::vector<gua::node::Node*> nodes_to_query;
 };
 
 class GUA_DLL OcclusionCullingTriMeshRenderer
@@ -95,7 +101,9 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                         scm::gl::rasterizer_state_ptr current_rasterizer_state,
                         bool& depth_complexity_vis);
     void unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target);
-    void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* current_node);
+    void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
+                               scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery> & query_queue,
+                               int64_t const current_frame_id, std::size_t in_camera_uuid, std::vector<gua::node::Node*> current_nodes);
 
 
     // helper functions to manage visibility of nodes
@@ -159,6 +167,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> >is_visible_for_camera_;
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
+
 };
 
 } // namespace gua

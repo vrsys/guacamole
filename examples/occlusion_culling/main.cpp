@@ -231,7 +231,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(2*1280, 2*720);
+    auto resolution = gua::math::vec2ui(1*1280, 1*720);
 
 
     configure_pipeline_descriptions();

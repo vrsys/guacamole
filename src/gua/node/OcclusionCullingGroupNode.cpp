@@ -228,7 +228,6 @@ void OcclusionCullingGroupNode::determine_best_split(std::queue<gua::node::Node*
                 current_node_to_split->add_child(child);
             }
             
-            std::cout << "DID NOT SPLIT FURTHER!" << std::endl;
         }
     }
 }
