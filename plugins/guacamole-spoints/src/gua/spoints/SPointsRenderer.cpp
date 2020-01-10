@@ -344,7 +344,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_quantized_, std::list<std::string>(), false, false, smap);
                                 forward_textured_triangles_pass_programs_quantized_[current_material] = current_shader;
                             }
                         }
@@ -372,7 +372,7 @@ void SPointsRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                                 current_shader = std::make_shared<ShaderProgram>();
                                 current_shader->set_shaders(
 
-                                forward_textured_triangles_shader_stages_, std::list<std::string>(), false, smap);
+                                forward_textured_triangles_shader_stages_, std::list<std::string>(), false, false, smap);
                                 forward_textured_triangles_pass_programs_[current_material] = current_shader;
                             }
                         }

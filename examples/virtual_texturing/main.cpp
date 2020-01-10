@@ -75,32 +75,54 @@ int main(int argc, char** argv)
     auto view_transform = graph.add_node<gua::node::TransformNode>("/", "view_transform");
 
 
+    auto vt_mat_wo_early_depth_test = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
+    auto vt_mat_with_early_depth_test = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
+    std::vector<std::shared_ptr<gua::node::TriMeshNode>> model_nodes; 
+
     if(atlas_file != ""){
         gua::VTBackend::set_physical_texture_size(2048);
         gua::VTBackend::set_update_throughput_size(4);
         gua::VTBackend::set_ram_cache_size(32768);
 
-        auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
-            gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
-            gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
-            gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
         
-        vt_mat->set_uniform("Metalness", 0.25f);
-        vt_mat->set_uniform("Roughness", 0.75f);
-        vt_mat->set_uniform("Emissivity", 0.5f);
-        vt_mat->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
-        vt_mat->set_uniform("vt_test", atlas_file);
-        vt_mat->set_enable_virtual_texturing(true);
-        vt_mat->set_show_back_faces(false);
+        vt_mat_wo_early_depth_test->set_uniform("Metalness", 0.25f);
+        vt_mat_wo_early_depth_test->set_uniform("Roughness", 0.75f);
+        vt_mat_wo_early_depth_test->set_uniform("Emissivity", 0.5f);
+        vt_mat_wo_early_depth_test->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+        vt_mat_wo_early_depth_test->set_uniform("vt_test", atlas_file);
+        vt_mat_wo_early_depth_test->set_enable_virtual_texturing(true);
+        vt_mat_wo_early_depth_test->set_enable_early_fragment_test(true);
+        vt_mat_wo_early_depth_test->set_show_back_faces(false);
+
+        vt_mat_with_early_depth_test->set_uniform("Metalness", 0.25f);
+        vt_mat_with_early_depth_test->set_uniform("Roughness", 0.75f);
+        vt_mat_with_early_depth_test->set_uniform("Emissivity", 0.5f);
+        vt_mat_with_early_depth_test->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+        vt_mat_with_early_depth_test->set_uniform("vt_test", atlas_file);
+        vt_mat_with_early_depth_test->set_enable_virtual_texturing(true);
+        vt_mat_with_early_depth_test->set_enable_early_fragment_test(true);
+        vt_mat_with_early_depth_test->set_show_back_faces(false);
+
 
         gua::TriMeshLoader loader;
+
         for(unsigned i = 0; i <  model_files.size(); ++i){
 
             std::cout << "start loading " << model_files[i] << std::endl;
-            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat, /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
+            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat_wo_early_depth_test, /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
             std::cout << model_files[i] << "...ready with " << model_node->get_children().size() << " children" << std::endl;
             graph.add_node("/transform/model_transform", model_node);
 
+            model_nodes.push_back(std::dynamic_pointer_cast<gua::node::TriMeshNode>(model_node));
 
 
             if(0 == i){
@@ -207,7 +229,7 @@ int main(int argc, char** argv)
     int button_state = -1;
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1920, 1080);
+    auto resolution = gua::math::vec2ui(1920*2, 1080*2);
 
 
     auto camera = graph.add_node<gua::node::CameraNode>("/view_transform/screen", "cam");
@@ -309,6 +331,20 @@ int main(int argc, char** argv)
         [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
             if(action == 0)
                 return;
+
+            std::cout << "Switched depth testing state" << std::endl;
+
+            for(auto const& trimesh_node : model_nodes) {
+                if(trimesh_node->get_material()->get_enable_early_fragment_test()) {
+                    trimesh_node->set_material(vt_mat_wo_early_depth_test);
+                } else {
+                    trimesh_node->set_material(vt_mat_with_early_depth_test);                    
+                }
+                
+            }
+
+            //vt_mat->set_enable_early_fragment_test(!vt_mat->get_enable_early_fragment_test());
+
             switch(std::tolower(key))
             {
             default:
@@ -334,7 +370,7 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 1000.0);
     std::size_t framecount = 0;
 
     ticker.on_tick.connect([&]() {

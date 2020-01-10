@@ -95,6 +95,7 @@ DynamicGeometryRenderer::DynamicGeometryRenderer(RenderContext const &ctx, Subst
 
 void DynamicGeometryRenderer::render(Pipeline &pipe, PipelinePassDescription const &desc)
 {
+    /*
     auto &scene = *pipe.current_viewstate().scene;
     auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::DynamicGeometryNode))));
     // auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::DynamicTriangleNode))));
@@ -275,7 +276,9 @@ void DynamicGeometryRenderer::render(Pipeline &pipe, PipelinePassDescription con
 #endif
 
         ctx.render_context->reset_state_objects();
+    
     }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

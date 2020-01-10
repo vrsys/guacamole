@@ -96,6 +96,15 @@ class GUA_DLL Material
 
     bool get_render_wireframe() const { return render_wireframe_; }
 
+    Material& set_enable_early_fragment_test(bool value) {
+        enable_early_fragment_test_ = value;
+        return *this;
+    }
+
+    bool get_enable_early_fragment_test() const {
+        return enable_early_fragment_test_;
+    }
+
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     Material& set_enable_virtual_texturing(bool value)
     {
@@ -177,6 +186,7 @@ class GUA_DLL Material
     std::map<std::string, ViewDependentUniform> uniforms_;
     bool show_back_faces_;
     bool render_wireframe_;
+    bool enable_early_fragment_test_;
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     bool enable_virtual_texturing_;

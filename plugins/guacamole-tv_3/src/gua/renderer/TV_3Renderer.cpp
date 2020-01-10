@@ -199,7 +199,7 @@ void TV_3Renderer::_initialize_ray_casting_program(
             smap[i.first] = i.second;
         }
 
-        program->set_shaders(ray_casting_program_stages_, std::list<std::string>(), false, smap);
+        program->set_shaders(ray_casting_program_stages_, std::list<std::string>(), false, false, smap);
         current_map_by_mode[material] = program;
     }
     assert(current_map_by_mode.count(material));

@@ -433,7 +433,7 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                         smap[i.first] = i.second;
 
                     current_shader = std::make_shared<ShaderProgram>();
-                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, false, smap);
                     programs_[current_material] = current_shader;
                 }
             }

@@ -116,6 +116,7 @@ SubstitutionMap MaterialShader::generate_substitution_map() const
     smap["material_method_calls_frag"] = sstr.str();
 
     smap["enable_virtual_texturing"] = "0";
+    smap["enable_early_fragment_test"] = "0";
     return smap;
 }
 

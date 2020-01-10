@@ -172,11 +172,13 @@ void DynamicTriangleRenderer::render(Pipeline &pipe, PipelinePassDescription con
 
                         current_shader_program = std::make_shared<ShaderProgram>();
 
+                        bool early_fragment_test_enabled = dynamic_triangle_node->get_material()->get_enable_early_fragment_test();
+
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader_program->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                        current_shader_program->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
 #else
                         bool virtual_texturing_enabled = dynamic_triangle_node->get_material()->get_enable_virtual_texturing();
-                        current_shader_program->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        current_shader_program->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
 #endif
                         (*current_material_shader_map)[current_material_shader] = current_shader_program;
                     }
