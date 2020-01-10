@@ -1,6 +1,8 @@
 @include "common/header.glsl"
 
+#if @enable_early_fragment_test@
 layout (early_fragment_tests) in;
+#endif
 
 @include "common/gua_fragment_shader_input.glsl"
 @include "common/gua_camera_uniforms.glsl"

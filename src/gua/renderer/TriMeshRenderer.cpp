@@ -87,7 +87,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-//#define USE_DISTANCE_SORTING
+#define USE_DISTANCE_SORTING
 #ifdef USE_DISTANCE_SORTING
 
         auto const& frustum = pipe.current_viewstate().frustum;
@@ -167,11 +167,12 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                         current_shader = std::make_shared<ShaderProgram>();
 
+                        bool early_fragment_test_enabled = tri_mesh_node->get_material()->get_enable_early_fragment_test();
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
 #else
                         bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
 #endif
                         programs_[current_material] = current_shader;
                     }

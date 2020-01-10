@@ -182,8 +182,10 @@ void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& de
                         for(const auto& i : current_material_shader->generate_substitution_map())
                             smap[i.first] = i.second;
 
+                        bool early_fragment_test_enabled = line_strip_node->get_material()->get_enable_early_fragment_test();
+                        
                         current_shader_program = std::make_shared<ShaderProgram>();
-                        current_shader_program->set_shaders(*current_shader_stages, std::list<std::string>(), false, smap);
+                        current_shader_program->set_shaders(*current_shader_stages, std::list<std::string>(), false, early_fragment_test_enabled, smap);
                         (*current_material_shader_map)[current_material_shader] = current_shader_program;
                     }
                 }

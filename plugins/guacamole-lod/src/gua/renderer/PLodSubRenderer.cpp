@@ -43,7 +43,7 @@ void PLodSubRenderer::_initialize_material_dependent_shader_programs(MaterialSha
         smap[i.first] = i.second;
     }
 
-    program->set_shaders(shader_stages_, std::list<std::string>(), false, smap);
+    program->set_shaders(shader_stages_, std::list<std::string>(), false, false, smap);
     material_dependent_shader_programs_[material] = program;
 }
 
