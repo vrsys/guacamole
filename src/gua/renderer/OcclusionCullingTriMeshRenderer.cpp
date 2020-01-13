@@ -37,6 +37,7 @@
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 //#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
+#define CHC_pp
 
 namespace
 {
@@ -1409,7 +1410,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                     } else {
                         //query next prev- visible node from v-queue
-
+#ifdef CHC_pp
                         if (v_query_queue.size()>0) {
 
                             auto current_vnode = v_query_queue.front();
@@ -1418,6 +1419,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             single_node_to_query.push_back(current_vnode);
                             issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
                         }
+#endif
                     }
 
                 }
@@ -1463,7 +1465,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                             if(current_node->get_children().size() == 0 && 1==1) {
                                 //push N to v-queue
+#ifdef CHC_pp
                                 v_query_queue.push(current_node);
+#endif
                             }
 
                             //traverse node n
@@ -1480,11 +1484,13 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         }
                     }
                 }
-            
+#ifdef CHC_pp
                 if (traversal_priority_queue.empty()) {
                     issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid,i_query_queue);
                 }
+#endif
             }
+#ifdef CHC_pp
 
             while(!v_query_queue.empty()) {
                 //issue remaining queries from v-queue
@@ -1495,7 +1501,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
 
             }
-
+#endif
         }
 
         unbind_and_reset(ctx, render_target);
@@ -1543,6 +1549,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
     std::cout<<"query result is "<<query_result<<std::endl;
     std::cout<<"threshold is "<<threshold<<std::endl;
     if(query_result>threshold) {
+#ifdef CHC_pp
         if(front_query_vector.size()>1) { //this means our multi query failed. 
             for (auto const& node : front_query_vector) {
                 std::vector<gua::node::Node*> single_node_to_query;
@@ -1550,6 +1557,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, single_node_to_query);
             }
         } else {
+#endif
             for (auto const& current_node : front_query_vector) {
                 //if node was not visible in last frame
 
@@ -1580,8 +1588,11 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
                 }
                 pull_up_visibility(current_node, in_camera_uuid);
             }
+#ifdef CHC_pp
         }
+
     } else {
+#endif
         for (auto const& current_node : front_query_vector) {
             set_visibility(current_node->get_path(), in_camera_uuid, false);
         }
@@ -1673,7 +1684,6 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
                                                             int64_t const current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue){
     
-    std::cout<<i_query_queue.size()<<std::endl;
     while(!i_query_queue.empty()) {
         uint64_t batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
 
@@ -1883,7 +1893,7 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(gua::node::Node* curren
 
         set_visibility(temp_node->get_path(), in_camera_uuid, true);
 
-        if (temp_node->get_parent_shared() != nullptr)
+        if (temp_node->get_parent() != nullptr)
         {
             temp_node = temp_node->get_parent();
         }
