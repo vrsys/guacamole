@@ -12,11 +12,14 @@ struct WASD_state {
     bool moving_upward = false;
     bool moving_downward = false;
 
-    bool rotate_around_y_pos = false;
-    bool rotate_around_y_neg = false;
+    bool yaw_pos = false;
+    bool yaw_neg = false;
 
-    bool rotate_around_x_pos = false;
-    bool rotate_around_x_neg = false;
+    bool pitch_pos = false;
+    bool pitch_neg = false;
+
+    bool roll_pos = false;
+    bool roll_neg = false;
 
     scm::math::mat4 accumulated_translation_world_space = scm::math::mat4::identity();
 
