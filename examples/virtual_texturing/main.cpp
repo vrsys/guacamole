@@ -182,6 +182,7 @@ int main(int argc, char** argv)
         auto model_dim = scm::math::length(bb.max - bb.min);
         auto center = (bb.max + bb.min) / 2.f; 
         view_transform->translate(center.x, center.y, center.z + model_dim);
+        cam_navigation_state.accumulated_translation_world_space = scm::math::make_translation(center.x, center.y, center.z + model_dim);
     }
     
 
