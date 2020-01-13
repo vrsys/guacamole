@@ -1,2 +1,2 @@
-serversocket 141.54.147.16:7050
-feedbacksocket 141.54.147.16:7051
+serversocket 127.0.0.1:7050
+feedbacksocket 127.0.0.1:7051
