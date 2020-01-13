@@ -1390,7 +1390,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
 
-
                         //handle returned query(node and result)-->needs to be a function? 
                         handle_returned_query(
                                         ctx, pipe, desc,
@@ -1449,8 +1448,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         }
 
                         if(!was_visible) {
-                            std::cout<<"was invisible"<<std::endl;
-                            
+
                             //query previously invisible node n
                             i_query_queue.push(current_node);
 
@@ -1523,6 +1521,10 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
                                                             std::queue<MultiQuery>& query_queue,
                                                             int64_t const current_frame_id){
     
+    
+
+
+
     unsigned int threshold = 0;
     switch( desc.get_occlusion_query_type() ) {
         case OcclusionQueryType::Number_Of_Samples_Passed:
@@ -1538,6 +1540,8 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
             Logger::LOG_WARNING << "OcclusionCullingTriMeshPass:: unknown occlusion query type encountered." << std::endl;
         break;
     }
+    std::cout<<"query result is "<<query_result<<std::endl;
+    std::cout<<"threshold is "<<threshold<<std::endl;
     if(query_result>threshold) {
         if(front_query_vector.size()>1) { //this means our multi query failed. 
             for (auto const& node : front_query_vector) {
@@ -1573,7 +1577,6 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
                             world_space_cam_pos,
                             traversal_priority_queue,
                             in_camera_uuid);
-
                 }
                 pull_up_visibility(current_node, in_camera_uuid);
             }
