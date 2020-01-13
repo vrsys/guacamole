@@ -54,6 +54,10 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 
 namespace gua
 {
+
+
+
+std::array<float, 16> keep_probability;
 ////////////////////////////////////////////////////////////////////////////////
 
 OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
@@ -78,6 +82,11 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
       occlusion_query_box_program_stages_(), occlusion_query_box_program_(nullptr), //only one shader that is independent of the actual node material
       global_substitution_map_(smap)
 {
+
+    for(int32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
+        keep_probability[used_frames_index] = 0.99 - 0.7 * std::exp(-used_frames_index);
+        std::cout << "Keep probability if node was consistent for " << used_frames_index << " frames: " << keep_probability[used_frames_index] << std::endl;
+    }
 
 // define all our shader sources for our 3 different shader programs we need/want to use here
 // 1
@@ -1326,7 +1335,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
             while(!traversal_queue.empty()) {
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
-                set_visibility(current_node->get_path(), current_cam_node.uuid, false);
+                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
 
                 traversal_queue.pop();
 
@@ -1406,12 +1415,12 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                                     issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
                                 }
                             } else {
-                                for (auto const& node : front_query_vector) {
+                                for (auto const& current_node : front_query_vector) {
                                     //if node was not visible in last frame
                                     /********************put this into a function?******/
-                                    bool visibility_current_node = get_visibility(node->get_path(), current_cam_node.uuid);
+                                    bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
 
-                                    int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(node->get_path(), current_cam_node.uuid);
+                                    int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
 
                                     bool was_visible = false;
                                     if (visibility_current_node && (node_last_checked_frame_id == 0
@@ -1422,34 +1431,38 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                                     if(!was_visible) {
 
-                                        if(!(node->get_children().empty())){
+                                        if((current_node->get_children().empty())){
 
-                                            // Traverse the nodes
-                                            for (auto & child : node->get_children())
-                                                {
-
-                                                    auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
-                                                    traversal_priority_queue.push(child_node_distance_pair_to_insert);
-                                                }
-
-                                        } else{
-                                            //render current node
-                                            render_visible_leaf(node, 
+                                                                            //render current node
+                                            render_visible_leaf(current_node, 
                                                                 ctx, pipe, 
                                                                 render_target,  
                                                                 current_material,
                                                                 current_shader,
                                                                 current_rasterizer_state,
                                                                 depth_complexity_vis);
-                                            
+
+                                        } else{
+
+
+                                            // Traverse the nodes
+                                            for (auto & child : current_node->get_children())
+                                                {
+
+                                                    auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
+                                                    traversal_priority_queue.push(child_node_distance_pair_to_insert);
+                                                }
+                                            set_visibility(current_node->get_path(), current_cam_node.uuid, false);
+
                                         }
+
                                     }
-                                    pull_up_visibility(node, current_cam_node.uuid);
+                                    pull_up_visibility(current_node, current_cam_node.uuid);
                                 }
                             }
                         } else {
-                            for (auto const& node : front_query_vector) {
-                                set_visibility(node->get_path(), current_cam_node.uuid, false);
+                            for (auto const& current_node : front_query_vector) {
+                                set_visibility(current_node->get_path(), current_cam_node.uuid, false);
                             }
                         }
 
@@ -1485,6 +1498,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                         int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
 
+
                         bool was_visible = false;
                         if (visibility_current_node && (node_last_checked_frame_id == 0
                                                         || (node_last_checked_frame_id == current_frame_id -1) ) )
@@ -1493,6 +1507,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         }
 
                         if(!was_visible) {
+                            std::cout<<"was invisible"<<std::endl;
                             
                             //query previously invisible node n
                             i_query_queue.push(current_node);
@@ -1512,7 +1527,19 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             }
 
                             //traverse node n
-                            if(!(current_node->get_children().empty())){
+                            if((current_node->get_children().empty())){
+
+                                                                //render current node
+                                render_visible_leaf(current_node, 
+                                                    ctx, pipe, 
+                                                    render_target,  
+                                                    current_material,
+                                                    current_shader,
+                                                    current_rasterizer_state,
+                                                    depth_complexity_vis);
+
+                            } else{
+
 
                                 // Traverse the nodes
                                 for (auto & child : current_node->get_children())
@@ -1521,17 +1548,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                                         auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
                                         traversal_priority_queue.push(child_node_distance_pair_to_insert);
                                     }
+                                set_visibility(current_node->get_path(), current_cam_node.uuid, false);
 
-                            } else{
-                                //render current node
-                                render_visible_leaf(current_node, 
-                                                    ctx, pipe, 
-                                                    render_target,  
-                                                    current_material,
-                                                    current_shader,
-                                                    current_rasterizer_state,
-                                                    depth_complexity_vis);
-                                
                             }
                         }
                     }
@@ -1563,7 +1581,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
                                                             int64_t const current_frame_id, std::size_t in_camera_uuid,
-                                                            std::vector<gua::node::Node*> current_nodes){
+                                                            std::vector<gua::node::Node*> const& current_nodes){
     
     auto current_node_path = current_nodes.front()->get_path();
     auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
@@ -1582,21 +1600,24 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     current_shader->use(ctx);
     auto vp_mat = view_projection_matrix;
-    for (auto const& node : current_nodes) {
-        auto world_space_bounding_box = node->get_bounding_box();
-        current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
-        current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
-        current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
-    
-        set_last_visibility_check_frame_id(node->get_path(), in_camera_uuid, current_frame_id); 
-
-    }
+    current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
     set_occlusion_query_states(ctx);
     ctx.render_context->begin_query(occlusion_query_iterator->second);
-    //wie iterieren wir hier?
-    pipe.draw_box();   
+
+    for (auto const& node : current_nodes) {
+        auto world_space_bounding_box = node->get_bounding_box();
+        
+        current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+        current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+    
+        set_last_visibility_check_frame_id(node->get_path(), in_camera_uuid, current_frame_id); 
+        pipe.draw_box();  
+
+    }
+
+     
     ctx.render_context->end_query(occlusion_query_iterator->second);
 
     MultiQuery temp_multi_query = MultiQuery{occlusion_query_iterator->second, current_nodes};
@@ -1608,9 +1629,11 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
                                                             int64_t const current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue){
+    
+    std::cout<<i_query_queue.size()<<std::endl;
     while(!i_query_queue.empty()) {
-        uint batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
-
+        uint64_t batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
+/*
         if(i_query_queue.size() > batch_size_max) { //maybe unnecessary? If we always issue remaining?
             uint i = 0;
             std::vector<gua::node::Node*> temp_multi_query_vector;
@@ -1630,6 +1653,22 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
             }
             issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, temp_multi_query_vector);
         }
+*/
+
+            uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue.size() );
+            //uint i = 0;
+            std::vector<gua::node::Node*> temp_multi_query_vector;
+            
+            for(uint64_t i = 0; i < num_nodes_to_render; ++i) {
+            //while(i <= batch_size_max) {
+                auto node = i_query_queue.front();
+                temp_multi_query_vector.push_back(node);
+                i_query_queue.pop();
+                ++i;
+            //}
+            }
+            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, temp_multi_query_vector);
+
     }
 }
 

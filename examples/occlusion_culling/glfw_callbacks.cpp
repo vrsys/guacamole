@@ -13,6 +13,8 @@ extern int current_bb_level_to_visualize;
 
 extern bool print_scenegraph_once;
 
+extern bool update_camera;
+
 extern std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description;
 
 uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
@@ -349,7 +351,13 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
-
+        case 'x': {
+            //toggle print state on keypress
+            if(1 == action) {
+                update_camera = !update_camera;
+            }
+            break;
+        }
 
         case 'v': {
             //toggle print state on keypress
