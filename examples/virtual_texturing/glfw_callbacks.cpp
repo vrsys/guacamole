@@ -184,7 +184,7 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 std::cout << "'q': { //moves the camera upward" << std::endl;
                 std::cout << "'e': { //moves the camera downward" << std::endl;
                 std::cout << std::endl;
-                std::cout << "'i/j/k/l': { //pitch/yaw camera" << std::endl;
+                std::cout << "'k/l; i/j; u/o': { //yaw/pitch/roll camera" << std::endl;
                 std::cout << "up/down arrow keys: { increase/decrease camera translation speed" << std::endl;  
                 std::cout << std::endl;
                 std::cout << std::endl;
