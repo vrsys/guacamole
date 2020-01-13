@@ -105,9 +105,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'l': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_y_neg = true;
+                cam_navigation_state.yaw_neg = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_neg = false;            
+                cam_navigation_state.yaw_neg = false;            
             }
 
             break;
@@ -115,9 +115,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'j': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_y_pos = true;
+                cam_navigation_state.yaw_pos = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_pos = false;            
+                cam_navigation_state.yaw_pos = false;            
             }
 
             break;
@@ -125,9 +125,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'i': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_x_pos = true;
+                cam_navigation_state.pitch_pos = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_pos = false;            
+                cam_navigation_state.pitch_pos = false;            
             }
 
             break;
@@ -135,14 +135,34 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'k': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_x_neg = true;
+                cam_navigation_state.pitch_neg = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_neg = false;            
+                cam_navigation_state.pitch_neg = false;            
             }
 
             break;
         }
   
+        case 'u': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.roll_neg = true;
+            } else if(0 == action) {
+                cam_navigation_state.roll_neg = false;            
+            }
+
+            break;
+        }
+
+        case 'o': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.roll_pos = true;
+            } else if(0 == action) {
+                cam_navigation_state.roll_pos = false;            
+            }
+
+            break;
+        }
+
         case 't': { //toggle printing of frame times
             if(1 == action) {
                 print_frame_times = !print_frame_times;
