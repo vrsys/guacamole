@@ -953,7 +953,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         ++total_num_trimesh_nodes;
                     }
 
-                    //is it so easy? YES it is!
 
                     bool render_current_node = false;
 
@@ -1382,9 +1381,24 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
 
+                        uint threshold = 0;
+
                         //handle returned query(node and result)-->needs to be a function? 
-                        /**************include Threshhold and modes!!!*********************/
-                        if(query_result>0) {
+                        switch( desc.get_occlusion_query_type() ) {
+                            case OcclusionQueryType::Number_Of_Samples_Passed:
+                                threshold = desc.get_occlusion_culling_fragment_threshold();
+                            break;
+
+                            //conservative approach. If any passed we render
+                            case OcclusionQueryType::Any_Samples_Passed:
+                                threshold = 0;
+                            break;
+
+                            default: 
+                                Logger::LOG_WARNING << "OcclusionCullingTriMeshPass:: unknown occlusion query type encountered." << std::endl;
+                            break;
+                        }
+                        if(query_result>threshold) {
                             if(front_query_vector.size()>1) { //this means our multi query failed. 
                                 for (auto const& node : front_query_vector) {
                                     std::vector<gua::node::Node*> single_node_to_query;
@@ -1578,14 +1592,6 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     }
 
-    /** still to be implemented
-    if(occlusion_culling_geometry_vis) {
-        switch_state_for_depth_complexity_vis(ctx, current_shader); 
-    } else {
-
-        set_occlusion_query_states(ctx);                    
-    }
-    **/
 
     set_occlusion_query_states(ctx);
     ctx.render_context->begin_query(occlusion_query_iterator->second);
