@@ -98,10 +98,10 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         case 87: {
             if(action == 1) {
                 auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
-                bool was_enabled = oc_tri_mesh_pass->get_enable_coarse_depth_sorting();
+                bool was_enabled = oc_tri_mesh_pass->get_enable_depth_sorting();
 
                 bool will_be_enabled = !was_enabled;
-                oc_tri_mesh_pass->set_enable_coarse_depth_sorting(will_be_enabled);
+                oc_tri_mesh_pass->set_enable_depth_sorting(will_be_enabled);
 
                 std::cout << "Enable depth sorting: " << will_be_enabled << std::endl; 
 
