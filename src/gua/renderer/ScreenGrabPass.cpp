@@ -200,7 +200,7 @@ void ScreenGrabJPEGSaver::save_() {
         rgb_8_[offset + 2] = F2B(rgb_32f_[flipped_offset + 2]);
     }
 
-    std::size_ft millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    std::size_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     std::string timestamp{std::to_string(millis)};
 
     if(!write_JPEG_file((output_prefix_ + timestamp + ".jpg").c_str(), 100))
