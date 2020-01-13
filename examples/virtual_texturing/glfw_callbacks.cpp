@@ -49,7 +49,6 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             } else if(0 == action) {
                 cam_navigation_state.moving_forward  = false;               
             }
-            std::cout << "w" << std::endl;
             break;
         }
 
