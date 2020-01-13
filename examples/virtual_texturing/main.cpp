@@ -259,7 +259,11 @@ int main(int argc, char** argv)
     camera->config.set_enable_frustum_culling(true);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
+    auto trimesh_pass_description_ptr = std::make_shared<gua::TriMeshPassDescription>();
+    trimesh_pass_description_ptr->set_enable_depth_sorting(true);
+
+    pipe->add_pass(trimesh_pass_description_ptr);
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
@@ -271,6 +275,7 @@ int main(int argc, char** argv)
 
     // pipe->set_abuffer_size(1920);
     pipe->set_enable_abuffer(false);
+
 
     // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 

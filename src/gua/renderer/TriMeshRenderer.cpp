@@ -87,9 +87,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-#define USE_DISTANCE_SORTING
-#ifdef USE_DISTANCE_SORTING
 
+    if(desc.get_enable_depth_sorting()) {
         auto const& frustum = pipe.current_viewstate().frustum;
         scm::math::mat4d const view_matrix = frustum.get_view();
 
@@ -106,15 +105,18 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             auto const& current_bb = (*start_iterator)->get_bounding_box();
             node_distances[(*start_iterator)] = scm::math::length_sqr(world_space_cam_pos_euclidean - (current_bb.max + current_bb.min)/2.0f ) ;
         } 
-#endif
+
 
         std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [&](node::Node* a, node::Node* b) {
-#ifdef USE_DISTANCE_SORTING
+
             return node_distances[a] < node_distances[b];
-#else
-            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
-#endif
         });
+    } else {
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [&](node::Node* a, node::Node* b) {
+            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
+
+        });
+    }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
