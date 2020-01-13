@@ -1327,7 +1327,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
             while(!traversal_queue.empty()) {
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
-                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
+                set_visibility(current_node->get_path(), current_cam_node.uuid, false);
 
                 traversal_queue.pop();
 
@@ -1371,12 +1371,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() ) 
             {
-                //while query queue not empty
-                std::cout<<"query queue size " << query_queue.size()<<std::endl;
 
                 while(!query_queue.empty()) {
                     //if the first query is finished
-                    std::cout<<query_queue.front().occlusion_query_pointer<<std::endl;
                     if(ctx.render_context->query_result_available(query_queue.front().occlusion_query_pointer)) {
 
                         auto front_query_obj_queue = query_queue.front().occlusion_query_pointer;
@@ -1384,7 +1381,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         query_queue.pop();
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
-
 
                         //handle returned query(node and result)-->needs to be a function? 
                         /**************include Threshhold and modes!!!*********************/
@@ -1446,11 +1442,14 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                     } else {
                         //query next prev- visible node from v-queue
 
+                        if (v_query_queue.size()>0) {
+
                             auto current_vnode = v_query_queue.front();
                             v_query_queue.pop();
                             std::vector<gua::node::Node*> single_node_to_query;
                             single_node_to_query.push_back(current_vnode);
                             issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
+                        }
                     }
 
                 }
@@ -1480,33 +1479,16 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         }
 
                         if(!was_visible) {
-                            std::cout<<"WAS VISIBLE"<<std::endl;
+                            
                             //query previously invisible node n
                             i_query_queue.push(current_node);
 
                             /***************************placeholder number here! testing for better one***********************/
                             if(i_query_queue.size() >= 20) {
-                                //Issue Multi Wueries
-                                /**************** MAKE FUNCTION***************/
-                                while(!i_query_queue.empty()) {
-                                    uint batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
-
-                                    if(i_query_queue.size() > batch_size_max) { //maybe unnecessary? If we always issue remaining?
-                                        uint i = 0;
-                                        std::vector<gua::node::Node*> temp_multi_query_vector;
-                                        while(i <= batch_size_max) {
-                                            auto node = i_query_queue.front();
-                                            temp_multi_query_vector.push_back(node);
-                                            i_query_queue.pop(); 
-                                            ++i;
-                                        }
-                                        
-                                        issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, temp_multi_query_vector);
-                                    }
-                                    //maybe else here for smaller multi query?
-                                }
+                                issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid,i_query_queue);
                             }
                         } else {
+                            
 
                             //if n is a leaf and the query is reasonable (cost function)
                             /*******************************cost function here******************************************/
@@ -1542,24 +1524,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 }
             
                 if (traversal_priority_queue.empty()) {
-
-                    //Issue Multi Wueries
-                    /**************** MAKE FUNCTION***************/
-                    while(!i_query_queue.empty()) {
-                        uint batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
-
-                        if(i_query_queue.size() > batch_size_max) { //maybe unnecessary? If we always issue remaining?
-                            uint i = 0;
-                            std::vector<gua::node::Node*> temp_multi_query_vector;
-                            while(i <= batch_size_max) {
-                                auto node = i_query_queue.front();
-                                temp_multi_query_vector.push_back(node);
-                                i_query_queue.pop();
-                                ++i;
-                            }
-                            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, temp_multi_query_vector);
-                        }
-                    }
+                    issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid,i_query_queue);
                 }
             }
 
@@ -1570,11 +1535,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 std::vector<gua::node::Node*> single_node_to_query;
                 single_node_to_query.push_back(current_node);
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
-                std::cout<<"QUERY QUEUE SIZE "<<query_queue.size()<< std::endl;
-                std::cout<<"V QUEUE SIZE "<<v_query_queue.size()<< std::endl;
 
             }
-
 
         }
 
@@ -1589,7 +1551,6 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
                                                             int64_t const current_frame_id, std::size_t in_camera_uuid,
                                                             std::vector<gua::node::Node*> current_nodes){
     
-
     auto current_node_path = current_nodes.front()->get_path();
     auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
 
@@ -1634,9 +1595,36 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     MultiQuery temp_multi_query = MultiQuery{occlusion_query_iterator->second, current_nodes};
     
-    std::cout<<"pushing to queue"<<std::endl;
     query_queue.push(temp_multi_query);
 
+}
+
+void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
+                                                            scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                                                            int64_t const current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue){
+    while(!i_query_queue.empty()) {
+        uint batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
+
+        if(i_query_queue.size() > batch_size_max) { //maybe unnecessary? If we always issue remaining?
+            uint i = 0;
+            std::vector<gua::node::Node*> temp_multi_query_vector;
+            while(i <= batch_size_max) {
+                auto node = i_query_queue.front();
+                temp_multi_query_vector.push_back(node);
+                i_query_queue.pop();
+                ++i;
+            }
+            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, temp_multi_query_vector);
+        } else {
+            std::vector<gua::node::Node*> temp_multi_query_vector;
+            while (!i_query_queue.empty()){
+                auto node = i_query_queue.front();
+                temp_multi_query_vector.push_back(node);
+                i_query_queue.pop();
+            }
+            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, temp_multi_query_vector);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
