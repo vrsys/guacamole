@@ -1355,7 +1355,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
 
         // ACTUAL CHC++ IMPLEMENTATION (w/o/ initializaton)********************************************************************************************************************************************************
-
+#ifdef CHC_pp
+        std::cout<<"Using Plusplus"<<std::endl;
+#endif
 
         #ifdef USE_PRIORITY_QUEUE
         std::priority_queue<std::pair<gua::node::Node*, double>, 
@@ -1380,6 +1382,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() ) 
             {
+                std::cout<<"frame "<< current_frame_id<< ",Traversal Queue size"  << traversal_priority_queue.size() << ", Query Queue Size " << query_queue.size()<<std::endl;
 
                 while(!query_queue.empty()) {
                     //if the first query is finished
@@ -1391,7 +1394,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
 
-                        //handle returned query(node and result)-->needs to be a function? 
                         handle_returned_query(
                                         ctx, pipe, desc,
                                         render_target,  
@@ -1546,15 +1548,15 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
             Logger::LOG_WARNING << "OcclusionCullingTriMeshPass:: unknown occlusion query type encountered." << std::endl;
         break;
     }
-    std::cout<<"query result is "<<query_result<<std::endl;
-    std::cout<<"threshold is "<<threshold<<std::endl;
+
     if(query_result>threshold) {
 #ifdef CHC_pp
-        if(front_query_vector.size()>1) { //this means our multi query failed. 
+        if(front_query_vector.size()>1) { //this means our multi query failed. NEVER ENTERS
             for (auto const& node : front_query_vector) {
                 std::vector<gua::node::Node*> single_node_to_query;
                 single_node_to_query.push_back(node);
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, single_node_to_query);
+                
             }
         } else {
 #endif
