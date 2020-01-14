@@ -59,7 +59,7 @@ void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action,
 void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods)
 {
 
-    std::cout << "scancode: " << scancode << std::endl;
+    //std::cout << "scancode: " << scancode << std::endl;
     switch(scancode) {
         
         // NUMPAD 8

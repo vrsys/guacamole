@@ -106,7 +106,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                                int64_t const current_frame_id, std::size_t in_camera_uuid, std::vector<gua::node::Node*>const& current_nodes);
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
-                                                            int64_t const current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
+                                                            int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
     void traverse_node(gua::node::Node* current_node, 
                         RenderContext const& ctx, 
                         Pipeline& pipe, 
@@ -134,7 +134,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                     uint64_t query_result,
                     std::vector<gua::node::Node*> front_query_vector,
                     std::queue<MultiQuery>& query_queue,
-                    int64_t const current_frame_id);
+                    int64_t current_frame_id);
 
 
     // helper functions to manage visibility of nodes
