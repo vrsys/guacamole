@@ -19,6 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+#include "glfw_callbacks.hpp"
+#include "navigation.hpp"
+
 #include <algorithm>
 #include <fstream>
 #include <functional>
@@ -95,6 +98,10 @@ std::string parse_model_from_cmd_line(int argc, char** argv)
 
     return model_path;
 }
+
+extern WASD_state cam_navigation_state;
+
+bool print_frame_times = true;
 
 
 int main(int argc, char** argv)
@@ -198,7 +205,9 @@ int main(int argc, char** argv)
     light_transform->rotate(-90, 1.0, 0.0, 0.0);
     light_transform->translate(0.f, 3.f, 1.0f);
 
-    auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
+
+    auto nav = graph.add_node<gua::node::TransformNode>("/", "navigation");
+    auto screen = graph.add_node<gua::node::ScreenNode>("/navigation", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
 
@@ -215,14 +224,14 @@ int main(int argc, char** argv)
      auto resolution = gua::math::vec2ui(3840, 2160);
     //auto resolution = gua::math::vec2ui(1920, 1080);
 
-    auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
+    auto camera = graph.add_node<gua::node::CameraNode>("/navigation/screen", "cam");
     camera->translate(0.0f, 0, 2.5f);
     camera->config.set_resolution(resolution);
 
     // use close near plane to allow inspection of details
     camera->config.set_near_clip(0.01f);
     camera->config.set_far_clip(20.0f);
-    camera->config.set_screen_path("/screen");
+    camera->config.set_screen_path("/navigation/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     // camera->config.set_enable_stereo(true);
@@ -544,6 +553,16 @@ int main(int argc, char** argv)
         elapsed_frame_time = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
         start = std::chrono::system_clock::now();
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
+
+
+        float application_fps = renderer.get_application_fps();
+        float elapsed_application_time_milliseconds = 0.0;
+
+        if(application_fps > 0.0f) {
+            elapsed_application_time_milliseconds = 1.0 / application_fps;
+        }
+
+        update_cam_matrix(camera, nav, elapsed_application_time_milliseconds);
 
         //light_transform->rotate(0.1, 0.f, 1.f, 0.f);
         window->process_events();
