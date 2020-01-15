@@ -59,6 +59,12 @@ struct MultiQuery{
     std::vector<gua::node::Node*> nodes_to_query;
 };
 
+struct LastVisibility{
+    std::size_t camera_uuid; //setter and getter need to be updated for multiple cameras
+    int32_t frame_id;
+    bool result;
+};
+
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
@@ -146,8 +152,16 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     void set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id);
 
+    LastVisibility get_last_visibility_checked_result(std::string const& node_path) const;
+
+    void set_last_visibility_checked_result(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result);
+
     // helper functions for CHC
     void pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid);
+
+    void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid);
+   
+
     private:
 
     // different rasterizer states for different render modes
@@ -198,6 +212,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> >is_visible_for_camera_;
     mutable std::unordered_map<std::string, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
+    mutable std::unordered_map<std::string, LastVisibility > last_visibility_checked_result_;
 
 };
 
