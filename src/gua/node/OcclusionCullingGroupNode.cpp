@@ -306,7 +306,7 @@ double OcclusionCullingGroupNode::calculate_median_cost(gua::node::Node* node){
 #endif //MAKE_OCCLUSION_CULLING_APP_VERBOSE
 
     auto children = node->get_children();
-
+    
     float summed_weighted_surface_area = 0.0f;
 
     for(auto& child : children) {
@@ -317,5 +317,8 @@ double OcclusionCullingGroupNode::calculate_median_cost(gua::node::Node* node){
     return (summed_weighted_surface_area) / parent_surface_area;
 
 }
+
+
+
 } // namespace node
 } // namespace gua

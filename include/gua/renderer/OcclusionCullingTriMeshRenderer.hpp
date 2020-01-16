@@ -142,7 +142,10 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                     std::queue<MultiQuery>& query_queue,
                     int64_t current_frame_id);
 
-
+    // children bb volume
+    // bool children_is_tigher(gua::node::Node* grp_node) const;
+    bool check_children_surface_area(gua::node::Node* grp_node, gua::node::Node* child_node) const;
+    
     // helper functions to manage visibility of nodes
     bool get_visibility(std::size_t node_path, std::size_t in_camera_uuid) const;
 

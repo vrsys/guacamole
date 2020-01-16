@@ -1116,6 +1116,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                             }
 
 
+
                             auto current_occlusion_query_object = occlusion_query_iterator->second;
                             // begin query?
                             ctx.render_context->begin_query(current_occlusion_query_object); //second is the query object from the map
@@ -2010,6 +2011,61 @@ void OcclusionCullingTriMeshRenderer::unbind_and_reset(RenderContext const& ctx,
 
     ctx.render_context->reset_state_objects();
     ctx.render_context->sync();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+bool OcclusionCullingTriMeshRenderer::check_children_is_tigher(gua::node::Node* grp_node) const{
+    grp_node->update_cache();
+
+    auto children = child_node->get_children();
+
+    unsigned int depth_diff = 0;
+    bool repeat = true;
+    while (repeat)
+    {
+        auto children_L = children->get_children()[0];
+        auto children_R = children->get_children()[1];
+
+        calc_surface_ratio(grp_node, children_L);
+        calc_surface_ratio(grp_node, children_R);
+    }
+
+
+}
+*/
+
+bool OcclusionCullingTriMeshRenderer::check_children_surface_area(gua::node::Node* grp_node, gua::node::Node* child_node) const{
+
+    grp_node->update_cache();
+
+    float parent_surface_area = child_node->get_bounding_box().surface_area();
+    
+    auto children = child_node->get_children();
+    
+    float smax = 1.4f;
+    bool is_tighter = true;
+
+    unsigned int depth_diff = child_node->get_depth() - grp_node->get_depth();
+
+    
+    if (!children.empty())
+    {
+        float summed_surface_area = 0.0f;
+
+        for(auto& child : children) {
+            child->update_cache();
+            summed_surface_area += child->get_bounding_box().surface_area();
+        }
+
+        is_tighter = summed_surface_area * smax < parent_surface_area ;
+
+        return is_tighter;
+    } 
+
+    return false;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
