@@ -97,7 +97,10 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target);
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* current_node);
 
-
+    // children bb volume
+    // bool children_is_tigher(gua::node::Node* grp_node) const;
+    bool check_children_surface_area(gua::node::Node* grp_node, gua::node::Node* child_node) const;
+    
     // helper functions to manage visibility of nodes
     bool get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const;
 

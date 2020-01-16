@@ -92,6 +92,7 @@ class GUA_DLL OcclusionCullingGroupNode : public GeometryNode
     void determine_best_split(std::queue<gua::node::Node*> splitting_queue);
 
     double calculate_median_cost(gua::node::Node* node);
+
 };
 
 

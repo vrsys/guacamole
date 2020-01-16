@@ -195,7 +195,7 @@ int main(int argc, char** argv)
     //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
-    //create_simple_debug_scene(occlusion_group_node);
+    // create_simple_debug_scene(occlusion_group_node);
     // create_city_scene(occlusion_group_node);
     create_simple_demo_scene(occlusion_group_node);
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_group_node);

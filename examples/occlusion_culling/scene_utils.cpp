@@ -221,44 +221,6 @@ void create_street_cars(std::shared_ptr<gua::node::Node> scene_root_node,
 }
 
 
-void create_street_trees(std::shared_ptr<gua::node::Node> scene_root_node, 
-                         int const start_position_z,
-                         int const end_position_z){
-
-    gua::TriMeshLoader loader;
-
-    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    material->set_show_back_faces(false);
-    material->set_render_wireframe(false);
-
-    std::srand(std::time(NULL));
-
-
-
-    for(int grid_position_z = start_position_z; grid_position_z < end_position_z; ++grid_position_z) {
-            //int car_type = std::floor((std::rand() / (float)RAND_MAX) * 4)+ 1;
-            std::string tree_path = "/opt/3d_models/trees/lindenTree/lindenTree.obj";
-
-            auto trimesh_model(
-                loader.create_geometry_from_file(std::string("trees")+ std::to_string(grid_position_z), 
-                                                tree_path, 
-                                                //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
-                                                material, 
-                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
-            auto trimesh_model_matrix = trimesh_model->get_transform();
-
-
-            scene_root_node->add_child(trimesh_model);
-
-            //float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
-            trimesh_model->rotate(-90, 1.0f, 0.0f, 0);
-            trimesh_model->scale(0.4f, 0.4f, 0.4f);
-            trimesh_model->translate(-10.0f, 0.0, 40.0f*grid_position_z);
-            trimesh_model->translate(0.0, -5.0, -100.0f);
-        
-    }
-
-}
 
 void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
@@ -276,7 +238,6 @@ void create_simple_demo_scene(std::shared_ptr<gua::node::Node> scene_root_node) 
 
     create_street_cars(scene_root_node, -1, 1, -30, -10);
 }
-
 
 
 
@@ -374,4 +335,9 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
         print_graph(child, depth+1);
     }
 
+}
+
+void create_demo_kbb(std::shared_ptr<gua::node::Node> scene_root_node){
+
+    
 }
