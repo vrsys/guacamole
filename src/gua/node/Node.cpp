@@ -35,11 +35,13 @@ namespace gua
 {
 namespace node
 {
+
+size_t Node::unique_node_counter_ = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Node::Node(std::string const& name, math::mat4 const& transform) : children_(), name_(name), transform_(transform), bounding_box_(), user_data_() {
-
-    //std::cout << "Recreated node: " << name_ << std::endl;
+    unique_node_id_ = unique_node_counter_++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -384,7 +386,7 @@ void Node::ray_test_impl(Ray const& ray, int options, Mask const& mask, std::set
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<Node> Node::deep_copy() const
+std::shared_ptr<Node> Node::deep_copy(bool copy_unique_node_ids) const
 {
     std::shared_ptr<Node> copied_node = copy();
     copied_node->tags_ = tags_;
@@ -398,11 +400,18 @@ std::shared_ptr<Node> Node::deep_copy() const
     //copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
     //copying of uuid -> will not be unique anymore
-    copied_node->uuid_=uuid_;
 
-    for(int i(0); i < children_.size(); ++i)
+    if(copy_unique_node_ids) {
+        copied_node->uuid_ = uuid_;
+        copied_node->unique_node_id_ = unique_node_id_;
+    } else {
+        copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
+        copied_node->unique_node_id_ = unique_node_counter_++;
+    }
+
+    for(uint32_t i = 0; i < children_.size(); ++i)
     {
-        copied_node->children_[i] = children_[i]->deep_copy();
+        copied_node->children_[i] = children_[i]->deep_copy(copy_unique_node_ids);
         copied_node->children_[i]->parent_ = copied_node.get();
     }
 

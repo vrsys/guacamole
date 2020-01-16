@@ -401,15 +401,15 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
 
             gua::node::TriMeshNode* current_node = reinterpret_cast<node::TriMeshNode*>(current_node_distance_pair.first);
 
-            auto current_node_path = current_node->get_path();
+            auto current_node_id = current_node->unique_node_id();
 
-            auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+            auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
 
             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
 
             // get occlusion query mode
 #ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-                std::cout << "Creating occlusion query for node with path: " << current_node_path << std::endl;
+                std::cout << "Creating occlusion query for node with unique_node_id: " << current_node_id << std::endl;
 #endif
                 //default: Number of Sampled Passed -> if 0 it is invisible?
                 auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
@@ -421,9 +421,9 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(Pipeline& pi
                 }
 
                 //Fuegen neues object (path, query object) zur map im ctx hinzu    //Damit wir Iterator an der Hand haben
-                ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
+                ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
             
-                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
             } 
 
 
@@ -593,7 +593,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
             std::cout << "Camera UUID: " << current_cam_node.uuid << std::endl;
 #endif
             // last checked frame id 
-            int32_t frame_id = get_last_visibility_check_frame_id(occlusion_group_node->get_path(), current_cam_node.uuid);
+            int32_t frame_id = get_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid);
 
 #ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
             std::cout << "FRAME ID: " << frame_id << std::endl;
@@ -619,7 +619,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
                 // work on it (CHC-Style)
-                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
+                set_visibility(current_node->unique_node_id(), current_cam_node.uuid, true);
 
                 //remove this node from the queue
                 traversal_queue.pop();
@@ -686,10 +686,10 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                 if (is_in_frustum) {
 
 
-                    auto current_node_path = current_node_dist_pair.first->get_path();
+                    auto current_node_id = current_node_dist_pair.first->unique_node_id();
 
                     // get iterator to occlusion query associated with node (currently by path)
-                    auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+                    auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
 
                     // if we didn't create an occlusion query for this node (based on path) for this context
                     // should only happen if a node has not been in frustum, because in map there is no oc-query object yet 
@@ -707,9 +707,9 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                         }
 
                         //Fuegen neues object (path, query object) zur map im ctx hinzu    //Damit wir Iterator an der Hand haben
-                        ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
+                        ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
                     
-                        occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+                        occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
                     } 
 
 
@@ -849,7 +849,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second ) 
         {
 
-            int32_t last_visibility_check_frame_id = get_last_visibility_check_frame_id(occlusion_group_node->get_path(), current_cam_node.uuid);
+            int32_t last_visibility_check_frame_id = get_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid);
             // if we never checked set the visibility status for this node, it will be 0.
             // in this case, we recursively set the entire hierarchy to visible
 
@@ -869,7 +869,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
             while(!traversal_queue.empty()) {
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
-                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
+                set_visibility(current_node->unique_node_id(), current_cam_node.uuid, true);
 
                 traversal_queue.pop();
 
@@ -937,7 +937,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
                     /*
                     std::cout<<"beginning query queue :"<< " current node name " << current_query_node->get_name() <<
-                    " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    " is visible? " << get_visibility(current_query_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     */
 
                     // waiting for the result of the previously invisible node
@@ -948,12 +948,12 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     
                     /*
                     std::cout<<"after waiting :"<< " current node name " << current_query_node->get_name() <<
-                    " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    " is visible? " << get_visibility(current_query_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     */
 
                     ctx.render_context->collect_query_results(front_query_obj_queue);
 
-                    //int64_t last_checked_frame_id_for_node = get_last_visibility_check_frame_id(current_query_node->get_path(), current_cam_node.uuid);
+                    //int64_t last_checked_frame_id_for_node = get_last_visibility_check_frame_id(current_query_node->unique_node_id(), current_cam_node.uuid);
 
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = front_query_obj_queue->result();
@@ -1022,7 +1022,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     }
                     /*
                     std::cout<<"end query_queue :"<< " current node name " << current_query_node->get_name() <<
-                    " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    " is visible? " << get_visibility(current_query_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     */
                 }
 
@@ -1038,7 +1038,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     traversal_priority_queue.pop();
 
                     //std::cout<<"begin tq: "<< ctx.framecount <<" current node " << current_node->get_name() <<
-                    //" is  " << get_visibility(current_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    //" is  " << get_visibility(current_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     
 
                     auto distance_cam_to_node = scm::math::length_sqr(world_space_cam_pos - (current_node->get_bounding_box().max 
@@ -1052,9 +1052,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     if (is_in_frustum)
                     {
 
-                        bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
+                        bool visibility_current_node = get_visibility(current_node->unique_node_id(), current_cam_node.uuid);
 
-                        int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
+                        int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->unique_node_id(), current_cam_node.uuid);
 
                         bool was_visible = false;
                         if (visibility_current_node && (node_last_checked_frame_id == 0
@@ -1068,17 +1068,17 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                             is_opened = true;
                         }
 
-                        set_visibility(current_node->get_path(), current_cam_node.uuid, false); 
-                        set_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid, current_frame_id);
+                        set_visibility(current_node->unique_node_id(), current_cam_node.uuid, false); 
+                        set_last_visibility_check_frame_id(current_node->unique_node_id(), current_cam_node.uuid, current_frame_id);
                                     
                         if (!is_opened)
                         {   
 
-                            auto current_node_path = current_node->get_path();
+                            auto current_node_id = current_node->unique_node_id();
 
 
                             /////// Check whether occlusion query objects for this node were already created 
-                            auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+                            auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
 
                             if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
                                 // get occlusion query mode
@@ -1092,9 +1092,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                                 }
 
                                 //Fuegen neues object (path, query object) zur map im ctx hinzu    //Damit wir Iterator an der Hand haben
-                                ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
+                                ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
                             
-                                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+                                occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
                             } 
 
                             current_shader = occlusion_query_box_program_; //define a new shader of type occlusion query box program
@@ -1160,7 +1160,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                         }
                         /*
                         std::cout<<"end of priority queue: "<< ctx.framecount <<" current node name " << current_node->get_name() <<
-                        " is visible? " << get_visibility(current_node->get_path(), current_cam_node.uuid)<<std::endl;
+                        " is visible? " << get_visibility(current_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                         */
                     }
                 }
@@ -1184,7 +1184,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
                     /*
                     std::cout<<"beginning query queue :"<< " current node name " << current_query_node->get_name() <<
-                    " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    " is visible? " << get_visibility(current_query_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     */
                     // busy waiting - instead of doing something meaningful, we stall the CPU and therefore starve the GPU
 
@@ -1196,12 +1196,12 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
                     /*
                     std::cout<<"after waiting :"<< " current node name " << current_query_node->get_name() <<
-                    " is visible? " << get_visibility(current_query_node->get_path(), current_cam_node.uuid)<<std::endl;
+                    " is visible? " << get_visibility(current_query_node->unique_node_id(), current_cam_node.uuid)<<std::endl;
                     */
 
                     ctx.render_context->collect_query_results(front_query_obj_queue);
 
-                    //int64_t last_checked_frame_id_for_node = get_last_visibility_check_frame_id(current_query_node->get_path(), current_cam_node.uuid);
+                    //int64_t last_checked_frame_id_for_node = get_last_visibility_check_frame_id(current_query_node->unique_node_id(), current_cam_node.uuid);
 
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = front_query_obj_queue->result();
@@ -1241,7 +1241,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                     if (render_current_node) //query_result > 0 /*desc.get_occlusion_culling_fragment_threshold()*/ )
                     {
 
-                        set_visibility(current_query_node->get_path(), current_cam_node.uuid, true); 
+                        set_visibility(current_query_node->unique_node_id(), current_cam_node.uuid, true); 
 
 
                     }
@@ -1316,7 +1316,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second ) 
         {
 
-            int32_t last_visibility_check_frame_id = get_last_visibility_check_frame_id(occlusion_group_node->get_path(), current_cam_node.uuid);
+            int32_t last_visibility_check_frame_id = get_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid);
             // if we never checked set the visibility status for this node, it will be 0.
             // in this case, we recursively set the entire hierarchy to visible
 
@@ -1337,7 +1337,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
             while(!traversal_queue.empty()) {
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
-                set_visibility(current_node->get_path(), current_cam_node.uuid, true);
+                set_visibility(current_node->unique_node_id(), current_cam_node.uuid, true);
 
                 traversal_queue.pop();
 
@@ -1380,7 +1380,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
  
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
-            set_last_visibility_check_frame_id(occlusion_group_node->get_path(), current_cam_node.uuid, current_frame_id); 
+            set_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid, current_frame_id); 
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() ) 
             {
@@ -1442,9 +1442,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                     if(culling_frustum.intersects(current_node->get_bounding_box())) {
 
-                        bool visibility_current_node = get_visibility(current_node->get_path(), current_cam_node.uuid);
+                        bool visibility_current_node = get_visibility(current_node->unique_node_id(), current_cam_node.uuid);
 
-                        int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), current_cam_node.uuid);
+                        int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->unique_node_id(), current_cam_node.uuid);
 
                         bool was_visible = false;
                         if (visibility_current_node && (node_last_checked_frame_id == 0
@@ -1456,7 +1456,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                         bool was_visible2 = false;
 
-                        LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->get_path());
+                        LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                         if (temp_last_visibility.frame_id == current_frame_id-1) {
                             was_visible = temp_last_visibility.result;
                         }
@@ -1475,7 +1475,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             //if n is a leaf and the query is reasonable (find out what is reasonable)
 
                             if(current_node->get_children().size() == 0 && 1==1) {
-                                //push N to v-queue
+                                //push N to v-queue^s
+
 #ifdef CHC_pp
                                 v_query_queue.push(current_node); 
 #endif
@@ -1561,7 +1562,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
 #ifdef CHC_pp
         if(front_query_vector.size()>1) { //this means our multi query failed. 
             for (auto const& node : front_query_vector) {
-                set_last_visibility_checked_result(node->get_path(), in_camera_uuid, current_frame_id, true);
+                set_last_visibility_checked_result(node->unique_node_id(), in_camera_uuid, current_frame_id, true);
                 std::vector<gua::node::Node*> single_node_to_query;
                 single_node_to_query.push_back(node);
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, single_node_to_query);
@@ -1571,11 +1572,11 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
 #endif      
             for (auto const& current_node : front_query_vector) {
                 //if node was not visible in last frame
-                set_last_visibility_checked_result(current_node->get_path(), in_camera_uuid, current_frame_id, true);
+                set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
 
-                bool visibility_current_node = get_visibility(current_node->get_path(), in_camera_uuid);
+                bool visibility_current_node = get_visibility(current_node->unique_node_id(), in_camera_uuid);
 
-                int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->get_path(), in_camera_uuid);
+                int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->unique_node_id(), in_camera_uuid);
 
                 bool was_visible = false;
                 if (visibility_current_node && (node_last_checked_frame_id == 0
@@ -1586,7 +1587,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
 
                 bool was_visible2 = false;
 
-                LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->get_path());
+                LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                 if (temp_last_visibility.frame_id == current_frame_id-1) {
                     was_visible = temp_last_visibility.result;
                 }
@@ -1612,8 +1613,8 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
     } else {
 #endif
         for (auto const& current_node : front_query_vector) {
-            set_last_visibility_checked_result(current_node->get_path(), in_camera_uuid, current_frame_id, false);
-            set_visibility(current_node->get_path(), in_camera_uuid, false);
+            set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
+            set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
         }
     }
 }
@@ -1645,7 +1646,7 @@ void OcclusionCullingTriMeshRenderer::traverse_node(gua::node::Node* current_nod
                 auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
                 traversal_priority_queue.push(child_node_distance_pair_to_insert);
             }
-        set_visibility(current_node->get_path(), in_camera_uuid, false);
+        set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
     }
 }
 
@@ -1654,17 +1655,17 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
                                                             int64_t current_frame_id, std::size_t in_camera_uuid,
                                                             std::vector<gua::node::Node*> const& current_nodes){
     
-    auto current_node_path = current_nodes.front()->get_path();
-    auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+    auto current_node_id = current_nodes.front()->unique_node_id();
+    auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
 
     if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
         auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
         if( OcclusionQueryType::Any_Samples_Passed == desc.get_occlusion_query_type() ) {
             occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
         }
-        ctx.occlusion_query_objects.insert(std::make_pair(current_node_path, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
+        ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
     
-        occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_path);
+        occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     } 
 
     auto current_shader = occlusion_query_box_program_; 
@@ -1683,7 +1684,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
         current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
         current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
     
-        set_last_visibility_check_frame_id(node->get_path(), in_camera_uuid, current_frame_id); 
+        set_last_visibility_check_frame_id(node->unique_node_id(), in_camera_uuid, current_frame_id); 
         pipe.draw_box();  
 
     }
@@ -1875,37 +1876,37 @@ void OcclusionCullingTriMeshRenderer::switch_state_for_depth_complexity_vis(Rend
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool OcclusionCullingTriMeshRenderer::get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const {
-    return is_visible_for_camera_[node_path][in_camera_uuid];
+bool OcclusionCullingTriMeshRenderer::get_visibility(std::size_t in_unique_node_id, std::size_t in_camera_uuid) const {
+    return is_visible_for_camera_[in_unique_node_id][in_camera_uuid];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OcclusionCullingTriMeshRenderer::set_visibility(std::string const& node_path, std::size_t in_camera_uuid, bool is_visible) {
-    is_visible_for_camera_[node_path][in_camera_uuid] = is_visible;
+void OcclusionCullingTriMeshRenderer::set_visibility(std::size_t in_unique_node_id, std::size_t in_camera_uuid, bool is_visible) {
+    is_visible_for_camera_[in_unique_node_id][in_camera_uuid] = is_visible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int32_t OcclusionCullingTriMeshRenderer::get_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid) const {
-    return last_visibility_check_frame_id_[node_path][in_camera_uuid];
+int32_t OcclusionCullingTriMeshRenderer::get_last_visibility_check_frame_id(std::size_t in_unique_node_id, std::size_t in_camera_uuid) const {
+    return last_visibility_check_frame_id_[in_unique_node_id][in_camera_uuid];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void OcclusionCullingTriMeshRenderer::set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id) {
-    last_visibility_check_frame_id_[node_path][in_camera_uuid] = current_frame_id;
+void OcclusionCullingTriMeshRenderer::set_last_visibility_check_frame_id(std::size_t in_unique_node_id, std::size_t in_camera_uuid, int32_t current_frame_id) {
+    last_visibility_check_frame_id_[in_unique_node_id][in_camera_uuid] = current_frame_id;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-LastVisibility OcclusionCullingTriMeshRenderer::get_last_visibility_checked_result(std::string const& node_path) const{
-    return last_visibility_checked_result_[node_path];
+LastVisibility OcclusionCullingTriMeshRenderer::get_last_visibility_checked_result(std::size_t in_unique_node_id) const{
+    return last_visibility_checked_result_[in_unique_node_id];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void OcclusionCullingTriMeshRenderer::set_last_visibility_checked_result(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result){
+void OcclusionCullingTriMeshRenderer::set_last_visibility_checked_result(std::size_t in_unique_node_id, std::size_t in_camera_uuid, int32_t current_frame_id, bool result){
     LastVisibility temp_last_visibility = LastVisibility{in_camera_uuid, current_frame_id, result};
-    last_visibility_checked_result_[node_path] = temp_last_visibility;
+    last_visibility_checked_result_[in_unique_node_id] = temp_last_visibility;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1916,10 +1917,10 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(gua::node::Node* curren
     auto temp_node = current_node;
     //std::cout<< "current node name " << temp_node->get_name()<<std::endl;
     // pull up algorithm as stated by CHC paper
-    while(!get_visibility(temp_node->get_path(), in_camera_uuid)){
+    while(!get_visibility(temp_node->unique_node_id(), in_camera_uuid)){
 
 
-        set_visibility(temp_node->get_path(), in_camera_uuid, true);
+        set_visibility(temp_node->unique_node_id(), in_camera_uuid, true);
 
         if (temp_node->get_parent() != nullptr)
         {
@@ -1938,11 +1939,11 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(gua::node::Node* curren
     auto temp_node = current_node;
     //std::cout<< "current node name " << temp_node->get_name()<<std::endl;
     // pull up algorithm as stated by CHC paper
-    while(!get_visibility(temp_node->get_path(), in_camera_uuid)){
+    while(!get_visibility(temp_node->unique_node_id(), in_camera_uuid)){
 
 
-        set_visibility(temp_node->get_path(), in_camera_uuid, true);
-        set_last_visibility_checked_result(temp_node->get_path(), in_camera_uuid, current_frame_id, true);
+        set_visibility(temp_node->unique_node_id(), in_camera_uuid, true);
+        set_last_visibility_checked_result(temp_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
 
         if (temp_node->get_parent() != nullptr)
         {

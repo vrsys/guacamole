@@ -144,17 +144,17 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
 
     // helper functions to manage visibility of nodes
-    bool get_visibility(std::string const& node_path, std::size_t in_camera_uuid) const;
+    bool get_visibility(std::size_t node_path, std::size_t in_camera_uuid) const;
 
-    void set_visibility(std::string const& node_path, std::size_t in_camera_uuid, bool is_visible);
+    void set_visibility(std::size_t node_path, std::size_t in_camera_uuid, bool is_visible);
 
-    int32_t get_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid) const;
+    int32_t get_last_visibility_check_frame_id(std::size_t node_path, std::size_t in_camera_uuid) const;
 
-    void set_last_visibility_check_frame_id(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id);
+    void set_last_visibility_check_frame_id(std::size_t node_path, std::size_t in_camera_uuid, int32_t current_frame_id);
 
-    LastVisibility get_last_visibility_checked_result(std::string const& node_path) const;
+    LastVisibility get_last_visibility_checked_result(std::size_t node_path) const;
 
-    void set_last_visibility_checked_result(std::string const& node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result);
+    void set_last_visibility_checked_result(std::size_t node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result);
 
     // helper functions for CHC
     void pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid);
@@ -209,10 +209,10 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
 
     SubstitutionMap global_substitution_map_;
 
-    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
-    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, bool> >is_visible_for_camera_;
-    mutable std::unordered_map<std::string, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
-    mutable std::unordered_map<std::string, LastVisibility > last_visibility_checked_result_;
+    mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
+    mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > is_visible_for_camera_;
+    mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
+    mutable std::unordered_map<std::size_t, LastVisibility > last_visibility_checked_result_;
 
 };
 

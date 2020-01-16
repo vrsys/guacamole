@@ -202,7 +202,7 @@ int main(int argc, char** argv)
     create_simple_demo_scene(occlusion_group_node);
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_grou"/opt/3d_models/trees/lindenTree/lindenTree.obj"p_node);
     
-    //occlusion_group_node->regroup_children();
+    occlusion_group_node->regroup_children();
 
     //occlusion_group_node->scale(0.2, 0.2, 0.2);
     //occlusion_group_node->translate(0.0, 0.0, -400);

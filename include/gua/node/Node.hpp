@@ -476,6 +476,11 @@ class GUA_DLL Node
      */
     inline std::size_t const uuid() const { return uuid_; }
 
+    /**
+     * \return size_t unique address of node between all nodes (except for copied ones). Use for occlusion culling
+     */
+    inline std::size_t const unique_node_id() const { return unique_node_id_; }
+
     friend class ::gua::SceneGraph;
     friend class ::gua::Serializer;
     friend class ::gua::DotGenerator;
@@ -496,7 +501,7 @@ class GUA_DLL Node
      *
      * \return node     A pointer of the recently generated Node.
      */
-    virtual std::shared_ptr<Node> deep_copy() const;
+    virtual std::shared_ptr<Node> deep_copy(bool copy_unique_node_ids) const;
 
     SceneGraph* get_scenegraph() const { return scenegraph_; }
 
@@ -552,6 +557,12 @@ class GUA_DLL Node
 
     SceneGraph* scenegraph_ = nullptr;
     std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
+
+    //unique id for newly created nodes
+    size_t unique_node_id_ = 0;
+
+    private:
+        static size_t unique_node_counter_;
 };
 
 } // namespace node

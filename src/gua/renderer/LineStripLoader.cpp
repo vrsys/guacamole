@@ -113,7 +113,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::stri
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         apply_fallback_material(copy, fallback_material, flags & NO_SHARED_MATERIALS);
 
@@ -132,7 +132,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_geometry_from_file(std::stri
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
         apply_fallback_material(copy, shader->make_new_material(), flags & NO_SHARED_MATERIALS);
@@ -152,7 +152,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string c
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         apply_fallback_material(copy, fallback_material, flags & NO_SHARED_MATERIALS);
 
@@ -171,7 +171,7 @@ std::shared_ptr<node::Node> LineStripLoader::create_empty_geometry(std::string c
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
         apply_fallback_material(copy, shader->make_new_material(), flags & NO_SHARED_MATERIALS);

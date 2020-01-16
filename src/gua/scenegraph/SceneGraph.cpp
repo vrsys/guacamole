@@ -43,7 +43,7 @@ SceneGraph::SceneGraph(std::string const& name) : root_(new node::TransformNode(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SceneGraph::SceneGraph(SceneGraph const& graph) : root_(graph.root_ ? graph.root_->deep_copy() : nullptr), name_(graph.name_) { root_->set_scenegraph(this); }
+SceneGraph::SceneGraph(SceneGraph const& graph) : root_(graph.root_ ? graph.root_->deep_copy(true) : nullptr), name_(graph.name_) { root_->set_scenegraph(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +98,7 @@ std::shared_ptr<node::Node> SceneGraph::operator[](std::string const& path_to_no
 
 SceneGraph const& SceneGraph::operator=(SceneGraph const& rhs)
 {
-    root_ = rhs.root_ ? rhs.root_->deep_copy() : nullptr;
+    root_ = rhs.root_ ? rhs.root_->deep_copy(true) : nullptr;
 
     return *this;
 }
