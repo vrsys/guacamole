@@ -1679,14 +1679,56 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     set_occlusion_query_states(ctx);
     ctx.render_context->begin_query(occlusion_query_iterator->second);
 
-    for (auto const& node : current_nodes) {
-        auto world_space_bounding_box = node->get_bounding_box();
-        
-        current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
-        current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+    for (auto const& original_query_node : current_nodes) {
+
+        std::queue<std::pair<uint32_t, gua::node::Node*> > traverse_current_node_queue;
+        traverse_current_node_queue.push({0, original_query_node});
+
+        unsigned int const dmax = 3;
+        //unsigned int depth_diff = 0;
+
+        //bool f
+
+        while(!traverse_current_node_queue.empty()){
+
+            auto checked_depth_node_pair = traverse_current_node_queue.front();
+            traverse_current_node_queue.pop();
+            //depth_diff = checked_node->get_depth() - node->get_depth();
+
+
+            if ( check_children_surface_area(checked_depth_node_pair.second) || checked_depth_node_pair.first == dmax)
+            {
+
+                for (auto const& child : checked_depth_node_pair.second->get_children())
+                {
+                    
+                    auto world_space_bounding_box = child->get_bounding_box();
+                    
+                    current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+                    current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+                
+                    set_last_visibility_check_frame_id(child->unique_node_id(), in_camera_uuid, current_frame_id); 
+                    pipe.draw_box();  
+
+                } 
+
+                // pop this node from the queue and repeat with the next node in queue
+
+            } 
+            else {
+
     
-        set_last_visibility_check_frame_id(node->unique_node_id(), in_camera_uuid, current_frame_id); 
-        pipe.draw_box();  
+                    auto world_space_bounding_box = original_query_node->get_bounding_box();
+                
+                    current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+                    current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+                
+                    set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id); 
+                    pipe.draw_box();
+                
+                
+            }
+        }
 
     }
 
@@ -2036,18 +2078,18 @@ bool OcclusionCullingTriMeshRenderer::check_children_is_tigher(gua::node::Node* 
 }
 */
 
-bool OcclusionCullingTriMeshRenderer::check_children_surface_area(gua::node::Node* grp_node, gua::node::Node* child_node) const{
+bool OcclusionCullingTriMeshRenderer::check_children_surface_area(gua::node::Node* grp_node) const{
 
     grp_node->update_cache();
 
-    float parent_surface_area = child_node->get_bounding_box().surface_area();
+    float parent_surface_area = grp_node->get_bounding_box().surface_area();
     
-    auto children = child_node->get_children();
+    auto children = grp_node->get_children();
     
     float smax = 1.4f;
     bool is_tighter = true;
 
-    unsigned int depth_diff = child_node->get_depth() - grp_node->get_depth();
+    //unsigned int depth_diff = child_node->get_depth() - grp_node->get_depth();
 
     
     if (!children.empty())
