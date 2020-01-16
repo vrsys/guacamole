@@ -37,7 +37,9 @@
 #include <gua/utils/Trackball.hpp>
 
 
-#define AUTO_ANIMATION
+//#define AUTO_ANIMATION
+
+#define USE_CITY_SCENE
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -193,15 +195,20 @@ int main(int argc, char** argv)
 
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
+    std::srand(0);
+
+#ifdef USE_CITY_SCENE
+    create_simple_demo_scene(occlusion_group_node);
+#else 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
 
     // create_simple_debug_scene(occlusion_group_node);
     // create_city_scene(occlusion_group_node);
-    create_simple_demo_scene(occlusion_group_node);
+
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_grou"/opt/3d_models/trees/lindenTree/lindenTree.obj"p_node);
-    
+#endif
     occlusion_group_node->regroup_children();
 
     //occlusion_group_node->scale(0.2, 0.2, 0.2);
@@ -216,24 +223,38 @@ int main(int argc, char** argv)
     light_node->scale(1200.f);
     light_node->translate(0.f, 50.f, 0.f);
 
+#ifdef USE_CITY_SCENE
+    double initial_nav_translation = 10.0;
+#else
+    double initial_nav_translation = 0.0;
+#endif
+
+    cam_navigation_state.accumulated_translation_world_space = scm::math::make_translation(0.0, initial_nav_translation, 0.0);
 
     // we put a transform node above camera and screen, because we want to keep the relative orientation and position between constant
     // when we navigate, we change the transformation of the navigation node instead the transformation of the camera!
     auto navigation_node = graph.add_node<gua::node::TransformNode>("/", "navigation_node");
 
+    navigation_node->translate(0.0, initial_nav_translation, 0.0);
 
     // Screen nodes are special nodes which allow us to model a "window into the virtual world"
     auto screen = graph.add_node<gua::node::ScreenNode>("/navigation_node", "screen_node");
     // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
-    screen->translate(0, 10, -3.0);
 
+    //float nav_translation
+    //#ifdef USE_CITY_SCENE
+
+
+
+    screen->translate(0, 0.0, -3.0);
 
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
+    uint32_t res_factor = 4;
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1*1280, 1*720);
+    auto resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 
 
     configure_pipeline_descriptions();
@@ -241,7 +262,8 @@ int main(int argc, char** argv)
     //add a camera node. Without a camera, we can not render
     auto camera_node = graph.add_node<gua::node::CameraNode>("/navigation_node", "cam_node");
     //we just leave the camera in 0, 0, 0 in its local coordinates
-    camera_node->translate(0, 10, 0);
+
+    //camera_node->translate(0, 0, 0);
     camera_node->config.set_resolution(resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
     camera_node->config.set_screen_path("/navigation_node/screen_node");
@@ -318,17 +340,18 @@ int main(int argc, char** argv)
         }
 
 
-        // apply changes to the current navigation node, such that the scene graph will see the change
-        //update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
 
 
+#ifdef AUTO_ANIMATION
         double x_trans = std::sin(accumulated_frametime/7);
+        auto nav_trans = scm::math::make_translation(200*x_trans, initial_nav_translation, 0.0);
 
-        auto nav_trans = scm::math::make_translation(200*x_trans, 0.0, 0.0);
-
-        #ifdef AUTO_ANIMATION
         navigation_node->set_transform(nav_trans);
-        #endif
+#else
+        // apply changes to the current navigation node, such that the scene graph will see the change
+        update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
+
+#endif
 
         //occlusion_group_node->rotate(0.1, 0.0, 1.0, 0.0);
 
