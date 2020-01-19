@@ -144,7 +144,7 @@ public:
 
     // helper CHC++ functions
     bool check_children_surface_area(std::vector<gua::node::Node*> const& in_parent_nodes) const;
-    void intanced_array_draw(std::vector<gua::node::Node*> const& leaf_node_vector, RenderContext const& ctx, std::shared_ptr<ShaderProgram>& current_shader ,size_t in_camera_uuid, size_t current_frame_id);
+    void instanced_array_draw(std::vector<gua::node::Node*> const& leaf_node_vector, RenderContext const& ctx, std::shared_ptr<ShaderProgram>& current_shader ,size_t in_camera_uuid, size_t current_frame_id);
     bool front_to_back_raycast(gua::node::Node* lhs, gua::node::Node* rhs);
 
 
@@ -221,6 +221,11 @@ private:
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > is_visible_for_camera_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
     mutable std::unordered_map<std::size_t, LastVisibility > last_visibility_checked_result_;
+
+    mutable scm::gl::buffer_ptr empty_vbo_ = nullptr;
+    mutable scm::gl::vertex_array_ptr empty_vao_layout_ = nullptr;
+    
+
 
 };
 

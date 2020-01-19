@@ -34,8 +34,10 @@
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
 
-
+#include <boost/assign/list_of.hpp>
 #include <scm/gl_core/render_device/opengl/gl_core.h>
+
+
 //#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 #define CHC_pp
 
@@ -112,8 +114,8 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
     std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.frag");
 
     // a new array box shader for CHC++
-    std::string v_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_array_box.vert");
-    std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_array_box.frag");
+    std::string v_occlusion_query_array_box = Resources::lookup_shader("shaders/occlusion_query_array_box.vert");
+    std::string v_occlusion_query_array_box = Resources::lookup_shader("shaders/occlusion_query_array_box.frag");
 
     std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
     std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
@@ -144,6 +146,21 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
 
+
+    RenderContext const& ctx(pipe.get_context());
+
+
+    if( nullptr == empty_vbo_) {
+        empty_vbo_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
+        ctx.render_context->apply_vertex_input();
+    }
+    
+    // size_t size_of_vertex = 2 * sizeof(uint32_t);
+    if(nullptr == empty_vao_layout_) {
+        empty_vao_layout_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(empty_vbo_));
+    }
+
+
     if(nullptr == occlusion_query_box_program_) {
         occlusion_query_box_program_ = std::make_shared<ShaderProgram>();
         occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
@@ -157,7 +174,7 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
     if (nullptr == occlusion_query_array_box_program_)
     {
         occlusion_query_array_box_program_ = std::make_shared<ShaderProgram>();
-        occlusion_query_array_box_program_ ->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+        occlusion_query_array_box_program_ ->set_shaders(occlusion_query_array_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
     }
 
 
@@ -1710,12 +1727,23 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(
             // original draw call
             auto world_space_bounding_box = original_query_node->get_bounding_box();
 
-            current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
-            current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
+            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
+            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
+
+            //current_shader->apply_uniform(ctx, "world_space_bb_min", math::vec3f(world_space_bounding_box.min));
+            //current_shader->apply_uniform(ctx, "world_space_bb_max", math::vec3f(world_space_bounding_box.max));
 
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
-            pipe.draw_box();
+         
+            //replacement for pipe.draw_box()
+            ctx.render_context->apply();
+            scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
+            ctx.render_context->bind_vertex_array(empty_vao_layout_);
+            ctx.render_context->apply_vertex_input();
+
+            auto const& glapi = ctx.render_context->opengl_api();
+            glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
 
         } else {
 
@@ -1726,12 +1754,17 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(
                 // leaf_node_instance_vector.push_back(original_query_node);
                 auto world_space_bounding_box = original_query_node->get_bounding_box();
 
-                current_shader->apply_uniform(ctx, "world_space_bb_min["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.min));
-                current_shader->apply_uniform(ctx, "world_space_bb_max["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.max));
+
+
+                current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min", 0);
+                current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max", 0);
 
                 set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
-                glapi.glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+                pipe.draw_box();
+                //glapi.glDrawArrays(GL_TRIANGLES, 0, 36);
 
             } else { // if the node is interior we search the tighter bounding volume through its children
 
@@ -1762,14 +1795,18 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(
                             // if the node is leaf issue the query
                             if(checked_node->get_children().empty()) {
 
-                                auto world_space_bounding_box = original_query_node->get_bounding_box();
+                                auto world_space_bounding_box = checked_node->get_bounding_box();
 
-                                current_shader->apply_uniform(ctx, "world_space_bb_min["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.min));
-                                current_shader->apply_uniform(ctx, "world_space_bb_max["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.max));
 
-                                set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
+                                current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min", 0);
+                                current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max", 0);
+                                //current_shader->apply_uniform(ctx, "world_space_bb_min["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.min));
+                                //current_shader->apply_uniform(ctx, "world_space_bb_max["+ std::to_string(0) + "]", math::vec3f(world_space_bounding_box.max));
 
-                                glapi.glDrawArrays(GL_TRIANGLES, 0, 36);
+                                set_last_visibility_check_frame_id(checked_node->unique_node_id(), in_camera_uuid, current_frame_id);
+
+                                pipe.draw_box();
+                                //glapi.glDrawArrays(GL_TRIANGLES, 0, 36);
 
                                 //leaf_nodes_vector.push_back(checked_node);
                             }
@@ -1796,9 +1833,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(
 
                     // the current level is the tightest  or comprises of the nodes with depth = 3 or leaf nodes
                     else {
-
-                        intanced_array_draw(checked_depth_node_vector_pair.second, ctx, current_shader, in_camera_uuid, current_frame_id);
-
+                        instanced_array_draw(checked_depth_node_vector_pair.second, ctx, current_shader, in_camera_uuid, current_frame_id);
                     }
                 }
 
@@ -2177,29 +2212,49 @@ bool OcclusionCullingTriMeshRenderer::check_children_surface_area(std::vector<gu
 
 }
 
-void OcclusionCullingTriMeshRenderer::intanced_array_draw(
+void OcclusionCullingTriMeshRenderer::instanced_array_draw(
     std::vector<gua::node::Node*> const& leaf_node_vector,
     RenderContext const& ctx,
     std::shared_ptr<ShaderProgram>& current_shader,
     size_t in_camera_uuid,
     size_t current_frame_id)
 {
-    uint32_t instanceID = 0;
-    auto const& glapi = ctx.render_context->opengl_api();
+    uint32_t current_instance_ID = 0;
+
 
     for (auto const& leaf_node: leaf_node_vector)
     {
+
         auto world_space_bounding_box = leaf_node->get_bounding_box();
 
-        current_shader->apply_uniform(ctx, "world_space_bb_min["+ std::to_string(instanceID) + "]", math::vec3f(world_space_bounding_box.min));
-        current_shader->apply_uniform(ctx, "world_space_bb_max["+ std::to_string(instanceID) + "]", math::vec3f(world_space_bounding_box.max));
+
+        std::string const uniform_string_bb_min = "world_space_bb_min";
+        std::string const uniform_string_bb_max = "world_space_bb_max";
+
+
+        math::vec3f bb_min_vec3f = math::vec3f(world_space_bounding_box.min);
+        math::vec3f bb_max_vec3f = math::vec3f(world_space_bounding_box.max);
+
+        current_shader->set_uniform(ctx, bb_min_vec3f, uniform_string_bb_min, current_instance_ID);
+        current_shader->set_uniform(ctx, bb_max_vec3f, uniform_string_bb_max, current_instance_ID);
 
         set_last_visibility_check_frame_id(leaf_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
-        ++instanceID;
+        ++current_instance_ID;
     }
 
-    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, leaf_node_vector.size());
+
+
+    scm::gl::context_vertex_input_guard vig(ctx.render_context);
+
+    ctx.render_context->bind_vertex_array(empty_vao_layout_);
+    ctx.render_context->apply_vertex_input();
+    
+    ctx.render_context->apply();
+
+    auto const& glapi = ctx.render_context->opengl_api();
+
+    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
 
 }
 
