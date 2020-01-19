@@ -1745,74 +1745,12 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(
 
         } else {
 
-            // vector of nodes that needs to be queried
-            std::vector<gua::node::Node*> leaf_nodes_vector;
-
-            // if the node is a leaf in hierachy we issue the query directly
-            if( original_query_node->get_children().empty() ) {
-
-                leaf_nodes_vector.push_back(original_query_node);
-
-            } else { // if the node is interior we search the tighter bounding volume through its children
-
-                std::queue<std::pair<uint32_t, std::vector<gua::node::Node*> > > depth_node_vector_queue;
-
-                // max depth we search down
-                unsigned int const dmax = 3;
-
-                depth_node_vector_queue.push({0, {original_query_node}});
-
-                // do the surface area check per level and find which level is the tightest
-                while(!depth_node_vector_queue.empty()) {
-
-                    auto checked_depth_node_vector_pair = depth_node_vector_queue.front();
-
-                    // pop this node from the queue and later repeat with the new deeper pair
-                    depth_node_vector_queue.pop();
-
-                    // check if if the children level is tighter than the current level
-                    if ( check_children_surface_area(checked_depth_node_vector_pair.second) && checked_depth_node_vector_pair.first < dmax)
-                    {
-                        std::vector<gua::node::Node*> checked_nodes_vector;
-
-                        // look through the vector
-                        for (auto const& checked_node: checked_depth_node_vector_pair.second)
-                        {
-                            // if the node is leaf issue the query
-                            if(checked_node->get_children().empty()) {
-                                leaf_nodes_vector.push_back(checked_node);
-                            }
-
-                            // if the node is interior push the children to the vector which later will be used to check their tightness
-                            else {
-
-                                for(auto const& child_of_checked_node: checked_node->get_children()) {
-                                    checked_nodes_vector.push_back(child_of_checked_node.get());
-                                }
-                            }
-
-                        }
-
-
-                        // if the vector is empty it means the all the checked node is leaf and thus is already queried
-                        if (!checked_nodes_vector.empty())
-                        {
-                            // push the vector containing interior nodes to the queue for the next iteration
-                            depth_node_vector_queue.push({checked_depth_node_vector_pair.first+1, checked_nodes_vector});
-                        }
-                    }
-
-                    // the current level is the tightest  or comprises of the nodes with depth = 3 or leaf nodes
-                    else {
-                        
-                        leaf_nodes_vector.insert(leaf_nodes_vector.end(), checked_depth_node_vector_pair.second.begin(), checked_depth_node_vector_pair.second.end() );
-                    }
-                }
-
-            }
-
-            instanced_array_draw(leaf_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
-
+            // issue the query on the node with the tighest bounding volume. smax = 1.4 and dmax = 3 by default
+            find_tightest_bounding_volume(original_query_node,
+                                          ctx,
+                                          current_shader,
+                                          in_camera_uuid,
+                                          current_frame_id, 3, 1.4f);
         }
 
     }
@@ -2148,7 +2086,10 @@ void OcclusionCullingTriMeshRenderer::unbind_and_reset(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool OcclusionCullingTriMeshRenderer::check_children_surface_area(std::vector<gua::node::Node*> const& in_parent_nodes) const {
+bool OcclusionCullingTriMeshRenderer::check_children_surface_area(
+    std::vector<gua::node::Node*> const& in_parent_nodes,
+    float const smax) const 
+{
 
     float parent_surface_area = 0.0f;
     float children_surface_area = 0.0f;
@@ -2178,7 +2119,6 @@ bool OcclusionCullingTriMeshRenderer::check_children_surface_area(std::vector<gu
     }
 
 
-    float const smax = 1.4f;
     bool is_tighter = (children_surface_area )  <= (parent_surface_area * smax);
 
     return is_tighter;
@@ -2230,6 +2170,84 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
     glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
 
 }
+
+
+void OcclusionCullingTriMeshRenderer::find_tightest_bounding_volume(
+    gua::node::Node* queried_node,
+    RenderContext const& ctx,
+    std::shared_ptr<ShaderProgram>& current_shader,
+    size_t in_camera_uuid,
+    size_t current_frame_id,
+    unsigned int const dmax,
+    float const smax) {
+    // vector of nodes that needs to be queried
+    std::vector<gua::node::Node*> leaf_nodes_vector;
+
+    // if the node is a leaf in hierachy we issue the query directly
+    if( queried_node->get_children().empty() ) {
+
+        leaf_nodes_vector.push_back(queried_node);
+
+    } else { // if the node is interior we search the tighter bounding volume through its children
+
+        std::queue<std::pair<uint32_t, std::vector<gua::node::Node*> > > depth_node_vector_queue;
+
+        // max depth we search down
+        depth_node_vector_queue.push({0, {queried_node}});
+
+        // do the surface area check per level and find which level is the tightest
+        while(!depth_node_vector_queue.empty()) {
+
+            auto checked_depth_node_vector_pair = depth_node_vector_queue.front();
+
+            // pop this node from the queue and later repeat with the new deeper pair
+            depth_node_vector_queue.pop();
+
+            // check if if the children level is tighter than the current level
+            if ( check_children_surface_area(checked_depth_node_vector_pair.second, smax) && checked_depth_node_vector_pair.first < dmax)
+            {
+                std::vector<gua::node::Node*> checked_nodes_vector;
+
+                // look through the vector
+                for (auto const& checked_node: checked_depth_node_vector_pair.second)
+                {
+                    // if the node is leaf issue the query
+                    if(checked_node->get_children().empty()) {
+                        leaf_nodes_vector.push_back(checked_node);
+                    }
+
+                    // if the node is interior push the children to the vector which later will be used to check their tightness
+                    else {
+
+                        for(auto const& child_of_checked_node: checked_node->get_children()) {
+                            checked_nodes_vector.push_back(child_of_checked_node.get());
+                        }
+                    }
+
+                }
+
+
+                // if the vector is empty it means the all the checked node is leaf and thus is already queried
+                if (!checked_nodes_vector.empty())
+                {
+                    // push the vector containing interior nodes to the queue for the next iteration
+                    depth_node_vector_queue.push({checked_depth_node_vector_pair.first+1, checked_nodes_vector});
+                }
+            }
+
+            // the current level is the tightest  or comprises of the nodes with depth = 3 or leaf nodes
+            else {
+
+                leaf_nodes_vector.insert(leaf_nodes_vector.end(), checked_depth_node_vector_pair.second.begin(), checked_depth_node_vector_pair.second.end() );
+            }
+        }
+
+    }
+
+    instanced_array_draw(leaf_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
+
+}
+
 
 bool OcclusionCullingTriMeshRenderer::front_to_back_raycast(gua::node::Node* lhs, gua::node::Node* rhs) {
     return true;

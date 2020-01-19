@@ -143,8 +143,20 @@ public:
                                int64_t current_frame_id);
 
     // helper CHC++ functions
-    bool check_children_surface_area(std::vector<gua::node::Node*> const& in_parent_nodes) const;
-    void instanced_array_draw(std::vector<gua::node::Node*> const& leaf_node_vector, RenderContext const& ctx, std::shared_ptr<ShaderProgram>& current_shader ,size_t in_camera_uuid, size_t current_frame_id);
+    void find_tightest_bounding_volume(gua::node::Node* queried_node,
+                                       RenderContext const& ctx,
+                                       std::shared_ptr<ShaderProgram>& current_shader,
+                                       size_t in_camera_uuid,
+                                       size_t current_frame_id,
+                                       unsigned int const dmax,
+                                       float const smax);
+
+    bool check_children_surface_area(std::vector<gua::node::Node*> const& in_parent_nodes, float const smax) const;
+    void instanced_array_draw(std::vector<gua::node::Node*> const& leaf_node_vector,
+                              RenderContext const& ctx,
+                              std::shared_ptr<ShaderProgram>& current_shader,
+                              size_t in_camera_uuid,
+                              size_t current_frame_id);
     bool front_to_back_raycast(gua::node::Node* lhs, gua::node::Node* rhs);
 
 
@@ -224,7 +236,7 @@ private:
 
     mutable scm::gl::buffer_ptr empty_vbo_ = nullptr;
     mutable scm::gl::vertex_array_ptr empty_vao_layout_ = nullptr;
-    
+
 
 
 };
