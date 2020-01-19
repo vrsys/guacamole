@@ -29,6 +29,8 @@ layout(location=0) in vec3 in_position;
 //ignore remaing layout parameters
 
 uniform mat4 view_projection_matrix;
+// uniform vec3 world_space_bb_min[8];
+// uniform vec3 world_space_bb_max[8];
 uniform vec3 world_space_bb_min;
 uniform vec3 world_space_bb_max;
 
@@ -38,6 +40,10 @@ void main() {
   // in_position encodes one vertex position (as vec3). In our case we render all the time the same bounding box geometry with
   // coordinates between [0, 1] ^ 3
   //
+  // vec3 bounding_box_dims = world_space_bb_max[gl_InstanceID] - world_space_bb_min[gl_InstanceID]; //get scaling in this line
+  // gl_Position = view_projection_matrix * vec4(bounding_box_dims[gl_InstanceID] * in_position + world_space_bb_min[gl_InstanceID], 1.0);
+  
+
   vec3 bounding_box_dims = world_space_bb_max - world_space_bb_min; //get scaling in this line
   gl_Position = view_projection_matrix * vec4(bounding_box_dims * in_position + world_space_bb_min, 1.0);
 

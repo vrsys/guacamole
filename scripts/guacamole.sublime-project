@@ -23,5 +23,27 @@
 	    "shell" : "true",
 	    "cmd":  ["doxygen"]
 	  }
-	]
+	],
+	"settings":
+    {
+        "AStyleFormatter":
+        {
+            "options_default":
+            {
+                // Use 2 spaces for indentation
+                "indent": "spaces",
+                "indent-spaces": 2
+            },
+            "options_c":
+            {
+                "use_only_additional_options": true,
+                "additional_options_file": "/path/to/your/astylerc/for/c"
+            },
+            "options_c++":
+            {
+                "use_only_additional_options": true,
+                "additional_options_file": "/path/to/your/astylerc/for/c++"
+            }
+        }
+    }
 }
