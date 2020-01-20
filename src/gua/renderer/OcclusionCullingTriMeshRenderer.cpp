@@ -57,7 +57,7 @@ namespace gua
 {
 
 
-
+bool query_context_state = false;
 std::array<float, 16> keep_probability;
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,6 @@ OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext c
 
     for(int32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
         keep_probability[used_frames_index] = 0.99 - 0.7 * std::exp(-used_frames_index);
-        std::cout << "Keep probability if node was consistent for " << used_frames_index << " frames: " << keep_probability[used_frames_index] << std::endl;
     }
 
 // define all our shader sources for our 3 different shader programs we need/want to use here
@@ -1325,8 +1324,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 continue;
             }
 
-            std::cout<<"last visited" <<last_visibility_check_frame_id<<std::endl;
-
             std::queue<gua::node::Node*> traversal_queue;
 
             // add root node of our occlusion hierarchy to the traversal queue 
@@ -1385,12 +1382,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() ) 
             {
-                //std::cout<<"frame "<< current_frame_id<< ",Traversal Queue size"  << traversal_priority_queue.size() << ", Query Queue Size " << query_queue.size()<<std::endl;
-
+                
                 while(!query_queue.empty()) {
 
-
-                    //if the first query is finished
                     if(ctx.render_context->query_result_available(query_queue.front().occlusion_query_pointer)) {
 
                         auto front_query_obj_queue = query_queue.front().occlusion_query_pointer;
@@ -1416,10 +1410,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                                         current_frame_id);
 
                     } else {
-                        //query next prev- visible node from v-queue
 #ifdef CHC_pp
                         if (v_query_queue.size()>0) {
-
                             auto current_vnode = v_query_queue.front();
                             v_query_queue.pop();
                             std::vector<gua::node::Node*> single_node_to_query;
@@ -1443,26 +1435,14 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                     if(culling_frustum.intersects(current_node->get_bounding_box())) {
 
-                        bool visibility_current_node = get_visibility(current_node->unique_node_id(), current_cam_node.uuid);
-
-                        int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->unique_node_id(), current_cam_node.uuid);
-
                         bool was_visible = false;
-                        if (visibility_current_node && (node_last_checked_frame_id == 0
-                                                        || (node_last_checked_frame_id == current_frame_id -1) ) )
-                        {
-                            was_visible = true;
-                        }
-
-
-                        bool was_visible2 = false;
 
                         LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                         if (temp_last_visibility.frame_id == current_frame_id-1) {
                             was_visible = temp_last_visibility.result;
                         }
 
-                        if(!was_visible2) {
+                        if(!was_visible) {
                             //query previously invisible node n
                             i_query_queue.push(current_node);
 
@@ -1472,14 +1452,15 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             }
                         } else {
                             
-                            
                             //if n is a leaf and the query is reasonable (find out what is reasonable)
+
 
                             if(current_node->get_children().size() == 0 && 1==1) {
                                 //push N to v-queue^s
 
 #ifdef CHC_pp
                                 v_query_queue.push(current_node); 
+
 #endif
                             }
 
@@ -1572,28 +1553,17 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(RenderContext const&
         } else {
 #endif      
             for (auto const& current_node : front_query_vector) {
-                //if node was not visible in last frame
+
                 set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
 
-                bool visibility_current_node = get_visibility(current_node->unique_node_id(), in_camera_uuid);
-
-                int32_t node_last_checked_frame_id = get_last_visibility_check_frame_id(current_node->unique_node_id(), in_camera_uuid);
-
                 bool was_visible = false;
-                if (visibility_current_node && (node_last_checked_frame_id == 0
-                                    || (node_last_checked_frame_id == current_frame_id -1) ) )
-                {
-                    was_visible = true;
-                }
-
-                bool was_visible2 = false;
 
                 LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                 if (temp_last_visibility.frame_id == current_frame_id-1) {
                     was_visible = temp_last_visibility.result;
                 }
 
-                if(!was_visible2) {
+                if(!was_visible) {
               
                     traverse_node(current_node, 
                             ctx, pipe, 
@@ -1675,8 +1645,15 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     auto vp_mat = view_projection_matrix;
     current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
+    /* not working properly yet. Idea: change occlusion query states only when switching from rendering to querying
+    if (!query_context_state) {
+        set_occlusion_query_states(ctx);
+        query_context_state = true;
+    }
+    */
 
     set_occlusion_query_states(ctx);
+
     ctx.render_context->begin_query(occlusion_query_iterator->second);
 
     for (auto const& original_query_node : current_nodes) {
@@ -1740,6 +1717,9 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     query_queue.push(temp_multi_query);
 
 }
+
+
+
 
 void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
@@ -2006,6 +1986,7 @@ void OcclusionCullingTriMeshRenderer::render_visible_leaf(gua::node::Node* curre
                         scm::gl::rasterizer_state_ptr current_rasterizer_state,
                         bool& depth_complexity_vis){
 
+    query_context_state = false;
     //Resetting states for drawing for leaf nodes
     auto const& glapi = ctx.render_context->opengl_api();
     glapi.glColorMask(true, true, true, true);

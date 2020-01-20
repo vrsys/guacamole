@@ -110,6 +110,8 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery> & query_queue,
                                int64_t const current_frame_id, std::size_t in_camera_uuid, std::vector<gua::node::Node*>const& current_nodes);
+
+
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                                             scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
                                                             int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
