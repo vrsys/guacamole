@@ -47,7 +47,6 @@ extern WASD_state cam_navigation_state;  //only declared in main - definition is
 bool print_times = false;
 
 bool update_camera = true;
-
 bool show_bounding_boxes = false;
 bool was_set_to_show_bounding_boxes = false;
 

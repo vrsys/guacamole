@@ -65,6 +65,12 @@ struct LastVisibility{
     bool result;
 };
 
+
+struct VisiblityPersistence{
+    bool last_visibility;
+    uint32_t persistence;
+};
+
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
@@ -125,6 +131,18 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
                         bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos, 
                         std::priority_queue<std::pair<gua::node::Node*, double>, 
                         std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
+                        std::size_t in_camera_uuid, int64_t const current_frame_id);
+
+        void traverse_node(gua::node::Node* current_node, 
+                        RenderContext const& ctx, 
+                        Pipeline& pipe, 
+                        RenderTarget& render_target,
+                        MaterialShader* current_material, 
+                        std::shared_ptr<ShaderProgram> current_shader,
+                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                        bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos, 
+                        std::priority_queue<std::pair<gua::node::Node*, double>, 
+                        std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
                         std::size_t in_camera_uuid);
 
     void handle_returned_query(RenderContext const& ctx, 
@@ -160,6 +178,10 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     LastVisibility get_last_visibility_checked_result(std::size_t node_path) const;
 
     void set_last_visibility_checked_result(std::size_t node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result);
+
+    void set_visibility_persistence(std::size_t node_uuid, bool visibility);
+
+    uint32_t get_visibility_persistence(std::size_t node_uuid);
 
     // helper functions for CHC
     void pull_up_visibility(gua::node::Node* current_node, std::size_t in_camera_uuid);
@@ -218,6 +240,7 @@ class GUA_DLL OcclusionCullingTriMeshRenderer
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > is_visible_for_camera_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
     mutable std::unordered_map<std::size_t, LastVisibility > last_visibility_checked_result_;
+    mutable std::unordered_map<std::size_t, VisiblityPersistence > node_visibility_persistence;
 
 };
 
