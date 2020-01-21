@@ -66,7 +66,7 @@ struct LastVisibility {
 };
 
 
-struct VisiblityPersistence{
+struct VisiblityPersistence {
     bool last_visibility;
     uint32_t persistence;
 };
@@ -86,8 +86,14 @@ public:
 
     // occlusion culling supported render functions
     void render_without_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+
+    // implemented in NStopAndWait.cpp
     void render_naive_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+
+    // implemented in HStopAndWait.cpp
     void render_hierarchical_stop_and_wait_oc(Pipeline& pipe, PipelinePassDescription const& desc, scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
+
+    // implemented in CHC.cpp
     void render_CHC(Pipeline& pipe, PipelinePassDescription const& desc,
                     scm::math::mat4d const& view_projection_matrix, gua::math::vec3f const& world_space_cam_pos);
     void render_CHC_plusplus(Pipeline& pipe, PipelinePassDescription const& desc,
@@ -119,55 +125,48 @@ public:
 
 
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
-                                                            scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
-                                                            int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
-    void traverse_node(gua::node::Node* current_node, 
-                        RenderContext const& ctx, 
-                        Pipeline& pipe, 
-                        RenderTarget& render_target,
-                        MaterialShader* current_material, 
-                        std::shared_ptr<ShaderProgram> current_shader,
-                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
-                        bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos, 
-                        std::priority_queue<std::pair<gua::node::Node*, double>, 
-                        std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
-                        std::size_t in_camera_uuid, int64_t const current_frame_id);
+                           scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                           int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
+    void traverse_node(gua::node::Node* current_node,
+                       RenderContext const& ctx,
+                       Pipeline& pipe,
+                       RenderTarget& render_target,
+                       MaterialShader* current_material,
+                       std::shared_ptr<ShaderProgram> current_shader,
+                       scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                       bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos,
+                       std::priority_queue<std::pair<gua::node::Node*, double>,
+                       std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
+                       std::size_t in_camera_uuid, int64_t const current_frame_id);
 
-        void traverse_node(gua::node::Node* current_node, 
-                        RenderContext const& ctx, 
-                        Pipeline& pipe, 
-                        RenderTarget& render_target,
-                        MaterialShader* current_material, 
-                        std::shared_ptr<ShaderProgram> current_shader,
-                        scm::gl::rasterizer_state_ptr current_rasterizer_state,
-                        bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos, 
-                        std::priority_queue<std::pair<gua::node::Node*, double>, 
-                        std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
-                        std::size_t in_camera_uuid);
+    void traverse_node(gua::node::Node* current_node,
+                       RenderContext const& ctx,
+                       Pipeline& pipe,
+                       RenderTarget& render_target,
+                       MaterialShader* current_material,
+                       std::shared_ptr<ShaderProgram> current_shader,
+                       scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                       bool& depth_complexity_vis, gua::math::vec3f const& world_space_cam_pos,
+                       std::priority_queue<std::pair<gua::node::Node*, double>,
+                       std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
+                       std::size_t in_camera_uuid);
 
-    void handle_returned_query(RenderContext const& ctx, 
-                    Pipeline& pipe, 
-                    PipelinePassDescription const& desc,
-                    RenderTarget& render_target,
-                    MaterialShader* current_material, 
-                    std::shared_ptr<ShaderProgram> current_shader,
-                    scm::math::mat4d const& view_projection_matrix,
-                    scm::gl::rasterizer_state_ptr current_rasterizer_state,
-                    bool& depth_complexity_vis,
-                    gua::math::vec3f const& world_space_cam_pos, 
-                    std::priority_queue<std::pair<gua::node::Node*, double>, std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
-                    std::size_t in_camera_uuid,
-                    uint64_t query_result,
-                    std::vector<gua::node::Node*> front_query_vector,
-                    std::queue<MultiQuery>& query_queue,
-                    int64_t current_frame_id);
-
-    // children bb volume
-    // bool children_is_tigher(gua::node::Node* grp_node) const;
-
-
-
-
+    void handle_returned_query(RenderContext const& ctx,
+                               Pipeline& pipe,
+                               PipelinePassDescription const& desc,
+                               RenderTarget& render_target,
+                               MaterialShader* current_material,
+                               std::shared_ptr<ShaderProgram> current_shader,
+                               scm::math::mat4d const& view_projection_matrix,
+                               scm::gl::rasterizer_state_ptr current_rasterizer_state,
+                               bool& depth_complexity_vis,
+                               gua::math::vec3f const& world_space_cam_pos,
+                               std::priority_queue<std::pair<gua::node::Node*, double>, std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
+                               std::size_t in_camera_uuid,
+                               uint64_t query_result,
+                               std::vector<gua::node::Node*> front_query_vector,
+                               std::queue<MultiQuery>& query_queue,
+                               int64_t current_frame_id);
 
     // helper CHC++ functions
     void find_tightest_bounding_volume(gua::node::Node* queried_node,
