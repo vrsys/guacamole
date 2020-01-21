@@ -453,6 +453,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
         auto const& culling_frustum = pipe.current_viewstate().frustum;
 
+        std::vector<gua::node::Node*> visibility_persistence_vector;
+
         //going over all occlusion culling group nodes (currently only 1)
         for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second)
         {
@@ -463,6 +465,16 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
             set_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid, current_frame_id);
+
+            visibility_persistence_vector.push_back(occlusion_group_node);
+
+            while(!visibility_persistence_vector.empty()) {
+                auto node = visibility_persistence_vector.back();
+                visibility_persistence_vector.pop_back();
+
+                
+            }
+
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() )
             {
@@ -583,7 +595,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
 
             }
-#endif
+
+#endif      
         }
 
         unbind_and_reset(ctx, render_target);
@@ -772,7 +785,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     }
 
     // for testing and comparison purpose
-    bool fallback = false;
+    bool fallback = true;
 
     auto current_shader = occlusion_query_array_box_program_;
 
@@ -791,7 +804,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     if (!query_context_state) {
         set_occlusion_query_states(ctx);
-        query_context_state = false;
+        query_context_state = true;
     }
 
 
@@ -1126,13 +1139,17 @@ void OcclusionCullingTriMeshRenderer::render_visible_leaf(
     bool& depth_complexity_vis)
 {
 
-    query_context_state = false;
-    //Resetting states for drawing for leaf nodes
-    auto const& glapi = ctx.render_context->opengl_api();
-    glapi.glColorMask(true, true, true, true);
-    ctx.render_context->set_depth_stencil_state(default_depth_test_);
-    ctx.render_context->set_blend_state(default_blend_state_);
-    ctx.render_context->apply();
+    
+    if (query_context_state == true) {
+        auto const& glapi = ctx.render_context->opengl_api();
+        glapi.glColorMask(true, true, true, true);
+        ctx.render_context->set_depth_stencil_state(default_depth_test_);
+        ctx.render_context->set_blend_state(default_blend_state_);
+        ctx.render_context->apply();
+        query_context_state = false;
+ 
+    }
+
 
 
     //make sure that we currently have a trimesh node in our hands
