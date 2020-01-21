@@ -29,8 +29,66 @@ layout(location=0) in vec3 in_position;
 //ignore remaing layout parameters
 
 uniform mat4 view_projection_matrix;
+// uniform vec3 world_space_bb_min[8];
+// uniform vec3 world_space_bb_max[8];
 uniform vec3 world_space_bb_min;
 uniform vec3 world_space_bb_max;
+
+vec3 implicit_unit_box[36] = vec3[](
+		vec3(1.0, 0.0, 0.0),
+		vec3(0.0, 1.0, 0.0),
+		vec3(1.0, 1.0, 0.0),
+
+		vec3(0.0, 1.0, 0.0),
+		vec3(1.0, 0.0, 0.0),
+		vec3(0.0, 0.0, 0.0),
+
+		/* face 2 */
+		vec3(0.0, 1.0, 1.0),
+		vec3(1.0, 0.0, 1.0),
+		vec3(1.0, 1.0, 1.0),
+
+		vec3(1.0, 0.0, 1.0),
+		vec3(0.0, 1.0, 1.0),
+		vec3(0.0, 0.0, 1.0),
+
+		/* face 3 */
+		vec3(0.0, 1.0, 0.0),
+		vec3(0.0, 1.0, 1.0),
+		vec3(1.0, 1.0, 0.0),
+
+		vec3(0.0, 1.0, 1.0),
+		vec3(1.0, 1.0, 1.0),
+		vec3(1.0, 1.0, 0.0),
+
+		/* face 4 */
+		vec3(0.0, 0.0, 1.0),
+		vec3(0.0, 0.0, 0.0),
+		vec3(1.0, 0.0, 0.0),
+
+		vec3(1.0, 0.0, 1.0),
+		vec3(0.0, 0.0, 1.0),
+		vec3(1.0, 0.0, 0.0),
+
+		/* face 5 */
+		vec3(1.0, 1.0, 0.0),
+		vec3(1.0, 1.0, 1.0),
+		vec3(1.0, 0.0, 1.0),
+
+		vec3(1.0, 1.0, 0.0),
+		vec3(1.0, 0.0, 1.0),
+		vec3(1.0, 0.0, 0.0),
+
+		/* face 6 */
+		vec3(0.0, 1.0, 1.0),
+		vec3(0.0, 1.0, 0.0),
+		vec3(0.0, 0.0, 1.0),
+
+		vec3(0.0, 0.0, 1.0),
+		vec3(0.0, 1.0, 0.0),
+		vec3(0.0, 0.0, 0.0)
+);
+
 
 // simplest possible vertex shader that does not use constant values
 void main() {
@@ -38,8 +96,12 @@ void main() {
   // in_position encodes one vertex position (as vec3). In our case we render all the time the same bounding box geometry with
   // coordinates between [0, 1] ^ 3
   //
+  // vec3 bounding_box_dims = world_space_bb_max[gl_InstanceID] - world_space_bb_min[gl_InstanceID]; //get scaling in this line
+  // gl_Position = view_projection_matrix * vec4(bounding_box_dims[gl_InstanceID] * in_position + world_space_bb_min[gl_InstanceID], 1.0);
+  
+
   vec3 bounding_box_dims = world_space_bb_max - world_space_bb_min; //get scaling in this line
-  gl_Position = view_projection_matrix * vec4(bounding_box_dims * in_position + world_space_bb_min, 1.0);
+  gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min, 1.0);
 
   //gl_Position = model_view_projection_matrix * vec4(in_position, 1.0);
 }
