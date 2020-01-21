@@ -1281,7 +1281,7 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
 
     auto const& glapi = ctx.render_context->opengl_api();
 
-    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
+    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, leaf_node_vector.size());
 
 */
     for (auto const& original_query_node : leaf_node_vector) {
