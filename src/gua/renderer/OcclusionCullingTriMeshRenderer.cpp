@@ -780,7 +780,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     {
         current_shader = occlusion_query_box_program_;
     } else {
-        current_shader = occlusion_query_array_box_program_;
+        current_shader = occlusion_query_box_program_;
     }
 
 
@@ -1279,7 +1279,7 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
 
     auto const& glapi = ctx.render_context->opengl_api();
 
-    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
+    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, leaf_node_vector.size());
 
 }
 
