@@ -1712,7 +1712,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     {
         current_shader = occlusion_query_box_program_;
     } else {
-        current_shader = occlusion_query_array_box_program_;
+        current_shader = occlusion_query_box_program_;
     }
 
 
@@ -1723,7 +1723,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     if (!query_context_state) {
         set_occlusion_query_states(ctx);
-        query_context_state = true;
+        query_context_state = false;
     }
 
 
@@ -1763,6 +1763,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
                                           current_shader,
                                           in_camera_uuid,
                                           current_frame_id, 3, 1.4f);
+
         }
 
     }
@@ -2176,6 +2177,7 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
     size_t in_camera_uuid,
     size_t current_frame_id)
 {
+/*
     uint32_t current_instance_ID = 0;
 
 
@@ -2213,6 +2215,28 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
 
     glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
 
+*/
+    for (auto const& original_query_node : leaf_node_vector) {
+
+        auto world_space_bounding_box = original_query_node->get_bounding_box();
+
+        current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
+        current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
+
+        set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
+
+        //replacement for pipe.draw_box()
+        ctx.render_context->apply();
+        scm::gl::context_vertex_input_guard vig(ctx.render_context);
+
+        ctx.render_context->bind_vertex_array(empty_vao_layout_);
+        ctx.render_context->apply_vertex_input();
+
+        auto const& glapi = ctx.render_context->opengl_api();
+        glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
+  
+    }
+
 }
 
 
@@ -2225,70 +2249,40 @@ void OcclusionCullingTriMeshRenderer::find_tightest_bounding_volume(
     unsigned int const dmax,
     float const smax) {
     // vector of nodes that needs to be queried
-    std::vector<gua::node::Node*> leaf_nodes_vector;
+    std::vector<gua::node::Node*> query_nodes_vector;
+    std::vector<gua::node::Node*> check_nodes_vector;
 
-    // if the node is a leaf in hierachy we issue the query directly
-    if( queried_node->get_children().empty() ) {
+    check_nodes_vector.push_back(queried_node);
 
-        leaf_nodes_vector.push_back(queried_node);
 
-    } else { // if the node is interior we search the tighter bounding volume through its children
-
-        std::queue<std::pair<uint32_t, std::vector<gua::node::Node*> > > depth_node_vector_queue;
-
-        // max depth we search down
-        depth_node_vector_queue.push({0, {queried_node}});
-
-        // do the surface area check per level and find which level is the tightest
-        while(!depth_node_vector_queue.empty()) {
-
-            auto checked_depth_node_vector_pair = depth_node_vector_queue.front();
-
-            // pop this node from the queue and later repeat with the new deeper pair
-            depth_node_vector_queue.pop();
-
-            // check if if the children level is tighter than the current level
-            if ( check_children_surface_area(checked_depth_node_vector_pair.second, smax) && checked_depth_node_vector_pair.first < dmax)
-            {
-                std::vector<gua::node::Node*> checked_nodes_vector;
-
-                // look through the vector
-                for (auto const& checked_node: checked_depth_node_vector_pair.second)
-                {
-                    // if the node is leaf issue the query
-                    if(checked_node->get_children().empty()) {
-                        leaf_nodes_vector.push_back(checked_node);
-                    }
-
-                    // if the node is interior push the children to the vector which later will be used to check their tightness
-                    else {
-
-                        for(auto const& child_of_checked_node: checked_node->get_children()) {
-                            checked_nodes_vector.push_back(child_of_checked_node.get());
-                        }
-                    }
-
+    uint32_t depth = 0;
+    while ((!check_nodes_vector.empty()) && depth < 3) {
+        auto node = check_nodes_vector.back();
+        check_nodes_vector.pop_back();
+        if(node->get_children().empty() || (node->get_children().size() == 1)) {
+            query_nodes_vector.push_back(node);
+        } else if (node->get_children().size() > 1) {
+            std::vector<gua::node::Node*> parent_node_vector;
+            parent_node_vector.push_back(node);
+            if (check_children_surface_area(parent_node_vector, 1.4f)){
+                for (auto const& child : node->get_children()) {
+                    check_nodes_vector.push_back(child.get());
                 }
-
-
-                // if the vector is empty it means the all the checked node is leaf and thus is already queried
-                if (!checked_nodes_vector.empty())
-                {
-                    // push the vector containing interior nodes to the queue for the next iteration
-                    depth_node_vector_queue.push({checked_depth_node_vector_pair.first+1, checked_nodes_vector});
-                }
-            }
-
-            // the current level is the tightest  or comprises of the nodes with depth = 3 or leaf nodes
-            else {
-
-                leaf_nodes_vector.insert(leaf_nodes_vector.end(), checked_depth_node_vector_pair.second.begin(), checked_depth_node_vector_pair.second.end() );
-            }
-        }
+                depth += 1;
+            } else {
+                query_nodes_vector.push_back(node);
+            } 
+        } 
 
     }
 
-    instanced_array_draw(leaf_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
+    for (auto const& node : check_nodes_vector) {
+            query_nodes_vector.push_back(node);
+    }
+
+
+    instanced_array_draw(query_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
+
 
 }
 
