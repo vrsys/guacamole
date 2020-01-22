@@ -45,6 +45,7 @@
 
 //#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 #define CHC_pp
+//#define vis_pullup
 
 namespace
 {
@@ -66,6 +67,7 @@ namespace gua
 
 bool query_context_state = false;
 std::array<float, 16> keep_probability;
+uint64_t batch_size_multi_query = 20;
 ////////////////////////////////////////////////////////////////////////////////
 
 OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
@@ -548,8 +550,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             //query previously invisible node n
                             i_query_queue.push(current_node);
 
+
                             /***************************placeholder number here! testing for better one***********************/
-                            if(i_query_queue.size() >= 20) {
+                            if(i_query_queue.size() >= batch_size_multi_query) {
                                 issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, i_query_queue);
                             }
                         } else {
@@ -692,6 +695,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
         for (auto const& current_node : front_query_vector) {
             set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
+            set_visibility_persistence(current_node->unique_node_id(), false);
         }
     }
 }
@@ -760,8 +764,10 @@ void OcclusionCullingTriMeshRenderer::traverse_node(gua::node::Node* current_nod
             auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
             traversal_priority_queue.push(child_node_distance_pair_to_insert);
         }
+#ifdef vis_pullup
         set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
         set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
+#endif
     }
 }
 
@@ -864,8 +870,17 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
         scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
         int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue) {
 
+    batch_size_max = batch_size_multi_query;
+
+    //calculate multi query size
+    /*first sorte nodes in descending order based on probability of staying invisible --> number of frames in same vis state times array 
+    if node in same state for more than 16 frames--> max */
+    std::priority_queue<gua::node::Node*, float> visibility_persistence_probability;
+    for(auto const& node : i_query_queue) {
+        float visibility_persistence = get_visibility_persistence(node->unique_node_id());
+    }
+
     while(!i_query_queue.empty()) {
-        uint64_t batch_size_max = 20; //only paceholder! has to be implemented correctly still!!!
 
         uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue.size() );
         //uint i = 0;
@@ -1115,6 +1130,8 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(
     // pull up algorithm as stated by CHC paper
 
     while(!get_visibility(temp_node->unique_node_id(), in_camera_uuid)) {
+
+        set_visibility_persistence(temp_node->unique_node_id(), true);
 
         set_visibility(temp_node->unique_node_id(), in_camera_uuid, true);
         set_last_visibility_checked_result(temp_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
