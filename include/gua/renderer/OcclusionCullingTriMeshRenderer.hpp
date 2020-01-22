@@ -54,6 +54,14 @@ struct NodeDistancePairComparator
     }
 };
 
+struct NodeVisibilityProbabilityPairComparator
+{
+    bool operator()(std::pair<gua::node::Node*, double> const& lhs, std::pair<gua::node::Node*, double> const& rhs)
+    {
+        return lhs.second < rhs.second;
+    }
+};
+
 struct MultiQuery {
     scm::gl::occlusion_query_ptr occlusion_query_pointer;
     std::vector<gua::node::Node*> nodes_to_query;

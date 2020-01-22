@@ -67,7 +67,7 @@ namespace gua
 
 bool query_context_state = false;
 std::array<float, 16> keep_probability;
-uint64_t batch_size_multi_query = 20;
+uint64_t batch_size_multi_query = 100;
 ////////////////////////////////////////////////////////////////////////////////
 
 OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
@@ -390,17 +390,12 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
         auto const& current_cam_node = pipe.current_viewstate().camera;
         //std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
 
-        //query queue - where it is used?
+
         std::queue<MultiQuery> query_queue;
-
-        //query queue for nodes that were previously invisible and need to be queried
         std::queue<gua::node::Node*> i_query_queue;
-
-        //query queue for nodes that were previously visible and need to be queried but can wait until the end of the frame
         std::queue<gua::node::Node*> v_query_queue;
 
         // reset visibility status if the node was never visited
-        // only one element is in the vector. is it necessary to do a for loop here? Or for the case we have more than one oc-group_node
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second )
         {
 
@@ -468,14 +463,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             set_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid, current_frame_id);
 
-            visibility_persistence_vector.push_back(occlusion_group_node);
-
-            while(!visibility_persistence_vector.empty()) {
-                auto node = visibility_persistence_vector.back();
-                visibility_persistence_vector.pop_back();
-
-                
-            }
 
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() )
@@ -551,8 +538,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             i_query_queue.push(current_node);
 
 
-                            /***************************placeholder number here! testing for better one***********************/
-                            if(i_query_queue.size() >= batch_size_multi_query) {
+                            //1 is for inital frame. After that the max will always be the max from the last frame
+                            if(i_query_queue.size() >= batch_size_multi_query || batch_size_multi_query == 1) {
                                 issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, i_query_queue);
                             }
                         } else {
@@ -870,27 +857,65 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
         scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
         int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue) {
 
-    batch_size_max = batch_size_multi_query;
+    uint64_t batch_size_max = batch_size_multi_query;
 
     //calculate multi query size
     /*first sorte nodes in descending order based on probability of staying invisible --> number of frames in same vis state times array 
     if node in same state for more than 16 frames--> max */
-    std::priority_queue<gua::node::Node*, float> visibility_persistence_probability;
-    for(auto const& node : i_query_queue) {
-        float visibility_persistence = get_visibility_persistence(node->unique_node_id());
-    }
+
+    std::priority_queue<std::pair<gua::node::Node*, double>,
+            std::vector<std::pair<gua::node::Node*, double> >, NodeVisibilityProbabilityPairComparator > visibility_persistence_probability;
+
+
+    std::queue<gua::node::Node*> i_query_queue2;
 
     while(!i_query_queue.empty()) {
+        auto node = i_query_queue.front();
+        i_query_queue.pop();
 
-        uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue.size() );
+        i_query_queue2.push(node);
+
+        double visibility_persistence = get_visibility_persistence(node->unique_node_id());
+        double keep;
+        if (visibility_persistence > 15) {
+            keep = keep_probability[15];
+        } else {
+            keep = keep_probability[visibility_persistence];
+        }
+        visibility_persistence_probability.push(std::make_pair(node, keep));
+
+    }
+
+    float fail = 1;
+    int number_of_nodes = 0;
+    int max = 0;
+    while(!visibility_persistence_probability.empty()) {
+        auto node = visibility_persistence_probability.top();
+        visibility_persistence_probability.pop();
+        number_of_nodes++;
+        fail *= node.second;
+        float cost = (1+(1-fail)*number_of_nodes);
+        float value = number_of_nodes/cost;
+        if (value > max) {
+            max = value;
+        } else {
+            break;
+        }
+        
+    }
+
+
+    while(!i_query_queue2.empty()) {
+
+        uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue2.size() );
         //uint i = 0;
         std::vector<gua::node::Node*> temp_multi_query_vector;
 
         for(uint64_t i = 0; i < num_nodes_to_render; ++i) {
             //while(i <= batch_size_max) {
-            auto node = i_query_queue.front();
+            auto node = i_query_queue2.front();
             temp_multi_query_vector.push_back(node);
-            i_query_queue.pop();
+            i_query_queue2.pop();
             ++i;
             //}
         }
