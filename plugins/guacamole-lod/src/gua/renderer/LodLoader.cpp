@@ -283,6 +283,8 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
             // after the vis file was parsed, load all models and set the common properties
 
+            int32_t model_index = 0;
+
             for(auto const& model_path : model_files_to_load) {
 
                 std::size_t found = model_path.find_last_of("/\\");
@@ -297,7 +299,12 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                 if(initial_max_surfel_radius > 0.0f) {
                     current_point_cloud_shared_ptr->set_max_surfel_radius(initial_max_surfel_radius);
                 }
+
+                if(model_index < settings.num_models_with_provenance_) {
+                    current_point_cloud_shared_ptr->set_has_provenance_attributes(true);
+                }
     
+                ++model_index;
             }
 
             return loaded_point_cloud_models;

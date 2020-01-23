@@ -99,6 +99,7 @@ struct vis_settings {
   std::string selection_ {""};
   float max_radius_ {std::numeric_limits<float>::max()};
   int color_rendering_mode {0};
+  int num_models_with_provenance_ {100};
 };
 
 

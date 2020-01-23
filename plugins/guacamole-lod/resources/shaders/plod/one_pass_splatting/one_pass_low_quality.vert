@@ -30,6 +30,7 @@ uniform bool enable_linear_temporal_interpolation = true;
 
 uniform int attribute_offset;
 
+uniform bool has_provenance_attributes;
 
 @include "../common/coloring.glsl"
 @include "../common/deformation.glsl"
@@ -52,7 +53,7 @@ void main() {
 
   vec3 raw_point_color = vec3(in_r, in_g, in_b); 
 
-  if( use_programmable_attributes && 
+  if( has_provenance_attributes && use_programmable_attributes && 
       (! (    (fem_vert_w_0 <= 0.0)  
            || (fem_vert_w_1 <= 0.0)  
            || (fem_vert_w_2 <= 0.0) ) )

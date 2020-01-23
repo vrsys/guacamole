@@ -171,6 +171,8 @@ void LowQualitySplattingSubRenderer::_upload_model_dependent_uniforms(std::share
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
     current_material_shader->apply_uniform(ctx, "max_surfel_radius", plod_node->get_max_surfel_radius());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+    current_material_shader->apply_uniform(ctx, "has_provenance_attributes", plod_node->get_has_provenance_attributes());
 }
 
 } // namespace gua

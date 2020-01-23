@@ -32,6 +32,8 @@ uniform bool enable_time_series_deformation = true;
 
 uniform bool enable_linear_temporal_interpolation = true;
 
+uniform bool has_provenance_attributes;
+
 @include "../common/deformation.glsl"
 
 out VertexData {
@@ -49,7 +51,7 @@ void main() {
 
   vec3 read_position = in_position;
 
-  if(use_programmable_attributes) {
+  if(has_provenance_attributes && use_programmable_attributes) {
 
   	if(enable_time_series_deformation) {
       deform_position(read_position);

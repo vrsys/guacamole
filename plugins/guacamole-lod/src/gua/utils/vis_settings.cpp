@@ -318,6 +318,9 @@ void load_vis_settings(std::string const& vis_file_name, vis_settings& settings)
           else if (key == "simulation_positions_filename") {
             settings.max_radius_ = std::max(atof(value.c_str()), 0.0);
           }
+          else if (key == "num_models_with_provenance") {
+            settings.num_models_with_provenance_ = atoi(value.c_str());
+          }
           else if (key == "fem_to_pcl_transform") {
             std::istringstream in_transform(value);
 

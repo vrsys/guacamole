@@ -116,6 +116,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     void set_attribute_color_mix_in_factor(float attribute_color_mix_in_factor);
     float get_attribute_color_mix_in_factor() const;
 
+    void set_has_provenance_attributes(bool has_provenance_attributes);
+    bool get_has_provenance_attributes() const;
 
     void set_active_time_series_index(unsigned int time_series_index);
     int get_active_time_series_index() const;
@@ -174,6 +176,7 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
     int active_time_series_data_description_index_ = 0;
     std::vector<std::string> associated_time_series_data_descriptions_;
 
+    bool has_provenance_attributes_ = false;
 };
 
 } // namespace node
