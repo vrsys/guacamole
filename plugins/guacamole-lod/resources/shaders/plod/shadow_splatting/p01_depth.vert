@@ -24,6 +24,8 @@ uniform bool enable_linear_temporal_interpolation = true;
 uniform float radius_scaling;
 uniform float max_surfel_radius;
 
+uniform bool has_provenance_attributes;
+
 out VertexData {
   vec3 pass_ms_u;
   vec3 pass_ms_v;
@@ -38,7 +40,7 @@ vec3 read_position = in_position;
 
 vec3 raw_point_color = vec3(in_r, in_g, in_b); 
 
-if( use_programmable_attributes && 
+if( has_provenance_attributes && use_programmable_attributes && 
   (! (    (fem_vert_w_0 <= 0.0)  
        || (fem_vert_w_1 <= 0.0)  
        || (fem_vert_w_2 <= 0.0) ) )

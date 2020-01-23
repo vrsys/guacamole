@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
     auto fem_model(
-        loader.create_geometry_from_file("fem_model", "/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_OBJS/2020_01_06/flipped_normals_Scherkonde_Geom_registered_2020_01_06.obj", 
+        loader.create_geometry_from_file("fem_model", "/mnt/pitoti/AISTec/FEM_simulation/Scherkondetal_Time_Series_20190822/FEM_OBJS/2020_01_23_Verbundtreffen_3_Demostate/Joined_Scherkonde_Geom_2020_01_23_registered.obj", 
                                                        gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
     //auto fem_model(

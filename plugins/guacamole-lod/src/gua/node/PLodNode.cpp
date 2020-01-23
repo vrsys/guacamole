@@ -315,6 +315,16 @@ int PLodNode::get_number_of_simulation_positions() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void PLodNode::set_has_provenance_attributes(bool has_provenance_attributes) {
+    has_provenance_attributes_ = has_provenance_attributes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool PLodNode::get_has_provenance_attributes() const {
+    return has_provenance_attributes_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 std::vector<scm::math::vec3f> PLodNode::get_current_simulation_positions() const {
     if( !associated_time_series_data_descriptions_.empty() ) {
         auto const& active_time_series_description = associated_time_series_data_descriptions_[active_time_series_data_description_index_];
@@ -329,7 +339,7 @@ std::vector<scm::math::vec3f> PLodNode::get_current_simulation_positions() const
         int timestep_t1 = int(ceil(current_timestep));
 
         float fraction = current_timestep - timestep_t0;
-        if( get_enable_temporal_interpolation() ) {
+        if( !get_enable_temporal_interpolation() ) {
             fraction = int(fraction);
         }
 
