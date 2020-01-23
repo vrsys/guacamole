@@ -147,7 +147,6 @@ void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
     material->set_uniform("metalness", 0.0f);
     material->set_uniform("emissivity", 1.0f);
 
-    std::srand(std::time(NULL));
 
     for(int grid_position_z = start_position_z; grid_position_z < end_position_z; ++grid_position_z) {
         for(int grid_position_x = start_position_x; grid_position_x < end_position_x; ++grid_position_x) {

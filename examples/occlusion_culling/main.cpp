@@ -170,7 +170,7 @@ void print_keyboard_controls() {
     std::cout << std::endl;
 }
 
-
+#define CONSISTENT_SCENE_STATE
 
 int main(int argc, char** argv)
 {
@@ -194,7 +194,11 @@ int main(int argc, char** argv)
 
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
+#ifdef CONSISTENT_SCENE_STATE
     std::srand(0);
+#else 
+    std::srand(std::time(NULL));
+#endif
 
 #ifdef USE_CITY_SCENE
     create_simple_demo_scene(occlusion_group_node);
@@ -251,7 +255,7 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-    uint32_t res_factor = 1;
+    uint32_t res_factor = 4;
     // setup rendering pipeline and window
     auto resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 

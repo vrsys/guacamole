@@ -46,6 +46,7 @@
 //#define OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
 #define CHC_pp
 //#define vis_pullup
+#define DYNAMIC_BATCH_SIZE
 
 namespace
 {
@@ -67,7 +68,7 @@ namespace gua
 
 bool query_context_state = false;
 std::array<float, 16> keep_probability;
-uint64_t batch_size_multi_query = 100;
+uint64_t batch_size_multi_query = 10;
 ////////////////////////////////////////////////////////////////////////////////
 
 OcclusionCullingTriMeshRenderer::OcclusionCullingTriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap)
@@ -539,7 +540,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
 
                             //1 is for inital frame. After that the max will always be the max from the last frame
-                            if(i_query_queue.size() >= batch_size_multi_query || batch_size_multi_query == 1) {
+                            if(i_query_queue.size() >= batch_size_multi_query) {
                                 issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, i_query_queue);
                             }
                         } else {
@@ -575,7 +576,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 #endif
             }
 #ifdef CHC_pp
-
+/*
             while(!v_query_queue.empty()) {
                 //issue remaining queries from v-queue
                 auto current_node = v_query_queue.front();
@@ -585,7 +586,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
 
             }
-
+*/
 #endif      
         }
 
@@ -857,8 +858,7 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
         scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
         int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue) {
 
-    uint64_t batch_size_max = batch_size_multi_query;
-
+#ifdef DYNAMIC_BATCH_SIZE
     //calculate multi query size
     /*first sorte nodes in descending order based on probability of staying invisible --> number of frames in same vis state times array 
     if node in same state for more than 16 frames--> max */
@@ -867,13 +867,11 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
             std::vector<std::pair<gua::node::Node*, double> >, NodeVisibilityProbabilityPairComparator > visibility_persistence_probability;
 
 
-    std::queue<gua::node::Node*> i_query_queue2;
 
     while(!i_query_queue.empty()) {
         auto node = i_query_queue.front();
         i_query_queue.pop();
 
-        i_query_queue2.push(node);
 
         double visibility_persistence = get_visibility_persistence(node->unique_node_id());
         double keep;
@@ -886,42 +884,60 @@ void OcclusionCullingTriMeshRenderer::issue_multi_query(RenderContext const& ctx
 
     }
 
+
+    std::vector<gua::node::Node*> query_vector;
+
     float fail = 1;
     int number_of_nodes = 0;
     int max = 0;
     while(!visibility_persistence_probability.empty()) {
         auto node = visibility_persistence_probability.top();
-        visibility_persistence_probability.pop();
         number_of_nodes++;
         fail *= node.second;
         float cost = (1+(1-fail)*number_of_nodes);
         float value = number_of_nodes/cost;
         if (value > max) {
             max = value;
+            visibility_persistence_probability.pop();
+            query_vector.push_back(node.first);
         } else {
-            break;
+            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, query_vector);
+            max = 0;
+            number_of_nodes = 0;
+            fail = 1;
+            query_vector.clear();
+            batch_size_multi_query = std::max(20,number_of_nodes);
+
+        }
+        if (visibility_persistence_probability.empty()) {
+            issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, query_vector);
         }
         
     }
 
+#else 
 
-    while(!i_query_queue2.empty()) {
+    uint64_t batch_size_max = 20;
+    
+    while(!i_query_queue.empty()) {
 
-        uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue2.size() );
+        uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue.size() );
         //uint i = 0;
         std::vector<gua::node::Node*> temp_multi_query_vector;
 
         for(uint64_t i = 0; i < num_nodes_to_render; ++i) {
             //while(i <= batch_size_max) {
-            auto node = i_query_queue2.front();
+            auto node = i_query_queue.front();
             temp_multi_query_vector.push_back(node);
-            i_query_queue2.pop();
+            i_query_queue.pop();
             ++i;
             //}
         }
         issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, temp_multi_query_vector);
 
     }
+#endif
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
