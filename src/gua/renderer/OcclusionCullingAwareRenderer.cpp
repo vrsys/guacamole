@@ -1,19 +1,36 @@
 #include <gua/renderer/OcclusionCullingAwareRenderer.hpp>
+#include <gua/renderer/TriMeshRessource.hpp>
 #include <boost/assign/list_of.hpp>
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 #include <gua/node/OcclusionCullingGroupNode.hpp>
+#include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/config.hpp>
 
-bool query_context_state = false;
+
+bool query_context_state2 = false;
 
 std::array<float, 16> keep_probability;
 uint64_t batch_size_multi_query = 10;
 
+#define USE_PRIORITY_QUEUE
 
+namespace
+{
+gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
+{
+    uint64_t handle = 0;
+    if(tex)
+    {
+        handle = tex->native_handle();
+    }
+    return gua::math::vec2ui(handle & 0x00000000ffffffff, handle & 0xffffffff00000000);
+}
+
+}
 
 
 namespace gua
 {
-
 
 
 OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const& ctx, SubstitutionMap const& smap) :
@@ -33,7 +50,6 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     depth_complexity_vis_program_stages_(), depth_complexity_vis_program_(nullptr),//only one shader that is independent of the actual node material
     occlusion_query_box_program_stages_(), occlusion_query_box_program_(nullptr), //only one shader that is independent of the actual node material
     occlusion_query_array_box_program_stages_(), occlusion_query_array_box_program_(nullptr), //only one shader that is independent of the actual node material
-
     global_substitution_map_(smap) {
     	
     	for(int32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
@@ -293,7 +309,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                             }
 
                             traverse_node(current_node,
-                                          ctx, pipe,
+                                          ctx, pipe, desc,
                                           render_target,
                                           current_material,
                                           current_shader,
@@ -352,7 +368,7 @@ void OcclusionCullingAwareRenderer::set_last_visibility_check_frame_id(std::size
 
 void OcclusionCullingAwareRenderer::unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target) {
     render_target.unbind(ctx);
-    query_context_state = false;
+    query_context_state2 = false;
 
     auto const& glapi = ctx.render_context->opengl_api();
     glapi.glColorMask(true, true, true, true);
@@ -382,11 +398,8 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
     std::vector<gua::node::Node*> front_query_vector,
     std::queue<MultiQuery>& query_queue,
     int64_t current_frame_id)
-
-
 {
-
-    
+ 
     unsigned int threshold = 0;
     switch( desc.get_occlusion_query_type() ) {
     case OcclusionQueryType::Number_Of_Samples_Passed:
@@ -432,7 +445,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
                 if(!was_visible) {
 
                     traverse_node(current_node,
-                                  ctx, pipe,
+                                  ctx, pipe, desc, 
                                   render_target,
                                   current_material,
                                   current_shader,
@@ -495,9 +508,9 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
-    if (!query_context_state) {
+    if (!query_context_state2) {
         set_occlusion_query_states(ctx);
-        query_context_state = true;
+        query_context_state2 = true;
     }
 
 
@@ -649,6 +662,7 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
 void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         RenderContext const& ctx,
         Pipeline& pipe,
+        PipelinePassDescription const& desc,
         RenderTarget& render_target,
         MaterialShader* current_material,
         std::shared_ptr<ShaderProgram> current_shader,
@@ -658,12 +672,13 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         ,int64_t current_frame_id) {
 
     if((current_node->get_children().empty())) {
-        render_visible_leaf(current_node,
+        renderSingleNode(pipe, desc, current_node);
+        /*render_visible_leaf(current_node,
                             ctx, pipe,
                             render_target,
                             current_material,
                             current_shader,
-                            current_rasterizer_state);
+                            current_rasterizer_state);*/
 
     } else {
 
@@ -683,7 +698,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
 void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext const& ctx) {
 
-    query_context_state = true;
+    query_context_state2 = true;
 
     auto const& glapi = ctx.render_context->opengl_api();
 
@@ -732,14 +747,16 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
     scm::gl::rasterizer_state_ptr current_rasterizer_state)
 {
 
+
+
     
-    if (query_context_state == true) {
+    if (query_context_state2 == true) {
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);
         ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->set_blend_state(default_blend_state_);
         ctx.render_context->apply();
-        query_context_state = false;
+        query_context_state2 = false;
  
     }
 
@@ -762,6 +779,7 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
         }
 
     }
+    
 
 }
 
@@ -971,5 +989,68 @@ uint32_t OcclusionCullingAwareRenderer::get_visibility_persistence(std::size_t n
 }
 
 
+void OcclusionCullingAwareRenderer::switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader,
+        MaterialShader* current_material, RenderTarget const& render_target, bool shadow_mode, std::size_t cam_uuid) {
+    if(current_material != tri_mesh_node->get_material()->get_shader())
+    {
+        current_material = tri_mesh_node->get_material()->get_shader();
+        if(current_material)
+        {
+            auto shader_iterator = default_rendering_programs_.find(current_material);
+            if(shader_iterator != default_rendering_programs_.end())
+            {
+                current_shader = shader_iterator->second;
+            }
+            else
+            {
+                auto smap = global_substitution_map_;
+                for(const auto& i : current_material->generate_substitution_map())
+                    smap[i.first] = i.second;
+
+                current_shader = std::make_shared<ShaderProgram>();
+
+#ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
+#else
+                bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
+                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+#endif
+                default_rendering_programs_[current_material] = current_shader;
+            }
+        }
+        else
+        {
+            Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
+        }
+        if(current_shader)
+        {
+            current_shader->use(ctx);
+            current_shader->set_uniform(ctx, math::vec2ui(render_target.get_width(), render_target.get_height()),
+                                        "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
+            current_shader->set_uniform(ctx, 1.0f / render_target.get_width(), "gua_texel_width");
+            current_shader->set_uniform(ctx, 1.0f / render_target.get_height(), "gua_texel_height");
+            // hack
+            current_shader->set_uniform(ctx, ::get_handle(render_target.get_depth_buffer()), "gua_gbuffer_depth");
+
+
+#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+            if(!shadow_mode)
+            {
+                VTContextState* vt_state = &VTBackend::get_instance().get_state(cam_uuid);
+
+                if(vt_state && vt_state->has_camera_)
+                {
+                    current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
+                }
+            }
+#endif
+        }
+    }
+}
+
+void OcclusionCullingAwareRenderer::set_last_visibility_checked_result(std::size_t in_unique_node_id, std::size_t in_camera_uuid, int32_t current_frame_id, bool result) {
+    LastVisibility temp_last_visibility = LastVisibility{in_camera_uuid, current_frame_id, result};
+    last_visibility_checked_result_[in_unique_node_id] = temp_last_visibility;
+}
 
 }

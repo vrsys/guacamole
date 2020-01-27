@@ -65,8 +65,10 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 namespace gua
 {
 
+#define USE_PRIORITY_QUEUE
 
 bool query_context_state = false;
+
 std::array<float, 16> keep_probability;
 uint64_t batch_size_multi_query = 10;
 ////////////////////////////////////////////////////////////////////////////////
@@ -779,7 +781,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     }
 
     // for testing and comparison purpose
-    bool fallback = true;
+    bool fallback = false;
 
     auto current_shader = occlusion_query_array_box_program_;
 
@@ -1185,7 +1187,7 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(
     }
 
 }
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////                            ///////////////////////////////////////////////////
 void OcclusionCullingTriMeshRenderer::render_visible_leaf(
     gua::node::Node* current_query_node,
     RenderContext const& ctx,

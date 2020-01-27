@@ -13,6 +13,9 @@
 #include <boost/assign/list_of.hpp>
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 
+
+bool query_context_state = false;
+
 namespace gua
 {
 void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDescription const& desc,
@@ -311,7 +314,10 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                             if(occlusion_culling_geometry_vis) {
                                 switch_state_for_depth_complexity_vis(ctx, current_shader);
                             } else {
-                                set_occlusion_query_states(ctx);
+                                if (!query_context_state){
+                                    set_occlusion_query_states(ctx);
+                                }
+                                
                             }
 
                             auto current_occlusion_query_object = occlusion_query_iterator->second;

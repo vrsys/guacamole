@@ -255,7 +255,7 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-    uint32_t res_factor = 4;
+    uint32_t res_factor = 1;
     // setup rendering pipeline and window
     auto resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 
