@@ -39,7 +39,7 @@
 
 //#define AUTO_ANIMATION
 
-#define USE_CITY_SCENE
+//#define USE_CITY_SCENE
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -204,7 +204,9 @@ int main(int argc, char** argv)
     create_simple_demo_scene(occlusion_group_node);
 #else 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    create_child_bb_test_scene(occlusion_group_node);
+    //create_child_bb_test_scene2(occlusion_group_node);
 
 
     // create_simple_debug_scene(occlusion_group_node);
@@ -255,7 +257,7 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-    uint32_t res_factor = 4;
+    uint32_t res_factor = 1;
     // setup rendering pipeline and window
     auto resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 

@@ -14,6 +14,7 @@
 
 
 namespace gua {
+    
 
 void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(
     Pipeline& pipe,

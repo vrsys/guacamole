@@ -25,7 +25,6 @@
 @include "shaders/common/gua_camera_uniforms.glsl"
 
 
-layout(location=0) in vec3 in_position;
 //ignore remaing layout parameters
 
 uniform mat4 view_projection_matrix;

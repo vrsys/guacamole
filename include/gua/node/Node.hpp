@@ -229,6 +229,8 @@ public:
         return "<Node>";
     }
 
+    bool is_visible;
+
     events::Signal<math::mat4 const&> on_world_transform_changed;
 
     /**

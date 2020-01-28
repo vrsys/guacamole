@@ -271,7 +271,11 @@ private:
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > is_visible_for_camera_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
+    
+    // map of node id and its visibility status (the last frame id where it is checked and boolean visibility)
     mutable std::unordered_map<std::size_t, LastVisibility > last_visibility_checked_result_;
+    
+    // 
     mutable std::unordered_map<std::size_t, VisiblityPersistence > node_visibility_persistence;
 
     mutable scm::gl::buffer_ptr empty_vbo_ = nullptr;
