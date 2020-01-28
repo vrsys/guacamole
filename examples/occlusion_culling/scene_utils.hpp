@@ -35,4 +35,5 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_roo
 
 
 void create_demo_kbb(std::shared_ptr<gua::node::Node> scene_root_node);
+void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node);
 #endif

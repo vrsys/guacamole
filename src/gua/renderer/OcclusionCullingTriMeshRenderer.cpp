@@ -398,6 +398,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
         std::queue<MultiQuery> query_queue;
         std::queue<gua::node::Node*> i_query_queue;
         std::queue<gua::node::Node*> v_query_queue;
+        std::queue<gua::node::Node*> visibility_setting_queue;
 
         // reset visibility status if the node was never visited
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second )
@@ -467,7 +468,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             set_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid, current_frame_id);
 
-
+            visibility_setting_queue.push(occlusion_group_node);
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() )
             {
@@ -530,12 +531,9 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                     if(culling_frustum.intersects(current_node->get_bounding_box())) {
 
-                        bool was_visible = false;
-
                         LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
-                        if (temp_last_visibility.frame_id == current_frame_id-1) {
-                            was_visible = temp_last_visibility.result;
-                        }
+                        
+                        bool was_visible = temp_last_visibility.result;
 
                         if(!was_visible) {
                             //query previously invisible node n
@@ -572,13 +570,13 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
                     }
                 }
-#ifdef CHC_pp
+
                 if (traversal_priority_queue.empty()) {
-                    issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid,i_query_queue);
+                    issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, i_query_queue);
                 }
-#endif
+
             }
-#ifdef CHC_pp
+
 /*
             while(!v_query_queue.empty()) {
                 //issue remaining queries from v-queue
@@ -590,7 +588,20 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
 
             }
 */
-#endif      
+            while(!visibility_setting_queue.empty()) {
+                auto current_node = visibility_setting_queue.front();
+                visibility_setting_queue.pop();
+
+                std::cout<<current_node->get_name() <<" is "<< get_visibility(current_node->unique_node_id(), current_cam_node.uuid)<< " in "<< current_frame_id <<std::endl;
+
+                set_last_visibility_checked_result(current_node->unique_node_id(), current_cam_node.uuid, current_frame_id, get_visibility(current_node->unique_node_id(), current_cam_node.uuid));
+
+                for (auto const& child : current_node->get_children()) {
+                    visibility_setting_queue.push(child.get());
+                }
+            }
+
+  
         }
 
         unbind_and_reset(ctx, render_target);
@@ -640,7 +651,8 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
 #ifdef CHC_pp
         if(front_query_vector.size()>1) { //this means our multi query failed.
             for (auto const& node : front_query_vector) {
-                set_last_visibility_checked_result(node->unique_node_id(), in_camera_uuid, current_frame_id, true);
+                //set_last_visibility_checked_result(node->unique_node_id(), in_camera_uuid, current_frame_id, true);
+                set_visibility(node->unique_node_id(), in_camera_uuid, true);
                 std::vector<gua::node::Node*> single_node_to_query;
                 single_node_to_query.push_back(node);
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, in_camera_uuid, single_node_to_query);
@@ -651,16 +663,12 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
             for (auto const& current_node : front_query_vector) {
 
 
-
-                bool was_visible = false;
-
-
                 LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
-                if (temp_last_visibility.frame_id == current_frame_id-1) {
-                    was_visible = temp_last_visibility.result;
-                }
-                set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
-
+                
+                bool was_visible = temp_last_visibility.result;
+                
+                //set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
+                //set_visibility(current_node->unique_node_id(), in_camera_uuid, true);
                 if(!was_visible) {
 
                     traverse_node(current_node,
@@ -684,7 +692,8 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
     } else {
 #endif
         for (auto const& current_node : front_query_vector) {
-            set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
+            std::cout<<"setting to false"<<std::endl;
+            //set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
             set_visibility_persistence(current_node->unique_node_id(), false);
         }
@@ -757,7 +766,7 @@ void OcclusionCullingTriMeshRenderer::traverse_node(gua::node::Node* current_nod
         }
 #ifdef vis_pullup
         set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
-        set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
+        //set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
 #endif
     }
 }
@@ -782,7 +791,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     }
 
     // for testing and comparison purpose
-    bool fallback = false;
+    bool fallback = true;
 
     auto current_shader = occlusion_query_array_box_program_;
 
@@ -812,8 +821,8 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     for (auto const& original_query_node : current_nodes)
     {
 
-
-        if (fallback)
+        
+        if (fallback || original_query_node->get_children().empty())
         {
             // original draw call
             auto world_space_bounding_box = original_query_node->get_bounding_box();
@@ -1184,7 +1193,7 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(
         set_visibility_persistence(temp_node->unique_node_id(), true);
 
         set_visibility(temp_node->unique_node_id(), in_camera_uuid, true);
-        set_last_visibility_checked_result(temp_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
+        //set_last_visibility_checked_result(temp_node->unique_node_id(), in_camera_uuid, current_frame_id, true);
 
         if (temp_node->get_parent() != nullptr)
         {
@@ -1283,7 +1292,7 @@ void OcclusionCullingTriMeshRenderer::unbind_and_reset(RenderContext const& ctx,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool OcclusionCullingTriMeshRenderer::check_children_surface_area(
+bool  OcclusionCullingTriMeshRenderer::check_children_surface_area(
     std::vector<gua::node::Node*> const& in_parent_nodes,
     float const smax) const
 {
@@ -1291,7 +1300,7 @@ bool OcclusionCullingTriMeshRenderer::check_children_surface_area(
     float parent_surface_area = 0.0f;
     float children_surface_area = 0.0f;
 
-    for(auto const& parent_node: in_parent_nodes) {
+    for (auto const& parent_node : in_parent_nodes) {
 
         // sum of the surface area of every node in the vactor
         parent_surface_area += parent_node->get_bounding_box().surface_area();
@@ -1300,7 +1309,7 @@ bool OcclusionCullingTriMeshRenderer::check_children_surface_area(
 
         if (!children_vector.empty())
         {
-            for (auto const& child: children_vector)
+            for (auto const& child : children_vector)
             {
                 // sum of the surface area of every children node of every parent node in the vactor
                 children_surface_area += child->get_bounding_box().surface_area();
@@ -1313,6 +1322,9 @@ bool OcclusionCullingTriMeshRenderer::check_children_surface_area(
             // include the leaf
             children_surface_area += parent_node->get_bounding_box().surface_area();
         }
+
+        // std::cout<< "Node name " << parent_node->get_name() << std::endl;//<<  " | Number of parents: " << in_parent_nodes.size() << " | Children area: " << children_surface_area <<  " is tighter " << is_tighter << " than parent nodes: " << parent_surface_area  << std::endl;
+
     }
 
 
@@ -1400,41 +1412,103 @@ void OcclusionCullingTriMeshRenderer::find_tightest_bounding_volume(
     size_t current_frame_id,
     unsigned int const dmax,
     float const smax) {
-    // vector of nodes that needs to be queried
-    std::vector<gua::node::Node*> query_nodes_vector;
-    std::vector<gua::node::Node*> check_nodes_vector;
 
-    check_nodes_vector.push_back(queried_node);
-
-
-    uint32_t depth = 0;
-    while ((!check_nodes_vector.empty()) && depth < 3) {
-        auto node = check_nodes_vector.back();
-        check_nodes_vector.pop_back();
-        if(node->get_children().empty() || (node->get_children().size() == 1)) {
-            query_nodes_vector.push_back(node);
-        } else if (node->get_children().size() > 1) {
-            std::vector<gua::node::Node*> parent_node_vector;
-            parent_node_vector.push_back(node);
-            if (check_children_surface_area(parent_node_vector, 1.4f)){
-                for (auto const& child : node->get_children()) {
-                    check_nodes_vector.push_back(child.get());
-                }
-                depth += 1;
-            } else {
+    /*
+        // vector of nodes that needs to be queried
+        std::vector<gua::node::Node*> query_nodes_vector;
+        std::vector<gua::node::Node*> check_nodes_vector;
+        check_nodes_vector.push_back(queried_node);
+        uint32_t depth = 0;
+        while ((!check_nodes_vector.empty()) && depth < dmax) {
+            auto node = check_nodes_vector.back();
+            check_nodes_vector.pop_back();
+            // leaf node or interior node with 1 child
+            if(node->get_children().size() < 2)
+            {
                 query_nodes_vector.push_back(node);
-            } 
-        } 
-
-    }
-
-    for (auto const& node : check_nodes_vector) {
+            }
+            else
+            {
+                std::vector<gua::node::Node*> parent_node_vector;
+                parent_node_vector.push_back(node);
+                if (check_children_surface_area(parent_node_vector, smax))
+                {
+                    for (auto const& child : node->get_children()) {
+                        check_nodes_vector.push_back(child.get());
+                    }
+                    depth += 1;
+                } else {
+                    query_nodes_vector.push_back(node);
+                }
+            }
+        }
+        for (auto const& node : check_nodes_vector) {
             query_nodes_vector.push_back(node);
+        }
+        instanced_array_draw(query_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
+        */
+
+
+    std::vector<gua::node::Node*> tightest_nodes_vector;
+
+    // if the node is interior we search the tighter bounding volume through its children
+    std::queue<std::pair<uint32_t, std::vector<gua::node::Node*> > > depth_node_vector_queue;
+
+    // max depth we search down
+    depth_node_vector_queue.push({0, {queried_node}});
+
+    // do the surface area check per level and find which level is the tightest
+    while (!depth_node_vector_queue.empty()) {
+
+        auto depth_node_vector_pair = depth_node_vector_queue.front();
+
+        // pop this node from the queue and later repeat with the new deeper pair
+        depth_node_vector_queue.pop();
+
+
+        bool children_are_tighter = check_children_surface_area(depth_node_vector_pair.second, smax);
+
+
+        // check if if the children level is tighter than the current level
+        if ( children_are_tighter && depth_node_vector_pair.first < dmax)
+        {
+            std::vector<gua::node::Node*> checked_nodes_vector;
+
+            // look through the vector
+            for (auto const& parent_node : depth_node_vector_pair.second)
+            {
+                // if the node is leaf it is already the tightest node
+                if (parent_node->get_children().empty()) {
+                    tightest_nodes_vector.push_back(parent_node);
+                }
+
+                // if the node is interior push the children to the vector which later will be used to check their tightness
+                else {
+
+                    for (auto const& child_node : parent_node->get_children()) {
+                        checked_nodes_vector.push_back(child_node.get());
+                    }
+                }
+
+            }
+
+
+            // if the vector is empty it means the all the tighter node is leaf and thus is already queried
+            if (!checked_nodes_vector.empty())
+            {
+                // push the vector containing interior nodes to the queue for the next iteration
+                depth_node_vector_queue.push({depth_node_vector_pair.first + 1, checked_nodes_vector});
+            }
+        }
+
+        // the current level is the tightest  or comprises of the nodes with depth = 3 or leaf nodes
+        else {
+
+            tightest_nodes_vector.insert(tightest_nodes_vector.end(), depth_node_vector_pair.second.begin(), depth_node_vector_pair.second.end() );
+        }
     }
 
-
-    instanced_array_draw(query_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
-
+    instanced_array_draw(tightest_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
 
 }
 
