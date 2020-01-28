@@ -28,7 +28,7 @@
 #include <gua/platform.hpp>
 #include <gua/config.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
-
+#include <gua/renderer/OcclusionCullingAwareRenderer.hpp>
 #include <scm/gl_core/shader_objects.h>
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
@@ -41,7 +41,7 @@ class MaterialShader;
 class Pipeline;
 class PipelinePassDescription;
 
-class GUA_DLL TriMeshRenderer
+class GUA_DLL TriMeshRenderer : public OcclusionCullingAwareRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
 #endif
@@ -49,7 +49,9 @@ class GUA_DLL TriMeshRenderer
   public:
     TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
-    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc) override;
+
+    void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node) override;
 
   private:
     scm::gl::rasterizer_state_ptr rs_cull_back_;
