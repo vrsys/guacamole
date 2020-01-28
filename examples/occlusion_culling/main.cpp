@@ -36,7 +36,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-
+//#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
 #define USE_CITY_SCENE
@@ -81,7 +81,7 @@ void configure_pipeline_descriptions() {
 
     // first pipe
 
-#if 1 // USE OCCLUSION
+#ifdef OCCLUSION_TRIMESH_PASS
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
     auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);

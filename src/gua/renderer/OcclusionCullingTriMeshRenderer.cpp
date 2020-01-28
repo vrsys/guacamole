@@ -323,6 +323,7 @@ void OcclusionCullingTriMeshRenderer::render_without_oc(Pipeline& pipe, Pipeline
                 continue;
             }
 
+            
             if(depth_complexity_vis) { // we render the scene normally if depth complexity visualisation is false.
                 switch_state_for_depth_complexity_vis(ctx, current_shader); //rendering with depth complexity on
             } else {
@@ -961,11 +962,13 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(
 
     int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
 
+
+    
     current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
     current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
     current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
     current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
-
+    
     // lowfi shadows dont need material input
     if(rendering_mode != 1)
     {
@@ -1000,12 +1003,15 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(
         }
     }
 
-    ctx.render_context->set_rasterizer_state(rs_cull_back_ );
-    ctx.render_context->apply_state_objects();
+    if (ctx.render_context->current_rasterizer_state() != current_rasterizer_state) {
+        ctx.render_context->set_rasterizer_state(rs_cull_back_ );
+        ctx.render_context->apply_state_objects();
+    }
+
 
     ctx.render_context->apply_program();
 
-    ctx.render_context->apply();
+    //ctx.render_context->apply();
 
 }
 
@@ -1064,6 +1070,7 @@ void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(Render
         }
         if(current_shader)
         {
+            
             current_shader->use(ctx);
             current_shader->set_uniform(ctx, math::vec2ui(render_target.get_width(), render_target.get_height()),
                                         "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
@@ -1071,7 +1078,7 @@ void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(Render
             current_shader->set_uniform(ctx, 1.0f / render_target.get_height(), "gua_texel_height");
             // hack
             current_shader->set_uniform(ctx, ::get_handle(render_target.get_depth_buffer()), "gua_gbuffer_depth");
-
+            
 
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
             if(!shadow_mode)
