@@ -359,7 +359,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                             //if n is a leaf and the query is reasonable (find out what is reasonable)
 
 
-                            if(current_node->get_children().size() == 0) {
+                            if((current_node->get_children().size() == 0) && (query_reasonable)) {
                                 v_query_queue.push(current_node);
 
                             }
