@@ -631,7 +631,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             std::vector<gua::node::Node*> single_node_to_query;
                             single_node_to_query.push_back(current_vnode);
 
-                            std::cout << "SINGLE NODE: " << current_vnode->get_name() << std::endl;
+                            //std::cout << "SINGLE NODE: " << current_vnode->get_name() << std::endl;
 
                             issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
                         }
@@ -716,7 +716,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                 auto current_node = visibility_setting_queue.front();
                 visibility_setting_queue.pop();
 
-                std::cout<<current_node->get_name() <<" is "<< get_visibility(current_node->unique_node_id(), current_cam_node.uuid)<< " in "<< current_frame_id <<std::endl;
+                //std::cout<<current_node->get_name() <<" is "<< get_visibility(current_node->unique_node_id(), current_cam_node.uuid)<< " in "<< current_frame_id <<std::endl;
 
                 set_last_visibility_checked_result(current_node->unique_node_id(), current_cam_node.uuid, current_frame_id, get_visibility(current_node->unique_node_id(), current_cam_node.uuid));
 
@@ -813,7 +813,7 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
 
         for (auto const& current_node : front_query_vector) {
 
-            std::cout<<"setting to false"<<std::endl;
+            //std::cout<<"setting to false"<<std::endl;
             //set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
             set_visibility_persistence(current_node->unique_node_id(), false);
@@ -922,13 +922,13 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     }
 
     // for testing and comparison purpose
-    bool fallback = true;
+    bool fallback = false;
 
     auto current_shader = occlusion_query_array_box_program_;
 
     if (fallback)
     {
-        current_shader = occlusion_query_box_program_;
+        current_shader = occlusion_query_array_box_program_;
     } else {
         current_shader = occlusion_query_array_box_program_;
     }
@@ -957,8 +957,19 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
             // original draw call
             auto world_space_bounding_box = original_query_node->get_bounding_box();
 
-            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
-            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
+        //    current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
+        //    current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
+        
+            std::string const uniform_string_bb_min = "world_space_bb_min";
+            std::string const uniform_string_bb_max = "world_space_bb_max";
+
+
+            math::vec3f bb_min_vec3f = math::vec3f(world_space_bounding_box.min);
+            math::vec3f bb_max_vec3f = math::vec3f(world_space_bounding_box.max);
+
+            current_shader->set_uniform(ctx, bb_min_vec3f, uniform_string_bb_min, 0);
+            current_shader->set_uniform(ctx, bb_max_vec3f, uniform_string_bb_max, 0);
+
 
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
@@ -970,7 +981,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
             ctx.render_context->apply_vertex_input();
 
             auto const& glapi = ctx.render_context->opengl_api();
-            glapi.glDrawArrays(GL_TRIANGLES, 0, 36);
+            glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
 
         } else {
 
@@ -1670,7 +1681,7 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
 
     auto const& glapi = ctx.render_context->opengl_api();
     // std::cout<< "RENDERING INSTANCES: " << current_instance_ID << std::endl;
-    glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, current_instance_ID);
+    glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
 
     /*

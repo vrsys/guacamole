@@ -338,6 +338,12 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                             was_visible = temp_last_visibility.result;
                         }
 
+
+                        bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
+
+                        //std::cout<<"query for node "<<current_node->get_name()<< " in frame "<< current_frame_id << " is " << query_reasonable<<std::endl;
+                        //std::cout<<"query reasonable test" << query_reasonable<<std::endl;
+
                         if(!was_visible) {
                             //query previously invisible node n
                             i_query_queue.push(current_node);
@@ -353,7 +359,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                             //if n is a leaf and the query is reasonable (find out what is reasonable)
 
 
-                            if(current_node->get_children().size() == 0 && 1==1) {
+                            if(current_node->get_children().size() == 0) {
                                 v_query_queue.push(current_node);
 
                             }
@@ -434,17 +440,22 @@ LastVisibility OcclusionCullingAwareRenderer::get_last_visibility_checked_result
     return last_visibility_checked_result_[in_unique_node_id];
 }
 
+bool OcclusionCullingAwareRenderer::get_query_reasonable(std::size_t node_uuid) const{
+    return node_visibility_persistence[node_uuid].query_reasonable;
+}
+
 void OcclusionCullingAwareRenderer::set_visibility_persistence(std::size_t node_uuid, bool visibility) {
     VisiblityPersistence temp_vis_persistence = node_visibility_persistence[node_uuid];
 //this part is for randomized queries of visible nodes
+
 
     //if the node just got visible
     if( !temp_vis_persistence.last_visibility && visibility) {
         //the paper suggested a random value between 5-10 so we will use mod 77 for now to randomize tests for visible nodes
         node_visibility_persistence[node_uuid].randomizer = std::rand() % 8;
         node_visibility_persistence[node_uuid].query_reasonable = false;
-
     }
+
 
     //if the node was previously visible and stays visible
     if(temp_vis_persistence.last_visibility && visibility) {
@@ -452,7 +463,7 @@ void OcclusionCullingAwareRenderer::set_visibility_persistence(std::size_t node_
             node_visibility_persistence[node_uuid].query_reasonable = true;
             node_visibility_persistence[node_uuid].randomizer = std::rand() % 8;
         } else {
-            node_visibility_persistence[node_uuid].randomizer -=1;
+            node_visibility_persistence[node_uuid].randomizer -= 1;
         }
     }
 
@@ -464,6 +475,7 @@ void OcclusionCullingAwareRenderer::set_visibility_persistence(std::size_t node_
         node_visibility_persistence[node_uuid].persistence = 0;
     }
 
+    node_visibility_persistence[node_uuid].last_visibility= visibility;
 
 
 }
@@ -586,7 +598,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     {
         current_shader = occlusion_query_box_program_;
     } else {
-        current_shader = occlusion_query_box_program_;
+        current_shader = occlusion_query_array_box_program_;
     }
 
     current_shader->use(ctx);

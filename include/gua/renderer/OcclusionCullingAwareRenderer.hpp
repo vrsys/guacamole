@@ -125,6 +125,7 @@ class OcclusionCullingAwareRenderer {
 		uint32_t get_visibility_persistence(std::size_t node_uuid);
 		bool get_visibility(std::size_t node_path, std::size_t in_camera_uuid) const;
 		LastVisibility get_last_visibility_checked_result(std::size_t in_unique_node_id) const;
+		bool get_query_reasonable(std::size_t in_unique_node_id) const;
 
 	    void set_visibility_persistence(std::size_t node_uuid, bool visibility);
 	    void set_visibility(std::size_t in_unique_node_id, std::size_t in_camera_uuid, bool is_visible);

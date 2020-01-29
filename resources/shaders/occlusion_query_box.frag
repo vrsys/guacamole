@@ -21,6 +21,8 @@
 
 @include "shaders/common/header.glsl"
 
+layout (early_fragment_tests) in;
+
 layout (location = 0) out vec3 out_color;
 
 
