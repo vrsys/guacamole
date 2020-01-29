@@ -194,7 +194,6 @@ public:
                               std::shared_ptr<ShaderProgram>& current_shader,
                               size_t in_camera_uuid,
                               size_t current_frame_id);
-    bool front_to_back_raycast(gua::node::Node* lhs, gua::node::Node* rhs);
 
 
 

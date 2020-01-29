@@ -28,6 +28,49 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     std::cout << std::endl;
 }
 
+
+
+void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    material->set_uniform("roughness", 0.0f);
+    material->set_uniform("metalness", 0.0f);
+    material->set_uniform("emissivity", 1.0f);
+
+
+    for (int i = 0; i < 4; ++i)
+    {
+        auto trimesh_model(
+            loader.create_geometry_from_file(std::string("house"),
+                                             "/opt/3d_models/paperHouses/paper-houses/house1.obj",
+                                             material,
+                                             gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+        scene_root_node->add_child(trimesh_model);
+
+        trimesh_model->translate(-80 + 160 * (i % 2), 0.0, -600 + 300 * int(i / 2));
+
+    }
+
+
+    auto trimesh_model(
+        loader.create_geometry_from_file(std::string("house"),
+                                         "/opt/3d_models/paperHouses/paper-houses/house1.obj",
+                                         material,
+                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+    scene_root_node->add_child(trimesh_model);
+
+    trimesh_model->translate(-60.0f, 0.0, -300.0f);
+
+}
+
+
+
 void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node) {
     gua::TriMeshLoader loader_central;
 

@@ -5,6 +5,7 @@
 #include <gua/node/OcclusionCullingGroupNode.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
 #include <gua/config.hpp>
+#include <gua/renderer/Pipeline.hpp>
 
 
 bool query_context_state2 = false;
@@ -13,6 +14,7 @@ std::array<float, 16> keep_probability;
 uint64_t batch_size_multi_query = 10;
 
 #define USE_PRIORITY_QUEUE
+#define DYNAMIC_BATCH_SIZE
 
 namespace
 {
@@ -56,7 +58,7 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     		keep_probability[used_frames_index] = 0.99 - 0.7 * std::exp(-used_frames_index);
 		}
 
-		#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
+	#ifdef GUACAMOLE_RUNTIME_PROGRAM_COMPILATION
 	    ResourceFactory factory;
 	    std::string v_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.vert");
 	    std::string f_occlusion_query_box = factory.read_shader_file("resources/shaders/occlusion_query_box.frag");
@@ -104,13 +106,45 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
 
 void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc){
 
-	RenderContext const& ctx(pipe.get_context());
+    
+    RenderContext const& ctx(pipe.get_context());
 
+
+    if( nullptr == empty_vbo_) {
+        empty_vbo_ = ctx.render_device->create_buffer(scm::gl::BIND_VERTEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, 0, 0);
+        ctx.render_context->apply_vertex_input();
+    }
+
+    // size_t size_of_vertex = 2 * sizeof(uint32_t);
+    if(nullptr == empty_vao_layout_) {
+        empty_vao_layout_ = ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_UINT, 0), boost::assign::list_of(empty_vbo_));
+    }
+
+
+    if(nullptr == occlusion_query_box_program_) {
+        occlusion_query_box_program_ = std::make_shared<ShaderProgram>();
+        occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+    }
+
+    if(nullptr == depth_complexity_vis_program_) {
+        depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
+        depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+    }
+
+    if (nullptr == occlusion_query_array_box_program_)
+    {
+        occlusion_query_array_box_program_ = std::make_shared<ShaderProgram>();
+        occlusion_query_array_box_program_ ->set_shaders(occlusion_query_array_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+    }
+
+
+    
     auto const& frustum = pipe.current_viewstate().frustum;
     scm::math::mat4d const view_matrix = frustum.get_view();
     scm::math::mat4d const projection_matrix = frustum.get_projection();
     scm::math::mat4d view_projection_matrix = projection_matrix * view_matrix;
 
+    
 
     scm::math::mat4d const camera_matrix = scm::math::inverse(view_matrix);
 
@@ -119,6 +153,8 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
     gua::math::vec3f world_space_cam_pos(world_space_cam_pos_homogeneous[0], world_space_cam_pos_homogeneous[1], world_space_cam_pos_homogeneous[2]);
 
+    
+
 #ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
     std::cout << "Start of new Frame " << std::endl;
 #endif
@@ -126,9 +162,13 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
     auto& scene = *pipe.current_viewstate().scene;
     auto sorted_occlusion_group_nodes(scene.nodes.find(std::type_index(typeid(node::OcclusionCullingGroupNode))));
 
+
+    
 //if oc-group note existed in map of serialized scene and is not empty
     if(sorted_occlusion_group_nodes != scene.nodes.end() && !sorted_occlusion_group_nodes->second.empty())
     {
+
+        
         auto& render_target = *pipe.current_viewstate().target;
 
         bool write_depth = true;
@@ -156,10 +196,13 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
         std::queue<gua::node::Node*> i_query_queue;
         std::queue<gua::node::Node*> v_query_queue;
 
+        
+
         // reset visibility status if the node was never visited
         for( auto& occlusion_group_node : sorted_occlusion_group_nodes->second )
         {
 
+            
             int32_t last_visibility_check_frame_id = get_last_visibility_check_frame_id(occlusion_group_node->unique_node_id(), current_cam_node.uuid);
             // if we never checked set the visibility status for this node, it will be 0.
             // in this case, we recursively set the entire hierarchy to visible
@@ -176,6 +219,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
             //INITIALIZATION
             while(!traversal_queue.empty()) {
+                
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
                 set_visibility(current_node->unique_node_id(), current_cam_node.uuid, true);
@@ -194,7 +238,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
             }
         }
 
-
+        
         // ACTUAL CHC++ IMPLEMENTATION (w/o/ initializaton)********************************************************************************************************************************************************
 
 #ifdef USE_PRIORITY_QUEUE
@@ -213,6 +257,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
         //going over all occlusion culling group nodes (currently only 1)
         for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second)
         {
+            
             //push the root to traversal queue
             auto node_distance_pair_to_insert = std::make_pair(occlusion_group_node,
                                                 scm::math::length_sqr(world_space_cam_pos - (occlusion_group_node->get_bounding_box().max + occlusion_group_node->get_bounding_box().min)/2.0f ) );
@@ -225,7 +270,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
             while(!traversal_priority_queue.empty() || !query_queue.empty() )
             {
-
+               
                 while(!query_queue.empty()) {
 
 
@@ -271,6 +316,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                 }
 
                 if (!traversal_priority_queue.empty()) {
+                    
 
                     //pop traversal queue
 #ifdef USE_PRIORITY_QUEUE
@@ -296,6 +342,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                             //1 is for inital frame. After that the max will always be the max from the last frame
                             if(i_query_queue.size() >= batch_size_multi_query) {
+
                                 issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, i_query_queue);
                             }
                         } else {
@@ -325,6 +372,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                 }
 
                 if (traversal_priority_queue.empty()) {
+
                     issue_multi_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid,i_query_queue);
                 }
 
@@ -490,6 +538,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
+    
+
     // for testing and comparison purpose
     bool fallback = true;
 
@@ -503,15 +553,21 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     }
 
 
+
+
     current_shader->use(ctx);
+
     auto vp_mat = view_projection_matrix;
     current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
+
 
 
     if (!query_context_state2) {
         set_occlusion_query_states(ctx);
         query_context_state2 = true;
     }
+
+    
 
 
     //set_occlusion_query_states(ctx);
@@ -672,13 +728,14 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         ,int64_t current_frame_id) {
 
     if((current_node->get_children().empty())) {
-        renderSingleNode(pipe, desc, current_node);
-        /*render_visible_leaf(current_node,
+
+        //renderSingleNode(pipe, desc, current_node);
+        render_visible_leaf(current_node,
                             ctx, pipe,
                             render_target,
                             current_material,
                             current_shader,
-                            current_rasterizer_state);*/
+                            current_rasterizer_state);
 
     } else {
 
@@ -841,13 +898,13 @@ void OcclusionCullingAwareRenderer::upload_uniforms_for_node(
         }
     }
 
-    ctx.render_context->set_rasterizer_state(rs_cull_back_ );
-    ctx.render_context->apply_state_objects();
+    //ctx.render_context->set_rasterizer_state(rs_cull_back_ );
+    //ctx.render_context->apply_state_objects();
 
+
+
+    //ctx.render_context->apply();
     ctx.render_context->apply_program();
-
-    ctx.render_context->apply();
-
 }
 
 
