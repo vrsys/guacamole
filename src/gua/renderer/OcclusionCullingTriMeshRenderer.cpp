@@ -928,7 +928,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     if (fallback)
     {
-        current_shader = occlusion_query_array_box_program_;
+        current_shader = occlusion_query_box_program_;
     } else {
         current_shader = occlusion_query_array_box_program_;
     }
@@ -1523,56 +1523,6 @@ void OcclusionCullingTriMeshRenderer::find_tightest_bounding_volume(
     size_t current_frame_id,
     unsigned int const dmax,
     float const smax) {
-
-    /******* 
-        // vector of nodes that needs to be queried
-        std::vector<gua::node::Node*> query_nodes_vector;
-        std::vector<gua::node::Node*> check_nodes_vector;
-
-        check_nodes_vector.push_back(queried_node);
-
-
-        uint32_t depth = 0;
-
-        while ((!check_nodes_vector.empty()) && depth < dmax) {
-
-            auto node = check_nodes_vector.back();
-
-            check_nodes_vector.pop_back();
-
-            // leaf node or interior node with 1 child
-            if(node->get_children().size() < 2)
-            {
-                query_nodes_vector.push_back(node);
-            }
-
-            else
-            {
-                std::vector<gua::node::Node*> parent_node_vector;
-
-                parent_node_vector.push_back(node);
-
-                if (check_children_surface_area(parent_node_vector, smax))
-                {
-                    for (auto const& child : node->get_children()) {
-                        check_nodes_vector.push_back(child.get());
-                    }
-                    depth += 1;
-                } else {
-                    query_nodes_vector.push_back(node);
-                }
-            }
-
-        }
-
-        for (auto const& node : check_nodes_vector) {
-            query_nodes_vector.push_back(node);
-        }
-
-
-        instanced_array_draw(query_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
-
-        */
 
 
     std::vector<gua::node::Node*> tightest_nodes_vector;

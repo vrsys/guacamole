@@ -36,7 +36,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#define OCCLUSION_TRIMESH_PASS
+//#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
 #define USE_CITY_SCENE
