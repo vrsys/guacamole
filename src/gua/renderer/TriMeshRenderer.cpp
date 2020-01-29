@@ -118,7 +118,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         for(auto const& object : sorted_objects->second)
         {
             auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-            if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF) 
+            if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
             {
                 continue;
             }

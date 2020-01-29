@@ -36,10 +36,10 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#define OCCLUSION_TRIMESH_PASS
+//#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-//#define USE_CITY_SCENE
+#define USE_CITY_SCENE
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
     create_simple_demo_scene(occlusion_group_node);
 #else 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
 
     //create_child_bb_test_scene(occlusion_group_node);
 

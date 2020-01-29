@@ -334,9 +334,6 @@ void place_objects_randomly(std::string const& model_path,  int32_t num_models_t
     scene_root_node->set_draw_bounding_box(false);
 }
 
-
-
-
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& current_node, bool enable, int bb_vis_level, int current_node_level) {
 
     if (enable) {
@@ -345,6 +342,7 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& current_n
         } else {
             current_node->set_draw_bounding_box(false);
         }
+        
     } else {
         current_node->set_draw_bounding_box(false);
     }
