@@ -31,64 +31,27 @@ uniform mat4 view_projection_matrix;
 uniform vec3 world_space_bb_min[30];
 uniform vec3 world_space_bb_max[30];
 
-vec3 implicit_unit_box[36] = vec3[](
-		vec3(1.0, 0.0, 0.0),
-		vec3(0.0, 1.0, 0.0),
-		vec3(1.0, 1.0, 0.0),
-
-		vec3(0.0, 1.0, 0.0),
-		vec3(1.0, 0.0, 0.0),
-		vec3(0.0, 0.0, 0.0),
-
-		/* face 2 */
-		vec3(0.0, 1.0, 1.0),
-		vec3(1.0, 0.0, 1.0),
-		vec3(1.0, 1.0, 1.0),
-
-		vec3(1.0, 0.0, 1.0),
-		vec3(0.0, 1.0, 1.0),
-		vec3(0.0, 0.0, 1.0),
-
-		/* face 3 */
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 1.0, 1.0),
-		vec3(1.0, 1.0, 0.0),
-
-		vec3(0.0, 1.0, 1.0),
-		vec3(1.0, 1.0, 1.0),
-		vec3(1.0, 1.0, 0.0),
-
-		/* face 4 */
-		vec3(0.0, 0.0, 1.0),
-		vec3(0.0, 0.0, 0.0),
-		vec3(1.0, 0.0, 0.0),
-
-		vec3(1.0, 0.0, 1.0),
-		vec3(0.0, 0.0, 1.0),
-		vec3(1.0, 0.0, 0.0),
-
-		/* face 5 */
-		vec3(1.0, 1.0, 0.0),
-		vec3(1.0, 1.0, 1.0),
-		vec3(1.0, 0.0, 1.0),
-
-		vec3(1.0, 1.0, 0.0),
-		vec3(1.0, 0.0, 1.0),
-		vec3(1.0, 0.0, 0.0),
-
-		/* face 6 */
-		vec3(0.0, 1.0, 1.0),
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 0.0, 1.0),
-
-		vec3(0.0, 0.0, 1.0),
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 0.0, 0.0)
+vec3 implicit_unit_box[14] = vec3[](
+    vec3(0.f, 1.f, 1.f),     // Front-top-left
+    vec3(1.f, 1.f, 1.f),      // Front-top-right
+    vec3(0.f, 0.f, 1.f),    // Front-bottom-left
+    vec3(1.f, 0.f, 1.f),     // Front-bottom-right
+    vec3(1.f, 0.f, 0.f),    // Back-bottom-right
+    vec3(1.f, 1.f, 1.f),      // Front-top-right
+    vec3(1.f, 1.f, 0.f),     // Back-top-right
+    vec3(0.f, 1.f, 1.f),     // Front-top-left
+    vec3(0.f, 1.f, 0.f),    // Back-top-left
+    vec3(0.f, 0.f, 1.f),    // Front-bottom-left
+    vec3(0.f, 0.f, 0.f),   // Back-bottom-left
+    vec3(1.f, 0.f, 0.f),    // Back-bottom-right
+    vec3(0.f, 1.f, 0.f),    // Back-top-left
+    vec3(1.f, 1.f, 0.f)      // Back-top-right
 );
+
+
 // simplest possible vertex shader that does not use constant values
 void main() {
-
   vec3 bounding_box_dims = world_space_bb_max[gl_InstanceID] - world_space_bb_min[gl_InstanceID]; //get scaling in this line
-  gl_Position = view_projection_matrix * vec4(bounding_box_dims[gl_InstanceID] * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
+  gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
   
 }

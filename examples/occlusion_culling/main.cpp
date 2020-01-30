@@ -84,6 +84,7 @@ void configure_pipeline_descriptions() {
 #ifdef OCCLUSION_TRIMESH_PASS
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
     auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+    //oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Any_Samples_Passed);
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 #else
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());  
@@ -310,10 +311,11 @@ int main(int argc, char** argv)
     // set up the ticker that tries to executes the main loop every of 1.0 / 500.0 s. T
     // he application thread triggers the rendering, so our rendering framerate can never be higher than our application framerate
 
-    float frametime = 1.0 / 500.0;
+    float desired_framerate = 2000.0;
+    float frametime = 1.0 / desired_framerate;
 
     float accumulated_frametime = 0.0;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / desired_framerate);
 
 
     // define the callback for the ticker - this is basically the content of the mainloop
