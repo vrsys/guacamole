@@ -74,6 +74,7 @@ class OcclusionCullingAwareRenderer {
 
 		OcclusionCullingAwareRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
+		void render_switch_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc);
 		virtual void render(Pipeline& pipe, PipelinePassDescription const& desc) = 0;
 		void render_with_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc);
 

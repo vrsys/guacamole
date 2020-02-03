@@ -105,6 +105,24 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
 	    std::cout << "Recreated trimesh renderer" << std::endl;
     }
 
+
+
+void OcclusionCullingAwareRenderer::render_switch_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc) {
+        switch (desc.get_occlusion_culling_strategy()) {
+        case OcclusionCullingStrategy::No_Culling: {
+            render(pipe, desc);
+            break;
+        }
+        case OcclusionCullingStrategy::Coherent_Hierarchical_Culling_PlusPlus: {
+            render_with_occlusion_culling(pipe, desc);
+            break;
+        } default: {
+            std::cout << "Unknown occlusion culling mode" << std::endl;
+        }
+    }
+
+}
+
 void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc){
 
     
@@ -602,7 +620,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
-    bool fallback = false;
+    bool fallback = true;
     auto current_shader = occlusion_query_array_box_program_;
 
     if (fallback)
@@ -617,14 +635,18 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
-    if (!in_query_state_) {
-        set_occlusion_query_states(ctx);
-        in_query_state_ = true;
-    }
+    
 
     if(occlusion_culling_geometry_visualization_) {
-        //switch_state_for_depth_complexity_vis(ctx, current_shader);
+        switch_state_for_depth_complexity_vis(ctx, current_shader);
+    } else {
+        if (!in_query_state_) {
+            set_occlusion_query_states(ctx);
+            in_query_state_ = true;
+        }
     }
+
+  
 
 
     ctx.render_context->begin_query(occlusion_query_iterator->second);
@@ -640,6 +662,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
 
+
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
             //replacement for pipe.draw_box()
@@ -648,6 +671,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
             ctx.render_context->bind_vertex_array(empty_vao_layout_);
             ctx.render_context->apply_vertex_input();
+
+
 
             auto const& glapi = ctx.render_context->opengl_api();
             glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 14, 1);
@@ -1212,6 +1237,7 @@ void OcclusionCullingAwareRenderer::switch_state_for_depth_complexity_vis(Render
 
     current_shader = depth_complexity_vis_program_;
     current_shader->use(ctx);
+
 
     ctx.render_context->set_blend_state(color_accumulation_state_);
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);

@@ -66,7 +66,7 @@ PipelinePass TriMeshPassDescription::make_pass(RenderContext const& ctx, Substit
 
     private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { //haben hier dauerhaft eine Kopie 
         pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
-        renderer->render_with_occlusion_culling(pipe, desc);
+        renderer->render_switch_occlusion_culling(pipe, desc);
     };
 
     PipelinePass pass{*this, ctx, substitution_map};
