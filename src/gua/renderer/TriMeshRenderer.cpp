@@ -368,9 +368,6 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
             bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
 
 
-
-
-
             if(show_backfaces)
             {
                 if(render_wireframe)
@@ -392,6 +389,12 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
                 {
                     current_rasterizer_state = rs_cull_back_;
                 }
+            }
+
+            if(ctx.render_context->current_rasterizer_state() != current_rasterizer_state)
+            {
+                ctx.render_context->set_rasterizer_state(current_rasterizer_state);
+                ctx.render_context->apply_state_objects();
             }
 
             ctx.render_context->apply_program();

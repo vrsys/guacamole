@@ -502,10 +502,18 @@ void OcclusionCullingAwareRenderer::set_last_visibility_check_frame_id(std::size
     last_visibility_check_frame_id_[in_unique_node_id][in_camera_uuid] = current_frame_id;
 }
 
-void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext const& ctx) {
 
+void OcclusionCullingAwareRenderer::set_geometry_visualisation_states(RenderContext const& ctx) {
 
     in_query_state_ = true;
+    ctx.render_context->set_rasterizer_state(rs_cull_none_);
+
+    ctx.render_context->apply_state_objects();
+}
+
+
+void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext const& ctx) {
+
 
     auto const& glapi = ctx.render_context->opengl_api();
 
@@ -620,7 +628,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
-    bool fallback = true;
+    bool fallback = false;
     auto current_shader = occlusion_query_array_box_program_;
 
     if (fallback)
@@ -638,7 +646,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     
 
     if(occlusion_culling_geometry_visualization_) {
-        switch_state_for_depth_complexity_vis(ctx, current_shader);
+        set_geometry_visualisation_states(ctx);
     } else {
         if (!in_query_state_) {
             set_occlusion_query_states(ctx);
@@ -665,17 +673,17 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
-            //replacement for pipe.draw_box()
+
+            auto const& glapi = ctx.render_context->opengl_api();
+
+
             ctx.render_context->apply();
             scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
             ctx.render_context->bind_vertex_array(empty_vao_layout_);
             ctx.render_context->apply_vertex_input();
-
-
-
-            auto const& glapi = ctx.render_context->opengl_api();
             glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 14, 1);
+
 
         } else {
 

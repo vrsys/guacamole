@@ -147,6 +147,7 @@ class OcclusionCullingAwareRenderer {
 	    void set_visibility(std::size_t in_unique_node_id, std::size_t in_camera_uuid, bool is_visible);
 		void set_last_visibility_check_frame_id(std::size_t in_unique_node_id, std::size_t in_camera_uuid, int32_t current_frame_id);
 		void set_occlusion_query_states(RenderContext const& ctx);
+		void set_geometry_visualisation_states(RenderContext const& ctx);
 		void set_last_visibility_checked_result(std::size_t node_path, std::size_t in_camera_uuid, int32_t current_frame_id, bool result);
 
 
