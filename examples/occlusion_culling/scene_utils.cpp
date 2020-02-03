@@ -28,6 +28,41 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     std::cout << std::endl;
 }
 
+void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    material->set_uniform("roughness", 0.0f);
+    material->set_uniform("metalness", 0.0f);
+    material->set_uniform("emissivity", 1.0f);
+
+    auto trimesh_model(
+        loader.create_geometry_from_file(std::string("cube"),
+                                         "data/objects/cube.obj",
+                                         material,
+                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+    trimesh_model->translate( 0.0f, 0.0, -100);
+
+    for(int model_idx = 0; model_idx < 100; ++model_idx) {
+        auto trimesh_model_hair(
+            loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
+                                             "/opt/3d_models/hairball/hairball.dae",
+                                             material,
+                                             gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+        trimesh_model_hair->translate( 0.0f, 0.0, -105);
+
+        scene_root_node->add_child(trimesh_model_hair);
+    }
+
+    scene_root_node->add_child(trimesh_model);
+
+
+}
 
 
 void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
@@ -40,6 +75,7 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
     material->set_uniform("roughness", 0.0f);
     material->set_uniform("metalness", 0.0f);
     material->set_uniform("emissivity", 1.0f);
+
 
 
     for (int i = 0; i < 4; ++i)
@@ -71,104 +107,7 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
 
 
 
-void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node) {
-    gua::TriMeshLoader loader_central;
 
-    auto model_material_central(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    model_material_central->set_show_back_faces(false);
-    model_material_central->set_render_wireframe(false);
-
-    auto new_model_central(loader_central.create_geometry_from_file("teapot_1", "/opt/3d_models/hairball/hairball.dae", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-    auto new_model_matrix = new_model_central->get_transform();
-
-    auto new_model_central2(loader_central.create_geometry_from_file("teapot_2", "/opt/3d_models/hairball/hairball.dae", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-
-    auto new_model_central3(loader_central.create_geometry_from_file("teapot_3", "/opt/3d_models/hairball/hairball.dae", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-
-    auto new_model_central4(loader_central.create_geometry_from_file("teapot_4", "/opt/3d_models/hairball/hairball.dae", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-
-
-    auto plane(loader_central.create_geometry_from_file("plane", "./data/objects/plane.obj", model_material_central , gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::NORMALIZE_SCALE));
-    // auto new_plane_model = new_model_central->get_transform();
-
-    float plane_scaling = 30.0f;
-
-    auto plane_transform =  gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, 0.0f)) *
-                            gua::math::mat4(scm::math::make_rotation(90.0f, 1.0f, 0.0f, 0.0f)) *
-                            gua::math::mat4(scm::math::make_scale(plane_scaling, plane_scaling, plane_scaling));
-
-    plane->set_transform(plane_transform);
-
-    gua::math::mat4 model_trans_central;
-
-    model_trans_central =
-        gua::math::mat4(scm::math::make_translation(-5.0f, 2.0f, -15.0f)) *
-        gua::math::mat4(scm::math::make_rotation(0.0f, 0.0f, 0.0f, 1.0f)) *
-        gua::math::mat4(scm::math::make_scale(10.0f, 10.0f, 10.0f)) *
-        new_model_matrix;
-
-
-    // override the model's transform with our calculated transformation
-    new_model_central->set_transform(model_trans_central);
-    new_model_central->set_draw_bounding_box(false);
-
-    new_model_central->translate(0.0, 0.0, 0.0);
-
-    new_model_central2->set_transform(model_trans_central);
-    new_model_central2->set_draw_bounding_box(false);
-    new_model_central2->translate(2.0, 0.0, 0.0);
-
-    new_model_central3->set_transform(model_trans_central);
-    new_model_central3->set_draw_bounding_box(false);
-    new_model_central3->translate(2.0, 2.0, 0.0);
-
-    new_model_central4->set_transform(model_trans_central);
-    new_model_central4->set_draw_bounding_box(false);
-    new_model_central4->translate(0.0, 2.0, 0.0);
-
-
-    scene_root_node->add_child(new_model_central);
-    scene_root_node->add_child(new_model_central2);
-    scene_root_node->add_child(new_model_central3);
-    scene_root_node->add_child(new_model_central4);
-
-    scene_root_node->add_child(plane);
-}
-
-void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
-
-    gua::TriMeshLoader loader;
-
-    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    material->set_show_back_faces(false);
-    material->set_render_wireframe(false);
-
-
-    for (int grid_position_z = 0; grid_position_z < 50; ++grid_position_z) {
-        for (int grid_position_x = 0; grid_position_x < 50; ++grid_position_x) {
-            auto trimesh_model(
-                loader.create_geometry_from_file(std::string("house") + std::to_string(grid_position_x) + "__" + std::to_string(grid_position_z),
-                                                 "/opt/3d_models/paperHouses/paper-houses/house3.obj",
-                                                 //"/opt/3d_models/trees/lindenTree/lindenTree.obj",
-                                                 material,
-                                                 gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
-            auto trimesh_model_matrix = trimesh_model->get_transform();
-
-
-            scene_root_node->add_child(trimesh_model);
-
-
-            float random_y_scaling = 1.3f * (std::rand() / (float)RAND_MAX) + 0.85f;
-
-            trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
-            trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
-            trimesh_model->translate(0.0, 0.0, -30.0f);
-        }
-    }
-
-}
 
 
 void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
@@ -211,11 +150,8 @@ void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
             trimesh_model->scale(1.0f, random_y_scaling, 1.0f);
             trimesh_model->translate(18 * grid_position_x, 0.0, 18 * grid_position_z);
             trimesh_model->translate(0.0, -5.0, -100.0f);
-
         }
     }
-
-
 }
 
 
@@ -342,7 +278,7 @@ void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& current_n
         } else {
             current_node->set_draw_bounding_box(false);
         }
-        
+
     } else {
         current_node->set_draw_bounding_box(false);
     }

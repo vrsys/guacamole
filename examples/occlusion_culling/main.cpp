@@ -36,10 +36,10 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-//#define OCCLUSION_TRIMESH_PASS
+#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-#define USE_CITY_SCENE
+// #define USE_CITY_SCENE
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -56,8 +56,8 @@ bool print_scenegraph_once = false;
 gua::OcclusionCullingStrategy current_culling_mode;
 
 
-std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description = std::make_shared<gua::PipelineDescription>();     
-std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();     
+std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description = std::make_shared<gua::PipelineDescription>();
+std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 std::string model_path_bus = "/opt/3d_models/vehicle/cars/autobus/auobus.obj"; //place this object
@@ -72,8 +72,8 @@ int current_bb_level_to_visualize = -1;
 void configure_pipeline_descriptions() {
     /* guacamole supports different rendering primitives - Triangle Meshes, LOD-PointClouds, Volumes, RGBD Streams, etc.
        It is our responsibility to keep the rendering stages minimal by describing the geometry that we actually plan to render
-       
-       In addition to the Geometry passes, we usually want to have shading in the scene. 
+
+       In addition to the Geometry passes, we usually want to have shading in the scene.
        For this, we add the LightVisibilityPass and ResolvePassDescription after the geometry passes.
        After the resolve pass, we may add post processing passes (or a DebugView)
 
@@ -87,13 +87,13 @@ void configure_pipeline_descriptions() {
     //oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Any_Samples_Passed);
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 #else
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());  
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
 #endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>()); // treats the light as geometry and rasterizes it into a light buffer
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());         // resolves the shading in screen space
-       // visualizes the GBuffer-content
+    // visualizes the GBuffer-content
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::FullscreenColorBufferViewPassDescription>());       // visualizes the GBuffer-content
     //occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
@@ -101,12 +101,12 @@ void configure_pipeline_descriptions() {
     // configure the resolve pass
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_exposure(3.f);
     occlusion_culling_pipeline_description->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
-/*
-    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_intensity(4.0);
-    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_enable(true);
-    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_falloff(1.0);
-    occlusion_culling_pipeline_description->get_resolve_pass()->ssao_radius(2.0);
-*/
+    /*
+        occlusion_culling_pipeline_description->get_resolve_pass()->ssao_intensity(4.0);
+        occlusion_culling_pipeline_description->get_resolve_pass()->ssao_enable(true);
+        occlusion_culling_pipeline_description->get_resolve_pass()->ssao_falloff(1.0);
+        occlusion_culling_pipeline_description->get_resolve_pass()->ssao_radius(2.0);
+    */
     occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_mode(gua::ResolvePassDescription::EnvironmentLightingMode::AMBIENT_COLOR);
     occlusion_culling_pipeline_description->get_resolve_pass()->environment_lighting_texture("data/textures/skymap_5k.jpg");
 
@@ -150,7 +150,7 @@ void parse_model_from_cmd_line(int argc, char** argv)
     }
     gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
 
-    
+
 }
 
 
@@ -197,16 +197,16 @@ int main(int argc, char** argv)
 
 #ifdef CONSISTENT_SCENE_STATE
     std::srand(0);
-#else 
+#else
     std::srand(std::time(NULL));
 #endif
 
 #ifdef USE_CITY_SCENE
     create_simple_demo_scene(occlusion_group_node);
-#else 
-    // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
-
+#else
+    // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp
+    // place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    create_raycast_test_scene(occlusion_group_node);
     //create_child_bb_test_scene(occlusion_group_node);
 
     // create_simple_debug_scene(occlusion_group_node);
@@ -296,7 +296,9 @@ int main(int argc, char** argv)
         camera_node->config.set_resolution(new_size);
         screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
     });
-    window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+    window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
+        trackball.motion(pos.x, pos.y);
+    });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     window->on_key_press.connect(
@@ -323,14 +325,14 @@ int main(int argc, char** argv)
         // apply trackball matrix to object
         // we update the model transformatin according to the internal state of the trackball.
 
-        #ifndef AUTO_ANIMATION
+#ifndef AUTO_ANIMATION
         gua::math::mat4 transform_node_model_matrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
 
         // set transform completely overrides the old transformation of this node
         transform_node->set_transform(transform_node_model_matrix);
         //translate, rotate, and scale apply a corresponding matrix to the current matrix stored in the node
         transform_node->translate(0.0f, 0.0f, -5.0f);
-        #endif
+#endif
 
         //we ask the renderer for the currently averaged applicatin fps and the window for the rendering fps
         float application_fps = renderer.get_application_fps();

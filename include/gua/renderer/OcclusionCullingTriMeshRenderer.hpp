@@ -79,6 +79,15 @@ struct VisiblityPersistence {
     uint32_t persistence;
 };
 
+
+struct BoundingBoxSide {
+    BoundingBoxSide(gua::math::vec3f const& mi, gua::math::vec3f const& ma, int c_ax) : min(mi), max(ma), constant_axis(c_ax) {};
+
+    gua::math::vec3f min = {gua::math::vec3f{std::numeric_limits<float>::max()}};
+    gua::math::vec3f max = {gua::math::vec3f{std::numeric_limits<float>::min()}};
+    int constant_axis = -1;
+};
+
 class GUA_DLL OcclusionCullingTriMeshRenderer
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
     : public VTRenderer
@@ -128,7 +137,7 @@ public:
                              bool& depth_complexity_vis);
 
     void unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target);
-    
+
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery> & query_queue,
                                int64_t const current_frame_id, std::size_t in_camera_uuid, std::vector<gua::node::Node*>const& current_nodes);
@@ -196,8 +205,9 @@ public:
                               size_t current_frame_id);
 
 
-
-
+    gua::math::vec3f find_raycast_intersection(gua::node::Node* node, gua::math::vec3f const& world_space_cam_pos) const;
+    bool is_inside(gua::math::vec3f const& intersection_pt,  BoundingBoxSide const& bounding_plane) const;
+    float find_t_coof(gua::math::vec3f const& ray, gua::math::vec3f const& world_space_cam_pos, std::pair<gua::math::vec3f, gua::math::vec3f>const& bounding_plane) const;
 
     // helper functions to manage visibility of nodes
     bool get_visibility(std::size_t node_path, std::size_t in_camera_uuid) const;
@@ -273,11 +283,11 @@ private:
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > was_not_frustum_culled_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, bool> > is_visible_for_camera_;
     mutable std::unordered_map<std::size_t, std::unordered_map<std::size_t, uint32_t> > last_visibility_check_frame_id_;
-    
+
     // map of node id and its visibility status (the last frame id where it is checked and boolean visibility)
     mutable std::unordered_map<std::size_t, LastVisibility > last_visibility_checked_result_;
-    
-    // 
+
+    //
     mutable std::unordered_map<std::size_t, VisiblityPersistence > node_visibility_persistence;
 
     mutable scm::gl::buffer_ptr empty_vbo_ = nullptr;
