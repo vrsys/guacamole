@@ -21,6 +21,9 @@ uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
 
 uint64_t num_occlusion_culling_fragment_threshold = 100;
 
+
+//#define OC_TRIMESH   
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -363,6 +366,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             //toggle print state on keypress
             if(1 == action) {
                 // get occlusion culling tri mesh pass and toggle rendering mode
+                
+
+#ifdef OC_TRIMESH       
                 auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
                 bool current_dcv_status = occlusion_culling_tri_mesh_pass->get_enable_depth_complexity_vis();
                 bool new_dcv_status = !current_dcv_status;
@@ -388,6 +394,39 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 bool is_fullscreen_color_view_enabled = fullscreen_color_buffer_view_pass->is_enabled();
                 fullscreen_color_buffer_view_pass->enable(!is_fullscreen_color_view_enabled);
                 occlusion_culling_tri_mesh_pass->touch();
+                
+
+#else
+                //for the occlusion culling aware renderer --> changing to tri mesh pass?? but should be for all passes.
+                /***************************************************************************************************************************/
+                auto& tri_mesh_pass = occlusion_culling_pipeline_description->get_tri_mesh_pass();
+                bool current_dcv_status = tri_mesh_pass->get_enable_depth_complexity_vis();
+                bool new_dcv_status = !current_dcv_status;
+                tri_mesh_pass->set_enable_depth_complexity_vis(new_dcv_status);
+
+                if(true == new_dcv_status) {
+                    tri_mesh_pass->set_enable_culling_geometry_vis(false);
+                }
+
+
+                // get light visibility pass and toggle pass on and off
+                auto& light_visibility_pass = occlusion_culling_pipeline_description->get_light_visibility_pass();
+                bool is_light_visibility_pass_enabled = light_visibility_pass->is_enabled();
+                light_visibility_pass->enable(!is_light_visibility_pass_enabled);
+
+                // get resolve pass and toggle pass on and off
+                auto& resolve_pass = occlusion_culling_pipeline_description->get_resolve_pass();
+                bool is_resolve_pass_enabled = resolve_pass->is_enabled();
+                resolve_pass->enable(!is_resolve_pass_enabled);
+
+                // get fullscreen color visibility pass and toggle pass on and off
+                auto& fullscreen_color_buffer_view_pass = occlusion_culling_pipeline_description->get_full_screen_color_buffer_view_pass();
+                bool is_fullscreen_color_view_enabled = fullscreen_color_buffer_view_pass->is_enabled();
+                fullscreen_color_buffer_view_pass->enable(!is_fullscreen_color_view_enabled);
+                tri_mesh_pass->touch();
+#endif
+
+
             }
             break;
         }
@@ -396,12 +435,25 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         case 'n': {
             //toggle print state on keypress
             if(1 == action) {
+
+#ifdef OC_TRIMESH   
                 // get occlusion culling tri mesh pass and toggle occlusion culling vis mode
                 auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
                 bool current_occlusion_culling_geometry_vis_status = occlusion_culling_tri_mesh_pass->get_enable_culling_geometry_vis();
                 occlusion_culling_tri_mesh_pass->set_enable_culling_geometry_vis(!current_occlusion_culling_geometry_vis_status);
 
                 occlusion_culling_tri_mesh_pass->touch();
+
+#else
+
+                //For Occlusion Culling Aware Renderer
+                /***********************************************************/
+                auto& tri_mesh_pass = occlusion_culling_pipeline_description->get_tri_mesh_pass();
+                bool current_occlusion_culling_geometry_vis_status_tri_mesh = tri_mesh_pass->get_enable_culling_geometry_vis();
+                tri_mesh_pass->set_enable_culling_geometry_vis(!current_occlusion_culling_geometry_vis_status_tri_mesh);
+
+                tri_mesh_pass->touch();
+#endif
             }
             break;
         }

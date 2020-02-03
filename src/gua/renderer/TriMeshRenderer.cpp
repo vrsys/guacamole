@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+                             
 // class header
 #include <gua/renderer/TriMeshRenderer.hpp>
 
@@ -256,177 +256,152 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 }
 
 
-void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node) {
-
-        RenderContext const& ctx(pipe.get_context());
-
-        auto& scene = *pipe.current_viewstate().scene;
+void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info ) {
 
 
-        auto& target = *pipe.current_viewstate().target;
-        auto const& camera = pipe.current_viewstate().camera;
+
+//could still be optimized by setting more things in the
+    RenderContext const& ctx(pipe.get_context());
+    MaterialShader* current_material = current_render_info.material;
+    std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
+    auto current_rasterizer_state = current_render_info.rasterizer_state;
 
 
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
-        std::string const cpu_query_name = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
 
-        pipe.begin_gpu_query(ctx, gpu_query_name);
-        pipe.begin_cpu_query(cpu_query_name);
-#endif
+    ctx.render_context->apply(); 
+    if(std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) {
+        auto& render_target = *pipe.current_viewstate().target;
 
-        bool write_depth = true;
-        target.bind(ctx, write_depth);
-        target.set_viewport(ctx);
 
-        int view_id(camera.config.get_view_id());
+        auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_node));
 
-        MaterialShader* current_material(nullptr);
-        std::shared_ptr<ShaderProgram> current_shader;
-        auto current_rasterizer_state = rs_cull_back_;
-        ctx.render_context->apply();
+                    if (depth_complexity_visualization_) {
+                current_shader = depth_complexity_vis_program_;
+                current_shader->use(ctx);
 
-        std::vector<gua::node::Node*> objects;
-        objects.push_back(current_node);
-
-        // loop through all objects, sorted by material ----------------------------
-        for(auto const& object : objects)
+                ctx.render_context->set_blend_state(color_accumulation_state_);
+                ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
+                ctx.render_context->apply_state_objects();
+            }  
+        else if                                                                                                                                                                                                                                                                                                                                                                                                                             (current_material != tri_mesh_node->get_material()->get_shader())
         {
-            auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(object));
-            if(pipe.current_viewstate().shadow_mode && tri_mesh_node->get_shadow_mode() == ShadowMode::OFF)
+            current_material = tri_mesh_node->get_material()->get_shader();
+            if(current_material)
             {
-                continue;
-            }
-
-            if(!tri_mesh_node->get_render_to_gbuffer())
-            {
-                continue;
-            }
-
-            if(current_material != tri_mesh_node->get_material()->get_shader())
-            {
-                current_material = tri_mesh_node->get_material()->get_shader();
-                if(current_material)
+                auto shader_iterator = default_rendering_programs_.find(current_material);
+                if(shader_iterator != default_rendering_programs_.end())
                 {
-                    auto shader_iterator = programs_.find(current_material);
-                    if(shader_iterator != programs_.end())
-                    {
-                        current_shader = shader_iterator->second;
-                    }
-                    else
-                    {
-                        auto smap = global_substitution_map_;
-                        for(const auto& i : current_material->generate_substitution_map())
-                            smap[i.first] = i.second;
-
-                        current_shader = std::make_shared<ShaderProgram>();
-
-#ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
-#else
-                        bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
-#endif
-                        programs_[current_material] = current_shader;
-                    }
+                    current_shader = shader_iterator->second;
                 }
                 else
                 {
-                    Logger::LOG_WARNING << "TriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
-                }
-                if(current_shader)
-                {
-                    current_shader->use(ctx);
-                    current_shader->set_uniform(ctx, math::vec2ui(target.get_width(), target.get_height()),
-                                                "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
-                    current_shader->set_uniform(ctx, 1.0f / target.get_width(), "gua_texel_width");
-                    current_shader->set_uniform(ctx, 1.0f / target.get_height(), "gua_texel_height");
-                    // hack
-                    current_shader->set_uniform(ctx, ::get_handle(target.get_depth_buffer()), "gua_gbuffer_depth");
+                    auto smap = global_substitution_map_;
+                    for(const auto& i : current_material->generate_substitution_map())
+                        smap[i.first] = i.second;
 
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                    if(!pipe.current_viewstate().shadow_mode)
-                    {
-                        VTContextState* vt_state = &VTBackend::get_instance().get_state(pipe.current_viewstate().camera.uuid);
+                    current_shader = std::make_shared<ShaderProgram>();
 
-                        if(vt_state && vt_state->has_camera_)
-                        {
-                            current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
-                        }
-                    }
-#endif
+    #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+                    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
+    #else
+                    bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
+                    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+    #endif
+                    default_rendering_programs_[current_material] = current_shader;
                 }
             }
-
-            if(current_shader && tri_mesh_node->get_geometry())
+            else
             {
-                auto const node_world_transform = tri_mesh_node->get_latest_cached_world_transform(ctx.render_window);
+                Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
+            }
+            if(current_shader)
+            {
+                current_shader->use(ctx);
+                current_shader->set_uniform(ctx, math::vec2ui(render_target.get_width(), render_target.get_height()),
+                                            "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
+                current_shader->set_uniform(ctx, 1.0f / render_target.get_width(), "gua_texel_width");
+                current_shader->set_uniform(ctx, 1.0f / render_target.get_height(), "gua_texel_height");
+                // hack
+                current_shader->set_uniform(ctx, ::get_handle(render_target.get_depth_buffer()), "gua_gbuffer_depth");
 
-                auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
-                UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
 
-                int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
-
-                current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
-                current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
-                current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-                current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
-
-                // lowfi shadows dont need material input
-                if(rendering_mode != 1)
+    #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
+                if(!shadow_mode)
                 {
-                    tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+                    VTContextState* vt_state = &VTBackend::get_instance().get_state(cam_uuid);
+
+                    if(vt_state && vt_state->has_camera_)
+                    {
+                        current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
+                    }
                 }
+    #endif
+            }
+        }
 
-                bool show_backfaces = tri_mesh_node->get_material()->get_show_back_faces();
-                bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
 
-                if(show_backfaces)
+        if(current_shader && tri_mesh_node->get_geometry())
+        {
+
+            auto& scene = *pipe.current_viewstate().scene;
+            auto const node_world_transform = tri_mesh_node->get_latest_cached_world_transform(ctx.render_window);
+
+
+            auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
+            UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
+
+            int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
+
+            current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
+            current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
+            current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
+            current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
+
+            // lowfi shadows dont need material input
+            if(rendering_mode != 1)
+            {
+                auto view_id = pipe.current_viewstate().camera.config.get_view_id();
+                tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
+            }
+
+            bool show_backfaces = tri_mesh_node->get_material()->get_show_back_faces();
+            bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
+
+
+
+
+
+            if(show_backfaces)
+            {
+                if(render_wireframe)
                 {
-                    if(render_wireframe)
-                    {
-                        current_rasterizer_state = rs_wireframe_cull_none_;
-                    }
-                    else
-                    {
-                        current_rasterizer_state = rs_cull_none_;
-                    }
+                    current_rasterizer_state = rs_wireframe_cull_none_;
                 }
                 else
                 {
-                    if(render_wireframe)
-                    {
-                        current_rasterizer_state = rs_wireframe_cull_back_;
-                    }
-                    else
-                    {
-                        current_rasterizer_state = rs_cull_back_;
-                    }
+                    current_rasterizer_state = rs_cull_none_;
                 }
-
-                if(ctx.render_context->current_rasterizer_state() != current_rasterizer_state)
+            }
+            else
+            {
+                if(render_wireframe)
                 {
-                    ctx.render_context->set_rasterizer_state(current_rasterizer_state);
-                    ctx.render_context->apply_state_objects();
+                    current_rasterizer_state = rs_wireframe_cull_back_;
                 }
-
-                ctx.render_context->apply_program();
-
-                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                else
+                {
+                    current_rasterizer_state = rs_cull_back_;
+                }
             }
 
+            ctx.render_context->apply_program();
+            
+            tri_mesh_node->get_geometry()->draw(pipe.get_context());
+        }
+        
 
-
-
-        target.unbind(ctx);
-
-#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        pipe.end_gpu_query(ctx, gpu_query_name);
-        pipe.end_cpu_query(cpu_query_name);
-#endif
-        ctx.render_context->reset_state_objects();
-        ctx.render_context->sync();
     }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

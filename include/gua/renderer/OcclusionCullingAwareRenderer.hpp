@@ -56,6 +56,13 @@ struct VisiblityPersistence {
     bool query_reasonable;
 };
 
+struct RenderInfo {
+	MaterialShader* material;
+    std::shared_ptr<ShaderProgram> shader;
+    scm::gl::rasterizer_state_ptr rasterizer_state;
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,11 +78,12 @@ class OcclusionCullingAwareRenderer {
 		void render_with_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc);
 
 	protected:
-		virtual void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node) = 0;
 
-	private:
+		virtual void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info) = 0;
+
+
 		////////////////////////////////////////////////////////////////////////////////////////
-	    scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
+		scm::gl::rasterizer_state_ptr rs_cull_back_ = nullptr;
 	    scm::gl::rasterizer_state_ptr rs_cull_none_ = nullptr;
 	    scm::gl::rasterizer_state_ptr rs_wireframe_cull_back_ = nullptr;
 	    scm::gl::rasterizer_state_ptr rs_wireframe_cull_none_ = nullptr;
@@ -91,6 +99,11 @@ class OcclusionCullingAwareRenderer {
 	    std::vector<ShaderProgramStage> default_rendering_program_stages_;
 	    std::unordered_map<MaterialShader*, std::shared_ptr<ShaderProgram>> default_rendering_programs_;
 
+	   	// these shaders are used only for visualizing the depth complexity in our system, together with disabled
+	    // depth tests and color accumulation blend states (expensive, but nevertheless only used for debug purposes)
+	    std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
+	    std::shared_ptr<ShaderProgram> depth_complexity_vis_program_;
+
 	    // these shaders and the compilshaders are used in combination with hardware occlusion queries
 	    std::vector<ShaderProgramStage> occlusion_query_box_program_stages_;
 	    std::shared_ptr<ShaderProgram> occlusion_query_box_program_;
@@ -100,10 +113,12 @@ class OcclusionCullingAwareRenderer {
 	    std::shared_ptr<ShaderProgram> occlusion_query_array_box_program_;
 
 
-	    // these shaders are used only for visualizing the depth complexity in our system, together with disabled
-	    // depth tests and color accumulation blend states (expensive, but nevertheless only used for debug purposes)
-	    std::vector<ShaderProgramStage> depth_complexity_vis_program_stages_;
-	    std::shared_ptr<ShaderProgram> depth_complexity_vis_program_;
+		bool depth_complexity_visualization_;
+		bool occlusion_culling_geometry_visualization_;
+
+
+
+	private:	    
 
 	    //maps
 	    ////////////////////////////////////////////////////////////////////////////////////////
@@ -221,6 +236,12 @@ class OcclusionCullingAwareRenderer {
 
 		void switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader,
             MaterialShader* current_material, RenderTarget const& target, bool shadow_mode, std::size_t cam_uuid);
+
+
+		void switch_state_for_depth_complexity_vis(RenderContext const& ctx, std::shared_ptr<ShaderProgram>& active_shader);
+	    //Member Variables
+	    ////////////////////////////////////////////////////////////////////////////////////////
+		bool in_query_state_ = false;
 
 };
 

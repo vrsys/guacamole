@@ -111,6 +111,8 @@ class GUA_DLL PipelinePassDescription
     PipelinePassPrivate private_;
     std::vector<std::shared_ptr<PipelineResponsibilityDescription>> pipeline_responsibilities_;
 
+
+
   public:
     std::map<std::string, UniformValue> uniforms;
 
@@ -135,6 +137,14 @@ class GUA_DLL PipelinePassDescription
     void enable(bool enable);
     bool is_enabled() const;
 
+    void set_enable_depth_complexity_vis(bool enable);
+    bool get_enable_depth_complexity_vis() const;
+  
+    void set_enable_culling_geometry_vis(bool enable);
+    bool get_enable_culling_geometry_vis() const;
+
+
+
   private:
     void* user_data_ = nullptr;
 
@@ -149,6 +159,10 @@ class GUA_DLL PipelinePassDescription
     // if the occlusion query mode is set to Number_Of_Samples_Passed, culling geometry which creates less
     // than occlusion_culling_fragment_threshold_ of fragments is not rendered
     uint64_t occlusion_culling_fragment_threshold_ = 10;
+
+    bool enable_depth_complexity_vis_;
+    bool enable_culling_geometry_vis_;
+
 };
 
 class GUA_DLL PipelinePass

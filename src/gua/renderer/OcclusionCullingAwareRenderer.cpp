@@ -8,13 +8,14 @@
 #include <gua/renderer/Pipeline.hpp>
 
 
-bool query_context_state2 = false;
 
 std::array<float, 16> keep_probability;
 uint64_t batch_size_multi_query = 10;
 
 #define USE_PRIORITY_QUEUE
 #define DYNAMIC_BATCH_SIZE
+#define RENDER_CHILD_CLASS
+#define query_state_test
 
 namespace
 {
@@ -153,11 +154,9 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
     gua::math::vec3f world_space_cam_pos(world_space_cam_pos_homogeneous[0], world_space_cam_pos_homogeneous[1], world_space_cam_pos_homogeneous[2]);
 
+    auto const pipeline_pass_description = reinterpret_cast<PipelinePassDescription const*>(&desc);
     
 
-#ifdef OCCLUSION_CULLING_TRIMESH_PASS_VERBOSE
-    std::cout << "Start of new Frame " << std::endl;
-#endif
 
     auto& scene = *pipe.current_viewstate().scene;
     auto sorted_occlusion_group_nodes(scene.nodes.find(std::type_index(typeid(node::OcclusionCullingGroupNode))));
@@ -168,7 +167,6 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
     if(sorted_occlusion_group_nodes != scene.nodes.end() && !sorted_occlusion_group_nodes->second.empty())
     {
 
-        
         auto& render_target = *pipe.current_viewstate().target;
 
         bool write_depth = true;
@@ -183,14 +181,12 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
-        //auto const occlusion_culling_pipeline_pass_description = reinterpret_cast<OcclusionCullingTriMeshPassDescription const*>(&desc);
-        //bool depth_complexity_vis = occlusion_culling_pipeline_pass_description->get_enable_depth_complexity_vis();
-        //bool occlusion_culling_geometry_vis = occlusion_culling_pipeline_pass_description->get_enable_culling_geometry_vis();
 
+        depth_complexity_visualization_ = pipeline_pass_description->get_enable_depth_complexity_vis();
+        occlusion_culling_geometry_visualization_ = pipeline_pass_description->get_enable_culling_geometry_vis();
+        
         // get a (serialized) cam node (see: guacamole/src/gua/node/CameraNode.cpp and guacamole/src/gua/node/CameraNode.hpp)
         auto const& current_cam_node = pipe.current_viewstate().camera;
-        //std::cout << "Current Cam UUID: " << current_cam_node.uuid << std::endl;
-
 
         std::queue<MultiQuery> query_queue;
         std::queue<gua::node::Node*> i_query_queue;
@@ -490,7 +486,8 @@ void OcclusionCullingAwareRenderer::set_last_visibility_check_frame_id(std::size
 
 void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext const& ctx) {
 
-    query_context_state2 = true;
+
+    in_query_state_ = true;
 
     auto const& glapi = ctx.render_context->opengl_api();
 
@@ -528,15 +525,29 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
     if((current_node->get_children().empty())) {
 
-        //     renderSingleNode(pipe, desc, current_node);
         
         
+#ifdef RENDER_CHILD_CLASS
+
+        if (in_query_state_) {
+            auto const& glapi = ctx.render_context->opengl_api();
+            glapi.glColorMask(true, true, true, true);
+            ctx.render_context->set_depth_stencil_state(default_depth_test_);
+            ctx.render_context->set_blend_state(default_blend_state_);
+            ctx.render_context->apply();
+            in_query_state_ = false;
+        }
+
+        RenderInfo current_render_info{current_material, current_shader, current_rasterizer_state};
+        renderSingleNode(pipe, desc, current_node, current_render_info);
+#else
         render_visible_leaf(current_node,
                             ctx, pipe,
                             render_target,
                             current_material,
                             current_shader,
                             current_rasterizer_state);
+#endif
 
 
     } else {
@@ -605,10 +616,17 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     auto vp_mat = view_projection_matrix;
     current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
-    if (!query_context_state2) {
+
+    if (!in_query_state_) {
         set_occlusion_query_states(ctx);
-        query_context_state2 = true;
+        in_query_state_ = true;
     }
+
+    if(occlusion_culling_geometry_visualization_) {
+        //switch_state_for_depth_complexity_vis(ctx, current_shader);
+    }
+
+
     ctx.render_context->begin_query(occlusion_query_iterator->second);
 
 
@@ -841,14 +859,14 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
 
 
 
-    
-    if (query_context_state2 == true) {
+
+    if (in_query_state_ == true ) {
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);
         ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->set_blend_state(default_blend_state_);
         ctx.render_context->apply();
-        query_context_state2 = false;
+        in_query_state_ = false;
  
     }
 
@@ -860,10 +878,15 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
         //std::cout << "ASSUMING THAT " << current_node->get_name() << " is a trimeshnode" << std::endl;
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_query_node));
 
-        switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target,
-                                            pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
 
+        if(!depth_complexity_visualization_) {
+           switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target,
+                                            pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid); 
+       } else {
+            switch_state_for_depth_complexity_vis(ctx, current_shader);
+       }
 
+        
         if(current_shader && tri_mesh_node->get_geometry())
         {
             upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
@@ -1044,7 +1067,7 @@ void OcclusionCullingAwareRenderer::instanced_array_draw(
 
 void OcclusionCullingAwareRenderer::unbind_and_reset(RenderContext const& ctx, RenderTarget& render_target) {
     render_target.unbind(ctx);
-    query_context_state2 = false;
+    in_query_state_ = false;
 
     auto const& glapi = ctx.render_context->opengl_api();
     glapi.glColorMask(true, true, true, true);
@@ -1124,6 +1147,7 @@ void OcclusionCullingAwareRenderer::upload_uniforms_for_node(
 
 void OcclusionCullingAwareRenderer::switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader,
         MaterialShader* current_material, RenderTarget const& render_target, bool shadow_mode, std::size_t cam_uuid) {
+    
     if(current_material != tri_mesh_node->get_material()->get_shader())
     {
         current_material = tri_mesh_node->get_material()->get_shader();
@@ -1179,6 +1203,20 @@ void OcclusionCullingAwareRenderer::switch_state_based_on_node_material(RenderCo
 #endif
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void OcclusionCullingAwareRenderer::switch_state_for_depth_complexity_vis(RenderContext const& ctx, std::shared_ptr<ShaderProgram>& current_shader) {
+
+    current_shader = depth_complexity_vis_program_;
+    current_shader->use(ctx);
+
+    ctx.render_context->set_blend_state(color_accumulation_state_);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
+    ctx.render_context->apply_state_objects();
+
 }
 
 }

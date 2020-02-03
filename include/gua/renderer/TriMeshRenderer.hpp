@@ -51,7 +51,7 @@ class GUA_DLL TriMeshRenderer : public OcclusionCullingAwareRenderer
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc) override;
 
-    void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node) override;
+    void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info) override;
 
   private:
     scm::gl::rasterizer_state_ptr rs_cull_back_;
