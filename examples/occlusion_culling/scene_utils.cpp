@@ -29,6 +29,55 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
 }
 
 
+void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+    gua::TriMeshLoader loader;
+
+    auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
+    material->set_show_back_faces(false);
+    material->set_render_wireframe(false);
+
+    material->set_uniform("roughness", 0.0f);
+    material->set_uniform("metalness", 0.0f);
+    material->set_uniform("emissivity", 1.0f);
+
+    auto trimesh_model(
+        loader.create_geometry_from_file(std::string("cube"),
+                                         "data/objects/cube.obj",
+                                         material,
+                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+    trimesh_model->translate( 0.0f, 0.0, -100);
+
+
+    auto cube_transform =  gua::math::mat4(scm::math::make_translation(0.0f, 0.0f, -100.0f)) *
+                            
+                            gua::math::mat4(scm::math::make_scale(17.0f, 17.0f, 17.0f));
+
+    trimesh_model->set_transform(cube_transform);
+
+
+
+
+    for(int model_idx = 0; model_idx < 100; ++model_idx) {
+        auto trimesh_model_hair(
+            loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
+                                             "/opt/3d_models/hairball/hairball.dae",
+                                             material,
+                                             gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+        trimesh_model_hair->translate( 0.0f, 0.0, -105);
+
+        scene_root_node->add_child(trimesh_model_hair);
+    }
+
+    scene_root_node->add_child(trimesh_model);
+
+
+}
+
+
+
+
 
 void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
     gua::TriMeshLoader loader;

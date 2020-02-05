@@ -355,9 +355,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                         bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
 
-                        //std::cout<<"query for node "<<current_node->get_name()<< " in frame "<< current_frame_id << " is " << query_reasonable<<std::endl;
-                        //std::cout<<"query reasonable test" << query_reasonable<<std::endl;
-
+                        
                         if(!was_visible) {
                             //query previously invisible node n
                             i_query_queue.push(current_node);
@@ -401,7 +399,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
             }
 
-/* --> these queries are never checked for! 
+
             while(!v_query_queue.empty()) {
                 //issue remaining queries from v-queue
                 auto current_node = v_query_queue.front();
@@ -412,8 +410,8 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
             }
 
-*/
 
+        std::cout<<"VQueue size "<<v_query_queue.size()<< std::endl;
           while(!visibility_setting_queue.empty()) {
                 auto current_node = visibility_setting_queue.front();
                 visibility_setting_queue.pop();
