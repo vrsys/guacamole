@@ -637,8 +637,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     }
 
     current_shader->use(ctx);
-    auto vp_mat = view_projection_matrix;
-    current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
+    //auto vp_mat = view_projection_matrix;
+    //current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
     
