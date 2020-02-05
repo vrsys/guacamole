@@ -28,7 +28,6 @@
 layout(location=0) in vec3 in_position;
 //ignore remaing layout parameters
 
-uniform mat4 view_projection_matrix;
 // uniform vec3 world_space_bb_min[8];
 // uniform vec3 world_space_bb_max[8];
 uniform vec3 world_space_bb_min;
@@ -101,7 +100,7 @@ void main() {
   
 
   vec3 bounding_box_dims = world_space_bb_max - world_space_bb_min; //get scaling in this line
-  gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min, 1.0);
+  gl_Position = gua_view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min, 1.0);
 
   //gl_Position = model_view_projection_matrix * vec4(in_position, 1.0);
 }

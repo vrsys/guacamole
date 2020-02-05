@@ -17,6 +17,7 @@ class CameraUniformBlock
     {
         math::mat4f view;
         math::mat4f projection;
+        math::mat4f view_projection;
         math::mat4f projection_inverse;
         math::mat4f projection_view_inverse;
         math::vec4f position;

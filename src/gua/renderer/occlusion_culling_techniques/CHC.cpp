@@ -131,7 +131,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
             // add root node of our occlusion hierarchy to the traversal queue
             auto node_distance_pair_to_insert = std::make_pair(occlusion_group_node,
-                                                scm::math::length_sqr(world_space_cam_pos - (occlusion_group_node->get_bounding_box().max + occlusion_group_node->get_bounding_box().min) / 2.0f ) );
+                                                scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(occlusion_group_node, world_space_cam_pos) ) );
 
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
@@ -310,10 +310,10 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                             if (occlusion_culling_geometry_vis) {
                                 switch_state_for_depth_complexity_vis(ctx, current_shader);
                             } else {
-                                if (!query_context_state){
+                                if (!query_context_state) {
                                     set_occlusion_query_states(ctx);
                                 }
-                                
+
                             }
 
                             auto current_occlusion_query_object = occlusion_query_iterator->second;
@@ -339,7 +339,8 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
                                 for (auto & child : current_node->get_children())
                                 {
 
-                                    auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min) / 2.0f ) );
+                                    auto child_node_distance_pair_to_insert = std::make_pair(child.get(),
+                                            scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(occlusion_group_node, world_space_cam_pos) ) );
                                     traversal_priority_queue.push(child_node_distance_pair_to_insert);
                                 }
 

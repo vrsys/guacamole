@@ -10,10 +10,6 @@ void print_graph(std::shared_ptr<gua::node::Node> const& scene_root_node, int de
 void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node);
 
 void place_objects_randomly(std::string const& model_path, int32_t num_models_to_place, float random_pos_cube_dimensions, std::shared_ptr<gua::node::Node> scene_root_node);
-void create_occlusion_scene(std::string const& model_path_plane, std::string const& model_path_objects, std::shared_ptr<gua::node::Node> scene_root_node);
-
-void create_city_scene(std::shared_ptr<gua::node::Node> scene_root_node);
-
 
 void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
                          int const start_position_x,
@@ -32,9 +28,9 @@ void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node
 
 void create_simple_demo_scene( std::shared_ptr<gua::node::Node> scene_root_node);
 
-void create_child_bb_test_scene2(std::shared_ptr<gua::node::Node> scene_root_node);
-
 void show_scene_bounding_boxes(std::shared_ptr<gua::node::Node> const& scene_root_node, bool enable, int bb_vis_level = -1, int current_node_level = 0);
 
-void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node);
+void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node);
+
+
 #endif

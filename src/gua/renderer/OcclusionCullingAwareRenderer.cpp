@@ -277,7 +277,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
             
             //push the root to traversal queue
             auto node_distance_pair_to_insert = std::make_pair(occlusion_group_node,
-                                                scm::math::length_sqr(world_space_cam_pos - (occlusion_group_node->get_bounding_box().max + occlusion_group_node->get_bounding_box().min)/2.0f ) );
+                                                scm::math::length_sqr(world_space_cam_pos - (find_raycast_intersection(occlusion_group_node, world_space_cam_pos) ) ) );
 
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
@@ -579,7 +579,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         for (auto & child : current_node->get_children())
         {
 
-            auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min)/2.0f ) );
+            auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(child.get(), world_space_cam_pos) ) );
             traversal_priority_queue.push(child_node_distance_pair_to_insert);
         }
 
@@ -1037,6 +1037,129 @@ bool OcclusionCullingAwareRenderer::check_children_surface_area(
     bool is_tighter = (children_surface_area )  <= (parent_surface_area * smax);
 
     return is_tighter;
+
+}
+
+
+gua::math::vec3f OcclusionCullingAwareRenderer::find_raycast_intersection(gua::node::Node* node , gua::math::vec3f const& world_space_cam_pos) const {
+
+    gua::math::vec3f const bb_min = gua::math::vec3f(node->get_bounding_box().min);
+
+    gua::math::vec3f const bb_max = gua::math::vec3f(node->get_bounding_box().max);
+
+
+    gua::math::vec3f const bb_mid_point = (bb_max + bb_min) / 2.0f;
+    gua::math::vec3f const ray_vector = bb_mid_point - world_space_cam_pos;
+
+    BoundingBoxSide const front_side = BoundingBoxSide{ gua::math::vec3f{bb_min.x,bb_min.y,bb_min.z},
+                                                        gua::math::vec3f{bb_max.x,bb_max.y,bb_min.z},
+                                                        2 };
+
+    BoundingBoxSide const back_side = BoundingBoxSide{ gua::math::vec3f{bb_min.x,bb_min.y,bb_max.z},
+                                                       gua::math::vec3f{bb_max.x,bb_max.y,bb_max.z},
+                                                        2 
+                                                      };
+
+    BoundingBoxSide const left_side = BoundingBoxSide{ gua::math::vec3f{bb_min.x,bb_min.y,bb_min.z},
+                                                       gua::math::vec3f{bb_min.x,bb_max.y,bb_max.z},
+                                                       0
+                                                      };
+
+    BoundingBoxSide const right_side = BoundingBoxSide{ gua::math::vec3f{bb_max.x,bb_min.y,bb_min.z},
+                                                        gua::math::vec3f{bb_max.x,bb_max.y,bb_max.z},
+                                                       0
+                                                       };
+
+    BoundingBoxSide const bottom_side = BoundingBoxSide{ gua::math::vec3f{bb_min.x,bb_min.y,bb_min.z},
+                                                         gua::math::vec3f{bb_max.x,bb_min.y,bb_max.z},
+                                                         1
+                                                       };
+    BoundingBoxSide const top_side =  BoundingBoxSide{  gua::math::vec3f{bb_min.x,bb_max.y,bb_min.z},
+                                                        gua::math::vec3f{bb_max.x,bb_max.y,bb_max.z},
+                                                        1
+                                                      };
+
+    float const front_intersect_coof = (bb_min.z - world_space_cam_pos.z) / ray_vector.z;
+
+    float const back_intersect_coof = (bb_max.z - world_space_cam_pos.z) / ray_vector.z;
+
+    float const left_intersect_coof = (bb_min.x  - world_space_cam_pos.x) / ray_vector.x;
+
+    float const right_intersect_coof = (bb_max.x - world_space_cam_pos.x) / ray_vector.x;
+
+    float const bottom_intersect_coof = (bb_min.y - world_space_cam_pos.y) / ray_vector.y;
+
+    float const top_intersect_coof = (bb_max.y - world_space_cam_pos.y) / ray_vector.y;
+
+    std::pair<float, BoundingBoxSide> front_pair(front_intersect_coof, front_side);
+    std::pair<float, BoundingBoxSide> back_pair(back_intersect_coof, back_side);
+    std::pair<float, BoundingBoxSide> left_pair(left_intersect_coof, left_side);
+    std::pair<float, BoundingBoxSide> right_pair(right_intersect_coof, right_side);
+    std::pair<float, BoundingBoxSide> bottom_pair(bottom_intersect_coof, bottom_side);
+    std::pair<float, BoundingBoxSide> top_pair(top_intersect_coof, top_side);
+
+
+    std::vector<std::pair<float, BoundingBoxSide>> coofs_vector = {front_pair,back_pair,left_pair,right_pair,bottom_pair,top_pair};
+
+
+
+    std::sort(coofs_vector.begin(),coofs_vector.end(), [](std::pair<float, BoundingBoxSide> a, std::pair<float, BoundingBoxSide> b) {
+        return a.first < b.first;
+    });
+
+    gua::math::vec3f intersection_pt = gua::math::vec3f{std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
+
+    for (auto coof: coofs_vector)
+    {
+        if (coof.first >= 0.0f)
+        {
+            auto temp = coof.first * ray_vector + world_space_cam_pos;
+
+            if (is_inside(temp, coof.second))
+            {
+                intersection_pt = temp;
+                break;
+            }
+
+        }
+    }
+
+    if( intersection_pt.x == std::numeric_limits<float>::max() ) {
+        std::cout << "INTERSECTION INVALID " << std::endl;
+    }
+
+    return intersection_pt;
+}
+
+
+bool OcclusionCullingAwareRenderer::is_inside(gua::math::vec3f const& intersection_pt, BoundingBoxSide const& bounding_plane) const {
+
+    gua::math::vec3f min_pt = gua::math::vec3f(std::min(bounding_plane.min.x, bounding_plane.max.x),
+                                               std::min(bounding_plane.min.y, bounding_plane.max.y),
+                                               std::min(bounding_plane.min.z, bounding_plane.max.z));
+
+    gua::math::vec3f max_pt = gua::math::vec3f(std::max(bounding_plane.min.x, bounding_plane.max.x),
+                                               std::max(bounding_plane.min.y, bounding_plane.max.y),
+                                               std::max(bounding_plane.min.z, bounding_plane.max.z));
+
+
+    bool x_bounded = intersection_pt.x >= min_pt.x && intersection_pt.x <= max_pt.x;
+    bool y_bounded = intersection_pt.y >= min_pt.y && intersection_pt.y <= max_pt.y;
+    bool z_bounded = intersection_pt.z >= min_pt.z && intersection_pt.z <= max_pt.z;
+
+    bool is_side_valid = true;
+
+    if(bounding_plane.constant_axis != 0) {
+        is_side_valid &= x_bounded;
+    }
+    if(bounding_plane.constant_axis != 1) {
+        is_side_valid &= y_bounded;
+    }
+    if(bounding_plane.constant_axis != 2) {
+        is_side_valid &= z_bounded;
+    }
+
+    return is_side_valid;
 
 }
 

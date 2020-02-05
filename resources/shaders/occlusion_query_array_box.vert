@@ -27,7 +27,6 @@
 
 //ignore remaing layout parameters
 
-uniform mat4 view_projection_matrix;
 uniform vec3 world_space_bb_min[30];
 uniform vec3 world_space_bb_max[30];
 
@@ -52,6 +51,7 @@ vec3 implicit_unit_box[14] = vec3[](
 // simplest possible vertex shader that does not use constant values
 void main() {
   vec3 bounding_box_dims = world_space_bb_max[gl_InstanceID] - world_space_bb_min[gl_InstanceID]; //get scaling in this line
-  gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
+  //gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
   
+  gl_Position = gua_view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
 }
