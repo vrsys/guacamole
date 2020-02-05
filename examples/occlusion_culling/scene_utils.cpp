@@ -54,13 +54,27 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
                                              material,
                                              gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
-        trimesh_model_hair->translate( 0.0f, 0.0, -105);
+
+        // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling
+        auto norm_scale_mat = trimesh_model_hair->get_transform();
+        
+        float rand_x_trans = 16 * (std::rand() / (float)RAND_MAX) - 8;
+        float rand_y_trans = 16 * (std::rand() / (float)RAND_MAX)- 8;
+        float rand_z_trans = 5 * (std::rand() / (float)RAND_MAX) -105.0f;
+
+        gua::math::mat4 model_trans =
+            gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans )) * 
+            gua::math::mat4(scm::math::make_scale(0.4f, 0.4f, 0.4f)) *   
+            norm_scale_mat;                                                           
+
+
+        // override the model's transform with our calculated transformation
+        trimesh_model_hair->set_transform(model_trans);
 
         scene_root_node->add_child(trimesh_model_hair);
     }
 
     scene_root_node->add_child(trimesh_model);
-
 
 }
 
@@ -75,8 +89,6 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
     material->set_uniform("roughness", 0.0f);
     material->set_uniform("metalness", 0.0f);
     material->set_uniform("emissivity", 1.0f);
-
-
 
     for (int i = 0; i < 4; ++i)
     {
@@ -98,6 +110,7 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
                                          "/opt/3d_models/paperHouses/paper-houses/house1.obj",
                                          material,
                                          gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
 
     scene_root_node->add_child(trimesh_model);
 

@@ -593,11 +593,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                                                 scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(occlusion_group_node, world_space_cam_pos) ) ) ;
 
 #endif
-            auto mid_bb = ((occlusion_group_node->get_bounding_box().max + occlusion_group_node->get_bounding_box().min) / 2.0f );
-            auto intersects = find_raycast_intersection(occlusion_group_node, world_space_cam_pos);
-
-            //std::cout << occlusion_group_node->get_name() << ": " << mid_bb.x << ";" << mid_bb.y << ";" << mid_bb.z << std::endl;
-            //std::cout << occlusion_group_node->get_name() << ": " << intersects.x << ";" << intersects.y << ";" << intersects.z << std::endl;
 
             traversal_priority_queue.push(node_distance_pair_to_insert);
 
@@ -643,8 +638,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                             v_query_queue.pop();
                             std::vector<gua::node::Node*> single_node_to_query;
                             single_node_to_query.push_back(current_vnode);
-
-                            //std::cout << "SINGLE NODE: " << current_vnode->get_name() << std::endl;
 
                             issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, query_queue, current_frame_id, current_cam_node.uuid, single_node_to_query);
                         }
@@ -820,10 +813,6 @@ void OcclusionCullingTriMeshRenderer::handle_returned_query(
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
             set_visibility_persistence(current_node->unique_node_id(), false);
 
-            /*
-            current_node->is_visible = false;
-            set_visibility_persistence(current_node->unique_node_id(), false);
-            */
         }
 
     }
@@ -894,11 +883,6 @@ void OcclusionCullingTriMeshRenderer::traverse_node(gua::node::Node* current_nod
 
         for (auto & child : current_node->get_children())
         {
-            //auto start = std::chrono::system_clock::now();
-
-
-            //std::cout << "start pushing " << child->get_name() << " to queue with size " << traversal_priority_queue.size() << std::endl;
-            //auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min) / 2.0f ) );
 
 #ifdef USE_CENTROID_BASED_SORTING
             auto child_node_distance_pair_to_insert = std::make_pair(child.get(), scm::math::length_sqr(world_space_cam_pos - (child->get_bounding_box().max + child->get_bounding_box().min) / 2.0f ) );
@@ -909,21 +893,13 @@ void OcclusionCullingTriMeshRenderer::traverse_node(gua::node::Node* current_nod
 
             traversal_priority_queue.push(child_node_distance_pair_to_insert);
 
-            //auto end = std::chrono::system_clock::now();
-
-            //std::chrono::duration<double> elapsed_seconds = end-start;
-
-            //std::cout << "elapsed time: " << elapsed_seconds.count()  << std::endl;
-
 
         }
 
-        // current_node->is_visible = false;
 
 #ifdef vis_pullup
 
         set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
-        //set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id, false);
 #endif
     }
 }
@@ -961,7 +937,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
 
     current_shader->use(ctx);
-    auto vp_mat = view_projection_matrix;
+    //auto vp_mat = view_projection_matrix;
     //current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
@@ -982,9 +958,6 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
         {
             // original draw call
             auto world_space_bounding_box = original_query_node->get_bounding_box();
-
-            //    current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
-            //    current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
 
             std::string const uniform_string_bb_min = "world_space_bb_min";
             std::string const uniform_string_bb_max = "world_space_bb_max";
@@ -1212,9 +1185,6 @@ void OcclusionCullingTriMeshRenderer::upload_uniforms_for_node(
 
 
     ctx.render_context->apply_program();
-
-    //ctx.render_context->apply();
-
 }
 
 
@@ -1354,7 +1324,7 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(
 
     // store the node pointer
     auto temp_node = current_node;
-    //std::cout<< "current node name " << temp_node->get_name()<<std::endl;
+
     // pull up algorithm as stated by CHC paper
     while (!get_visibility(temp_node->unique_node_id(), in_camera_uuid)) {
 
@@ -1396,18 +1366,6 @@ void OcclusionCullingTriMeshRenderer::pull_up_visibility(
 
     }
 
-    /*
-    while(!temp_node->is_visible) {
-        temp_node->is_visible = true;
-        set_visibility_persistence(temp_node->unique_node_id(), true);
-
-        if (temp_node->get_parent() != nullptr)
-        {
-            temp_node = temp_node->get_parent();
-        }
-    }
-    */
-
 }
 /////////////////////////////                            ///////////////////////////////////////////////////
 void OcclusionCullingTriMeshRenderer::render_visible_leaf(
@@ -1431,8 +1389,6 @@ void OcclusionCullingTriMeshRenderer::render_visible_leaf(
         query_context_state = false;
 
     }
-
-
 
     //make sure that we currently have a trimesh node in our hands
     if (std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_query_node)) ) {
@@ -1529,7 +1485,6 @@ bool  OcclusionCullingTriMeshRenderer::check_children_surface_area(
             children_surface_area += parent_node->get_bounding_box().surface_area();
         }
 
-        // std::cout<< "Node name " << parent_node->get_name() << std::endl;//<<  " | Number of parents: " << in_parent_nodes.size() << " | Children area: " << children_surface_area <<  " is tighter " << is_tighter << " than parent nodes: " << parent_surface_area  << std::endl;
 
     }
 
@@ -1656,33 +1611,8 @@ void OcclusionCullingTriMeshRenderer::instanced_array_draw(
     ctx.render_context->apply();
 
     auto const& glapi = ctx.render_context->opengl_api();
-    // std::cout<< "RENDERING INSTANCES: " << current_instance_ID << std::endl;
     glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
-
-    /*
-    for (auto const& original_query_node : leaf_node_vector) {
-
-        auto world_space_bounding_box = original_query_node->get_bounding_box();
-
-        current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
-        current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
-
-        set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
-
-        //replacement for pipe.draw_box()
-        ctx.render_context->apply();
-        scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-        ctx.render_context->bind_vertex_array(empty_vao_layout_);
-        ctx.render_context->apply_vertex_input();
-
-        auto const& glapi = ctx.render_context->opengl_api();
-        glapi.glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
-
-
-    }
-    */
 
 }
 
@@ -1727,22 +1657,16 @@ gua::math::vec3f OcclusionCullingTriMeshRenderer::find_raycast_intersection(gua:
                                                       };
 
     float const front_intersect_coof = (bb_min.z - world_space_cam_pos.z) / ray_vector.z;
-    //std::cout<< "FRONT T: " << front_intersect_coof << std::endl;
 
     float const back_intersect_coof = (bb_max.z - world_space_cam_pos.z) / ray_vector.z;
-    //std::cout<< "BACK T: " << back_intersect_coof << std::endl;
 
     float const left_intersect_coof = (bb_min.x  - world_space_cam_pos.x) / ray_vector.x;
-    //std::cout<< "LEFT T: " << left_intersect_coof << std::endl;
 
     float const right_intersect_coof = (bb_max.x - world_space_cam_pos.x) / ray_vector.x;
-    //std::cout<< "RIGHT T: " << right_intersect_coof << std::endl;
 
     float const bottom_intersect_coof = (bb_min.y - world_space_cam_pos.y) / ray_vector.y;
-    //std::cout<< "BOTTOM T: " << bottom_intersect_coof << std::endl;
 
     float const top_intersect_coof = (bb_max.y - world_space_cam_pos.y) / ray_vector.y;
-    //std::cout<< "TOP T: " << top_intersect_coof << std::endl;
 
     std::pair<float, BoundingBoxSide> front_pair(front_intersect_coof, front_side);
     std::pair<float, BoundingBoxSide> back_pair(back_intersect_coof, back_side);
