@@ -962,7 +962,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     current_shader->use(ctx);
     auto vp_mat = view_projection_matrix;
-    current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
+    //current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
     if (!query_context_state) {
@@ -976,7 +976,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
 
     for (auto const& original_query_node : current_nodes)
     {
-        std::cout << "Queried Node name: " << original_query_node->get_name()<< std::endl;
+        //std::cout << "Queried Node name: " << original_query_node->get_name()<< std::endl;
 
         if (fallback || original_query_node->get_children().empty())
         {
