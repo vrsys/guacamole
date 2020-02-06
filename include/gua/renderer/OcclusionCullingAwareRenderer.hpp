@@ -39,6 +39,11 @@ struct MultiQuery {
     std::vector<gua::node::Node*> nodes_to_query;
 };
 
+struct PreviousQueries {
+    std::size_t node_uuid;
+    scm::gl::occlusion_query_ptr occlusion_query_pointer;
+};
+
 struct LastVisibility {
     std::size_t camera_uuid; //setter and getter need to be updated for multiple cameras
     int32_t frame_id;
@@ -177,13 +182,14 @@ private:
     void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid);
 
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
-                               scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                               scm::math::mat4d const& view_projection_matrix,
                                int64_t current_frame_id, std::size_t in_camera_uuid,
-                               std::vector<gua::node::Node*> const& current_nodes);
+                               std::vector<gua::node::Node*> const& current_nodes,
+                               bool query_last_frame = false);
 
 
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
-                           scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                           scm::math::mat4d const& view_projection_matrix,
                            int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
 
     void handle_returned_query(RenderContext const& ctx,
@@ -199,7 +205,6 @@ private:
                                std::size_t in_camera_uuid,
                                uint64_t query_result,
                                std::vector<gua::node::Node*> front_query_vector,
-                               std::queue<MultiQuery>& query_queue,
                                int64_t current_frame_id);
 
 
@@ -253,6 +258,8 @@ private:
     //Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////
     bool in_query_state_ = false;
+    std::queue<MultiQuery> query_queue_;
+    std::queue<PreviousQueries> previous_query_queue_;
 
 };
 
