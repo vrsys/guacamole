@@ -40,6 +40,11 @@ struct MultiQuery {
     bool query_from_last_frame;
 };
 
+struct PreviousQueries {
+    std::size_t node_uuid;
+    scm::gl::occlusion_query_ptr occlusion_query_pointer;
+};
+
 struct LastVisibility {
     std::size_t camera_uuid; //setter and getter need to be updated for multiple cameras
     int32_t frame_id;
@@ -180,7 +185,8 @@ private:
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                scm::math::mat4d const& view_projection_matrix,
                                int64_t current_frame_id, std::size_t in_camera_uuid,
-                               std::vector<gua::node::Node*> const& current_nodes, bool query_from_last_frame = false);
+                               std::vector<gua::node::Node*> const& current_nodes,
+                               bool query_last_frame = false);
 
 
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
@@ -200,8 +206,7 @@ private:
                                std::size_t in_camera_uuid,
                                uint64_t query_result,
                                std::vector<gua::node::Node*> front_query_vector,
-                               int64_t current_frame_id,
-                               bool query_from_last_frame);
+                               int64_t current_frame_id);
 
 
 
@@ -255,6 +260,7 @@ private:
     ////////////////////////////////////////////////////////////////////////////////////////
     bool in_query_state_ = false;
     std::queue<MultiQuery> query_queue_;
+    std::queue<PreviousQueries> previous_query_queue_;
 
 };
 

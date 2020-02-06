@@ -47,7 +47,6 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     //trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
-
     for(int model_idx = 0; model_idx < 50; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
@@ -58,14 +57,14 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 
         // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling
         auto norm_scale_mat = trimesh_model_hair->get_transform();
-        
-        float rand_x_trans = 6 * (std::rand() / (float)RAND_MAX) - 3;
-        float rand_y_trans = 6 * (std::rand() / (float)RAND_MAX)- 3;
+
+        float rand_x_trans = 3 * (std::rand() / (float)RAND_MAX) - 6;
+        float rand_y_trans = 3 * (std::rand() / (float)RAND_MAX)- 2;
         float rand_z_trans = 5 * (std::rand() / (float)RAND_MAX) -105.0f;
 
         gua::math::mat4 model_trans =
             gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans )) * 
-            gua::math::mat4(scm::math::make_scale(0.8f, 0.8f, 0.8f)) *   
+            gua::math::mat4(scm::math::make_scale(0.7f, 0.7f, 0.7f)) *   
             norm_scale_mat;                                                           
 
 
