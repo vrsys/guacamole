@@ -636,8 +636,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 void OcclusionCullingAwareRenderer::pull_up_visibility(
     gua::node::Node* current_node,
     int64_t current_frame_id,
-    std::size_t in_camera_uuid,
-    bool query_from_last_frame)
+    std::size_t in_camera_uuid)
 {
 
 
@@ -645,14 +644,7 @@ void OcclusionCullingAwareRenderer::pull_up_visibility(
     auto temp_node = current_node;
 
     while(!get_visibility(temp_node->unique_node_id(), in_camera_uuid)) {
-        std::cout<<"pulling up"<<std::endl;
-
-        if(!query_from_last_frame) {
-            set_visibility(current_node->unique_node_id(), in_camera_uuid, true);
-        } else {
-            set_last_visibility_checked_result(temp_node->unique_node_id(), in_camera_uuid, current_frame_id-1, true);
-            set_visibility_persistence(temp_node->unique_node_id(), true);
-        }
+        set_visibility(current_node->unique_node_id(), in_camera_uuid, true);
 
         if (temp_node->get_parent() != nullptr)
         {
@@ -893,12 +885,9 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
 
         if(front_query_vector.size()>1) { //this means our multi query failed.
             for (auto const& node : front_query_vector) {
-                if(!query_from_last_frame) {
-                    set_visibility(node->unique_node_id(), in_camera_uuid, true);
-                } else {
-                    set_last_visibility_checked_result(node->unique_node_id(), in_camera_uuid, current_frame_id-1, true);
-                    set_visibility_persistence(node->unique_node_id(), true);
-                }
+
+                set_visibility(node->unique_node_id(), in_camera_uuid, true);
+
                 std::vector<gua::node::Node*> single_node_to_query;
                 single_node_to_query.push_back(node);
 
@@ -933,7 +922,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
                                   current_frame_id);
 
                 }
-                pull_up_visibility(current_node, current_frame_id, in_camera_uuid, query_from_last_frame);
+                pull_up_visibility(current_node, current_frame_id, in_camera_uuid);
             }
 
         }
@@ -941,12 +930,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
     } else {
 
         for (auto const& current_node : front_query_vector) {
-            if(!query_from_last_frame) {
-                set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
-            } else {
-                set_last_visibility_checked_result(current_node->unique_node_id(), in_camera_uuid, current_frame_id-1, false);
-                set_visibility_persistence(current_node->unique_node_id(), false);
-            }
+            set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
         }
     }
 }

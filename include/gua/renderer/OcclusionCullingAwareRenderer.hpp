@@ -180,7 +180,7 @@ private:
                        std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
                        std::size_t in_camera_uuid, int64_t current_frame_id);
 
-    void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid, bool query_from_last_frame);
+    void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid);
 
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
                                scm::math::mat4d const& view_projection_matrix,
