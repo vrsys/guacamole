@@ -37,6 +37,7 @@ struct NodeVisibilityProbabilityPairComparator
 struct MultiQuery {
     scm::gl::occlusion_query_ptr occlusion_query_pointer;
     std::vector<gua::node::Node*> nodes_to_query;
+    bool query_from_last_frame;
 };
 
 struct LastVisibility {
@@ -174,16 +175,16 @@ private:
                        std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
                        std::size_t in_camera_uuid, int64_t current_frame_id);
 
-    void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid);
+    void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid, bool query_from_last_frame);
 
     void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
-                               scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                               scm::math::mat4d const& view_projection_matrix,
                                int64_t current_frame_id, std::size_t in_camera_uuid,
-                               std::vector<gua::node::Node*> const& current_nodes);
+                               std::vector<gua::node::Node*> const& current_nodes, bool query_from_last_frame = false);
 
 
     void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
-                           scm::math::mat4d const& view_projection_matrix, std::queue<MultiQuery>& query_queue,
+                           scm::math::mat4d const& view_projection_matrix,
                            int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
 
     void handle_returned_query(RenderContext const& ctx,
@@ -199,8 +200,8 @@ private:
                                std::size_t in_camera_uuid,
                                uint64_t query_result,
                                std::vector<gua::node::Node*> front_query_vector,
-                               std::queue<MultiQuery>& query_queue,
-                               int64_t current_frame_id);
+                               int64_t current_frame_id,
+                               bool query_from_last_frame);
 
 
 
@@ -253,6 +254,7 @@ private:
     //Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////
     bool in_query_state_ = false;
+    std::queue<MultiQuery> query_queue_;
 
 };
 

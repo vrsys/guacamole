@@ -32,25 +32,26 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     gua::TriMeshLoader loader;
 
     auto material(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
-    material->set_show_back_faces(false);
-    material->set_render_wireframe(false);
 
-    material->set_uniform("roughness", 0.0f);
-    material->set_uniform("metalness", 0.0f);
-    material->set_uniform("emissivity", 1.0f);
 
     auto trimesh_model(
         loader.create_geometry_from_file(std::string("cube"),
                                          "data/objects/cube.obj",
+                                         //"/opt/3d_models/assets/pillar/Column_Resized.obj",
                                          material,
                                          gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
+    auto current_mat = reinterpret_cast<gua::node::TriMeshNode*>(trimesh_model.get())->get_material();
+    //current_mat->set_show_back_faces(true);
+
+    //trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
-    for(int model_idx = 0; model_idx < 100; ++model_idx) {
+
+    for(int model_idx = 0; model_idx < 50; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
-                                             "/opt/3d_models/hairball/hairball.dae",
+                                             "/opt/3d_models/hairball/low_poly_hairball.dae",
                                              material,
                                              gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
@@ -58,13 +59,13 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
         // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling
         auto norm_scale_mat = trimesh_model_hair->get_transform();
         
-        float rand_x_trans = 16 * (std::rand() / (float)RAND_MAX) - 8;
-        float rand_y_trans = 16 * (std::rand() / (float)RAND_MAX)- 8;
+        float rand_x_trans = 6 * (std::rand() / (float)RAND_MAX) - 3;
+        float rand_y_trans = 6 * (std::rand() / (float)RAND_MAX)- 3;
         float rand_z_trans = 5 * (std::rand() / (float)RAND_MAX) -105.0f;
 
         gua::math::mat4 model_trans =
             gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans )) * 
-            gua::math::mat4(scm::math::make_scale(0.4f, 0.4f, 0.4f)) *   
+            gua::math::mat4(scm::math::make_scale(0.8f, 0.8f, 0.8f)) *   
             norm_scale_mat;                                                           
 
 
@@ -73,7 +74,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 
         scene_root_node->add_child(trimesh_model_hair);
     }
-
+    
     scene_root_node->add_child(trimesh_model);
 
 }

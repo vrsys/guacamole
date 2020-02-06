@@ -235,6 +235,8 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                     ctx.render_context->apply_state_objects();
                 }
 
+
+                current_rasterizer_state = rs_cull_none_;
                 ctx.render_context->apply_program();
 
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());
@@ -396,7 +398,7 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
                 ctx.render_context->set_rasterizer_state(current_rasterizer_state);
                 ctx.render_context->apply_state_objects();
             }
-
+            
             ctx.render_context->apply_program();
             
             tri_mesh_node->get_geometry()->draw(pipe.get_context());
