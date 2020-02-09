@@ -27,8 +27,8 @@ void main() {
 
   //float read_depth = gua_get_unscaled_depth();
 
-  uvec2 floored_xy = uvec2(floor( max(vec2(0,0), (downsampling_factors*(frag_pos+vec2(0.5) ) - downsampling_factors ) )) );
-  uvec2 ceiled_xy  = uvec2(ceil( min(vec2(original_resolution) - vec2(1.0, 1.0), ivec2(downsampling_factors*(frag_pos+vec2(0.5)) + downsampling_factors)) ) );
+  uvec2 floored_xy = uvec2(floor( max(vec2(0,0), (downsampling_factors*(frag_pos+vec2(0.5) ) /*- downsampling_factors*/ ) )) );
+  uvec2 ceiled_xy  = uvec2(ceil( min(vec2(original_resolution) - vec2(1.0, 1.0), ivec2(downsampling_factors*(frag_pos+vec2(0.5)) /*+ downsampling_factors*/)) ) );
 
 
   float max_depth = 0.0; // initialized with min value
