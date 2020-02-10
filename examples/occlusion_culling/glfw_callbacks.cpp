@@ -22,7 +22,7 @@ uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
 uint64_t num_occlusion_culling_fragment_threshold = 100;
 
 
-//#define OC_TRIMESH   
+#define OC_TRIMESH   
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -125,13 +125,14 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 std::cout << "Set Occlusion_Culling_Strategy to 'No Culling'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
                 occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
-#endif
+#else
 
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::No_Culling);
 
                 std::cout << "Set Occlusion_Culling_Strategy to 'No Culling'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->touch();
+#endif
             }
             break;
         }
@@ -145,13 +146,14 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 std::cout << "Set Occlusion_Culling_Strategy to 'Naive Stop and Wait'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
                 occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
-#endif
+#else
 
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling_PlusPlus);
 
                 std::cout << "Set Occlusion_Culling_Strategy to 'CHC++'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->touch();
+#endif
             }
             break;
         }

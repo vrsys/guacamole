@@ -614,7 +614,6 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
 
-
                         handle_returned_query(
                             ctx, pipe, desc,
                             render_target,
@@ -924,7 +923,7 @@ void OcclusionCullingTriMeshRenderer::issue_occlusion_query(RenderContext const&
     }
 
     // for testing and comparison purpose
-    bool fallback = false;
+    bool fallback = true;
 
     auto current_shader = occlusion_query_array_box_program_;
 

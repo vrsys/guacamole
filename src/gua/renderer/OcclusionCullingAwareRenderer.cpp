@@ -276,7 +276,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
         std::vector<gua::node::Node*> visibility_persistence_vector;
 
-        //going over all occlusion culling group nodes (currently only 1)
+
         for(auto const& occlusion_group_node : sorted_occlusion_group_nodes->second)
         {
 
@@ -296,8 +296,6 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
             visibility_setting_queue.push(occlusion_group_node);
 
-
-            //while(!traversal_priority_queue.empty() || !query_queue.empty() )
             while(!traversal_priority_queue.empty() || !query_queue_.empty() || !previous_query_queue_.empty())
             {
                 while(!previous_query_queue_.empty()) {
@@ -308,13 +306,14 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                     ctx.render_context->collect_query_results(front_query_obj_queue);
                     uint64_t query_result = front_query_obj_queue->result();
 
+                    //std::cout<< current_frame_id << " node "<< front_query_uuid << " was " << query_result << std::endl;
+
                     if (query_result>0)
                     {
                         set_last_visibility_checked_result(front_query_uuid, current_cam_node.uuid, current_frame_id - 1, true);
                     } else {
                         set_last_visibility_checked_result(front_query_uuid, current_cam_node.uuid, current_frame_id - 1, false);
                     }
-
 
                 }
                 while(!query_queue_.empty()) {
@@ -330,16 +329,9 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
 
-
-
-                        /*
-                        for (auto const& node: front_query_vector)
-                        {
-                            std::cout << "NOT LAST FRAME MULTI QUERY: " << node->get_name() << std::endl;
-
+                        for (auto const& node : front_query_vector) {
+                            //std::cout<< current_frame_id << " node "<< node->get_name() << " with id "<< node->unique_node_id() << " is " << query_result << std::endl;
                         }
-                        */
-                        // std::cout << "FRAME: " << current_frame_id << ":: query result " << query_result << std::endl;
 
                         handle_returned_query(ctx, pipe, desc,
                                               render_target,
@@ -392,24 +384,17 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                         }
 
 
-                        //bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
-                        bool query_reasonable = true;
-
-
+                        bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
+                        //bool query_reasonable = true;
+                        
                         if(!was_visible) {
-                            //query previously invisible node n
                             i_query_queue.push(current_node);
 
-
-                            //1 is for inital frame. After that the max will always be the max from the last frame
                             if(i_query_queue.size() >= batch_size_multi_query) {
 
                                 issue_multi_query(ctx, pipe, desc, view_projection_matrix, current_frame_id, current_cam_node.uuid, i_query_queue);
                             }
                         } else {
-
-                            //if n is a leaf and the query is reasonable (find out what is reasonable)
-
 
                             if((current_node->get_children().size() == 0) && (query_reasonable)) {
                                 v_query_queue.push(current_node);
@@ -455,9 +440,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                 auto current_node = visibility_setting_queue.front();
                 visibility_setting_queue.pop();
                 bool visibility_current_node = get_visibility(current_node->unique_node_id(), current_cam_node.uuid);
-                std::cout<<"frame "<< current_frame_id<< " " << current_node->get_name()<<" is "<<v_query_queue.size()<< std::endl;
                 set_last_visibility_checked_result(current_node->unique_node_id(), current_cam_node.uuid, current_frame_id, visibility_current_node);
-                std::cout<< current_frame_id << " " << current_node->get_name() << " is " << visibility_current_node <<std::endl;
                 set_visibility_persistence(current_node->unique_node_id(), visibility_current_node);
                 for (auto const& child : current_node->get_children()) {
                     visibility_setting_queue.push(child.get());
@@ -498,9 +481,10 @@ bool OcclusionCullingAwareRenderer::get_query_reasonable(std::size_t node_uuid) 
 }
 
 void OcclusionCullingAwareRenderer::set_visibility_persistence(std::size_t node_uuid, bool visibility) {
-    VisiblityPersistence temp_vis_persistence = node_visibility_persistence[node_uuid];
-//this part is for randomized queries of visible nodes
 
+    VisiblityPersistence temp_vis_persistence = node_visibility_persistence[node_uuid];
+
+//this part is for randomized queries of visible nodes
 
     //if the node just got visible
     if( !temp_vis_persistence.last_visibility && visibility) {
@@ -517,6 +501,7 @@ void OcclusionCullingAwareRenderer::set_visibility_persistence(std::size_t node_
             node_visibility_persistence[node_uuid].randomizer = std::rand() % 8;
         } else {
             node_visibility_persistence[node_uuid].randomizer -= 1;
+            node_visibility_persistence[node_uuid].query_reasonable = false;
         }
     }
 
@@ -674,7 +659,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
-    bool fallback = true;
+    bool fallback = false;
     auto current_shader = occlusion_query_array_box_program_;
 
     if (fallback)
@@ -689,8 +674,6 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     //current_shader->apply_uniform(ctx, "view_projection_matrix", math::mat4f(vp_mat));
 
 
-
-
     if(occlusion_culling_geometry_visualization_) {
         set_geometry_visualisation_states(ctx);
     } else {
@@ -699,8 +682,6 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
             in_query_state_ = true;
         }
     }
-
-
 
 
     ctx.render_context->begin_query(occlusion_query_iterator->second);
@@ -716,12 +697,9 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
 
-
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
-
             auto const& glapi = ctx.render_context->opengl_api();
-
 
             ctx.render_context->apply();
             scm::gl::context_vertex_input_guard vig(ctx.render_context);
