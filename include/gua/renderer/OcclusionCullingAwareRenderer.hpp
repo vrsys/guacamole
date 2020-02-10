@@ -182,15 +182,19 @@ private:
 
     void pull_up_visibility(gua::node::Node* current_node, int64_t current_frame_id, std::size_t in_camera_uuid);
 
-    void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
+    void issue_occlusion_query(RenderContext const& ctx, Pipeline& pipe,
+                               PipelinePassDescription const& desc,
                                scm::math::mat4d const& view_projection_matrix,
+                               gua::math::vec3f const& world_space_cam_pos,
                                int64_t current_frame_id, std::size_t in_camera_uuid,
                                std::vector<gua::node::Node*> const& current_nodes,
                                bool query_last_frame = false);
 
 
-    void issue_multi_query(RenderContext const& ctx, Pipeline& pipe, PipelinePassDescription const& desc,
+    void issue_multi_query(RenderContext const& ctx, Pipeline& pipe,
+                           PipelinePassDescription const& desc,
                            scm::math::mat4d const& view_projection_matrix,
+                           gua::math::vec3f const& world_space_cam_pos,
                            int64_t current_frame_id, std::size_t in_camera_uuid, std::queue<gua::node::Node*>& i_query_queue);
 
     void handle_returned_query(RenderContext const& ctx,
@@ -200,8 +204,8 @@ private:
                                MaterialShader* current_material,
                                std::shared_ptr<ShaderProgram> current_shader,
                                scm::math::mat4d const& view_projection_matrix,
-                               scm::gl::rasterizer_state_ptr current_rasterizer_state,
                                gua::math::vec3f const& world_space_cam_pos,
+                               scm::gl::rasterizer_state_ptr current_rasterizer_state,
                                std::priority_queue<std::pair<gua::node::Node*, double>, std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue,
                                std::size_t in_camera_uuid,
                                uint64_t query_result,
@@ -224,6 +228,7 @@ private:
 
     void find_tightest_bounding_volume(gua::node::Node* queried_node,
                                        RenderContext const& ctx,
+                                       gua::math::vec3f const& world_space_cam_pos,
                                        std::shared_ptr<ShaderProgram>& current_shader,
                                        size_t in_camera_uuid,
                                        size_t current_frame_id,
