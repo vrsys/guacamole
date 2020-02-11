@@ -274,7 +274,11 @@ class NetKinectArray
     float m_lod_scaling_ = 1.0f;
     float m_lod_scaling_back_ = 1.0f;
 
+    float m_texture_lod_scaling_ = 1.0f;
+    float m_texture_lod_scaling_back_ = 1.0f;
+
     mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_;
+    mutable std::unordered_map<std::size_t, float> m_current_texture_lod_scaling_per_context_;
 
     std::atomic<bool> m_need_model_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;

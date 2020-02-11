@@ -36,7 +36,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 OcclusionSlaveResolvePassDescription::OcclusionSlaveResolvePassDescription()
-    : PipelinePassDescription(), last_rendered_view_id(std::numeric_limits<int>::max()), last_rendered_side(0), gbuffer_extraction_resolution_(scm::math::vec2ui{100, 100}),
+    : PipelinePassDescription(), last_rendered_view_id(std::numeric_limits<int>::max()), last_rendered_side(0), gbuffer_extraction_resolution_(scm::math::vec2ui{256, 144}),
       control_monitor_shader_stages_(), control_monitor_shader_program_(nullptr), depth_downsampling_shader_stages_(), depth_downsampling_shader_program_(nullptr),
       gpu_resources_already_created_(false)
 {
@@ -319,7 +319,8 @@ PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const
         memory_controller->add_read_only_memory_segment(memory_segment_label_prefix, false);
         memory_controller->register_remotely_constructed_object_on_segment(memory_segment_label_prefix, depth_buffer_object);
 
-        memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64>>(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
+        //memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::KB64>>(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
+        memory_controller->memcpy_buffer_to_named_object<std::array<char, gua::MemAllocSizes::MB1>>(depth_buffer_object.c_str(), (char*)&texture_data[0], texture_data.size() * 4);
         memory_controller->unlock_read_write();
         // std::cout << "After unlocking the mutex\n";
     };
