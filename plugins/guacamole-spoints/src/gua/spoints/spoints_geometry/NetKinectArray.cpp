@@ -127,10 +127,11 @@ void NetKinectArray::draw_textured_triangle_soup(gua::RenderContext const& ctx, 
             
 
             float lod_scaling_for_context = m_current_lod_scaling_per_context_[ctx.id];
+            float texture_lod_scaling_for_context = m_current_texture_lod_scaling_per_context_[ctx.id];
 
             shader_program->set_uniform(ctx, m_calibration_descriptor_.inverse_vol_to_world_mat, "inv_vol_to_world_matrix");
             shader_program->set_uniform(ctx, lod_scaling_for_context, "scaling_factor");
-
+            shader_program->set_uniform(ctx, texture_lod_scaling_for_context, "texture_scaling_factor");
 
             scm::math::vec3 tight_geometry_bb_min_for_context = m_current_tight_geometry_bb_min_per_context_[ctx.id];
             scm::math::vec3 tight_geometry_bb_max_for_context = m_current_tight_geometry_bb_max_per_context_[ctx.id];
@@ -366,6 +367,7 @@ void NetKinectArray::_try_swap_model_data_cpu() {
         std::swap(m_num_best_triangles_for_sensor_layer_, m_num_best_triangles_for_sensor_layer_back_);
 
         std::swap(m_lod_scaling_back_, m_lod_scaling_);
+        std::swap(m_texture_lod_scaling_back_, m_texture_lod_scaling_);
 
         std::swap(m_texture_space_bounding_boxes_back_, m_texture_space_bounding_boxes_);
 
@@ -433,8 +435,8 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
  
 
 
-        size_t texture_width = 1280 * 2;
-        size_t texture_height = 720 * 2;
+        size_t texture_width = 2560 * 2;
+        size_t texture_height = 1440 * 2;
 
         if(!texture_atlas_per_context_[ctx.id]) {
             texture_atlas_per_context_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
@@ -602,6 +604,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                 
                 
                 m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
+                m_current_texture_lod_scaling_per_context_[ctx.id] = m_texture_lod_scaling_;
 
                 m_current_tight_geometry_bb_min_per_context_[ctx.id] = m_tight_geometry_bb_min_;
                 m_current_tight_geometry_bb_max_per_context_[ctx.id] = m_tight_geometry_bb_max_;
@@ -636,12 +639,12 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
 
-                    if( !(m_texture_space_bounding_boxes_[test_layer_offset + 0] > 2560 || m_texture_space_bounding_boxes_[test_layer_offset + 0] < 0 || 
-                        m_texture_space_bounding_boxes_[test_layer_offset + 1] > 1440 || m_texture_space_bounding_boxes_[test_layer_offset + 1] < 0 ||
-                       (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) > 2560 ||
-                       (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) > 1440 || 
-                       (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) < 0    ||
-                       (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) < 0      ) )
+                    if( !(m_texture_space_bounding_boxes_[test_layer_offset + 0] > 5120/*2560*/ || m_texture_space_bounding_boxes_[test_layer_offset + 0] < 0 || 
+                          m_texture_space_bounding_boxes_[test_layer_offset + 1] > 2880/*1440*/ || m_texture_space_bounding_boxes_[test_layer_offset + 1] < 0 ||
+                         (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) > /*2560*/ 5120 ||
+                         (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) > /*1440*/ 2880 || 
+                         (m_texture_space_bounding_boxes_[test_layer_offset + 2] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 0]) < 0    ||
+                         (m_texture_space_bounding_boxes_[test_layer_offset + 3] + 1 - m_texture_space_bounding_boxes_[test_layer_offset + 1]) < 0      ) )
                     {
 
                     
@@ -788,7 +791,8 @@ void NetKinectArray::_unpack_back_message() {
 
                 m_model_descriptor_back_.request_reply_latency_ms = total_latency_in_microseconds / 1000.0f;
 
-                m_lod_scaling_back_ = message_header.lod_scaling;
+                m_lod_scaling_back_         = message_header.lod_scaling;
+                m_texture_lod_scaling_back_ = message_header.texture_lod_scaling;
 
 
 

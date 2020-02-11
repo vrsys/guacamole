@@ -10,8 +10,8 @@ using chrono_timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
 namespace SGTP {
   uint8_t     const _MAX_NUM_SENSORS = 16;
-  std::size_t const _TEXTURE_DIMENSION_X = 2*1280;
-  std::size_t const _TEXTURE_DIMENSION_Y = 2*720;
+  std::size_t const _TEXTURE_DIMENSION_X = 2*2560;
+  std::size_t const _TEXTURE_DIMENSION_Y = 2*1280;
 
   namespace v_0_2_3{
 
@@ -51,6 +51,7 @@ namespace SGTP {
     uint32_t                 bounding_box_pixel_coverage[_MAX_NUM_SENSORS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint32_t                 jpeg_bytes_per_sensor[_MAX_NUM_SENSORS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	  float                    lod_scaling = 1.0;
+    float                    texture_lod_scaling = 1.0;
     int32_t                  package_reply_id = -1;
     int64_t                  passed_microseconds_since_request;
 
