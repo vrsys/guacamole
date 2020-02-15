@@ -91,7 +91,7 @@ namespace SGTP {
       uint64_t data;
     };
 
-  std::size_t const _MAX_MESSAGE_SIZE = 250 * 1024 * 1024 ; // 250 MB
+  std::size_t const _MAX_MESSAGE_SIZE = 500 * 1024 * 1024 ; // 500 MB
 
   //textured triangle formats
   std::size_t const _VERTEX_XYZ_3x32F_UV_2x32F_UNCOMPRESSED_SIZE  = 3 * sizeof(float) + 2 * sizeof(float);
