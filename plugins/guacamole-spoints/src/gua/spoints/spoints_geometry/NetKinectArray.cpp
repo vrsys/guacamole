@@ -948,7 +948,7 @@ void NetKinectArray::_decompress_images()
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) {
                 if(nullptr == m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx])
                 {
-                    m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx] = tjAlloc(1024 * 1024 * 50);
+                    m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx] = tjAlloc(tjBufSize(2560, 1440,TJSAMP_444));//tjAlloc(1024 * 1024 * 50);
                 }
             }
 

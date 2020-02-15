@@ -134,8 +134,8 @@ class NetKinectArray
 {
   public:
     static size_t constexpr MAX_ZMQ_MESSAGE_SIZE = 500000000;
-    static size_t constexpr INITIAL_VBO_SIZE = 20000000;
-    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
+    static size_t constexpr INITIAL_VBO_SIZE = 3*20000000;
+    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 3*20000000*3/5;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
     static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
 
@@ -221,12 +221,12 @@ class NetKinectArray
     std::vector<uint8_t> m_buffer_back_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
     std::vector<uint8_t> m_buffer_back_compressed_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
 
-    std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
-    std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
-    std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(5*11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(5*11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(5*11059200, 0);
 
     std::vector<uint8_t*> m_tj_compressed_image_buffer_per_layer_ =  std::vector<uint8_t*>(MAX_LAYER_IDX, nullptr);
-    std::array<uint8_t, 1024 * 1024 * 100> m_decompressed_image_buffer_;
+    std::array<uint8_t, 1024 * 1024 * 150> m_decompressed_image_buffer_;
 
     std::vector<uint8_t> m_calibration_;
     std::vector<uint8_t> m_calibration_back_;
