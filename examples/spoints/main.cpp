@@ -201,7 +201,7 @@ int main(int argc, char** argv)
               add_window("window4", camera4);
             }*/
 
-            //std::cout << window_handle->get_rendering_fps() << "\n";
+            //std::cout << 1.0 / window->get_rendering_fps() << "\n";
             ++framecount;
         }
     });
