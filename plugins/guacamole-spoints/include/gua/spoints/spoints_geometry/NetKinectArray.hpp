@@ -221,6 +221,7 @@ class NetKinectArray
     std::vector<uint8_t> m_buffer_back_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
     std::vector<uint8_t> m_buffer_back_compressed_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
 
+    std::vector<uint8_t> m_texture_buffer_async_upload_ = std::vector<uint8_t>(5*11059200, 0);
     std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(5*11059200, 0);
     std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(5*11059200, 0);
     std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(5*11059200, 0);
@@ -249,6 +250,7 @@ class NetKinectArray
 
     SPointsCalibrationDescriptor m_calibration_descriptor_;
     SPointsCalibrationDescriptor m_calibration_descriptor_back_;
+    SPointsCalibrationDescriptor m_calibration_descriptor_back_two_times_;
 
     SPointsModelDescriptor m_model_descriptor_;
     SPointsModelDescriptor m_model_descriptor_back_;
@@ -256,12 +258,16 @@ class NetKinectArray
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_;
 
+    std::unordered_map<std::size_t, std::array<uint32_t, 16>> m_current_num_best_triangles_for_sensor_layer_per_context_back_;
     std::unordered_map<std::size_t, std::array<uint32_t, 16>> m_current_num_best_triangles_for_sensor_layer_per_context_;
 
     scm::math::vec3 m_tight_geometry_bb_min_back_;
     scm::math::vec3 m_tight_geometry_bb_min_;
     scm::math::vec3 m_tight_geometry_bb_max_back_;
     scm::math::vec3 m_tight_geometry_bb_max_;
+
+    std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_back_;
+    std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_back_;
 
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_;
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_;
@@ -279,6 +285,9 @@ class NetKinectArray
 
     mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_;
     mutable std::unordered_map<std::size_t, float> m_current_texture_lod_scaling_per_context_;
+
+    mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_back_;
+    mutable std::unordered_map<std::size_t, float> m_current_texture_lod_scaling_per_context_back_;
 
     std::atomic<bool> m_need_model_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;
@@ -337,13 +346,23 @@ class NetKinectArray
     mutable std::vector<scm::gl::vertex_array_ptr> point_layout_per_context_ = std::vector<scm::gl::vertex_array_ptr>(50, nullptr);
     
     //mutable std::vector<scm::gl::buffer_ptr> compressed_net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+
+    mutable std::vector<std::vector<bool> > is_first_texture_update_frame_per_context = std::vector<std::vector<bool>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<bool>(4, true) );
+    mutable std::vector<std::vector<scm::gl::texture_region> > previous_frame_texture_regions_to_update_per_context = std::vector<std::vector<scm::gl::texture_region>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_region>(4) );
+
+
+    mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_back_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
     mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+
+    mutable std::vector<bool> is_net_back_buffer_mapped_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
     mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     mutable std::vector<scm::gl::buffer_ptr> one_d_color_data_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
 
     mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+    mutable std::vector<std::vector<scm::gl::buffer_ptr> > texture_atlas_pbo_back_ = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
+    mutable std::vector<std::vector<scm::gl::buffer_ptr> > texture_atlas_pbo_ = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
 
     //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
     mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );

@@ -227,7 +227,10 @@ void NetKinectArray::_try_swap_calibration_data_cpu() {
         //std::lock_guard<std::mutex> lock(m_mutex_);
         m_calibration_.swap(m_calibration_back_);
 
+
+
         std::swap(m_calibration_descriptor_, m_calibration_descriptor_back_);
+        std::swap(m_calibration_descriptor_back_, m_calibration_descriptor_back_two_times_);
 
         --num_clients_cpu_swapping_;
         m_need_calibration_cpu_swap_.store(false);
@@ -423,7 +426,14 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             }
         }
         
-        
+        if(!net_data_vbo_per_context_back_[ctx.id]) {
+            net_data_vbo_per_context_back_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+            if(!net_data_vbo_per_context_back_[ctx.id]) {
+                some_gpu_update_went_wrong = true;
+                std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
+            }
+        }
+     
        if(nullptr == linear_sampler_state_per_context_[ctx.id])
         {
             linear_sampler_state_per_context_[ctx.id] = ctx.render_device->create_sampler_state(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_CLAMP_TO_EDGE);
@@ -439,6 +449,14 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         size_t texture_height = 1440 * 2;
 
         if(!texture_atlas_per_context_[ctx.id]) {
+
+            uint64_t total_num_pixel_byte = (texture_width/2) * (texture_height/2) * 3;
+
+            for(int layer_idx = 0; layer_idx < 4; ++layer_idx) {
+                texture_atlas_pbo_back_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, total_num_pixel_byte, 0);
+                texture_atlas_pbo_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, total_num_pixel_byte, 0);
+            }
+
             texture_atlas_per_context_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
             if(!texture_atlas_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
@@ -581,14 +599,24 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
 
                 num_textured_tris_to_draw_per_context_[ctx.id] = m_model_descriptor_.received_textured_tris;
-                m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id] = m_num_best_triangles_for_sensor_layer_;
+
+
+
+                std::swap(m_current_num_best_triangles_for_sensor_layer_per_context_back_[ctx.id], m_current_num_best_triangles_for_sensor_layer_per_context_[ctx.id]);
+
+                m_current_num_best_triangles_for_sensor_layer_per_context_back_[ctx.id] = m_num_best_triangles_for_sensor_layer_;
 
 
                 //std::lock_guard<std::mutex> lock(m_mutex_);
                 //auto& current_is_vbo_created = is_vbo_created_per_context_[ctx.id];
 
+ 
+                //std::cout  << "Before trying to update geometry " << std::endl;
+                
+                std::swap(net_data_vbo_per_context_[ctx.id], net_data_vbo_per_context_back_[ctx.id]);
 
 
+                //update back buffer net_data_vbo_per_context
                 ctx.render_context->bind_storage_buffer(net_data_vbo_per_context_[ctx.id], 3, 0, INITIAL_VBO_SIZE);
 
                 ctx.render_context->apply_storage_buffer_bindings();
@@ -596,21 +624,41 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
                 
 
                 is_swapping_gpu_model_data_per_context_[ctx.id] = true;
-                float* mapped_net_data_vbo_ = (float*)ctx.render_context->map_buffer(net_data_vbo_per_context_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_ONLY);
-                memcpy((char*)mapped_net_data_vbo_, (char*)&m_buffer_[0], total_num_bytes_to_copy);
-                ctx.render_context->unmap_buffer(net_data_vbo_per_context_[ctx.id]);
+
+                if( false == is_net_back_buffer_mapped_[ctx.id]) {
+                    float* mapped_net_data_vbo_back = (float*)ctx.render_context->map_buffer(net_data_vbo_per_context_back_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_INVALIDATE_BUFFER);
+                    memcpy((char*)mapped_net_data_vbo_back, (char*)&m_buffer_[0], total_num_bytes_to_copy);
+                    is_net_back_buffer_mapped_[ctx.id] = true;
+
+                   if( true == is_net_back_buffer_mapped_[ctx.id]) {
+                        ctx.render_context->unmap_buffer(net_data_vbo_per_context_back_[ctx.id]);
+                        is_net_back_buffer_mapped_[ctx.id] = false;
+                    }
+                } else {
+                    throw("Net Buffer was already mapped");
+                }
+                
 
                 //ctx.render_context->unmap_buffer(net_data_vbo_per_context_[ctx.id]);
                 
                 
-                m_current_lod_scaling_per_context_[ctx.id] = m_lod_scaling_;
-                m_current_texture_lod_scaling_per_context_[ctx.id] = m_texture_lod_scaling_;
+                std::swap(m_current_lod_scaling_per_context_[ctx.id], m_current_lod_scaling_per_context_back_[ctx.id]);
+                std::swap(m_current_texture_lod_scaling_per_context_[ctx.id], m_current_texture_lod_scaling_per_context_back_[ctx.id]);
 
-                m_current_tight_geometry_bb_min_per_context_[ctx.id] = m_tight_geometry_bb_min_;
-                m_current_tight_geometry_bb_max_per_context_[ctx.id] = m_tight_geometry_bb_max_;
+                m_current_lod_scaling_per_context_back_[ctx.id] = m_lod_scaling_;
+                m_current_texture_lod_scaling_per_context_back_[ctx.id] = m_texture_lod_scaling_;
+
+                std::swap(m_current_tight_geometry_bb_min_per_context_[ctx.id], m_current_tight_geometry_bb_min_per_context_back_[ctx.id]);
+                std::swap(m_current_tight_geometry_bb_max_per_context_[ctx.id], m_current_tight_geometry_bb_max_per_context_back_[ctx.id]);
+
+                m_current_tight_geometry_bb_min_per_context_back_[ctx.id] = m_tight_geometry_bb_min_;
+                m_current_tight_geometry_bb_max_per_context_back_[ctx.id] = m_tight_geometry_bb_max_;
 
                 uint32_t byte_offset_per_texture_data_for_layers[MAX_LAYER_IDX];
 
+
+
+                //std::cout  << "Before trying to update texture " << std::endl;
                 for(uint32_t layer_to_update_idx = 0; layer_to_update_idx < MAX_LAYER_IDX; ++layer_to_update_idx)
                 {
                     // initialize offset with 0 or value of last region and update incrementally
@@ -661,9 +709,47 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
                             size_t current_read_offset = byte_offset_per_texture_data_for_layers[layer_to_update_idx];
 
+
+
+
+
                             
-                            ctx.render_context->update_sub_texture(
-                                texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+
+
+                            //std::swap(texture_atlas_pbo_[ctx.id][layer_to_update_idx], texture_atlas_pbo_back_[ctx.id][layer_to_update_idx]);
+
+                            //ctx.render_context->update_sub_texture(
+                            //    texture_atlas_per_context_[ctx.id], current_region_to_update, 0, scm::gl::FORMAT_BGR_8, (void*)&m_texture_buffer_[current_read_offset]);
+
+                            std::swap(texture_atlas_pbo_back_[ctx.id][layer_to_update_idx], texture_atlas_pbo_[ctx.id][layer_to_update_idx]);
+                            
+                            if(!is_first_texture_update_frame_per_context[ctx.id][layer_to_update_idx]) {
+                                ctx.render_context->bind_unpack_buffer(texture_atlas_pbo_[ctx.id][layer_to_update_idx]);
+                            
+                                ctx.render_context->update_sub_texture(
+                                    texture_atlas_per_context_[ctx.id], previous_frame_texture_regions_to_update_per_context[ctx.id][layer_to_update_idx], 0, scm::gl::FORMAT_BGR_8, (void*)0);
+                                ctx.render_context->bind_unpack_buffer(0);
+                            } else {
+                                is_first_texture_update_frame_per_context[ctx.id][layer_to_update_idx] = false;
+                            }
+                            //ctx.render_context->reset_texture_units();
+
+                            //ctx.render_context->bind_unpack_buffer(texture_atlas_pbo_back_[ctx.id][layer_to_update_idx]);
+                            float* mapped_texture_pbo_back = (float*)ctx.render_context->map_buffer(texture_atlas_pbo_back_[ctx.id][layer_to_update_idx], scm::gl::access_mode::ACCESS_WRITE_INVALIDATE_BUFFER);
+
+                            int rgb_byte_to_copy = (1 + m_texture_space_bounding_boxes_[4 * layer_to_update_idx + 2] - m_texture_space_bounding_boxes_[4 * layer_to_update_idx + 0]) * (1 + m_texture_space_bounding_boxes_[4 * layer_to_update_idx + 3] - m_texture_space_bounding_boxes_[4 * layer_to_update_idx + 1]) * 3;
+
+                            //std::cout << "Trying to copy " << rgb_byte_to_copy << std::endl;
+                            //memcpy(m_texture_buffer_async_upload_.data() + current_read_offset, m_texture_buffer_.data() + current_read_offset, rgb_byte_to_copy);
+
+                            //if(rgb_byte_to_copy >= 0) {
+                                memcpy(mapped_texture_pbo_back, (void*)&m_texture_buffer_[current_read_offset], rgb_byte_to_copy);
+                            //}
+                            ctx.render_context->unmap_buffer(texture_atlas_pbo_back_[ctx.id][layer_to_update_idx]);
+                            previous_frame_texture_regions_to_update_per_context[ctx.id][layer_to_update_idx] = current_region_to_update;
+
+                            //ctx.render_context->bind_unpack_buffer(0);
+
                             
                         }
 
@@ -677,6 +763,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
                     }
                 }
+
 
             }
             else
@@ -741,12 +828,17 @@ void NetKinectArray::_unpack_back_message() {
 
                 m_calibration_back_.resize(message_header.total_payload);
 
+                
+
                 memcpy((char*)&m_calibration_back_[0], ((char*)m_front_zmq_unpack_buffer_.data()) + HEADER_SIZE, message_header.total_payload);
 
                 // memcpy inv_model_to_world_mat
 
-                memcpy((char*)&m_calibration_descriptor_back_.inverse_vol_to_world_mat[0], 
-                       (char*)message_header.inv_vol_to_world_mat, 16 * sizeof(float));
+                memcpy((char*)&m_calibration_descriptor_back_two_times_.inverse_vol_to_world_mat[0], (char*)message_header.inv_vol_to_world_mat, 16 * sizeof(float));
+
+
+                //memcpy((char*)&m_calibration_descriptor_back_.inverse_vol_to_world_mat[0], 
+                //       (char*)message_header.inv_vol_to_world_mat, 16 * sizeof(float));
 
                 { // swap
                     //std::lock_guard<std::mutex> lock(m_mutex_);
@@ -914,7 +1006,6 @@ void NetKinectArray::_unpack_back_message() {
             }
 
         }
-    
 
 }
 
