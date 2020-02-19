@@ -92,11 +92,12 @@ struct camera_matrix_package
 
 struct SPointsStats
 {
-    SPointsStats() : m_received_triangles(0), m_received_timestamp_ms(0.0f), m_received_reconstruction_time_ms(-1.0f), m_request_reply_latency_ms(-1.0f), m_total_message_payload_in_byte(0) {}
+    SPointsStats() : m_received_triangles(0), m_received_timestamp_ms(0.0f), m_received_reconstruction_time_ms(-1.0f), m_request_reply_latency_ms(-1.0f), m_total_message_payload_in_byte(0), m_is_calibration_data(true) {}
 
-    SPointsStats(uint32_t in_received_tris, float in_received_timestamp, float in_received_recon_time, float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte)
+    SPointsStats(uint32_t in_received_tris, float in_received_timestamp, float in_received_recon_time, float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte, bool is_calibration_data)
         : m_received_triangles(in_received_tris), m_received_timestamp_ms(in_received_timestamp), m_received_reconstruction_time_ms(in_received_recon_time),
-          m_request_reply_latency_ms(in_request_reply_latency_ms), m_total_message_payload_in_byte(in_total_message_payload_in_byte)
+          m_request_reply_latency_ms(in_request_reply_latency_ms), m_total_message_payload_in_byte(in_total_message_payload_in_byte),
+          m_is_calibration_data(is_calibration_data)
     {
     }
 
@@ -105,6 +106,7 @@ struct SPointsStats
     float m_received_reconstruction_time_ms = 0.0f;
     float m_request_reply_latency_ms = -1.0f;
     uint32_t m_total_message_payload_in_byte = 0;
+    bool m_is_calibration_data = false;
 };
 
 struct SPointsCalibrationDescriptor {
@@ -128,6 +130,8 @@ struct SPointsModelDescriptor {
     uint32_t total_message_payload_in_byte = 0;
 
     bool is_fully_encoded_vertex_data = false;
+
+    bool is_calibration_data = true;
 };
 
 class NetKinectArray
@@ -171,7 +175,9 @@ class NetKinectArray
                             m_model_descriptor_.received_kinect_timestamp, 
                             m_model_descriptor_.received_reconstruction_time, 
                             m_model_descriptor_.request_reply_latency_ms, 
-                            m_model_descriptor_.total_message_payload_in_byte};
+                            m_model_descriptor_.total_message_payload_in_byte,
+                            m_model_descriptor_.is_calibration_data
+                            };
     }
 
     // void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);

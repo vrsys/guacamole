@@ -8,4 +8,4 @@ if (UNIX)
   endif(PLUGIN_guacamole-nrp)
 endif(UNIX)
 
-add_subdirectory(lz4)
+#add_subdirectory(lz4)
