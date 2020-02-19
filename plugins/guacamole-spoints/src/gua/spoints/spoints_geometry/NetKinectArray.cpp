@@ -419,7 +419,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
 
         
         if(!net_data_vbo_per_context_[ctx.id]) {
-            net_data_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+            net_data_vbo_per_context_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_DRAW, INITIAL_VBO_SIZE, 0);
             if(!net_data_vbo_per_context_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
@@ -427,7 +427,7 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
         }
         
         if(!net_data_vbo_per_context_back_[ctx.id]) {
-            net_data_vbo_per_context_back_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, INITIAL_VBO_SIZE, 0);
+            net_data_vbo_per_context_back_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_STORAGE_BUFFER, scm::gl::USAGE_STREAM_DRAW, INITIAL_VBO_SIZE, 0);
             if(!net_data_vbo_per_context_back_[ctx.id]) {
                 some_gpu_update_went_wrong = true;
                 std::cout << "SOME UPDATE OF GPU BUFFERS WENT WRONG" << std::endl;
@@ -453,8 +453,8 @@ bool NetKinectArray::update(gua::RenderContext const& ctx, gua::math::BoundingBo
             uint64_t total_num_pixel_byte = (texture_width/2) * (texture_height/2) * 3;
 
             for(int layer_idx = 0; layer_idx < 4; ++layer_idx) {
-                texture_atlas_pbo_back_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, total_num_pixel_byte, 0);
-                texture_atlas_pbo_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_DYNAMIC_COPY, total_num_pixel_byte, 0);
+                texture_atlas_pbo_back_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_pixel_byte, 0);
+                texture_atlas_pbo_[ctx.id][layer_idx] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_num_pixel_byte, 0);
             }
 
             texture_atlas_per_context_[ctx.id] = ctx.render_device->create_texture_2d(scm::math::vec2ui(texture_width, texture_height), scm::gl::FORMAT_BGR_8, 1, 1, 1);
@@ -853,6 +853,8 @@ void NetKinectArray::_unpack_back_message() {
             }
             else
             {
+
+                m_model_descriptor_back_.is_calibration_data = false;
                 message_header.fill_texture_byte_offsets_to_bounding_boxes();
 
                 for(uint32_t dim_idx = 0; dim_idx < 3; ++dim_idx)
@@ -872,16 +874,7 @@ void NetKinectArray::_unpack_back_message() {
 
                 auto passed_microseconds_to_request = message_header.passed_microseconds_since_request;
 
-                auto timestamp_during_reception = std::chrono::system_clock::now();
-                auto reference_timestamp = ::gua::SPointsFeedbackCollector::instance()->get_reference_timestamp();
 
-                auto start_to_reply_diff = timestamp_during_reception - reference_timestamp;
-
-                int64_t passed_microseconds_to_reply = std::chrono::duration<double>(start_to_reply_diff).count() * 1000000;
-
-                int64_t total_latency_in_microseconds = passed_microseconds_to_reply - passed_microseconds_to_request;
-
-                m_model_descriptor_back_.request_reply_latency_ms = total_latency_in_microseconds / 1000.0f;
 
                 m_lod_scaling_back_         = message_header.lod_scaling;
                 m_texture_lod_scaling_back_ = message_header.texture_lod_scaling;
@@ -980,18 +973,43 @@ void NetKinectArray::_unpack_back_message() {
 
                     //m_submitted_compressed_images_.store(true);
 
-                    _decompress_geometry_buffer();
+                    #pragma omp parallel sections
+                    {
+                        #pragma omp section
+                        _decompress_geometry_buffer();
 
-                    _decompress_images();
+                        //auto mid_decompression = std::chrono::system_clock::now();
+                        
+                        #pragma omp section
+                        _decompress_images();
+                    }
 
                 auto end_decompression = std::chrono::system_clock::now();
 
+                //std::chrono::duration<double> geometry_decomp_time = mid_decompression-start_decompression;
+                //std::chrono::duration<double> texture_decomp_time = end_decompression-mid_decompression;
                 std::chrono::duration<double> elapsed_seconds = end_decompression-start_decompression;
         
+                //std::cout << "Geometry Decompression time: " << geometry_decomp_time.count() << std::endl;
+                //std::cout << "Texture Decompression time: " << texture_decomp_time.count() << std::endl;
+                std::cout << "Total Decompression time: " << elapsed_seconds.count() << std::endl;
     #else
                     gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
     #endif // GUACAMOLE_ENABLE_TURBOJPEG
                 }
+
+                auto timestamp_during_reception = std::chrono::system_clock::now();
+                auto reference_timestamp = ::gua::SPointsFeedbackCollector::instance()->get_reference_timestamp();
+
+                auto start_to_reply_diff = timestamp_during_reception - reference_timestamp;
+
+                int64_t passed_microseconds_to_reply = std::chrono::duration<double>(start_to_reply_diff).count() * 1000000;
+
+                int64_t total_latency_in_microseconds = passed_microseconds_to_reply - passed_microseconds_to_request;
+
+                m_model_descriptor_back_.request_reply_latency_ms = total_latency_in_microseconds / 1000.0f;
+
+
 
                 { // swap
                     //std::lock_guard<std::mutex> lock(m_mutex_);
@@ -1069,6 +1087,8 @@ void NetKinectArray::_decompress_images()
             }
 
             bool skip_decompression = false;
+
+   
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
             {
                 long unsigned int jpeg_size = m_byte_offset_to_jpeg_windows_[sensor_layer_idx];

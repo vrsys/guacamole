@@ -1,4 +1,4 @@
 serversocket 127.0.0.1:7050
 feedbacksocket 127.0.0.1:7051
 uv_volume_res 128 128 128
-inv_xyz_volume_res 40 40 40
+inv_xyz_volume_res 43 32 43
