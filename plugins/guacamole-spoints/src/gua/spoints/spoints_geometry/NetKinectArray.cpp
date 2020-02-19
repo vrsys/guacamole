@@ -973,12 +973,16 @@ void NetKinectArray::_unpack_back_message() {
 
                     //m_submitted_compressed_images_.store(true);
 
+                    auto mid_decompression = std::chrono::system_clock::now();
+
                     #pragma omp parallel sections
                     {
                         #pragma omp section
+
                         _decompress_geometry_buffer();
 
-                        //auto mid_decompression = std::chrono::system_clock::now();
+                        
+                      //  mid_decompression = std::chrono::system_clock::now();
                         
                         #pragma omp section
                         _decompress_images();
@@ -986,12 +990,12 @@ void NetKinectArray::_unpack_back_message() {
 
                 auto end_decompression = std::chrono::system_clock::now();
 
-                //std::chrono::duration<double> geometry_decomp_time = mid_decompression-start_decompression;
-                //std::chrono::duration<double> texture_decomp_time = end_decompression-mid_decompression;
+                std::chrono::duration<double> geometry_decomp_time = mid_decompression-start_decompression;
+                std::chrono::duration<double> texture_decomp_time = end_decompression-mid_decompression;
                 std::chrono::duration<double> elapsed_seconds = end_decompression-start_decompression;
         
-                //std::cout << "Geometry Decompression time: " << geometry_decomp_time.count() << std::endl;
-                //std::cout << "Texture Decompression time: " << texture_decomp_time.count() << std::endl;
+                std::cout << "Geometry Decompression time: " << geometry_decomp_time.count() << std::endl;
+                std::cout << "Texture Decompression time: " << texture_decomp_time.count() << std::endl;
                 std::cout << "Total Decompression time: " << elapsed_seconds.count() << std::endl;
     #else
                     gua::Logger::LOG_WARNING << "TurboJPEG not available. Compile with option ENABLE_TURBOJPEG" << std::endl;
@@ -1062,7 +1066,7 @@ void NetKinectArray::_decompress_images()
             }
 
 
-            std::size_t byte_offset_to_current_image = 0;
+
 
             std::size_t total_image_byte_size = 0;
 
@@ -1089,19 +1093,42 @@ void NetKinectArray::_decompress_images()
             bool skip_decompression = false;
 
    
+            int header_width[4] = {0, 0, 0, 0};
+            int header_height[4] = {0, 0, 0, 0};
+            int header_subsamp[4] = {0, 0, 0, 0};
+
+            int error_handles[4] = {0, 0, 0, 0};
+
+
+            #pragma omp parallel for num_threads(4)
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
             {
                 long unsigned int jpeg_size = m_byte_offset_to_jpeg_windows_[sensor_layer_idx];
 
                 //memcpy((char*)&m_tj_compressed_image_buffer_per_layer_[sensor_layer_idx][0], (char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image], jpeg_size);
 
-                int header_width, header_height, header_subsamp;
+
 
                 auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
 
-                int error_handle = tjDecompressHeader2(current_decompressor_handle, (unsigned char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image], jpeg_size, &header_width, &header_height, &header_subsamp);
+                std::size_t byte_offset_to_current_image = 0;
 
-                if(-1 == error_handle)
+                for(uint32_t sensor_offset_idx = 0; sensor_offset_idx < sensor_layer_idx; ++sensor_offset_idx) {
+                    byte_offset_to_current_image += m_byte_offset_to_jpeg_windows_[sensor_offset_idx];;
+                }
+
+                error_handles[sensor_layer_idx] = tjDecompressHeader2(current_decompressor_handle, (unsigned char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image], jpeg_size, &(header_width[sensor_layer_idx]), &(header_height[sensor_layer_idx]), &(header_subsamp[sensor_layer_idx]) );
+            
+                
+            }
+
+            
+            #pragma omp parallel for num_threads(4)
+            for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
+            {
+
+                long unsigned int jpeg_size = m_byte_offset_to_jpeg_windows_[sensor_layer_idx];
+                if(-1 == error_handles[sensor_layer_idx])
                 {
                     std::cout << "ERROR DECOMPRESSING JPEG\n";
                     std::cout << "Error was: " << tjGetErrorStr() << "\n";
@@ -1114,20 +1141,31 @@ void NetKinectArray::_decompress_images()
                 }
 
                 if(!skip_decompression) {
+
+                    auto& current_decompressor_handle = m_jpeg_decompressor_per_layer[sensor_layer_idx];
+
+
+                    std::size_t byte_offset_to_current_image = 0;
+                    std::size_t decompressed_image_offset    = 0;
+                    for(uint32_t sensor_offset_idx = 0; sensor_offset_idx < sensor_layer_idx; ++sensor_offset_idx) {
+                        byte_offset_to_current_image += m_byte_offset_to_jpeg_windows_[sensor_offset_idx];
+                        decompressed_image_offset    += header_height[sensor_offset_idx] * header_width[sensor_offset_idx] * 3;
+                    }
+
                     tjDecompress2(current_decompressor_handle,
                                   (unsigned char*)&m_texture_buffer_back_compressed_[byte_offset_to_current_image],
                                   jpeg_size,
                                   &m_texture_buffer_back_[decompressed_image_offset],
-                                  header_width,
+                                  header_width[sensor_layer_idx],
                                   0,
-                                  header_height,
+                                  header_height[sensor_layer_idx],
                                   TJPF_BGR,
                                   TJFLAG_FASTDCT);
 
-                    uint32_t copied_image_byte = header_height * header_width * 3;
+                    //uint32_t copied_image_byte = header_height[sensor_layer_idx] * header_width[sensor_layer_idx] * 3;
 
-                    byte_offset_to_current_image += jpeg_size;
-                    decompressed_image_offset += copied_image_byte;
+                    //byte_offset_to_current_image += jpeg_size;
+                    //decompressed_image_offset += copied_image_byte;
                 }
             }
 

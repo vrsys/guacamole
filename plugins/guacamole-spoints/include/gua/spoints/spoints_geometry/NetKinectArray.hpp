@@ -354,7 +354,7 @@ class NetKinectArray
     //mutable std::vector<scm::gl::buffer_ptr> compressed_net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     mutable std::vector<std::vector<bool> > is_first_texture_update_frame_per_context = std::vector<std::vector<bool>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<bool>(4, true) );
-    mutable std::vector<std::vector<scm::gl::texture_region> > previous_frame_texture_regions_to_update_per_context = std::vector<std::vector<scm::gl::texture_region>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_region>(4) );
+    mutable std::vector<std::vector<scm::gl::texture_region> > previous_frame_texture_regions_to_update_per_context = std::vector<std::vector<scm::gl::texture_region>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_region>(4 ) );
 
 
     mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_back_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
