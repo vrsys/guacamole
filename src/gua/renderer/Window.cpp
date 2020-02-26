@@ -82,7 +82,7 @@ void Window::open()
 
     ctx_.display.reset(new scm::gl::wm::display(config.get_display_name()));
 
-    scm_window_.reset(new scm::gl::wm::window(ctx_.display, config.get_title(), config.get_window_position(), math::vec2ui(config.get_size().x, config.get_size().y), window_format));
+    scm_window_.reset(new scm::gl::wm::window(ctx_.display, config.get_title(), math::vec2i(config.get_window_position()), math::vec2ui(config.get_size().x, config.get_size().y), window_format));
 
     ctx_.context.reset(new scm::gl::wm::context(scm_window_, context_attribs));
 
