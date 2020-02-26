@@ -94,8 +94,24 @@ struct SPointsStats
 {
     SPointsStats() : m_received_triangles(0), m_received_timestamp_ms(0.0f), m_received_reconstruction_time_ms(-1.0f), m_request_reply_latency_ms(-1.0f), m_total_message_payload_in_byte(0), m_is_calibration_data(true) {}
 
-    SPointsStats(uint32_t in_received_tris, float in_received_timestamp, float in_received_recon_time, float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte, bool is_calibration_data)
-        : m_received_triangles(in_received_tris), m_received_timestamp_ms(in_received_timestamp), m_received_reconstruction_time_ms(in_received_recon_time),
+    SPointsStats(uint32_t in_received_tris, 
+                 float in_received_timestamp, 
+                 float in_received_recon_time,
+                 float in_received_box_division_time,
+                 float in_received_texture_processing_time,
+                 float in_received_frustum_and_occlusion_culling_time,
+                 float in_received_integration_time,
+                 float in_received_marching_cubes_time,
+                 float in_received_atlas_generation_time,
+                 float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte, bool is_calibration_data)
+        : m_received_triangles(in_received_tris), m_received_timestamp_ms(in_received_timestamp), 
+          m_received_reconstruction_time_ms(in_received_recon_time),
+          m_received_box_division_time_ms(in_received_box_division_time),
+          m_received_texture_processing_time_ms(in_received_texture_processing_time), 
+          m_received_frustum_and_occlusion_culling_time_ms(in_received_frustum_and_occlusion_culling_time),
+          m_received_integration_time_ms(in_received_integration_time),
+          m_received_marching_cubes_time_ms(in_received_marching_cubes_time), 
+          m_received_atlas_generation_time_ms(in_received_atlas_generation_time), 
           m_request_reply_latency_ms(in_request_reply_latency_ms), m_total_message_payload_in_byte(in_total_message_payload_in_byte),
           m_is_calibration_data(is_calibration_data)
     {
@@ -104,9 +120,17 @@ struct SPointsStats
     uint32_t m_received_triangles = 0;
     float m_received_timestamp_ms = -1.0f;
     float m_received_reconstruction_time_ms = 0.0f;
+    // the following 6 attributes are the component adding up the reconstruction time
+    float m_received_box_division_time_ms         = -1.0f;
+    float m_received_texture_processing_time_ms   = -1.0f;
+    float m_received_frustum_and_occlusion_culling_time_ms = -1.0f;
+    float m_received_integration_time_ms          = -1.0f;
+    float m_received_marching_cubes_time_ms       = -1.0f;
+    float m_received_atlas_generation_time_ms     = -1.0f;
+
     float m_request_reply_latency_ms = -1.0f;
     uint32_t m_total_message_payload_in_byte = 0;
-    bool m_is_calibration_data = false;
+    bool m_is_calibration_data = true;
 };
 
 struct SPointsCalibrationDescriptor {
@@ -120,7 +144,15 @@ struct SPointsModelDescriptor {
     uint32_t received_textured_tris = 0.0;
     float received_kinect_timestamp = 0.0;
     float received_reconstruction_time = 0.0;
-  
+    // the following 6 attributes are the component adding up the reconstruction time
+    float received_box_division_time_ms         =  0.0f;
+    float received_texture_processing_time_ms   =  0.0f;
+    float received_frustum_and_occlusion_culling_time_ms = 0.0f;
+    float received_integration_time_ms          =  0.0f;
+    float received_marching_cubes_time_ms       =  0.0f;
+    float received_atlas_generation_time_ms     =  0.0f;
+
+
     float request_reply_latency_ms = -1.0;
     int32_t triangle_texture_atlas_size = 0.0;
    
@@ -174,6 +206,12 @@ class NetKinectArray
         return SPointsStats{m_model_descriptor_.received_textured_tris, 
                             m_model_descriptor_.received_kinect_timestamp, 
                             m_model_descriptor_.received_reconstruction_time, 
+                            m_model_descriptor_.received_box_division_time_ms,                                 
+                            m_model_descriptor_.received_texture_processing_time_ms,     
+                            m_model_descriptor_.received_frustum_and_occlusion_culling_time_ms ,    
+                            m_model_descriptor_.received_integration_time_ms,     
+                            m_model_descriptor_.received_marching_cubes_time_ms,     
+                            m_model_descriptor_.received_atlas_generation_time_ms,         
                             m_model_descriptor_.request_reply_latency_ms, 
                             m_model_descriptor_.total_message_payload_in_byte,
                             m_model_descriptor_.is_calibration_data

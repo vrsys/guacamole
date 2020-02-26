@@ -870,6 +870,13 @@ void NetKinectArray::_unpack_back_message() {
                 m_model_descriptor_back_.received_kinect_timestamp = message_header.timestamp;
                 m_model_descriptor_back_.received_reconstruction_time = message_header.geometry_creation_time_in_ms;
 
+                m_model_descriptor_back_.received_box_division_time_ms                  = message_header.box_division_time_in_ms;
+                m_model_descriptor_back_.received_texture_processing_time_ms            = message_header.texture_processing_time_in_ms;
+                m_model_descriptor_back_.received_frustum_and_occlusion_culling_time_ms = message_header.frustum_and_occlusion_culling_time_in_ms;
+                m_model_descriptor_back_.received_integration_time_ms                   = message_header.integration_time_in_ms;
+                m_model_descriptor_back_.received_marching_cubes_time_ms                = message_header.marching_cubes_time_in_ms;
+                m_model_descriptor_back_.received_atlas_generation_time_ms              = message_header.atlas_generation_time_in_ms;
+
                 m_model_descriptor_back_.total_message_payload_in_byte = m_front_unpack_zmq_message_size_;
 
                 auto passed_microseconds_to_request = message_header.passed_microseconds_since_request;
@@ -975,16 +982,16 @@ void NetKinectArray::_unpack_back_message() {
 
                     auto mid_decompression = std::chrono::system_clock::now();
 
-                    #pragma omp parallel sections
+                    //#pragma omp parallel sections
                     {
-                        #pragma omp section
+                    //    #pragma omp section
 
                         _decompress_geometry_buffer();
 
                         
                       //  mid_decompression = std::chrono::system_clock::now();
                         
-                        #pragma omp section
+                    //    #pragma omp section
                         _decompress_images();
                     }
 
@@ -1100,7 +1107,7 @@ void NetKinectArray::_decompress_images()
             int error_handles[4] = {0, 0, 0, 0};
 
 
-            #pragma omp parallel for num_threads(4)
+            //#pragma omp parallel for num_threads(4)
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
             {
                 long unsigned int jpeg_size = m_byte_offset_to_jpeg_windows_[sensor_layer_idx];
@@ -1123,7 +1130,7 @@ void NetKinectArray::_decompress_images()
             }
 
             
-            #pragma omp parallel for num_threads(4)
+           //#pragma omp parallel for num_threads(4)
             for(uint32_t sensor_layer_idx = 0; sensor_layer_idx < 4; ++sensor_layer_idx) 
             {
 
