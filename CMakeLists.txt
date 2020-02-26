@@ -258,7 +258,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (UNIX)
-  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 -fopenmp --std=c++11 -Wall")
+  set(CMAKE_CXX_FLAGS_RELEASE "-s -O4 --std=c++11 -Wall")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g -DNDEBUG --std=c++11 -Wall")
   set(CMAKE_CXX_FLAGS_DEBUG "-g --std=c++11 -Wall")
 elseif(MSVC)
