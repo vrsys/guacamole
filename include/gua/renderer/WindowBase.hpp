@@ -87,7 +87,7 @@ class GUA_DLL WindowBase
         GUA_ADD_PROPERTY(math::vec2ui, left_position, math::vec2ui(0, 0));
         GUA_ADD_PROPERTY(math::vec2ui, right_resolution, math::vec2ui(800, 600));
         GUA_ADD_PROPERTY(math::vec2ui, right_position, math::vec2ui(0, 0));
-        GUA_ADD_PROPERTY(math::vec2i, window_position, math::vec2i(0, 0));
+        GUA_ADD_PROPERTY(math::vec2ui, window_position, math::vec2i(0, 0));
         GUA_ADD_PROPERTY(bool, fullscreen_mode, false);
         GUA_ADD_PROPERTY(bool, enable_vsync, true);
         GUA_ADD_PROPERTY(bool, debug, false);
