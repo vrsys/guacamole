@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 // class header
+#include <gua/config.hpp>
 #include <gua/renderer/Serializer.hpp>
 
 // guacamole headers
@@ -40,11 +41,11 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-Serializer::Serializer() : data_(nullptr), rendering_frustum_(), enable_frustum_culling_(false), enable_alternative_frustum_culling_(false) {}
+Serializer::Serializer() : data_(nullptr), rendering_frusta_(), enable_frustum_culling_(false), enable_alternative_frustum_culling_(false) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, int view_id)
+void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, bool enable_mvr, int view_id)
 {
     data_ = &output;
     data_->nodes.clear();
@@ -55,8 +56,20 @@ void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, M
     enable_alternative_frustum_culling_ = (output.rendering_frustum != output.culling_frustum) && enable_frustum_culling;
 
     render_mask_ = mask;
-    rendering_frustum_ = output.rendering_frustum;
-    culling_frustum_ = output.culling_frustum;
+
+    rendering_frusta_.push_back(output.rendering_frustum);
+    culling_frusta_.push_back(output.culling_frustum);
+
+    //rendering_frustum_ = output.rendering_frustum;
+    //culling_frustum_ = output.culling_frustum;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+      if(enable_mvr){
+        rendering_frusta_.push_back(output.secondary_rendering_frustum);
+        culling_frusta_.push_back(output.secondary_culling_frustum);
+      }
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
 
     for(auto const& plane : scene_graph.get_clipping_plane_nodes())
     {
@@ -68,6 +81,18 @@ void Serializer::check(SerializedScene& output, SceneGraph const& scene_graph, M
 
     scene_graph.accept(*this);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Serializer::check(SerializedScene& output,
+           SceneGraph const& scene_graph,
+           Mask const& mask,
+           bool enable_frustum_culling,
+           int view_id){
+
+  check(output, scene_graph, mask, enable_frustum_culling, false, view_id);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,14 +156,30 @@ bool Serializer::is_visible(node::Node* node) const
     // check whether bounding box is (partially) within frustum
     if(enable_frustum_culling_)
     {
+        is_visible = false;
+
         auto bbox(node->get_bounding_box());
         if(bbox != math::BoundingBox<math::vec3>())
         {
-            is_visible = rendering_frustum_.intersects(bbox, data_->clipping_planes);
+
+            for (auto const& rendering_frustum : rendering_frusta_) {
+                if(rendering_frustum.intersects(bbox, data_->clipping_planes) ) {
+                    is_visible = true;
+                    break;
+                }
+
+            }
 
             if(is_visible && enable_alternative_frustum_culling_)
             {
-                is_visible = culling_frustum_.intersects(bbox);
+                is_visible = false;
+                for (auto const& culling_frustum : culling_frusta_) {
+                    if( culling_frustum.intersects(bbox) ) {
+                        is_visible = true;
+                        break;
+                    }
+
+                }
             }
         }
     }

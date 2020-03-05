@@ -59,6 +59,10 @@ struct GUA_DLL SerializedScene
      */
     Frustum culling_frustum;
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    Frustum secondary_rendering_frustum;
+    Frustum secondary_culling_frustum;
+#endif
     /**
      * The original camera position for which we are rendering. This stays the
      * same even if rendering shadow maps, for example.

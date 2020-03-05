@@ -22,6 +22,8 @@
 #ifndef GUA_SCENE_GRAPH_HPP
 #define GUA_SCENE_GRAPH_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/platform.hpp>
 #include <gua/node/Node.hpp>
 #include <gua/math/math.hpp>
@@ -277,6 +279,10 @@ class GUA_DLL SceneGraph
     serialize(Frustum const& rendering_frustum, Frustum const& culling_frustum, math::vec3 const& reference_camera_position, bool enable_frustum_culling, Mask const& mask, int view_id) const;
 
     std::shared_ptr<SerializedScene> serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    std::shared_ptr<SerializedScene> serialize(node::SerializedCameraNode const& camera) const;
+#endif
 
     /**
      * Intersects a SceneGraph with a given RayNode.

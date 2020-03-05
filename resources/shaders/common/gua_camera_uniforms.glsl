@@ -6,6 +6,16 @@ layout (std140, binding=0) uniform cameraBlock {
   mat4  gua_inverse_projection_matrix;
   mat4  gua_inverse_projection_view_matrix;
   vec4  gua_camera_position_4;
+#if 1
+   mat4  gua_secondary_view_matrix;
+   mat4  gua_secondary_projection_matrix;
+   mat4  gua_secondary_view_projection_matrix;
+   mat4  gua_secondary_inverse_projection_matrix;
+   mat4  gua_secondary_inverse_projection_view_matrix;
+   vec4  gua_secondary_camera_position_4;
+#endif
+
+
   vec4  gua_clipping_planes[64];
   uvec2 gua_resolution;
   uvec2 gua_noise_texture;

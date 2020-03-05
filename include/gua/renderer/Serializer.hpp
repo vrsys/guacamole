@@ -41,7 +41,7 @@ class SerializableNode;
 }
 
 /**
- * This class is used to convert the scengraph to a (opimized) sequence.
+ * This class is used to convert the scenegraph to a (opimized) sequence.
  *
  * It serializes the scene graph.
  */
@@ -64,6 +64,8 @@ class Serializer : public NodeVisitor
      *                             the graph.
      */
     void check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, int view_id);
+
+    void check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, bool enable_mvr, int view_id);
 
     /**
      * Visits a TransformNode
@@ -98,8 +100,8 @@ class Serializer : public NodeVisitor
 
     void visit_children(node::Node* node);
 
-    Frustum culling_frustum_;
-    Frustum rendering_frustum_;
+    std::vector<Frustum> culling_frusta_;
+    std::vector<Frustum> rendering_frusta_;
     Mask render_mask_;
 
     SerializedScene* data_;

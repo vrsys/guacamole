@@ -40,7 +40,8 @@ enum class CameraMode
 {
     CENTER = 0,
     LEFT,
-    RIGHT
+    RIGHT,
+    BOTH
 };
 
 /**
