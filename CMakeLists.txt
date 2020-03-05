@@ -24,6 +24,8 @@ option (GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES "Set to enable profile using
 option (GUACAMOLE_RUNTIME_PROGRAM_COMPILATION "Set to enable to runtime generation of ubershaders." ON)
 option (GUACAMOLE_ENABLE_NVIDIA_3D_VISION "Set to enable NVIDIA 3D Vision active stereo." OFF)
 option (GUACAMOLE_TESTS "Enable testing." OFF)
+option (GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING "Set to use NVIDIA VRWORKS Multi-View-Rendering (only for SIDE-BY-SIDE Stereo)" OFF)
+
 # fbx import crashes on nodetype-cast on windows
 if (NOT WIN32)
   option (GUACAMOLE_FBX "Set to enable FBX support." ON)

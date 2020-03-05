@@ -26,6 +26,7 @@
 #include <functional>
 
 #include <gua/guacamole.hpp>
+#include <gua/config.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
@@ -259,8 +260,16 @@ int main(int argc, char** argv)
 
     uint32_t res_factor = 4;
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 
+#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
+    auto cam_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
+    auto window_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
+#else
+    res_factor = 1;
+    //twice the x resolution for side by side mode
+    auto cam_resolution = gua::math::vec2ui( res_factor*1280, res_factor*720);
+    auto window_resolution = gua::math::vec2ui( 2 * res_factor*1280, res_factor*720);
+#endif
 
     configure_pipeline_descriptions();
 
@@ -269,15 +278,29 @@ int main(int argc, char** argv)
     //we just leave the camera in 0, 0, 0 in its local coordinates
 
     //camera_node->translate(0, 0, 0);
-    camera_node->config.set_resolution(resolution);
+    camera_node->config.set_resolution(cam_resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
+#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
     camera_node->config.set_screen_path("/navigation_node/screen_node");
+    camera_node->config.set_output_window_name("main_window");
+#else
+    camera_node->config.set_left_screen_path("/navigation_node/screen_node");
+    camera_node->config.set_right_screen_path("/navigation_node/screen_node");
+    //camera_node->config.set_left_output_window_name("main_window");
+    //camera_node->config.set_right_output_window_name("main_window");
+     
+#endif
     //we associate the camera with our scenegraph
     camera_node->config.set_scene_graph_name("main_scenegraph");
     //and finally tell it in which window to render
     camera_node->config.set_output_window_name("main_window");
+    
+#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
     //for now, we do not render in stereo
     camera_node->config.set_enable_stereo(false);
+#else //MULTI VIEW RENDERING
+    camera_node->config.set_enable_stereo(true);
+#endif
     //we associate our current pipeline description with the camera
     camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
 
@@ -287,15 +310,26 @@ int main(int argc, char** argv)
     gua::WindowDatabase::instance()->add("main_window", window);
 
     window->config.set_enable_vsync(false);
-    window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
-    window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_size(window_resolution);
+    window->config.set_resolution(window_resolution);
 
+
+#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
+#else //MULTI VIEW RENDERING
+    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    window->config.set_left_position(scm::math::vec2ui(0, 0));
+    window->config.set_right_position(scm::math::vec2ui(window_resolution.x/2, 0));
+    window->config.set_left_resolution(cam_resolution);
+    window->config.set_right_resolution(cam_resolution);
+#endif
+    /*
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
         camera_node->config.set_resolution(new_size);
         screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
     });
+    */
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
         trackball.motion(pos.x, pos.y);
     });
@@ -388,6 +422,7 @@ int main(int argc, char** argv)
 
             // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});
+
         }
 
 
