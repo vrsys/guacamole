@@ -231,7 +231,7 @@ void OcclusionCullingTriMeshRenderer::render_hierarchical_stop_and_wait_oc(Pipel
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = (*occlusion_query_iterator).second->result();
 
-
+                    
 
                     if(is_first_traversed_node) {
                         is_first_traversed_node = false;

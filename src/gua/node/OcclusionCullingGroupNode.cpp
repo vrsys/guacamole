@@ -278,7 +278,7 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
 
 
     } else if (split_R.size() > 1 && split_L.size() == 1 && remove_useless_split) {
-        std::cout<< "SPLIT R_SIDE NODE: " << scene_occlusion_group_node->get_name() << " " << split_R.size()<< std::endl;
+
 
         auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_R");
         for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
@@ -293,7 +293,7 @@ void OcclusionCullingGroupNode::split_children(gua::node::Node* scene_occlusion_
     } else {
         auto transform_node_L = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_L");
         auto transform_node_R = scene_occlusion_group_node->add_child<gua::node::TransformNode>("t_R");
-        std::cout<< "NORMAL" << std::endl;
+
         for(auto it = sorted_vector.begin(); it != sorted_vector.end(); ++it) {
             if(index < pivot) {
                 transform_node_L->add_child(*it);

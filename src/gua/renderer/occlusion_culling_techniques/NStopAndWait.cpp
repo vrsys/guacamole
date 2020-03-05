@@ -165,6 +165,7 @@ void OcclusionCullingTriMeshRenderer::render_naive_stop_and_wait_oc(
             uint64_t query_result = (*occlusion_query_iterator).second->result();
 
 
+
             switch( desc.get_occlusion_query_type() ) {
             case OcclusionQueryType::Number_Of_Samples_Passed:
                 //So if we define a certain threshold, then check if the number of returned fragments is higher than threshold, only then render (not conservative?)

@@ -161,12 +161,15 @@ void OcclusionCullingTriMeshRenderer::render_CHC(Pipeline& pipe, PipelinePassDes
 
 
 
+
                     ctx.render_context->collect_query_results(front_query_obj_queue);
 
                     //int64_t last_checked_frame_id_for_node = get_last_visibility_check_frame_id(current_query_node->unique_node_id(), current_cam_node.uuid);
 
                     // the result contains the number of sampled that were created (in mode OQMODE_SAMPLES_PASSED) or 0 or 1 (in mode OQMODE_ANY_SAMPLES_PASSED)
                     uint64_t query_result = front_query_obj_queue->result();
+
+                    std::cout<<ctx.framecount<< " Node: " << current_query_node->get_name()<< " is " << query_result<<std::endl;
 
 
                     if (current_query_node->get_children().empty()) {
