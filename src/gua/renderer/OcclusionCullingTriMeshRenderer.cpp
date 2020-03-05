@@ -613,7 +613,7 @@ void OcclusionCullingTriMeshRenderer::render_CHC_plusplus(Pipeline& pipe, Pipeli
                         query_queue.pop();
                         ctx.render_context->collect_query_results(front_query_obj_queue);
                         uint64_t query_result = front_query_obj_queue->result();
-
+                        
                         handle_returned_query(
                             ctx, pipe, desc,
                             render_target,

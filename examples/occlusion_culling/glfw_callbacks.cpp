@@ -22,7 +22,7 @@ uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
 uint64_t num_occlusion_culling_fragment_threshold = 100;
 
 
-#define OC_TRIMESH   
+//#define OC_TRIMESH   
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
