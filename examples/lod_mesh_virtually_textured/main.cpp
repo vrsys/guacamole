@@ -124,12 +124,13 @@ int main(int argc, char** argv)
     
     std::cout << "precomputed min lod depth: " << min_lod_depth << std::endl;
 
-    mlod_node->set_min_lod_depth(5); //works for most models
+    auto casted_mlod_node = std::dynamic_pointer_cast<gua::node::MLodNode>(mlod_node);
+    casted_mlod_node->set_min_lod_depth(5); //works for most models
 
 
-    mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
-    mlod_node->set_error_threshold(5.0);
-    graph.add_node("/transform/mlod_transform", mlod_node);
+    casted_mlod_node->set_shadow_mode(gua::ShadowMode::LOW_QUALITY);
+    casted_mlod_node->set_error_threshold(5.0);
+    graph.add_node("/transform/mlod_transform", casted_mlod_node);
 
     mlod_transform->translate(0.0, 0.0, 0.0);
 

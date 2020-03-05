@@ -165,6 +165,8 @@ int main(int argc, char** argv)
 
     graph.add_node("/transform/plod_transform", fem_model);
 
+
+
     auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file(vis_file_path,
                                                                              //lod_rough,
                                                                               gua::LodLoader::MAKE_PICKABLE);
@@ -273,8 +275,9 @@ int main(int argc, char** argv)
     });
 
     for(auto& plod_node : vector_of_lod_nodes) {
-        plod_node->set_time_series_playback_speed(1.0f);
-        plod_node->set_time_series_deform_factor(3000.0f);
+        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+        casted_plod_node->set_time_series_playback_speed(1.0f);
+        casted_plod_node->set_time_series_deform_factor(3000.0f);
     }
 
     // trackball controls
@@ -329,7 +332,9 @@ int main(int argc, char** argv)
     float elapsed_frame_time = 0.0f;
 
 
-    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes( vector_of_lod_nodes[0]->get_number_of_simulation_positions() );
+    auto first_casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(vector_of_lod_nodes[0]);
+
+    std::vector<std::shared_ptr<gua::node::Node>> train_axis_geodes( first_casted_plod_node->get_number_of_simulation_positions() );
     std::vector<std::shared_ptr<gua::node::TriMeshNode>> arrow_nodes;
 
     auto model_mat_arrows(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material")->make_new_material());
@@ -360,7 +365,8 @@ int main(int argc, char** argv)
                 //ARROW UP
                 case 111: {
                     for(auto& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_attribute_to_visualize_index( plod_node->get_attribute_to_visualize_index() + 1);
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_attribute_to_visualize_index( casted_plod_node->get_attribute_to_visualize_index() + 1);
                     }
                     break;
                 }
@@ -368,7 +374,8 @@ int main(int argc, char** argv)
                 //ARROW DOWN
                 case 116: {
                     for(auto& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_attribute_to_visualize_index( plod_node->get_attribute_to_visualize_index() - 1);
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_attribute_to_visualize_index( casted_plod_node->get_attribute_to_visualize_index() - 1);
                     }
                     break;
                 }
@@ -389,30 +396,35 @@ int main(int argc, char** argv)
                 break;
             case 'b':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_backface_culling_by_normal(!casted_plod_node->get_enable_backface_culling_by_normal());
                 }
                 break;
             case 'd':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_time_series_deformation(!plod_node->get_enable_time_series_deformation());
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_time_series_deformation(!casted_plod_node->get_enable_time_series_deformation());
                 }
                 break;
             case 'c':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_time_series_coloring(!plod_node->get_enable_time_series_coloring());
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_time_series_coloring(!casted_plod_node->get_enable_time_series_coloring());
                 }
                 break;
             case '4':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_radius()));
-                    std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * casted_plod_node->get_max_surfel_radius()));
+                    std::cout << "Max. surfel size set to : " << casted_plod_node->get_max_surfel_radius() << std::endl;
                 }
                 break;
             case '5':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_max_surfel_radius(1.1 * plod_node->get_max_surfel_radius());
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_max_surfel_radius(1.1 * casted_plod_node->get_max_surfel_radius());
 
-                    std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
+                    std::cout << "Max. surfel size set to : " << casted_plod_node->get_max_surfel_radius() << std::endl;
                 }
                 break;
 
@@ -426,15 +438,17 @@ int main(int argc, char** argv)
 
             case '9':
                 for(auto const& plod_node : vector_of_lod_nodes) {
-                    uint32_t new_active_index = (plod_node->get_active_time_series_index() + 1) %  plod_node->get_time_series_data_descriptions().size();
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    uint32_t new_active_index = (casted_plod_node->get_active_time_series_index() + 1) %  casted_plod_node->get_time_series_data_descriptions().size();
 
-                    plod_node->set_active_time_series_index(new_active_index);
+                    casted_plod_node->set_active_time_series_index(new_active_index);
                 }
                 break;
 
             case 's':
                 for(auto const& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_time_cursor_position(plod_node->get_time_cursor_position() + 1.0f);
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_time_cursor_position(casted_plod_node->get_time_cursor_position() + 1.0f);
 
                     //std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
                 }
@@ -442,8 +456,9 @@ int main(int argc, char** argv)
             case 'j': {
                 float current_attribute_color_mix_in_factor = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_attribute_color_mix_in_factor( plod_node->get_attribute_color_mix_in_factor() + 0.1f );
-                        current_attribute_color_mix_in_factor = plod_node->get_attribute_color_mix_in_factor();
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_attribute_color_mix_in_factor( casted_plod_node->get_attribute_color_mix_in_factor() + 0.1f );
+                        current_attribute_color_mix_in_factor = casted_plod_node->get_attribute_color_mix_in_factor();
                     }
                     std::cout << "Set color mix in factor to: " << 1.0 - current_attribute_color_mix_in_factor << std::endl;
                 }
@@ -451,15 +466,17 @@ int main(int argc, char** argv)
             case 'u': {
                 float current_attribute_color_mix_in_factor = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_attribute_color_mix_in_factor( plod_node->get_attribute_color_mix_in_factor() - 0.1f );
-                        current_attribute_color_mix_in_factor = plod_node->get_attribute_color_mix_in_factor();
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_attribute_color_mix_in_factor( casted_plod_node->get_attribute_color_mix_in_factor() - 0.1f );
+                        current_attribute_color_mix_in_factor = casted_plod_node->get_attribute_color_mix_in_factor();
                     }
                     std::cout << "Set color mix in factor to: " << 1.0 - current_attribute_color_mix_in_factor << std::endl;
                 }
                 break;
             case 'p':
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_automatic_playback(!plod_node->get_enable_automatic_playback() );
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_automatic_playback(!casted_plod_node->get_enable_automatic_playback() );
                 }
                     //
                     //print_graph( graph.get_root() );
@@ -468,8 +485,9 @@ int main(int argc, char** argv)
             case 'o': {
                     float current_playback_speed = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_time_series_playback_speed(std::min(1.0f, plod_node->get_time_series_playback_speed() * 2.0f) );
-                        current_playback_speed = plod_node->get_time_series_playback_speed();
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_time_series_playback_speed(std::min(1.0f, casted_plod_node->get_time_series_playback_speed() * 2.0f) );
+                        current_playback_speed = casted_plod_node->get_time_series_playback_speed();
                     }
                     std::cout << "Set playback speed to: " << current_playback_speed << std::endl;
                 }
@@ -477,8 +495,9 @@ int main(int argc, char** argv)
             case 'l': {
                     float current_playback_speed = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_time_series_playback_speed(std::max(0.01f, plod_node->get_time_series_playback_speed()/2.0f) );
-                        current_playback_speed = plod_node->get_time_series_playback_speed();
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_time_series_playback_speed(std::max(0.01f, casted_plod_node->get_time_series_playback_speed()/2.0f) );
+                        current_playback_speed = casted_plod_node->get_time_series_playback_speed();
                     }
                     std::cout << "Set playback speed to: " << current_playback_speed << std::endl;
                 }
@@ -486,8 +505,9 @@ int main(int argc, char** argv)
             case 'i': {
                     float current_deform_factor = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_time_series_deform_factor(std::min(3000.0f, plod_node->get_time_series_deform_factor() * 2.0f) );
-                        current_deform_factor = plod_node->get_time_series_deform_factor();
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_time_series_deform_factor(std::min(3000.0f, casted_plod_node->get_time_series_deform_factor() * 2.0f) );
+                        current_deform_factor = casted_plod_node->get_time_series_deform_factor();
                     }
                     std::cout << "Set deform factor to: " << current_deform_factor << std::endl;
                 }
@@ -495,16 +515,18 @@ int main(int argc, char** argv)
             case 'k': {
                     float current_deform_factor = 0.0f;
                     for(auto const& plod_node : vector_of_lod_nodes) {
-                        plod_node->set_time_series_deform_factor(std::max(1.0f, plod_node->get_time_series_deform_factor()/2.0f) );
+                        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                        casted_plod_node->set_time_series_deform_factor(std::max(1.0f, casted_plod_node->get_time_series_deform_factor()/2.0f) );
 
-                        current_deform_factor = plod_node->get_time_series_deform_factor();
+                        current_deform_factor = casted_plod_node->get_time_series_deform_factor();
                     }
                     std::cout << "Set deform factor to: " << current_deform_factor << std::endl;
                 }
             break;
             case 't':
                 for(auto const& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_temporal_interpolation( !plod_node->get_enable_temporal_interpolation() );
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_temporal_interpolation( !casted_plod_node->get_enable_temporal_interpolation() );
                 }
                 break;
 
@@ -533,8 +555,9 @@ int main(int argc, char** argv)
 
 
                 for(auto& plod_node : vector_of_lod_nodes) {
-                    plod_node->set_enable_time_series_deformation(true);
-                    plod_node->set_enable_time_series_coloring(true);
+                    auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                    casted_plod_node->set_enable_time_series_deformation(true);
+                    casted_plod_node->set_enable_time_series_coloring(true);
                 }
 
 
@@ -575,15 +598,18 @@ int main(int argc, char** argv)
         else
         {
             for(auto const& plod_node : vector_of_lod_nodes) {
-                plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
+                auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                casted_plod_node->update_time_cursor(elapsed_frame_time / 1e3f);
             }
             
 
 
-            auto node_pretransform = gua::math::get_rotation(scm::math::mat4d(vector_of_lod_nodes[0]->get_active_time_series_transform()) );
+            auto first_casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(vector_of_lod_nodes[0]);
+
+            auto node_pretransform = gua::math::get_rotation(scm::math::mat4d(first_casted_plod_node->get_active_time_series_transform()) );
 
 
-            auto current_simulation_positions = vector_of_lod_nodes[0]->get_current_simulation_positions();
+            auto current_simulation_positions = first_casted_plod_node->get_current_simulation_positions();
 
             for(uint32_t train_axis_index = 0; train_axis_index < current_simulation_positions.size(); ++train_axis_index) {
 

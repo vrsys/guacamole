@@ -57,7 +57,7 @@ LodLoader::LodLoader() : _supported_file_extensions_model_file(), _supported_fil
 
 
 /////////////////////////////////////////////////////////////////////////////
-std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, unsigned flags)
+std::vector<std::shared_ptr<node::Node>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
     auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
@@ -71,7 +71,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
     }
 
     Logger::LOG_WARNING << "LodLoader::load_lod_pointclouds_from_vis_file() : unable to create Lod Nodes" << std::endl;
-    return std::vector<std::shared_ptr<node::PLodNode>>();
+    return std::vector<std::shared_ptr<node::Node>>();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ void parse_simulation_positions(std::string const& simulation_positions_file_pat
 
 
 /////////////////////////////////////////////////////////////////////////////
-std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
+std::vector<std::shared_ptr<node::Node>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
     
     std::vector<std::string> model_files_to_load;
 
@@ -133,7 +133,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
             std::string line_buffer;
 
             //int model_count = 0;
-            std::vector<std::shared_ptr<node::PLodNode>> loaded_point_cloud_models;
+            std::vector<std::shared_ptr<node::Node>> loaded_point_cloud_models;
             while(std::getline(in_vis_filestream, line_buffer) ) {
                 boost::trim(line_buffer);
 
@@ -290,7 +290,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
                 std::size_t found = model_path.find_last_of("/\\");
                 auto const automatic_node_name = model_path.substr(found+1);
 
-                auto const& current_point_cloud_shared_ptr = load_lod_pointcloud(automatic_node_name, model_path, fallback_material, flags);
+                auto const& current_point_cloud_shared_ptr = std::dynamic_pointer_cast< gua::node::PLodNode >( load_lod_pointcloud(automatic_node_name, model_path, fallback_material, flags) );
                     
                 current_point_cloud_shared_ptr->set_time_series_data_descriptions(parsed_time_series_data_description);
 
@@ -317,7 +317,7 @@ std::vector<std::shared_ptr<node::PLodNode>> LodLoader::load_lod_pointclouds_fro
 
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_pointcloud(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
 {
     try
     {
@@ -378,7 +378,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_trimesh(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
 {
     try
     {
@@ -439,7 +439,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& n
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& filename, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_pointcloud(std::string const& filename, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
     auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
@@ -458,7 +458,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
     auto material_shader(std::make_shared<gua::MaterialShader>("MLod_unshaded_material", desc));
