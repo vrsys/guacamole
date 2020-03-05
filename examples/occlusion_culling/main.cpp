@@ -27,6 +27,8 @@
 
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/LodLoader.hpp>
+#include <gua/renderer/PLodPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
 #include <gua/renderer/DebugViewPass.hpp>
@@ -83,7 +85,8 @@ void configure_pipeline_descriptions() {
     auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 #else
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());  
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::PLodPassDescription>());  
 #endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
@@ -192,7 +195,16 @@ int main(int argc, char** argv)
     auto occlusion_group_node = graph.add_node<gua::node::OcclusionCullingGroupNode>("/transform_node", "occlusion_group_node");
 
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp 
-    place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+    //place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
+
+
+    create_b1_scene(occlusion_group_node);
+
+    occlusion_group_node->translate(-26.6, -29.9, -40.0);
+    occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
+    occlusion_group_node->translate(-0.0, 15.0, -10.0);
+    occlusion_group_node->scale(3.0);
+
 
 
     //create_simple_debug_scene(occlusion_group_node);
@@ -317,7 +329,7 @@ int main(int argc, char** argv)
 
 
         // apply changes to the current navigation node, such that the scene graph will see the change
-        //update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
+        update_cam_matrix(camera_node, navigation_node, elapsed_application_time_milliseconds);
 
 
         double x_trans = std::sin(accumulated_frametime/7);
@@ -357,6 +369,13 @@ int main(int argc, char** argv)
             renderer.queue_draw({&graph});
         }
 
+
+        //std::cout << "Bounding box" << std::endl;
+        //for(int dim_idx = 0; dim_idx < 3; ++dim_idx) {
+        //    std::cout << "dim " << dim_idx << ": " << occlusion_group_node->get_bounding_box().min[dim_idx] << ", " << occlusion_group_node->get_bounding_box().max[dim_idx] << std::endl;
+        //}
+
+        //std::cout << std::endl;
 
         accumulated_frametime += frametime;
 
