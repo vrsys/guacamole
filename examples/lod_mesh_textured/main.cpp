@@ -80,8 +80,9 @@ int main(int argc, char** argv)
                                                  /* | gua::LodLoader::MAKE_PICKABLE*/
     );
 
-    mlod_node->set_error_threshold(0.25);
-    graph.add_node("/transform/mlod_transform", mlod_node);
+    auto casted_mlod_node = std::dynamic_pointer_cast<gua::node::MLodNode>(mlod_node);
+    casted_mlod_node->set_error_threshold(0.25);
+    graph.add_node("/transform/mlod_transform", casted_mlod_node);
 
     mlod_transform->translate(0.0, 0.0, 0.0);
 
