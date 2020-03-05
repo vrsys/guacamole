@@ -13,7 +13,7 @@ std::array<float, 16> keep_probability;
 uint64_t batch_size_multi_query = 10;
 
 #define USE_PRIORITY_QUEUE
-//#define DYNAMIC_BATCH_SIZE
+#define DYNAMIC_BATCH_SIZE
 #define RENDER_CHILD_CLASS
 #define query_state_test
 //#define USE_CENTROID_BASED_SORTING
@@ -246,6 +246,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                 // get next node
                 gua::node::Node* current_node = traversal_queue.front();
+
                 set_visibility(current_node->unique_node_id(), current_cam_node.uuid, true);
 
                 traversal_queue.pop();
@@ -407,7 +408,6 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
 
                         bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
-                        //bool query_reasonable = true;
                         
                         if(!was_visible) {
                             i_query_queue.push(current_node);
@@ -469,6 +469,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
                 for (auto const& child : current_node->get_children()) {
                     visibility_setting_queue.push(child.get());
                 }
+                //std::cout<<" Visibility in "<< current_frame_id << " of Node " << current_node->get_name() << " is " << visibility_current_node << std::endl;
             }
 
 
@@ -626,6 +627,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
     } else {
 
+
         for (auto & child : current_node->get_children())
         {
 #ifdef USE_CENTROID_BASED_SORTING
@@ -642,9 +644,6 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
             traversal_priority_queue.push(child_node_distance_pair_to_insert);
         }
 
-#ifdef VERBOSE_DEBUGGING
-        std::cout << std::endl;
-#endif //VERBOSE_DEBUGGING
     }
 }
 
@@ -893,12 +892,28 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
     if(query_result>threshold) {
 
         if(front_query_vector.size()>1) { //this means our multi query failed.
+            std::priority_queue<std::pair<gua::node::Node*, double>,
+            std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator > failed_multiquery_queue;
+
             for (auto const& node : front_query_vector) {
 
-                set_visibility(node->unique_node_id(), in_camera_uuid, true);
+                //set_visibility(node->unique_node_id(), in_camera_uuid, true);
+                
+                auto node_distance_pair_to_insert = std::make_pair(node,
+                    scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(node, world_space_cam_pos) ) ) ;
+
+                failed_multiquery_queue.push(node_distance_pair_to_insert);
+
+            }
+
+            if (!failed_multiquery_queue.empty()) {
+                auto current_node = failed_multiquery_queue.top().first;
+
+                failed_multiquery_queue.pop();
 
                 std::vector<gua::node::Node*> single_node_to_query;
-                single_node_to_query.push_back(node);
+
+                single_node_to_query.push_back(current_node);
 
                 std::sort(single_node_to_query.begin(), single_node_to_query.end(), [&](gua::node::Node* a, gua::node::Node* b) {
                     auto distance_a =  scm::math::length_sqr(world_space_cam_pos - (find_raycast_intersection(a, world_space_cam_pos) ));
@@ -912,6 +927,8 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
                 issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, world_space_cam_pos, current_frame_id, in_camera_uuid, single_node_to_query);
 
             }
+
+
         } else {
 
             for (auto const& current_node : front_query_vector) {
@@ -922,6 +939,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
                 if (temp_last_visibility.frame_id == current_frame_id-1) {
                     was_visible = temp_last_visibility.result;
                 }
+
 
                 set_visibility(current_node->unique_node_id(), in_camera_uuid, true);
 
@@ -948,6 +966,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
     } else {
 
         for (auto const& current_node : front_query_vector) {
+            //std::cout<< " frame " << current_frame_id << " from " <<current_node->get_name()<<" result "<< query_result<<std::endl;
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
         }
     }
