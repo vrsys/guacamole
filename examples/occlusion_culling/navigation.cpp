@@ -62,7 +62,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
 
 
     // here we rotate around the y-Axis
-    if(cam_navigation_state.rotate_around_y_pos) {
+    if(cam_navigation_state.yaw_pos) {
 
         auto up_axis = cam_world_matrix.column(1);
         auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
@@ -72,7 +72,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     }
     
     // same as before but negative
-    if(cam_navigation_state.rotate_around_y_neg) {
+    if(cam_navigation_state.yaw_neg) {
 
         auto up_axis = cam_world_matrix.column(1);
         auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
@@ -81,7 +81,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     }
 
     // here we rotate around the x-Axis
-    if(cam_navigation_state.rotate_around_x_pos) {
+    if(cam_navigation_state.pitch_pos) {
 
         auto right_axis = cam_world_matrix.column(0);
         auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
@@ -90,7 +90,7 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
     }
     
      // same as before but negative
-    if(cam_navigation_state.rotate_around_x_neg) {
+    if(cam_navigation_state.pitch_neg) {
 
         auto right_axis = cam_world_matrix.column(0);
 
@@ -100,6 +100,29 @@ void update_cam_matrix(std::shared_ptr<gua::node::CameraNode> const& cam_node, s
         auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
 
         cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, right_axis[0], right_axis[1], right_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
+        //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
+    }
+
+    // here we rotate around the x-Axis
+    if(cam_navigation_state.roll_pos) {
+
+        auto forward_axis = cam_world_matrix.column(2);
+        auto rot_angle = cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, forward_axis[0], forward_axis[1], forward_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
+    }
+    
+     // same as before but negative
+    if(cam_navigation_state.roll_neg) {
+
+        auto forward_axis = cam_world_matrix.column(2);
+
+        //nav
+        //nav_node->rotate(50.0f * elapsed_milliseconds, up_axis);
+
+        auto rot_angle = -cam_navigation_state.cam_rotation_speed * elapsed_milliseconds;
+
+        cam_navigation_state.accumulated_rotation_world_space = scm::math::mat4f(scm::math::make_rotation(rot_angle, forward_axis[0], forward_axis[1], forward_axis[2])) * cam_navigation_state.accumulated_rotation_world_space;
         //std::cout << "Cam forward vector: " << forward_cam_vector << std::endl;   
     }
 
