@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     if(atlas_file != ""){
         gua::VTBackend::set_physical_texture_size(2048);
         gua::VTBackend::set_update_throughput_size(4);
-        gua::VTBackend::set_ram_cache_size(32768);
+        gua::VTBackend::set_ram_cache_size(12768);
 
 
         
