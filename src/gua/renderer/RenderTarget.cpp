@@ -22,6 +22,8 @@
 // class header
 #include <gua/renderer/RenderTarget.hpp>
 
+#include <scm/gl_core/render_device/opengl/gl_core.h>
+
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,26 @@ void RenderTarget::set_viewport(RenderContext const& ctx)
     if(ctx.render_context)
     {
         ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RenderTarget::set_side_by_side_viewport_array(RenderContext const& ctx)
+{
+    if(ctx.render_context)
+    {
+
+    	std::cout << " rendertarget res: " << resolution_ << std::endl;
+        auto const& glapi = ctx.render_context->opengl_api();
+		float const v[8]  = { 0.0f, 0.0f, float(resolution_.x/2), float(resolution_.y),
+							  float(resolution_.x/2), 0.0f, float(resolution_.x/2), float(resolution_.y) };
+
+        glapi.glViewportArrayv(0, 2, v);
+
+        //glapi.glViewportIndexedf(0, resolution_.x/2, 0, resolution_.x + resolution_.x/2, resolution_.y);
+        //glapi.glViewportIndexedf(1, resolution_.x, 0, resolution_.x, resolution_.y);
+        //ctx.render_context->set_viewport(scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_)));
     }
 }
 

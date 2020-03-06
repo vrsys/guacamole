@@ -35,4 +35,6 @@ void main() {
   @include "common/gua_varyings_assignment.glsl"
 
   gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);
+
+  //gl_ViewportIndex = 0;
 }

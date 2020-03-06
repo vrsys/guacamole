@@ -26,7 +26,6 @@ void CameraUniformBlock::update(
     auto view_projection = projection * view;
     uniform_block_.begin_manipulation(context.render_context);
     {
-        auto view_projection_mat = 
         uniform_block_->view = view;
         uniform_block_->projection = projection;
         uniform_block_->view_projection = view_projection;
@@ -84,7 +83,7 @@ void CameraUniformBlock::update(
         uniform_block_->secondary_view_projection = secondary_view_projection;
         uniform_block_->secondary_view_projection_inverse = scm::math::inverse(secondary_view_projection);
         uniform_block_->secondary_position = math::vec4(secondary_camera_position, 1.0);
-        
+
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
         for(unsigned i(0); i < 64 && i < clipping_planes.size(); ++i)

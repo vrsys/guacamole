@@ -6,7 +6,7 @@ layout (std140, binding=0) uniform cameraBlock {
   mat4  gua_inverse_projection_matrix;
   mat4  gua_inverse_projection_view_matrix;
   vec4  gua_camera_position_4;
-#if 1
+#if 1 // pass new bool enable_mvr
    mat4  gua_secondary_view_matrix;
    mat4  gua_secondary_projection_matrix;
    mat4  gua_secondary_view_projection_matrix;
@@ -34,4 +34,11 @@ uniform mat4 gua_model_view_matrix;
 uniform mat4 gua_model_view_inverse_matrix;
 uniform mat4 gua_model_view_projection_matrix;
 uniform mat4 gua_normal_matrix;
+#if 1 // pass new bool enable_mvr
+uniform mat4 gua_secondary_model_view_matrix;
+uniform mat4 gua_secondary_model_view_inverse_matrix;
+uniform mat4 gua_secondary_model_view_projection_matrix;
+uniform mat4 gua_secondary_normal_matrix;
+#endif
 uniform int  gua_rendering_mode; // 0: normal, 1: lowfi shadows, 2: hifi shadows
+
