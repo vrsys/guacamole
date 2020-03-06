@@ -46,13 +46,19 @@ void RenderTarget::set_side_by_side_viewport_array(RenderContext const& ctx)
 {
     if(ctx.render_context)
     {
+    	if (ctx.mode == gua::CameraMode::BOTH)
+    	{
+    		
+	    	std::cout << " rendertarget res: " << resolution_ << std::endl;
+	        auto const& glapi = ctx.render_context->opengl_api();
+			float const v[8]  = { 0.0f, 0.0f, float(resolution_.x/2), float(resolution_.y),
+								  float(resolution_.x/2), 0.0f, float(resolution_.x/2), float(resolution_.y) };
 
-    	std::cout << " rendertarget res: " << resolution_ << std::endl;
-        auto const& glapi = ctx.render_context->opengl_api();
-		float const v[8]  = { 0.0f, 0.0f, float(resolution_.x/2), float(resolution_.y),
-							  float(resolution_.x/2), 0.0f, float(resolution_.x/2), float(resolution_.y) };
+	        glapi.glViewportArrayv(0, 2, v);
 
-        glapi.glViewportArrayv(0, 2, v);
+    	} else {
+    		set_viewport(ctx);
+    	}
 
         //glapi.glViewportIndexedf(0, resolution_.x/2, 0, resolution_.x + resolution_.x/2, resolution_.y);
         //glapi.glViewportIndexedf(1, resolution_.x, 0, resolution_.x, resolution_.y);

@@ -20,6 +20,7 @@ void main() {
 
   @material_input@
 
+if(0 == gl_InstanceID) {
   gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_normal         = (gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz;
@@ -29,12 +30,33 @@ void main() {
   gua_metalness      = 0.01;
   gua_roughness      = 0.1;
   gua_emissivity     = 0;
+} else { // TODO: secondary modelview and normal matrices (see trimeshrenderer.cpp)
+  gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+  gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
+  gua_normal         = (gua_normal_matrix * vec4(gua_in_normal, 0.0)).xyz;
+  gua_tangent        = (gua_normal_matrix * vec4(gua_in_tangent, 0.0)).xyz;
+  gua_bitangent      = (gua_normal_matrix * vec4(gua_in_bitangent, 0.0)).xyz;
+  gua_texcoords      = gua_in_texcoords;
+  gua_metalness      = 0.01;
+  gua_roughness      = 0.1;
+  gua_emissivity     = 0;
+}
 
   @material_method_calls_vert@
 
   @include "common/gua_varyings_assignment.glsl"
 
-  gl_Position = gua_projection_matrix * vec4(gua_view_position, 1.0);
+#if @get_enable_multi_view_rendering@
+if (0 == gl_InstanceID) {
+#endif
+  
+  gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
 
-  //gl_ViewportIndex = 0;
+#if @get_enable_multi_view_rendering@
+} else {
+  gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
+}
+
+  gl_ViewportIndex = gl_InstanceID;
+#endif
 }

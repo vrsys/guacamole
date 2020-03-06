@@ -267,7 +267,7 @@ int main(int argc, char** argv)
 #else
     res_factor = 1;
     //twice the x resolution for side by side mode
-    auto cam_resolution = gua::math::vec2ui( res_factor*1280, res_factor*720);
+    auto cam_resolution = gua::math::vec2ui(2*res_factor*1280, res_factor*720);
     auto window_resolution = gua::math::vec2ui( 2 * res_factor*1280, res_factor*720);
 #endif
 

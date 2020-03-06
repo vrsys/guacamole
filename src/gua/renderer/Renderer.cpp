@@ -176,20 +176,25 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                     else
                     {
                         // TODO: add alternate frame rendering here? -> take clear and render methods
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs));
+                        if(img) window->display(img, true);
+
+#else
                         auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
-                        if(img)
-                            window->display(img, true);
+                        if(img) window->display(img, true);
+
                         img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
-                        if(img)
-                            window->display(img, false);
+                        if(img) window->display(img, false);
+
+
+#endif                  
                     }
                 }
                 else
                 {
                     auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(), *cmd.serialized_cam, *cmd.scene_graphs));
-
-                    if(img)
-                        window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
+                    if(img) window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
                 }
 
                 pipe->clear_frame_cache();

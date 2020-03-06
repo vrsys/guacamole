@@ -105,7 +105,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
         bool write_depth = true;
         target.bind(ctx, write_depth);
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        target.set_side_by_side_viewport_array(ctx);
+
+#else
         target.set_viewport(ctx);
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
         int view_id(camera.config.get_view_id());
 
@@ -239,7 +245,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_rasterizer_state = rs_cull_none_;
                 ctx.render_context->apply_program();
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+#else
                 tri_mesh_node->get_geometry()->draw(pipe.get_context());
+#endif
             }
         }
 

@@ -198,6 +198,22 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
+
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        if (camera.config.get_enable_stereo())
+        {
+            global_substitution_map_["get_enable_multi_view_rendering"] = "1";
+        } else {
+            global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+        }
+
+#else
+        global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
         global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
         global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
         global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
@@ -230,11 +246,29 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
     else
     {
-        camera_block_.update(context_, current_viewstate_.scene->rendering_frustum, math::get_translation(camera.transform), current_viewstate_.scene->clipping_planes, camera.config.get_view_id(),
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        camera_block_.update(context_, 
+                             current_viewstate_.scene->rendering_frustum, 
+                             current_viewstate_.scene->secondary_rendering_frustum,
+                             math::get_translation(camera.transform), 
+                             current_viewstate_.scene->clipping_planes, 
+                             camera.config.get_view_id(),
                              camera.config.get_resolution());
+            bind_camera_uniform_block(0);
+
+#else
+        camera_block_.update(context_, 
+                             current_viewstate_.scene->rendering_frustum, 
+                             math::get_translation(camera.transform), 
+                             current_viewstate_.scene->clipping_planes, 
+                             camera.config.get_view_id(),
+                             camera.config.get_resolution());
+            bind_camera_uniform_block(0);
+
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     }
 
-    bind_camera_uniform_block(0);
 
     // clear gbuffer
     gbuffer_->clear(context_, 1.f, 1);
