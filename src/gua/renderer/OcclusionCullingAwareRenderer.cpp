@@ -47,7 +47,7 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)), /* < for rendering > */
     depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
     depth_stencil_state_writing_without_test_state_(ctx.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_LESS) ),
-    depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ), /* < for occlusion querying > */
+    depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL) ), /* < for occlusion querying > */
 
     default_blend_state_(ctx.render_device->create_blend_state(false)),  /* < for rendering > */
     color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)),
@@ -57,7 +57,7 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     occlusion_query_array_box_program_stages_(), occlusion_query_array_box_program_(nullptr), //only one shader that is independent of the actual node material
     global_substitution_map_(smap) {
 
-    for(int32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
+    for(uint32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
         keep_probability[used_frames_index] = 0.99 - 0.7 * std::exp(-used_frames_index);
     }
 
@@ -560,6 +560,8 @@ void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext con
 
     // we disable all color channels to save rasterization time
     glapi.glColorMask(false, false, false, false);
+    glapi.glEnable(GL_POLYGON_OFFSET_FILL);
+    glapi.glPolygonOffset(0.0f, -1.0f);
 
     // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
     ctx.render_context->set_rasterizer_state(rs_cull_none_);
@@ -599,6 +601,8 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         if (in_query_state_) {
             auto const& glapi = ctx.render_context->opengl_api();
             glapi.glColorMask(true, true, true, true);
+            glapi.glDisable(GL_POLYGON_OFFSET_FILL);
+            glapi.glPolygonOffset(0.0f, 0.0f);
             ctx.render_context->set_depth_stencil_state(default_depth_test_);
             ctx.render_context->set_blend_state(default_blend_state_);
             ctx.render_context->apply();
@@ -621,7 +625,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
     } else {
 
-        for (auto & child : current_node->get_children())
+        for (auto& child : current_node->get_children())
         {
             auto child_node_distance_pair_to_insert = std::make_pair(child.get(),
                     scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(child.get(), world_space_cam_pos) ) ) ;
@@ -976,6 +980,8 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
     if (in_query_state_ == true ) {
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);
+        glapi.glDisable(GL_POLYGON_OFFSET_FILL);
+        glapi.glPolygonOffset(0.0f, 0.0f);
         ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->set_blend_state(default_blend_state_);
         ctx.render_context->apply();
@@ -1317,6 +1323,8 @@ void OcclusionCullingAwareRenderer::unbind_and_reset(RenderContext const& ctx, R
 
     auto const& glapi = ctx.render_context->opengl_api();
     glapi.glColorMask(true, true, true, true);
+    glapi.glDisable(GL_POLYGON_OFFSET_FILL);
+    glapi.glPolygonOffset(0.0f, 0.0f);
     ctx.render_context->set_depth_stencil_state(default_depth_test_);
     ctx.render_context->set_blend_state(default_blend_state_);
     ctx.render_context->apply();
