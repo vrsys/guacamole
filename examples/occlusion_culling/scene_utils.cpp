@@ -50,7 +50,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     for(int model_idx = 0; model_idx < 1; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
-                                             "data/objects/cube.obj",//"/opt/3d_models/hairball/low_poly_hairball.dae",
+                                             "/opt/3d_models/hairball/low_poly_hairball.dae", //"data/objects/cube.obj",
                                              material,
                                              gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
@@ -62,7 +62,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
         float rand_y_trans = 3 * (std::rand() / (float)RAND_MAX)- 2;
         float rand_z_trans = 5 * (std::rand() / (float)RAND_MAX) -105.0f;
 
-#define DEBUG_STATE
+//#define DEBUG_STATE
 
 
         gua::math::mat4 model_trans =
@@ -72,7 +72,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 #else
             gua::math::mat4(scm::math::make_translation(rand_x_trans, rand_y_trans, rand_z_trans )) * 
 #endif 
-            gua::math::mat4(scm::math::make_scale(0.5f, 0.5f, 0.5f)) *   
+            gua::math::mat4(scm::math::make_scale(0.7f, 0.7f, 0.7f)) *   
             norm_scale_mat;                                                           
 
 
