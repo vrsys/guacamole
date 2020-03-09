@@ -607,6 +607,8 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
         RenderInfo current_render_info{current_material, current_shader, current_rasterizer_state};
         renderSingleNode(pipe, desc, current_node, current_render_info);
+
+        std::cout << "Rendering " << current_node->get_name() << std::endl;
 #else
         render_visible_leaf(current_node,
                             ctx, pipe,
