@@ -10,10 +10,10 @@
 
 
 std::array<float, 16> keep_probability;
-uint64_t batch_size_multi_query = 10;
+uint64_t batch_size_multi_query = 20;
 
 #define USE_PRIORITY_QUEUE
-//#define DYNAMIC_BATCH_SIZE
+#define DYNAMIC_BATCH_SIZE
 #define RENDER_CHILD_CLASS
 #define query_state_test
 //#define VERBOSE_DEBUGGING
@@ -55,7 +55,9 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     occlusion_query_array_box_program_stages_(), occlusion_query_array_box_program_(nullptr), //only one shader that is independent of the actual node material
     global_substitution_map_(smap) {
 
-    for(uint32_t used_frames_index = 0; used_frames_index < keep_probability.size(); ++used_frames_index) {
+
+//DO NOT change to uint, it will result independent crashes
+    for(int32_t used_frames_index = 0; used_frames_index < int32_t(keep_probability.size()); ++used_frames_index) {
         keep_probability[used_frames_index] = 0.99 - 0.7 * std::exp(-used_frames_index);
     }
 
@@ -374,7 +376,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                     if(culling_frustum.intersects(current_node->get_bounding_box())) {
 
-                        bool was_visible = false;
+                        bool was_visible = true;
 
                         LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                         if (temp_last_visibility.frame_id <= current_frame_id-1) {
@@ -710,9 +712,87 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
+
+
+    std::vector<gua::node::Node*> query_nodes;
+    std::vector<MinMax> bounding_boxes; 
+
+    for (auto const& original_query_node : current_nodes)
+        {
+            if (fallback || original_query_node->get_children().empty())
+            {
+                // original draw call
+                auto world_space_bounding_box = original_query_node->get_bounding_box();
+
+                MinMax bounding_box =  MinMax{scm::math::vec3f(world_space_bounding_box.min), scm::math::vec3f(world_space_bounding_box.max)};
+
+
+                query_nodes.push_back(original_query_node);
+                bounding_boxes.push_back(bounding_box);
+
+
+
+            } else {
+
+                auto tightest_nodes = find_tightest_bounding_volume(original_query_node,
+                                              ctx,
+                                              world_space_cam_pos,
+                                              current_shader,
+                                              in_camera_uuid,
+                                              current_frame_id, 3, 1.4f);
+
+                for (auto const& node : tightest_nodes) {
+                    auto world_space_bounding_box = node->get_bounding_box();
+
+                    MinMax bounding_box =  MinMax{scm::math::vec3f(world_space_bounding_box.min), scm::math::vec3f(world_space_bounding_box.max)};
+
+                    query_nodes.push_back(node);
+                    bounding_boxes.push_back(bounding_box);
+                }
+            }
+
+        }
+
+
+
+    uint32_t current_instance_ID = 0;
+
+
+    for (auto const& leaf_node : query_nodes) {
+
+        auto world_space_bounding_box = leaf_node->get_bounding_box();
+
+
+        std::string const uniform_string_bb_min = "world_space_bb_min";
+        std::string const uniform_string_bb_max = "world_space_bb_max";
+
+
+        math::vec3f bb_min_vec3f = math::vec3f(world_space_bounding_box.min);
+        math::vec3f bb_max_vec3f = math::vec3f(world_space_bounding_box.max);
+
+        current_shader->set_uniform(ctx, bb_min_vec3f, uniform_string_bb_min, current_instance_ID);
+        current_shader->set_uniform(ctx, bb_max_vec3f, uniform_string_bb_max, current_instance_ID);
+
+        set_last_visibility_check_frame_id(leaf_node->unique_node_id(), in_camera_uuid, current_frame_id);
+
+        ++current_instance_ID;
+    }
+
+    ctx.render_context->apply_program();
+    ctx.render_context->bind_vertex_array(empty_vao_layout_);
+    ctx.render_context->apply_vertex_input();
+
+
     ctx.render_context->begin_query(occlusion_query_iterator->second);
+    
+
+    auto const& glapi = ctx.render_context->opengl_api();
+    // std::cout<< "RENDERING INSTANCES: " << current_instance_ID << std::endl;
+    glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
 
+
+    /*
     for (auto const& original_query_node : current_nodes)
     {
         if (fallback || original_query_node->get_children().empty())
@@ -746,8 +826,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
                                           current_frame_id, 3, 1.4f);
         }
 
-        break;
     }
+    */
 
     ctx.render_context->end_query(occlusion_query_iterator->second);
 
@@ -780,7 +860,6 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
         std::vector<std::pair<gua::node::Node*, double> >, NodeVisibilityProbabilityPairComparator > visibility_persistence_probability;
 
 
-
     while(!i_query_queue.empty()) {
         auto node = i_query_queue.front();
         i_query_queue.pop();
@@ -793,7 +872,6 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
             keep = keep_probability[visibility_persistence];
         }
         visibility_persistence_probability.push(std::make_pair(node, keep));
-
     }
 
 
@@ -802,13 +880,13 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
     float fail = 1;
     int number_of_nodes = 0;
     int max = 0;
-    while(!visibility_persistence_probability.empty()) {
+
+    while(!visibility_persistence_probability.empty()) {   
         auto node = visibility_persistence_probability.top();
         number_of_nodes++;
         fail *= node.second;
         float cost = (1+(1-fail)*number_of_nodes);
         float value = number_of_nodes/cost;
-        std::cout<< "value: "<< value << " cost: " << cost << " max: " << max <<std::endl;
         if (value > max) {
             max = value;
             visibility_persistence_probability.pop();
@@ -930,7 +1008,7 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
 
             for (auto const& current_node : front_query_vector) {
 
-                bool was_visible = false;
+                bool was_visible = true;
 
                 LastVisibility temp_last_visibility = get_last_visibility_checked_result(current_node->unique_node_id());
                 if (temp_last_visibility.frame_id == current_frame_id-1) {
@@ -1024,7 +1102,7 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
 
 }
 
-void OcclusionCullingAwareRenderer::find_tightest_bounding_volume(
+std::vector<gua::node::Node*> OcclusionCullingAwareRenderer::find_tightest_bounding_volume(
     gua::node::Node* queried_node,
     RenderContext const& ctx,
     gua::math::vec3f const& world_space_cam_pos,
@@ -1101,8 +1179,9 @@ void OcclusionCullingAwareRenderer::find_tightest_bounding_volume(
         return distance_a < distance_b;
     }  );
 
-    instanced_array_draw(tightest_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
+    //instanced_array_draw(tightest_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
 
+    return tightest_nodes_vector;
 
 }
 

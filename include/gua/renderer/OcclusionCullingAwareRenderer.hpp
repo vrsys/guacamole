@@ -78,6 +78,12 @@ struct BoundingBoxSide {
 };
 
 
+struct MinMax {
+    gua::math::vec3f min;
+    gua::math::vec3f max;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 
 class OcclusionCullingAwareRenderer {
@@ -226,7 +232,7 @@ private:
     bool is_inside(gua::math::vec3f const& intersection_pt,  BoundingBoxSide const& bounding_plane) const;
 
 
-    void find_tightest_bounding_volume(gua::node::Node* queried_node,
+    std::vector<gua::node::Node*> find_tightest_bounding_volume(gua::node::Node* queried_node,
                                        RenderContext const& ctx,
                                        gua::math::vec3f const& world_space_cam_pos,
                                        std::shared_ptr<ShaderProgram>& current_shader,

@@ -270,23 +270,22 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
 
 
 
-    ctx.render_context->apply(); 
+    //ctx.render_context->apply(); 
     if(std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) {
         auto& render_target = *pipe.current_viewstate().target;
 
 
         auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_node));
 
-                    if (depth_complexity_visualization_) {
-                current_shader = depth_complexity_vis_program_;
-                current_shader->use(ctx);
+        if (depth_complexity_visualization_) {
+            current_shader = depth_complexity_vis_program_;
+            current_shader->use(ctx);
 
-                ctx.render_context->set_blend_state(color_accumulation_state_);
-                ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
-                ctx.render_context->apply_state_objects();
-            }  
-        else if                                                                                                                                                                                                                                                                                                                                                                                                                             (current_material != tri_mesh_node->get_material()->get_shader())
-        {
+            ctx.render_context->set_blend_state(color_accumulation_state_);
+            ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
+            ctx.render_context->apply_state_objects();
+        }  
+        else if (current_material != tri_mesh_node->get_material()->get_shader()) {
             current_material = tri_mesh_node->get_material()->get_shader();
             if(current_material)
             {
