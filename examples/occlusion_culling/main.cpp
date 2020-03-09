@@ -40,7 +40,7 @@
 //#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-//#define USE_CITY_SCENE
+#define USE_CITY_SCENE
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -258,7 +258,7 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-    uint32_t res_factor = 1;
+    float res_factor = 1.6;
     // setup rendering pipeline and window
 
 #ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING

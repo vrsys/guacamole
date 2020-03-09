@@ -16,9 +16,7 @@ uint64_t batch_size_multi_query = 10;
 //#define DYNAMIC_BATCH_SIZE
 #define RENDER_CHILD_CLASS
 #define query_state_test
-//#define USE_CENTROID_BASED_SORTING
-
-#define VERBOSE_DEBUGGING
+//#define VERBOSE_DEBUGGING
 
 namespace
 {
@@ -47,7 +45,7 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     default_depth_test_(ctx.render_device->create_depth_stencil_state(true, true,  scm::gl::COMPARISON_LESS)), /* < for rendering > */
     depth_stencil_state_no_test_no_writing_state_(ctx.render_device->create_depth_stencil_state(false, false, scm::gl::COMPARISON_NEVER) ),
     depth_stencil_state_writing_without_test_state_(ctx.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_LESS) ),
-    depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS_EQUAL) ), /* < for occlusion querying > */
+    depth_stencil_state_test_without_writing_state_(ctx.render_device->create_depth_stencil_state(true, false, scm::gl::COMPARISON_LESS) ), /* < for occlusion querying > */
 
     default_blend_state_(ctx.render_device->create_blend_state(false)),  /* < for rendering > */
     color_accumulation_state_(ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD)),
@@ -130,6 +128,11 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
 
     RenderContext const& ctx(pipe.get_context());
+
+    auto const& glapi = ctx.render_context->opengl_api();
+
+    // we disable all color channels to save rasterization time
+    glapi.glPolygonOffset(0.0f, -1.0f);
 
 
     if( nullptr == empty_vbo_) {
@@ -548,7 +551,6 @@ void OcclusionCullingAwareRenderer::set_geometry_visualisation_states(RenderCont
 
     in_query_state_ = true;
     ctx.render_context->set_rasterizer_state(rs_cull_none_);
-
     ctx.render_context->apply_state_objects();
 }
 
@@ -561,7 +563,6 @@ void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext con
     // we disable all color channels to save rasterization time
     glapi.glColorMask(false, false, false, false);
     glapi.glEnable(GL_POLYGON_OFFSET_FILL);
-    glapi.glPolygonOffset(0.0f, -1.0f);
 
     // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
     ctx.render_context->set_rasterizer_state(rs_cull_none_);
@@ -602,7 +603,6 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
             auto const& glapi = ctx.render_context->opengl_api();
             glapi.glColorMask(true, true, true, true);
             glapi.glDisable(GL_POLYGON_OFFSET_FILL);
-            glapi.glPolygonOffset(0.0f, 0.0f);
             ctx.render_context->set_depth_stencil_state(default_depth_test_);
             ctx.render_context->set_blend_state(default_blend_state_);
             ctx.render_context->apply();
@@ -611,8 +611,9 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
         RenderInfo current_render_info{current_material, current_shader, current_rasterizer_state};
         renderSingleNode(pipe, desc, current_node, current_render_info);
-
+#ifdef VERBOSE_DEBUGGING
         std::cout << "Rendering " << current_node->get_name() << std::endl;
+#endif //VERBOSE_DEBUGGING
 #else
         render_visible_leaf(current_node,
                             ctx, pipe,
@@ -631,6 +632,8 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
                     scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(child.get(), world_space_cam_pos) ) ) ;
             traversal_priority_queue.push(child_node_distance_pair_to_insert);
         }
+
+        //set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
 
 
     }
@@ -676,8 +679,9 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
+#ifdef VERBOSE_DEBUGGING
     std::cout<<"Query for "<< current_nodes.front()->get_name()<< " " << current_nodes.front()->unique_node_id() <<std::endl;
-
+#endif
 
 
     bool fallback = false;
@@ -692,7 +696,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
 
     current_shader->use(ctx);
-
+    ctx.render_context->apply_program();
 
     if(occlusion_culling_geometry_visualization_) {
         set_geometry_visualisation_states(ctx);
@@ -704,6 +708,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     }
 
 
+    ctx.render_context->bind_vertex_array(empty_vao_layout_);
+    ctx.render_context->apply_vertex_input();
     ctx.render_context->begin_query(occlusion_query_iterator->second);
 
 
@@ -717,15 +723,16 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
             current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
 
+            ctx.render_context->apply_program();
+
             set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
 
             auto const& glapi = ctx.render_context->opengl_api();
 
-            ctx.render_context->apply();
-            scm::gl::context_vertex_input_guard vig(ctx.render_context);
+            //ctx.render_context->apply();
+            //scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-            ctx.render_context->bind_vertex_array(empty_vao_layout_);
-            ctx.render_context->apply_vertex_input();
+
             glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, 1);
 
 
@@ -739,6 +746,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
                                           current_frame_id, 3, 1.4f);
         }
 
+        break;
     }
 
     ctx.render_context->end_query(occlusion_query_iterator->second);
@@ -777,7 +785,6 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
         auto node = i_query_queue.front();
         i_query_queue.pop();
 
-
         double visibility_persistence = get_visibility_persistence(node->unique_node_id());
         double keep;
         if (visibility_persistence > 15) {
@@ -801,6 +808,7 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
         fail *= node.second;
         float cost = (1+(1-fail)*number_of_nodes);
         float value = number_of_nodes/cost;
+        std::cout<< "value: "<< value << " cost: " << cost << " max: " << max <<std::endl;
         if (value > max) {
             max = value;
             visibility_persistence_probability.pop();
@@ -981,7 +989,6 @@ void OcclusionCullingAwareRenderer::render_visible_leaf(
         auto const& glapi = ctx.render_context->opengl_api();
         glapi.glColorMask(true, true, true, true);
         glapi.glDisable(GL_POLYGON_OFFSET_FILL);
-        glapi.glPolygonOffset(0.0f, 0.0f);
         ctx.render_context->set_depth_stencil_state(default_depth_test_);
         ctx.render_context->set_blend_state(default_blend_state_);
         ctx.render_context->apply();
@@ -1300,12 +1307,15 @@ void OcclusionCullingAwareRenderer::instanced_array_draw(
     }
 
 
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
+    //if(current_instance_ID > 1 && leaf_node_vector.size() > 1) {
+    //    std::cout << "RENDERING CHILDREN INSTEAD OF PARENT" << std::endl;
+    //}
+    //scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
 
-    ctx.render_context->apply();
+    ctx.render_context->apply_program();
 
     auto const& glapi = ctx.render_context->opengl_api();
     // std::cout<< "RENDERING INSTANCES: " << current_instance_ID << std::endl;
