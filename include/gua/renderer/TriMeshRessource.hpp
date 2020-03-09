@@ -50,6 +50,14 @@ struct RenderContext;
  */
 class GUA_DLL TriMeshRessource : public GeometryResource
 {
+  public: // typedefs, enums
+    enum Flags
+    {
+        DEFAULTS = 0,
+        SAVE_TANGENTS = 1 << 0,
+        SAVE_BITANGENTS = 1 << 1
+    };
+
   public:
     /**
      * Default constructor.
@@ -92,6 +100,8 @@ class GUA_DLL TriMeshRessource : public GeometryResource
 
     math::vec3 get_vertex(unsigned int i) const;
     std::vector<unsigned int> get_face(unsigned int i) const;
+
+    bool save_to_binary(const char* filename, unsigned flags = DEFAULTS);
 
   private:
     void upload_to(RenderContext& context) const;

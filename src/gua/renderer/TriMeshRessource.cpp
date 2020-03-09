@@ -108,10 +108,10 @@ void TriMeshRessource::upload_kdtree_to(RenderContext& ctx) const
 
     float* data(static_cast<float*>(ctx.render_context->map_buffer(cbounding_box_hierarchy.vertices, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER)));
 
-    std::cout << "KD TREE COPY TO BUFFER!" << std::endl;
+    //std::cout << "KD TREE COPY TO BUFFER!" << std::endl;
     kd_tree_.copy_to_buffer(data);
 
-    std::cout << "AFTER KD TREE COPY TO BUFFER!" << std::endl;
+    //std::cout << "AFTER KD TREE COPY TO BUFFER!" << std::endl;
     ctx.render_context->unmap_buffer(cbounding_box_hierarchy.vertices);
 
     cbounding_box_hierarchy.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, cbounding_box_hierarchy.indices_count * sizeof(unsigned), kd_tree_.indices.data());
@@ -179,6 +179,13 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
     face[2] = mesh_.indices[face_base_index + 2];
 
     return face;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool TriMeshRessource::save_to_binary(const char* filename, unsigned flags)
+{
+    return mesh_.save_to_binary(filename, flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

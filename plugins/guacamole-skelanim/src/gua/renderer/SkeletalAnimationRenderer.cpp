@@ -146,7 +146,7 @@ void SkeletalAnimationRenderer::render(Pipeline& pipe, PipelinePassDescription c
                                 smap[i.first] = i.second;
 
                             current_shader = std::make_shared<ShaderProgram>();
-                            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                            current_shader->set_shaders(program_stages_, std::list<std::string>(), false, false, smap);
                             programs_[current_material] = current_shader;
                         }
                     }

@@ -42,7 +42,7 @@
 
 namespace gua
 {
-struct NURBSGPURessource : public PluginRessource
+struct NURBSGPUResource : public PluginResource
 {
     // array and texture buffers for adaptive tesselation
     struct surface_tesselation_buffer

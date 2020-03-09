@@ -139,7 +139,7 @@ void NURBSRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 
             if(nurbs_ressource && pre_tesselation_program_ && current_material_program)
             {
-                auto resource_upload_required = ctx.plugin_ressources.end() == ctx.plugin_ressources.find(nurbs_ressource->uuid());
+                auto resource_upload_required = ctx.plugin_resources.end() == ctx.plugin_resources.find(nurbs_ressource->uuid());
                 if(_pretessellation || resource_upload_required)
                 {
                     // render using two-pass tesselation approach
@@ -248,7 +248,7 @@ void NURBSRenderer::_initialize_pre_tesselation_program(RenderContext const& ctx
 
         auto smap = global_substitution_map_;
 
-        new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true, smap);
+        new_program->set_shaders(pre_tesselation_shader_stages_, pre_tesselation_interleaved_stream_capture_, true, false, smap);
         pre_tesselation_program_ = new_program;
         // save_to_file(*pre_tesselation_program_, ".", "pre_tesselation_program");
     }
@@ -276,7 +276,7 @@ void NURBSRenderer::_initialize_tesselation_program(MaterialShader* material)
             smap[i.first] = i.second;
         }
 
-        program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, smap);
+        program->set_shaders(tesselation_shader_stages_, std::list<std::string>(), false, false, smap);
         tesselation_programs_[material] = program;
 
         // save_to_file(*program, ".", "tesselation_program");

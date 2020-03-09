@@ -11,7 +11,7 @@ link_directories(${LIB_PATHS})
 
 include_directories( ${INCLUDE_PATHS} ${PROJECT_SOURCE_DIR}/include)
 
-add_executable( ${_EXE_NAME} main.cpp)
+add_executable( ${_EXE_NAME} main.cpp  navigation.cpp glfw_callbacks.cpp)
 
 add_dependencies(${_EXE_NAME} guacamole)
 

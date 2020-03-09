@@ -12,7 +12,7 @@ in VertexData {
   vec2 pass_uv_coords;
   vec3 pass_normal;
   vec3 pass_world_position;
-  vec3 pass_color;
+  vec3 pass_point_color;
 } VertexIn;
 
 @include "common/gua_fragment_shader_input.glsl"
@@ -53,11 +53,11 @@ void main()
   @material_input@
   @include "common/gua_global_variable_assignment.glsl"
 
-  gua_color      = pow(VertexIn.pass_color, vec3(1.4));
+  gua_color      = VertexIn.pass_point_color;
   gua_normal     = VertexIn.pass_normal;
   gua_metalness  = 0.0;
-  gua_roughness  = 0.0;
-  gua_emissivity = 0.0; // pass through if unshaded
+  gua_roughness  = 1.0;
+  gua_emissivity = 1.0; // pass through if unshaded
 
   gua_world_position = VertexIn.pass_world_position;
 

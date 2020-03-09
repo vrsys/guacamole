@@ -22,6 +22,8 @@
 // class header
 #include <gua/renderer/LodLoader.hpp>
 
+#include <gua/utils/vis_settings.hpp>
+
 // guacamole headers
 #include <gua/utils.hpp>
 #include <gua/utils/Logger.hpp>
@@ -30,6 +32,7 @@
 #include <gua/node/MLodNode.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
 #include <gua/renderer/LodResource.hpp>
 
 // external headers
@@ -38,21 +41,287 @@
 #include <lamure/ren/policy.h>
 #include <lamure/ren/ray.h>
 
+#include <boost/algorithm/string.hpp>
+
 namespace gua
 {
 /////////////////////////////////////////////////////////////////////////////
-LodLoader::LodLoader() : _supported_file_extensions()
+LodLoader::LodLoader() : _supported_file_extensions_model_file(), _supported_file_extensions_vis_file()
 {
-    _supported_file_extensions.insert("bvh");
-    _supported_file_extensions.insert("BVH");
+    _supported_file_extensions_model_file.insert("bvh");
+    _supported_file_extensions_model_file.insert("BVH");
+
+    _supported_file_extensions_vis_file.insert("vis");
+    _supported_file_extensions_vis_file.insert("VIS");
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+std::vector<std::shared_ptr<node::Node>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, unsigned flags)
+{
+    auto desc = std::make_shared<gua::MaterialShaderDescription>();
+    auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
+    gua::MaterialShaderDatabase::instance()->add(material_shader);
+
+    auto cached_nodes(load_lod_pointclouds_from_vis_file(vis_file_name, material_shader->make_new_material(), flags));
+
+    if(!cached_nodes.empty())
+    {
+        return cached_nodes;
+    }
+
+    Logger::LOG_WARNING << "LodLoader::load_lod_pointclouds_from_vis_file() : unable to create Lod Nodes" << std::endl;
+    return std::vector<std::shared_ptr<node::Node>>();
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
+void parse_simulation_positions(std::string const& simulation_positions_file_path, std::shared_ptr<TimeSeriesDataSet> const& current_time_series_dataset) {
+    std::cout << "simulation_position_file: " <<  simulation_positions_file_path << std::endl;
+
+
+    std::ifstream in_simulation_positions_file(simulation_positions_file_path);
+
+    int line_index = 0;
+    std::string line_buffer = "";
+    int num_simulations_positions_per_line = 0;
+
+
+    while(std::getline(in_simulation_positions_file, line_buffer)) {
+        std::istringstream in_sstream(line_buffer);
+
+        if(0 == line_index) {
+            in_sstream >> num_simulations_positions_per_line;
+            std::cout << num_simulations_positions_per_line << std::endl;
+            current_time_series_dataset->simulation_positions.resize(num_simulations_positions_per_line);
+        } else {
+            for(int position_index = 0; position_index < num_simulations_positions_per_line; ++position_index) {
+                scm::math::vec3f current_simulation_position;
+
+                in_sstream >> current_simulation_position[0];
+                in_sstream >> current_simulation_position[1];
+                in_sstream >> current_simulation_position[2];
+                current_time_series_dataset->simulation_positions[position_index].push_back(current_simulation_position);
+            }
+        }
+
+        ++line_index;
+    }
+    in_simulation_positions_file.close();
+
+    current_time_series_dataset->num_simulation_positions_per_timestep = num_simulations_positions_per_line;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+std::vector<std::shared_ptr<node::Node>> LodLoader::load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags) {
+    
+    std::vector<std::string> model_files_to_load;
+
+    float initial_max_surfel_radius = -1.0f;
+
+    scm::math::mat4f fem_transform_matrix;
+
+    std::vector<std::string> parsed_time_series_data_description;
+
+    std::string simulation_positions_filename = "";
+
+    try {
+        if(!is_supported_vis_file(vis_file_name)) {
+            throw std::runtime_error(std::string("Unsupported filetype: ") + vis_file_name);
+        } else {
+            std::ifstream in_vis_filestream(vis_file_name, std::ios::in);
+            std::string line_buffer;
+
+            //int model_count = 0;
+            std::vector<std::shared_ptr<node::Node>> loaded_point_cloud_models;
+            while(std::getline(in_vis_filestream, line_buffer) ) {
+                boost::trim(line_buffer);
+
+                if(is_supported_model_file(line_buffer)) {
+                    model_files_to_load.push_back(line_buffer);
+                } else {
+                    std::istringstream attribute_parser_stringstream(line_buffer);
+
+                    std::string attribute_string_dummy_buffer("");
+                    if(0 == line_buffer.rfind("max_radius:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        attribute_parser_stringstream >> initial_max_surfel_radius;
+                    }
+
+                    if(0 == line_buffer.rfind("fem_to_pcl_transform:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        for(int transform_matrix_element = 0; transform_matrix_element < 16; ++transform_matrix_element) {
+                            attribute_parser_stringstream >> fem_transform_matrix[transform_matrix_element];
+                        }
+                    }
+
+                    if(0 == line_buffer.rfind("simulation_positions_filename:", 0)) {
+                        attribute_parser_stringstream >> attribute_string_dummy_buffer;
+                        attribute_parser_stringstream >> simulation_positions_filename;
+                    }
+
+                }
+            }
+
+            
+
+            in_vis_filestream.close();
+
+            vis_settings settings;
+            load_vis_settings(vis_file_name, settings);
+
+            //assertions
+            if (settings.provenance_ != 0) {
+                if (settings.json_.size() > 0) {
+                    if (settings.json_.substr(settings.json_.size()-5) != ".json") {
+                        std::cout << "unsupported json file: " << settings.json_ << std::endl;
+                        exit(-1);
+                    } else {
+                        std::cout << "Loading Provenance-Layout-Description from JSON: " << settings.json_ << std::endl;
+                        lamure::ren::data_provenance::get_instance()->parse_json(settings.json_);
+                    
+                        std::cout << "Loading mapping file: " << std::endl;
+                        std::cout << settings.fem_value_mapping_file_ << std::endl;
+
+
+
+
+                        std::string line_buffer;
+                        std::ifstream in_mapping_file_stream(settings.fem_value_mapping_file_);
+
+
+
+                        while( std::getline(in_mapping_file_stream, line_buffer) ) {
+                            boost::trim(line_buffer);
+                            if (! (line_buffer.rfind("#", 0) == 0 ) ) {
+                                std::cout << line_buffer << std::endl;
+
+                                std::istringstream data_item_description_strstream(line_buffer);
+
+
+                                std::shared_ptr<TimeSeriesDataSet> shared_time_series_dataset = std::make_shared<TimeSeriesDataSet>();
+                
+
+                                data_item_description_strstream >> shared_time_series_dataset->name; 
+                                data_item_description_strstream >> shared_time_series_dataset->num_attributes;
+                                data_item_description_strstream >> shared_time_series_dataset->num_timesteps; 
+                                data_item_description_strstream >> shared_time_series_dataset->sequence_length; 
+
+                                std::ifstream in_attribute_file(shared_time_series_dataset->name, std::ios::in | std::ios::binary | std::ios::ate);
+
+                                size_t total_num_byte_in_file = in_attribute_file.tellg();
+
+                                in_attribute_file.clear();
+                                in_attribute_file.seekg(0, std::ios::beg);
+
+
+                                std::size_t num_vertices_per_file = (total_num_byte_in_file / sizeof(float) ) / (shared_time_series_dataset->num_attributes * shared_time_series_dataset->num_timesteps );
+                                std::size_t num_elements_to_read = total_num_byte_in_file / sizeof(float);
+                                std::size_t num_elements_per_attribute_over_time = num_vertices_per_file * shared_time_series_dataset->num_timesteps;
+
+                                shared_time_series_dataset->data.resize(num_elements_to_read);
+
+                                in_attribute_file.read( (char*) shared_time_series_dataset->data.data(), total_num_byte_in_file);
+
+                                //memcpy((char*) shared_time_series_dataset->data.data(), (char*) dummy_data.data(),dummy_data.size() * sizeof(float));
+
+                                uint64_t total_num_attributes = shared_time_series_dataset->data.size() / num_elements_per_attribute_over_time;
+
+                                shared_time_series_dataset->extreme_values.resize(total_num_attributes);
+
+                                for(uint64_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {
+                                    shared_time_series_dataset->extreme_values[attribute_idx].first = std::numeric_limits<float>::max();
+                                    shared_time_series_dataset->extreme_values[attribute_idx].second = std::numeric_limits<float>::min();                        
+                                }
+
+                                for(uint32_t attribute_idx = 0; attribute_idx < total_num_attributes; ++attribute_idx) {
+                                    uint32_t base_offset = num_elements_per_attribute_over_time * attribute_idx;
+                                    
+                                    for(uint32_t element_idx = 0; element_idx < num_elements_per_attribute_over_time; ++element_idx) {
+
+                                        shared_time_series_dataset->extreme_values[attribute_idx].first = std::min(shared_time_series_dataset->extreme_values[attribute_idx].first,
+                                                                                                       shared_time_series_dataset->data[base_offset + element_idx]);
+                                        shared_time_series_dataset->extreme_values[attribute_idx].second = std::max(shared_time_series_dataset->extreme_values[attribute_idx].second,
+                                                                                                       shared_time_series_dataset->data[base_offset + element_idx]);
+                                    }
+                                }
+
+                                in_attribute_file.close();
+
+
+                                if(!simulation_positions_filename.empty()) {
+
+                                    std::string directory;
+                                    std::size_t const last_slash_idx = shared_time_series_dataset->name.find_last_of("\\/");
+                                    if (std::string::npos != last_slash_idx)
+                                    {
+                                        directory = shared_time_series_dataset->name.substr(0, last_slash_idx);
+                                    }
+
+                                    std::string simulation_positions_source = (directory) + "/" + simulation_positions_filename;
+                                    parse_simulation_positions(simulation_positions_source,  shared_time_series_dataset);
+                                }
+
+
+                                TimeSeriesDataSetDatabase::instance()->add(shared_time_series_dataset->name, shared_time_series_dataset);
+
+                                shared_time_series_dataset->simulation_positions_filename = simulation_positions_filename;
+                                shared_time_series_dataset->time_series_transform_matrix = fem_transform_matrix;
+
+                                parsed_time_series_data_description.push_back(shared_time_series_dataset->name);
+
+                            }
+                        }
+
+                        in_mapping_file_stream.close();
+                    }
+                }
+
+            } 
+
+            
+
+            // after the vis file was parsed, load all models and set the common properties
+
+            int32_t model_index = 0;
+
+            for(auto const& model_path : model_files_to_load) {
+
+                std::size_t found = model_path.find_last_of("/\\");
+                auto const automatic_node_name = model_path.substr(found+1);
+
+                auto const& current_point_cloud_shared_ptr = std::dynamic_pointer_cast< gua::node::PLodNode >( load_lod_pointcloud(automatic_node_name, model_path, fallback_material, flags) );
+                    
+                current_point_cloud_shared_ptr->set_time_series_data_descriptions(parsed_time_series_data_description);
+
+                loaded_point_cloud_models.push_back(current_point_cloud_shared_ptr);
+
+                if(initial_max_surfel_radius > 0.0f) {
+                    current_point_cloud_shared_ptr->set_max_surfel_radius(initial_max_surfel_radius);
+                }
+
+                if(model_index < settings.num_models_with_provenance_) {
+                    current_point_cloud_shared_ptr->set_has_provenance_attributes(true);
+                }
+    
+                ++model_index;
+            }
+
+            return loaded_point_cloud_models;
+        }
+    } catch(std::exception& e) {
+        Logger::LOG_WARNING << "Failed to parse vis file object \"" << vis_file_name << "\": " << e.what() << std::endl;
+        return {};
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<node::Node> LodLoader::load_lod_pointcloud(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
 {
     try
     {
-        if(!is_supported(filename))
+        if(!is_supported_model_file(filename))
         {
             throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
         }
@@ -63,6 +332,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
             GeometryDescription desc("PLod", filename, 0, flags);
 
             lamure::model_t model_id = database->add_model(filename, desc.unique_key());
+
             if(database->get_model(model_id)->get_bvh()->get_primitive() != lamure::ren::bvh::primitive_type::POINTCLOUD)
             {
                 Logger::LOG_WARNING << "Failed to load lod file \"" << filename << "\":"
@@ -108,11 +378,11 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 }
 
 /////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_trimesh(std::string const& nodename, std::string const& filename, std::shared_ptr<Material> const& material, unsigned flags)
 {
     try
     {
-        if(!is_supported(filename))
+        if(!is_supported_model_file(filename))
         {
             throw std::runtime_error(std::string("Unsupported filetype: ") + filename);
         }
@@ -169,7 +439,7 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& n
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const& filename, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_pointcloud(std::string const& filename, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
     auto material_shader(std::make_shared<gua::MaterialShader>("Lod_unshaded_material", desc));
@@ -188,7 +458,7 @@ std::shared_ptr<node::PLodNode> LodLoader::load_lod_pointcloud(std::string const
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags)
+std::shared_ptr<node::Node> LodLoader::load_lod_trimesh(std::string const& filename, unsigned flags)
 {
     auto desc = std::make_shared<gua::MaterialShaderDescription>();
     auto material_shader(std::make_shared<gua::MaterialShader>("MLod_unshaded_material", desc));
@@ -207,10 +477,16 @@ std::shared_ptr<node::MLodNode> LodLoader::load_lod_trimesh(std::string const& f
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool LodLoader::is_supported(std::string const& file_name) const
+bool LodLoader::is_supported_model_file(std::string const& file_name) const
 {
     std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
-    return filename_decomposition.empty() ? false : _supported_file_extensions.count(filename_decomposition.back()) > 0;
+    return filename_decomposition.empty() ? false : _supported_file_extensions_model_file.count(filename_decomposition.back()) > 0;
+}
+
+bool LodLoader::is_supported_vis_file(std::string const& file_name) const
+{
+    std::vector<std::string> filename_decomposition = gua::string_utils::split(file_name, '.');
+    return filename_decomposition.empty() ? false : _supported_file_extensions_vis_file.count(filename_decomposition.back()) > 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

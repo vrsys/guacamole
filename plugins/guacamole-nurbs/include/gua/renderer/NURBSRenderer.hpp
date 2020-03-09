@@ -38,7 +38,7 @@ class ShaderProgram;
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Transformation Feedback Specific Members - only once per context
 /////////////////////////////////////////////////////////////////////////////////////////////
-struct GUA_NURBS_DLL NURBSTransformFeedbackBuffer : public PluginRessource
+struct GUA_NURBS_DLL NURBSTransformFeedbackBuffer : public PluginResource
 {
     static const unsigned GUA_TRANSFORM_FEEDBACK_BUFFER_BASE_CACHE_ID = 1;
 
@@ -47,7 +47,7 @@ struct GUA_NURBS_DLL NURBSTransformFeedbackBuffer : public PluginRessource
     scm::gl::buffer_ptr _transform_feedback_vbo;
 };
 
-struct GUA_NURBS_DLL NURBSRasterizationState : public PluginRessource
+struct GUA_NURBS_DLL NURBSRasterizationState : public PluginResource
 {
     static const unsigned GUA_RASTERIZATION_BASE_CACHE_ID = 2;
 

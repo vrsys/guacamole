@@ -55,10 +55,10 @@ class Node;
 /**
  * Abstract base class for plugin ressources
  */
-struct GUA_DLL PluginRessource
+struct GUA_DLL PluginResource
 {
   public:
-    virtual ~PluginRessource() = default;
+    virtual ~PluginResource() = default;
 };
 
 /**
@@ -227,12 +227,14 @@ struct GUA_DLL RenderContext
 
     mutable std::unordered_map<std::size_t, scm::gl::occlusion_query_ptr> occlusion_query_objects;
 
+    mutable std::unordered_map<std::size_t, scm::gl::buffer_ptr> shader_storage_buffer_objects;
+
     /**
      * Resources associated with this context
      */
     std::unordered_map<std::size_t, std::shared_ptr<Pipeline>> render_pipelines;
 
-    mutable std::unordered_map<std::size_t, std::shared_ptr<PluginRessource>> plugin_ressources;
+    mutable std::unordered_map<std::size_t, std::shared_ptr<PluginResource>> plugin_resources;
 };
 
 } // namespace gua

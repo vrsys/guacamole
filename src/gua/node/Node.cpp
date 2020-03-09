@@ -201,7 +201,7 @@ math::mat4 Node::get_latest_cached_world_transform(const WindowBase* w) const {
   math::mat4 world_transform = world_transform_;
   world_transform_ = get_latest_world_transform(w);
   update_bounding_box();
-  return world_transform_;
+  return world_transform;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -479,33 +479,7 @@ void Node::set_scenegraph(SceneGraph* scenegraph)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
 
-/*
-bool Node::get_visibility(std::size_t in_camera_uuid) const {
-    return is_visible_for_camera_[in_camera_uuid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Node::set_visibility(std::size_t in_camera_uuid, bool is_visible) {
-    is_visible_for_camera_[in_camera_uuid] = is_visible;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int32_t Node::get_last_visibility_check_frame_id(std::size_t in_camera_uuid) const {
-    return last_visibility_check_frame_id_[in_camera_uuid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Node::set_last_visibility_check_frame_id(std::size_t in_camera_uuid, int32_t current_frame_id) {
-    last_visibility_check_frame_id_[in_camera_uuid] = current_frame_id;
-}
-
-*/
-////////////////////////////////////////////////////////////////////////////////
 
 } // namespace node
 } // namespace gua

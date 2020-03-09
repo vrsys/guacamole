@@ -26,6 +26,8 @@
 
 #include <lamure/ren/controller.h>
 
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
+
 namespace
 {
 gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
@@ -56,7 +58,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
                                                      lamure::view_t lamure_view_id)
 {
     auto const& camera = pipe.current_viewstate().camera;
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
     auto& target = *pipe.current_viewstate().target;
 
     scm::gl::context_all_guard context_guard(ctx.render_context);
@@ -72,7 +74,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
     bool program_changed = false;
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
+    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LowQualitySplattingSubRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 #endif
 
@@ -105,6 +107,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
             plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
             _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
 
+            plod_node->bind_time_series_data_to(ctx, current_material_program);
             ctx.render_context->apply();
 
             plod_resource->draw(ctx,
@@ -119,7 +122,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
         }
         else
         {
-            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "LowQualitySplattingSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
     }
     target.unbind(ctx);
@@ -168,6 +171,8 @@ void LowQualitySplattingSubRenderer::_upload_model_dependent_uniforms(std::share
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
     current_material_shader->apply_uniform(ctx, "max_surfel_radius", plod_node->get_max_surfel_radius());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+    current_material_shader->apply_uniform(ctx, "has_provenance_attributes", plod_node->get_has_provenance_attributes());
 }
 
 } // namespace gua

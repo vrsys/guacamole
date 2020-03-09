@@ -28,6 +28,8 @@
 #include <gua/guacamole.hpp>
 #include <gua/config.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
+#include <gua/renderer/LodLoader.hpp>
+#include <gua/renderer/PLodPass.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
 #include <gua/renderer/BBoxPass.hpp> //to add a pass that visualizes bounding boxes in gua
 #include <gua/renderer/DebugViewPass.hpp>
@@ -41,6 +43,7 @@
 //#define AUTO_ANIMATION
 
 #define USE_CITY_SCENE
+
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -82,13 +85,15 @@ void configure_pipeline_descriptions() {
 
     // first pipe
 
-#ifdef OCCLUSION_TRIMESH_PASS
+#if 0 // USE OCCLUSION
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::OcclusionCullingTriMeshPassDescription>());         // geometry pass for rendering trimesh files (obj, ply, ...)
     auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
     //oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Any_Samples_Passed);
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 #else
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
+    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::PLodPassDescription>());  
 #endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
@@ -208,6 +213,17 @@ int main(int argc, char** argv)
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp
     // place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
     create_raycast_test_scene(occlusion_group_node);
+
+    /*
+    create_b1_scene(occlusion_group_node);
+
+    occlusion_group_node->translate(-26.6, -29.9, -40.0);
+    occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
+    occlusion_group_node->translate(-0.0, 15.0, -10.0);
+    occlusion_group_node->scale(3.0);
+
+    */
+
     //create_child_bb_test_scene(occlusion_group_node);
 
     // create_simple_debug_scene(occlusion_group_node);
@@ -215,6 +231,12 @@ int main(int argc, char** argv)
 
     //create_occlusion_scene(model_path_plane, model_path_town, occlusion_grou"/opt/3d_models/trees/lindenTree/lindenTree.obj"p_node);
 #endif
+
+
+
+
+
+
     occlusion_group_node->regroup_children();
 
     //occlusion_group_node->scale(0.2, 0.2, 0.2);
@@ -248,6 +270,7 @@ int main(int argc, char** argv)
     // setting the size of the screen metrically correct allows us to perceive virtual objects 1:1. Here: 1.92m by 1.08 meters (powerwall)
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
 
+
     //float nav_translation
     //#ifdef USE_CITY_SCENE
 
@@ -279,6 +302,7 @@ int main(int argc, char** argv)
 
     //camera_node->translate(0, 0, 0);
     camera_node->config.set_resolution(cam_resolution);
+
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
 #ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
     camera_node->config.set_screen_path("/navigation_node/screen_node");

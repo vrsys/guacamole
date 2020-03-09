@@ -579,10 +579,6 @@ protected:
     math::mat4 transform_ = math::mat4::identity(); // invertible affine transformation
     mutable math::mat4 world_transform_ = math::mat4::identity();
 
-    //mutable std::unordered_map<std::size_t, bool> was_not_frustum_culled_;
-    //mutable std::unordered_map<std::size_t, bool> is_visible_for_camera_;
-    //mutable std::unordered_map<std::size_t, uint32_t> last_visibility_check_frame_id_;
-
     SceneGraph* scenegraph_ = nullptr;
     std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 

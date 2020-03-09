@@ -97,6 +97,7 @@ class GUA_DLL ShaderProgram
     void set_shaders(std::vector<ShaderProgramStage> const& shaders,
                      std::list<std::string> const& interleaved_stream_capture = std::list<std::string>(),
                      bool in_rasterization_discard = false,
+                     bool in_early_fragment_test = false,
                      SubstitutionMap const& substitutions = SubstitutionMap(),
                      bool enable_virtual_texturing = false);
 

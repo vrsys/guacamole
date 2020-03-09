@@ -92,19 +92,45 @@ struct camera_matrix_package
 
 struct SPointsStats
 {
-    SPointsStats() : m_received_triangles(0), m_received_timestamp_ms(0.0f), m_received_reconstruction_time_ms(-1.0f), m_request_reply_latency_ms(-1.0f), m_total_message_payload_in_byte(0) {}
+    SPointsStats() : m_received_triangles(0), m_received_timestamp_ms(0.0f), m_received_reconstruction_time_ms(-1.0f), m_request_reply_latency_ms(-1.0f), m_total_message_payload_in_byte(0), m_is_calibration_data(true) {}
 
-    SPointsStats(uint32_t in_received_tris, float in_received_timestamp, float in_received_recon_time, float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte)
-        : m_received_triangles(in_received_tris), m_received_timestamp_ms(in_received_timestamp), m_received_reconstruction_time_ms(in_received_recon_time),
-          m_request_reply_latency_ms(in_request_reply_latency_ms), m_total_message_payload_in_byte(in_total_message_payload_in_byte)
+    SPointsStats(uint32_t in_received_tris, 
+                 float in_received_timestamp, 
+                 float in_received_recon_time,
+                 float in_received_box_division_time,
+                 float in_received_texture_processing_time,
+                 float in_received_frustum_and_occlusion_culling_time,
+                 float in_received_integration_time,
+                 float in_received_marching_cubes_time,
+                 float in_received_atlas_generation_time,
+                 float in_request_reply_latency_ms, uint32_t in_total_message_payload_in_byte, bool is_calibration_data)
+        : m_received_triangles(in_received_tris), m_received_timestamp_ms(in_received_timestamp), 
+          m_received_reconstruction_time_ms(in_received_recon_time),
+          m_received_box_division_time_ms(in_received_box_division_time),
+          m_received_texture_processing_time_ms(in_received_texture_processing_time), 
+          m_received_frustum_and_occlusion_culling_time_ms(in_received_frustum_and_occlusion_culling_time),
+          m_received_integration_time_ms(in_received_integration_time),
+          m_received_marching_cubes_time_ms(in_received_marching_cubes_time), 
+          m_received_atlas_generation_time_ms(in_received_atlas_generation_time), 
+          m_request_reply_latency_ms(in_request_reply_latency_ms), m_total_message_payload_in_byte(in_total_message_payload_in_byte),
+          m_is_calibration_data(is_calibration_data)
     {
     }
 
     uint32_t m_received_triangles = 0;
     float m_received_timestamp_ms = -1.0f;
     float m_received_reconstruction_time_ms = 0.0f;
+    // the following 6 attributes are the component adding up the reconstruction time
+    float m_received_box_division_time_ms         = -1.0f;
+    float m_received_texture_processing_time_ms   = -1.0f;
+    float m_received_frustum_and_occlusion_culling_time_ms = -1.0f;
+    float m_received_integration_time_ms          = -1.0f;
+    float m_received_marching_cubes_time_ms       = -1.0f;
+    float m_received_atlas_generation_time_ms     = -1.0f;
+
     float m_request_reply_latency_ms = -1.0f;
     uint32_t m_total_message_payload_in_byte = 0;
+    bool m_is_calibration_data = true;
 };
 
 struct SPointsCalibrationDescriptor {
@@ -118,7 +144,15 @@ struct SPointsModelDescriptor {
     uint32_t received_textured_tris = 0.0;
     float received_kinect_timestamp = 0.0;
     float received_reconstruction_time = 0.0;
-  
+    // the following 6 attributes are the component adding up the reconstruction time
+    float received_box_division_time_ms         =  0.0f;
+    float received_texture_processing_time_ms   =  0.0f;
+    float received_frustum_and_occlusion_culling_time_ms = 0.0f;
+    float received_integration_time_ms          =  0.0f;
+    float received_marching_cubes_time_ms       =  0.0f;
+    float received_atlas_generation_time_ms     =  0.0f;
+
+
     float request_reply_latency_ms = -1.0;
     int32_t triangle_texture_atlas_size = 0.0;
    
@@ -128,14 +162,16 @@ struct SPointsModelDescriptor {
     uint32_t total_message_payload_in_byte = 0;
 
     bool is_fully_encoded_vertex_data = false;
+
+    bool is_calibration_data = true;
 };
 
 class NetKinectArray
 {
   public:
     static size_t constexpr MAX_ZMQ_MESSAGE_SIZE = 500000000;
-    static size_t constexpr INITIAL_VBO_SIZE = 20000000;
-    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 20000000*3/5;
+    static size_t constexpr INITIAL_VBO_SIZE = 3*20000000;
+    static size_t constexpr INITIAL_COMPRESSED_VBO_SIZE = 3*20000000*3/5;
     static uint16_t constexpr MAX_LAYER_IDX = 16;
     static uint64_t constexpr MAX_NUM_SUPPORTED_CONTEXTS = 12;
 
@@ -170,8 +206,16 @@ class NetKinectArray
         return SPointsStats{m_model_descriptor_.received_textured_tris, 
                             m_model_descriptor_.received_kinect_timestamp, 
                             m_model_descriptor_.received_reconstruction_time, 
+                            m_model_descriptor_.received_box_division_time_ms,                                 
+                            m_model_descriptor_.received_texture_processing_time_ms,     
+                            m_model_descriptor_.received_frustum_and_occlusion_culling_time_ms ,    
+                            m_model_descriptor_.received_integration_time_ms,     
+                            m_model_descriptor_.received_marching_cubes_time_ms,     
+                            m_model_descriptor_.received_atlas_generation_time_ms,         
                             m_model_descriptor_.request_reply_latency_ms, 
-                            m_model_descriptor_.total_message_payload_in_byte};
+                            m_model_descriptor_.total_message_payload_in_byte,
+                            m_model_descriptor_.is_calibration_data
+                            };
     }
 
     // void push_matrix_package(bool is_camera, std::size_t view_uuid, bool is_stereo_mode, matrix_package mp);
@@ -221,12 +265,13 @@ class NetKinectArray
     std::vector<uint8_t> m_buffer_back_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
     std::vector<uint8_t> m_buffer_back_compressed_ = std::vector<uint8_t>(INITIAL_VBO_SIZE);
 
-    std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(11059200, 0);
-    std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(11059200, 0);
-    std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_async_upload_ = std::vector<uint8_t>(5*11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_ = std::vector<uint8_t>(5*11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_back_ = std::vector<uint8_t>(5*11059200, 0);
+    std::vector<uint8_t> m_texture_buffer_back_compressed_ = std::vector<uint8_t>(5*11059200, 0);
 
     std::vector<uint8_t*> m_tj_compressed_image_buffer_per_layer_ =  std::vector<uint8_t*>(MAX_LAYER_IDX, nullptr);
-    std::array<uint8_t, 1024 * 1024 * 100> m_decompressed_image_buffer_;
+    std::array<uint8_t, 1024 * 1024 * 150> m_decompressed_image_buffer_;
 
     std::vector<uint8_t> m_calibration_;
     std::vector<uint8_t> m_calibration_back_;
@@ -249,6 +294,7 @@ class NetKinectArray
 
     SPointsCalibrationDescriptor m_calibration_descriptor_;
     SPointsCalibrationDescriptor m_calibration_descriptor_back_;
+    SPointsCalibrationDescriptor m_calibration_descriptor_back_two_times_;
 
     SPointsModelDescriptor m_model_descriptor_;
     SPointsModelDescriptor m_model_descriptor_back_;
@@ -256,12 +302,16 @@ class NetKinectArray
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_;
     std::array<uint32_t, 16> m_num_best_triangles_for_sensor_layer_back_;
 
+    std::unordered_map<std::size_t, std::array<uint32_t, 16>> m_current_num_best_triangles_for_sensor_layer_per_context_back_;
     std::unordered_map<std::size_t, std::array<uint32_t, 16>> m_current_num_best_triangles_for_sensor_layer_per_context_;
 
     scm::math::vec3 m_tight_geometry_bb_min_back_;
     scm::math::vec3 m_tight_geometry_bb_min_;
     scm::math::vec3 m_tight_geometry_bb_max_back_;
     scm::math::vec3 m_tight_geometry_bb_max_;
+
+    std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_back_;
+    std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_back_;
 
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_min_per_context_;
     std::unordered_map<std::size_t, scm::math::vec3> m_current_tight_geometry_bb_max_per_context_;
@@ -274,7 +324,14 @@ class NetKinectArray
     float m_lod_scaling_ = 1.0f;
     float m_lod_scaling_back_ = 1.0f;
 
+    float m_texture_lod_scaling_ = 1.0f;
+    float m_texture_lod_scaling_back_ = 1.0f;
+
     mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_;
+    mutable std::unordered_map<std::size_t, float> m_current_texture_lod_scaling_per_context_;
+
+    mutable std::unordered_map<std::size_t, float> m_current_lod_scaling_per_context_back_;
+    mutable std::unordered_map<std::size_t, float> m_current_texture_lod_scaling_per_context_back_;
 
     std::atomic<bool> m_need_model_cpu_swap_{false};
     mutable std::unordered_map<std::size_t, std::atomic<bool>> m_need_model_gpu_swap_;
@@ -333,13 +390,23 @@ class NetKinectArray
     mutable std::vector<scm::gl::vertex_array_ptr> point_layout_per_context_ = std::vector<scm::gl::vertex_array_ptr>(50, nullptr);
     
     //mutable std::vector<scm::gl::buffer_ptr> compressed_net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+
+    mutable std::vector<std::vector<bool> > is_first_texture_update_frame_per_context = std::vector<std::vector<bool>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<bool>(4, true) );
+    mutable std::vector<std::vector<scm::gl::texture_region> > previous_frame_texture_regions_to_update_per_context = std::vector<std::vector<scm::gl::texture_region>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_region>(4 ) );
+
+
+    mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_back_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
     mutable std::vector<scm::gl::buffer_ptr> net_data_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+
+    mutable std::vector<bool> is_net_back_buffer_mapped_ = std::vector<bool>(MAX_NUM_SUPPORTED_CONTEXTS, false);
     mutable std::vector<scm::gl::buffer_ptr> empty_vbo_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
     mutable std::vector<scm::gl::buffer_ptr> one_d_color_data_per_context_ = std::vector<scm::gl::buffer_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
 
 
     mutable std::vector<scm::gl::texture_2d_ptr> texture_atlas_per_context_ = std::vector<scm::gl::texture_2d_ptr>(MAX_NUM_SUPPORTED_CONTEXTS, nullptr);
+    mutable std::vector<std::vector<scm::gl::buffer_ptr> > texture_atlas_pbo_back_ = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
+    mutable std::vector<std::vector<scm::gl::buffer_ptr> > texture_atlas_pbo_ = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
 
     //mutable std::unordered_map<std::size_t, std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_;
     mutable std::vector<std::vector<scm::gl::texture_3d_ptr>> inv_xyz_calibs_per_context_ = std::vector<std::vector<scm::gl::texture_3d_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::texture_3d_ptr>(4, nullptr) );

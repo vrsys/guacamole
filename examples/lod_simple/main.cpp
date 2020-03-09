@@ -263,28 +263,39 @@ int main(int argc, char** argv)
                 return;
             switch(std::tolower(key))
             {
-            case '1':
+            case '1': {
                 PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS);
                 PLod_Pass->touch();
                 std::cout << "PLOD rendering set to high-quality two pass splatting." << std::endl;
                 break;
-            case '2':
+            }
+            case '2': {
                 PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
                 PLod_Pass->touch();
                 std::cout << "PLOD rendering set to low-quality one-pass splatting with ellipsoid surfels." << std::endl;
                 break;
-            case 'b':
-                plod_node->set_enable_backface_culling_by_normal(!plod_node->get_enable_backface_culling_by_normal());
+            }
+            case 'b': {
+                auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                
+                casted_plod_node->set_enable_backface_culling_by_normal(!casted_plod_node->get_enable_backface_culling_by_normal()) ;
                 break;
+            }
             // change max surfel size
-            case '4':
-                plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * plod_node->get_max_surfel_radius()));
-                std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
+            case '4': {
+                auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+                
+                casted_plod_node->set_max_surfel_radius(std::max(0.0001f, 0.9f * casted_plod_node->get_max_surfel_radius()));
+                std::cout << "Max. surfel size set to : " << casted_plod_node->get_max_surfel_radius() << std::endl;
                 break;
-            case '5':
-                plod_node->set_max_surfel_radius(1.1 * plod_node->get_max_surfel_radius());
-                std::cout << "Max. surfel size set to : " << plod_node->get_max_surfel_radius() << std::endl;
+            }
+            case '5': {
+                auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(plod_node);
+
+                casted_plod_node->set_max_surfel_radius(1.1 * casted_plod_node->get_max_surfel_radius());
+                std::cout << "Max. surfel size set to : " << casted_plod_node->get_max_surfel_radius() << std::endl;
                 break;
+            }
             default:
                 break;
             }

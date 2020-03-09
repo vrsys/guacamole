@@ -45,9 +45,9 @@ void main() {
   uint surfel_image_idx_y =  int(global_surfel_idx / image_width) ;
   ivec2 surfel_pos = ivec2(surfel_image_idx_x, surfel_image_idx_y);
 
-  float gua_metalness  = 1.0;
+  float gua_metalness  = 0.0;
   float gua_roughness  = 1.0;
-  float gua_emissivity = 0.0; // pass through if unshaded
+  float gua_emissivity = 1.0; // pass through if unshaded
 
   imageStore(out_surfels_pbr, surfel_pos, vec4(gua_metalness, gua_roughness, gua_emissivity, 1.0) );
 

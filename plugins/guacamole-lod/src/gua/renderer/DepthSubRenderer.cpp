@@ -25,6 +25,7 @@
 
 #include <gua/renderer/DepthSubRenderer.hpp>
 #include <lamure/ren/controller.h>
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
 
 namespace gua
 {
@@ -48,7 +49,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
                                        lamure::context_t context_id,
                                        lamure::view_t lamure_view_id)
 {
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
     scm::gl::context_all_guard context_guard(ctx.render_context);
 
     if(!custom_FBO_ptr_)
@@ -70,7 +71,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
     shader_program_->use(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::DepthPass";
+    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthSubRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 #endif
 
@@ -91,8 +92,13 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
 
         auto const& plod_resource = plod_node->get_geometry();
 
+
+
+
         if(plod_resource && shader_program_)
         {
+            plod_node->bind_time_series_data_to(ctx, shader_program_);
+
             plod_resource->draw(ctx,
                                 context_id,
                                 lamure_view_id,
@@ -103,7 +109,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
         }
         else
         {
-            Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "DepthSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
     }
 
@@ -151,6 +157,7 @@ void DepthSubRenderer::_upload_model_dependent_uniforms(RenderContext const& ctx
     shader_program_->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
     shader_program_->apply_uniform(ctx, "max_surfel_radius", plod_node->get_max_surfel_radius());
     shader_program_->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+    shader_program_->apply_uniform(ctx, "has_provenance_attributes", plod_node->get_has_provenance_attributes());
 }
 
 } // namespace gua

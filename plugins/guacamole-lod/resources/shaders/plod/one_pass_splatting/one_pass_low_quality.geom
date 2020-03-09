@@ -17,7 +17,7 @@ layout (points) in;
 
 in VertexData {
   vec3 pass_normal;
-  vec3 pass_color;
+  vec3 pass_point_color;
   float pass_radius;
 } VertexIn[];
 
@@ -28,7 +28,7 @@ out VertexData {
   vec2 pass_uv_coords;
   vec3 pass_normal;
   vec3 pass_world_position;
-  vec3 pass_color;
+  vec3 pass_point_color;
 } VertexOut;
 
 @include "common/gua_vertex_shader_output.glsl"
@@ -85,7 +85,7 @@ void main()
    VertexOut.pass_uv_coords      = vec2(-1.0, -1.0);
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
-   VertexOut.pass_color          = VertexIn[0].pass_color;
+   VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
    EmitVertex();
    
    a = vec4(gl_in[0].gl_Position.xyz - ms_u + sqrt2_plus1 * ms_v, 1.0);
@@ -93,7 +93,7 @@ void main()
    VertexOut.pass_uv_coords      = vec2(-1.0, sqrt2_plus1);
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
-   VertexOut.pass_color          = VertexIn[0].pass_color;
+   VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
    EmitVertex();
 
    a = vec4(gl_in[0].gl_Position.xyz + sqrt2_plus1 * ms_u - ms_v, 1.0);
@@ -101,7 +101,7 @@ void main()
    VertexOut.pass_uv_coords      = vec2(sqrt2_plus1, -1.0);
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
-   VertexOut.pass_color          = VertexIn[0].pass_color;
+   VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
    EmitVertex();
 
 
@@ -133,7 +133,7 @@ void main()
 
     VertexOut.pass_world_position = (gua_model_matrix * q_pos_ms).xyz;
     VertexOut.pass_normal = normalize(world_normal.xyz);
-    VertexOut.pass_color = VertexIn[0].pass_color;
+    VertexOut.pass_point_color = VertexIn[0].pass_point_color;
     EmitVertex();
   }
 #endif

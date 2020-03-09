@@ -28,6 +28,7 @@ uniform mat4 mvp_matrix;
 uniform mat4 inv_vol_to_world_matrix;
 
 uniform float scaling_factor;
+uniform float texture_scaling_factor;
 
 uniform int current_sensor_layer;
 
@@ -129,7 +130,8 @@ void main() {
 
   vec3 pos_calib = texture(inv_xyz_volumes[current_sensor_layer], calib_sample_pos.xyz ).rgb;
   //vec3 pos_calib = texture(usampler3D(inv_xyz_volume_handles[current_sensor_layer]), calib_sample_pos.xyz ).rgb;
-  vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy / scaling_factor;
+  //vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy / scaling_factor;
+  vec2 pos_color = texture(uv_volumes[current_sensor_layer], pos_calib).xy / texture_scaling_factor;
 
   pass_uvs = pos_color / 2.0 + viewport_offsets[current_sensor_layer];
 }

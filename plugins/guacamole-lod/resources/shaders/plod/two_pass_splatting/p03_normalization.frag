@@ -183,7 +183,7 @@ void main() {
 
     normalized_color = accumulated_color.rgb / accumulated_weight ;
     //normalized_color = accumulated_color.rgb;
-    normalized_color = pow(normalized_color, vec3(1.4));
+    normalized_color = normalized_color;
    
     vec3 accumulated_normal = texelFetch(p02_normal_texture, current_fragment_pos, 0).rgb;
     vec3 normalized_normal = normalize(accumulated_normal.rgb / accumulated_weight );

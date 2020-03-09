@@ -19,6 +19,9 @@
  *                                                                            *
  ******************************************************************************/
 
+#include "glfw_callbacks.hpp"
+#include "navigation.hpp"
+
 #include <functional>
 #include <memory>
 #include <algorithm>
@@ -38,6 +41,9 @@
 #include <lamure/ren/model_database.h>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 
+extern WASD_state cam_navigation_state;
+
+bool print_frame_times = true;
 
 int main(int argc, char** argv)
 {
@@ -75,31 +81,57 @@ int main(int argc, char** argv)
     auto view_transform = graph.add_node<gua::node::TransformNode>("/", "view_transform");
 
 
+    auto vt_mat_wo_early_depth_test = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
+    auto vt_mat_with_early_depth_test = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
+        gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
+        gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
+    std::vector<std::shared_ptr<gua::node::TriMeshNode>> model_nodes; 
+
+
+
     if(atlas_file != ""){
         gua::VTBackend::set_physical_texture_size(2048);
         gua::VTBackend::set_update_throughput_size(4);
-        gua::VTBackend::set_ram_cache_size(32768);
+        gua::VTBackend::set_ram_cache_size(12768);
 
-        auto vt_mat = gua::PBSMaterialFactory::create_material((gua::PBSMaterialFactory::Capabilities)(
-            gua::PBSMaterialFactory::Capabilities::ROUGHNESS_VALUE |
-            gua::PBSMaterialFactory::Capabilities::METALNESS_VALUE |
-            gua::PBSMaterialFactory::Capabilities::EMISSIVITY_VALUE) );
+
         
-        vt_mat->set_uniform("Metalness", 0.25f);
-        vt_mat->set_uniform("Roughness", 0.75f);
-        vt_mat->set_uniform("Emissivity", 0.5f);
-        vt_mat->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
-        vt_mat->set_uniform("vt_test", atlas_file);
-        vt_mat->set_enable_virtual_texturing(true);
-        vt_mat->set_show_back_faces(false);
+        vt_mat_wo_early_depth_test->set_uniform("Metalness", 0.25f);
+        vt_mat_wo_early_depth_test->set_uniform("Roughness", 0.75f);
+        vt_mat_wo_early_depth_test->set_uniform("Emissivity", 0.5f);
+        vt_mat_wo_early_depth_test->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+        vt_mat_wo_early_depth_test->set_uniform("vt_test", atlas_file);
+        vt_mat_wo_early_depth_test->set_enable_virtual_texturing(true);
+        vt_mat_wo_early_depth_test->set_enable_early_fragment_test(true);
+        vt_mat_wo_early_depth_test->set_show_back_faces(false);
+
+        vt_mat_with_early_depth_test->set_uniform("Metalness", 0.25f);
+        vt_mat_with_early_depth_test->set_uniform("Roughness", 0.75f);
+        vt_mat_with_early_depth_test->set_uniform("Emissivity", 0.5f);
+        vt_mat_with_early_depth_test->set_uniform("Color", gua::math::vec4f(.5f, .5f, .7f, 1.0f));
+        vt_mat_with_early_depth_test->set_uniform("vt_test", atlas_file);
+        vt_mat_with_early_depth_test->set_enable_virtual_texturing(true);
+        vt_mat_with_early_depth_test->set_enable_early_fragment_test(true);
+        vt_mat_with_early_depth_test->set_show_back_faces(false);
+
 
         gua::TriMeshLoader loader;
+
         for(unsigned i = 0; i <  model_files.size(); ++i){
 
             std::cout << "start loading " << model_files[i] << std::endl;
-            auto model_node(loader.create_geometry_from_file("model_node" /*shoudl be unique*/ , model_files[i].c_str(), vt_mat, 0));
-            std::cout << model_file << "...ready" << std::endl;
+            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat_wo_early_depth_test, /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
+            std::cout << model_files[i] << "...ready with " << model_node->get_children().size() << " children" << std::endl;
             graph.add_node("/transform/model_transform", model_node);
+
+            model_nodes.push_back(std::dynamic_pointer_cast<gua::node::TriMeshNode>(model_node));
+
 
             if(0 == i){
                 //center camera on model (only works without NORMALIZE_POS and NORMALIZE_SCALE)
@@ -107,6 +139,8 @@ int main(int argc, char** argv)
                 auto model_dim = scm::math::length(bb.max - bb.min);
                 auto center = (bb.max + bb.min) / 2.f; 
                 view_transform->translate(center.x, center.y, center.z + model_dim); 
+
+                cam_navigation_state.accumulated_translation_world_space = scm::math::make_translation(center.x, center.y, center.z + model_dim);
             }
 
         }
@@ -148,6 +182,7 @@ int main(int argc, char** argv)
         auto model_dim = scm::math::length(bb.max - bb.min);
         auto center = (bb.max + bb.min) / 2.f; 
         view_transform->translate(center.x, center.y, center.z + model_dim);
+        cam_navigation_state.accumulated_translation_world_space = scm::math::make_translation(center.x, center.y, center.z + model_dim);
     }
     
 
@@ -205,7 +240,7 @@ int main(int argc, char** argv)
     int button_state = -1;
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1920, 1080);
+    auto resolution = gua::math::vec2ui(1920*2, 1080*2);
 
 
     auto camera = graph.add_node<gua::node::CameraNode>("/view_transform/screen", "cam");
@@ -224,7 +259,11 @@ int main(int argc, char** argv)
     camera->config.set_enable_frustum_culling(true);
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
-    pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+
+    auto trimesh_pass_description_ptr = std::make_shared<gua::TriMeshPassDescription>();
+    trimesh_pass_description_ptr->set_enable_depth_sorting(true);
+
+    pipe->add_pass(trimesh_pass_description_ptr);
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
 
@@ -236,6 +275,7 @@ int main(int argc, char** argv)
 
     // pipe->set_abuffer_size(1920);
     pipe->set_enable_abuffer(false);
+
 
     // pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
@@ -303,22 +343,9 @@ int main(int argc, char** argv)
             button_state = -1;
     });
 
-    window->on_key_press.connect(std::bind(
-        [&](gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, int scancode, int action, int mods) {
-            if(action == 0)
-                return;
-            switch(std::tolower(key))
-            {
-            default:
-                break;
-            }
-        },
-        std::ref(*(camera->get_pipeline_description())),
-        std::ref(graph),
-        std::placeholders::_1,
-        std::placeholders::_2,
-        std::placeholders::_3,
-        std::placeholders::_4));
+    window->on_key_press.connect(
+        std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+
 
     window->open();
 
@@ -332,11 +359,23 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 1000.0);
     std::size_t framecount = 0;
 
     ticker.on_tick.connect([&]() {
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
+
+        //we ask the renderer for the currently averaged applicatin fps and the window for the rendering fps
+        float application_fps = renderer.get_application_fps();
+
+
+        float elapsed_application_time_milliseconds = 0.0;
+
+        if(application_fps > 0.0f) {
+            elapsed_application_time_milliseconds = 1.0 / application_fps;
+        }
+
+        update_cam_matrix(camera, view_transform, elapsed_application_time_milliseconds);
 
         light_transform->rotate(0.05, 0.f, 1.f, 0.f);
         window->process_events();
@@ -355,8 +394,9 @@ int main(int argc, char** argv)
             renderer.queue_draw({&graph});
             if(framecount++ % 200 == 0)
             {
-                std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
-                // screen_grab_pass->set_grab_next(true);
+                if(print_frame_times) {
+                    std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+                }
             }
         }
     });

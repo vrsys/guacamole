@@ -20,6 +20,8 @@
  ******************************************************************************/
 
 
+#include <queue>
+
 
 // class header
 #include <gua/renderer/OcclusionCullingTriMeshRenderer.hpp>
@@ -174,18 +176,18 @@ void OcclusionCullingTriMeshRenderer::render(Pipeline& pipe, PipelinePassDescrip
 
     if (nullptr == occlusion_query_box_program_) {
         occlusion_query_box_program_ = std::make_shared<ShaderProgram>();
-        occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+        occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, true, global_substitution_map_);
     }
 
     if (nullptr == depth_complexity_vis_program_) {
         depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
-        depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+        depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, false, global_substitution_map_);
     }
 
     if (nullptr == occlusion_query_array_box_program_)
     {
         occlusion_query_array_box_program_ = std::make_shared<ShaderProgram>();
-        occlusion_query_array_box_program_ ->set_shaders(occlusion_query_array_box_program_stages_, std::list<std::string>(), false, global_substitution_map_);
+        occlusion_query_array_box_program_ ->set_shaders(occlusion_query_array_box_program_stages_, std::list<std::string>(), false, true, global_substitution_map_);
     }
 
 
@@ -1226,11 +1228,12 @@ void OcclusionCullingTriMeshRenderer::switch_state_based_on_node_material(Render
 
                 current_shader = std::make_shared<ShaderProgram>();
 
+                        bool early_fragment_test_enabled = tri_mesh_node->get_material()->get_enable_early_fragment_test();
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
+    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
 #else
-                bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+    bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
+    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
 #endif
                 default_rendering_programs_[current_material] = current_shader;
             }

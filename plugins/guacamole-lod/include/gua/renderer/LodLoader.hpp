@@ -29,6 +29,7 @@
 #include <set>
 #include <unordered_set>
 #include <memory>
+#include <vector>
 
 namespace gua
 {
@@ -62,13 +63,18 @@ class GUA_LOD_DLL LodLoader
     LodLoader();
 
   public:
-    std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& file_name, unsigned flags = DEFAULTS);
 
-    std::shared_ptr<node::PLodNode> load_lod_pointcloud(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
+    std::vector<std::shared_ptr<node::Node>> load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, unsigned flags);
 
-    std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& file_name, unsigned flags = DEFAULTS);
+    std::vector<std::shared_ptr<node::Node>> load_lod_pointclouds_from_vis_file(std::string const& vis_file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags);
+    
+    std::shared_ptr<node::Node> load_lod_pointcloud(std::string const& file_name, unsigned flags = DEFAULTS);
 
-    std::shared_ptr<node::MLodNode> load_lod_trimesh(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
+    std::shared_ptr<node::Node> load_lod_pointcloud(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
+
+    std::shared_ptr<node::Node> load_lod_trimesh(std::string const& file_name, unsigned flags = DEFAULTS);
+
+    std::shared_ptr<node::Node> load_lod_trimesh(std::string const& node_name, std::string const& file_name, std::shared_ptr<Material> const& fallback_material, unsigned flags = DEFAULTS);
 
     void apply_fallback_material(std::shared_ptr<node::Node> const& root, std::shared_ptr<Material> const& fallback_material) const;
 
@@ -100,13 +106,14 @@ class GUA_LOD_DLL LodLoader
     void set_render_budget_in_mb(size_t const render_budget);
     void set_out_of_core_budget_in_mb(size_t const out_of_core_budget);
 
-    bool is_supported(std::string const& file_name) const;
-
+    bool is_supported_model_file(std::string const& file_name) const;
+    bool is_supported_vis_file(std::string const& file_name) const;
   private: // methods
     math::mat4 _load_local_transform(std::string const& filename) const;
 
   private: // member
-    std::unordered_set<std::string> _supported_file_extensions;
+    std::unordered_set<std::string> _supported_file_extensions_model_file;
+    std::unordered_set<std::string> _supported_file_extensions_vis_file;
 };
 
 } // namespace gua

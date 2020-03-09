@@ -29,7 +29,7 @@ namespace gua
 ////////////////////////////////////////////////////////////////////////////////
 
 Material::Material(std::string const& shader_name)
-    : shader_name_(shader_name), shader_cache_(nullptr), show_back_faces_(false), render_wireframe_(false)
+    : shader_name_(shader_name), shader_cache_(nullptr), show_back_faces_(false), render_wireframe_(false), enable_early_fragment_test_(false)
 #ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
       ,
       enable_virtual_texturing_(false)

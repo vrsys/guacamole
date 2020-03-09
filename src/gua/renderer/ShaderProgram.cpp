@@ -66,6 +66,7 @@ void ShaderProgram::create_from_sources(std::string const& v_source, std::string
 void ShaderProgram::set_shaders(std::vector<ShaderProgramStage> const& shaders,
                                 std::list<std::string> const& interleaved_stream_capture,
                                 bool in_rasterization_discard,
+                                bool in_early_fragment_test,
                                 SubstitutionMap const& substitutions,
                                 bool enable_virtual_texturing)
 {
@@ -79,6 +80,7 @@ void ShaderProgram::set_shaders(std::vector<ShaderProgramStage> const& shaders,
     in_rasterization_discard_ = in_rasterization_discard;
     substitutions_ = substitutions;
     substitutions_["enable_virtual_texturing"] = enable_virtual_texturing ? "1" : "0";
+    substitutions_["enable_early_fragment_test"] = in_early_fragment_test ? "1" : "0";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

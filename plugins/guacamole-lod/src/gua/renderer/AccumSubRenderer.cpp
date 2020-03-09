@@ -26,6 +26,8 @@
 #include <gua/renderer/AccumSubRenderer.hpp>
 #include <lamure/ren/controller.h>
 
+#include <gua/databases/TimeSeriesDataSetDatabase.hpp>
+
 namespace gua
 {
 AccumSubRenderer::AccumSubRenderer() : PLodSubRenderer() { _load_shaders(); }
@@ -54,6 +56,12 @@ void AccumSubRenderer::create_gpu_resources(gua::RenderContext const& ctx, scm::
     _register_shared_resources(shared_resources);
 }
 
+float dummy_generator() {
+    static float gen = 0.0f;
+    return gen += 1.0f;
+}
+
+
 void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                        PipelinePassDescription const& desc,
                                        gua::plod_shared_resources& shared_resources,
@@ -62,8 +70,9 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                        lamure::context_t context_id,
                                        lamure::view_t lamure_view_id)
 {
+
     auto const& camera = pipe.current_viewstate().camera;
-    RenderContext const& ctx(pipe.get_context());
+    RenderContext& ctx(pipe.get_context());
     lamure::ren::controller* controller = lamure::ren::controller::get_instance();
 
     scm::gl::context_all_guard context_guard(ctx.render_context);
@@ -87,11 +96,11 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
     ctx.render_context->clear_color_buffer(custom_FBO_ptr_, 3, scm::math::vec2f(0.0f, 0.0f));
 
     MaterialShader* current_material(nullptr);
-    std::shared_ptr<ShaderProgram> current_material_program;
+    std::shared_ptr<ShaderProgram> current_material_program = nullptr;
 
     {
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / PLodRenderer::AccumulationPass";
+        std::string const gpu_query_name_accum_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / AccumSubRenderer::AccumulationPass";
         pipe.begin_gpu_query(ctx, gpu_query_name_accum_pass);
 #endif
 
@@ -113,13 +122,23 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
             current_material = plod_node->get_material()->get_shader();
 
-            current_material_program = _get_material_dependent_shader_program(current_material, current_material_program, program_changed);
+            auto new_plod_node_material = _get_material_dependent_shader_program(current_material, current_material_program, program_changed);
 
-            current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+            if(current_material_program != new_plod_node_material) {
+
+                current_material_program = new_plod_node_material;
+                current_material_program->apply_uniform(ctx, "p01_linear_depth_texture", 0);
+
+                //current_material_program->set_uniform(ctx, int(20), "dummy_value_ssbo_layout");
+
+                //ctx.render_context->bind_storage_buffer( ctx.shader_storage_buffer_objects.begin()->second, 20, 0, 1000);
+                //ctx.render_context->apply_storage_buffer_bindings();
+            }
 
             ctx.render_context->apply();
 
             auto plod_resource = plod_node->get_geometry();
+
 
             // retrieve frustum culling results
             std::unordered_set<lamure::node_t>& nodes_in_frustum = nodes_in_frustum_per_model[plod_node];
@@ -135,6 +154,9 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                 _upload_model_dependent_uniforms(current_material_program, ctx, plod_node, pipe);
 
                 plod_node->get_material()->apply_uniforms(ctx, current_material_program.get(), view_id);
+                plod_node->bind_time_series_data_to(ctx, current_material_program);
+
+                ctx.render_context->apply();
 
                 plod_resource->draw(ctx,
                                     context_id,
@@ -148,7 +170,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             }
             else
             {
-                Logger::LOG_WARNING << "PLodRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+                Logger::LOG_WARNING << "AccumSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
             }
         }
 
@@ -196,6 +218,8 @@ void AccumSubRenderer::_upload_model_dependent_uniforms(std::shared_ptr<ShaderPr
     current_material_shader->apply_uniform(ctx, "radius_scaling", plod_node->get_radius_scale());
     current_material_shader->apply_uniform(ctx, "max_surfel_radius", plod_node->get_max_surfel_radius());
     current_material_shader->apply_uniform(ctx, "enable_backface_culling", plod_node->get_enable_backface_culling_by_normal());
+
+    current_material_shader->apply_uniform(ctx, "has_provenance_attributes", plod_node->get_has_provenance_attributes());
 }
 
 } // namespace gua

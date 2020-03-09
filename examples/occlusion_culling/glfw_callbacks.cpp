@@ -103,10 +103,10 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         case 87: {
             if(action == 1) {
                 auto oc_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
-                bool was_enabled = oc_tri_mesh_pass->get_enable_coarse_depth_sorting();
+                bool was_enabled = oc_tri_mesh_pass->get_enable_depth_sorting();
 
                 bool will_be_enabled = !was_enabled;
-                oc_tri_mesh_pass->set_enable_coarse_depth_sorting(will_be_enabled);
+                oc_tri_mesh_pass->set_enable_depth_sorting(will_be_enabled);
 
                 std::cout << "Enable depth sorting: " << will_be_enabled << std::endl; 
 
@@ -317,11 +317,11 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
             break;
         }
 
-        case 'l': { //moves the camera to the right with respect to the camera vector described in global coordinates
+        case 'l': { //rotates the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_y_neg = true;
+                cam_navigation_state.yaw_neg = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_neg = false;            
+                cam_navigation_state.yaw_neg = false;            
             }
 
             break;
@@ -329,9 +329,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'j': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_y_pos = true;
+                cam_navigation_state.yaw_pos = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_y_pos = false;            
+                cam_navigation_state.yaw_pos = false;            
             }
 
             break;
@@ -339,9 +339,9 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'i': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_x_pos = true;
+                cam_navigation_state.pitch_pos = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_pos = false;            
+                cam_navigation_state.pitch_pos = false;            
             }
 
             break;
@@ -349,13 +349,35 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
 
         case 'k': { //moves the camera to the right with respect to the camera vector described in global coordinates
             if(1 == action) {
-                cam_navigation_state.rotate_around_x_neg = true;
+                cam_navigation_state.pitch_neg = true;
             } else if(0 == action) {
-                cam_navigation_state.rotate_around_x_neg = false;            
+                cam_navigation_state.pitch_neg = false;            
             }
 
             break;
         }
+        
+        case 'u': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.roll_neg = true;
+            } else if(0 == action) {
+                cam_navigation_state.roll_neg = false;            
+            }
+
+            break;
+        }
+
+        case 'o': { //moves the camera to the right with respect to the camera vector described in global coordinates
+            if(1 == action) {
+                cam_navigation_state.roll_pos = true;
+            } else if(0 == action) {
+                cam_navigation_state.roll_pos = false;            
+            }
+
+            break;
+        }
+
+
 
         case 't': {
             //toggle print state on keypress

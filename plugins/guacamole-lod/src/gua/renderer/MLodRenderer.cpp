@@ -140,11 +140,13 @@ void MLodRenderer::_initialize_tri_mesh_lod_program(MaterialShader* material, gu
             smap[i.first] = i.second;
         }
 
+        bool early_fragment_test_enabled = mlod_node->get_material()->get_enable_early_fragment_test();
+
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-        program->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+        program->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
 #else
         bool virtual_texturing_enabled = mlod_node->get_material()->get_enable_virtual_texturing();
-        program->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+        program->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
 #endif
         programs_[material] = program;
     }

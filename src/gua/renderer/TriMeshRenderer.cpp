@@ -91,9 +91,36 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto& target = *pipe.current_viewstate().target;
         auto const& camera = pipe.current_viewstate().camera;
 
-        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
+
+    if(desc.get_enable_depth_sorting()) {
+        auto const& frustum = pipe.current_viewstate().frustum;
+        scm::math::mat4d const view_matrix = frustum.get_view();
+
+        scm::math::mat4d const camera_matrix = scm::math::inverse(view_matrix);
+
+        gua::math::vec4f camera_space_cam_pos_homogeneous(0.0f, 0.0f, 0.0f, 1.0f);
+        gua::math::vec4f world_space_cam_pos_homogeneous = gua::math::mat4f(camera_matrix) * camera_space_cam_pos_homogeneous;
+
+        gua::math::vec3f world_space_cam_pos_euclidean(world_space_cam_pos_homogeneous[0], world_space_cam_pos_homogeneous[1], world_space_cam_pos_homogeneous[2]);
+
+        std::map<node::Node*, double> node_distances;
+
+        for(auto start_iterator = sorted_objects->second.begin(); start_iterator < sorted_objects->second.end(); ++start_iterator) {
+            auto const& current_bb = (*start_iterator)->get_bounding_box();
+            node_distances[(*start_iterator)] = scm::math::length_sqr(world_space_cam_pos_euclidean - (current_bb.max + current_bb.min)/2.0f ) ;
+        } 
+
+
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [&](node::Node* a, node::Node* b) {
+
+            return node_distances[a] < node_distances[b];
         });
+    } else {
+        std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [&](node::Node* a, node::Node* b) {
+            return reinterpret_cast<node::TriMeshNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::TriMeshNode*>(b)->get_material()->get_shader();
+
+        });
+    }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         std::string const gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / TrimeshPass";
@@ -146,11 +173,12 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                         current_shader = std::make_shared<ShaderProgram>();
 
+                        bool early_fragment_test_enabled = tri_mesh_node->get_material()->get_enable_early_fragment_test();
 #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
 #else
                         bool virtual_texturing_enabled = !pipe.current_viewstate().shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                        current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
 #endif
                         programs_[current_material] = current_shader;
                     }
@@ -302,11 +330,12 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
 
                     current_shader = std::make_shared<ShaderProgram>();
 
+                    bool early_fragment_test_enabled = tri_mesh_node->get_material()->get_enable_early_fragment_test();
     #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
+                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
     #else
                     bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
     #endif
                     programs_[current_material] = current_shader;
                 }

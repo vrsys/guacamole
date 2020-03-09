@@ -53,7 +53,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform)
+LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform), data_collection_per_context_({})
 {
     //compute bounds
     auto bvh = lamure::ren::model_database::get_instance()->get_model(model_id)->get_bvh();
@@ -87,7 +87,8 @@ void LodResource::draw(RenderContext const& ctx,
                        std::unordered_set<lamure::node_t> const& nodes_in_frustum,
                        scm::gl::primitive_topology const type,
                        scm::math::mat4d model_view_matrix,
-                       bool draw_sorted) const
+                       bool draw_sorted
+                       ) const
 {
     lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
     lamure::ren::cut_database* cuts = lamure::ren::cut_database::get_instance();

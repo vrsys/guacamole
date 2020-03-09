@@ -155,6 +155,7 @@ void BackgroundDetector::detect(unsigned char* frame, float thresh)
 	}
 #endif
     // 1. convert frame to 16 bit image
+    #pragma omp parallel for collapse(2)
     for(unsigned y = 0; y < m_h; ++y)
     {
         for(unsigned x = 0; x < m_w; ++x)
@@ -189,6 +190,7 @@ void BackgroundDetector::detect(unsigned char* frame, float thresh)
     }
     else
     {
+        #pragma omp parallel for collapse(2)
         for(unsigned y = 1; y < m_h - 1; ++y)
         {
             for(unsigned x = 1; x < m_w - 1; ++x)
@@ -265,7 +267,7 @@ void BackgroundDetector::RGB_to_CIELab()
     int c;
     double xyz[3];
 
-#pragma omp parallel for private(offset, xyz, c) shared(lab)
+#pragma omp parallel for private(xyz, c)
     for(unsigned offset = 0; offset < m_w * m_h; offset++)
     {
         // Convert RGB to XYZ
@@ -302,7 +304,7 @@ void BackgroundDetector::CIELab_to_RGB()
     double L;
     double xyz[3], rgb[3], f[3];
 
-#pragma omp parallel for private(offset, xyz, c, f, L, rgb) shared(image)
+#pragma omp parallel for private(xyz, c, f, L, rgb)
     for(unsigned offset = 0; offset < m_w * m_h; offset++)
     {
         // Convert L*a*b* to XYZ
@@ -320,7 +322,7 @@ void BackgroundDetector::CIELab_to_RGB()
         f[2] = f[1] - (double)m_lab[offset].b / 200.0; // fz
 
         xyz[0] = 65535.0 * d50_white[0] * (f[0] * f[0] * f[0] > ep ? f[0] * f[0] * f[0] : (116.0 * f[0] - 16.0) / ka);
-        xyz[1] = 65535.0 * d50_white[1] * (L > ka * ep ? pow(f[1], 3.0) : L / ka);
+        xyz[1] = 65535.0 * d50_white[1] * (L > ka * ep ? (f[1] * f[1] * f[1]) : L / ka);
         xyz[2] = 65535.0 * d50_white[2] * (f[2] * f[2] * f[2] > ep ? f[2] * f[2] * f[2] : (116.0 * f[2] - 16.0) / ka);
 
         // Convert XYZ to RGB
@@ -393,6 +395,8 @@ void BackgroundDetector::detectBackground(unsigned char* frame, float thresh)
     }
     else
     {
+
+        #pragma omp parallel for collapse(2)
         for(unsigned y = 1; y < m_h - 1; ++y)
         {
             for(unsigned x = 1; x < m_w - 1; ++x)
@@ -431,6 +435,8 @@ void BackgroundDetector::detectBackground(unsigned char* frame, float thresh)
                 }
             }
         }
+
+        #pragma omp parallel for collapse(2)
         for(unsigned y = 1; y < m_h - 1; ++y)
         {
             for(unsigned x = 1; x < m_w - 1; ++x)

@@ -30,6 +30,7 @@ out VertexData {
 @include "common/gua_vertex_shader_output.glsl"
  
 
+
 void main() {
     
     vec4 world_normal = gua_normal_matrix * vec4(VertexIn[0].pass_normal, 0.0);
@@ -74,12 +75,14 @@ void main() {
         gl_Position.z  = (gl_Position.z - 0.5) * 2.0;
         gl_Position.z  *= gl_Position.w;
 
+
         EmitVertex();
       }
 
       EndPrimitive();
       
   }
+
 
 }
 
