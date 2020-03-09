@@ -290,8 +290,8 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
             current_material = tri_mesh_node->get_material()->get_shader();
             if(current_material)
             {
-                auto shader_iterator = default_rendering_programs_.find(current_material);
-                if(shader_iterator != default_rendering_programs_.end())
+                auto shader_iterator = programs_.find(current_material);
+                if(shader_iterator != programs_.end())
                 {
                     current_shader = shader_iterator->second;
                 }
@@ -304,12 +304,12 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
                     current_shader = std::make_shared<ShaderProgram>();
 
     #ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap);
+                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap);
     #else
                     bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                    current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
+                    current_shader->set_shaders(program_stages_, std::list<std::string>(), false, smap, virtual_texturing_enabled);
     #endif
-                    default_rendering_programs_[current_material] = current_shader;
+                    programs_[current_material] = current_shader;
                 }
             }
             else
