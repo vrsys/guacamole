@@ -42,12 +42,12 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
                                          gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
     auto current_mat = reinterpret_cast<gua::node::TriMeshNode*>(trimesh_model.get())->get_material();
-    //current_mat->set_show_back_faces(true);
+    current_mat->set_show_back_faces(true);
 
     //trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
-    for(int model_idx = 0; model_idx < 20; ++model_idx) {
+    for(int model_idx = 0; model_idx < 1; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
                                              "/opt/3d_models/hairball/low_poly_hairball.dae",
@@ -55,7 +55,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
                                              gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
 
 
-        // we want to have controle over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling
+        // we want to have control over the scaling for now, so we get the matrix that was used to create the normalizatin in scaling
         auto norm_scale_mat = trimesh_model_hair->get_transform();
 
         float rand_x_trans = 3 * (std::rand() / (float)RAND_MAX) - 6;
