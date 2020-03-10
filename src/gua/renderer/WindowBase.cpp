@@ -334,7 +334,12 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
         ctx_.render_context->set_blend_state(blend_state_);
     }
 
-    fullscreen_quad_->draw(ctx_.render_context);
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        fullscreen_quad_->draw_instanced(ctx_.render_context, 2);
+#else
+        fullscreen_quad_->draw(ctx_.render_context);
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
     ctx_.render_context->reset_state_objects();
     fullscreen_shader_.unuse(ctx_);

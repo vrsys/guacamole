@@ -156,7 +156,12 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             }
             else
             { // RenderMode::Quad
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                pipe.draw_quad_instanced(2);
+#else
                 pipe.draw_quad();
+#endif
             }
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES

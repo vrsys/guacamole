@@ -121,6 +121,7 @@ class GUA_DLL Pipeline
     void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
     void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
     void draw_quad();
+    void draw_quad_instanced(const int in_instance_count);
     void draw_box();
 
 

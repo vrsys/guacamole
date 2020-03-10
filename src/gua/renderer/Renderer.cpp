@@ -188,7 +188,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                         if(img) window->display(img, false);
 
 
-#endif                  
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING         
                     }
                 }
                 else

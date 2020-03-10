@@ -34,6 +34,6 @@ void main() {
     gl_Position = vec4(gua_in_position, 1.0);
 
 #if @get_enable_multi_view_rendering@
-  	gl_ViewportIndex = 1;
+  	gl_ViewportIndex = gl_InstanceID;
 #endif
 }
