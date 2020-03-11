@@ -42,7 +42,11 @@
 //#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-#define USE_CITY_SCENE
+//#define RENDER_TRIMESH_SCENES
+//#define USE_CITY_SCENE
+
+//for !RENDER_TRIMESH_SCENES
+//#define USE_B1_SCENE
 
 
 // global variables
@@ -91,9 +95,14 @@ void configure_pipeline_descriptions() {
     //oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Any_Samples_Passed);
     oc_tri_mesh_pass->set_occlusion_query_type(gua::OcclusionQueryType::Number_Of_Samples_Passed);
 #else
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
 
-    occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::PLodPassDescription>());  
+    #ifdef RENDER_TRIMESH_SCENES
+        occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    #else
+        auto PLOD_Pass = std::make_shared<gua::PLodPassDescription>();
+        PLOD_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
+        occlusion_culling_pipeline_description->add_pass(PLOD_Pass);  
+    #endif
 #endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes
     //----------------------------------------------------------------------------------------
@@ -207,32 +216,29 @@ int main(int argc, char** argv)
     std::srand(std::time(NULL));
 #endif
 
-#ifdef USE_CITY_SCENE
-    create_simple_demo_scene(occlusion_group_node);
-#else
+
+#ifdef RENDER_TRIMESH_SCENES
+    #ifdef USE_CITY_SCENE
+        create_simple_demo_scene(occlusion_group_node);
+    #else //!USE_CITY_SCENE
+        create_raycast_test_scene(occlusion_group_node);
+    #endif // USE_CITY_SCENE
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp
     // place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
-    //create_raycast_test_scene(occlusion_group_node);
 
-    
+#else //!RENDER_TRIMESH_SCENES
 
-    create_dom_scene(occlusion_group_node);
-    
-    //create_b1_scene(occlusion_group_node);
+    #ifdef USE_B1_SCENE
+        create_b1_scene(occlusion_group_node);
 
-    //occlusion_group_node->translate(-26.6, -29.9, -40.0);
-    //occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
-    //occlusion_group_node->translate(-0.0, 15.0, -10.0);
-    //occlusion_group_node->scale(3.0);
+        occlusion_group_node->translate(-26.6, -29.9, -40.0);
+        occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
+        occlusion_group_node->translate(-0.0, 15.0, -10.0);
+        occlusion_group_node->scale(3.0);
+    #else //!USE_B1_SCENE
+        create_dom_scene(occlusion_group_node);
+    #endif // USE_B1_SCENE
 
-    
-
-    //create_child_bb_test_scene(occlusion_group_node);
-
-    // create_simple_debug_scene(occlusion_group_node);
-    // create_city_scene(occlusion_group_node);
-
-    //create_occlusion_scene(model_path_plane, model_path_town, occlusion_grou"/opt/3d_models/trees/lindenTree/lindenTree.obj"p_node);
 #endif
 
 

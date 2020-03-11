@@ -138,7 +138,25 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     //trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
-    for(int model_idx = 0; model_idx < 10; ++model_idx) {
+
+    auto trimesh_model2(
+        loader.create_geometry_from_file(std::string("cube2"),
+                                         "data/objects/cube.obj",
+                                         //"/opt/3d_models/assets/pillar/Column_Resized.obj",
+                                         material,
+                                         gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
+
+    //auto current_mat = reinterpret_cast<gua::node::TriMeshNode*>(trimesh_model.get())->get_material();
+    current_mat->set_show_back_faces(true);
+
+
+
+    //trimesh_model->scale(10.0f);
+    trimesh_model2->translate( 10.0f, 10.0f, 0.0f);
+
+    trimesh_model->add_child(trimesh_model2);
+
+    for(int model_idx = 0; model_idx < 0; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
                                              "/opt/3d_models/hairball/low_poly_hairball.dae", //"data/objects/cube.obj",
@@ -173,6 +191,8 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
         scene_root_node->add_child(trimesh_model_hair);
     }
     
+
+
     scene_root_node->add_child(trimesh_model);
 
 }
