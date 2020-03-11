@@ -144,9 +144,17 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
 
     // recreate gbuffer if resolution changed
-    if(last_resolution_ != camera.config.get_resolution())
+
+    auto adjusted_camera_resolution = camera.config.get_resolution();
+
+    #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        std::cout << "Ist an" << std::endl;
+        adjusted_camera_resolution.x *= 2;
+    #endif
+
+    if(last_resolution_ != adjusted_camera_resolution)
     {
-        last_resolution_ = camera.config.get_resolution();
+        last_resolution_ = adjusted_camera_resolution;
         reload_gbuffer = true;
     }
 
@@ -157,7 +165,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
             gbuffer_->remove_buffers(get_context());
         }
 
-        math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y));
+        math::vec2ui new_gbuf_size(std::max(1U, adjusted_camera_resolution.x), std::max(1U, adjusted_camera_resolution.y));
         gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size));
     }
 

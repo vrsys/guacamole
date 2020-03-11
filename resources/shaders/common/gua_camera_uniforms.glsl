@@ -38,7 +38,6 @@ uniform mat4 gua_normal_matrix;
 uniform mat4 gua_secondary_model_view_matrix;
 uniform mat4 gua_secondary_model_view_inverse_matrix;
 uniform mat4 gua_secondary_model_view_projection_matrix;
-uniform mat4 gua_secondary_normal_matrix;
 #endif
 uniform int  gua_rendering_mode; // 0: normal, 1: lowfi shadows, 2: hifi shadows
 

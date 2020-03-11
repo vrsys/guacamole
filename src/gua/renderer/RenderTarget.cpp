@@ -55,7 +55,6 @@ void RenderTarget::set_side_by_side_viewport_array(RenderContext const& ctx)
 								  float(resolution_.x/2), 0.0f, float(resolution_.x/2), float(resolution_.y) };
 
 	        glapi.glViewportArrayv(0, 2, v);
-
     	} else {
     		set_viewport(ctx);
     	}

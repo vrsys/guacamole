@@ -40,7 +40,9 @@
 //#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-#define USE_CITY_SCENE
+//#define USE_CITY_SCENE
+
+#define RENDER_SIDE_BY_SIDE_STEREO
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -258,17 +260,17 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
-    uint32_t res_factor = 4;
+    uint32_t res_factor = 1;
     // setup rendering pipeline and window
 
-#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
-    auto cam_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
-    auto window_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
-#else
+#ifdef RENDER_SIDE_BY_SIDE_STEREO 
     res_factor = 1;
     //twice the x resolution for side by side mode
-    auto cam_resolution = gua::math::vec2ui(2*res_factor*1280, res_factor*720);
+    auto cam_resolution = gua::math::vec2ui(  res_factor*1280, res_factor*720);
     auto window_resolution = gua::math::vec2ui( 2 * res_factor*1280, res_factor*720);
+#else
+    auto cam_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
+    auto window_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
 #endif
 
     configure_pipeline_descriptions();
@@ -280,14 +282,15 @@ int main(int argc, char** argv)
     //camera_node->translate(0, 0, 0);
     camera_node->config.set_resolution(cam_resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
-#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
-    camera_node->config.set_screen_path("/navigation_node/screen_node");
-    camera_node->config.set_output_window_name("main_window");
-#else
+#ifdef RENDER_SIDE_BY_SIDE_STEREO 
     camera_node->config.set_left_screen_path("/navigation_node/screen_node");
     camera_node->config.set_right_screen_path("/navigation_node/screen_node");
     //camera_node->config.set_left_output_window_name("main_window");
     //camera_node->config.set_right_output_window_name("main_window");
+#else
+    camera_node->config.set_screen_path("/navigation_node/screen_node");
+    camera_node->config.set_output_window_name("main_window");
+
      
 #endif
     //we associate the camera with our scenegraph
@@ -295,11 +298,11 @@ int main(int argc, char** argv)
     //and finally tell it in which window to render
     camera_node->config.set_output_window_name("main_window");
     
-#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
+#ifdef RENDER_SIDE_BY_SIDE_STEREO //MONO RENDERING
+    camera_node->config.set_enable_stereo(true);
+#else //MULTI VIEW RENDERING
     //for now, we do not render in stereo
     camera_node->config.set_enable_stereo(false);
-#else //MULTI VIEW RENDERING
-    camera_node->config.set_enable_stereo(true);
 #endif
     //we associate our current pipeline description with the camera
     camera_node->set_pipeline_description(occlusion_culling_pipeline_description);
@@ -314,14 +317,14 @@ int main(int argc, char** argv)
     window->config.set_resolution(window_resolution);
 
 
-#ifndef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING //MONO RENDERING
-    window->config.set_stereo_mode(gua::StereoMode::MONO);
-#else //MULTI VIEW RENDERING
+#ifdef RENDER_SIDE_BY_SIDE_STEREO 
     window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
     window->config.set_left_position(scm::math::vec2ui(0, 0));
     window->config.set_right_position(scm::math::vec2ui(window_resolution.x/2, 0));
     window->config.set_left_resolution(cam_resolution);
     window->config.set_right_resolution(cam_resolution);
+#else //MULTI VIEW RENDERING
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
 #endif
     /*
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {

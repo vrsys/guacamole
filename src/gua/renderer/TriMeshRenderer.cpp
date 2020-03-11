@@ -111,6 +111,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
 #else
         target.set_viewport(ctx);
+
 #endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
         int view_id(camera.config.get_view_id());
@@ -203,6 +204,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
+                current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));
+#endif
+
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)
                 {
@@ -246,9 +252,14 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 ctx.render_context->apply_program();
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-                tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+
+                        tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+
+
 #else
-                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+        tri_mesh_node->get_geometry()->draw(pipe.get_context());
+
+
 #endif
             }
         }

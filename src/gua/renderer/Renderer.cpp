@@ -181,11 +181,13 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                         if(img) window->display(img, true);
 
 #else
+
                         auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
                         if(img) window->display(img, true);
 
                         img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
                         if(img) window->display(img, false);
+
 
 
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING         
@@ -300,7 +302,10 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
 
                     if(pipe_iter == window->get_context()->render_pipelines.end())
                     {
-                        pipe = std::make_shared<Pipeline>(*window->get_context(), serialized_cam.config.get_resolution());
+                        pipe = std::make_shared<Pipeline>(*window->get_context(), scm::math::vec2ui(serialized_cam.config.get_resolution().x * 2, serialized_cam.config.get_resolution().y ) );
+
+
+
                         window->get_context()->render_pipelines.insert(std::make_pair(serialized_cam.uuid, pipe));
                     }
                     else

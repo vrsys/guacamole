@@ -158,9 +158,11 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             { // RenderMode::Quad
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-                pipe.draw_quad_instanced(2);
+            pipe.draw_quad_instanced(2);
+
 #else
-                pipe.draw_quad();
+            pipe.draw_quad();
+
 #endif
             }
 
