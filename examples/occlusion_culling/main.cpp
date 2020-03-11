@@ -42,7 +42,7 @@
 //#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-#define USE_CITY_SCENE
+//#define USE_CITY_SCENE
 
 
 // global variables
@@ -212,17 +212,20 @@ int main(int argc, char** argv)
 #else
     // add a cluster of pseudorandomly placed objects in the scene. See: scene_utils.cpp
     // place_objects_randomly(model_path, num_models_to_place, one_d_cube_size, occlusion_group_node);
-    create_raycast_test_scene(occlusion_group_node);
+    //create_raycast_test_scene(occlusion_group_node);
 
-    /*
-    create_b1_scene(occlusion_group_node);
+    
 
-    occlusion_group_node->translate(-26.6, -29.9, -40.0);
-    occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
-    occlusion_group_node->translate(-0.0, 15.0, -10.0);
-    occlusion_group_node->scale(3.0);
+    create_dom_scene(occlusion_group_node);
+    
+    //create_b1_scene(occlusion_group_node);
 
-    */
+    //occlusion_group_node->translate(-26.6, -29.9, -40.0);
+    //occlusion_group_node->rotate(-90.0, 1.0, 0.0, 0.0);
+    //occlusion_group_node->translate(-0.0, 15.0, -10.0);
+    //occlusion_group_node->scale(3.0);
+
+    
 
     //create_child_bb_test_scene(occlusion_group_node);
 
@@ -443,6 +446,7 @@ int main(int argc, char** argv)
                 print_scenegraph_once = false;
             }
 
+            //std::cout << "Trying to draw" << std::endl;
 
             // enqueue the scene graph in the gua rendering queue
             renderer.queue_draw({&graph});

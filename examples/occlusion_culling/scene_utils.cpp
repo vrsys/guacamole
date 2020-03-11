@@ -33,7 +33,49 @@ void print_draw_times(gua::Renderer const& renderer, std::shared_ptr<gua::GlfwWi
     std::cout << std::endl;
 }
 
+void create_dom_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
+     // create simple untextured material shader
+    auto lod_keep_input_desc = std::make_shared<gua::MaterialShaderDescription>("./data/materials/PLOD_use_input_color.gmd");
+    auto lod_keep_color_shader(std::make_shared<gua::MaterialShader>("PLOD_pass_input_color", lod_keep_input_desc));
+    gua::MaterialShaderDatabase::instance()->add(lod_keep_color_shader);
 
+    auto lod_rough = lod_keep_color_shader->make_new_material();
+    lod_rough->set_uniform("metalness", 0.0f);
+    lod_rough->set_uniform("roughness", 1.0f);
+    lod_rough->set_uniform("emissivity", 1.0f);
+
+
+    gua::LodLoader lod_loader;
+    //configure level-of-detail budgets
+    lod_loader.set_out_of_core_budget_in_mb(8192); //budget for ram (see htop)
+    lod_loader.set_render_budget_in_mb(4096); //budget for video ram (see nvidia-settings)
+    lod_loader.set_upload_budget_in_mb(30); //budget for max. allowed change per cut-update frame
+
+
+    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file("/mnt/ssd_lod/Dom_Halberstadt/cutout_dom_filtered.vis",
+                                                                             gua::LodLoader::MAKE_PICKABLE);
+
+    // load a sample pointcloud
+    //auto plod_node = lod_loader.load_lod_pointcloud("pointcloud",
+    //                                                "/mnt/misc/previous_mount_pitoti_data/B1_Scan/output/xyz/vis_file/b1.vis",
+    //                                                lod_rough,
+    //                                                gua::LodLoader::MAKE_PICKABLE);
+
+    uint current_offset_index = 0;
+    for(auto node : vector_of_lod_nodes) {
+
+        auto casted_plod_node = std::dynamic_pointer_cast<gua::node::PLodNode>(node);
+
+        casted_plod_node->set_max_surfel_radius(0.1f);
+        casted_plod_node->translate(current_offset_index*10.0f, 0.0, 0.0);
+
+        scene_root_node->add_child(node);
+
+        ++current_offset_index;
+    }
+
+   
+}
 
 void create_b1_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
 
@@ -55,7 +97,7 @@ void create_b1_scene(std::shared_ptr<gua::node::Node> scene_root_node) {
     lod_loader.set_upload_budget_in_mb(30); //budget for max. allowed change per cut-update frame
 
 
-    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file("/mnt/misc/previous_mount_pitoti_data/B1_Scan/output/xyz/vis_file/b1_unfiltered.vis",
+    auto vector_of_lod_nodes = lod_loader.load_lod_pointclouds_from_vis_file("/mnt/ssd_lod/B1_Scan/b1_unfiltered.vis",
                                                                              gua::LodLoader::MAKE_PICKABLE);
 
     // load a sample pointcloud

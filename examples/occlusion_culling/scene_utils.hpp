@@ -25,6 +25,8 @@ void create_street_cars(std::shared_ptr<gua::node::Node> scene_root_node,
 
 void create_b1_scene(std::shared_ptr<gua::node::Node> scene_root_node);
 
+void create_dom_scene(std::shared_ptr<gua::node::Node> scene_root_node);
+
 void create_simple_debug_scene( std::shared_ptr<gua::node::Node> scene_root_node);
 
 
