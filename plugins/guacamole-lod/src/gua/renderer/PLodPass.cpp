@@ -40,6 +40,11 @@
 
 namespace gua
 {
+
+////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<PLodPassDescription> const PipelineDescription::get_plod_pass() const { return get_pass_by_type<PLodPassDescription>(); }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PLodPassDescription::PLodPassDescription(SurfelRenderMode const mode) : PipelinePassDescription(), surfel_render_mode_(mode)
@@ -71,7 +76,9 @@ PipelinePass PLodPassDescription::make_pass(RenderContext const& ctx, Substituti
     auto renderer = std::make_shared<PLodRenderer>();
     renderer->set_global_substitution_map(substitution_map);
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) { renderer->render(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+        renderer->render_switch_occlusion_culling(pipe, desc);
+    };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

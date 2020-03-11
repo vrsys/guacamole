@@ -296,9 +296,6 @@ void TriMeshRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription c
     std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
     auto current_rasterizer_state = current_render_info.rasterizer_state;
 
-
-
-    //ctx.render_context->apply(); 
     if(std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_node)) ) {
         auto& render_target = *pipe.current_viewstate().target;
 

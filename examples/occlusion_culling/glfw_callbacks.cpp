@@ -3,6 +3,7 @@
 
 #include <gua/renderer/OcclusionCullingTriMeshPass.hpp>
 #include <gua/renderer/FullscreenColorBufferViewPass.hpp>
+#include <gua/renderer/PLodPass.hpp>
 
 extern WASD_state cam_navigation_state;
 extern bool print_times;
@@ -17,12 +18,13 @@ extern bool update_camera;
 
 extern std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description;
 
+
 uint64_t const max_occlusion_culling_fragment_treshold = 1000000;
 
 uint64_t num_occlusion_culling_fragment_threshold = 100;
 
 
-//#define OC_TRIMESH   
+#define OC_PLOD
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -119,12 +121,11 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         case 10: {
             if(action == 1) {
 
-#ifdef OC_TRIMESH
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::No_Culling);
-
+#ifdef OC_PLOD
+                occlusion_culling_pipeline_description->get_plod_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::No_Culling);
                 std::cout << "Set Occlusion_Culling_Strategy to 'No Culling'" << std::endl;
-                //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                //calling touch is necessary for guacamole to notice that the pass has ch
+                occlusion_culling_pipeline_description->get_plod_pass()->touch();
 #else
 
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::No_Culling);
@@ -139,13 +140,13 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         //scancode for 2 key
         case 11: {
             if(action == 1) {
-#ifdef OC_TRIMESH
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Naive_Stop_And_Wait);
+#ifdef OC_PLOD
+                occlusion_culling_pipeline_description->get_plod_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Naive_Stop_And_Wait);
 
 
                 std::cout << "Set Occlusion_Culling_Strategy to 'Naive Stop and Wait'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                occlusion_culling_pipeline_description->get_plod_pass()->touch();
 #else
 
                 occlusion_culling_pipeline_description->get_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling_PlusPlus);
@@ -161,12 +162,12 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         //scancode for 3 key
         case 12: {
             if(action == 1) {
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Hierarchical_Stop_And_Wait);
+                occlusion_culling_pipeline_description->get_plod_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Hierarchical_Stop_And_Wait);
 
 
                 std::cout << "Set Occlusion_Culling_Strategy to 'Hierarchical Stop and Wait'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                occlusion_culling_pipeline_description->get_plod_pass()->touch();
             }
             break;
         }
@@ -174,11 +175,11 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
         //scancode for 4 key
         case 13: {
             if(action == 1) {
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling);
+                occlusion_culling_pipeline_description->get_plod_pass()->set_occlusion_culling_strategy(gua::OcclusionCullingStrategy::Coherent_Hierarchical_Culling);
 
                 std::cout << "Set Occlusion_Culling_Strategy to 'Coherent Hierarchical Culling'" << std::endl;
                 //calling touch is necessary for guacamole to notice that the pass has changed
-                occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass()->touch();
+                occlusion_culling_pipeline_description->get_plod_pass()->touch();
             }
             break;
         }

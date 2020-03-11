@@ -22,8 +22,11 @@
 #ifndef GUA_PIPELINE_DESCRIPTION_HPP
 #define GUA_PIPELINE_DESCRIPTION_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/math.hpp>
+
 
 #include <memory>
 #include <algorithm>
@@ -45,9 +48,13 @@ class TexturedScreenSpaceQuadPassDescription;
 class FullscreenColorBufferViewPassDescription;
 class DebugViewPassDescription;
 class SSAAPassDescription;
+class PLodPassDescription;
 
 class GUA_DLL PipelineDescription
 {
+
+
+
   public:
     static std::shared_ptr<PipelineDescription> make_default();
 
@@ -77,6 +84,8 @@ class GUA_DLL PipelineDescription
     std::shared_ptr<FullscreenColorBufferViewPassDescription> const get_full_screen_color_buffer_view_pass() const;
     std::shared_ptr<DebugViewPassDescription> const get_debug_view_pass() const;
     std::shared_ptr<SSAAPassDescription> const get_ssaa_pass() const;
+    std::shared_ptr<PLodPassDescription> const get_plod_pass() const;
+
 
     void set_enable_abuffer(bool value) { enable_abuffer_ = value; }
 

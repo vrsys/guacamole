@@ -52,6 +52,9 @@
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
 
+
+
+
 bool print_times = false;
 
 bool update_camera = true;
@@ -65,7 +68,7 @@ gua::OcclusionCullingStrategy current_culling_mode;
 
 
 std::shared_ptr<gua::PipelineDescription> occlusion_culling_pipeline_description = std::make_shared<gua::PipelineDescription>();
-std::shared_ptr<gua::PipelineDescription> default_trimesh_pipeline_description = std::make_shared<gua::PipelineDescription>();
+
 
 std::string model_path = "data/objects/teapot.obj"; //place this object
 std::string model_path_bus = "/opt/3d_models/vehicle/cars/autobus/auobus.obj"; //place this object
@@ -99,9 +102,9 @@ void configure_pipeline_descriptions() {
     #ifdef RENDER_TRIMESH_SCENES
         occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     #else
-        auto PLOD_Pass = std::make_shared<gua::PLodPassDescription>();
-        PLOD_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
-        occlusion_culling_pipeline_description->add_pass(PLOD_Pass);  
+        std::shared_ptr<gua::PLodPassDescription> PLod_Pass = std::make_shared<gua::PLodPassDescription>();
+        PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
+        occlusion_culling_pipeline_description->add_pass(PLod_Pass);  
     #endif
 #endif
     occlusion_culling_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());            // geometry pass for rendering bounding boxes of nodes

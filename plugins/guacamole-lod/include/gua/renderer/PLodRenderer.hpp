@@ -36,6 +36,7 @@
 #include <gua/renderer/View.hpp>
 #include <gua/renderer/ShaderProgram.hpp>
 #include <gua/renderer/ResourceFactory.hpp>
+#include <gua/renderer/OcclusionCullingAwareRenderer.hpp>
 
 #include <gua/node/PLodNode.hpp>
 
@@ -48,12 +49,13 @@ class MaterialShader;
 class ShaderProgram;
 // class plod_shared_resources;
 
-class GUA_LOD_DLL PLodRenderer
+class GUA_LOD_DLL PLodRenderer : public OcclusionCullingAwareRenderer
 {
   public:
     PLodRenderer();
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info) override;
     void set_global_substitution_map(SubstitutionMap const& smap);
 
   private: // shader related auxiliary methods

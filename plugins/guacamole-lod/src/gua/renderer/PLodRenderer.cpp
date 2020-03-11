@@ -418,4 +418,154 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     }
 }
 
+void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info ) {
+    RenderContext const& ctx(pipe.get_context());
+    MaterialShader* current_material = current_render_info.material;
+    std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
+    auto current_rasterizer_state = current_render_info.rasterizer_state;
+
+    ///////////////////////////////////////////////////////////////////////////
+    //  retrieve current view state
+    ///////////////////////////////////////////////////////////////////////////
+    auto& scene = *pipe.current_viewstate().scene;
+    auto const& camera = pipe.current_viewstate().camera;
+    auto const& frustum = pipe.current_viewstate().frustum;
+    auto& target = *pipe.current_viewstate().target;
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+    std::string cpu_query_name_plod_total = "CPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LodPass";
+    pipe.begin_cpu_query(cpu_query_name_plod_total);
+#endif
+
+    ///////////////////////////////////////////////////////////////////////////
+    //  sort nodes
+    ///////////////////////////////////////////////////////////////////////////
+    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::PLodNode))));
+
+    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
+        return reinterpret_cast<node::PLodNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLodNode*>(b)->get_material()->get_shader();
+    });
+
+    std::vector<node::Node*> single_node;
+    single_node.push_back(current_node);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // resource initialization
+    ///////////////////////////////////////////////////////////////////////////
+    scm::math::vec2ui const& render_target_dims = camera.config.get_resolution();
+    _check_for_resource_updates(pipe, ctx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // program initialization
+    ///////////////////////////////////////////////////////////////////////////
+
+    target.set_viewport(ctx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // prepare Lamure cut-update
+    ///////////////////////////////////////////////////////////////////////////
+    lamure::context_t context_id = _register_context_in_cut_update(ctx);
+
+    // TODO: can we use  pipe.get_scene().culling_frustum here?
+    std::vector<math::vec3> frustum_corner_values = frustum.get_corners();
+    float top_minus_bottom = scm::math::length((frustum_corner_values[2]) - (frustum_corner_values[0]));
+
+    float height_divided_by_top_minus_bottom = render_target_dims[1] / (top_minus_bottom);
+
+    // create lamure camera out of gua camera values
+    lamure::ren::controller* controller = lamure::ren::controller::get_instance();
+    lamure::ren::cut_database* cuts = lamure::ren::cut_database::get_instance();
+    lamure::ren::model_database* database = lamure::ren::model_database::get_instance();
+
+    std::size_t pipe_id = (size_t)&pipe;
+    std::size_t camera_id = pipe.current_viewstate().viewpoint_uuid;
+    unsigned char view_direction = (unsigned char)pipe.current_viewstate().view_direction;
+
+    std::size_t gua_view_id = (camera_id << 8) | (std::size_t(view_direction));
+
+    lamure::view_t lamure_view_id = controller->deduce_view_id(context_id, gua_view_id);
+
+    lamure::ren::camera cut_update_cam(lamure_view_id, frustum.get_clip_near(), math::mat4f(frustum.get_view()), math::mat4f(frustum.get_projection()));
+
+    cuts->send_camera(context_id, lamure_view_id, cut_update_cam);
+    cuts->send_height_divided_by_top_minus_bottom(context_id, lamure_view_id, height_divided_by_top_minus_bottom);
+
+    auto& gua_depth_buffer = target.get_depth_buffer();
+
+    std::unordered_map<node::PLodNode*, lamure::ren::cut*> cut_map;
+    std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>> nodes_in_frustum_per_model;
+
+    for(auto const& object : single_node)
+    {
+        auto plod_node(reinterpret_cast<node::PLodNode*>(object));
+        lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
+
+        auto const& scm_model_matrix = plod_node->get_cached_world_transform();
+
+        cuts->send_transform(context_id, model_id, math::mat4f(scm_model_matrix));
+        cuts->send_rendered(context_id, model_id);
+        cuts->send_threshold(context_id, model_id, plod_node->get_error_threshold());
+
+        // update current model matrix for LodLibrary in order to make bundle pick work
+        database->get_model(model_id)->set_transform(math::mat4f(scm_model_matrix));
+
+        lamure::ren::cut& cut = cuts->get_cut(context_id, lamure_view_id, model_id);
+        cut_map.insert(std::make_pair(plod_node, &cut));
+    }
+    perform_frustum_culling_for_scene(single_node, nodes_in_frustum_per_model, cut_map, cut_update_cam, pipe);
+
+    // count splats in cut
+#if 0
+    std::size_t surfels_in_cut = 0;
+    for (auto const& object : sorted_objects->second) {
+
+      auto plod_node(reinterpret_cast<node::PLodNode*>(object));
+      lamure::model_t model_id = controller->deduce_model_id(plod_node->get_geometry_description());
+
+      auto bvh = database->get_model(model_id)->get_bvh();
+      size_t surfels_per_node_of_model = bvh->get_primitives_per_node();
+      
+      lamure::ren::cut& cut = cuts->get_cut(context_id, lamure_view_id, model_id);
+      for (auto const& node_slot_aggregate : cut.complete_set()) {
+        surfels_in_cut += surfels_per_node_of_model;
+      }
+    }
+    std::cout << "Surfels : " << surfels_in_cut << "\n";
+#endif
+
+    if(!pipe.current_viewstate().shadow_mode)
+    { // normal rendering branch
+
+        PLodPassDescription const& plod_desc = static_cast<PLodPassDescription const&>(desc);
+
+        auto const surfel_render_mode = plod_desc.mode();
+
+        for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
+        {
+            pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, single_node, nodes_in_frustum_per_model, context_id, lamure_view_id);
+        }
+    }
+    else
+    { // shadow branch
+        {
+            for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
+            {
+                pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, single_node, nodes_in_frustum_per_model, context_id, lamure_view_id);
+            }
+        }
+    }
+
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+    pipe.end_cpu_query(cpu_query_name_plod_total);
+#endif
+
+    // dispatch cut updates
+    if(previous_frame_count_ != ctx.framecount)
+    {
+        previous_frame_count_ = ctx.framecount;
+        controller->dispatch(controller->deduce_context_id(ctx.id), ctx.render_device);
+    }
+}
+
 } // namespace gua
+

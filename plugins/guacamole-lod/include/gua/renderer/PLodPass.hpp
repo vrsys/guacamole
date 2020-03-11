@@ -21,6 +21,8 @@
 #ifndef GUA_P_LOD_PASS_HPP
 #define GUA_P_LOD_PASS_HPP
 
+#include <iostream>
+
 // guacamole headers
 #include <gua/renderer/Lod.hpp>
 #include <gua/renderer/PipelinePass.hpp>
