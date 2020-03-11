@@ -73,7 +73,7 @@ std::shared_ptr<PipelinePassDescription> PLodPassDescription::make_copy() const 
 
 PipelinePass PLodPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    auto renderer = std::make_shared<PLodRenderer>();
+    auto renderer = std::make_shared<PLodRenderer>(ctx, substitution_map);
     renderer->set_global_substitution_map(substitution_map);
 
     private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {

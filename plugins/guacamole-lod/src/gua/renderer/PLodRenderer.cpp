@@ -113,7 +113,7 @@ std::vector<math::vec3> PLodRenderer::_get_frustum_corners_vs(gua::Frustum const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-PLodRenderer::PLodRenderer()
+PLodRenderer::PLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap) : OcclusionCullingAwareRenderer(ctx, smap)
 {
     std::shared_ptr<std::vector<std::shared_ptr<PLodSubRenderer>>> HQ_two_pass_splatting_pipeline_ptr = std::make_shared<std::vector<std::shared_ptr<PLodSubRenderer>>>();
     std::shared_ptr<std::vector<std::shared_ptr<PLodSubRenderer>>> LQ_one_pass_splatting_pipeline_ptr = std::make_shared<std::vector<std::shared_ptr<PLodSubRenderer>>>();
@@ -421,7 +421,7 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info ) {
     RenderContext const& ctx(pipe.get_context());
     MaterialShader* current_material = current_render_info.material;
-    std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
+    //std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
     auto current_rasterizer_state = current_render_info.rasterizer_state;
 
     ///////////////////////////////////////////////////////////////////////////

@@ -52,7 +52,7 @@ class ShaderProgram;
 class GUA_LOD_DLL PLodRenderer : public OcclusionCullingAwareRenderer
 {
   public:
-    PLodRenderer();
+    PLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
     void render(Pipeline& pipe, PipelinePassDescription const& desc);
     void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info) override;

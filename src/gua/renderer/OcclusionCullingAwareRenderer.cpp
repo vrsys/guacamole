@@ -70,11 +70,11 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     std::string v_occlusion_query_array_box = factory.read_shader_file("resources/shaders/occlusion_query_array_box.vert");
     std::string f_occlusion_query_array_box = factory.read_shader_file("resources/shaders/occlusion_query_array_box.frag");
 
-    std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
-    std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
+    //std::string v_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.vert");
+    //std::string f_default_rendering_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader.frag");
 
-    std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader_no_programmable_material.vert");
-    std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
+    //std::string v_depth_complexity_vis = factory.read_shader_file("resources/shaders/tri_mesh_shader_no_programmable_material.vert");
+    //std::string f_depth_complexity_vis = factory.read_shader_file("resources/shaders/depth_complexity_to_color.frag");
 #else
     std::string v_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.vert");
     std::string f_occlusion_query_box = Resources::lookup_shader("shaders/occlusion_query_box.frag");
@@ -83,11 +83,11 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     std::string v_occlusion_query_array_box = Resources::lookup_shader("shaders/occlusion_query_array_box.vert");
     std::string v_occlusion_query_array_box = Resources::lookup_shader("shaders/occlusion_query_array_box.frag");
 
-    std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
-    std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
+    //std::string v_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.vert");
+    //std::string f_default_rendering_vis = Resources::lookup_shader("shaders/tri_mesh_shader.frag");
 
-    std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
-    std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
+    //std::string v_depth_complexity_vis = Resources::lookup_shader("shaders/tri_mesh_shader_no_programmable_material.vert");
+    //std::string f_depth_complexity_vis = Resources::lookup_shader("shaders/depth_complexity_to_color.frag");
 #endif
 
     //default_rendering_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_default_rendering_vis);
@@ -100,8 +100,8 @@ OcclusionCullingAwareRenderer::OcclusionCullingAwareRenderer(RenderContext const
     occlusion_query_array_box_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_occlusion_query_array_box);
     occlusion_query_array_box_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_occlusion_query_array_box);
 
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
-    depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
+    //depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_VERTEX_SHADER, v_depth_complexity_vis);
+    //depth_complexity_vis_program_stages_.emplace_back(scm::gl::STAGE_FRAGMENT_SHADER, f_depth_complexity_vis);
 
 
     std::cout << "Recreated trimesh renderer" << std::endl;
@@ -153,11 +153,12 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
         occlusion_query_box_program_->set_shaders(occlusion_query_box_program_stages_, std::list<std::string>(), false, true, global_substitution_map_);
     }
 
+/*
     if(nullptr == depth_complexity_vis_program_) {
         depth_complexity_vis_program_ = std::make_shared<ShaderProgram>();
         depth_complexity_vis_program_->set_shaders(depth_complexity_vis_program_stages_, std::list<std::string>(), false, false, global_substitution_map_);
     }
-
+*/
     if (nullptr == occlusion_query_array_box_program_)
     {
         occlusion_query_array_box_program_ = std::make_shared<ShaderProgram>();
@@ -411,6 +412,8 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                             }
 
+                    
+                            
                             traverse_node(current_node,
                                           ctx, pipe, desc,
                                           render_target,
@@ -562,14 +565,17 @@ void OcclusionCullingAwareRenderer::set_occlusion_query_states(RenderContext con
 
     auto const& glapi = ctx.render_context->opengl_api();
 
+
     // we disable all color channels to save rasterization time
     glapi.glColorMask(false, false, false, false);
     glapi.glEnable(GL_POLYGON_OFFSET_FILL);
+
 
     // set depth state that tests, but does not write depth (otherwise we would have bounding box contours in the depth buffer -> not conservative anymore)
     ctx.render_context->set_rasterizer_state(rs_cull_none_);
     ctx.render_context->set_depth_stencil_state(depth_stencil_state_test_without_writing_state_);
     ctx.render_context->apply_state_objects();
+
 }
 
 
@@ -668,6 +674,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     auto occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
 
 
+
     if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
         auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
         ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
@@ -685,6 +692,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     current_shader->use(ctx);
     ctx.render_context->apply_program();
 
+
+    
 #ifdef REDUCE_STATE_CHANGE
     if(occlusion_culling_geometry_visualization_) {
         set_geometry_visualisation_states(ctx);
@@ -706,12 +715,16 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     fallback = true;
 #endif
 
+    
+
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
 
 
     std::vector<gua::node::Node*> query_nodes;
     std::vector<MinMax> bounding_boxes; 
+
+
 
     for (auto const& original_query_node : current_nodes)
         {
@@ -749,7 +762,6 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
         }
 
 
-
     uint32_t current_instance_ID = 0;
 
 
@@ -776,7 +788,6 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     ctx.render_context->apply_program();
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
-
 
     ctx.render_context->begin_query(occlusion_query_iterator->second);
     

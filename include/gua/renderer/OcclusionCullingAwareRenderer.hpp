@@ -88,10 +88,6 @@ struct MinMax {
 
 class OcclusionCullingAwareRenderer {
 public:
-    OcclusionCullingAwareRenderer() {}
-
-    ~OcclusionCullingAwareRenderer() {}
-
     OcclusionCullingAwareRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
     void render_switch_occlusion_culling(Pipeline& pipe, PipelinePassDescription const& desc);
