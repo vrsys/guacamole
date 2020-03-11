@@ -14,8 +14,8 @@ uint64_t batch_size_multi_query = 20;
 
 #define USE_PRIORITY_QUEUE
 #define DYNAMIC_BATCH_SIZE
-#define RENDER_CHILD_CLASS
-#define query_state_test
+#define CHILD_BOUNDING_BOX
+#define REDUCE_STATE_CHANGE
 //#define VERBOSE_DEBUGGING
 
 namespace
@@ -386,7 +386,7 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
 
                         bool query_reasonable = get_query_reasonable(current_node->unique_node_id());
-                        query_reasonable = true;
+                        //query_reasonable = true;
                         
                         if(!was_visible) {
 #ifdef VERBOSE_DEBUGGING
@@ -597,10 +597,7 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
     if((current_node->get_children().empty())) {
 
-
-
-#ifdef RENDER_CHILD_CLASS
-
+#ifdef REDUCE_STATE_CHANGE
         if (in_query_state_) {
             auto const& glapi = ctx.render_context->opengl_api();
             glapi.glColorMask(true, true, true, true);
@@ -610,20 +607,20 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
             ctx.render_context->apply();
             in_query_state_ = false;
         }
+#else
+        auto const& glapi = ctx.render_context->opengl_api();
+        glapi.glColorMask(true, true, true, true);
+        glapi.glDisable(GL_POLYGON_OFFSET_FILL);
+        ctx.render_context->set_depth_stencil_state(default_depth_test_);
+        ctx.render_context->set_blend_state(default_blend_state_);
+        ctx.render_context->apply();
+#endif
 
         RenderInfo current_render_info{current_material, current_shader, current_rasterizer_state};
         renderSingleNode(pipe, desc, current_node, current_render_info);
 #ifdef VERBOSE_DEBUGGING
         std::cout << "Rendering " << current_node->get_name() << std::endl;
 #endif //VERBOSE_DEBUGGING
-#else
-        render_visible_leaf(current_node,
-                            ctx, pipe,
-                            render_target,
-                            current_material,
-                            current_shader,
-                            current_rasterizer_state);
-#endif
 
 
     } else {
@@ -673,11 +670,7 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
     if(ctx.occlusion_query_objects.end() == occlusion_query_iterator ) {
         auto occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_SAMPLES_PASSED;
-        //if( OcclusionQueryType::Any_Samples_Passed == desc.get_occlusion_query_type() ) {
-        //    occlusion_query_mode = scm::gl::occlusion_query_mode::OQMODE_ANY_SAMPLES_PASSED;
-        //}
         ctx.occlusion_query_objects.insert(std::make_pair(current_node_id, ctx.render_device->create_occlusion_query(occlusion_query_mode) ) );
-
         occlusion_query_iterator = ctx.occlusion_query_objects.find(current_node_id);
     }
 
@@ -689,17 +682,10 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     bool fallback = false;
     auto current_shader = occlusion_query_array_box_program_;
 
-    if (fallback)
-    {
-        current_shader = occlusion_query_array_box_program_;
-    } else {
-        current_shader = occlusion_query_array_box_program_;
-    }
-
-
     current_shader->use(ctx);
     ctx.render_context->apply_program();
 
+#ifdef REDUCE_STATE_CHANGE
     if(occlusion_culling_geometry_visualization_) {
         set_geometry_visualisation_states(ctx);
     } else {
@@ -708,7 +694,17 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
             in_query_state_ = true;
         }
     }
+#else
+    if(occlusion_culling_geometry_visualization_) {
+        set_geometry_visualisation_states(ctx);
+    } else {
+        set_occlusion_query_states(ctx);
+    }
+#endif
 
+#ifdef CHILD_BOUNDING_BOX
+    fallback = true;
+#endif
 
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
@@ -729,7 +725,6 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
 
                 query_nodes.push_back(original_query_node);
                 bounding_boxes.push_back(bounding_box);
-
 
 
             } else {
@@ -787,50 +782,9 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     
 
     auto const& glapi = ctx.render_context->opengl_api();
-    // std::cout<< "RENDERING INSTANCES: " << current_instance_ID << std::endl;
     glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
-
-
-    /*
-    for (auto const& original_query_node : current_nodes)
-    {
-        if (fallback || original_query_node->get_children().empty())
-        {
-            // original draw call
-            auto world_space_bounding_box = original_query_node->get_bounding_box();
-
-            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.min), "world_space_bb_min");
-            current_shader->set_uniform(ctx, scm::math::vec3f(world_space_bounding_box.max), "world_space_bb_max");
-
-            ctx.render_context->apply_program();
-
-            set_last_visibility_check_frame_id(original_query_node->unique_node_id(), in_camera_uuid, current_frame_id);
-
-            auto const& glapi = ctx.render_context->opengl_api();
-
-            //ctx.render_context->apply();
-            //scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
-
-            glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, 1);
-
-
-        } else {
-
-            find_tightest_bounding_volume(original_query_node,
-                                          ctx,
-                                          world_space_cam_pos,
-                                          current_shader,
-                                          in_camera_uuid,
-                                          current_frame_id, 3, 1.4f);
-        }
-
-    }
-    */
-
     ctx.render_context->end_query(occlusion_query_iterator->second);
-
 
 
     if (query_last_frame)
@@ -971,8 +925,6 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
             std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator > failed_multiquery_queue;
 
             for (auto const& node : front_query_vector) {
-
-                //set_visibility(node->unique_node_id(), in_camera_uuid, true);
                 
                 auto node_distance_pair_to_insert = std::make_pair(node,
                     scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(node, world_space_cam_pos) ) ) ;
@@ -1041,7 +993,6 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
     } else {
 
         for (auto const& current_node : front_query_vector) {
-            //std::cout<< " frame " << current_frame_id << " from " <<current_node->get_name()<<" result "<< query_result<<std::endl;
             set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
         }
     }
@@ -1050,58 +1001,6 @@ void OcclusionCullingAwareRenderer::handle_returned_query(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void OcclusionCullingAwareRenderer::render_visible_leaf(
-    gua::node::Node* current_query_node,
-    RenderContext const& ctx,
-    Pipeline& pipe,
-    RenderTarget& render_target,
-    MaterialShader* current_material,
-    std::shared_ptr<ShaderProgram> current_shader,
-    scm::gl::rasterizer_state_ptr current_rasterizer_state)
-{
-
-
-
-
-    if (in_query_state_ == true ) {
-        auto const& glapi = ctx.render_context->opengl_api();
-        glapi.glColorMask(true, true, true, true);
-        glapi.glDisable(GL_POLYGON_OFFSET_FILL);
-        ctx.render_context->set_depth_stencil_state(default_depth_test_);
-        ctx.render_context->set_blend_state(default_blend_state_);
-        ctx.render_context->apply();
-        in_query_state_ = false;
-
-    }
-
-
-
-    //make sure that we currently have a trimesh node in our hands
-    if(std::type_index(typeid(node::TriMeshNode)) == std::type_index(typeid(*current_query_node)) ) {
-
-        //std::cout << "ASSUMING THAT " << current_node->get_name() << " is a trimeshnode" << std::endl;
-        auto tri_mesh_node(reinterpret_cast<node::TriMeshNode*>(current_query_node));
-
-
-        if(!depth_complexity_visualization_) {
-            switch_state_based_on_node_material(ctx, tri_mesh_node, current_shader, current_material, render_target,
-                                                pipe.current_viewstate().shadow_mode, pipe.current_viewstate().camera.uuid);
-        } else {
-            switch_state_for_depth_complexity_vis(ctx, current_shader);
-        }
-
-
-        if(current_shader && tri_mesh_node->get_geometry())
-        {
-            upload_uniforms_for_node(ctx, tri_mesh_node, current_shader, pipe, current_rasterizer_state);
-            tri_mesh_node->get_geometry()->draw(pipe.get_context());
-        }
-
-    }
-
-
-}
-
 std::vector<gua::node::Node*> OcclusionCullingAwareRenderer::find_tightest_bounding_volume(
     gua::node::Node* queried_node,
     RenderContext const& ctx,
@@ -1154,7 +1053,6 @@ std::vector<gua::node::Node*> OcclusionCullingAwareRenderer::find_tightest_bound
 
             }
 
-
             // if the vector is empty it means the all the tighter node is leaf and thus is already queried
             if (!checked_nodes_vector.empty())
             {
@@ -1179,8 +1077,6 @@ std::vector<gua::node::Node*> OcclusionCullingAwareRenderer::find_tightest_bound
         return distance_a < distance_b;
     }  );
 
-    //instanced_array_draw(tightest_nodes_vector, ctx, current_shader, in_camera_uuid, current_frame_id);
-
     return tightest_nodes_vector;
 
 }
@@ -1204,15 +1100,12 @@ bool OcclusionCullingAwareRenderer::check_children_surface_area(
         {
             for (auto const& child: children_vector)
             {
-                // sum of the surface area of every children node of every parent node in the vactor
+                // sum of the surface area of every children node of every parent node in the vector
                 children_surface_area += child->get_bounding_box().surface_area();
             }
         }
 
-
         else {
-            // what if there are both leaf and interior nodes in the in_parent vector????
-            // include the leaf
             children_surface_area += parent_node->get_bounding_box().surface_area();
         }
     }
@@ -1349,10 +1242,6 @@ bool OcclusionCullingAwareRenderer::is_inside(gua::math::vec3f const& intersecti
 
 //Rendering related
 ////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 void OcclusionCullingAwareRenderer::instanced_array_draw(
     std::vector<gua::node::Node*> const& leaf_node_vector,
     RenderContext const& ctx,
@@ -1385,12 +1274,6 @@ void OcclusionCullingAwareRenderer::instanced_array_draw(
         ++current_instance_ID;
     }
 
-
-    //if(current_instance_ID > 1 && leaf_node_vector.size() > 1) {
-    //    std::cout << "RENDERING CHILDREN INSTEAD OF PARENT" << std::endl;
-    //}
-    //scm::gl::context_vertex_input_guard vig(ctx.render_context);
-
     ctx.render_context->bind_vertex_array(empty_vao_layout_);
     ctx.render_context->apply_vertex_input();
 
@@ -1401,8 +1284,6 @@ void OcclusionCullingAwareRenderer::instanced_array_draw(
     glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
 }
-
-
 
 
 
@@ -1420,126 +1301,6 @@ void OcclusionCullingAwareRenderer::unbind_and_reset(RenderContext const& ctx, R
 
     ctx.render_context->reset_state_objects();
     ctx.render_context->sync();
-}
-
-
-void OcclusionCullingAwareRenderer::upload_uniforms_for_node(
-    RenderContext const& ctx,
-    node::TriMeshNode* tri_mesh_node,
-    std::shared_ptr<ShaderProgram>& current_shader,
-    Pipeline& pipe,
-    scm::gl::rasterizer_state_ptr& current_rasterizer_state)
-{
-
-    auto& scene = *pipe.current_viewstate().scene;
-    auto const node_world_transform = tri_mesh_node->get_latest_cached_world_transform(ctx.render_window);
-
-
-    auto model_view_mat = scene.rendering_frustum.get_view() * node_world_transform;
-    UniformValue normal_mat(math::mat4f(scm::math::transpose(scm::math::inverse(node_world_transform))));
-
-    int rendering_mode = pipe.current_viewstate().shadow_mode ? (tri_mesh_node->get_shadow_mode() == ShadowMode::HIGH_QUALITY ? 2 : 1) : 0;
-
-    current_shader->apply_uniform(ctx, "gua_model_matrix", math::mat4f(node_world_transform));
-    current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
-    current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
-    current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
-
-    // lowfi shadows dont need material input
-    if(rendering_mode != 1)
-    {
-        auto view_id = pipe.current_viewstate().camera.config.get_view_id();
-        tri_mesh_node->get_material()->apply_uniforms(ctx, current_shader.get(), view_id);
-    }
-
-    bool show_backfaces = tri_mesh_node->get_material()->get_show_back_faces();
-    bool render_wireframe = tri_mesh_node->get_material()->get_render_wireframe();
-
-
-    if(show_backfaces)
-    {
-        if(render_wireframe)
-        {
-            current_rasterizer_state = rs_wireframe_cull_none_;
-        }
-        else
-        {
-            current_rasterizer_state = rs_cull_none_;
-        }
-    }
-    else
-    {
-        if(render_wireframe)
-        {
-            current_rasterizer_state = rs_wireframe_cull_back_;
-        }
-        else
-        {
-            current_rasterizer_state = rs_cull_back_;
-        }
-    }
-    ctx.render_context->apply_program();
-}
-
-void OcclusionCullingAwareRenderer::switch_state_based_on_node_material(RenderContext const& ctx, node::TriMeshNode* tri_mesh_node, std::shared_ptr<ShaderProgram>& current_shader,
-        MaterialShader* current_material, RenderTarget const& render_target, bool shadow_mode, std::size_t cam_uuid) {
-
-    if(current_material != tri_mesh_node->get_material()->get_shader())
-    {
-        current_material = tri_mesh_node->get_material()->get_shader();
-        if(current_material)
-        {
-            auto shader_iterator = default_rendering_programs_.find(current_material);
-            if(shader_iterator != default_rendering_programs_.end())
-            {
-                current_shader = shader_iterator->second;
-            }
-            else
-            {
-                auto smap = global_substitution_map_;
-                for(const auto& i : current_material->generate_substitution_map())
-                    smap[i.first] = i.second;
-
-                current_shader = std::make_shared<ShaderProgram>();
-
-                bool early_fragment_test_enabled = tri_mesh_node->get_material()->get_enable_early_fragment_test();
-#ifndef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap);
-#else
-                bool virtual_texturing_enabled = !shadow_mode && tri_mesh_node->get_material()->get_enable_virtual_texturing();
-                current_shader->set_shaders(default_rendering_program_stages_, std::list<std::string>(), false, early_fragment_test_enabled, smap, virtual_texturing_enabled);
-#endif
-                default_rendering_programs_[current_material] = current_shader;
-            }
-        }
-        else
-        {
-            Logger::LOG_WARNING << "OcclusionCullingTriMeshPass::process(): Cannot find material: " << tri_mesh_node->get_material()->get_shader_name() << std::endl;
-        }
-        if(current_shader)
-        {
-            current_shader->use(ctx);
-            current_shader->set_uniform(ctx, math::vec2ui(render_target.get_width(), render_target.get_height()),
-                                        "gua_resolution"); // TODO: pass gua_resolution. Probably should be somehow else implemented
-            current_shader->set_uniform(ctx, 1.0f / render_target.get_width(), "gua_texel_width");
-            current_shader->set_uniform(ctx, 1.0f / render_target.get_height(), "gua_texel_height");
-            // hack
-            current_shader->set_uniform(ctx, ::get_handle(render_target.get_depth_buffer()), "gua_gbuffer_depth");
-
-
-#ifdef GUACAMOLE_ENABLE_VIRTUAL_TEXTURING
-            if(!shadow_mode)
-            {
-                VTContextState* vt_state = &VTBackend::get_instance().get_state(cam_uuid);
-
-                if(vt_state && vt_state->has_camera_)
-                {
-                    current_shader->set_uniform(ctx, vt_state->feedback_enabled_, "enable_feedback");
-                }
-            }
-#endif
-        }
-    }
 }
 
 

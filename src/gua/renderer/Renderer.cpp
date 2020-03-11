@@ -95,7 +95,7 @@ Renderer::~Renderer() { stop(); }
 
 void Renderer::renderclient(Mailbox in, std::string window_name)
 {
-    FpsCounter fpsc(1);
+    FpsCounter fpsc(5);
     fpsc.start();
 
     for(auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in))
