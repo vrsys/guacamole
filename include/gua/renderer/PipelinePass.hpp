@@ -148,7 +148,7 @@ class GUA_DLL PipelinePassDescription
   private:
     void* user_data_ = nullptr;
 
-    bool enable_depth_sorting_ = true;
+    bool enable_depth_sorting_ = false;
 
     // describes the occlusion culling strategy
     OcclusionCullingStrategy occlusion_culling_strategy_ = OcclusionCullingStrategy::No_Culling;
