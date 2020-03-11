@@ -42,7 +42,7 @@
 //#define OCCLUSION_TRIMESH_PASS
 //#define AUTO_ANIMATION
 
-//#define USE_CITY_SCENE
+#define USE_CITY_SCENE
 
 
 // global variables
