@@ -264,6 +264,7 @@ if(is_instanced_side_by_side_enabled) {
         gl_program->uniform("light_id", 0, int(i));
         ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
 
+std::cout << "AFTER 1" << std::endl;
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 if(is_instanced_side_by_side_enabled) {
         ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 1, 0, 0);
