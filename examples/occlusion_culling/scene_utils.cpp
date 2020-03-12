@@ -47,7 +47,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     //trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
-    for(int model_idx = 0; model_idx < 10; ++model_idx) {
+    for(int model_idx = 0; model_idx < 0; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
                                              "/opt/3d_models/hairball/low_poly_hairball.dae",

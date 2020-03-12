@@ -27,6 +27,7 @@
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -110,6 +111,16 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
 }
 void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 {
+
+        auto const& camera = pipe.current_viewstate().camera;
+
+        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        bool is_instanced_side_by_side_enabled = false;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+            if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+                is_instanced_side_by_side_enabled = true;
+            }
+#endif
     if(private_.is_enabled_) {
         auto const& ctx(pipe.get_context());
 
@@ -142,6 +153,8 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
                 u.second.apply(ctx, u.first, ctx.render_context->current_program(), 0);
             }
 
+
+
             pipe.bind_gbuffer_input(shader_);
             pipe.bind_light_table(shader_);
 
@@ -157,13 +170,13 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             else
             { // RenderMode::Quad
 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-            pipe.draw_quad_instanced(2);
 
-#else
-            pipe.draw_quad();
 
-#endif
+if(is_instanced_side_by_side_enabled) {
+    pipe.draw_quad_instanced(2);
+} else {
+    pipe.draw_quad();
+}
             }
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES

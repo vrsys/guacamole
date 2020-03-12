@@ -29,6 +29,7 @@
 #include <gua/renderer/Pipeline.hpp>
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <vector>
 
 namespace
@@ -121,6 +122,17 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
+        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+
+
+        bool is_instanced_side_by_side_enabled = false;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+            is_instanced_side_by_side_enabled = true;
+        }
+#endif
+
         // loop through all objects, sorted by material ----------------------------
         for(auto const& object : sorted_objects->second)
         {
@@ -204,10 +216,10 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-                auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
-                current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));
-#endif
+                if(is_instanced_side_by_side_enabled) {
+                    auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
+                    current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));
+                }
 
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)
@@ -251,16 +263,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_rasterizer_state = rs_cull_none_;
                 ctx.render_context->apply_program();
 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                if(is_instanced_side_by_side_enabled) {
+                    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                } else {
 
-                        tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context());                   
+                }
 
-
-#else
-        tri_mesh_node->get_geometry()->draw(pipe.get_context());
-
-
-#endif
             }
         }
 

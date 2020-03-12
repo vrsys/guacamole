@@ -56,27 +56,32 @@ void CameraUniformBlock::update(
         noise_texture_ = TextureDatabase::instance()->lookup("gua_noise_texture")->get_handle(context);
     }
 
+    // left camera
     auto camera_position(cam.get_camera_position());
-    auto secondary_camera_position(secondary_cam.get_camera_position());
     auto projection(cam.get_projection());
-    auto secondary_projection(secondary_cam.get_projection());
     auto view(cam.get_view());
-    auto secondary_view(secondary_cam.get_view());
     auto projection_inv(scm::math::inverse(projection));
-    auto secondary_projection_inv(scm::math::inverse(secondary_projection));
-
     auto view_projection = projection * view;
+
+
+    // right camera
+    auto secondary_camera_position(secondary_cam.get_camera_position());
+    auto secondary_projection(secondary_cam.get_projection());
+    auto secondary_view(secondary_cam.get_view());
+    auto secondary_projection_inv(scm::math::inverse(secondary_projection));
     auto secondary_view_projection = secondary_projection * secondary_view;
+
     uniform_block_.begin_manipulation(context.render_context);
     {
-
+        // left camera
         uniform_block_->view = view;
         uniform_block_->projection = projection;
         uniform_block_->view_projection = view_projection;
         uniform_block_->projection_inverse = projection_inv;
         uniform_block_->view_projection_inverse = scm::math::inverse(view_projection);
         uniform_block_->position = math::vec4(camera_position, 1.0);
-
+        
+        // right camera
         uniform_block_->secondary_view = secondary_view;
         uniform_block_->secondary_projection = secondary_projection;
         uniform_block_->secondary_projection_inverse = secondary_projection_inv;
@@ -86,10 +91,12 @@ void CameraUniformBlock::update(
 
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
+
         for(unsigned i(0); i < 64 && i < clipping_planes.size(); ++i)
         {
             uniform_block_->clipping_planes[i] = math::vec4f(clipping_planes[i]);
         }
+
         uniform_block_->clipping_plane_count = clipping_planes.size();
         uniform_block_->cyclops_position = math::vec4(cyclops_position, 1.0);
         uniform_block_->clip_near = cam.get_clip_near();

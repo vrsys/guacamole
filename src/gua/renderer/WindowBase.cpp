@@ -238,19 +238,20 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
-    case StereoMode::SEPARATE_WINDOWS:
-    case StereoMode::MONO:
     case StereoMode::SIDE_BY_SIDE:
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING 
     if(is_left) {
         auto adjusted_resolution = config.get_left_resolution();
         adjusted_resolution.x *= 2;
         display(texture, adjusted_resolution, config.get_left_position(), WindowBase::FULL, is_left, true);
-    break;
-    } else {
-    break;
     }
-#endif
+
+    break;
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    case StereoMode::SEPARATE_WINDOWS:
+    case StereoMode::MONO:
+
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
     case StereoMode::NVIDIA_3D_VISION:
 #endif

@@ -43,6 +43,7 @@
 //#define USE_CITY_SCENE
 
 #define RENDER_SIDE_BY_SIDE_STEREO
+//#define RENDER_ANAGLYPH_STEREO
 
 // global variables
 extern WASD_state cam_navigation_state;  //only declared in main - definition is in navigation.cpp
@@ -263,11 +264,12 @@ int main(int argc, char** argv)
     uint32_t res_factor = 1;
     // setup rendering pipeline and window
 
-#ifdef RENDER_SIDE_BY_SIDE_STEREO 
-    res_factor = 1;
+#ifdef RENDER_SIDE_BY_SIDE_STEREO
     //twice the x resolution for side by side mode
     auto cam_resolution = gua::math::vec2ui(  res_factor*1280, res_factor*720);
     auto window_resolution = gua::math::vec2ui( 2 * res_factor*1280, res_factor*720);
+
+
 #else
     auto cam_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
     auto window_resolution = gua::math::vec2ui(res_factor*1280, res_factor*720);
@@ -282,7 +284,7 @@ int main(int argc, char** argv)
     //camera_node->translate(0, 0, 0);
     camera_node->config.set_resolution(cam_resolution);
     //we tell the camera to which screen it belongs (camera position and screen boundaries define a frustum)
-#ifdef RENDER_SIDE_BY_SIDE_STEREO 
+#if defined (RENDER_SIDE_BY_SIDE_STEREO) || defined (RENDER_ANAGLYPH_STEREO)   
     camera_node->config.set_left_screen_path("/navigation_node/screen_node");
     camera_node->config.set_right_screen_path("/navigation_node/screen_node");
     //camera_node->config.set_left_output_window_name("main_window");
@@ -290,15 +292,13 @@ int main(int argc, char** argv)
 #else
     camera_node->config.set_screen_path("/navigation_node/screen_node");
     camera_node->config.set_output_window_name("main_window");
-
-     
 #endif
     //we associate the camera with our scenegraph
     camera_node->config.set_scene_graph_name("main_scenegraph");
     //and finally tell it in which window to render
     camera_node->config.set_output_window_name("main_window");
     
-#ifdef RENDER_SIDE_BY_SIDE_STEREO //MONO RENDERING
+#if defined (RENDER_SIDE_BY_SIDE_STEREO) || defined (RENDER_ANAGLYPH_STEREO)   
     camera_node->config.set_enable_stereo(true);
 #else //MULTI VIEW RENDERING
     //for now, we do not render in stereo
@@ -317,15 +317,22 @@ int main(int argc, char** argv)
     window->config.set_resolution(window_resolution);
 
 
-#ifdef RENDER_SIDE_BY_SIDE_STEREO 
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+#if defined RENDER_SIDE_BY_SIDE_STEREO || defined RENDER_ANAGLYPH_STEREO   
     window->config.set_left_position(scm::math::vec2ui(0, 0));
-    window->config.set_right_position(scm::math::vec2ui(window_resolution.x/2, 0));
     window->config.set_left_resolution(cam_resolution);
     window->config.set_right_resolution(cam_resolution);
-#else //MULTI VIEW RENDERING
+
+  #ifdef RENDER_SIDE_BY_SIDE_STEREO
+    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    window->config.set_right_position(scm::math::vec2ui(window_resolution.x/2, 0));
+  #else 
+    window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+    window->config.set_right_position(scm::math::vec2ui(0, 0));
+  #endif
+#else // RENDER_SIDE_BY_SIDE_STEREO
     window->config.set_stereo_mode(gua::StereoMode::MONO);
 #endif
+
     /*
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);

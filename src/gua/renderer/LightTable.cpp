@@ -8,6 +8,14 @@ void LightTable::remove_buffers(RenderContext const& ctx)
     {
         light_bitset_->make_non_resident(ctx);
     }
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(secondary_light_bitset_)
+    {
+        secondary_light_bitset_->make_non_resident(ctx);
+    }
+#endif
+
 }
 
 math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const& resolution, LightTable::array_type const& lights, int tile_power, int sun_lights_num)
@@ -59,9 +67,32 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
         Logger::LOG_DEBUG << "Size of LightBlock: " << sizeof(LightBlock) << std::endl;
     }
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    // create secondary bitset if necessary
+    if(!secondary_light_bitset_ || secondary_light_bitset_->width() < width || secondary_light_bitset_->height() < height)
+    {
+        scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
+
+        if(secondary_light_bitset_)
+        {
+            secondary_light_bitset_->make_non_resident(ctx);
+            secondary_light_bitset_.reset();
+        }
+        secondary_light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words, scm::gl::FORMAT_R_32UI, 1, state);
+        light_bitset_words_ = light_bitset_words;
+        Logger::LOG_DEBUG << "Secondary Light bitset allocation for " << light_bitset_words << " words" << std::endl;
+        Logger::LOG_DEBUG << "Size of LightBlock: " << sizeof(LightBlock) << std::endl;
+    }
+#endif
+
     // clear bitset
     ctx.render_context->clear_image_sub_data(
         light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    ctx.render_context->clear_image_sub_data(
+        secondary_light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
+#endif
 
     // upload light UBO
     bool needs_update(false);
