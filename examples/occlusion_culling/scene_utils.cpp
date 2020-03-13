@@ -36,7 +36,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 
     auto trimesh_model(
         loader.create_geometry_from_file(std::string("cube"),
-                                         "data/objects/cube.obj",
+                                         "data/objects/icosphere.obj",
                                          //"/opt/3d_models/assets/pillar/Column_Resized.obj",
                                          material,
                                          gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));

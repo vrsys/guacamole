@@ -215,11 +215,12 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_model_view_matrix", math::mat4f(model_view_mat));
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
-
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
                 if(is_instanced_side_by_side_enabled) {
                     auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
                     current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));
                 }
+#endif
 
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)

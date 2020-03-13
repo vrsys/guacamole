@@ -1,3 +1,5 @@
+#include <gua/config.hpp>
+
 #include <gua/renderer/LightTable.hpp>
 
 namespace gua
@@ -63,14 +65,21 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     // create secondary bitset if necessary
-        if(secondary_light_bitset_)
-        {
+//        if(secondary_light_bitset_)
+//        {
             secondary_light_bitset_->make_non_resident(ctx);
             secondary_light_bitset_.reset();
-        }
+//        }
 #endif
         }
         light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words, scm::gl::FORMAT_R_32UI, 1, state);
+      
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        std::cout << "CREATED SECONDARY LIGHT BITSET" << std::endl;
+        secondary_light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words, scm::gl::FORMAT_R_32UI, 1, state);
+#endif  
+
+
         light_bitset_words_ = light_bitset_words;
         Logger::LOG_DEBUG << "Light bitset allocation for " << light_bitset_words << " words" << std::endl;
         Logger::LOG_DEBUG << "Size of LightBlock: " << sizeof(LightBlock) << std::endl;
@@ -83,7 +92,7 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     ctx.render_context->clear_image_sub_data(
-        secondary_light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
+    secondary_light_bitset_->get_buffer(ctx), scm::gl::texture_region(math::vec3ui(0, 0, 0), math::vec3ui(width, height, light_bitset_words_)), 0, scm::gl::FORMAT_R_32UI, 0);
 #endif
 
     // upload light UBO
