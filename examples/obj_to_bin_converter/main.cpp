@@ -54,20 +54,20 @@ int main(int argc, char** argv)
 
     std::cout << "start loading " << obj_file << std::endl;
     gua::TriMeshLoader loader;
-    auto obj_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , obj_file.c_str(), /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
+    auto obj_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , obj_file.c_str(), gua::TriMeshLoader::LOAD_MATERIALS  /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/));
     
     unsigned mesh_counter = 0;
     if(obj_node->get_children().empty()){
         std::string filename(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node));
-        t_node->get_geometry()->save_to_binary((const char*) filename.c_str()/*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary((const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
         ++mesh_counter;
         std::cout << "saved " << filename << std::endl;
     }
     for(unsigned i = 0; i < obj_node->get_children().size(); ++i){
         std::string filename(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node->get_children()[i]));
-        t_node->get_geometry()->save_to_binary((const char*) filename.c_str()/*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary((const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
         ++mesh_counter;
         std::cout << "saved " << filename << std::endl;
     }
