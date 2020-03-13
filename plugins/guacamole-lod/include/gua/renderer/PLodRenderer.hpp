@@ -58,6 +58,7 @@ class GUA_LOD_DLL PLodRenderer : public OcclusionCullingAwareRenderer
     void renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info) override;
     void set_global_substitution_map(SubstitutionMap const& smap);
 
+
   private: // shader related auxiliary methods
     void perform_frustum_culling_for_scene(std::vector<node::Node*>& models,
                                            std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& culling_results_per_model,

@@ -601,7 +601,13 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
         std::vector<std::pair<gua::node::Node*, double> >, NodeDistancePairComparator >& traversal_priority_queue, std::size_t in_camera_uuid
         ,int64_t current_frame_id) {
 
-    if((current_node->get_children().empty())) {
+
+    bool render_and_traverse = false;
+    if (current_node->get_type_string() ==  "<TriMeshNode>" || current_node->get_type_string() ==  "<PLodNode>") {
+        render_and_traverse = true;
+    }
+
+    if((current_node->get_children().empty()) || render_and_traverse) {
 
 #ifdef REDUCE_STATE_CHANGE
         if (in_query_state_) {
@@ -640,6 +646,19 @@ void OcclusionCullingAwareRenderer::traverse_node(gua::node::Node* current_node,
 
         //set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
 
+
+    }
+
+    if (render_and_traverse) {
+
+        for (auto& child : current_node->get_children())
+        {
+            auto child_node_distance_pair_to_insert = std::make_pair(child.get(),
+                    scm::math::length_sqr(world_space_cam_pos - find_raycast_intersection(child.get(), world_space_cam_pos) ) ) ;
+            traversal_priority_queue.push(child_node_distance_pair_to_insert);
+        }
+
+        //set_visibility(current_node->unique_node_id(), in_camera_uuid, false);
 
     }
 }

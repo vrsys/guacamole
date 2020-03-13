@@ -18,41 +18,46 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-#ifndef GUA_P_LOD_PASS_HPP
-#define GUA_P_LOD_PASS_HPP
 
-#include <iostream>
+#ifndef GUA_DEPTH_COMPLEXITY_VIS_SUB_RENDERER_HPP
+#define GUA_DEPTH_COMPLEXITY_VIS_SUB_RENDERER_HPP
 
-// guacamole headers
-#include <gua/renderer/Lod.hpp>
-#include <gua/renderer/PipelinePass.hpp>
+#include <gua/renderer/Pipeline.hpp>
+#include <gua/renderer/PLodSubRenderer.hpp>
 
 namespace gua
 {
-class GUA_LOD_DLL PLodPassDescription : public PipelinePassDescription
+class PLodSubRenderer;
+
+class GUA_LOD_DLL DepthComplexityVisSubRenderer : public PLodSubRenderer
 {
-  public: // typedefs, enums
-    enum SurfelRenderMode
-    {
-        LQ_ONE_PASS = 0,
-        HQ_TWO_PASS = 1,
-        DEPTH_COMPLEXITY_VIS_PASS = 2
-    };
-
-    friend class Pipeline;
-
   public:
-    PLodPassDescription(SurfelRenderMode const mode = SurfelRenderMode::HQ_TWO_PASS);
-    PLodPassDescription& mode(SurfelRenderMode const mode);
-    SurfelRenderMode mode() const;
+    DepthComplexityVisSubRenderer();
 
-    std::shared_ptr<PipelinePassDescription> make_copy() const override;
-    PipelinePass make_pass(RenderContext const&, SubstitutionMap&) override;
+    virtual void create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources) override;
+
+    virtual void render_sub_pass(Pipeline& pipe,
+                                 PipelinePassDescription const& desc,
+                                 gua::plod_shared_resources& shared_resources,
+                                 std::vector<node::Node*>& sorted_models,
+                                 std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
+                                 lamure::context_t context_id,
+                                 lamure::view_t lamure_view_id) override;
+
+  
+  protected:
+    scm::gl::depth_stencil_state_ptr depth_stencil_state_writing_without_test_state_ = nullptr;
+    scm::gl::blend_state_ptr color_accumulation_state_ = nullptr;
+
+
+  private: // shader related auxiliary methods
+    virtual void _load_shaders();
+
+    void _upload_model_dependent_uniforms(std::shared_ptr<ShaderProgram> const& current_material_shader, RenderContext const& ctx, node::PLodNode* plod_node, gua::Pipeline& pipe);
 
   private:
-    SurfelRenderMode surfel_render_mode_;
+    scm::gl::rasterizer_state_ptr no_backface_culling_rasterizer_state_;
 };
-
 } // namespace gua
 
-#endif // GUA_P_LOD_PASS_HPP
+#endif // GUA_DEPTH_COMPLEXITY_VIS_SUB_RENDERER_HPP

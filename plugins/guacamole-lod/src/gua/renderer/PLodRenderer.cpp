@@ -25,6 +25,7 @@
 
 // sub rendering passes
 #include <gua/renderer/LowQualitySplattingSubRenderer.hpp>
+#include <gua/renderer/DepthComplexityVisSubRenderer.hpp>
 #include <gua/renderer/NormalizationSubRenderer.hpp>
 #include <gua/renderer/AccumSubRenderer.hpp>
 #include <gua/renderer/DepthSubRenderer.hpp>
@@ -117,6 +118,7 @@ PLodRenderer::PLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap
 {
     std::shared_ptr<std::vector<std::shared_ptr<PLodSubRenderer>>> HQ_two_pass_splatting_pipeline_ptr = std::make_shared<std::vector<std::shared_ptr<PLodSubRenderer>>>();
     std::shared_ptr<std::vector<std::shared_ptr<PLodSubRenderer>>> LQ_one_pass_splatting_pipeline_ptr = std::make_shared<std::vector<std::shared_ptr<PLodSubRenderer>>>();
+    std::shared_ptr<std::vector<std::shared_ptr<PLodSubRenderer>>> depth_complexity_vis_pass_pipeline_ptr = std::make_shared<std::vector<std::shared_ptr<PLodSubRenderer>>>();
 
     HQ_two_pass_splatting_pipeline_ptr->push_back(std::make_shared<LogToLinSubRenderer>());
     HQ_two_pass_splatting_pipeline_ptr->push_back(std::make_shared<DepthSubRenderer>());
@@ -125,8 +127,10 @@ PLodRenderer::PLodRenderer(RenderContext const& ctx, SubstitutionMap const& smap
 
     LQ_one_pass_splatting_pipeline_ptr->push_back(std::make_shared<LowQualitySplattingSubRenderer>());
 
+    depth_complexity_vis_pass_pipeline_ptr->push_back(std::make_shared<DepthComplexityVisSubRenderer>());
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::HQ_TWO_PASS] = HQ_two_pass_splatting_pipeline_ptr;
     plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS] = LQ_one_pass_splatting_pipeline_ptr;
+    plod_pipelines_[PLodPassDescription::SurfelRenderMode::DEPTH_COMPLEXITY_VIS_PASS] = depth_complexity_vis_pass_pipeline_ptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -420,13 +424,7 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 
 void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription const& desc, gua::node::Node* const current_node, RenderInfo& current_render_info ) {
     RenderContext const& ctx(pipe.get_context());
-    MaterialShader* current_material = current_render_info.material;
-    //std::shared_ptr<ShaderProgram> current_shader = current_render_info.shader;
-    auto current_rasterizer_state = current_render_info.rasterizer_state;
 
-    ///////////////////////////////////////////////////////////////////////////
-    //  retrieve current view state
-    ///////////////////////////////////////////////////////////////////////////
     auto& scene = *pipe.current_viewstate().scene;
     auto const& camera = pipe.current_viewstate().camera;
     auto const& frustum = pipe.current_viewstate().frustum;
@@ -437,14 +435,6 @@ void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription cons
     pipe.begin_cpu_query(cpu_query_name_plod_total);
 #endif
 
-    ///////////////////////////////////////////////////////////////////////////
-    //  sort nodes
-    ///////////////////////////////////////////////////////////////////////////
-    auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::PLodNode))));
-
-    std::sort(sorted_objects->second.begin(), sorted_objects->second.end(), [](node::Node* a, node::Node* b) {
-        return reinterpret_cast<node::PLodNode*>(a)->get_material()->get_shader() < reinterpret_cast<node::PLodNode*>(b)->get_material()->get_shader();
-    });
 
     std::vector<node::Node*> single_node;
     single_node.push_back(current_node);
@@ -512,6 +502,8 @@ void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription cons
         lamure::ren::cut& cut = cuts->get_cut(context_id, lamure_view_id, model_id);
         cut_map.insert(std::make_pair(plod_node, &cut));
     }
+
+    /*This test should ideally not be perfomed again because nodes have passed frustrum cullin already*/
     perform_frustum_culling_for_scene(single_node, nodes_in_frustum_per_model, cut_map, cut_update_cam, pipe);
 
     // count splats in cut
@@ -533,24 +525,34 @@ void PLodRenderer::renderSingleNode(Pipeline& pipe, PipelinePassDescription cons
     std::cout << "Surfels : " << surfels_in_cut << "\n";
 #endif
 
-    if(!pipe.current_viewstate().shadow_mode)
-    { // normal rendering branch
+    PLodPassDescription const& plod_desc = static_cast<PLodPassDescription const&>(desc);
+    bool depth_complexity_vis = plod_desc.get_enable_depth_complexity_vis();
 
-        PLodPassDescription const& plod_desc = static_cast<PLodPassDescription const&>(desc);
+    if(depth_complexity_vis) {
 
-        auto const surfel_render_mode = plod_desc.mode();
 
-        for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
+        for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::DEPTH_COMPLEXITY_VIS_PASS]))
         {
             pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, single_node, nodes_in_frustum_per_model, context_id, lamure_view_id);
         }
-    }
-    else
-    { // shadow branch
-        {
-            for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
+    } else{ 
+        if(!pipe.current_viewstate().shadow_mode)
+        { // normal rendering branch
+
+            auto const surfel_render_mode = plod_desc.mode();
+
+            for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
             {
                 pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, single_node, nodes_in_frustum_per_model, context_id, lamure_view_id);
+            }
+        }
+        else
+        { // shadow branch
+            {
+                for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
+                {
+                    pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, single_node, nodes_in_frustum_per_model, context_id, lamure_view_id);
+                }
             }
         }
     }

@@ -143,6 +143,8 @@ class GUA_LOD_DLL PLodNode : public GeometryNode
 
     void bind_time_series_data_to(RenderContext& ctx, std::shared_ptr<ShaderProgram>& current_program);
 
+    inline virtual std::string get_type_string() const {return "<PLodNode>";}
+
   protected:
     std::shared_ptr<Node> copy() const override;
 

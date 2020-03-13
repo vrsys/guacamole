@@ -410,8 +410,8 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
                 // get occlusion culling tri mesh pass and toggle rendering mode
                 
 
-#ifdef OC_TRIMESH       
-                auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_occlusion_culling_tri_mesh_pass();
+#ifndef RENDER_TRIMESH_SCENES     
+                auto& occlusion_culling_tri_mesh_pass = occlusion_culling_pipeline_description->get_plod_pass();
                 bool current_dcv_status = occlusion_culling_tri_mesh_pass->get_enable_depth_complexity_vis();
                 bool new_dcv_status = !current_dcv_status;
                 occlusion_culling_tri_mesh_pass->set_enable_depth_complexity_vis(new_dcv_status);
