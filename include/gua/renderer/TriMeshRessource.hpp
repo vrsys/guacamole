@@ -103,12 +103,17 @@ class GUA_DLL TriMeshRessource : public GeometryResource
 
     bool save_to_binary(const char* filename, unsigned flags = DEFAULTS);
 
+    void set_original_material_name(std::string const& in_material_name);
+    std::string get_original_material_name() const;
+    
   private:
     void upload_to(RenderContext& context) const;
     void upload_kdtree_to(RenderContext& context) const;
     
     KDTree kd_tree_;
     Mesh mesh_;
+
+    std::string original_material_name_;
 };
 
 } // namespace gua

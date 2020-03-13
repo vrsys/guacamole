@@ -165,11 +165,62 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
             GeometryDescription desc("TriMesh", file_name, 0, flags);
             GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{(const char* ) file_name.c_str()}, flags & TriMeshLoader::MAKE_PICKABLE));
 
+            // load material
+            std::shared_ptr<Material> material = nullptr;
+        
             if(flags & TriMeshLoader::LOAD_MATERIALS)
             {
-                Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+
+            auto importer = std::make_shared<Assimp::Importer>();
+
+            unsigned ai_ignore_flags = aiComponent_COLORS | aiComponent_ANIMATIONS | aiComponent_LIGHTS | aiComponent_CAMERAS | aiComponent_BONEWEIGHTS;
+
+  
+            unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality | aiProcess_RemoveComponent;
+
+            if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY)
+            {
+                ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_PreTransformVertices;
             }
-            return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), nullptr));
+            importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+            importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
+
+            
+            importer->ReadFile(file_name + ".mat_ref", ai_process_flags);
+
+
+
+            aiScene const* scene(importer->GetScene());
+
+            std::cout << "After trying to load " << file_name << ".mat_ref" << std::endl;
+            if(nullptr == scene) {
+                std::cout << "SCREAAAM" << std::endl;
+            }
+            std::cout << importer->GetErrorString();
+            aiMaterial const* ai_material(scene->mMaterials[0]);
+            std::cout << "inside " << std::endl;
+            aiString name;
+            ai_material->Get(AI_MATKEY_NAME, name);
+
+            std::shared_ptr<node::Node> new_node;
+
+            std::string error = importer->GetErrorString();
+            if(!error.empty())
+            {
+                Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+            }
+
+
+                MaterialLoader material_loader;
+                std::cout << "inside " << std::endl;
+                material = material_loader.load_material(ai_material, file_name + ".mtl", flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags );
+
+
+
+                std::cout << file_name << std::endl;
+                //Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+            }
+            return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
         }
 #ifdef GUACAMOLE_FBX
         else if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX")
@@ -385,7 +436,10 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
         //std::cout << "mesh_count: " << mesh_count << std::endl;
 
         GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
-        GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE));
+
+        auto current_trimesh_resource = std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE);
+
+        GeometryDatabase::instance()->add(desc.unique_key(), current_trimesh_resource);
 
         // load material
         std::shared_ptr<Material> material = nullptr;
@@ -395,6 +449,15 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
             const unsigned material_index(ai_scene->mMeshes[ai_current->mMeshes[i]]->mMaterialIndex);
             MaterialLoader material_loader;
             aiMaterial const* ai_material(ai_scene->mMaterials[material_index]);
+
+            aiString name;
+            ai_material->Get(AI_MATKEY_NAME, name);
+
+            std::string const cpp_string_mat_file_name = name.C_Str();
+
+            std::cout << "MATERIAL FILENAME IS: " << cpp_string_mat_file_name << std::endl;
+
+            current_trimesh_resource->set_original_material_name(cpp_string_mat_file_name);
             material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
         }
 

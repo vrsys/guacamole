@@ -185,9 +185,52 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
 
 bool TriMeshRessource::save_to_binary(const char* filename, unsigned flags)
 {
+    if( !original_material_name_.empty() ) {
+        std::cout << "HAVE FILENAME: " << filename << " associated" << std::endl;
+        std::cout << filename << std::endl;
+
+        std::string filename_as_string = std::string(filename);
+
+        std::string directory;
+        std::size_t const last_slash_idx = filename_as_string.find_last_of("\\/");
+
+
+
+        if (std::string::npos != last_slash_idx)
+        {
+            directory = filename_as_string.substr(0, last_slash_idx) + "/";
+        }
+
+
+        #if WIN32
+            Logger::LOG_WARNING << "Writing material is currently not supported under Windows" << std::endl;
+        #else
+            Logger::LOG_WARNING << "Would write material under linux" << std::endl;
+            std::cout << "Directory: " << directory << original_material_name_ << std::endl;
+
+            std::string original_material_name = directory + original_material_name_;
+            std::string new_material_name = filename + std::string(".mtl");
+
+            std::string copy_string = "cp " + original_material_name + " " + new_material_name;
+            std::cout << "About to copy" << copy_string << std::endl;
+            system(copy_string.c_str());
+        #endif
+    }
+
     return mesh_.save_to_binary(filename, flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::set_original_material_name(std::string const& in_material_name) {
+    original_material_name_ = in_material_name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string TriMeshRessource::get_original_material_name() const {
+    return original_material_name_;
+}
+
 
 } // namespace gua
