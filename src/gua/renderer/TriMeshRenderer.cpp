@@ -122,12 +122,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
-        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
-
-
         bool is_instanced_side_by_side_enabled = false;
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        
         if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
             is_instanced_side_by_side_enabled = true;
         }

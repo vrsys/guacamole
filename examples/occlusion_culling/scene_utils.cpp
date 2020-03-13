@@ -44,7 +44,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     auto current_mat = reinterpret_cast<gua::node::TriMeshNode*>(trimesh_model.get())->get_material();
     //current_mat->set_show_back_faces(true);
 
-    //trimesh_model->scale(10.0f);
+    trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
     for(int model_idx = 0; model_idx < 0; ++model_idx) {
@@ -117,11 +117,6 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
     trimesh_model->translate(-60.0f, 0.0, -300.0f);
 
 }
-
-
-
-
-
 
 void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
                          int const start_position_x,

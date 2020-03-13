@@ -311,9 +311,6 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
                     if(pipe_iter == window->get_context()->render_pipelines.end())
                     {
                         pipe = std::make_shared<Pipeline>(*window->get_context(), scm::math::vec2ui(serialized_cam.config.get_resolution().x * 2, serialized_cam.config.get_resolution().y ) );
-
-
-
                         window->get_context()->render_pipelines.insert(std::make_pair(serialized_cam.uuid, pipe));
                     }
                     else

@@ -25,13 +25,13 @@ void main()
 
 
 #if @get_enable_multi_view_rendering@
-if(0 == gl_ViewportIndex) {
+  if(0 == gl_ViewportIndex) {
 #endif
-  imageAtomicOr(light_bitset, pos, bit);
+  	  imageAtomicOr(light_bitset, pos, bit);
 #if @get_enable_multi_view_rendering@
-} else {
-  imageAtomicOr(secondary_light_bitset, pos, bit);
-}
+  } else {
+ 	  imageAtomicOr(secondary_light_bitset, pos, bit);
+  }
 #endif
 }
 

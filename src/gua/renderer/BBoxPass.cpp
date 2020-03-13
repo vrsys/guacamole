@@ -20,10 +20,12 @@
  ******************************************************************************/
 
 // class header
+#include <gua/config.hpp>
 #include <gua/renderer/BBoxPass.hpp>
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -84,7 +86,25 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         ctx.render_context->apply();
 
         assert(count < std::numeric_limits<unsigned>::max());
+
+
+        bool is_instanced_side_by_side_enabled = false;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        auto const& camera = (pipe.current_viewstate().camera);
+        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        
+        if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+            is_instanced_side_by_side_enabled = true;
+        }
+#endif
+
+    if(is_instanced_side_by_side_enabled) {
+        ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
+    } else {
         ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
+    }
+
     };
 
     PipelinePass pass{*this, ctx, substitution_map};

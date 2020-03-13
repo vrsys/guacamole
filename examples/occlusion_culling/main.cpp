@@ -42,7 +42,7 @@
 
 //#define USE_CITY_SCENE
 
-#define RENDER_SIDE_BY_SIDE_STEREO
+//#define RENDER_SIDE_BY_SIDE_STEREO
 //#define RENDER_ANAGLYPH_STEREO
 
 // global variables
@@ -229,8 +229,8 @@ int main(int argc, char** argv)
     auto light_node = graph.add_node<gua::node::LightNode>("/transform_node", "light_node");
     light_node->data.set_type(gua::node::LightNode::Type::POINT);
     light_node->data.brightness = 35000.0f;
-    light_node->scale(1200.f);
-    light_node->translate(0.f, 50.f, 0.f);
+    light_node->scale(12.f);
+    light_node->translate(0.f, 0.f, 0.f);
 
 #ifdef USE_CITY_SCENE
     double initial_nav_translation = 10.0;
