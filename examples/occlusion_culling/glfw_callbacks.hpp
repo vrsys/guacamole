@@ -1,7 +1,7 @@
 #ifndef GUA_OCCLUSION_CULLING_APP_GLFW_CALLBACKS_HPP
 #define GUA_OCCLUSION_CULLING_APP_GLFW_CALLBACKS_HPP
 
-//#define RENDER_TRIMESH_SCENES
+#define RENDER_TRIMESH_SCENES
 
 #include <gua/guacamole.hpp>
 #include <gua/utils/Trackball.hpp>

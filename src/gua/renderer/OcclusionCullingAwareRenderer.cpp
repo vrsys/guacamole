@@ -10,10 +10,12 @@
 
 
 std::array<float, 16> keep_probability;
-uint64_t batch_size_multi_query = 20;
+//if DYNAMIC BATCH SIZE is not defined, this value will define the maximum size for all Multiqueries. 25 seems good for city scene.
+//if value is higher than nodes in scene, can lead to crashes
+uint64_t batch_size_multi_query = 25;
 
 #define USE_PRIORITY_QUEUE
-#define DYNAMIC_BATCH_SIZE
+//#define DYNAMIC_BATCH_SIZE
 #define CHILD_BOUNDING_BOX
 #define REDUCE_STATE_CHANGE
 //#define VERBOSE_DEBUGGING

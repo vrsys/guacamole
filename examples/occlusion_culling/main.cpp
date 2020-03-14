@@ -43,7 +43,7 @@
 //#define AUTO_ANIMATION
 
 
-//#define USE_CITY_SCENE
+#define USE_CITY_SCENE
 
 //for !RENDER_TRIMESH_SCENES
 //#define USE_B1_SCENE
