@@ -398,12 +398,12 @@ std::shared_ptr<Node> Node::deep_copy() const
     //copied_node->uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
 
     //copying of uuid -> will not be unique anymore
-    copied_node->uuid_=uuid_;
+    copied_node->uuid_ = uuid_;
 
-    for(int i(0); i < children_.size(); ++i)
+    for(uint32_t child_idx = 0; child_idx < children_.size(); ++child_idx)
     {
-        copied_node->children_[i] = children_[i]->deep_copy();
-        copied_node->children_[i]->parent_ = copied_node.get();
+        copied_node->children_[child_idx] = children_[child_idx]->deep_copy();
+        copied_node->children_[child_idx]->parent_ = copied_node.get();
     }
 
     return copied_node;
