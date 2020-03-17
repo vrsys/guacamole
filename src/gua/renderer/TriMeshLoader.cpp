@@ -238,7 +238,6 @@ std::shared_ptr<node::Node> TriMeshLoader::load_gua_trimesh(std::string const& f
         aiScene const* scene(importer->GetScene());
 
         bool skip_loading_material = false;
-        std::cout << "After trying to load " << file_name << ".mat_ref" << std::endl;
         if(nullptr == scene) {
             Logger::LOG_WARNING << "TriMeshLoader::load(): Could not load material file because the file " 
                                 << mat_ref_file_string << " is missing" << std::endl;
