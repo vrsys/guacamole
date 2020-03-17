@@ -571,10 +571,10 @@ scm::gl::vertex_format Mesh::get_vertex_format() const
 }
 
 
-bool Mesh::save_to_binary(const char* filename, unsigned flags) const
+bool Mesh::save_to_binary(std::string const& filename, unsigned flags) const
 {
 
-    FILE* f = fopen( filename, "wb");
+    FILE* f = fopen( filename.c_str(), "wb");
     if(nullptr == f){
         return false;
     }

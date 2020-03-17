@@ -101,7 +101,7 @@ class GUA_DLL TriMeshRessource : public GeometryResource
     math::vec3 get_vertex(unsigned int i) const;
     std::vector<unsigned int> get_face(unsigned int i) const;
 
-    bool save_to_binary(const char* filename, unsigned flags = DEFAULTS);
+    bool save_to_binary(std::string const& input_filename, std::string const& output_filename, unsigned flags = DEFAULTS);
 
     void set_original_material_name(std::string const& in_material_name);
     std::string get_original_material_name() const;

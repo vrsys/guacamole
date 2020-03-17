@@ -89,7 +89,7 @@ struct GUA_DLL Mesh
      * @brief saves this mesh as binary file
      * @return true on success
      */
-    bool save_to_binary(const char* filename, unsigned flags = DEFAULTS) const;
+    bool save_to_binary(std::string const& out_filename, unsigned flags = DEFAULTS) const;
 
 
     std::vector<scm::math::vec3f> positions;
@@ -110,8 +110,8 @@ struct GUA_DLL Mesh
     {
         temp_vert(unsigned oindex, unsigned pt, unsigned tr, unsigned ind) : old_index{oindex}, point{pt}, normal{}, tangent{}, bitangent{}, uv{}, tris{} { tris.push_back(std::make_pair(tr, ind)); }
 
-        unsigned old_index;
-        unsigned point;
+        unsigned int old_index;
+        unsigned int point;
         scm::math::vec3f normal;
         scm::math::vec3f tangent;
         scm::math::vec3f bitangent;

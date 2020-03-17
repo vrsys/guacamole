@@ -29,6 +29,9 @@
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
+// standard header
+#include <fstream>
+
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,41 +186,54 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TriMeshRessource::save_to_binary(const char* filename, unsigned flags)
+bool TriMeshRessource::save_to_binary(std::string const& input_filename, std::string const& output_filename, unsigned flags)
 {
     if( !original_material_name_.empty() ) {
-        std::cout << "HAVE FILENAME: " << filename << " associated" << std::endl;
-        std::cout << filename << std::endl;
+        //std::cout << "HAVE FILENAME: " << input_filename << " associated" << std::endl;
+        //std::cout << "Going to write file: " << output_filename << std::endl;
 
-        std::string filename_as_string = std::string(filename);
+        std::string line_buffer;
+        std::ifstream in_obj_file(input_filename, std::ios::in);
 
-        std::string directory;
-        std::size_t const last_slash_idx = filename_as_string.find_last_of("\\/");
+        std::string out_material_lib_line("");
+        bool found_valid_mttllib_token = false;
+        while(std::getline(in_obj_file, line_buffer)) {
+            if( std::string::npos != line_buffer.find("mtllib ") ) {
+                std::istringstream line_buffer_string_stream(line_buffer);
+                std::string mtllib_token("");
+                line_buffer_string_stream >> mtllib_token;
 
+                if("mtllib" == mtllib_token && !in_obj_file.eof()) {
+                    found_valid_mttllib_token = true;
+                    std::string mtllib_path("");
+                    line_buffer_string_stream >> mtllib_path;
+                    out_material_lib_line = "mtllib " + mtllib_path;
+                    break;
+                }
 
-
-        if (std::string::npos != last_slash_idx)
-        {
-            directory = filename_as_string.substr(0, last_slash_idx) + "/";
+            }
         }
 
+        if(found_valid_mttllib_token) {
+            std::cout << "Materiallib line: " << line_buffer << std::endl;
 
-        #if WIN32
-            Logger::LOG_WARNING << "Writing material is currently not supported under Windows" << std::endl;
-        #else
-            Logger::LOG_WARNING << "Would write material under linux" << std::endl;
-            std::cout << "Directory: " << directory << original_material_name_ << std::endl;
+            std::cout << "Writing matref file: " << output_filename << ".mat_ref" << std::endl;
+            std::ofstream out_matref_file(output_filename + ".mat_ref", std::ios::out);
+            out_matref_file << out_material_lib_line << std::endl;
+            out_matref_file << "usemtl " << original_material_name_ << std::endl;
+            out_matref_file << "v 0 0 0" << std::endl;
+            out_matref_file << "v 1 0 0" << std::endl;            
+            out_matref_file << "v 0 1 0" << std::endl;
+            out_matref_file << "f 1// 2// 3//" << std::endl;
+            out_matref_file.close();
+        }
 
-            std::string original_material_name = directory + original_material_name_;
-            std::string new_material_name = filename + std::string(".mtl");
+        in_obj_file.close();
 
-            std::string copy_string = "cp " + original_material_name + " " + new_material_name;
-            std::cout << "About to copy" << copy_string << std::endl;
-            system(copy_string.c_str());
-        #endif
     }
 
-    return mesh_.save_to_binary(filename, flags);
+
+    return mesh_.save_to_binary(output_filename, flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
