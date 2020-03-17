@@ -19,6 +19,8 @@
  *                                                                            *
  ******************************************************************************/
 
+#include <gua/config.hpp>
+
 // class header
 #include <gua/renderer/TriMeshLoader.hpp>
 
@@ -149,130 +151,11 @@ std::shared_ptr<node::Node> TriMeshLoader::create_geometry_from_file(std::string
     return std::make_shared<node::TransformNode>(node_name);
 }
 
+
+
 /////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, unsigned flags)
-{
-    TextFile file(file_name);
-
-    // MESSAGE("Loading mesh file %s", file_name.c_str());
-
-    if(file.is_valid())
-    {
-        auto point_pos(file_name.find_last_of("."));
-        if(file_name.substr(point_pos + 1) == "gua_trimesh" )
-        {
-            GeometryDescription desc("TriMesh", file_name, 0, flags);
-            GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{(const char* ) file_name.c_str()}, flags & TriMeshLoader::MAKE_PICKABLE));
-
-            // load material
-            std::shared_ptr<Material> material = nullptr;
-        
-            if(flags & TriMeshLoader::LOAD_MATERIALS)
-            {
-
-            auto importer = std::make_shared<Assimp::Importer>();
-
-            unsigned ai_ignore_flags = aiComponent_COLORS | aiComponent_ANIMATIONS | aiComponent_LIGHTS | aiComponent_CAMERAS | aiComponent_BONEWEIGHTS;
-
-  
-            unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality | aiProcess_RemoveComponent;
-
-            if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY)
-            {
-                ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_PreTransformVertices;
-            }
-            importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-            importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
-
-            
-            std::string const mat_ref_file_string = file_name + ".mat_ref";
-            importer->ReadFile(mat_ref_file_string, ai_process_flags);
-
-
-
-            aiScene const* scene(importer->GetScene());
-
-            bool skip_loading_material = false;
-            std::cout << "After trying to load " << file_name << ".mat_ref" << std::endl;
-            if(nullptr == scene) {
-                Logger::LOG_WARNING << "TriMeshLoader::load(): Could not load material file because the file " 
-                                    << mat_ref_file_string << " is missing" << std::endl;
-
-                skip_loading_material = true;
-            }
-
-                if(!skip_loading_material) {
-                std::cout << importer->GetErrorString();
-                aiMaterial const* ai_material(scene->mMaterials[0]);
-                aiString name;
-                ai_material->Get(AI_MATKEY_NAME, name);
-
-                std::shared_ptr<node::Node> new_node;
-
-                std::string error = importer->GetErrorString();
-                if(!error.empty())
-                {
-                    Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
-                }
-
-
-                    MaterialLoader material_loader;
-                    material = material_loader.load_material(ai_material, file_name + ".mtl", flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags );
-
-
-
-                    std::cout << file_name << std::endl;
-                    //Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
-                }
-            }
-            return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
-        }
-#ifdef GUACAMOLE_FBX
-        else if(file_name.substr(point_pos + 1) == "fbx" || file_name.substr(point_pos + 1) == "FBX")
-        {
-            // The first thing to do is to create the FBX Manager which is the object
-            // allocator for almost all the classes in the SDK
-            FbxManager* sdk_manager = FbxManager::Create();
-            if(!sdk_manager)
-            {
-                Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
-                assert(0);
-            }
-
-            // Create an IOSettings object. This object holds all import/export
-            // settings.
-            FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
-            if(flags & TriMeshLoader::LOAD_MATERIALS)
-            {
-                ios->SetBoolProp(IMP_FBX_MATERIAL, true);
-                ios->SetBoolProp(IMP_FBX_TEXTURE, true);
-            }
-            else
-            {
-                ios->SetBoolProp(IMP_FBX_MATERIAL, false);
-                ios->SetBoolProp(IMP_FBX_TEXTURE, false);
-            }
-            ios->SetBoolProp(IMP_FBX_CHARACTER, false);
-            ios->SetBoolProp(IMP_FBX_CONSTRAINT, false);
-            ios->SetBoolProp(IMP_FBX_LINK, false);
-            ios->SetBoolProp(IMP_FBX_SHAPE, false);
-            ios->SetBoolProp(IMP_FBX_MODEL, true);
-            ios->SetBoolProp(IMP_FBX_GOBO, false);
-            ios->SetBoolProp(IMP_FBX_ANIMATION, false);
-            ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
-            sdk_manager->SetIOSettings(ios);
-            FbxScene* scene = load_fbx_file(sdk_manager, file_name);
-
-            unsigned count(0);
-            std::shared_ptr<node::Node> tree{get_tree(*scene->GetRootNode(), file_name, flags, count)};
-            sdk_manager->Destroy();
-
-            return tree;
-        }
-        else
-#endif
-        {
+std::shared_ptr<node::Node> TriMeshLoader::load_default(std::string const& file_name, unsigned flags) {
             auto importer = std::make_shared<Assimp::Importer>();
 
             unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality | aiProcess_RemoveComponent;
@@ -316,6 +199,149 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
             }
 
             return new_node;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TriMeshLoader::load_gua_trimesh(std::string const& file_name, unsigned flags) {
+    GeometryDescription desc("TriMesh", file_name, 0, flags);
+    GeometryDatabase::instance()->add(desc.unique_key(), std::make_shared<TriMeshRessource>(Mesh{(const char* ) file_name.c_str()}, flags & TriMeshLoader::MAKE_PICKABLE));
+
+    // load material
+    std::shared_ptr<Material> material = nullptr;
+
+    if(flags & TriMeshLoader::LOAD_MATERIALS)
+    {
+
+        auto importer = std::make_shared<Assimp::Importer>();
+
+        unsigned ai_ignore_flags = aiComponent_COLORS | aiComponent_ANIMATIONS | aiComponent_LIGHTS | aiComponent_CAMERAS | aiComponent_BONEWEIGHTS;
+
+
+        unsigned ai_process_flags = aiProcessPreset_TargetRealtime_Quality | aiProcess_RemoveComponent;
+
+        if(flags & TriMeshLoader::OPTIMIZE_GEOMETRY)
+        {
+            ai_process_flags |= aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_PreTransformVertices;
+        }
+        importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
+
+        
+        std::string const mat_ref_file_string = file_name + ".mat_ref";
+        importer->ReadFile(mat_ref_file_string, ai_process_flags);
+
+
+
+        aiScene const* scene(importer->GetScene());
+
+        bool skip_loading_material = false;
+        std::cout << "After trying to load " << file_name << ".mat_ref" << std::endl;
+        if(nullptr == scene) {
+            Logger::LOG_WARNING << "TriMeshLoader::load(): Could not load material file because the file " 
+                                << mat_ref_file_string << " is missing" << std::endl;
+
+            skip_loading_material = true;
+        }
+
+        if(!skip_loading_material) {
+        std::cout << importer->GetErrorString();
+        aiMaterial const* ai_material(scene->mMaterials[0]);
+        aiString name;
+        ai_material->Get(AI_MATKEY_NAME, name);
+
+        std::shared_ptr<node::Node> new_node;
+
+        std::string error = importer->GetErrorString();
+        if(!error.empty())
+        {
+            Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+        }
+
+
+            MaterialLoader material_loader;
+            material = material_loader.load_material(ai_material, file_name + ".mtl", flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags );
+
+
+
+            std::cout << file_name << std::endl;
+            //Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+        }
+    }
+    return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
+}
+
+#ifdef GUACAMOLE_FBX
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TriMeshLoader::load_fbx(std::string const& file_name, unsigned flags) {
+    // The first thing to do is to create the FBX Manager which is the object
+    // allocator for almost all the classes in the SDK
+    FbxManager* sdk_manager = FbxManager::Create();
+    if(!sdk_manager)
+    {
+        Logger::LOG_ERROR << "Error: Unable to create FBX Manager!\n";
+        assert(0);
+    }
+
+    // Create an IOSettings object. This object holds all import/export
+    // settings.
+    FbxIOSettings* ios = FbxIOSettings::Create(sdk_manager, IOSROOT);
+    if(flags & TriMeshLoader::LOAD_MATERIALS)
+    {
+        ios->SetBoolProp(IMP_FBX_MATERIAL, true);
+        ios->SetBoolProp(IMP_FBX_TEXTURE, true);
+    }
+    else
+    {
+        ios->SetBoolProp(IMP_FBX_MATERIAL, false);
+        ios->SetBoolProp(IMP_FBX_TEXTURE, false);
+    }
+    ios->SetBoolProp(IMP_FBX_CHARACTER, false);
+    ios->SetBoolProp(IMP_FBX_CONSTRAINT, false);
+    ios->SetBoolProp(IMP_FBX_LINK, false);
+    ios->SetBoolProp(IMP_FBX_SHAPE, false);
+    ios->SetBoolProp(IMP_FBX_MODEL, true);
+    ios->SetBoolProp(IMP_FBX_GOBO, false);
+    ios->SetBoolProp(IMP_FBX_ANIMATION, false);
+    ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, false);
+    sdk_manager->SetIOSettings(ios);
+    FbxScene* scene = load_fbx_file(sdk_manager, file_name);
+
+    unsigned count(0);
+    std::shared_ptr<node::Node> tree{get_tree(*scene->GetRootNode(), file_name, flags, count)};
+    sdk_manager->Destroy();
+
+    return tree;
+}
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, unsigned flags)
+{
+    TextFile file(file_name);
+
+    // MESSAGE("Loading mesh file %s", file_name.c_str());
+
+    if(file.is_valid())
+    {
+        auto point_pos = file_name.find_last_of(".");
+        std::string const extension_string = file_name.substr(point_pos + 1);
+
+        if( "gua_trimesh" == extension_string  )
+        {
+           return load_gua_trimesh(file_name, flags);
+        }
+#ifdef GUACAMOLE_FBX
+        else if("fbx" == extension_string || "FBX" == extension_string )
+        {
+            return load_fbx(file_name, flags);
+        }
+        else
+#endif
+        {
+            return load_default(file_name, flags);
         }
     }
 
