@@ -22,6 +22,7 @@
 #ifndef GUA_TRI_MESH_LOADER_HPP
 #define GUA_TRI_MESH_LOADER_HPP
 
+#include <gua/config.hpp>
 // guacamole headers
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/renderer/Material.hpp>
@@ -130,6 +131,13 @@ class GUA_DLL TriMeshLoader
     static std::unordered_map<std::string, std::shared_ptr<::gua::node::Node>> loaded_files_;
     static gua::math::mat4 convert_transformation(aiMatrix4x4t<float> const& transform_mat);
     static void apply_transformation(std::shared_ptr<node::Node> node, aiMatrix4x4t<float> const& transform_mat);
+
+    std::shared_ptr<node::Node> load_default(std::string const& file_name, unsigned flags);
+    std::shared_ptr<node::Node> load_gua_trimesh(std::string const& file_name, unsigned flags);
+
+#ifdef GUACAMOLE_FBX
+    std::shared_ptr<node::Node> load_fbx(std::string const& file_name, unsigned flags);
+#endif
 };
 
 } // namespace gua
