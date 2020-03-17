@@ -323,7 +323,6 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
     TextFile file(file_name);
 
     // MESSAGE("Loading mesh file %s", file_name.c_str());
-
     if(file.is_valid())
     {
         auto point_pos = file_name.find_last_of(".");
@@ -422,7 +421,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode& fbx_node, std::stri
         return node;
     };
 
-    auto group(std::make_shared<node::TransformNode>());
+    auto group_node = std::make_shared<node::TransformNode>();
 
     if(fbx_node.GetGeometry() != nullptr)
     {
@@ -434,7 +433,7 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode& fbx_node, std::stri
                 return load_geometry(fbx_node);
             }
 
-            group->add_child(load_geometry(fbx_node));
+            group_node->add_child(load_geometry(fbx_node));
         }
     }
 
@@ -448,12 +447,12 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(FbxNode& fbx_node, std::stri
     }
 
     // else: there are multiple children and meshes
-    for(int i = 0; i < fbx_node.GetChildCount(); ++i)
+    for(int32_t i = 0; i < fbx_node.GetChildCount(); ++i)
     {
-        group->add_child(get_tree(*fbx_node.GetChild(i), file_name, flags, mesh_count));
+        group_node->add_child(get_tree(*fbx_node.GetChild(i), file_name, flags, mesh_count));
     }
 
-    return group;
+    return group_node;
 }
 #endif
 ////////////////////////////////////////////////////////////////////////////////
@@ -467,11 +466,11 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
 
         //std::cout << "mesh_count: " << mesh_count << std::endl;
 
-        GeometryDescription desc("TriMesh", file_name, mesh_count++, flags);
+        GeometryDescription geometry_desc("TriMesh", file_name, mesh_count++, flags);
 
         auto current_trimesh_resource = std::make_shared<TriMeshRessource>(Mesh{*ai_scene->mMeshes[ai_current->mMeshes[i]]}, flags & TriMeshLoader::MAKE_PICKABLE);
 
-        GeometryDatabase::instance()->add(desc.unique_key(), current_trimesh_resource);
+        GeometryDatabase::instance()->add(geometry_desc.unique_key(), current_trimesh_resource);
 
         // load material
         std::shared_ptr<Material> material = nullptr;
@@ -491,9 +490,9 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
             material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);
         }
 
-        // return std::make_shared<node::TriMeshNode>("", desc.unique_key(),
+        // return std::make_shared<node::TriMeshNode>("", geometry_desc.unique_key(),
         // material); // not allowed -> private c'tor
-        return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
+        return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", geometry_desc.unique_key(), material));
     };
 
     if(!enforce_hierarchy)
