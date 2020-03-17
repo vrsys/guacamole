@@ -60,14 +60,14 @@ int main(int argc, char** argv)
     if(obj_node->get_children().empty()){
         std::string filename(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node));
-        t_node->get_geometry()->save_to_binary((const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary(obj_file,(const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
         ++mesh_counter;
         std::cout << "saved " << filename << std::endl;
     }
     for(unsigned i = 0; i < obj_node->get_children().size(); ++i){
         std::string filename(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node->get_children()[i]));
-        t_node->get_geometry()->save_to_binary((const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary(obj_file, (const char*) filename.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
         ++mesh_counter;
         std::cout << "saved " << filename << std::endl;
     }

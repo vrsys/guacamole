@@ -186,39 +186,45 @@ std::shared_ptr<node::Node> TriMeshLoader::load(std::string const& file_name, un
             importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ai_ignore_flags);
 
             
-            importer->ReadFile(file_name + ".mat_ref", ai_process_flags);
+            std::string const mat_ref_file_string = file_name + ".mat_ref";
+            importer->ReadFile(mat_ref_file_string, ai_process_flags);
 
 
 
             aiScene const* scene(importer->GetScene());
 
+            bool skip_loading_material = false;
             std::cout << "After trying to load " << file_name << ".mat_ref" << std::endl;
             if(nullptr == scene) {
-                std::cout << "SCREAAAM" << std::endl;
-            }
-            std::cout << importer->GetErrorString();
-            aiMaterial const* ai_material(scene->mMaterials[0]);
-            std::cout << "inside " << std::endl;
-            aiString name;
-            ai_material->Get(AI_MATKEY_NAME, name);
+                Logger::LOG_WARNING << "TriMeshLoader::load(): Could not load material file because the file " 
+                                    << mat_ref_file_string << " is missing" << std::endl;
 
-            std::shared_ptr<node::Node> new_node;
-
-            std::string error = importer->GetErrorString();
-            if(!error.empty())
-            {
-                Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+                skip_loading_material = true;
             }
 
+                if(!skip_loading_material) {
+                std::cout << importer->GetErrorString();
+                aiMaterial const* ai_material(scene->mMaterials[0]);
+                aiString name;
+                ai_material->Get(AI_MATKEY_NAME, name);
 
-                MaterialLoader material_loader;
-                std::cout << "inside " << std::endl;
-                material = material_loader.load_material(ai_material, file_name + ".mtl", flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags );
+                std::shared_ptr<node::Node> new_node;
+
+                std::string error = importer->GetErrorString();
+                if(!error.empty())
+                {
+                    Logger::LOG_WARNING << "TriMeshLoader::load(): Importing failed, " << error << std::endl;
+                }
+
+
+                    MaterialLoader material_loader;
+                    material = material_loader.load_material(ai_material, file_name + ".mtl", flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags );
 
 
 
-                std::cout << file_name << std::endl;
-                //Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+                    std::cout << file_name << std::endl;
+                    //Logger::LOG_WARNING << "TriMeshLoader::LOAD_MATERIALS not supported for gua_trimesh file format ....ignoring TriMeshLoader::LOAD_MATERIALS" << std::endl;
+                }
             }
             return std::shared_ptr<node::TriMeshNode>(new node::TriMeshNode("", desc.unique_key(), material));
         }
@@ -454,8 +460,6 @@ std::shared_ptr<node::Node> TriMeshLoader::get_tree(
             ai_material->Get(AI_MATKEY_NAME, name);
 
             std::string const cpp_string_mat_file_name = name.C_Str();
-
-            std::cout << "MATERIAL FILENAME IS: " << cpp_string_mat_file_name << std::endl;
 
             current_trimesh_resource->set_original_material_name(cpp_string_mat_file_name);
             material = material_loader.load_material(ai_material, file_name, flags & TriMeshLoader::OPTIMIZE_MATERIALS, flags & TriMeshLoader::PARSE_HIERARCHY);

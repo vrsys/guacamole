@@ -68,7 +68,7 @@ void adjust_arguments(int& argc, char**& argv)
     argv = argv_tmp;
 }
 
-std::string parse_model_from_cmd_line(int argc, char** argv)
+std::vector<std::string> parse_model_from_cmd_line(int argc, char** argv)
 {
     std::string model_path = "data/objects/teapot.obj";
 
