@@ -20,6 +20,8 @@
  ******************************************************************************/
 
 // class header
+#include <gua/config.hpp>
+
 #include <gua/scenegraph/SceneGraph.hpp>
 
 // guacamole headers

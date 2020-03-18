@@ -1,6 +1,8 @@
 #ifndef GUA_LIGHT_VISIBILITY_RENDERER_HPP
 #define GUA_LIGHT_VISIBILITY_RENDERER_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/renderer/PipelinePass.hpp>
 #include <gua/renderer/LightTable.hpp>
 

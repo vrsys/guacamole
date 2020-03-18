@@ -81,6 +81,17 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
             ctx.render_context->unmap_buffer(buffer_);
         }
 
+        auto& target = *pipe.current_viewstate().target;
+        bool write_depth = true;
+        target.bind(ctx, write_depth);
+
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        target.set_side_by_side_viewport_array(ctx);
+#else
+        target.set_viewport(ctx);
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
         ctx.render_context->bind_vertex_array(vao_);
 
         ctx.render_context->apply();
@@ -99,11 +110,15 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         }
 #endif
 
-    if(is_instanced_side_by_side_enabled) {
-        ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
-    } else {
-        ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
-    }
+        if(is_instanced_side_by_side_enabled) {
+            ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
+        } else {
+            ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
+        }
+
+        target.unbind(ctx);
+        ctx.render_context->reset_state_objects();
+        ctx.render_context->sync();
 
     };
 

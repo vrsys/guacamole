@@ -22,6 +22,8 @@
 #ifndef GUA_SERIALIZED_SCENE_HPP
 #define GUA_SERIALIZED_SCENE_HPP
 
+#include <gua/config.hpp>
+
 // guacamole headers
 #include <gua/node/Node.hpp>
 #include <gua/node/ScreenNode.hpp>

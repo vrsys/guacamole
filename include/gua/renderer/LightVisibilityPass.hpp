@@ -1,6 +1,7 @@
 #ifndef GUA_LIGHT_VISIBILITY_PASS_HPP
 #define GUA_LIGHT_VISIBILITY_PASS_HPP
 
+
 #include <gua/renderer/PipelinePass.hpp>
 
 #include <memory>

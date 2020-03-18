@@ -22,6 +22,8 @@
 #ifndef GUA_PIPELINE_HPP
 #define GUA_PIPELINE_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/node/CameraNode.hpp>
 #include <gua/renderer/Renderer.hpp>
 #include <gua/renderer/PipelinePass.hpp>

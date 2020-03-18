@@ -38,6 +38,6 @@ void main() {
     gua_max = gua_in_max;
 
     gl_ViewportIndex = gl_InstanceID;
-    instance_id = gl_InstanceID; 
+    instance_id = gl_ViewportIndex; 
     // gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_in_min, 1.0);
 }

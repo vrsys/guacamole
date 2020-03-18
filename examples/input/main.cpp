@@ -24,6 +24,7 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
+#include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -172,8 +173,18 @@ int main(int argc, char** argv)
     camera->config.set_enable_stereo(true);
     //camera->set_pre_render_cameras({portal_camera});
 
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    auto default_pipeline_description = std::make_shared<gua::PipelineDescription>();
+    default_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    default_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());
+    default_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    default_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());
+
+    camera->set_pipeline_description(default_pipeline_description);
+
+    //auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
+
+    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);

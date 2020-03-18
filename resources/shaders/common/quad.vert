@@ -36,5 +36,5 @@ out vec3 gua_varying_normal;
 void main() {
     gua_varying_quad_coords = gua_in_texcoord;
     gua_varying_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
-    gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);
+    gl_Position = gua_model_view_projection_matrix * vec4(gua_in_position*0.5, 1.0);
 }
