@@ -237,16 +237,22 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
 
     for(auto graph : scene_graphs)
     {
-        for(auto& cam : graph->get_camera_nodes())
+
+        auto& cam_node_vector = graph->get_camera_nodes();
+
+        //for(auto& cam : graph->get_camera_nodes())
+        #pragma omp parallel for
+        for(uint32_t cam_idx = 0; cam_idx < graph->get_camera_nodes().size(); ++cam_idx) 
         {
-            if(cam->config.separate_windows())
+            auto const& cam_ptr_ref = cam_node_vector[cam_idx];
+            if(cam_ptr_ref->config.separate_windows())
             {
-                send_renderclient(cam->config.get_left_output_window(), sgs, cam, alternate_frame_rendering);
-                send_renderclient(cam->config.get_right_output_window(), sgs, cam, alternate_frame_rendering);
+                send_renderclient(cam_ptr_ref->config.get_left_output_window(), sgs, cam_ptr_ref, alternate_frame_rendering);
+                send_renderclient(cam_ptr_ref->config.get_right_output_window(), sgs, cam_ptr_ref, alternate_frame_rendering);
             }
             else
             {
-                send_renderclient(cam->config.get_output_window_name(), sgs, cam, alternate_frame_rendering);
+                send_renderclient(cam_ptr_ref->config.get_output_window_name(), sgs, cam_ptr_ref, alternate_frame_rendering);
             }
         }
     }

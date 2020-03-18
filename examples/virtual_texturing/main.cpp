@@ -61,9 +61,9 @@ int main(int argc, char** argv)
       model_file = argv[1];
     }
     else {
-      std::cout << "usage: " << argv[0] << " filename_vt.obj ... filename.atlas" << std::endl;
+      std::cout << "usage: " << argv[0] << " filename_vt.obj/.gua_trimesh ... filename.atlas" << std::endl;
       std::cout << "or" << std::endl;
-      std::cout << "usage: " << argv[0] << " filename.obj" << std::endl;
+      std::cout << "usage: " << argv[0] << " filename.obj/.gua_trimesh" << std::endl;
       return 0;  
     }
     
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
         for(unsigned i = 0; i <  model_files.size(); ++i){
 
             std::cout << "start loading " << model_files[i] << std::endl;
-            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat_wo_early_depth_test, /*gua::TriMeshLoader::OPTIMIZE_GEOMETRY*/0));
+            auto model_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , model_files[i].c_str(), vt_mat_wo_early_depth_test, gua::TriMeshLoader::MAKE_PICKABLE));
             std::cout << model_files[i] << "...ready with " << model_node->get_children().size() << " children" << std::endl;
             graph.add_node("/transform/model_transform", model_node);
 
@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 #endif
         std::cout << "start loading " << model_file << std::endl;
         gua::TriMeshLoader loader;
-        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), mat_textured, gua::TriMeshLoader::LOAD_MATERIALS));
+        auto model_node(loader.create_geometry_from_file("model_node", model_file.c_str(), mat_textured, gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::MAKE_PICKABLE));
         std::cout << model_file << " ready" << std::endl;
         graph.add_node("/transform/model_transform", model_node);
 

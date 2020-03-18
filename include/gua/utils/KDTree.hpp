@@ -54,7 +54,7 @@ class KDTree
      */
     void generate(Mesh const& mesh);
 
-    void generate(const char* filename);
+    bool generate(const char* base_filename);
 
     //returns the number of nodes in the tree
     int get_num_nodes() const;

@@ -105,13 +105,14 @@ void KDTree::generate(Mesh const& mesh)
     }
 }
 
-void
-KDTree::generate(const char* filename){
-       
-    FILE* f = fopen( filename, "rb");
+bool
+KDTree::generate(const char* base_filename){
+    
+    std::string filename = std::string(base_filename) + ".gua_kdtree";
+    FILE* f = fopen( filename.c_str(), "rb");
     if(nullptr == f){
         std::cout << "ERROR: KDTree: could not open file " << filename << " kdtree will not be generated" << std::endl;
-        return;
+        return false;
     }
 
     fread(&num_nodes_in_tree_, sizeof(num_nodes_in_tree_), 1, f);
@@ -149,8 +150,8 @@ KDTree::generate(const char* filename){
         }
     }
     fclose(f);
-
     //root_->print(0);
+    return true;
 }
 
 int KDTree::get_num_nodes() const {

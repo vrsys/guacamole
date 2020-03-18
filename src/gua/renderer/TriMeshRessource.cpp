@@ -29,6 +29,9 @@
 #include <gua/node/TriMeshNode.hpp>
 #include <gua/utils/Logger.hpp>
 
+// standard header
+#include <fstream>
+
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +53,10 @@ TriMeshRessource::TriMeshRessource(Mesh const& mesh, bool build_kd_tree) : kd_tr
 
         if(build_kd_tree)
         {
-            kd_tree_.generate(mesh);
+            if(!kd_tree_.generate(mesh_.base_filename.c_str())){
+                kd_tree_.generate(mesh);
+            }
+            
         }
     }
 }
@@ -183,9 +189,55 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TriMeshRessource::save_to_binary(const char* filename_gua_trimesh, const char* filename_gua_kdtree, unsigned flags)
+
+bool TriMeshRessource::save_to_binary(std::string const& input_filename, std::string const& output_filename, const char* filename_gua_kdtree, unsigned flags)
 {
-    bool res = mesh_.save_to_binary(filename_gua_trimesh, flags);
+    if( !original_material_name_.empty() ) {
+        //std::cout << "HAVE FILENAME: " << input_filename << " associated" << std::endl;
+        //std::cout << "Going to write file: " << output_filename << std::endl;
+
+        std::string line_buffer;
+        std::ifstream in_obj_file(input_filename, std::ios::in);
+
+        std::string out_material_lib_line("");
+        bool found_valid_mttllib_token = false;
+        while(std::getline(in_obj_file, line_buffer)) {
+            if( std::string::npos != line_buffer.find("mtllib ") ) {
+                std::istringstream line_buffer_string_stream(line_buffer);
+                std::string mtllib_token("");
+                line_buffer_string_stream >> mtllib_token;
+
+                if("mtllib" == mtllib_token && !in_obj_file.eof()) {
+                    found_valid_mttllib_token = true;
+                    std::string mtllib_path("");
+                    line_buffer_string_stream >> mtllib_path;
+                    out_material_lib_line = "mtllib " + mtllib_path;
+                    break;
+                }
+
+            }
+        }
+
+        if(found_valid_mttllib_token) {
+            //std::cout << "Materiallib line: " << line_buffer << std::endl;
+
+            //std::cout << "Writing matref file: " << output_filename << ".mat_ref" << std::endl;
+            std::ofstream out_matref_file(output_filename + ".mat_ref", std::ios::out);
+            out_matref_file << out_material_lib_line << std::endl;
+            out_matref_file << "usemtl " << original_material_name_ << std::endl;
+            out_matref_file << "v 0 0 0" << std::endl;
+            out_matref_file << "v 1 0 0" << std::endl;            
+            out_matref_file << "v 0 1 0" << std::endl;
+            out_matref_file << "f 1// 2// 3//" << std::endl;
+            out_matref_file.close();
+        }
+
+        in_obj_file.close();
+
+    }
+
+
+    bool res = mesh_.save_to_binary(output_filename, flags);
     if( (nullptr != filename_gua_kdtree) && (0 < kd_tree_.get_num_nodes()) ){
         res = res && kd_tree_.save_to_binary(filename_gua_kdtree);
     }
@@ -193,5 +245,28 @@ bool TriMeshRessource::save_to_binary(const char* filename_gua_trimesh, const ch
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::set_original_material_name(std::string const& in_material_name) {
+    original_material_name_ = in_material_name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string TriMeshRessource::get_original_material_name() const {
+    return original_material_name_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::set_base_filename(std::string const& in_base_filename) {
+    base_filename_ = in_base_filename;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string TriMeshRessource::get_base_filename() const {
+    return base_filename_;
+}
+
 
 } // namespace gua

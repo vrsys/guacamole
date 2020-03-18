@@ -101,7 +101,13 @@ class GUA_DLL TriMeshRessource : public GeometryResource
     math::vec3 get_vertex(unsigned int i) const;
     std::vector<unsigned int> get_face(unsigned int i) const;
 
-    bool save_to_binary(const char* filename_gua_trimesh, const char* filename_gua_kdtree, unsigned flags = DEFAULTS);
+    bool save_to_binary(std::string const& input_filename, std::string const& output_filename, const char* filename_gua_kdtree, unsigned flags = DEFAULTS);
+
+    void set_original_material_name(std::string const& in_material_name);
+    std::string get_original_material_name() const;
+    
+    void set_base_filename(std::string const& in_base_filename);
+    std::string get_base_filename() const;
 
   private:
     void upload_to(RenderContext& context) const;
@@ -109,6 +115,9 @@ class GUA_DLL TriMeshRessource : public GeometryResource
     
     KDTree kd_tree_;
     Mesh mesh_;
+
+    std::string original_material_name_;
+    std::string base_filename_;
 };
 
 } // namespace gua
