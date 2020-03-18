@@ -249,6 +249,14 @@ SceneGraph::serialize(Frustum const& rendering_frustum, Frustum const& culling_f
 
 std::shared_ptr<SerializedScene> SceneGraph::serialize(node::SerializedCameraNode const& camera, CameraMode mode) const
 {
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if (mode == CameraMode::BOTH){
+      return serialize(camera);
+    }
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
     return serialize(camera.get_rendering_frustum(*this, mode),
                      camera.get_culling_frustum(*this, mode),
                      math::get_translation(camera.transform),
@@ -256,6 +264,32 @@ std::shared_ptr<SerializedScene> SceneGraph::serialize(node::SerializedCameraNod
                      camera.config.mask(),
                      camera.config.view_id());
 }
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+std::shared_ptr<SerializedScene> SceneGraph::serialize(node::SerializedCameraNode const& camera) const {
+
+  auto out = std::make_shared<SerializedScene>();
+
+  //left eye frusta
+  out->rendering_frustum = camera.get_rendering_frustum(*this, CameraMode::LEFT);
+  out->culling_frustum = camera.get_culling_frustum(*this, CameraMode::LEFT);
+  //right eye frusta
+  out->secondary_rendering_frustum = camera.get_rendering_frustum(*this, CameraMode::RIGHT);
+  out->secondary_culling_frustum = camera.get_culling_frustum(*this, CameraMode::RIGHT);
+
+  out->reference_camera_position = math::get_translation(camera.transform);
+
+  Serializer s;
+  //TODO reduce number of param
+  s.check(*out, *this, camera.config.mask(), camera.config.enable_frustum_culling(), true, camera.config.view_id());
+
+  return out;
+
+
+}
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

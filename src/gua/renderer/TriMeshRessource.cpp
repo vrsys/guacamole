@@ -144,6 +144,27 @@ void TriMeshRessource::draw(RenderContext& ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::draw_instanced(RenderContext& ctx, int instance_count) const
+{
+    auto iter = ctx.meshes.find(uuid());
+    if(iter == ctx.meshes.end())
+    {
+        // upload to GPU if neccessary
+        upload_to(ctx);
+        iter = ctx.meshes.find(uuid());
+    }
+    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+    ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+    ctx.render_context->apply_vertex_input();
+    ctx.render_context->draw_elements_instanced(iter->second.indices_count, 0, instance_count);
+
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 void TriMeshRessource::draw_kdtree(RenderContext& ctx) const {
     auto iter = ctx.bounding_box_hierarchies.find(uuid());
     if(iter == ctx.bounding_box_hierarchies.end())

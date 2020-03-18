@@ -238,14 +238,27 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
+    case StereoMode::SIDE_BY_SIDE:
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING 
+    if(is_left) {
+        auto adjusted_resolution = config.get_left_resolution();
+        adjusted_resolution.x *= 2;
+        display(texture, adjusted_resolution, config.get_left_position(), WindowBase::FULL, is_left, true);
+    }
+
+    break;
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
-    case StereoMode::SIDE_BY_SIDE:
+
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
     case StereoMode::NVIDIA_3D_VISION:
 #endif
-        display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(), WindowBase::FULL, is_left, true);
-        break;
+
+    display(texture, is_left ? config.get_left_resolution() : config.get_right_resolution(), is_left ? config.get_left_position() : config.get_right_position(), WindowBase::FULL, is_left, true);
+    break;
+
     case StereoMode::ANAGLYPH_RED_CYAN:
         display(texture,
                 is_left ? config.get_left_resolution() : config.get_right_resolution(),
@@ -334,7 +347,16 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
         ctx_.render_context->set_blend_state(blend_state_);
     }
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+    fullscreen_quad_->draw_instanced(ctx_.render_context, 2);
+
+
+#else
     fullscreen_quad_->draw(ctx_.render_context);
+
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
     ctx_.render_context->reset_state_objects();
     fullscreen_shader_.unuse(ctx_);

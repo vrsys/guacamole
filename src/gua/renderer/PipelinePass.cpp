@@ -27,6 +27,7 @@
 #include <gua/renderer/LightTable.hpp>
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
 
@@ -110,6 +111,18 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
 }
 void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 {
+
+    auto const& camera = pipe.current_viewstate().camera;
+
+    auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+    bool is_instanced_side_by_side_enabled = false;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+        is_instanced_side_by_side_enabled = true;
+    }
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
     if(private_.is_enabled_) {
         auto const& ctx(pipe.get_context());
 
@@ -128,7 +141,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             auto& target = *pipe.current_viewstate().target;
 
             target.bind(ctx, !private_.writes_only_color_buffer_);
-            target.set_viewport(ctx);
+            target.set_side_by_side_viewport_array(ctx);
             if(depth_stencil_state_)
                 ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
             if(blend_state_)
@@ -145,10 +158,10 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             pipe.bind_gbuffer_input(shader_);
             pipe.bind_light_table(shader_);
 
-    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
             std::string gpu_query_name = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / " + private_->name_;
             pipe.begin_gpu_query(ctx, gpu_query_name);
-    #endif
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
             if(RenderMode::Callback == private_.rendermode_)
             {
@@ -156,12 +169,17 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             }
             else
             { // RenderMode::Quad
-                pipe.draw_quad();
+
+                if(is_instanced_side_by_side_enabled) {
+                    pipe.draw_quad_instanced(2);
+                } else {
+                    pipe.draw_quad();
+                }
             }
 
-    #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
+#ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
             pipe.end_gpu_query(ctx, gpu_query_name);
-    #endif
+#endif
 
             target.unbind(ctx);
             ctx.render_context->reset_state_objects();

@@ -127,7 +127,7 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 
     auto trimesh_model(
         loader.create_geometry_from_file(std::string("cube"),
-                                         "data/objects/cube.obj",
+                                         "data/objects/icosphere.obj",
                                          //"/opt/3d_models/assets/pillar/Column_Resized.obj",
                                          material,
                                          gua::TriMeshLoader::OPTIMIZE_GEOMETRY | gua::TriMeshLoader::LOAD_MATERIALS ));
@@ -135,9 +135,10 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
     auto current_mat = reinterpret_cast<gua::node::TriMeshNode*>(trimesh_model.get())->get_material();
     current_mat->set_show_back_faces(true);
 
-    //trimesh_model->scale(10.0f);
+    trimesh_model->scale(10.0f);
     trimesh_model->translate( 0.0f, 0.0, -100);
 
+<<<<<<< HEAD
 
     auto trimesh_model2(
         loader.create_geometry_from_file(std::string("cube2"),
@@ -156,6 +157,8 @@ void create_raycast_test_scene(std::shared_ptr<gua::node::Node> scene_root_node)
 
     trimesh_model->add_child(trimesh_model2);
 
+=======
+>>>>>>> upstream_project_rt_oc/feature/multi_view_rendering
     for(int model_idx = 0; model_idx < 0; ++model_idx) {
         auto trimesh_model_hair(
             loader.create_geometry_from_file(std::string("hair") + std::to_string(model_idx),
@@ -236,11 +239,6 @@ void create_child_bb_test_scene(std::shared_ptr<gua::node::Node> scene_root_node
     trimesh_model->translate(-60.0f, 0.0, -300.0f);
 
 }
-
-
-
-
-
 
 void create_city_quarter(std::shared_ptr<gua::node::Node> scene_root_node,
                          int const start_position_x,

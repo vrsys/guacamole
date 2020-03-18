@@ -65,11 +65,15 @@ struct GUA_DLL PipelineViewState
     node::SerializedCameraNode camera;
 
     Frustum frustum;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    Frustum secondary_frustum;
+#endif
+
     std::size_t viewpoint_uuid = 0;
 
     ViewDirection view_direction = front;
     bool shadow_mode = false;
-};
+}; //PipelineViewState
 
 
 class GUA_DLL Pipeline
@@ -116,7 +120,9 @@ class GUA_DLL Pipeline
 
     void bind_gbuffer_input(std::shared_ptr<ShaderProgram> const& shader) const;
     void bind_light_table(std::shared_ptr<ShaderProgram> const& shader) const;
+    
     void draw_quad();
+    void draw_quad_instanced(const int in_instance_count);
     void draw_box();
 
 

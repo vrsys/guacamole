@@ -32,4 +32,8 @@ out vec2 gua_quad_coords;
 void main() {
     gua_quad_coords = gua_in_texcoord;
     gl_Position = vec4(gua_in_position, 1.0);
+
+#if @get_enable_multi_view_rendering@
+  	gl_ViewportIndex = gl_InstanceID;
+#endif
 }

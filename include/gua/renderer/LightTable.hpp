@@ -53,6 +53,11 @@ class LightTable
     math::vec2ui invalidate(RenderContext const& ctx, math::vec2ui const& resolution, array_type const& lights, int tile_power, int sun_lights_num);
 
     std::shared_ptr<Texture3D> const& get_light_bitset() const { return light_bitset_; }
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    std::shared_ptr<Texture3D> const& get_secondary_light_bitset() const { return secondary_light_bitset_; }
+#endif
+
     int get_lights_num() const { return lights_num_; }
     int get_sun_lights_num() const { return sun_lights_num_; }
 
@@ -64,6 +69,9 @@ class LightTable
     int sun_lights_num_ = 0;
 
     std::shared_ptr<Texture3D> light_bitset_;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    std::shared_ptr<Texture3D> secondary_light_bitset_;
+#endif
     unsigned light_bitset_words_ = 0;
 };
 

@@ -54,4 +54,8 @@ void main() {
   //gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
   
   gl_Position = gua_view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
+
+  
+
+
 }

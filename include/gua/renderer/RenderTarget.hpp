@@ -39,6 +39,7 @@ class GUA_DLL RenderTarget
 
     virtual void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) = 0;
     virtual void set_viewport(RenderContext const& context);
+    virtual void set_side_by_side_viewport_array(RenderContext const& ctx);
 
     virtual void bind(RenderContext const& context, bool write_depth) = 0;
     virtual void unbind(RenderContext const& context);

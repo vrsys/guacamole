@@ -144,9 +144,25 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
 
     // recreate gbuffer if resolution changed
-    if(last_resolution_ != camera.config.get_resolution())
+
+    auto adjusted_camera_resolution = camera.config.get_resolution();
+
+    #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+
+        if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+            std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
+            adjusted_camera_resolution.x *= 2;
+        }
+    #else
+
+        std::cout << "MONO + SIDE BY SIDE" << std::endl;
+
+    #endif
+
+    if(last_resolution_ != adjusted_camera_resolution)
     {
-        last_resolution_ = camera.config.get_resolution();
+        last_resolution_ = adjusted_camera_resolution;
         reload_gbuffer = true;
     }
 
@@ -157,7 +173,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
             gbuffer_->remove_buffers(get_context());
         }
 
-        math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y));
+        math::vec2ui new_gbuf_size(std::max(1U, adjusted_camera_resolution.x), std::max(1U, adjusted_camera_resolution.y));
         gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size));
     }
 
@@ -198,6 +214,22 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
+
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        if (camera.config.get_enable_stereo())
+        {
+            global_substitution_map_["get_enable_multi_view_rendering"] = "1";
+        } else {
+            global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+        }
+
+#else
+        global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+
+#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
         global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
         global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
         global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
@@ -230,11 +262,29 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
     else
     {
-        camera_block_.update(context_, current_viewstate_.scene->rendering_frustum, math::get_translation(camera.transform), current_viewstate_.scene->clipping_planes, camera.config.get_view_id(),
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        camera_block_.update(context_, 
+                             current_viewstate_.scene->rendering_frustum, 
+                             current_viewstate_.scene->secondary_rendering_frustum,
+                             math::get_translation(camera.transform), 
+                             current_viewstate_.scene->clipping_planes, 
+                             camera.config.get_view_id(),
                              camera.config.get_resolution());
+        bind_camera_uniform_block(0);
+
+#else
+        camera_block_.update(context_, 
+                             current_viewstate_.scene->rendering_frustum, 
+                             math::get_translation(camera.transform), 
+                             current_viewstate_.scene->clipping_planes, 
+                             camera.config.get_view_id(),
+                             camera.config.get_resolution());
+        bind_camera_uniform_block(0);
+
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     }
 
-    bind_camera_uniform_block(0);
 
     // clear gbuffer
     gbuffer_->clear(context_, 1.f, 1);
@@ -668,7 +718,12 @@ void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) co
     if(light_table_->get_light_bitset() && light_table_->get_lights_num() > 0)
     {
         shader->set_uniform(context_, light_table_->get_light_bitset()->get_handle(context_), "gua_light_bitset");
+        
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        shader->set_uniform(context_, light_table_->get_secondary_light_bitset()->get_handle(context_), "gua_secondary_light_bitset");
+#endif
         context_.render_context->bind_uniform_buffer(light_table_->light_uniform_block().block_buffer(), 1);
+
     }
 }
 
@@ -679,6 +734,10 @@ void Pipeline::bind_camera_uniform_block(unsigned location) const { get_context(
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::draw_quad() { quad_->draw(context_.render_context); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::draw_quad_instanced(const int in_instance_count) { quad_->draw_instanced(context_.render_context, in_instance_count); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

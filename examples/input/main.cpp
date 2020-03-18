@@ -165,11 +165,12 @@ int main(int argc, char** argv)
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0, 0, 2.0);
     camera->config.set_resolution(resolution);
-    camera->config.set_screen_path("/screen");
+    camera->config.set_left_screen_path("/screen");
+    camera->config.set_right_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
-    camera->config.set_enable_stereo(false);
-    camera->set_pre_render_cameras({portal_camera});
+    camera->config.set_enable_stereo(true);
+    //camera->set_pre_render_cameras({portal_camera});
 
     camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
     camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
@@ -178,9 +179,12 @@ int main(int argc, char** argv)
     gua::WindowDatabase::instance()->add("main_window", window);
 
     window->config.set_enable_vsync(false);
-    window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
-    window->config.set_stereo_mode(gua::StereoMode::MONO);
+    window->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
+    window->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
+    window->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
+    window->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
+    window->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
+    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);

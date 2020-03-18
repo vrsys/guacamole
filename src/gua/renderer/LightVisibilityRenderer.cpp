@@ -3,6 +3,7 @@
 
 #include <gua/renderer/Pipeline.hpp>
 #include <gua/databases/GeometryDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/renderer/TriMeshRessource.hpp>
 #include <gua/node/LightNode.hpp>
@@ -50,6 +51,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 
     ctx.render_context->set_frame_buffer(empty_fbo_);
 
+    // should this be viewport array???
     ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution));
 
     if(pass.depth_stencil_state())
@@ -69,7 +71,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     {
         glapi.glEnable(GL_MULTISAMPLE);
     }
-
+    std::cout << "BEGIN DRAWING LIGHT" << std::endl;
     draw_lights(pipe, transforms, lights);
 
     if(ms_sample_count > 0)
@@ -227,26 +229,83 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
 
+    auto camera = pipe.current_viewstate().camera;
+
+    auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+    bool is_instanced_side_by_side_enabled = false;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+        is_instanced_side_by_side_enabled = true;
+    }
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+math::mat4f secondary_view_projection_mat{1.0f, 0.0f, 0.0f, 0.0f, 
+                                          0.0f, 1.0f, 0.0f, 0.0f, 
+                                          0.0f, 0.0f, 1.0f, 0.0f, 
+                                          0.0f, 0.0f, 0.0f, 1.0f};
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(is_instanced_side_by_side_enabled) {
+        secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+    }
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
     // draw lights
     for(size_t i = 0; i < lights.size(); ++i)
     {
         if(lights[i].type == 2) // skip sun lights
             continue;
 
+        gl_program->uniform("light_id", 0, int(i));
+
         math::mat4f light_transform(transforms[i]);
 
         auto light_mvp_mat = view_projection_mat * light_transform;
-
         gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        
-        gl_program->uniform("light_id", 0, int(i));
-        ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
+        ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
+                                       scm::gl::FORMAT_R_32UI, 
+                                       scm::gl::ACCESS_READ_WRITE, 
+                                       0, 0, 0);
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+        if(is_instanced_side_by_side_enabled) {
+            auto secondary_light_mvp_mat = secondary_view_projection_mat * light_transform;
+            gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
+            ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
+                                           scm::gl::FORMAT_R_32UI, 
+                                           scm::gl::ACCESS_READ_WRITE, 
+                                           1, 0, 0);
+        }
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
         ctx.render_context->apply();
 
         if(lights[i].type == 0) // point light
+        {
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+            light_sphere->draw_instanced(pipe.get_context(),2);
+#else
             light_sphere->draw(pipe.get_context());
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        }
+
         else if(lights[i].type == 1) // spot light
+        {
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+            light_cone->draw_instanced(pipe.get_context(),2);
+
+#else
             light_cone->draw(pipe.get_context());
+
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+        }
+
     }
 }
 
