@@ -1,6 +1,9 @@
 #ifndef GUA_LIGHT_TABLE_HPP
 #define GUA_LIGHT_TABLE_HPP
 
+#include <gua/config.hpp>
+
+
 #include <gua/math/math.hpp>
 
 #include <gua/renderer/RenderContext.hpp>

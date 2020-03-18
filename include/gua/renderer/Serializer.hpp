@@ -22,6 +22,8 @@
 #ifndef GUA_SERIALIZER_HPP
 #define GUA_SERIALIZER_HPP
 
+#include <gua/config.hpp>
+
 #include <stack>
 
 // guacamole headers

@@ -31,15 +31,17 @@ in vec3 gua_max[];
 in int instance_id[];
 // body 
 void main() {
+mat4 mat;
+
 #if @get_enable_multi_view_rendering@
-    mat4 mat;
     if (0 == instance_id[0]) {
       mat = gua_view_projection_matrix;
+
     } else {
       mat = gua_secondary_view_projection_matrix;
     }
 #else 
-    mat4 mat = gua_view_projection_matrix;
+    mat = gua_view_projection_matrix;
 #endif
 
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);

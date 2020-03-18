@@ -22,6 +22,8 @@
 #ifndef GUA_BBOX_PASS_HPP
 #define GUA_BBOX_PASS_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/renderer/PipelinePass.hpp>
 
 #include <memory>

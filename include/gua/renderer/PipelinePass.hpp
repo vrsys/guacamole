@@ -22,6 +22,8 @@
 #ifndef GUA_PIPELINE_PASS_HPP
 #define GUA_PIPELINE_PASS_HPP
 
+#include <gua/config.hpp>
+
 #include <scm/gl_core.h>
 #include <gua/renderer/ShaderProgram.hpp>
 

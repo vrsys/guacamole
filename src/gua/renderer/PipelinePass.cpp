@@ -141,7 +141,14 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             auto& target = *pipe.current_viewstate().target;
 
             target.bind(ctx, !private_.writes_only_color_buffer_);
-            target.set_side_by_side_viewport_array(ctx);
+
+            if (is_instanced_side_by_side_enabled)
+            {
+                target.set_side_by_side_viewport_array(ctx);
+
+            } else {
+                target.set_viewport(ctx);
+            }
             if(depth_stencil_state_)
                 ctx.render_context->set_depth_stencil_state(depth_stencil_state_, 1);
             if(blend_state_)
