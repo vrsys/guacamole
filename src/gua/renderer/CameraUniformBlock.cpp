@@ -21,12 +21,15 @@ void CameraUniformBlock::update(
     auto view(cam.get_view());
     auto projection_inv(scm::math::inverse(projection));
 
+    auto view_projection = projection * view;
     uniform_block_.begin_manipulation(context.render_context);
     {
+        auto view_projection_mat = 
         uniform_block_->view = view;
         uniform_block_->projection = projection;
+        uniform_block_->view_projection = view_projection;
         uniform_block_->projection_inverse = projection_inv;
-        uniform_block_->projection_view_inverse = scm::math::inverse(projection * view);
+        uniform_block_->projection_view_inverse = scm::math::inverse(view_projection);
         uniform_block_->position = math::vec4(camera_position, 1.0);
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
@@ -66,6 +69,7 @@ void CameraUniformBlock::updateHMD(RenderContext const &context, Frustum const &
     cam.set_view(view);
     //auto view(mat4eyePos * scm::math::inverse(cam.get_view()));
     auto projection_inv(scm::math::inverse(projection));
+    auto view_projection = projection * view;
     //auto camera_position(cam.get_camera_position());
     auto camera_position = scm::math::inverse(view) * gua::math::vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -73,8 +77,9 @@ void CameraUniformBlock::updateHMD(RenderContext const &context, Frustum const &
     {
         uniform_block_->view = view;
         uniform_block_->projection = projection;
+        uniform_block_->view_projection = view_projection;
         uniform_block_->projection_inverse = projection_inv;
-        uniform_block_->projection_view_inverse = scm::math::inverse(projection * view);
+        uniform_block_->projection_view_inverse = scm::math::inverse(view_projection);
         //uniform_block_->position = gua::math::vec4(camera_position, 1.0f);
         uniform_block_->position = camera_position;
         uniform_block_->resolution = screen_resolution;

@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 // class header
-#include <gua/renderer/LowQualitySplattingSubRenderer.hpp>
+#include <gua/renderer/DepthComplexityVisSubRenderer.hpp>
 
 #include <gua/renderer/LodResource.hpp>
 
@@ -38,20 +38,23 @@ gua::math::vec2ui get_handle(scm::gl::texture_image_ptr const& tex)
 
 } // namespace
 
+
+
 namespace gua
 {
-LowQualitySplattingSubRenderer::LowQualitySplattingSubRenderer() : PLodSubRenderer() { 
+DepthComplexityVisSubRenderer::DepthComplexityVisSubRenderer() : PLodSubRenderer()
+{ 
         _load_shaders();
 }
 
-void LowQualitySplattingSubRenderer::create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources)
+void DepthComplexityVisSubRenderer::create_gpu_resources(gua::RenderContext const& ctx, scm::math::vec2ui const& render_target_dims, gua::plod_shared_resources& shared_resources)
 {
     // state objects
     no_backface_culling_rasterizer_state_ =
         ctx.render_device->create_rasterizer_state(scm::gl::FILL_SOLID, scm::gl::CULL_NONE, scm::gl::ORIENT_CCW, false, false, 0.0, false, false, scm::gl::point_raster_state(false));
 }
 
-void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
+void DepthComplexityVisSubRenderer::render_sub_pass(Pipeline& pipe,
                                                      PipelinePassDescription const& desc,
                                                      gua::plod_shared_resources& shared_resources,
                                                      std::vector<node::Node*>& sorted_models,
@@ -66,7 +69,13 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
 
     scm::gl::context_all_guard context_guard(ctx.render_context);
 
-    ctx.render_context->set_rasterizer_state(no_backface_culling_rasterizer_state_);
+
+    depth_stencil_state_writing_without_test_state_ = ctx.render_device->create_depth_stencil_state(false, true, scm::gl::COMPARISON_LESS); 
+    color_accumulation_state_ = ctx.render_device->create_blend_state(true, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::FUNC_ONE, scm::gl::EQ_FUNC_ADD, scm::gl::EQ_FUNC_ADD);
+    
+    ctx.render_context->set_blend_state(color_accumulation_state_);
+    ctx.render_context->set_depth_stencil_state(depth_stencil_state_writing_without_test_state_);
+    ctx.render_context->apply_state_objects();
 
     bool write_depth = true;
     target.bind(ctx, write_depth);
@@ -77,7 +86,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
     bool program_changed = false;
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
-    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / LowQualitySplattingSubRenderer::DepthPass";
+    std::string const gpu_query_name_depth_pass = "GPU: Camera uuid: " + std::to_string(pipe.current_viewstate().viewpoint_uuid) + " / DepthComplexityVisSubRenderer::DepthPass";
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 #endif
 
@@ -125,7 +134,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
         }
         else
         {
-            Logger::LOG_WARNING << "LowQualitySplattingSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
+            Logger::LOG_WARNING << "DepthComplexityVisSubRenderer::render(): Cannot find ressources for node: " << plod_node->get_name() << std::endl;
         }
     }
     target.unbind(ctx);
@@ -135,7 +144,7 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
 #endif
 }
 
-void LowQualitySplattingSubRenderer::_load_shaders()
+void DepthComplexityVisSubRenderer::_load_shaders()
 {
     // create stages only with one thread!
     if(!shaders_loaded_)
@@ -147,12 +156,13 @@ void LowQualitySplattingSubRenderer::_load_shaders()
         shader_stages_.clear();
         shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_VERTEX_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.vert")));
         shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_GEOMETRY_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.geom")));
-        shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality.frag")));
+        shader_stages_.push_back(ShaderProgramStage(scm::gl::STAGE_FRAGMENT_SHADER, factory.read_shader_file("resources/shaders/plod/one_pass_splatting/one_pass_low_quality_depth_visualisation.frag")));
         shaders_loaded_ = true;
     }
 }
 
-void LowQualitySplattingSubRenderer::_upload_model_dependent_uniforms(std::shared_ptr<ShaderProgram> const& current_material_shader,
+
+void DepthComplexityVisSubRenderer::_upload_model_dependent_uniforms(std::shared_ptr<ShaderProgram> const& current_material_shader,
                                                                       RenderContext const& ctx,
                                                                       node::PLodNode* plod_node,
                                                                       gua::Pipeline& pipe)

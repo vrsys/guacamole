@@ -20,6 +20,7 @@
  *                                                                            *
  ******************************************************************************/
 
+
 // class header
 #include <gua/renderer/PipelineDescription.hpp>
 
@@ -39,6 +40,9 @@
 
 namespace gua
 {
+
+class PLodPassDescription;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<PipelineDescription> PipelineDescription::make_default()

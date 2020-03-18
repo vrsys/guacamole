@@ -74,7 +74,7 @@ class RayNode;
  */
 class GUA_DLL Node
 {
-  public:
+public:
     /**
      * Constructor.
      *
@@ -98,7 +98,9 @@ class GUA_DLL Node
      *
      * \return std::string  The Node's name.
      */
-    inline std::string const& get_name() const { return name_; }
+    inline std::string const& get_name() const {
+        return name_;
+    }
 
 
     /**
@@ -107,14 +109,16 @@ class GUA_DLL Node
      *
      * \return std::size_t  Number of faces contained in hierarchy below this node.
      */
-    virtual std::size_t num_grouped_faces() const; 
+    virtual std::size_t num_grouped_faces() const;
 
     /**
      * Sets the Node's name.
      *
      * \param name   The Node's new name.
      */
-    inline void set_name(std::string const& name) { name_ = name; }
+    inline void set_name(std::string const& name) {
+        name_ = name;
+    }
 
     /**
      * Adds a child.
@@ -173,7 +177,9 @@ class GUA_DLL Node
      *
      * \return std::vector<std::shared_ptr<Node>>  The Node's children vector.
      */
-    inline std::vector<std::shared_ptr<Node>> const& get_children() const { return children_; }
+    inline std::vector<std::shared_ptr<Node>> const& get_children() const {
+        return children_;
+    }
 
     /**
      * Clears the Node's children vector. Additionally, the parent node pointer of
@@ -189,7 +195,9 @@ class GUA_DLL Node
      *
      * \return math::mat4  The Object's transformation.
      */
-    inline virtual math::mat4 get_transform() const { return transform_; }
+    inline virtual math::mat4 get_transform() const {
+        return transform_;
+    }
 
     /**
      * Sets the Node's transformation.
@@ -210,14 +218,18 @@ class GUA_DLL Node
 
     math::mat4 const& get_cached_world_transform() const;
 
-	math::mat4 get_latest_cached_world_transform(const WindowBase* w) const;
+    math::mat4 get_latest_cached_world_transform(const WindowBase* w) const;
 
-  private:
+private:
     virtual math::mat4 get_latest_world_transform(const WindowBase* w) const;
 
-  public:
+public:
 
-    inline virtual std::string get_type_string() const {return "<Node>";}
+    inline virtual std::string get_type_string() const {
+        return "<Node>";
+    }
+
+    bool is_visible;
 
     events::Signal<math::mat4 const&> on_world_transform_changed;
 
@@ -311,7 +323,9 @@ class GUA_DLL Node
      * \return bool  The return value is true if the Node has any children, else
      *               false.
      */
-    inline bool has_children() const { return !children_.empty(); }
+    inline bool has_children() const {
+        return !children_.empty();
+    }
 
     /**
      * Returns the full path to the node.
@@ -328,7 +342,9 @@ class GUA_DLL Node
      *
      * \return Node*  The Node's parent.
      */
-    inline Node* get_parent() const { return parent_; }
+    inline Node* get_parent() const {
+        return parent_;
+    }
 
     /**
      * Returns a shared pointer to the Node's parent.
@@ -342,7 +358,9 @@ class GUA_DLL Node
      *
      * \return math::BoundingBox<math::vec3>  The Node's BoundingBox.
      */
-    virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const { return bounding_box_; }
+    virtual inline math::BoundingBox<math::vec3> const& get_bounding_box() const {
+        return bounding_box_;
+    }
 
     /**
      * Updates a Node's BoundingBox.
@@ -451,14 +469,14 @@ class GUA_DLL Node
      */
     //void set_visibility(std::size_t in_camera_uuid, bool is_visible);
 
-   /**
-     * Returns the frame id in which the node's visibility status was updated last.
-     *
-     *
-     * \param in_camera_uuid  The uuid of the serialized camera node for which frame id is queried.
-     *
-     * \return bool   The id of the frame in which the node was queried last.
-     */
+    /**
+      * Returns the frame id in which the node's visibility status was updated last.
+      *
+      *
+      * \param in_camera_uuid  The uuid of the serialized camera node for which frame id is queried.
+      *
+      * \return bool   The id of the frame in which the node was queried last.
+      */
     //int32_t get_last_visibility_check_frame_id(std::size_t in_camera_uuid) const;
 
     /**
@@ -474,7 +492,16 @@ class GUA_DLL Node
     /**
      * \return size_t unique address of node
      */
-    inline std::size_t const uuid() const { return uuid_; }
+    inline std::size_t const uuid() const {
+        return uuid_;
+    }
+
+    /**
+     * \return size_t unique address of node between all nodes (except for copied ones). Use for occlusion culling
+     */
+    inline std::size_t const unique_node_id() const {
+        return unique_node_id_;
+    }
 
     friend class ::gua::SceneGraph;
     friend class ::gua::Serializer;
@@ -496,27 +523,33 @@ class GUA_DLL Node
      *
      * \return node     A pointer of the recently generated Node.
      */
-    virtual std::shared_ptr<Node> deep_copy() const;
+    virtual std::shared_ptr<Node> deep_copy(bool copy_unique_node_ids) const;
 
-    SceneGraph* get_scenegraph() const { return scenegraph_; }
+    SceneGraph* get_scenegraph() const {
+        return scenegraph_;
+    }
 
-  protected:
+protected:
     /**
      * Returns if the Node is Root
      *
      * \return bool     Is root node of SceneGraph
      */
-    inline bool is_root() const { return parent_ == nullptr; }
+    inline bool is_root() const {
+        return parent_ == nullptr;
+    }
 
-  private:
+private:
     /**
      * Sets the Node's parent.
      *
      * \param parent    The new parent of the Node.
      */
-    inline void set_parent(Node* parent) { parent_ = parent; }
+    inline void set_parent(Node* parent) {
+        parent_ = parent;
+    }
 
-  private:
+private:
     // structure
     Node* parent_ = nullptr;
     std::vector<std::shared_ptr<Node>> children_;
@@ -526,7 +559,7 @@ class GUA_DLL Node
     std::vector<void*> user_data_;
     std::string name_;
 
-  protected:
+protected:
     bool is_visible_in(SerializedScene const& scene, node::SerializedCameraNode const& camera) const;
 
     void set_dirty() const;
@@ -548,6 +581,12 @@ class GUA_DLL Node
 
     SceneGraph* scenegraph_ = nullptr;
     std::size_t uuid_ = boost::hash<boost::uuids::uuid>()(boost::uuids::random_generator()());
+
+    //unique id for newly created nodes
+    size_t unique_node_id_ = 0;
+
+private:
+    static size_t unique_node_counter_;
 };
 
 } // namespace node

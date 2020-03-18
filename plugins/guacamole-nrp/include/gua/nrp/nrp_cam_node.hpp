@@ -15,7 +15,7 @@ class GUA_NRP_DLL NRPCameraNode : public gua::node::CameraNode
     explicit NRPCameraNode(std::string const &name, std::shared_ptr<PipelineDescription> const &description = PipelineDescription::make_default(), Configuration const &configuration = Configuration(),
                            math::mat4 const &transform = math::mat4::identity());
 
-    std::shared_ptr<node::Node> deep_copy() const override;
+    std::shared_ptr<node::Node> deep_copy(bool copy_unique_node_ids = true) const override;
     void update_cache() override;
     void set_transform(math::mat4 const &transform) override;
     void scale(math::float_t x, math::float_t y, math::float_t z) override;

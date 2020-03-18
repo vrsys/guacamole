@@ -54,6 +54,26 @@ unsigned PipelinePassDescription::mod_count() const { return mod_count_; }
 
 const std::vector<std::shared_ptr<PipelineResponsibilityDescription>>& PipelinePassDescription::get_responsibilities() const { return pipeline_responsibilities_; }
 
+///////////////////////////////////////////////////////////////////////////////////
+void PipelinePassDescription::set_enable_depth_complexity_vis(bool enable) {
+    enable_depth_complexity_vis_ = enable;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+bool PipelinePassDescription::get_enable_depth_complexity_vis() const {
+    return enable_depth_complexity_vis_;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+void PipelinePassDescription::set_enable_culling_geometry_vis(bool enable) {
+    enable_culling_geometry_vis_ = enable;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+bool PipelinePassDescription::get_enable_culling_geometry_vis() const {
+    return enable_culling_geometry_vis_;
+}
+
 bool PipelinePass::needs_color_buffer_as_input() const { return private_.needs_color_buffer_as_input_; }
 bool PipelinePass::writes_only_color_buffer() const { return private_.writes_only_color_buffer_; }
 bool PipelinePass::enable_for_shadows() const { return private_.enable_for_shadows_; }
@@ -182,4 +202,8 @@ void PipelinePass::upload_program(PipelinePassDescription const& desc, RenderCon
 }
 
 PipelineResponsibility::PipelineResponsibility(PipelineResponsibilityDescription const& d, Pipeline& pipe) : private_(d.private_) {}
+
+
+
+
 } // namespace gua

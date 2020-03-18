@@ -14,7 +14,7 @@ class GUA_NRP_DLL NRPInteractiveNode : public gua::node::TransformNode
     NRPInteractiveNode();
     explicit NRPInteractiveNode(const std::string &name, math::mat4 const &transform = math::mat4::identity());
 
-    std::shared_ptr<node::Node> deep_copy() const override;
+    std::shared_ptr<node::Node> deep_copy(bool make_deep_copy = true) const override;
     void update_cache() override;
     void set_transform(math::mat4 const &transform) override;
     void scale(math::float_t x, math::float_t y, math::float_t z) override;

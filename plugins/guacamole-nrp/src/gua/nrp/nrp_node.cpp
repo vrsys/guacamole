@@ -20,10 +20,10 @@ NRPNode::NRPNode(const std::string &name, const math::mat4 &transform, std::func
     this->_pre_pass = std::move(pre_pass);
     this->_post_pass = std::move(post_pass);
 }
-std::shared_ptr<node::Node> NRPNode::deep_copy() const
+std::shared_ptr<node::Node> NRPNode::deep_copy(bool copy_unique_node_ids) const
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
-    auto copied_node = node::TransformNode::deep_copy();
+    auto copied_node = node::TransformNode::deep_copy(copy_unique_node_ids);
     return copied_node;
 }
 void NRPNode::accept(NodeVisitor &visitor)

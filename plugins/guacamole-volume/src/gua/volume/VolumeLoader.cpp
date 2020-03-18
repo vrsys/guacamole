@@ -109,7 +109,7 @@ std::shared_ptr<node::Node> VolumeLoader::create_volume_from_file(std::string co
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         copy->set_name(node_name);
         return copy;

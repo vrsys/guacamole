@@ -21,11 +21,37 @@
 
 @include "shaders/common/header.glsl"
 
-layout (early_fragment_tests) in;
+// uniforms
+@include "shaders/common/gua_camera_uniforms.glsl"
 
-layout (location = 0) out vec3 out_color;
+
+//ignore remaing layout parameters
+
+uniform vec3 world_space_bb_min[30];
+uniform vec3 world_space_bb_max[30];
+
+vec3 implicit_unit_box[14] = vec3[](
+    vec3(0.f, 1.f, 1.f),     // Front-top-left
+    vec3(1.f, 1.f, 1.f),      // Front-top-right
+    vec3(0.f, 0.f, 1.f),    // Front-bottom-left
+    vec3(1.f, 0.f, 1.f),     // Front-bottom-right
+    vec3(1.f, 0.f, 0.f),    // Back-bottom-right
+    vec3(1.f, 1.f, 1.f),      // Front-top-right
+    vec3(1.f, 1.f, 0.f),     // Back-top-right
+    vec3(0.f, 1.f, 1.f),     // Front-top-left
+    vec3(0.f, 1.f, 0.f),    // Back-top-left
+    vec3(0.f, 0.f, 1.f),    // Front-bottom-left
+    vec3(0.f, 0.f, 0.f),   // Back-bottom-left
+    vec3(1.f, 0.f, 0.f),    // Back-bottom-right
+    vec3(0.f, 1.f, 0.f),    // Back-top-left
+    vec3(1.f, 1.f, 0.f)      // Back-top-right
+);
 
 
+// simplest possible vertex shader that does not use constant values
 void main() {
-  out_color = vec3(1.0, 0.0, 0.0);
+  vec3 bounding_box_dims = world_space_bb_max[gl_InstanceID] - world_space_bb_min[gl_InstanceID]; //get scaling in this line
+  //gl_Position = view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
+  
+  gl_Position = gua_view_projection_matrix * vec4(bounding_box_dims * implicit_unit_box[gl_VertexID] + world_space_bb_min[gl_InstanceID], 1.0);
 }

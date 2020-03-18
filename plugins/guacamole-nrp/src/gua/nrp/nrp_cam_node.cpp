@@ -18,10 +18,10 @@ NRPCameraNode::NRPCameraNode(std::string const &name, std::shared_ptr<PipelineDe
     auto *binder = &NRPBinder::get_instance();
     binder->bind_cam_node(this);
 }
-std::shared_ptr<node::Node> NRPCameraNode::deep_copy() const
+std::shared_ptr<node::Node> NRPCameraNode::deep_copy(bool copy_unique_node_ids) const
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
-    auto copied_node = node::Node::deep_copy();
+    auto copied_node = node::Node::deep_copy(copy_unique_node_ids);
     return copied_node;
 }
 void NRPCameraNode::update_cache()

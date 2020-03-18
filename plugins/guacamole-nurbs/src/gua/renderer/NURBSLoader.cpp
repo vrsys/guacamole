@@ -52,7 +52,7 @@ std::shared_ptr<node::NURBSNode> NURBSLoader::load_geometry(std::string const& n
 
     if(cached_node)
     {
-        auto copy = std::dynamic_pointer_cast<node::NURBSNode>(cached_node->deep_copy());
+        auto copy = std::dynamic_pointer_cast<node::NURBSNode>(cached_node->deep_copy(false));
 
         if(copy)
         {

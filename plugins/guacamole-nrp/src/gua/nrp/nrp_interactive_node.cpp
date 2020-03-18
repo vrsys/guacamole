@@ -16,10 +16,10 @@ NRPInteractiveNode::NRPInteractiveNode(const std::string &name, const math::mat4
     auto *binder = &NRPBinder::get_instance();
     binder->bind_interactive_node(this);
 }
-std::shared_ptr<node::Node> NRPInteractiveNode::deep_copy() const
+std::shared_ptr<node::Node> NRPInteractiveNode::deep_copy(bool copy_unique_node_ids) const
 {
     std::unique_lock<std::mutex> lock(NRPBinder::get_instance().get_scene_mutex());
-    auto copied_node = node::Node::deep_copy();
+    auto copied_node = node::Node::deep_copy(copy_unique_node_ids);
     return copied_node;
 }
 void NRPInteractiveNode::update_cache()

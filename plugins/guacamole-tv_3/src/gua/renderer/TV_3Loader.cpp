@@ -187,7 +187,7 @@ std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(
 
     if(cached_node)
     {
-        auto copy(cached_node->deep_copy());
+        auto copy(cached_node->deep_copy(false));
 
         apply_fallback_material(copy, fallback_material, flags); //& NO_SHARED_MATERIALS
 
@@ -206,7 +206,7 @@ std::shared_ptr<node::Node> TV_3Loader::create_geometry_from_file(std::string co
 
     if(cached_node)
     {
-        auto copy(std::dynamic_pointer_cast<node::Node>(cached_node->deep_copy()));
+        auto copy(std::dynamic_pointer_cast<node::Node>(cached_node->deep_copy(false)));
 
         auto shader(gua::MaterialShaderDatabase::instance()->lookup("gua_default_material"));
         apply_fallback_material(copy, shader->make_new_material(), flags /*& NO_SHARED_MATERIALS*/);
