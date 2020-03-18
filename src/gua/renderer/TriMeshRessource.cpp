@@ -183,9 +183,13 @@ std::vector<unsigned int> TriMeshRessource::get_face(unsigned int i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool TriMeshRessource::save_to_binary(const char* filename, unsigned flags)
+bool TriMeshRessource::save_to_binary(const char* filename_gua_trimesh, const char* filename_gua_kdtree, unsigned flags)
 {
-    return mesh_.save_to_binary(filename, flags);
+    bool res = mesh_.save_to_binary(filename_gua_trimesh, flags);
+    if( (nullptr != filename_gua_kdtree) && (0 < kd_tree_.get_num_nodes()) ){
+        res = res && kd_tree_.save_to_binary(filename_gua_kdtree);
+    }
+    return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

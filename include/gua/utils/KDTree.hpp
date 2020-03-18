@@ -54,6 +54,8 @@ class KDTree
      */
     void generate(Mesh const& mesh);
 
+    void generate(const char* filename);
+
     //returns the number of nodes in the tree
     int get_num_nodes() const;
 
@@ -69,6 +71,8 @@ class KDTree
      *                deleted depending on the supplied options.
      */
     void ray_test(Ray const& ray, Mesh const& mesh, int options, node::Node* owner, std::set<PickResult>& hits) const;
+
+    bool save_to_binary(const char* filename) const;
 
   private:
     // a private struct used for triangle data storage in the leaves of the tree
@@ -100,6 +104,9 @@ class KDTree
         KDNode(KDNode* left_child, KDNode* right_child, unsigned splitting_dimension, float splitting_position, math::BoundingBox<math::vec3> const& bounds);
 
         void print(unsigned depth) const;
+        
+        size_t write(FILE* &f);
+        size_t read(FILE* &f);
 
         std::vector<LeafData> data_;
         KDNode *left_child_, *right_child_;

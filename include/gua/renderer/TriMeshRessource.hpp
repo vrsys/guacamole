@@ -101,7 +101,7 @@ class GUA_DLL TriMeshRessource : public GeometryResource
     math::vec3 get_vertex(unsigned int i) const;
     std::vector<unsigned int> get_face(unsigned int i) const;
 
-    bool save_to_binary(const char* filename, unsigned flags = DEFAULTS);
+    bool save_to_binary(const char* filename_gua_trimesh, const char* filename_gua_kdtree, unsigned flags = DEFAULTS);
 
   private:
     void upload_to(RenderContext& context) const;

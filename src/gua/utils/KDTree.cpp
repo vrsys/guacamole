@@ -27,6 +27,8 @@
 #include <iostream>
 #include <queue>
 
+#include <stack>
+
 namespace gua
 {
 KDTree::KDTree() : root_(nullptr), current_visit_flag_(0), num_nodes_in_tree_(0) {}
@@ -103,6 +105,54 @@ void KDTree::generate(Mesh const& mesh)
     }
 }
 
+void
+KDTree::generate(const char* filename){
+       
+    FILE* f = fopen( filename, "rb");
+    if(nullptr == f){
+        std::cout << "ERROR: KDTree: could not open file " << filename << " kdtree will not be generated" << std::endl;
+        return;
+    }
+
+    fread(&num_nodes_in_tree_, sizeof(num_nodes_in_tree_), 1, f);
+
+    size_t indices_size(0);
+    fread(&indices_size, sizeof(indices_size), 1, f);
+    indices.resize(indices_size);
+    fread(&indices[0], sizeof(uint32_t), indices_size, f);
+    
+    size_t triangles_size(0);
+    fread(&triangles_size, sizeof(triangles_size), 1, f);
+    triangles_.resize(triangles_size);
+    fread(&triangles_[0], sizeof(Triangle), triangles_size, f); 
+
+
+    bool isvalid;
+    fread(&isvalid, sizeof(isvalid), 1, f);
+    root_ = new KDNode;
+    root_->read(f);
+    std::stack<KDNode**> childpointer;
+    childpointer.push(&(root_->right_child_));
+    childpointer.push(&(root_->left_child_));
+    while(!childpointer.empty()){
+        KDNode** current_childpointer = childpointer.top(); childpointer.pop();
+        fread(&isvalid, sizeof(isvalid), 1, f);
+        if(isvalid){
+            KDNode* child = new KDNode;
+            *current_childpointer = child;
+            child->read(f);
+            childpointer.push(&(child->right_child_));
+            childpointer.push(&(child->left_child_));
+        }
+        else{
+            *current_childpointer = nullptr;
+        }
+    }
+    fclose(f);
+
+    //root_->print(0);
+}
+
 int KDTree::get_num_nodes() const {
     return num_nodes_in_tree_;
 }
@@ -166,6 +216,7 @@ KDTree::KDNode* KDTree::build(std::vector<std::vector<LeafData>> const& sorted_t
     // return empty leaf if there are no triangles left
     if(sorted_triangles[current_dim].size() == 0)
     {
+        std::cout << "ERROR - leaf not initialized as is_leaf_ == true" << std::endl;
         return new KDNode;
     }
 
@@ -527,12 +578,187 @@ void KDTree::KDNode::print(unsigned depth) const
     else
         msg += "Split @ " + string_utils::to_string(splitting_position_) + " " + string_utils::to_string(bounds_.min) + " " + string_utils::to_string(bounds_.max);
 
-    Logger::LOG_MESSAGE << msg << std::endl;
+    std::cout << msg << std::endl;
 
     if(left_child_)
         left_child_->print(depth + 1);
     if(right_child_)
         right_child_->print(depth + 1);
+}
+
+
+size_t
+KDTree::KDNode::write(FILE* &f){
+    size_t res = 0;
+    res += fwrite(&is_leaf_, sizeof(is_leaf_), 1, f);
+    res += fwrite(&splitting_dimension_, sizeof(splitting_dimension_), 1, f);
+    res += fwrite(&splitting_position_, sizeof(splitting_position_), 1, f);
+    res += fwrite(&bounds_.min, sizeof(bounds_.min), 1, f);
+    res += fwrite(&bounds_.max, sizeof(bounds_.max), 1, f);
+    if(is_leaf_){
+        unsigned num_leaf_data(data_.size());
+        res += fwrite(&num_leaf_data, sizeof(num_leaf_data), 1, f);
+        res += fwrite(&data_[0], sizeof(LeafData), num_leaf_data, f);
+    }
+    return res;
+}
+
+size_t
+KDTree::KDNode::read(FILE* &f){
+    size_t res = 0;
+    res += fread(&is_leaf_, sizeof(is_leaf_), 1, f);
+    res += fread(&splitting_dimension_, sizeof(splitting_dimension_), 1, f);
+    res += fread(&splitting_position_, sizeof(splitting_position_), 1, f);
+    res += fread(&bounds_.min, sizeof(bounds_.min), 1, f);
+    res += fread(&bounds_.max, sizeof(bounds_.max), 1, f);
+    if(is_leaf_){
+        unsigned num_leaf_data(0);
+        res += fread(&num_leaf_data, sizeof(num_leaf_data), 1, f);
+        data_.resize(num_leaf_data);
+        res += fread(&data_[0], sizeof(LeafData), num_leaf_data, f);
+    }
+    return res;
+}
+
+
+bool
+KDTree::save_to_binary(const char* filename) const
+{
+    
+    FILE* f = fopen( filename, "wb");
+    if(nullptr == f){
+        std::cout << "ERROR: Mesh: could not open file " << filename << " kdtree will not be written" << std::endl;
+        return false;
+    }
+
+
+#if 0
+    mutable std::vector<uint32_t> indices;
+    KDNode* root_;
+    std::vector<Triangle> triangles_;
+
+    mutable node::Node* current_owner_;
+    mutable int current_options_;
+    mutable unsigned current_visit_flag_;
+    mutable int num_nodes_in_tree_;
+
+    // save:
+    num_nodes_in_tree_
+    indices.size()
+    indices
+    triangles_.size()
+    triangles_
+    root_ -> hierarchy
+    
+    
+    // load:
+    num_nodes_in_tree_
+    indices.size()
+    indices
+    triangles_.size()
+    triangles_
+    root_ -> hierarchy
+
+#endif
+
+    fwrite(&num_nodes_in_tree_, sizeof(num_nodes_in_tree_), 1, f);
+
+    size_t indices_size = indices.size();
+    fwrite(&indices_size, sizeof(indices_size), 1, f);
+    fwrite(&indices[0], sizeof(uint32_t), indices_size, f);
+    
+    size_t triangles_size = triangles_.size();
+    fwrite(&triangles_size, sizeof(triangles_size), 1, f);
+    fwrite(&triangles_[0], sizeof(Triangle), triangles_size, f);    
+
+
+    const bool valid = true;
+    const bool childstop = false;
+
+    std::stack<KDNode*> stk;
+    stk.push(root_);
+    while(!stk.empty()){
+
+        KDNode* current = stk.top(); stk.pop();
+        fwrite(&valid, sizeof(valid), 1, f);
+        current->write(f);
+
+        //++nodes_visited;
+        if(current->is_leaf_){
+            //++leaves_visited;
+            fwrite(&childstop, sizeof(childstop), 1, f);
+            fwrite(&childstop, sizeof(childstop), 1, f);
+        }
+        else{
+            if(nullptr != current->right_child_){
+                stk.push(current->right_child_);
+            }
+            else{
+                //++num_empty_leaves;
+                fwrite(&childstop, sizeof(childstop), 1, f);
+
+            }
+            if(nullptr != current->left_child_){
+                stk.push(current->left_child_);
+            }
+            else{
+                //++num_empty_leaves;
+                fwrite(&childstop, sizeof(childstop), 1, f);                
+            }
+            
+            
+        }
+    }       
+    
+    fclose(f);
+
+    return true;
+
+#if 0
+    // test reading from binary file    
+    f = fopen( filename, "rb");
+    if(nullptr == f){
+        std::cout << "ERROR: Mesh: could not open file " << filename << " kdtree will not be written" << std::endl;
+        return false;
+    }
+
+    fread(&num_nodes_in_tree_, sizeof(num_nodes_in_tree_), 1, f);
+
+    //size_t indices_size(0);
+    fread(&indices_size, sizeof(indices_size), 1, f);
+    indices.resize(indices_size);
+    fread(&indices[0], sizeof(uint32_t), indices_size, f);
+    
+    //size_t triangles_size(0);
+    fread(&triangles_size, sizeof(triangles_size), 1, f);
+    triangles_.resize(triangles_size);
+    fread(&triangles_[0], sizeof(Triangle), triangles_size, f); 
+
+
+    bool isvalid;
+    fread(&isvalid, sizeof(isvalid), 1, f);
+    KDNode* root2 = new KDNode;
+    root2->read(f);
+    std::stack<KDNode**> childpointer;
+    childpointer.push(&(root2->right_child_));
+    childpointer.push(&(root2->left_child_));
+    while(!childpointer.empty()){
+        KDNode** current_childpointer = childpointer.top(); childpointer.pop();
+        fread(&isvalid, sizeof(isvalid), 1, f);
+        if(isvalid){
+            KDNode* child = new KDNode;
+            *current_childpointer = child;
+            child->read(f);
+            childpointer.push(&(child->right_child_));
+            childpointer.push(&(child->left_child_));
+        }
+        else{
+            *current_childpointer = nullptr;
+        }
+    }
+    fclose(f);
+#endif
+
 }
 
 } // namespace gua
