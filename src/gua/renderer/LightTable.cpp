@@ -105,11 +105,11 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
         needs_update = true;
     }
 
-    for(size_t i = 0; i < lights_num_; ++i)
+    for(size_t light_idx = 0; light_idx < lights_num_; ++light_idx)
     {
-        if(uniform_block_[i] != lights[i])
+        if(uniform_block_[light_idx] != lights[light_idx])
         {
-            uniform_block_[i] = lights[i];
+            uniform_block_[light_idx] = lights[light_idx];
             needs_update = true;
         }
     }

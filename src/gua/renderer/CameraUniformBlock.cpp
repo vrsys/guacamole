@@ -91,12 +91,8 @@ void CameraUniformBlock::update(
 
         uniform_block_->resolution = screen_resolution;
         uniform_block_->noise_texture = noise_texture_;
-<<<<<<< HEAD
-        for(unsigned int clipping_plane_idx = 0; clipping_plane_idx < 64 && clipping_plane_idx < clipping_planes.size(); ++clipping_plane_idx)
-=======
 
-        for(unsigned i(0); i < 64 && i < clipping_planes.size(); ++i)
->>>>>>> upstream_project_rt_oc/feature/multi_view_rendering
+        for(unsigned int clipping_plane_idx = 0; clipping_plane_idx < 64 && clipping_plane_idx < clipping_planes.size(); ++clipping_plane_idx)
         {
             uniform_block_->clipping_planes[clipping_plane_idx] = math::vec4f(clipping_planes[clipping_plane_idx]);
         }

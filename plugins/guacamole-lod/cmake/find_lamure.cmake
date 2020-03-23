@@ -9,6 +9,7 @@ SET(LAMURE_INCLUDE_SEARCH_DIRS
   ${LAMURE_ROOT}/include
   /usr/include
   /opt/local  
+  ../lamure/install/include
 )
 
 SET(LAMURE_LIBRARY_SEARCH_DIRS
@@ -19,6 +20,7 @@ SET(LAMURE_LIBRARY_SEARCH_DIRS
   /usr/lib
   /usr/lib/x86_64-linux-gnu
   /opt/local/lib
+  ../lamure/install/lib
 )
 
 ##############################################################################

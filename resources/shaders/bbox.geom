@@ -44,6 +44,7 @@ mat4 mat;
     mat = gua_view_projection_matrix;
 #endif
 
+    gl_ViewportIndex  = instance_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
 
@@ -58,6 +59,7 @@ mat4 mat;
 
     EndPrimitive();
 
+    gl_ViewportIndex  = instance_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
     
@@ -69,9 +71,9 @@ mat4 mat;
 
     gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
-
     EndPrimitive();
 
+    gl_ViewportIndex  = instance_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
 
@@ -83,9 +85,9 @@ mat4 mat;
 
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
-
     EndPrimitive();
 
+    gl_ViewportIndex  = instance_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
 
@@ -97,9 +99,9 @@ mat4 mat;
 
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
-    
     EndPrimitive();
 
-  
+
+
 
 }

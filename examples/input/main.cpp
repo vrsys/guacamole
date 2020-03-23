@@ -140,7 +140,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1920, 1080);
+    auto resolution = gua::math::vec2ui(960, 540);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);

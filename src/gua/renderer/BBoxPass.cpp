@@ -88,6 +88,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         target.set_side_by_side_viewport_array(ctx);
+        std::cout << "Setting side by side viewport for bounding box renderer" << std::endl;
 #else
         target.set_viewport(ctx);
 #endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
