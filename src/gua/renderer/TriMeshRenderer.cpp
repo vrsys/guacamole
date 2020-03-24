@@ -156,7 +156,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
           auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
         
           if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
-              is_instanced_side_by_side_enabled = true;
+            is_instanced_side_by_side_enabled = true;
           }
         }
 #endif
@@ -296,7 +296,6 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 if(is_instanced_side_by_side_enabled) {
                     tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
                 } else {
-
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());                   
                 }
 

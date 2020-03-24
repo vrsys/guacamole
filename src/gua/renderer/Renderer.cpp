@@ -149,14 +149,16 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
                         if((window->get_context()->framecount % 2) == 0)
                         {
                             auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
-                            if(img)
+                            if(img) {
                                 window->display(img, true);
+                            }
                         }
                         else
                         {
                             auto img(pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs));
-                            if(img)
+                            if(img) {
                                 window->display(img, false);
+                            }
                         }
 #else
                         Logger::LOG_WARNING << "guacamole has not been compiled with NVIDIA 3D Vision support!" << std::endl;
@@ -179,6 +181,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
                     if(window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+                        (*cmd.serialized_cam).config.mono_mode = CameraMode::BOTH; //important because the mode is not passed further than the pipeline
                         auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs));
                         if(img) window->display(img, true);
                     } else {

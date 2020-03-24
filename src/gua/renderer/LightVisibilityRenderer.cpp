@@ -38,7 +38,16 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     bool is_instanced_side_by_side_enabled = false;
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+      //std::cout << camera.config.get_mono_mode() << std::endl;
+
+
+
+
     if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
+
+
+
       auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
     
       if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
@@ -285,6 +294,21 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
 
 
+    if(!lights.empty()) {
+        ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
+                                       scm::gl::FORMAT_R_32UI, 
+                                       scm::gl::ACCESS_READ_WRITE, 
+                                       0, 0, 0);     
+                                       
+        ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
+                                       scm::gl::FORMAT_R_32UI, 
+                                       scm::gl::ACCESS_READ_WRITE, 
+                                       1, 0, 0);
+
+        ctx.render_context->apply_image_units();
+        ctx.render_context->apply_frame_buffer();
+        ctx.render_context->apply_state_objects();
+    }
 
     // draw lights
     for(size_t i = 0; i < lights.size(); ++i)
@@ -298,25 +322,21 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
         auto light_mvp_mat = view_projection_mat * light_transform;
         gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), 
-                                       scm::gl::FORMAT_R_32UI, 
-                                       scm::gl::ACCESS_READ_WRITE, 
-                                       0, 0, 0);
+
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         if(is_instanced_side_by_side_enabled) {
-            std::cout << "This is actually happening" << std::endl;
             auto secondary_light_mvp_mat = secondary_view_projection_mat * light_transform;
             gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
-            ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
-                                           scm::gl::FORMAT_R_32UI, 
-                                           scm::gl::ACCESS_READ_WRITE, 
-                                           1, 0, 0);
+
         }
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
 
-        ctx.render_context->apply();
+
+
+        ctx.render_context->apply_program();
+
 
         if(lights[i].type == 0) // point light
         {
