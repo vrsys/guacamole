@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = 1.8 * gua::math::vec2ui(960, 540);
+    auto resolution = 1.0 * gua::math::vec2ui(960, 540);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -182,6 +182,22 @@ int main(int argc, char** argv)
 
     camera->set_pipeline_description(default_pipeline_description);
 
+
+
+
+    auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
+    camera_mvs->translate(0, 0, 2.0);
+    camera_mvs->config.set_resolution(resolution);
+    camera_mvs->config.set_left_screen_path("/screen");
+    camera_mvs->config.set_right_screen_path("/screen");
+    camera_mvs->config.set_scene_graph_name("main_scenegraph");
+    camera_mvs->config.set_output_window_name("software_mvs_window");
+    camera_mvs->config.set_enable_stereo(true);
+    //camera->set_pre_render_cameras({portal_camera});
+
+
+    camera_mvs->set_pipeline_description(default_pipeline_description);
+
     //auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
 
     //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
@@ -205,6 +221,28 @@ int main(int argc, char** argv)
     });
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+
+
+    auto window_mvs = std::make_shared<gua::GlfwWindow>();
+    gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);
+
+    window_mvs->config.set_enable_vsync(false);
+    window_mvs->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
+    window_mvs->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
+    window_mvs->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
+    window_mvs->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
+    window_mvs->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
+    window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
+
+    window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
+        window_mvs->config.set_resolution(new_size);
+        camera_mvs->config.set_resolution(new_size);
+        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
+    });
+    window_mvs->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
+    window_mvs->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
 
     gua::Renderer renderer;
 

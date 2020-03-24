@@ -28,6 +28,11 @@ layout (std140, binding=0) uniform cameraBlock {
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;
+
+#if @get_enable_multi_view_rendering@
+vec3 gua_secondary_camera_position = gua_secondary_camera_position_4.xyz;
+#endif
+
 vec3 gua_cyclops_position = gua_cyclops_position_4.xyz;
 
 uniform mat4 gua_model_matrix;
