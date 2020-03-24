@@ -175,9 +175,8 @@ float gua_calculate_light(int light_id,
 
   const float fading_exponent = 5;
 
-
+float fading = 0;
 #if @get_enable_multi_view_rendering@
-  float fading = 0;
   if(gl_ViewportIndex == 0) {
     fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), fading_exponent);    
   } else {

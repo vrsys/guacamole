@@ -130,8 +130,8 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     current_viewstate_.view_direction = PipelineViewState::front;
     current_viewstate_.shadow_mode = false;
 
-    bool reload_gbuffer(false);
-    bool reload_abuffer(false);
+    bool reload_gbuffer = false;
+    bool reload_abuffer = false;
 
     // execute all prerender cameras
     for(auto const& cam : camera.pre_render_cameras)
@@ -279,6 +279,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
                              ,is_instanced_side_by_side_enabled
 #endif  // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
                              );
+
         bind_camera_uniform_block(0);
     }
 
@@ -288,13 +289,13 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     current_viewstate_.target = gbuffer_.get();
 
     // process all passes
-    for(unsigned i(0); i < passes_.size(); ++i)
+    for(unsigned pass_index = 0; pass_index < passes_.size(); ++pass_index)
     {
-        if(passes_[i].needs_color_buffer_as_input())
+        if(passes_[pass_index].needs_color_buffer_as_input())
         {
             gbuffer_->toggle_ping_pong();
         }
-        passes_[i].process(*last_description_.get_passes()[i], *this);
+        passes_[pass_index].process(*last_description_.get_passes()[pass_index], *this);
     }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
