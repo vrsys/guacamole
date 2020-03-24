@@ -52,7 +52,7 @@ class CameraUniformBlock
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     void
-    update(RenderContext const& context, Frustum const& cam, Frustum const& secondary_cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution);
+    update(RenderContext const& context, Frustum const& cam, Frustum const& secondary_cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution, bool is_side_by_side_multi_view_rendering_mode);
 #endif
 
 	void updateHMD(RenderContext const& context, Frustum const& cam, math::mat4 const& camera_parents_transform,

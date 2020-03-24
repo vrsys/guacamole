@@ -147,10 +147,14 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
     auto adjusted_camera_resolution = camera.config.get_resolution();
 
+
+    bool is_instanced_side_by_side_enabled = false;
     #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
 
         if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+
+            is_instanced_side_by_side_enabled = true;
             //std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
             adjusted_camera_resolution.x *= 2;
         }
@@ -262,27 +266,20 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
     else
     {
+        camera_block_.update(context_, 
+                             current_viewstate_.scene->rendering_frustum,
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        camera_block_.update(context_, 
-                             current_viewstate_.scene->rendering_frustum, 
                              current_viewstate_.scene->secondary_rendering_frustum,
+#endif  // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
                              math::get_translation(camera.transform), 
                              current_viewstate_.scene->clipping_planes, 
                              camera.config.get_view_id(),
-                             camera.config.get_resolution());
+                             camera.config.get_resolution()
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                             ,is_instanced_side_by_side_enabled
+#endif  // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                             );
         bind_camera_uniform_block(0);
-
-#else
-        camera_block_.update(context_, 
-                             current_viewstate_.scene->rendering_frustum, 
-                             math::get_translation(camera.transform), 
-                             current_viewstate_.scene->clipping_planes, 
-                             camera.config.get_view_id(),
-                             camera.config.get_resolution());
-        bind_camera_uniform_block(0);
-
-
-#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     }
 
 
