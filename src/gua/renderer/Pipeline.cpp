@@ -182,7 +182,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
 
     // recreate pipeline passes if pipeline description changed
-    bool reload_passes(reload_gbuffer);
+    bool reload_passes = reload_gbuffer;
 
     if(*camera.pipeline_description != last_description_)
     {
@@ -221,13 +221,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        if (camera.config.get_enable_stereo())
-        {
-            global_substitution_map_["get_enable_multi_view_rendering"] = "1";
-        } else {
-            global_substitution_map_["get_enable_multi_view_rendering"] = "0";
-        }
-
+        global_substitution_map_["get_enable_multi_view_rendering"] = "1";
 #else
         global_substitution_map_["get_enable_multi_view_rendering"] = "0";
 

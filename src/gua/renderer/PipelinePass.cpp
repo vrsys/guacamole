@@ -180,6 +180,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
                 if(is_instanced_side_by_side_enabled) {
                     pipe.draw_quad_instanced(2);
                 } else {
+                    std::cout << "draw normal quad" << std::endl;
                     pipe.draw_quad();
                 }
             }
