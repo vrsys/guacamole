@@ -140,6 +140,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         {
             context_.render_pipelines.insert(std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
         }
+
         context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs);
     }
 
@@ -150,13 +151,15 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
     bool is_instanced_side_by_side_enabled = false;
     #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        if( gua::CameraMode::BOTH == mode ) {
+          auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
 
-        if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
 
-            is_instanced_side_by_side_enabled = true;
-            //std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
-            adjusted_camera_resolution.x *= 2;
+              is_instanced_side_by_side_enabled = true;
+              //std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
+              adjusted_camera_resolution.x *= 2;
+          }
         }
     #else
 
@@ -224,7 +227,6 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         global_substitution_map_["get_enable_multi_view_rendering"] = "1";
 #else
         global_substitution_map_["get_enable_multi_view_rendering"] = "0";
-
 #endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
 

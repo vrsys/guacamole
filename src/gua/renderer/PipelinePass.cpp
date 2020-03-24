@@ -118,8 +118,11 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
     bool is_instanced_side_by_side_enabled = false;
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
-        is_instanced_side_by_side_enabled = true;
+
+    if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
+      if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          is_instanced_side_by_side_enabled = true;
+      }
     }
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 

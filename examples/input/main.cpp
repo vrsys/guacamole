@@ -24,7 +24,6 @@
 #include <gua/guacamole.hpp>
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/renderer/ToneMappingPass.hpp>
-#include <gua/renderer/BBoxPass.hpp>
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
@@ -121,7 +120,6 @@ int main(int argc, char** argv)
     portal->translate(0.5f, 0.f, -0.2f);
     portal->rotate(-30, 0.f, 1.f, 0.f);
 
-
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->data.brightness = 150.0f;
@@ -141,7 +139,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = 1.0 * gua::math::vec2ui(960, 540);
+    auto resolution = gua::math::vec2ui(1920, 1080);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -167,52 +165,22 @@ int main(int argc, char** argv)
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0, 0, 2.0);
     camera->config.set_resolution(resolution);
-    camera->config.set_left_screen_path("/screen");
-    camera->config.set_right_screen_path("/screen");
+    camera->config.set_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
-    camera->config.set_enable_stereo(true);
-    //camera->set_pre_render_cameras({portal_camera});
+    camera->config.set_enable_stereo(false);
+    camera->set_pre_render_cameras({portal_camera});
 
-    auto default_pipeline_description = std::make_shared<gua::PipelineDescription>();
-    default_pipeline_description->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-    default_pipeline_description->add_pass(std::make_shared<gua::BBoxPassDescription>());
-    default_pipeline_description->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-    default_pipeline_description->add_pass(std::make_shared<gua::ResolvePassDescription>());
-
-    camera->set_pipeline_description(default_pipeline_description);
-
-
-
-
-    auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
-    camera_mvs->translate(0, 0, 2.0);
-    camera_mvs->config.set_resolution(resolution);
-    camera_mvs->config.set_left_screen_path("/screen");
-    camera_mvs->config.set_right_screen_path("/screen");
-    camera_mvs->config.set_scene_graph_name("main_scenegraph");
-    camera_mvs->config.set_output_window_name("software_mvs_window");
-    camera_mvs->config.set_enable_stereo(true);
-    //camera->set_pre_render_cameras({portal_camera});
-
-
-    camera_mvs->set_pipeline_description(default_pipeline_description);
-
-    //auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-
-    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
 
     window->config.set_enable_vsync(false);
-    window->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
-    window->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
-    window->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
-    window->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    window->config.set_size(resolution);
+    window->config.set_resolution(resolution);
+    window->config.set_stereo_mode(gua::StereoMode::MONO);
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
@@ -222,33 +190,11 @@ int main(int argc, char** argv)
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-
-
-    auto window_mvs = std::make_shared<gua::GlfwWindow>();
-    gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);
-
-    window_mvs->config.set_enable_vsync(false);
-    window_mvs->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
-    window_mvs->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
-    window_mvs->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
-    window_mvs->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
-
-    window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-        window_mvs->config.set_resolution(new_size);
-        camera_mvs->config.set_resolution(new_size);
-        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-    });
-    window_mvs->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
-    window_mvs->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-
     gua::Renderer renderer;
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 1000.0);
+    gua::events::Ticker ticker(loop, 1.0 / 500.0);
 
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
@@ -256,7 +202,6 @@ int main(int argc, char** argv)
 
         transform->set_transform(modelmatrix);
 
-        std::cout << "Speedup: " << (1.0f/window->get_rendering_fps())/(1.0f/window_mvs->get_rendering_fps()) << std::endl;
         if(window->should_close())
         {
             renderer.stop();

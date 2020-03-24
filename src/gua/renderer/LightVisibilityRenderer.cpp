@@ -38,10 +38,12 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     bool is_instanced_side_by_side_enabled = false;
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+    if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
+      auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
     
-    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
-        is_instanced_side_by_side_enabled = true;
+      if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          is_instanced_side_by_side_enabled = true;
+      }
     }
 #endif
 
@@ -259,7 +261,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     auto camera = pipe.current_viewstate().camera;
 
-    auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+
     bool is_instanced_side_by_side_enabled = false;
     
     math::mat4f secondary_view_projection_mat{1.0f, 0.0f, 0.0f, 0.0f, 
@@ -268,12 +270,16 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
                                               0.0f, 0.0f, 0.0f, 1.0f};
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
-        is_instanced_side_by_side_enabled = true;
-    }
+    if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
 
-    if(is_instanced_side_by_side_enabled) {
-        secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+      auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+      if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          is_instanced_side_by_side_enabled = true;
+      }
+
+      if(is_instanced_side_by_side_enabled) {
+          secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+      }
     }
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
