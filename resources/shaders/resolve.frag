@@ -228,6 +228,13 @@ void main() {
 
   // init light bitset
   int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
+
+  #if @get_enable_multi_view_rendering@
+  if(1 == gl_ViewportIndex) {
+    ivec3 light_table_dims = textureSize(usampler3D(gua_light_bitset), 0);
+    frag_pos = frag_pos % light_table_dims.x;
+  }
+  #endif
   ivec2 tile = frag_pos >> @light_table_tile_power@;
   for (int sl = 0; sl < bitset_words; ++sl) {
     #if @get_enable_multi_view_rendering@

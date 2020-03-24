@@ -151,12 +151,12 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
 
         if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
-            std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
+            //std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
             adjusted_camera_resolution.x *= 2;
         }
     #else
 
-        std::cout << "MONO + SIDE BY SIDE" << std::endl;
+        //std::cout << "MONO + SIDE BY SIDE" << std::endl;
 
     #endif
 
@@ -715,7 +715,11 @@ void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) co
     shader->set_uniform(context_, int(light_table_->get_lights_num()), "gua_lights_num");
     shader->set_uniform(context_, int(light_table_->get_sun_lights_num()), "gua_sun_lights_num");
 
-    if(light_table_->get_light_bitset() && light_table_->get_lights_num() > 0)
+    if(light_table_->get_light_bitset() &&
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+       light_table_->get_secondary_light_bitset() &&
+#endif
+       light_table_->get_lights_num() > 0)
     {
         shader->set_uniform(context_, light_table_->get_light_bitset()->get_handle(context_), "gua_light_bitset");
         

@@ -53,9 +53,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 
 
 if(is_instanced_side_by_side_enabled) {
-        empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x*2, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
-} else {
-        empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
+    empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
 }
         empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
 #else
@@ -100,7 +98,7 @@ if(is_instanced_side_by_side_enabled) {
     {
         glapi.glEnable(GL_MULTISAMPLE);
     }
-    std::cout << "BEGIN DRAWING LIGHT" << std::endl;
+    //std::cout << "BEGIN DRAWING LIGHT" << std::endl;
     draw_lights(pipe, transforms, lights);
 
     if(ms_sample_count > 0)
@@ -269,14 +267,15 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     bool is_instanced_side_by_side_enabled = false;
     
     math::mat4f secondary_view_projection_mat{1.0f, 0.0f, 0.0f, 0.0f, 
-                                          0.0f, 1.0f, 0.0f, 0.0f, 
-                                          0.0f, 0.0f, 1.0f, 0.0f, 
-                                          0.0f, 0.0f, 0.0f, 1.0f};
+                                              0.0f, 1.0f, 0.0f, 0.0f, 
+                                              0.0f, 0.0f, 1.0f, 0.0f, 
+                                              0.0f, 0.0f, 0.0f, 1.0f};
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
         is_instanced_side_by_side_enabled = true;
     }
+
     if(is_instanced_side_by_side_enabled) {
         secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
     }
@@ -303,8 +302,8 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
                                        0, 0, 0);
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-
         if(is_instanced_side_by_side_enabled) {
+            std::cout << "This is actually happening" << std::endl;
             auto secondary_light_mvp_mat = secondary_view_projection_mat * light_transform;
             gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
             ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 

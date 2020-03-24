@@ -9,6 +9,8 @@ layout(binding=0, r32ui) uniform coherent uimage3D light_bitset;
 layout(binding=1, r32ui) uniform coherent uimage3D secondary_light_bitset;
 #endif
 
+in flat int is_for_right_eye;
+out vec4 out_Color;
 void main()
 {
   // calculate slice in light_bitset (a 3D-Texture)
@@ -25,13 +27,15 @@ void main()
 
 
 #if @get_enable_multi_view_rendering@
-  if(0 == gl_ViewportIndex) {
+  if(0 == is_for_right_eye) {
 #endif
-  	  imageAtomicOr(light_bitset, pos, bit);
+  	imageAtomicOr(light_bitset, pos, bit);
 #if @get_enable_multi_view_rendering@
   } else {
  	  imageAtomicOr(secondary_light_bitset, pos, bit);
   }
 #endif
+
+out_Color = vec4(float(bit)*255.0, 0.0, 0.0, 1.0);
 }
 

@@ -54,7 +54,11 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
     }
 
     // create bitset if necessary
-    if(!light_bitset_ || light_bitset_->width() < width || light_bitset_->height() < height || light_bitset_words > light_bitset_words_)
+    if(!light_bitset_ || light_bitset_->width() < width || light_bitset_->height() < height || 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+       !secondary_light_bitset_ || secondary_light_bitset_->width() < width || secondary_light_bitset_->height() < height || 
+#endif
+        light_bitset_words > light_bitset_words_)
     {
         scm::gl::sampler_state_desc state(scm::gl::FILTER_MIN_MAG_NEAREST, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT);
 
@@ -62,16 +66,17 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
         {
             light_bitset_->make_non_resident(ctx);
             light_bitset_.reset();
-
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-
-            secondary_light_bitset_->make_non_resident(ctx);
-            secondary_light_bitset_.reset();
-#endif
         }
 
         light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words, scm::gl::FORMAT_R_32UI, 1, state);
       
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        if(secondary_light_bitset_) {
+            secondary_light_bitset_->make_non_resident(ctx);
+            secondary_light_bitset_.reset();
+        }
+#endif
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         secondary_light_bitset_ = std::make_shared<Texture3D>(width, height, light_bitset_words, scm::gl::FORMAT_R_32UI, 1, state);
 #endif  

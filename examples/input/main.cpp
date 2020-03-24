@@ -121,13 +121,13 @@ int main(int argc, char** argv)
     portal->translate(0.5f, 0.f, -0.2f);
     portal->rotate(-30, 0.f, 1.f, 0.f);
 
-/*
+
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->data.brightness = 150.0f;
     light2->scale(12.f);
     light2->translate(-3.f, 5.f, 5.f);
-*/
+
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(960, 540);
+    auto resolution = 1.8 * gua::math::vec2ui(960, 540);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -210,7 +210,7 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 1000.0);
 
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
@@ -218,6 +218,7 @@ int main(int argc, char** argv)
 
         transform->set_transform(modelmatrix);
 
+        std::cout << "Rendering FPS: " << 1.0f/window->get_rendering_fps() << std::endl;
         if(window->should_close())
         {
             renderer.stop();
