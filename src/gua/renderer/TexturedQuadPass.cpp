@@ -27,6 +27,8 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/databases/Resources.hpp>
 
+#include <gua/databases/WindowDatabase.hpp>
+
 namespace gua
 {
 TexturedQuadPassDescription::TexturedQuadPassDescription() : PipelinePassDescription()
@@ -54,23 +56,64 @@ std::shared_ptr<PipelinePassDescription> TexturedQuadPassDescription::make_copy(
 PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
     private_.process_ = [](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) {
+
+    auto const& frustum = pipe.current_viewstate().frustum;
+    scm::math::mat4f const view_matrix = scm::math::mat4f(frustum.get_view());
+    scm::math::mat4f const projection_matrix = scm::math::mat4f(frustum.get_projection());
+    auto left_eye_view_projection_matrix = projection_matrix * view_matrix;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        auto const& camera = pipe.current_viewstate().camera;
+
+        bool is_instanced_side_by_side_enabled = false;
+        if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
+          auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        
+          if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+              is_instanced_side_by_side_enabled = true;
+          }
+        }
+
+        auto const& secondary_frustum = pipe.current_viewstate().secondary_frustum;
+        scm::math::mat4f const secondary_view_matrix = scm::math::mat4f(secondary_frustum.get_view());
+        scm::math::mat4f const secondary_projection_matrix = scm::math::mat4f(secondary_frustum.get_projection());
+
+        auto right_eye_view_projection_matrix = secondary_projection_matrix * secondary_view_matrix;
+#endif
+
+
+
         for(auto const& node : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::TexturedQuadNode))])
         {
             auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));
+            scm::math::mat4f scaled_node_world_transform = scm::math::mat4f(quad_node->get_scaled_world_transform());
 
-            UniformValue model_mat(scm::math::mat4f(quad_node->get_scaled_world_transform()));
+            UniformValue left_eye_model_view_projection_mat(left_eye_view_projection_matrix * scaled_node_world_transform );
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+            UniformValue right_eye_model_view_projection_mat(right_eye_view_projection_matrix * scaled_node_world_transform );
+#endif
+
             UniformValue normal_mat(scm::math::mat4f(scm::math::transpose(scm::math::inverse(quad_node->get_scaled_world_transform()))));
             UniformValue tex(quad_node->data.get_texture());
             UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
 
             auto const& ctx(pipe.get_context());
 
-            pass.shader()->apply_uniform(ctx, "gua_model_matrix", model_mat);
+            pass.shader()->apply_uniform(ctx, "gua_model_view_projection_matrix", left_eye_model_view_projection_mat);
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+            pass.shader()->apply_uniform(ctx, "gua_secondary_model_view_projection_matrix", right_eye_model_view_projection_mat);
+#endif
+
             pass.shader()->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
             pass.shader()->apply_uniform(ctx, "gua_in_texture", tex);
             pass.shader()->apply_uniform(ctx, "flip", flip);
 
-            pipe.draw_quad();
+
+            if(!is_instanced_side_by_side_enabled) {
+              pipe.draw_quad();
+            } else {
+              pipe.draw_quad_instanced(2);
+            }
         }
     };
 

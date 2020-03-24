@@ -153,6 +153,11 @@ UniformValue UniformValue::create_from_string_and_type(std::string const& value,
         // case UniformType::SAMPLERCUBE:
         //  return UniformValue(value);
         // case NONE
+    case UniformType::SAMPLER1D:
+    case UniformType::SAMPLER3D:
+    case UniformType::SAMPLERCUBE:
+    case UniformType::NONE:
+        throw std::runtime_error("UniformValue::create_from_string_and_type(): Invalid type");
     }
     throw std::runtime_error("UniformValue::create_from_string_and_type(): Invalid type");
 }
