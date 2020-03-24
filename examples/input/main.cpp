@@ -256,7 +256,7 @@ int main(int argc, char** argv)
 
         transform->set_transform(modelmatrix);
 
-        std::cout << "Rendering FPS: " << 1.0f/window->get_rendering_fps() << std::endl;
+        std::cout << "Speedup: " << (1.0f/window->get_rendering_fps())/(1.0f/window_mvs->get_rendering_fps()) << std::endl;
         if(window->should_close())
         {
             renderer.stop();

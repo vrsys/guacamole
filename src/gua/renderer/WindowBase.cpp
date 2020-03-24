@@ -238,7 +238,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
-    case StereoMode::SIDE_BY_SIDE:
+    case StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING:
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING 
     if(is_left) {
@@ -249,6 +249,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 
     break;
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    case StereoMode::SIDE_BY_SIDE:
     case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
 

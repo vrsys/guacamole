@@ -40,7 +40,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
     
-    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
         is_instanced_side_by_side_enabled = true;
     }
 #endif
@@ -50,12 +50,8 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
         empty_fbo_ = ctx.render_device->create_frame_buffer();
 
 #if 1 // workaround to avoid GL assertions
-
-
-if(is_instanced_side_by_side_enabled) {
     empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
-}
-        empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
+    empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
 #else
         // TODO: ideally, FBOs with no attachments should be implemented in schism
         auto const& glapi = ctx.render_context->opengl_api();
@@ -272,7 +268,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
                                               0.0f, 0.0f, 0.0f, 1.0f};
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
         is_instanced_side_by_side_enabled = true;
     }
 
