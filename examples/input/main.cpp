@@ -121,12 +121,13 @@ int main(int argc, char** argv)
     portal->translate(0.5f, 0.f, -0.2f);
     portal->rotate(-30, 0.f, 1.f, 0.f);
 
+/*
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->data.brightness = 150.0f;
     light2->scale(12.f);
     light2->translate(-3.f, 5.f, 5.f);
-
+*/
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);

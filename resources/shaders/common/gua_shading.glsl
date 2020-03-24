@@ -2,7 +2,11 @@ const float Pi = 3.14159265;
 const float INV_PI = 1.0f / Pi;
 
 // lights
+
 uniform uvec2 gua_light_bitset;
+#if @get_enable_multi_view_rendering@
+uniform uvec2 gua_secondary_light_bitset;
+#endif
 
 @include "gua_light_uniforms.glsl"
 @include "../brdf.glsl"

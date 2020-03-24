@@ -29,16 +29,34 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 
     unsigned sun_lights_num = 0u;
     prepare_light_table(pipe, transforms, lights, sun_lights_num);
+
     math::vec2ui effective_resolution = pipe.get_light_table().invalidate(ctx, camera.config.get_resolution(), lights, tile_power, sun_lights_num);
 
     math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback) ? camera.config.get_resolution() : effective_resolution;
+
+
+    bool is_instanced_side_by_side_enabled = false;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+    
+    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+        is_instanced_side_by_side_enabled = true;
+    }
+#endif
 
     if(!empty_fbo_)
     {
         empty_fbo_ = ctx.render_device->create_frame_buffer();
 
 #if 1 // workaround to avoid GL assertions
+
+
+if(is_instanced_side_by_side_enabled) {
+        empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x*2, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
+} else {
         empty_fbo_color_attachment_ = ctx.render_device->create_texture_2d(scm::math::vec2ui(rasterizer_resolution.x, rasterizer_resolution.y), scm::gl::FORMAT_RGBA_8UI);
+}
         empty_fbo_->attach_color_buffer(0, empty_fbo_color_attachment_);
 #else
         // TODO: ideally, FBOs with no attachments should be implemented in schism
@@ -52,10 +70,18 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 #endif
     }
 
+
+
+
     ctx.render_context->set_frame_buffer(empty_fbo_);
 
     // should this be viewport array???
-    ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution));
+    if(is_instanced_side_by_side_enabled) {
+      auto viewport_array = scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution)(math::vec2f(rasterizer_resolution.x,0), math::vec2f(rasterizer_resolution) );
+      ctx.render_context->set_viewports( viewport_array );
+    } else {
+      ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution));
+    }
 
     if(pass.depth_stencil_state())
         ctx.render_context->set_depth_stencil_state(pass.depth_stencil_state());
@@ -87,6 +113,11 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     }
 
     ctx.render_context->reset_state_objects();
+
+    auto light_nodes = pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))];
+    if(light_nodes.empty()) {
+        return; 
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

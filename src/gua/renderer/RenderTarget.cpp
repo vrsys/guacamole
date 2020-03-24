@@ -40,6 +40,18 @@ void RenderTarget::set_viewport(RenderContext const& ctx)
     }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RenderTarget::set_side_by_side_viewport_array_internal(RenderContext const& ctx)
+{
+    if(ctx.render_context)
+    {
+        auto viewport_array = scm::gl::viewport(scm::math::vec2f(0, 0), scm::math::vec2f(resolution_.x/2, resolution_.y))(scm::math::vec2f(resolution_.x/2, 0), scm::math::vec2f(resolution_.x/2, resolution_.y));
+        ctx.render_context->set_viewports(viewport_array);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void RenderTarget::set_side_by_side_viewport_array(RenderContext const& ctx)
@@ -48,13 +60,7 @@ void RenderTarget::set_side_by_side_viewport_array(RenderContext const& ctx)
     {
     	if (ctx.mode == gua::CameraMode::BOTH)
     	{
-    		
-	    	std::cout << " rendertarget res: " << resolution_ << std::endl;
-	        auto const& glapi = ctx.render_context->opengl_api();
-			float const v[8]  = { 0.0f, 0.0f, float(resolution_.x/2), float(resolution_.y),
-								  float(resolution_.x/2), 0.0f, float(resolution_.x/2), float(resolution_.y) };
-
-	        glapi.glViewportArrayv(0, 2, v);
+            set_side_by_side_viewport_array_internal(ctx);
     	} else {
     		set_viewport(ctx);
     	}
