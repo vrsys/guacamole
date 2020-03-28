@@ -901,11 +901,10 @@ void OcclusionCullingAwareRenderer::issue_multi_query(RenderContext const& ctx, 
         uint64_t num_nodes_to_render = std::min(batch_size_max, i_query_queue.size() );
         std::vector<gua::node::Node*> temp_multi_query_vector;
 
-        for(uint64_t i = 0; i < num_nodes_to_render; ++i) {
+        for(uint64_t node_count = 0; node_count < num_nodes_to_render; ++node_count) {
             auto node = i_query_queue.front();
             temp_multi_query_vector.push_back(node);
             i_query_queue.pop();
-            ++i;
 
         }
         issue_occlusion_query(ctx, pipe, desc, view_projection_matrix, world_space_cam_pos, current_frame_id, in_camera_uuid, temp_multi_query_vector);
