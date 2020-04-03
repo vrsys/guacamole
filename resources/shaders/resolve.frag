@@ -23,12 +23,16 @@ in vec2 gua_quad_coords;
 
 uint bitset[((@max_lights_num@ - 1) >> 5) + 1];
 
+#if @get_enable_multi_view_rendering@
+uint secondary_bitset[((@max_lights_num@ - 1) >> 5) + 1];
+#endif
 ///////////////////////////////////////////////////////////////////////////////
+
+const float invpi = 1.0 / 3.14159265359;
+
 vec2
 longitude_latitude(in vec3 normal)
 {
-  const float invpi = 1.0 / 3.14159265359;
-
   vec2 a_xz = normalize(normal.xz);
   vec2 a_yz = normalize(normal.yz);
 
@@ -95,18 +99,28 @@ vec3 shade_for_all_lights(in vec3 color, in vec3 normal, in vec3 position, in ve
   gua_prepare_shading(T, color, normal, position, pbr);
 
   vec3 frag_color = vec3(0);
-  for (int i = 0; i < gua_lights_num; ++i) {
+  for (int light_idx = 0; light_idx < gua_lights_num; ++light_idx) {
       float screen_space_shadow = 0.0;
 
       if(gua_screen_space_shadows_enable) {
-        screen_space_shadow = compute_screen_space_shadow (i, position);
+        screen_space_shadow = compute_screen_space_shadow (light_idx, position);
       }
 
+      bool should_light_contribute = false;
+      #if @get_enable_multi_view_rendering@
+        if(1 == gl_ViewportIndex) {
+          should_light_contribute = ((secondary_bitset[light_idx>>5] & (1u << (light_idx%32))) != 0) || light_idx >= gua_lights_num - gua_sun_lights_num ;
+        } else {
+      #endif
+          should_light_contribute = ((bitset[light_idx>>5] & (1u << (light_idx%32))) != 0) || light_idx >= gua_lights_num - gua_sun_lights_num ;
+      #if @get_enable_multi_view_rendering@
+        }
+      #endif
+
       // is it either a visible spot/point light or a sun light ?
-      if ( ((bitset[i>>5] & (1u << (i%32))) != 0)
-         || i >= gua_lights_num - gua_sun_lights_num )
+      if ( should_light_contribute )
       {
-        frag_color += (1.0 - screen_space_shadow) * gua_shade(i, T);
+        frag_color += (1.0 - screen_space_shadow) * gua_shade(light_idx, T);
       }
   }
 
@@ -231,8 +245,8 @@ void main() {
 
   #if @get_enable_multi_view_rendering@
   if(1 == gl_ViewportIndex) {
-    ivec3 light_table_dims = textureSize(usampler3D(gua_light_bitset), 0);
-    frag_pos = frag_pos % light_table_dims.x;
+    ivec3 light_table_dims = textureSize(usampler3D(gua_secondary_light_bitset), 0);
+    frag_pos.x = frag_pos.x % light_table_dims.x;
   }
   #endif
   ivec2 tile = frag_pos >> @light_table_tile_power@;
@@ -243,7 +257,7 @@ void main() {
       bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r;
     #if @get_enable_multi_view_rendering@
     } else {
-      bitset[sl] = texelFetch(usampler3D(gua_secondary_light_bitset), ivec3(tile, sl), 0).r;      
+      secondary_bitset[sl] = texelFetch(usampler3D(gua_secondary_light_bitset), ivec3(tile, sl), 0).r;      
     }
     #endif
   }
@@ -337,7 +351,6 @@ void main() {
     }
   }
 #endif
-
 
 }
 

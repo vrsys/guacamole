@@ -9,7 +9,11 @@ uniform float gua_texel_height;
 
 // quad coords -----------------------------------------------------------------
 vec2 gua_get_quad_coords() {
-  return vec2(gl_FragCoord.x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+
+  float frag_coord_x = gl_FragCoord.x;
+
+
+  return vec2(frag_coord_x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
 }
 
 
@@ -20,8 +24,31 @@ float gua_scale_unscaled_depth(float unscaled_depth) {
 
 vec3 gua_unproject_depth_to_position(float scaled_depth) {
     vec2 frag_pos = gua_get_quad_coords();
+
     vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, scaled_depth, 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+
+    #if @get_enable_multi_view_rendering@
+      if(! (0 == gua_camera_in_multi_view_rendering_mode) ) {
+        if(0 == gl_ViewportIndex) {
+          screen_space_pos.x = screen_space_pos.x * 2 + 1;
+        } else {
+          screen_space_pos.x = screen_space_pos.x * 2 - 1;
+        }
+      }
+      //screen_space_pos.x *= 2.0;
+      //screen_space_pos.x -= 1.0;
+    #endif
+
+    vec4 h = vec4(0.0, 0.0, 0.0, 1.0);
+    #if @get_enable_multi_view_rendering@
+      if(1 == gl_ViewportIndex) {
+        h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;
+      } else {
+    #endif
+      h = gua_inverse_projection_view_matrix * screen_space_pos;
+    #if @get_enable_multi_view_rendering@
+      }
+    #endif
     h /= h.w; 
     return h.xyz;
 }

@@ -39,6 +39,9 @@ class CameraUniformBlock
         int view_id;
         float clip_near;
         float clip_far;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        int camera_in_multi_view_stere_mode;
+#endif //GUACMOLE_ENABLE_MULTI_VIEW_RENDERING
 
     };
 

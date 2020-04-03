@@ -25,6 +25,9 @@ layout (std140, binding=0) uniform cameraBlock {
   int   gua_view_id;
   float gua_clip_near;
   float gua_clip_far;
+#if @get_enable_multi_view_rendering@
+  int   gua_camera_in_multi_view_rendering_mode;
+#endif 
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;

@@ -20,6 +20,7 @@ void main() {
 #if @get_enable_multi_view_rendering@
 	} else {
   		gl_Position = gua_secondary_model_view_projection_matrix * vec4(gua_in_position, 1.0);
+  		
 	}
 
     is_for_right_eye = gl_InstanceID;
