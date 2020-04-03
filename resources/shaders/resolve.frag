@@ -144,8 +144,29 @@ vec4 abuf_shade(uint pos, float depth) {
   vec3 pbr = unpackUnorm4x8(data.w).xyz;
   uint flags = bitfieldExtract(data.w, 24, 8);
 
-  vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
-  vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+  vec2 lookup_frag_pos = gua_get_quad_coords();
+
+  #if @get_enable_multi_view_rendering@
+    if(! (0 == gua_camera_in_multi_view_rendering_mode) ) {
+      lookup_frag_pos.x *= 2;
+      float dummy_integer_part = 0.0;
+      lookup_frag_pos.x = modf(lookup_frag_pos.x, dummy_integer_part);
+    }
+  #endif
+
+  vec4 screen_space_pos = vec4(lookup_frag_pos* 2.0 - 1.0, depth, 1.0);
+  
+  vec4 h = vec4(0.0, 0.0, 0.0, 1.0);
+
+  #if @get_enable_multi_view_rendering@
+    if(1 == gl_ViewportIndex) {
+       h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;
+    } else {
+  #endif
+       h = gua_inverse_projection_view_matrix * screen_space_pos;
+  #if @get_enable_multi_view_rendering@
+    }
+  #endif
   vec3 position = h.xyz / h.w;
 
   vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, depth, false), pbr.r);
@@ -172,6 +193,7 @@ vec3 gua_apply_background_texture() {
   vec3 col1 = texture(sampler2D(gua_background_texture), gua_quad_coords).xyz;
   vec3 col2 = texture(sampler2D(gua_alternative_background_texture), gua_quad_coords).xyz;
   return mix(col1, col2, gua_background_texture_blend_factor);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -212,6 +234,7 @@ vec3 gua_apply_fog(vec3 color, vec3 fog_color) {
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_get_background_color() {
+
   switch (gua_background_mode) {
     case 0: // color
       return sRGB_to_linear(gua_apply_background_color());

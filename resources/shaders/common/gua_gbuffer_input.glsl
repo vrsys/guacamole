@@ -35,8 +35,6 @@ vec3 gua_unproject_depth_to_position(float scaled_depth) {
           screen_space_pos.x = screen_space_pos.x * 2 - 1;
         }
       }
-      //screen_space_pos.x *= 2.0;
-      //screen_space_pos.x -= 1.0;
     #endif
 
     vec4 h = vec4(0.0, 0.0, 0.0, 1.0);
@@ -84,8 +82,26 @@ float gua_get_depth(sampler2D depth_texture) {
 
 // position --------------------------------------------------------------------
 vec3 gua_get_position(vec2 frag_pos) {
-    vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(frag_pos), 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+    vec2 lookup_frag_pos = frag_pos;
+    #if @get_enable_multi_view_rendering@
+      if(! (0 == gua_camera_in_multi_view_rendering_mode) ) {
+        lookup_frag_pos.x *= 2;
+        float dummy_integer_part = 0.0;
+        lookup_frag_pos.x = modf(lookup_frag_pos.x, dummy_integer_part);
+      }
+    #endif
+    vec4 screen_space_pos = vec4(lookup_frag_pos * 2.0 - 1.0, gua_get_depth(frag_pos), 1.0);
+    
+    vec4 h = vec4(0.0, 0.0, 0.0, 1.0);
+    #if @get_enable_multi_view_rendering@
+      if(1 == gl_ViewportIndex) {
+         h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;
+      } else {
+    #endif
+         h = gua_inverse_projection_view_matrix * screen_space_pos;
+    #if @get_enable_multi_view_rendering@
+      }
+    #endif
     h /= h.w; 
     return h.xyz;
 }
@@ -95,10 +111,29 @@ vec3 gua_get_position() {
 }
 
 vec3 gua_get_position(sampler2D depth_texture, vec2 frag_pos) {
-    vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(depth_texture, frag_pos), 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+    vec2 lookup_frag_pos = frag_pos;
+    #if @get_enable_multi_view_rendering@
+      if(! (0 == gua_camera_in_multi_view_rendering_mode) ) {
+        lookup_frag_pos.x *= 2;
+        float dummy_integer_part = 0.0;
+        lookup_frag_pos.x = modf(lookup_frag_pos.x, dummy_integer_part);
+      }
+    #endif
+    vec4 screen_space_pos = vec4(lookup_frag_pos * 2.0 - 1.0, gua_get_depth(depth_texture, frag_pos), 1.0);
+
+    vec4 h = vec4(0.0, 0.0, 0.0, 1.0);
+    #if @get_enable_multi_view_rendering@
+      if(1 == gl_ViewportIndex) {
+         h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;
+      } else {
+    #endif
+         h = gua_inverse_projection_view_matrix * screen_space_pos;
+    #if @get_enable_multi_view_rendering@
+      }
+    #endif
     h /= h.w;
     return h.xyz;
+
 }
 
 vec3 gua_get_position(sampler2D depth_texture) {
