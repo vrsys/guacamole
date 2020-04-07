@@ -103,7 +103,7 @@ vec3 shade_for_all_lights(in vec3 color, in vec3 normal, in vec3 position, in ve
       float screen_space_shadow = 0.0;
 
       if(gua_screen_space_shadows_enable) {
-        screen_space_shadow = compute_screen_space_shadow (light_idx, position);
+        screen_space_shadow = compute_screen_space_shadow(light_idx, position);
       }
 
       bool should_light_contribute = false;
