@@ -252,7 +252,7 @@ int main(int argc, char** argv)
 
     auto light = graph.add_node<gua::node::LightNode>("/transform/city", "light");
     light->data.set_type(gua::node::LightNode::Type::POINT);
-    light->data.set_enable_shadows(false);
+    light->data.set_enable_shadows(true);
     // light->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.0f, 10.0f});
     // light->data.set_max_shadow_dist(100.0f);
     light->data.set_shadow_map_size(1024);

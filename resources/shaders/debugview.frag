@@ -13,19 +13,11 @@ layout(location=0) out vec3 gua_out_color;
 
 void main() {
 
-vec2 effective_gua_resolution = gua_resolution;
-#if @get_enable_multi_view_rendering@
-
-  if(1 == gua_camera_in_multi_view_rendering_mode) {
-    //effective_gua_resolution.x *= 2;
-  }
-#endif
-
   ivec2 fragment_position = ivec2(gl_FragCoord.xy);
   const int number_of_gbuffers = 5;
 
-  int debug_window_width  = int(effective_gua_resolution.x / number_of_gbuffers);
-  int debug_window_height = int((debug_window_width * gua_resolution.y) / effective_gua_resolution.x);
+  int debug_window_width  = int(gua_resolution.x / number_of_gbuffers);
+  int debug_window_height = int((debug_window_width * gua_resolution.y) / gua_resolution.x);
 
   int shadow_debug_size  = 150;
 
@@ -38,7 +30,7 @@ vec2 effective_gua_resolution = gua_resolution;
     #if @get_enable_multi_view_rendering@
 
       if(1 == gua_camera_in_multi_view_rendering_mode) {
-        lookup_texcoord.x *= 0.5;//effective_gua_resolution.x *= 2;
+        lookup_texcoord.x *= 0.5;
       }
     #endif
 
@@ -97,9 +89,7 @@ vec2 effective_gua_resolution = gua_resolution;
   }
 #endif
 
-  } 
-
-  else if (fragment_position.x < shadow_debug_size && fragment_position.y >= debug_window_height) {
+  } else if (fragment_position.x < shadow_debug_size && fragment_position.y >= debug_window_height) {
 
     int shadow_map = (fragment_position.y - debug_window_height) / shadow_debug_size + 1;
     int light_id = -1;
@@ -126,7 +116,44 @@ vec2 effective_gua_resolution = gua_resolution;
       discard;
     }
 
-  } else {
+  }
+  #if @get_enable_multi_view_rendering@
+  else if(1 == gua_camera_in_multi_view_rendering_mode) {
+    if (fragment_position.x > gua_resolution.x && 
+        fragment_position.x < (gua_resolution.x + shadow_debug_size) && 
+        fragment_position.y >= debug_window_height) {
+
+        int shadow_map = (fragment_position.y - debug_window_height) / shadow_debug_size + 1;
+        int light_id = -1;
+
+        for (int light_idx = 0; light_idx < gua_lights_num; ++light_idx) {
+          if (gua_lights[light_idx].casts_shadow && --shadow_map == 0) {
+            light_id = light_idx;
+            break;
+          }
+        }
+
+        if (light_id >= 0) {
+          vec2 texcoord = vec2(float(mod(fragment_position.x*2, shadow_debug_size)) / shadow_debug_size,
+                               float(mod(fragment_position.y-debug_window_height, shadow_debug_size)) / shadow_debug_size);
+
+          float intensity = 0.0;
+          const int slices = 30;
+          for (int i = 0; i < slices; ++i) {
+            intensity += texture(sampler2DShadow(gua_lights[light_id].shadow_map), vec3(texcoord, i * 1.0/slices)).r;
+          }
+
+          gua_out_color = vec3(intensity/slices);
+        } else {
+          discard;
+        }
+
+    } else {
+      discard;
+    }
+  }
+  #endif
+  else {
     discard;
   }
 
