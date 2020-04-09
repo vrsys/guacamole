@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     portal_camera->config.set_screen_path("/portal_screen");
     portal_camera->config.set_scene_graph_name("main_scenegraph");
     portal_camera->config.set_output_texture_name("portal");
-    portal_camera->config.set_enable_stereo(false);
+    portal_camera->config.set_enable_stereo(true);
 
     gua::TextureDatabase::instance()->load("data/checkerboard.png");
 
@@ -173,6 +173,8 @@ int main(int argc, char** argv)
     camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
     camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/checkerboard.png");
     camera->get_pipeline_description()->set_enable_abuffer(true);
+    camera->get_pipeline_description()->set_abuffer_size(6000);
+    camera->get_pipeline_description()->set_blending_termination_threshold(0.99f);
 
     auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
     camera_mvs->translate(0, 0, 2.0);
@@ -182,9 +184,11 @@ int main(int argc, char** argv)
     camera_mvs->config.set_scene_graph_name("main_scenegraph");
     camera_mvs->config.set_output_window_name("software_mvs_window");
     camera_mvs->config.set_enable_stereo(true);
-    camera_mvs->set_pre_render_cameras({portal_camera});
+    //camera_mvs->set_pre_render_cameras({portal_camera});
     camera_mvs->set_pipeline_description( camera->get_pipeline_description() );
     camera_mvs->get_pipeline_description()->set_enable_abuffer(true);
+    camera_mvs->get_pipeline_description()->set_abuffer_size(6000);
+    camera_mvs->get_pipeline_description()->set_blending_termination_threshold(0.99f);
 
     auto window = std::make_shared<gua::GlfwWindow>();
     //gua::WindowDatabase::instance()->add("main_window", window);
@@ -213,7 +217,7 @@ int main(int argc, char** argv)
     window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
     window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window_mvs->config.set_resolution(new_size);
-        camera->config.set_resolution(new_size);
+        camera_mvs->config.set_resolution(new_size);
         screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
         resolution = new_size;
     });
@@ -391,7 +395,7 @@ int main(int argc, char** argv)
         }
 
         if(2 == ctr) {
-          //  gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);           
+           gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);           
         }
 
         window->process_events();

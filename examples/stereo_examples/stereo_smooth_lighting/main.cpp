@@ -28,7 +28,7 @@
 #include <gua/renderer/DebugViewPass.hpp>
 #include <gua/utils/Trackball.hpp>
 
-bool animate_light = true;
+bool animate_light = false;
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -216,8 +216,56 @@ void key_press(gua::PipelineDescription& pipe, gua::SceneGraph& graph, int key, 
     }
 }
 
+void adjust_arguments(int& argc, char**& argv)
+{
+    char* argv_tmp[] = {argv[0], NULL};
+    int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
+    argc = argc_tmp;
+    argv = argv_tmp;
+}
+
+enum class Side_By_Side_Mode {
+  DEFAULT_SIDE_BY_SIDE = 0,
+  SOFTWARE_MULTI_VIEW_RENDERING = 1,
+
+  NUM_SIDE_BY_SIDE_MODES = 2
+};
+
+
+Side_By_Side_Mode sbs_mode = Side_By_Side_Mode::DEFAULT_SIDE_BY_SIDE;
+
+std::string parse_model_from_cmd_line(int argc, char** argv)
+{
+    std::string model_path = "data/objects/city.3ds1";
+
+    std::string log_message_model_string = "";
+    if(argc < 2)
+    {
+        gua::Logger::LOG_MESSAGE << argv[0] << ": Did not provide any model file." << std::endl;
+        log_message_model_string = "Using default model path: " + model_path;
+    }
+    else
+    {
+        model_path = argv[1];
+        log_message_model_string = std::string(argv[0]) + ": Using provided model path:";
+
+        if(argc > 2) {
+            sbs_mode = Side_By_Side_Mode(std::atoi(argv[2]));
+            gua::Logger::LOG_MESSAGE << "Setting side by side mode to " << (int(sbs_mode) == 0 ? " SIDE_BY_SIDE " : "SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING") << std::endl; 
+        }
+
+    }
+    gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
+
+    return model_path;
+}
+
 int main(int argc, char** argv)
 {
+
+    std::string model_path = parse_model_from_cmd_line(argc, argv);
+
+    adjust_arguments(argc, argv);
     // initialize guacamole
     gua::init(argc, argv);
 
@@ -301,24 +349,12 @@ int main(int argc, char** argv)
     camera->get_pipeline_description()->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
     camera->get_pipeline_description()->get_resolve_pass()->background_texture("data/textures/envmap.jpg");
 
-    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+//    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     //camera->get_pipeline_description()->add_pass(std::make_shared<gua::SSAAPassDescription>());
     camera->config.set_near_clip(0.1f);
     camera->config.set_far_clip(10.0f);
 
 
-    // define second camera with different stereo mode secondary camera
-    auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
-    camera_mvs->translate(0, 0, 2.0);
-    camera_mvs->config.set_resolution(resolution);  
-    camera_mvs->config.set_left_screen_path("/screen");
-    camera_mvs->config.set_right_screen_path("/screen");
-    camera_mvs->config.set_scene_graph_name("main_scenegraph");
-    camera_mvs->config.set_output_window_name("software_mvs_window");
-    camera_mvs->config.set_enable_stereo(true);
-    camera_mvs->set_pipeline_description(camera->get_pipeline_description());
-    camera_mvs->config.set_near_clip(0.1f);
-    camera_mvs->config.set_far_clip(10.0f);
 
 
     auto window = std::make_shared<gua::GlfwWindow>();
@@ -327,7 +363,12 @@ int main(int argc, char** argv)
     window->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
     window->config.set_left_resolution( scm::math::vec2ui(resolution.x, resolution.y) );
     window->config.set_right_resolution( scm::math::vec2ui(resolution.x, resolution.y) );
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+
+    if( 0 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    } else if( 1 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
+    }
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
@@ -340,35 +381,19 @@ int main(int argc, char** argv)
     window->on_key_press.connect(
         std::bind(key_press, std::ref(*(camera->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
-
-    auto window_mvs = std::make_shared<gua::GlfwWindow>();
-
-    window_mvs->config.set_enable_vsync(false);
-    window_mvs->config.set_size( scm::math::vec2ui(resolution.x * 2, resolution.y) );
-    window_mvs->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
-    window_mvs->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
-    window_mvs->config.set_left_resolution( scm::math::vec2ui(resolution.x, resolution.y) );
-    window_mvs->config.set_right_resolution( scm::math::vec2ui(resolution.x, resolution.y) );
-    window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
-
-    window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-        window_mvs->config.set_resolution(new_size);
-        camera_mvs->config.set_resolution(new_size);
-        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-    });
-
-    window_mvs->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
-    window_mvs->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    window_mvs->on_key_press.connect(
-        std::bind(key_press, std::ref(*(camera_mvs->get_pipeline_description())), std::ref(graph), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-
     //window->open();
 
     gua::Renderer renderer;
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 5000.0);
+
+    double frame_time_avg = 0.0;
+    double last_frame_time = -1.0;
+    uint32_t valid_frames_recorded = 0;
+    uint32_t num_frames_to_average = 1000;
+    uint32_t info_frame_threshold = num_frames_to_average / 4;
 
 
     int cnt = 0;
@@ -382,19 +407,30 @@ int main(int argc, char** argv)
 
         ++cnt;
 
-        if(1 == cnt) {
-            gua::WindowDatabase::instance()->add("main_window", window);
+
+        if(cnt == 1) {
+           gua::WindowDatabase::instance()->add("main_window", window);
         }
 
-        if(200 == cnt) {
-            gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);
-        }
+        if(window->get_rendering_fps() > 0) {
+          if(valid_frames_recorded < num_frames_to_average) {
 
+            // wait a few frames before printing profiling information, otherwise it is hardly visible with the additional gua informations printed
+            if( info_frame_threshold == valid_frames_recorded ) {
+                std::cout << "Averaging Frame Time for the the next: " << num_frames_to_average << " Rendering Frames" << std::endl;
+            }
+            double current_frame_time = 1.0 / window->get_rendering_fps();
+            if(last_frame_time != current_frame_time) {
+              //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
 
-        if(window->get_rendering_fps() > 0 && window_mvs->get_rendering_fps() > 0) {
-          std::cout << "Speedup: " << (1.0f/window->get_rendering_fps())/(1.0f/window_mvs->get_rendering_fps()) << std::endl;
-          std::cout << "draw time ref: " << 1.0 / window->get_rendering_fps() << std::endl;
-          std::cout << "draw time 2: " << 1.0 / window_mvs->get_rendering_fps() << std::endl;
+              last_frame_time = current_frame_time;
+              frame_time_avg += current_frame_time;
+            }
+          } else if(num_frames_to_average == valid_frames_recorded) {
+            std::cout << "avg frame time after " << num_frames_to_average << " frames:" << frame_time_avg / valid_frames_recorded << std::endl;
+          }
+
+          ++valid_frames_recorded;
         }
 
         if(animate_light)
@@ -403,7 +439,6 @@ int main(int argc, char** argv)
         }
 
         window->process_events();
-        window_mvs->process_events();
 
         if(window->should_close())
         {

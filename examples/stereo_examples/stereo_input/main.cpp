@@ -69,6 +69,16 @@ void adjust_arguments(int& argc, char**& argv)
     argv = argv_tmp;
 }
 
+enum class Side_By_Side_Mode {
+  DEFAULT_SIDE_BY_SIDE = 0,
+  SOFTWARE_MULTI_VIEW_RENDERING = 1,
+
+  NUM_SIDE_BY_SIDE_MODES = 2
+};
+
+
+Side_By_Side_Mode sbs_mode = Side_By_Side_Mode::DEFAULT_SIDE_BY_SIDE;
+
 std::string parse_model_from_cmd_line(int argc, char** argv)
 {
     std::string model_path = "data/objects/teapot.obj";
@@ -83,6 +93,13 @@ std::string parse_model_from_cmd_line(int argc, char** argv)
     {
         model_path = argv[1];
         log_message_model_string = std::string(argv[0]) + ": Using provided model path:";
+
+        if(argc > 2) {
+
+            sbs_mode = Side_By_Side_Mode(std::atoi(argv[2]));
+            gua::Logger::LOG_MESSAGE << "Setting side by side mode to " << (int(sbs_mode) == 0 ? " SIDE_BY_SIDE " : "SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING") << std::endl; 
+        }
+
     }
     gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
 
@@ -184,25 +201,6 @@ int main(int argc, char** argv)
 
 
 
-
-    auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
-    camera_mvs->translate(0, 0, 2.0);
-    camera_mvs->config.set_resolution(resolution);
-    camera_mvs->config.set_left_screen_path("/screen");
-    camera_mvs->config.set_right_screen_path("/screen");
-    camera_mvs->config.set_scene_graph_name("main_scenegraph");
-    camera_mvs->config.set_output_window_name("software_mvs_window");
-    camera_mvs->config.set_enable_stereo(true);
-    //camera->set_pre_render_cameras({portal_camera});
-
-
-    camera_mvs->set_pipeline_description(default_pipeline_description);
-
-    //auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-
-    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
-
     auto window = std::make_shared<gua::GlfwWindow>();
     window->config.set_enable_vsync(false);
     window->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
@@ -210,7 +208,12 @@ int main(int argc, char** argv)
     window->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
     window->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
     window->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+
+    if( 0 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    } else if( 1 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
+    }
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
@@ -219,29 +222,6 @@ int main(int argc, char** argv)
     });
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
     window->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-
-
-    auto window_mvs = std::make_shared<gua::GlfwWindow>();
-
-
-    window_mvs->config.set_enable_vsync(false);
-    window_mvs->config.set_size(scm::math::vec2ui(resolution.x * 2, resolution.y ) ) ;
-    window_mvs->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
-    window_mvs->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
-    window_mvs->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
-
-    window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-        window_mvs->config.set_resolution(new_size);
-        camera_mvs->config.set_resolution(new_size);
-        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-    });
-    window_mvs->on_move_cursor.connect([&](gua::math::vec2 const& pos) { trackball.motion(pos.x, pos.y); });
-    window_mvs->on_button_press.connect(std::bind(mouse_button, std::ref(trackball), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-
 
 
 
@@ -255,8 +235,13 @@ int main(int argc, char** argv)
     int cnt = 0;
 
 
-    gua::events::Ticker ticker(loop, 1.0 / 1000.0);
+    gua::events::Ticker ticker(loop, 1.0 / 5000.0);
 
+    double frame_time_avg = 0.0;
+    double last_frame_time = -1.0;
+    uint32_t valid_frames_recorded = 0;
+    uint32_t num_frames_to_average = 1000;
+    uint32_t info_frame_threshold = num_frames_to_average / 4;
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
@@ -267,15 +252,27 @@ int main(int argc, char** argv)
            gua::WindowDatabase::instance()->add("main_window", window);
         }
 
-        if(cnt == 2) {
-            gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);           
+        if(window->get_rendering_fps() > 0) {
+          if(valid_frames_recorded < num_frames_to_average) {
+
+            // wait a few frames before printing profiling information, otherwise it is hardly visible with the additional gua informations printed
+            if( info_frame_threshold == valid_frames_recorded ) {
+                std::cout << "Averaging Frame Time for the the next: " << num_frames_to_average << " Rendering Frames" << std::endl;
+            }
+            double current_frame_time = 1.0 / window->get_rendering_fps();
+            if(last_frame_time != current_frame_time) {
+              //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
+
+              last_frame_time = current_frame_time;
+              frame_time_avg += current_frame_time;
+            }
+          } else if(num_frames_to_average == valid_frames_recorded) {
+            std::cout << "avg frame time after " << num_frames_to_average << " frames:" << frame_time_avg / valid_frames_recorded << std::endl;
+          }
+
+          ++valid_frames_recorded;
         }
 
-        if(window->get_rendering_fps() > 0 && window_mvs->get_rendering_fps() > 0) {
-          std::cout << "Speedup: " << (1.0f/window->get_rendering_fps())/(1.0f/window_mvs->get_rendering_fps()) << std::endl;
-          std::cout << "draw time ref: " << 1.0 / window->get_rendering_fps() << std::endl;
-          std::cout << "draw time 2: " << 1.0 / window_mvs->get_rendering_fps() << std::endl;
-        }
 
         if(window->should_close())
         {
