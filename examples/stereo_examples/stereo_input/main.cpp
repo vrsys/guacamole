@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto resolution = 1.0 * gua::math::vec2ui(960, 540);
+    auto resolution = 1.0 * gua::math::vec2ui(1.8*960, 1.8*540);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
             }
             double current_frame_time = 1.0 / window->get_rendering_fps();
             if(last_frame_time != current_frame_time) {
-              //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
+              std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
 
               last_frame_time = current_frame_time;
               frame_time_avg += current_frame_time;
@@ -270,7 +270,7 @@ int main(int argc, char** argv)
             std::cout << "avg frame time after " << num_frames_to_average << " frames:" << frame_time_avg / valid_frames_recorded << std::endl;
           }
 
-          ++valid_frames_recorded;
+          //++valid_frames_recorded;
         }
 
 

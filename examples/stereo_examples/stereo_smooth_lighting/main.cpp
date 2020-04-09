@@ -320,7 +320,7 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01f, 0.002f, 0.2f);
 
-    // setup rendering pipeline and window
+    // setup rendering pipeline and window1
     auto resolution = gua::math::vec2ui(960, 540);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");

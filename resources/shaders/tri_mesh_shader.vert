@@ -1,5 +1,11 @@
 @include "common/header.glsl"
 
+#extension GL_OVR_multiview2: require
+
+#if @get_enable_multi_view_rendering@
+layout(num_views = 2) in;
+#endif
+
 layout(location=0) in vec3 gua_in_position;
 layout(location=1) in vec2 gua_in_texcoords;
 layout(location=2) in vec3 gua_in_normal;
@@ -44,6 +50,8 @@ if(0 == gl_InstanceID) {
 
   @include "common/gua_varyings_assignment.glsl"
 
+
+/*
 #if @get_enable_multi_view_rendering@
 if (0 == gl_InstanceID) {
 #endif
@@ -57,4 +65,20 @@ if (0 == gl_InstanceID) {
 
   gl_ViewportIndex = gl_InstanceID;
 #endif
+*/
+
+#if @get_enable_multi_view_rendering@
+if (0 == gl_ViewID_OVR) {
+#endif
+  
+  gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
+
+#if @get_enable_multi_view_rendering@
+} else {
+  gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
+}
+
+  gl_ViewportIndex = int(gl_ViewID_OVR);
+#endif
+
 }

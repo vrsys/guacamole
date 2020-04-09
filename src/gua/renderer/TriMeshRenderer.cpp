@@ -291,11 +291,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_rasterizer_state = rs_cull_none_;
                 ctx.render_context->apply_program();
 
-                if(is_instanced_side_by_side_enabled) {
-                    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
-                } else {
+                //if(is_instanced_side_by_side_enabled) {
+                //    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                //} else {
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());                   
-                }
+                //}
 
             }
         }

@@ -13,5 +13,4 @@
 #extension GL_ARB_derivative_control : enable
 
 //TODO conditional enabling on graphics cards of genetation turing or higher
-//#extension GL_OVR_multiview: require
 #extension GL_ARB_shader_viewport_layer_array: enable
