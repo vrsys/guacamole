@@ -1,0 +1,32 @@
+{
+  "name" : "FragmentColor",
+  "source" : "
+    void FragmentColor() {
+      vec4 c = vec4(0);
+      if (uvec2(0) != diffuse_map) {
+        c = texture(sampler2D(diffuse_map), gua_texcoords);
+      } else {
+        c = vec4(color, 0.8);
+      }
+      gua_color = c.rgb;
+      gua_roughness = 0.0;
+      gua_metalness = 0.0;
+      gua_emissivity = 1.0;
+      gua_flags_passthrough = true;
+      gua_alpha = c.a;
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "color",
+      "type" : "vec3",
+      "value" : "(1.0 1.0 1.0)"
+    },
+    {
+      "name" : "diffuse_map",
+      "type" : "sampler2D",
+      "value" : "0"
+    }
+  ]
+}

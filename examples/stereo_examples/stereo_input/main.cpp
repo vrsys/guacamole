@@ -237,11 +237,14 @@ int main(int argc, char** argv)
 
     gua::events::Ticker ticker(loop, 1.0 / 5000.0);
 
+
     double frame_time_avg = 0.0;
     double last_frame_time = -1.0;
+    
     uint32_t valid_frames_recorded = 0;
-    uint32_t num_frames_to_average = 1000;
-    uint32_t info_frame_threshold = num_frames_to_average / 4;
+    uint32_t waiting_frames_recorded = 0;
+    uint32_t const num_frames_to_average = 1000;
+    uint32_t const waiting_frames = num_frames_to_average/10;
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
@@ -254,24 +257,25 @@ int main(int argc, char** argv)
 
         if(window->get_rendering_fps() > 0) {
           if(valid_frames_recorded < num_frames_to_average) {
-
-            // wait a few frames before printing profiling information, otherwise it is hardly visible with the additional gua informations printed
-            if( info_frame_threshold == valid_frames_recorded ) {
-                std::cout << "Averaging Frame Time for the the next: " << num_frames_to_average << " Rendering Frames" << std::endl;
-            }
             double current_frame_time = 1.0 / window->get_rendering_fps();
             if(last_frame_time != current_frame_time) {
-              std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
+              //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
 
               last_frame_time = current_frame_time;
-              frame_time_avg += current_frame_time;
+
+              if(waiting_frames_recorded < waiting_frames) {
+                ++waiting_frames_recorded;
+              } else {
+                frame_time_avg += current_frame_time;
+                ++valid_frames_recorded;
+              }
             }
           } else if(num_frames_to_average == valid_frames_recorded) {
-            std::cout << "avg frame time after " << num_frames_to_average << " frames:" << frame_time_avg / valid_frames_recorded << std::endl;
+            std::cout << "avg frame time: " << frame_time_avg / valid_frames_recorded << std::endl;
+            ++valid_frames_recorded;
           }
-
-          //++valid_frames_recorded;
         }
+
 
 
         if(window->should_close())

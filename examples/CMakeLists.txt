@@ -103,6 +103,7 @@ IF (GUACAMOLE_EXAMPLES)
 
   IF (GUACAMOLE_ENABLE_PHYSICS)
     add_subdirectory(physics)
+    add_subdirectory(stereo_examples/stereo_physics)
   ENDIF (GUACAMOLE_ENABLE_PHYSICS)
 
   IF (${PLUGIN_guacamole-nrp} AND ${PLUGIN_guacamole-video3d})

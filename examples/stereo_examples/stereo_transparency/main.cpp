@@ -26,6 +26,39 @@
 #include <gua/renderer/TriMeshLoader.hpp>
 #include <gua/databases/TextureDatabase.hpp>
 
+
+void adjust_arguments(int& argc, char**& argv)
+{
+    char* argv_tmp[] = {argv[0], NULL};
+    int argc_tmp = sizeof(argv_tmp) / sizeof(char*) - 1;
+    argc = argc_tmp;
+    argv = argv_tmp;
+}
+
+enum class Side_By_Side_Mode {
+  DEFAULT_SIDE_BY_SIDE = 0,
+  SOFTWARE_MULTI_VIEW_RENDERING = 1,
+
+  NUM_SIDE_BY_SIDE_MODES = 2
+};
+
+
+Side_By_Side_Mode sbs_mode = Side_By_Side_Mode::DEFAULT_SIDE_BY_SIDE;
+
+std::string parse_model_from_cmd_line(int argc, char** argv)
+{
+    {
+        if(argc > 1) {
+
+            sbs_mode = Side_By_Side_Mode(std::atoi(argv[1]));
+            gua::Logger::LOG_MESSAGE << "Setting side by side mode to " << (int(sbs_mode) == 0 ? " SIDE_BY_SIDE " : "SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING") << std::endl; 
+        }
+    }
+
+    return "";
+}
+
+
 int main(int argc, char** argv)
 {
     auto resolution = gua::math::vec2ui(960, 540);
@@ -42,6 +75,9 @@ int main(int argc, char** argv)
     const float car_glass_opacity = .3f;
 
     // initialize guacamole
+    std::string model_path = parse_model_from_cmd_line(argc, argv);
+
+    adjust_arguments(argc, argv);
     gua::init(argc, argv);
 
     // setup scene
@@ -176,19 +212,7 @@ int main(int argc, char** argv)
     camera->get_pipeline_description()->set_abuffer_size(6000);
     camera->get_pipeline_description()->set_blending_termination_threshold(0.99f);
 
-    auto camera_mvs = graph.add_node<gua::node::CameraNode>("/screen", "cam_mvs");
-    camera_mvs->translate(0, 0, 2.0);
-    camera_mvs->config.set_resolution(resolution);
-    camera_mvs->config.set_left_screen_path("/screen");
-    camera_mvs->config.set_right_screen_path("/screen");
-    camera_mvs->config.set_scene_graph_name("main_scenegraph");
-    camera_mvs->config.set_output_window_name("software_mvs_window");
-    camera_mvs->config.set_enable_stereo(true);
-    //camera_mvs->set_pre_render_cameras({portal_camera});
-    camera_mvs->set_pipeline_description( camera->get_pipeline_description() );
-    camera_mvs->get_pipeline_description()->set_enable_abuffer(true);
-    camera_mvs->get_pipeline_description()->set_abuffer_size(6000);
-    camera_mvs->get_pipeline_description()->set_blending_termination_threshold(0.99f);
+
 
     auto window = std::make_shared<gua::GlfwWindow>();
     //gua::WindowDatabase::instance()->add("main_window", window);
@@ -198,7 +222,13 @@ int main(int argc, char** argv)
     window->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
     window->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
     window->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+
+    if( 0 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    } else if( 1 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
+    }
+
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
         camera->config.set_resolution(new_size);
@@ -206,21 +236,6 @@ int main(int argc, char** argv)
         resolution = new_size;
     });
 
-    auto window_mvs = std::make_shared<gua::GlfwWindow>();
-    //gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);
-    window_mvs->config.set_enable_vsync(false);
-    window_mvs->config.set_size( scm::math::vec2ui(2 * resolution.x, resolution.y) );
-    window_mvs->config.set_resolution(scm::math::vec2ui(resolution.x * 2, resolution.y ) );
-    window_mvs->config.set_right_position(scm::math::vec2ui(resolution.x , 0));
-    window_mvs->config.set_left_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_right_resolution(scm::math::vec2ui(resolution.x , resolution.y));
-    window_mvs->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
-    window_mvs->on_resize.connect([&](gua::math::vec2ui const& new_size) {
-        window_mvs->config.set_resolution(new_size);
-        camera_mvs->config.set_resolution(new_size);
-        screen->data.set_size(gua::math::vec2(0.001 * new_size.x, 0.001 * new_size.y));
-        resolution = new_size;
-    });
 
     bool drag_mode = false;
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
@@ -383,6 +398,15 @@ int main(int argc, char** argv)
 
     size_t ctr = 0;
 
+
+    double frame_time_avg = 0.0;
+    double last_frame_time = -1.0;
+    
+    uint32_t valid_frames_recorded = 0;
+    uint32_t waiting_frames_recorded = 0;
+    uint32_t const num_frames_to_average = 1000;
+    uint32_t const waiting_frames = num_frames_to_average/10;
+
     ticker.on_tick.connect([&]() {
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
@@ -394,9 +418,27 @@ int main(int argc, char** argv)
            gua::WindowDatabase::instance()->add("main_window", window);
         }
 
-        if(2 == ctr) {
-           gua::WindowDatabase::instance()->add("software_mvs_window", window_mvs);           
+        if(window->get_rendering_fps() > 0) {
+          if(valid_frames_recorded < num_frames_to_average) {
+            double current_frame_time = 1.0 / window->get_rendering_fps();
+            if(last_frame_time != current_frame_time) {
+              //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
+
+              last_frame_time = current_frame_time;
+
+              if(waiting_frames_recorded < waiting_frames) {
+                ++waiting_frames_recorded;
+              } else {
+                frame_time_avg += current_frame_time;
+                ++valid_frames_recorded;
+              }
+            }
+          } else if(num_frames_to_average == valid_frames_recorded) {
+            std::cout << "avg frame time: " << frame_time_avg / valid_frames_recorded << std::endl;
+            ++valid_frames_recorded;
+          }
         }
+
 
         window->process_events();
         if(window->should_close())

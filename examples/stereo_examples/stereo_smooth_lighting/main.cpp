@@ -236,7 +236,7 @@ Side_By_Side_Mode sbs_mode = Side_By_Side_Mode::DEFAULT_SIDE_BY_SIDE;
 
 std::string parse_model_from_cmd_line(int argc, char** argv)
 {
-    std::string model_path = "data/objects/city.3ds1";
+    std::string model_path = "data/objects/city.3ds";
 
     std::string log_message_model_string = "";
     if(argc < 2)
@@ -263,7 +263,7 @@ std::string parse_model_from_cmd_line(int argc, char** argv)
 int main(int argc, char** argv)
 {
 
-    std::string model_path = parse_model_from_cmd_line(argc, argv);
+    std::string const model_path = parse_model_from_cmd_line(argc, argv);
 
     adjust_arguments(argc, argv);
     // initialize guacamole
@@ -293,7 +293,7 @@ int main(int argc, char** argv)
     gua::TriMeshLoader loader;
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto city(loader.create_geometry_from_file("city", "data/objects/city.3ds", rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
+    auto city(loader.create_geometry_from_file("city", model_path, rough_white, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE));
     // auto city(loader.create_geometry_from_file("city", "data/objects/city.3ds", gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
     graph.add_node("/transform", city);
     city->set_draw_bounding_box(true);
@@ -321,7 +321,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01f, 0.002f, 0.2f);
 
     // setup rendering pipeline and window1
-    auto resolution = gua::math::vec2ui(960, 540);
+    auto resolution = gua::math::vec2ui(960, 1080);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
 
@@ -391,9 +391,11 @@ int main(int argc, char** argv)
 
     double frame_time_avg = 0.0;
     double last_frame_time = -1.0;
+    
     uint32_t valid_frames_recorded = 0;
-    uint32_t num_frames_to_average = 1000;
-    uint32_t info_frame_threshold = num_frames_to_average / 4;
+    uint32_t waiting_frames_recorded = 0;
+    uint32_t const num_frames_to_average = 1000;
+    uint32_t const waiting_frames = num_frames_to_average/10;
 
 
     int cnt = 0;
@@ -414,23 +416,23 @@ int main(int argc, char** argv)
 
         if(window->get_rendering_fps() > 0) {
           if(valid_frames_recorded < num_frames_to_average) {
-
-            // wait a few frames before printing profiling information, otherwise it is hardly visible with the additional gua informations printed
-            if( info_frame_threshold == valid_frames_recorded ) {
-                std::cout << "Averaging Frame Time for the the next: " << num_frames_to_average << " Rendering Frames" << std::endl;
-            }
             double current_frame_time = 1.0 / window->get_rendering_fps();
             if(last_frame_time != current_frame_time) {
               //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
 
               last_frame_time = current_frame_time;
-              frame_time_avg += current_frame_time;
+
+              if(waiting_frames_recorded < waiting_frames) {
+                ++waiting_frames_recorded;
+              } else {
+                frame_time_avg += current_frame_time;
+                ++valid_frames_recorded;
+              }
             }
           } else if(num_frames_to_average == valid_frames_recorded) {
-            std::cout << "avg frame time after " << num_frames_to_average << " frames:" << frame_time_avg / valid_frames_recorded << std::endl;
+            std::cout << "avg frame time: " << frame_time_avg / valid_frames_recorded << std::endl;
+            ++valid_frames_recorded;
           }
-
-          ++valid_frames_recorded;
         }
 
         if(animate_light)

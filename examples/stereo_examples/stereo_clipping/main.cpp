@@ -219,9 +219,11 @@ int main(int argc, char** argv)
 
     double frame_time_avg = 0.0;
     double last_frame_time = -1.0;
-    uint32_t valid_frames_recorded = 0;
-    uint32_t num_frames_to_average = 1000;
 
+    uint32_t valid_frames_recorded = 0;
+    uint32_t waiting_frames_recorded = 0;
+    uint32_t const num_frames_to_average = 1000;
+    uint32_t const waiting_frames = num_frames_to_average/10;
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(gua::math::float_t(trackball.shiftx()), gua::math::float_t(trackball.shifty()), gua::math::float_t(trackball.distance())) *
@@ -239,13 +241,18 @@ int main(int argc, char** argv)
               //std::cout << "draw time: " << 1.0 / window->get_rendering_fps() << std::endl;
 
               last_frame_time = current_frame_time;
-              frame_time_avg += current_frame_time;
+
+              if(waiting_frames_recorded < waiting_frames) {
+                ++waiting_frames_recorded;
+              } else {
+                frame_time_avg += current_frame_time;
+                ++valid_frames_recorded;
+              }
             }
           } else if(num_frames_to_average == valid_frames_recorded) {
             std::cout << "avg frame time: " << frame_time_avg / valid_frames_recorded << std::endl;
+            ++valid_frames_recorded;
           }
-
-          ++valid_frames_recorded;
         }
 
         if(window->should_close())

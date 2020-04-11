@@ -1,0 +1,35 @@
+{
+  "vertex_methods" : [],
+  "fragment_methods" : [
+  {
+    "name" : "FragmentColor",
+    "source" : "
+      void FragmentColor() {
+        gua_color = color;
+        gua_roughness = 0.2;
+        gua_metalness = 0.2;
+        gua_emissivity = 0;
+
+        const float contrib = 0.5;
+        const float r_ind = 1.5;
+        const float Rs = ((1.0 - r_ind) * (1.0 - r_ind)) / ((1.0 + r_ind) * (1.0 + r_ind));
+        // Schlick's approximation
+        float fresnel = Rs + (1.0 - Rs) * pow((1.0 - abs(dot(gua_normal, normalize(gua_world_position - gua_camera_position)))), 5.0);
+        gua_alpha = clamp(alpha + mix(0.0, fresnel, contrib), 0.0, 1.0);
+      }",
+    "uniforms" : [
+      {
+        "name" : "color",
+        "type" : "vec3",
+        "value" : "(1.0 1.0 1.0)"
+      },
+      {
+        "name" : "alpha",
+        "type" : "float",
+        "value" : "0.7"
+      }
+    ]
+  }
+  ]
+}
+
