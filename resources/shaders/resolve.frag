@@ -26,6 +26,8 @@ uint bitset[((@max_lights_num@ - 1) >> 5) + 1];
 #if @get_enable_multi_view_rendering@
 uint secondary_bitset[((@max_lights_num@ - 1) >> 5) + 1];
 #endif
+
+vec3 gua_active_camera_position = gua_camera_position;
 ///////////////////////////////////////////////////////////////////////////////
 
 const float invpi = 1.0 / 3.14159265359;
@@ -199,7 +201,7 @@ vec3 gua_apply_background_texture() {
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_cubemap_texture() {
   vec3 pos = gua_get_position();
-  vec3 view = normalize(pos - gua_camera_position) ;
+  vec3 view = normalize(pos - gua_active_camera_position) ;
   vec3 col1 = texture(samplerCube(gua_background_texture), view).xyz;
   vec3 col2 = texture(samplerCube(gua_alternative_background_texture), view).xyz;
   return mix(col1, col2, gua_background_texture_blend_factor);
@@ -209,25 +211,12 @@ vec3 gua_apply_cubemap_texture() {
 vec3 gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
 
-
-#if @get_enable_multi_view_rendering@
-  vec3 active_camera_position = vec3(0.0, 0.0, 0.0);
-  if(0 == gl_ViewportIndex) { //left eye cam pos
-    active_camera_position = gua_camera_position;
-  }
-  else {
-    active_camera_position = gua_secondary_camera_position;
-  }
-#else
-  vec3 active_camera_position = gua_camera_position;
-#endif
-
-  vec3 view = normalize(pos - active_camera_position);
+  vec3 view = normalize(pos - gua_active_camera_position);
   const float pi = 3.14159265359;
   float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
   float y = 1.0 - acos(view.y)/pi;
   vec2 texcoord = vec2(x, y);
-  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - active_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - active_camera_position));
+  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_active_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_active_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
   vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
   vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
@@ -242,8 +231,11 @@ vec3 gua_apply_background_color() {
 
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_fog(vec3 color, vec3 fog_color) {
-  float dist       = length(gua_camera_position - gua_get_position());
+
+  float dist = length(gua_active_camera_position - gua_get_position()); 
+
   float fog_factor = clamp((dist - gua_fog_start)/(gua_fog_end - gua_fog_start), 0.0, 1.0);
+
   return mix(color, fog_color, fog_factor);
 }
 
@@ -273,6 +265,14 @@ float get_vignette(float coverage, float softness, float intensity) {
 
 ///////////////////////////////////////////////////////////////////////////////
 void main() {
+
+  //prepare active mvr attributes
+  #if @get_enable_multi_view_rendering@
+  if(1 == gl_ViewportIndex) {
+    gua_active_camera_position = gua_secondary_camera_position;
+  }
+  #endif
+
   //gua_out_color = gua_get_color() + gua_get_normal() + gua_get_pbr() + gua_get_position() + vec3(gua_get_flags());
 
 
