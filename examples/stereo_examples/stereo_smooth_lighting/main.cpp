@@ -300,7 +300,7 @@ int main(int argc, char** argv)
 
     auto light = graph.add_node<gua::node::LightNode>("/transform/city", "light");
     light->data.set_type(gua::node::LightNode::Type::POINT);
-    light->data.set_enable_shadows(true);
+    light->data.set_enable_shadows(false);
     // light->data.set_shadow_cascaded_splits({0.3f, 0.7f, 1.0f, 10.0f});
     // light->data.set_max_shadow_dist(100.0f);
     light->data.set_shadow_map_size(1024);
@@ -321,7 +321,8 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01f, 0.002f, 0.2f);
 
     // setup rendering pipeline and window1
-    auto resolution = gua::math::vec2ui(960, 1080);
+    float res_factor = 1.8f;
+    auto resolution = gua::math::vec2ui(res_factor*960, 1080);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
 
@@ -365,8 +366,10 @@ int main(int argc, char** argv)
     window->config.set_right_resolution( scm::math::vec2ui(resolution.x, resolution.y) );
 
     if( 0 == int(sbs_mode) ) {
+        std::cout << "SIDE_BY_SIDE" << std::endl;
         window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
     } else if( 1 == int(sbs_mode) ) {
+        std::cout << "SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING" << std::endl;
         window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
     }
 

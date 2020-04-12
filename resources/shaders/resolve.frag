@@ -208,15 +208,30 @@ vec3 gua_apply_cubemap_texture() {
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
-  vec3 view = normalize(pos - gua_camera_position);
+
+
+#if @get_enable_multi_view_rendering@
+  vec3 active_camera_position = vec3(0.0, 0.0, 0.0);
+  if(0 == gl_ViewportIndex) { //left eye cam pos
+    active_camera_position = gua_camera_position;
+  }
+  else {
+    active_camera_position = gua_secondary_camera_position;
+  }
+#else
+  vec3 active_camera_position = gua_camera_position;
+#endif
+
+  vec3 view = normalize(pos - active_camera_position);
   const float pi = 3.14159265359;
   float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
   float y = 1.0 - acos(view.y)/pi;
   vec2 texcoord = vec2(x, y);
-  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_camera_position));
+  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - active_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - active_camera_position));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
   vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
   vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
+  //return vec3(1.0, 0.0, 0.0);
   return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
