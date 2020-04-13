@@ -21,22 +21,29 @@
 
 
 @include "shaders/common/header.glsl"
+#extension GL_EXT_multiview_tessellation_geometry_shader: require
+
+#if @get_enable_multi_view_rendering@
+layout(num_views = 2) in;
+#endif
+
 @include "shaders/common/gua_camera_uniforms.glsl"
+
+
 
 layout(points) in;
 layout(line_strip, max_vertices = 16) out;
 
 in vec3 gua_min[];
 in vec3 gua_max[];
-in int instance_id[];
+in int is_for_right_eye[];
 // body 
 void main() {
 mat4 mat;
 
 #if @get_enable_multi_view_rendering@
-    if (0 == instance_id[0]) {
+    if (0 == is_for_right_eye[0]) {
       mat = gua_view_projection_matrix;
-
     } else {
       mat = gua_secondary_view_projection_matrix;
     }
@@ -44,7 +51,7 @@ mat4 mat;
     mat = gua_view_projection_matrix;
 #endif
 
-    gl_ViewportIndex  = instance_id[0];
+    gl_ViewportIndex  = is_for_right_eye[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
 
@@ -59,7 +66,7 @@ mat4 mat;
 
     EndPrimitive();
 
-    gl_ViewportIndex  = instance_id[0];
+    gl_ViewportIndex  = is_for_right_eye[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
     
@@ -73,7 +80,7 @@ mat4 mat;
     EmitVertex(); 
     EndPrimitive();
 
-    gl_ViewportIndex  = instance_id[0];
+    gl_ViewportIndex  = is_for_right_eye[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
 
@@ -87,7 +94,7 @@ mat4 mat;
     EmitVertex(); 
     EndPrimitive();
 
-    gl_ViewportIndex  = instance_id[0];
+    gl_ViewportIndex  = is_for_right_eye[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
 
@@ -100,8 +107,4 @@ mat4 mat;
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
     EndPrimitive();
-
-
-
-
 }

@@ -4,6 +4,7 @@
 #include <scm/gl_core/render_device/opengl/gl_core.h>
 #include <gua/node/OcclusionCullingGroupNode.hpp>
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 #include <gua/config.hpp>
 #include <gua/renderer/Pipeline.hpp>
 
@@ -168,6 +169,24 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
     }
 
 
+    auto const& camera = pipe.current_viewstate().camera;
+    bool is_multi_view_rendering_mode = true;
+    bool is_instanced_side_by_side_enabled = false;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
+      auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+    
+      auto const stereo_mode = associated_window->config.get_stereo_mode();
+
+      if(stereo_mode == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING || 
+         stereo_mode == StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING) {
+        is_multi_view_rendering_mode = true;
+        if(stereo_mode == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          is_instanced_side_by_side_enabled = true;
+        }
+      }
+    }
+#endif
 
     auto const& frustum = pipe.current_viewstate().frustum;
     scm::math::mat4d const view_matrix = frustum.get_view();
@@ -272,7 +291,9 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
         int64_t const current_frame_id = ctx.framecount;
 
         auto const& culling_frustum = pipe.current_viewstate().frustum;
-
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        auto const& secondary_culling_fustum = pipe.current_viewstate().secondary_frustum;
+#endif
         std::vector<gua::node::Node*> visibility_persistence_vector;
 
 
@@ -377,7 +398,20 @@ void OcclusionCullingAwareRenderer::render_with_occlusion_culling(Pipeline& pipe
 
                     traversal_priority_queue.pop();
 
-                    if(culling_frustum.intersects(current_node->get_bounding_box())) {
+                    auto& current_bounding_box = current_node->get_bounding_box();
+                    bool is_bounding_volume_inside_of_frustum = culling_frustum.intersects( current_bounding_box );
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                    if(is_multi_view_rendering_mode || is_instanced_side_by_side_enabled) {
+                        is_bounding_volume_inside_of_frustum |= secondary_culling_fustum.intersects( current_bounding_box );
+                    }
+#endif
+
+                    if( culling_frustum.intersects(current_bounding_box) 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                    || secondary_culling_fustum.intersects(current_bounding_box) 
+#endif GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+                    ) {
 
                         bool was_visible = true;
 
@@ -814,8 +848,8 @@ void OcclusionCullingAwareRenderer::issue_occlusion_query(RenderContext const& c
     
 
     auto const& glapi = ctx.render_context->opengl_api();
-    glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
 
+    glapi.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, current_instance_ID);
     ctx.render_context->end_query(occlusion_query_iterator->second);
 
 

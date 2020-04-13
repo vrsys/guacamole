@@ -122,8 +122,8 @@ void OcclusionCullingGroupNode::regroup_children() {
         renaming_queue.push(child);
     }
 
+    // node renaming
     while(!renaming_queue.empty()) {
-
         auto& current_node_to_rename = renaming_queue.front();
         renaming_queue.pop();
 
@@ -136,7 +136,7 @@ void OcclusionCullingGroupNode::regroup_children() {
         }
     }
 
-
+    
     std::vector<std::shared_ptr<Node>> children = get_children();
     for(auto& child : get_children() ) {
         if (child->num_grouped_faces()>THRESHHOLD) {
@@ -155,7 +155,6 @@ void OcclusionCullingGroupNode::regroup_children() {
     //if we have less than 3 children, then the grouping is as good as it gets
     if( get_children().size() > 2) {
         splitting_queue.push(this);
-
     }
 
     determine_best_split(splitting_queue);

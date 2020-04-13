@@ -151,6 +151,8 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(true);
+
+    
     camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(0.8f);
 
     auto plane_transform = graph.add_node<gua::node::TransformNode>("/", "plane_transform");

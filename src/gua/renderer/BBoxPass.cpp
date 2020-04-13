@@ -72,10 +72,10 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         {
             auto data = static_cast<math::vec3f*>(ctx.render_context->map_buffer(buffer_, scm::gl::ACCESS_WRITE_INVALIDATE_BUFFER));
 
-            for(unsigned int i = 0; i < count; ++i)
+            for(unsigned int bounding_box_idx = 0; bounding_box_idx < count; ++bounding_box_idx)
             {
-                data[2 * i] = math::vec3f(scene.bounding_boxes[i].min);
-                data[2 * i + 1] = math::vec3f(scene.bounding_boxes[i].max);
+                data[2 * bounding_box_idx]     = math::vec3f(scene.bounding_boxes[bounding_box_idx].min);
+                data[2 * bounding_box_idx + 1] = math::vec3f(scene.bounding_boxes[bounding_box_idx].max);
             }
 
             ctx.render_context->unmap_buffer(buffer_);
@@ -86,21 +86,8 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         target.bind(ctx, write_depth);
 
 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        target.set_side_by_side_viewport_array(ctx);
-        //std::cout << "Setting side by side viewport for bounding box renderer" << std::endl;
-#else
-        target.set_viewport(ctx);
-#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-
-        ctx.render_context->bind_vertex_array(vao_);
-
-        ctx.render_context->apply();
-
-        assert(count < std::numeric_limits<unsigned>::max());
-
-
         bool is_instanced_side_by_side_enabled = false;
+        bool is_hardware_multi_view_rendering_enabled = false;
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         auto const& camera = (pipe.current_viewstate().camera);
@@ -111,8 +98,25 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
             if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
                 is_instanced_side_by_side_enabled = true;
             }
+            if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING) {
+                is_hardware_multi_view_rendering_enabled = true;
+            }
         }
 #endif
+
+    if(is_instanced_side_by_side_enabled || is_hardware_multi_view_rendering_enabled) {
+        target.set_side_by_side_viewport_array(ctx);
+    } else {   //std::cout << "Setting side by side viewport for bounding box renderer" << std::endl;
+        target.set_viewport(ctx);
+    }
+
+        ctx.render_context->bind_vertex_array(vao_);
+        ctx.render_context->apply();
+
+        assert(count < std::numeric_limits<unsigned>::max());
+
+
+
 
         if(is_instanced_side_by_side_enabled) {
             ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);

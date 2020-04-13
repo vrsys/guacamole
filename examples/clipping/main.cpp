@@ -22,6 +22,8 @@
 #include <gua/guacamole.hpp>
 #include <gua/utils/Trackball.hpp>
 
+#include <gua/renderer/DebugViewPass.hpp>
+
 #define COUNT 5
 
 // forward mouse interaction to trackball
@@ -102,7 +104,11 @@ int main(int argc, char** argv)
     camera->config.set_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(0.8f);
+
+    auto pipeline_description = camera->get_pipeline_description();
+    pipeline_description->get_resolve_pass()->tone_mapping_exposure(0.8f);
+    pipeline_description->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    camera->set_pipeline_description(pipeline_description);
 
     auto plane_transform = graph.add_node<gua::node::TransformNode>("/", "plane_transform");
 

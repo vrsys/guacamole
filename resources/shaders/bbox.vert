@@ -21,6 +21,11 @@
 
 @include "shaders/common/header.glsl"
 
+#if @get_enable_multi_view_rendering@
+#extension GL_OVR_multiview2: require
+layout(num_views = 2) in;
+#endif
+
 // input
 layout(location=0) in vec3 gua_in_min;
 layout(location=1) in vec3 gua_in_max;
@@ -31,13 +36,24 @@ layout(location=1) in vec3 gua_in_max;
 out vec3 gua_min;
 out vec3 gua_max;
 
-out int instance_id; 
+out int is_for_right_eye; 
 // body
 void main() { 
     gua_min = gua_in_min;
     gua_max = gua_in_max;
 
-    gl_ViewportIndex = gl_InstanceID;
-    instance_id = gl_ViewportIndex; 
-    // gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_in_min, 1.0);
+    int viewport_index = 0;
+#if @get_enable_multi_view_rendering@
+
+  if(1 == gua_camera_in_multi_view_rendering_mode) {
+    viewport_index = gl_InstanceID;
+    is_for_right_eye = viewport_index;
+  } 
+  if(1 == gua_hardware_multi_view_rendering_mode_enabled) {
+    viewport_index = int(gl_ViewID_OVR);
+    is_for_right_eye = viewport_index;
+  }
+#endif
+    
+
 }

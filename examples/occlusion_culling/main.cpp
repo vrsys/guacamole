@@ -43,7 +43,7 @@
 //#define AUTO_ANIMATION
 
 
-//#define USE_CITY_SCENE
+#define USE_CITY_SCENE
 
 //#define RENDER_SIDE_BY_SIDE_STEREO
 //#define RENDER_ANAGLYPH_STEREO
@@ -297,7 +297,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
 
-    uint32_t res_factor = 1;
+    uint32_t res_factor = 2;
     // setup rendering pipeline and window
 
 #ifdef RENDER_SIDE_BY_SIDE_STEREO

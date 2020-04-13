@@ -31,7 +31,7 @@ vec3 gua_active_camera_position = gua_camera_position;
 ///////////////////////////////////////////////////////////////////////////////
 
 const float invpi = 1.0 / 3.14159265359;
-
+const float half_invpi = 0.5 * invpi;
 vec2
 longitude_latitude(in vec3 normal)
 {
@@ -212,12 +212,12 @@ vec3 gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
 
   vec3 view = normalize(pos - gua_active_camera_position);
-  const float pi = 3.14159265359;
-  float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
-  float y = 1.0 - acos(view.y)/pi;
+
+  float x = 0.5 + half_invpi*gua_my_atan2(view.x, -view.z);
+  float y = 1.0 - invpi*acos(view.y);
   vec2 texcoord = vec2(x, y);
   float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_active_camera_position) - normalize(gua_get_position(vec2(1, 0.5)) - gua_active_camera_position));
-  vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
+  vec2 uv = 0.25*l*(gua_get_quad_coords() - 1.0) + 0.5;
   vec3 col1 = textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
   vec3 col2 = textureGrad(sampler2D(gua_alternative_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
   //return vec3(1.0, 0.0, 0.0);
@@ -257,10 +257,9 @@ vec3 gua_get_background_color() {
 ///////////////////////////////////////////////////////////////////////////////
 float get_vignette(float coverage, float softness, float intensity) {
   // inigo quilez's great vigneting effect!
-  float a = -coverage/softness;
-  float b = 1.0/softness;
+  vec2 a_b = vec2(-coverage, 1.0)/vec2(softness,softness);
   vec2 q = gua_get_quad_coords();
-  return clamp(a + b*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0.0, 1.0) * intensity + (1.0-intensity);
+  return clamp(a_b.x + a_b.y*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ), 0.0, 1.0) * intensity + (1.0-intensity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
