@@ -147,14 +147,20 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
         auto current_rasterizer_state = rs_cull_back_;
         ctx.render_context->apply();
 
+        bool is_multi_view_rendering_mode = true;
         bool is_instanced_side_by_side_enabled = false;
-
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
           auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
         
-          if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
-            is_instanced_side_by_side_enabled = true;
+          auto const stereo_mode = associated_window->config.get_stereo_mode();
+
+          if(stereo_mode == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING || 
+             stereo_mode == StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING) {
+            is_multi_view_rendering_mode = true;
+            if(stereo_mode == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+              is_instanced_side_by_side_enabled = true;
+            }
           }
         }
 #endif
@@ -243,7 +249,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-                if(is_instanced_side_by_side_enabled) {
+                if(is_multi_view_rendering_mode) {
                     auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
                     current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));
                 }
@@ -291,11 +297,11 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_rasterizer_state = rs_cull_none_;
                 ctx.render_context->apply_program();
 
-                //if(is_instanced_side_by_side_enabled) {
-                //    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
-                //} else {
+                if(is_instanced_side_by_side_enabled) { // path for side-by-side software MVR (instanced rendering, reduces state changes)
+                    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                } else { // path for other modes including hardware MVR
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());                   
-                //}
+                }
 
             }
         }

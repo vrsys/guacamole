@@ -299,12 +299,12 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
                                        scm::gl::FORMAT_R_32UI, 
                                        scm::gl::ACCESS_READ_WRITE, 
                                        0, 0, 0);     
-                                       
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
                                        scm::gl::FORMAT_R_32UI, 
                                        scm::gl::ACCESS_READ_WRITE, 
                                        1, 0, 0);
-
+#endif
         ctx.render_context->apply_image_units();
         ctx.render_context->apply_frame_buffer();
         ctx.render_context->apply_state_objects();

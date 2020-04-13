@@ -67,8 +67,8 @@ void adjust_arguments(int& argc, char**& argv)
 enum class Side_By_Side_Mode {
   DEFAULT_SIDE_BY_SIDE = 0,
   SOFTWARE_MULTI_VIEW_RENDERING = 1,
-
-  NUM_SIDE_BY_SIDE_MODES = 2
+  HARDWARE_MULTI_VIEW_RENDERING = 2,
+  NUM_SIDE_BY_SIDE_MODES = 3
 };
 
 
@@ -193,6 +193,8 @@ int main(int argc, char** argv)
         window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
     } else if( 1 == int(sbs_mode) ) {
         window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING);
+    } else if( 2 == int(sbs_mode) ) {
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING);
     }
 
     gua::WindowDatabase::instance()->add("main_window", window);

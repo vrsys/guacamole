@@ -27,6 +27,7 @@ layout (std140, binding=0) uniform cameraBlock {
   float gua_clip_far;
 #if @get_enable_multi_view_rendering@
   int   gua_camera_in_multi_view_rendering_mode;
+  int   gua_hardware_multi_view_rendering_mode_enabled;
 #endif 
 };
 

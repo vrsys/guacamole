@@ -390,5 +390,7 @@ void main() {
   }
 #endif
 
+//gua_out_color = vec3(gua_get_quad_coords(), 0.0);
+
 }
 

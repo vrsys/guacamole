@@ -21,6 +21,15 @@
 
 @include "shaders/common/header.glsl"
 
+#if @get_enable_multi_view_rendering@
+#extension GL_OVR_multiview2: require
+layout(num_views = 2) in;
+#endif
+
+@include "common/gua_camera_uniforms.glsl"
+
+
+
 // input
 layout(location=0) in vec3 gua_in_position;
 layout(location=2) in vec2 gua_in_texcoord;
@@ -30,10 +39,20 @@ out vec2 gua_quad_coords;
 
 // body
 void main() {
-    gua_quad_coords = gua_in_texcoord;
-    gl_Position = vec4(gua_in_position, 1.0);
-
 #if @get_enable_multi_view_rendering@
-  	gl_ViewportIndex = gl_InstanceID;
+  int viewport_index = 0;
+  if(1 == gua_camera_in_multi_view_rendering_mode) {
+    viewport_index = gl_InstanceID;
+  //test_color = vec3(0.0, 1.0, 0.0);
+  } 
+  if(1 == gua_hardware_multi_view_rendering_mode_enabled) {
+    viewport_index = int(gl_ViewID_OVR);
+  //test_color = vec3(0.0, 0.0, 1.0);
+  }
+
+  gl_ViewportIndex = viewport_index;
 #endif
+
+  gua_quad_coords = gua_in_texcoord;
+  gl_Position = vec4(gua_in_position, 1.0);
 }

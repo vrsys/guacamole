@@ -9,13 +9,24 @@ uniform float gua_texel_height;
 
 // quad coords -----------------------------------------------------------------
 vec2 gua_get_quad_coords() {
-
   float frag_coord_x = gl_FragCoord.x;
-
-
   return vec2(frag_coord_x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
 }
 
+vec2 gua_get_quad_coords_eye_separated() {
+  float frag_coord_x = gl_FragCoord.x;
+  #if @get_enable_multi_view_rendering@
+      vec2 temp_quad_coords = vec2(frag_coord_x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+      if(1 == gua_camera_in_multi_view_rendering_mode) {
+        temp_quad_coords.x *= 2;
+        temp_quad_coords.x = fract(temp_quad_coords.x);
+      }
+      return temp_quad_coords;
+
+  #else 
+    return vec2(frag_coord_x * gua_texel_width, gl_FragCoord.y * gua_texel_height);
+  #endif    
+}
 
 // helper functions
 float gua_scale_unscaled_depth(float unscaled_depth) {

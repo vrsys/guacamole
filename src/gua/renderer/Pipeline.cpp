@@ -150,15 +150,19 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
 
     bool is_instanced_side_by_side_enabled = false;
+    bool is_hardware_multi_view_rendering_mode = false;
     #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         if( gua::CameraMode::BOTH == mode ) {
           auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
 
-          if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING) {
+          if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING || 
+             associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING) {
 
               is_instanced_side_by_side_enabled = true;
-              //std::cout << "MULTI VIEW + SIDE BY SIDE" << std::endl;
               adjusted_camera_resolution.x *= 2;
+            if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MULTI_VIEW_RENDERING) {
+              is_hardware_multi_view_rendering_mode = true;
+            }
           }
         }
     #else
@@ -273,6 +277,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
                              camera.config.get_resolution()
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
                              ,is_instanced_side_by_side_enabled
+                             ,is_hardware_multi_view_rendering_mode
 #endif  // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
                              );
 

@@ -1,8 +1,7 @@
 @include "common/header.glsl"
 
-#extension GL_OVR_multiview2: require
-
 #if @get_enable_multi_view_rendering@
+#extension GL_OVR_multiview2: require
 layout(num_views = 2) in;
 #endif
 
@@ -22,12 +21,29 @@ layout(location=4) in vec3 gua_in_bitangent;
 
 @material_method_declarations_vert@
 
+out vec3 test_color;
 void main() {
+  
+test_color = vec3(1.0, 0.0, 0.0);
+#if @get_enable_multi_view_rendering@
+int viewport_index = 0;
+if(1 == gua_camera_in_multi_view_rendering_mode) {
+  viewport_index = gl_InstanceID;
+  test_color = vec3(0.0, 1.0, 0.0);
+} 
+
+if(1 == gua_hardware_multi_view_rendering_mode_enabled) {
+  viewport_index = int(gl_ViewID_OVR);
+  test_color = vec3(0.0, 0.0, 1.0);
+}
+
 
   @material_input@
 
+
+
 #if @get_enable_multi_view_rendering@
-if(0 == gl_InstanceID) {
+if(0 == viewport_index) {
 #endif
   gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
@@ -51,34 +67,16 @@ if(0 == gl_InstanceID) {
   @include "common/gua_varyings_assignment.glsl"
 
 
-/*
-#if @get_enable_multi_view_rendering@
-if (0 == gl_InstanceID) {
+
+
+if(0 == viewport_index) {
 #endif
-  
   gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
-
 #if @get_enable_multi_view_rendering@
-} else {
-  gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
-}
+  } else {
+    gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
+  }
 
-  gl_ViewportIndex = gl_InstanceID;
+  gl_ViewportIndex = viewport_index;
 #endif
-*/
-
-#if @get_enable_multi_view_rendering@
-if (0 == gl_ViewID_OVR) {
-#endif
-  
-  gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
-
-#if @get_enable_multi_view_rendering@
-} else {
-  gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
-}
-
-  gl_ViewportIndex = int(gl_ViewID_OVR);
-#endif
-
 }

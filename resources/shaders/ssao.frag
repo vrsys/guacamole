@@ -40,7 +40,7 @@ vec3 object_space_random() {
 
 float compute_ssao (in vec3 normal, in vec3 position, in float in_depth) 
 {
-  vec2 texcoords = gua_get_quad_coords();
+  vec2 texcoords = gua_get_quad_coords_eye_separated() ;
 
   //vec3 n = normal;
   //vec3 p = position;

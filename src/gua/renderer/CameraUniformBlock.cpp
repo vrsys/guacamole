@@ -49,7 +49,7 @@ void CameraUniformBlock::update(
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 void CameraUniformBlock::update(
-    RenderContext const& context, Frustum const& frustum, Frustum const& secondary_cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution, bool is_side_by_side_multi_view_rendering_mode)
+    RenderContext const& context, Frustum const& frustum, Frustum const& secondary_cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution, bool is_side_by_side_multi_view_rendering_mode, bool is_hardware_multi_view_rendering_mode)
 {
     if(noise_texture_ == math::vec2ui(0))
     {
@@ -105,7 +105,8 @@ void CameraUniformBlock::update(
         uniform_block_->clip_far = frustum.get_clip_far();
         uniform_block_->view_id = view_id;
 
-        uniform_block_->camera_in_multi_view_stere_mode = is_side_by_side_multi_view_rendering_mode;
+        uniform_block_->camera_in_multi_view_stereo_mode = is_side_by_side_multi_view_rendering_mode;
+        uniform_block_->hardware_multi_view_rendering_mode_enabled = is_hardware_multi_view_rendering_mode;
     }
     uniform_block_.end_manipulation();
 }

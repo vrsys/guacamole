@@ -28,6 +28,8 @@ vec2 gua_get_quad_coords() {
 @include "common/virtual_texturing_functions.frag"
 #endif
 
+in vec3 test_color;
+
 void main()
 {
   @material_input@
@@ -57,5 +59,7 @@ void main()
       @material_method_calls_frag@
   }
 
+
+  gua_color = test_color;
   submit_fragment(gl_FragCoord.z);
 }
