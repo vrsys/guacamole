@@ -62,10 +62,11 @@ PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, Su
     scm::math::mat4f const projection_matrix = scm::math::mat4f(frustum.get_projection());
     auto left_eye_view_projection_matrix = projection_matrix * view_matrix;
 
+
+        bool is_instanced_side_by_side_enabled = false;
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         auto const& camera = pipe.current_viewstate().camera;
 
-        bool is_instanced_side_by_side_enabled = false;
         if( gua::CameraMode::BOTH == camera.config.get_mono_mode() ) {
           auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
         

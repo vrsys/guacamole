@@ -249,7 +249,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 
     break;
 #else
-    Logger::ERROR_MESSAGE << "SIDE_BY_SIDE_MULTI_VIEW_RENDERING modes are only available after setting the corresponding CMake option" << std::endl;
+    Logger::LOG_ERROR << "SIDE_BY_SIDE_MULTI_VIEW_RENDERING modes are only available after setting the corresponding CMake option" << std::endl;
 #endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     case StereoMode::SIDE_BY_SIDE:
     case StereoMode::SEPARATE_WINDOWS:

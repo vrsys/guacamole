@@ -297,7 +297,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
 
-    uint32_t res_factor = 2;
+    uint32_t res_factor = 1.8;
     // setup rendering pipeline and window
 
 #ifdef RENDER_SIDE_BY_SIDE_STEREO
@@ -394,7 +394,7 @@ int main(int argc, char** argv)
     // set up the ticker that tries to executes the main loop every of 1.0 / 500.0 s. T
     // he application thread triggers the rendering, so our rendering framerate can never be higher than our application framerate
 
-    float desired_framerate = 2000.0;
+    float desired_framerate = 5000.0;
     float frametime = 1.0 / desired_framerate;
 
     float accumulated_frametime = 0.0;
