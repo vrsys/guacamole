@@ -21,11 +21,12 @@
 
 
 @include "shaders/common/header.glsl"
-#extension GL_EXT_multiview_tessellation_geometry_shader: require
 
-#if @get_enable_multi_view_rendering@
+
+#if 0 & @is_hardware_multi_view_rendering_enabled@
+#extension GL_EXT_multiview_tessellation_geometry_shader: require
 layout(num_views = 2) in;
-#endif
+#endif //is_hardware_multi_view_rendering_enabled
 
 @include "shaders/common/gua_camera_uniforms.glsl"
 

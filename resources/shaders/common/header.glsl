@@ -12,5 +12,5 @@
 
 #extension GL_ARB_derivative_control : enable
 
-//TODO conditional enabling on graphics cards of genetation turing or higher
+// single pass instanced rendering or multi view rendering
 #extension GL_ARB_shader_viewport_layer_array: enable

@@ -117,10 +117,10 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
 
 
 
-
-        if(is_instanced_side_by_side_enabled) {
+        // for now only perform software mvr here
+        if(is_instanced_side_by_side_enabled || is_hardware_multi_view_rendering_enabled) {
             ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
-        } else {
+        } else { // investigate later what happens with gl_view_id_ovr here
             ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
         }
 

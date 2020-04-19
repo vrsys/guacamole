@@ -21,7 +21,7 @@
 
 @include "shaders/common/header.glsl"
 
-#if @get_enable_multi_view_rendering@
+#if @is_hardware_multi_view_rendering_enabled@
 #extension GL_OVR_multiview2: require
 layout(num_views = 2) in;
 #endif
@@ -39,17 +39,17 @@ out vec2 gua_quad_coords;
 
 // body
 void main() {
-#if @get_enable_multi_view_rendering@
-  int viewport_index = 0;
-  if(1 == gua_camera_in_multi_view_rendering_mode) {
-    viewport_index = gl_InstanceID;
-  //test_color = vec3(0.0, 1.0, 0.0);
-  } 
-  if(1 == gua_hardware_multi_view_rendering_mode_enabled) {
-    viewport_index = int(gl_ViewID_OVR);
-  //test_color = vec3(0.0, 0.0, 1.0);
-  }
 
+
+// first check if hardware MVR is enabled (more specific)
+#if @is_hardware_multi_view_rendering_enabled@
+  int viewport_index = int(gl_ViewID_OVR);
+// then check whether any multi view rendering mode is enabled (less specific, includes hardware MVR)
+#elif @get_enable_multi_view_rendering@
+  int viewport_index = gl_InstanceID;
+#endif //is_hardware_multi_view_rendering_enabled
+
+#if @get_enable_multi_view_rendering@
   gl_ViewportIndex = viewport_index;
 #endif
 

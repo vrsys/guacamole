@@ -9,7 +9,9 @@ layout(binding=0, r32ui) uniform coherent uimage3D light_bitset;
 layout(binding=1, r32ui) uniform coherent uimage3D secondary_light_bitset;
 #endif
 
+#if @get_enable_multi_view_rendering@
 in flat int is_for_right_eye;
+#endif
 out vec4 out_Color;
 void main()
 {
@@ -34,7 +36,7 @@ void main()
   } else {
  	  imageAtomicOr(secondary_light_bitset, pos, bit);
   }
-#endif
+#endif 
 
 out_Color = vec4(float(bit)*255.0, 0.0, 0.0, 1.0);
 }

@@ -79,8 +79,9 @@ enum class Side_By_Side_Mode {
 
 Side_By_Side_Mode sbs_mode = Side_By_Side_Mode::DEFAULT_SIDE_BY_SIDE;
 
-std::string parse_model_from_cmd_line(int argc, char** argv)
+std::vector<std::string> parse_model_from_cmd_line(int argc, char** argv)
 {
+    std::vector<std::string> model_paths;
     std::string model_path = "data/objects/teapot.obj";
 
     std::string log_message_model_string = "";
@@ -88,27 +89,37 @@ std::string parse_model_from_cmd_line(int argc, char** argv)
     {
         gua::Logger::LOG_MESSAGE << argv[0] << ": Did not provide any model file." << std::endl;
         log_message_model_string = "Using default model path: " + model_path;
+        model_paths.push_back(model_path);
     }
     else
     {
-        model_path = argv[1];
-        log_message_model_string = std::string(argv[0]) + ": Using provided model path:";
 
         if(argc > 2) {
-
-            sbs_mode = Side_By_Side_Mode(std::atoi(argv[2]));
+            uint const last_valid_argument_idx = argc - 1;
+            sbs_mode = Side_By_Side_Mode(std::atoi(argv[last_valid_argument_idx]));
             gua::Logger::LOG_MESSAGE << "Setting side by side mode to " << (int(sbs_mode) == 0 ? " SIDE_BY_SIDE " : "SIDE_BY_SIDE_SOFTWARE_MULTI_VIEW_RENDERING") << std::endl; 
+            
+            for(int model_path_arg_indices = 1; model_path_arg_indices < last_valid_argument_idx; ++model_path_arg_indices) {
+                model_path = argv[model_path_arg_indices];
+                model_paths.push_back(model_path);            
+            }
+
+        } else {
+          model_path = argv[1];
+          model_paths.push_back(model_path);
+          log_message_model_string = std::string(argv[0]) + ": Using provided model path:";
         }
 
-    }
-    gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
 
-    return model_path;
+    }
+    //gua::Logger::LOG_MESSAGE << log_message_model_string + model_path << std::endl;
+
+    return model_paths;
 }
 
 int main(int argc, char** argv)
 {
-    std::string model_path = parse_model_from_cmd_line(argc, argv);
+    auto model_paths = parse_model_from_cmd_line(argc, argv);
 
     adjust_arguments(argc, argv);
     gua::init(argc, argv);
@@ -124,13 +135,19 @@ int main(int argc, char** argv)
     model_mat->set_show_back_faces(false);
 
     auto transform = graph.add_node<gua::node::TransformNode>("/", "transform");
-    auto example_model(
-        loader.create_geometry_from_file("example_model", model_path, model_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
-    graph.add_node("/transform", example_model);
-    example_model->set_draw_bounding_box(true);
+    uint32_t model_idx = 0;
+    for(auto const& model_path : model_paths) {
+        
+        std::string const model_name = "example_model_" + std::to_string(model_idx);
+        auto example_model_node(
+            loader.create_geometry_from_file(model_name, model_path, model_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
-    std::cout << "Hierarchy below teapot contains: " << example_model->num_grouped_faces() << " Triangles" << std::endl;
+        graph.add_node("/transform", example_model_node);
+        example_model_node->set_draw_bounding_box(true);
+    }
+
+    //std::cout << "Hierarchy below teapot contains: " << example_model->num_grouped_faces() << " Triangles" << std::endl;
 
     auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
     portal->data.set_size(gua::math::vec2(1.2f, 0.8f));
