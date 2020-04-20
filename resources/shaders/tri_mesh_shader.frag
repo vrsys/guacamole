@@ -60,6 +60,6 @@ void main()
   }
 
 
-  gua_color = test_color;
+  //gua_color = test_color;
   submit_fragment(gl_FragCoord.z);
 }
