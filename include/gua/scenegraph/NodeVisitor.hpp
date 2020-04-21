@@ -36,6 +36,7 @@ class LODNode;
 class SkeletalAnimationNode;
 class TriMeshNode;
 class TV_3Node;
+class TemporalSVONode;
 class Video3DNode;
 class VolumeNode;
 class LightNode;

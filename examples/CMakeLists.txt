@@ -74,6 +74,11 @@ IF (GUACAMOLE_EXAMPLES)
     ENDIF (GUACAMOLE_ENABLE_VIRTUAL_TEXTURING)
   ENDIF (${PLUGIN_guacamole-lod})
 
+  # time-varying volume example requires temporalSVO-plugin
+  IF (${PLUGIN_guacamole-temporal_svo})
+    add_subdirectory(temporalSVO)
+  ENDIF (${PLUGIN_guacamole-temporal_svo})
+
   # time-varying volume example requires tv_3-plugin
   IF (${PLUGIN_guacamole-tv_3})
     add_subdirectory(time_varying_volume)
