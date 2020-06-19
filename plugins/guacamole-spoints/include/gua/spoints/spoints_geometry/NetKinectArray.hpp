@@ -340,12 +340,13 @@ class NetKinectArray
     std::thread m_decompress_images_thread_;
     std::thread m_unpack_thread_;
 
-    volatile std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
-    volatile std::atomic<bool> m_geometry_decompressor_finished_{false};
+    std::atomic<bool> m_submitted_compressed_geometry_buffer_{false};
+    std::atomic<bool> m_geometry_decompressor_finished_{false};
 
-    volatile std::atomic<bool> m_submitted_compressed_images_{false};
-    volatile std::atomic<bool> m_image_decompressor_finished_{false};
-    volatile std::atomic<bool> m_image_decompression_without_errors_{true};
+    std::atomic<bool> m_submitted_compressed_images_{false};
+    std::atomic<bool> m_image_decompressor_finished_{false};
+    std::atomic<bool> m_image_decompression_without_errors_{true};
+    
     // sending matrices
     std::mutex m_feedback_mutex_;
     // bool       m_feedback_running_;
@@ -417,7 +418,7 @@ class NetKinectArray
     //mutable std::unordered_map<std::size_t, std::size_t> net_data_vbo_size_per_context_;
     mutable std::vector<std::size_t> net_data_vbo_size_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
 
-    mutable std::vector<std::size_t> num_vertex_colored_points_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
+    //mutable std::vector<std::size_t> num_vertex_colored_points_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
     mutable std::vector<std::size_t> num_vertex_colored_tris_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
     mutable std::vector<std::size_t> num_textured_tris_to_draw_per_context_ = std::vector<std::size_t>(MAX_NUM_SUPPORTED_CONTEXTS, 0);
 
