@@ -1,4 +1,5 @@
 #include <gua/video3d/video3d_geometry/NetKinectArray.hpp>
+#include <gua/video3d/Video3DResource.hpp>
 
 #include <zmq.hpp>
 
@@ -20,7 +21,7 @@ NetKinectArray::~NetKinectArray()
     m_recv.join();
 }
 
-bool NetKinectArray::update()
+bool NetKinectArray::update(uint8_t* mapped_pbo_back_pointer_back, ::gua::Video3DResource const& video3d_ressource)
 {
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -28,6 +29,24 @@ bool NetKinectArray::update()
         {
             m_buffer.swap(m_buffer_back);
             m_need_swap.store(false);
+
+            {
+
+                unsigned char* buff = m_buffer.data();
+                int64_t current_write_offset = 0;
+                for(unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i)
+                {
+                    memcpy((char*) &mapped_pbo_back_pointer_back[current_write_offset], (void*) buff, video3d_ressource.color_size());
+                    buff += video3d_ressource.color_size();
+                    current_write_offset += video3d_ressource.color_size();
+                    memcpy((char*) &mapped_pbo_back_pointer_back[current_write_offset], (void*) buff, video3d_ressource.depth_size_byte());
+                    buff += video3d_ressource.depth_size_byte();
+                    current_write_offset += video3d_ressource.depth_size_byte();
+                }
+
+            }
+
+
             return true;
         }
     }

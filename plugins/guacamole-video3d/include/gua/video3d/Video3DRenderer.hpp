@@ -114,9 +114,16 @@ class GUA_VIDEO3D_DLL Video3DRenderer
 
     std::unordered_map<std::size_t, Video3DData> video3Ddata_;
 
+    std::unordered_map<std::size_t, scm::gl::buffer_ptr> kinect_textures_per_context_pbo_back_;// = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
+    std::unordered_map<std::size_t, scm::gl::buffer_ptr> kinect_textures_per_context_pbo_;// = std::vector<std::vector<scm::gl::buffer_ptr>>(MAX_NUM_SUPPORTED_CONTEXTS, std::vector<scm::gl::buffer_ptr>(4, nullptr));
+    std::unordered_map<std::size_t, uint8_t*> mapped_pbo_pointers_;
+
+
     scm::gl::frame_buffer_ptr fbo_depth_process_;
     std::shared_ptr<ShaderProgram> depth_process_program_;
     scm::gl::depth_stencil_state_ptr depth_stencil_state_tex_process_;
+
+
 };
 
 } // namespace gua

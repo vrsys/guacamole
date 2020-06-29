@@ -2,6 +2,7 @@
 #define VIDEO3D_NETKINECTARRAY_HPP
 
 #include <gua/video3d/video3d_geometry/KinectCalibrationFile.hpp>
+#include <gua/video3d/Video3DResource.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -15,7 +16,7 @@ class NetKinectArray
     NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files, const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte);
     ~NetKinectArray();
 
-    bool update();
+    bool update(uint8_t* mapped_pbo_back_pointer, ::gua::Video3DResource const& video3d_ressource);
     inline unsigned char* getBuffer() { return m_buffer.data(); }
 
   private:
