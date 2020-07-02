@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     auto example_model(
         loader.create_geometry_from_file("example_model", model_path, model_mat, gua::TriMeshLoader::NORMALIZE_POSITION | gua::TriMeshLoader::NORMALIZE_SCALE | gua::TriMeshLoader::LOAD_MATERIALS));
 
-    //graph.add_node("/transform", example_model);
+    graph.add_node("/transform", example_model);
     example_model->set_draw_bounding_box(true);
 
     std::cout << "Hierarchy below teapot contains: " << example_model->num_grouped_faces() << " Triangles" << std::endl;
@@ -172,8 +172,19 @@ int main(int argc, char** argv)
     camera->config.set_enable_stereo(false);
     //camera->set_pre_render_cameras({portal_camera});
 
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+
+    auto pipe = std::make_shared<gua::PipelineDescription>();
+    //pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
+    //pipe->add_pass(PLod_Pass);
+    //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    camera->set_pipeline_description(pipe);
+
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
@@ -195,8 +206,12 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 2000.0);
+    gua::events::Ticker ticker(loop, 1.0 / 5000.0);
 
+    float max_fps = -1.0;
+    float min_fps = 10000.0;
+
+    unsigned int framecount = 0;
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
@@ -211,8 +226,32 @@ int main(int argc, char** argv)
         }
         else
         {
-            std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+
+
+            auto start_decompress_avatar = std::chrono::system_clock::now();
             renderer.queue_draw({&graph});
+            auto end_decompress_avatar = std::chrono::system_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end_decompress_avatar - start_decompress_avatar);
+
+
+
+
+            //if(elapsed.count()) {
+                float app_ms =  elapsed.count();
+                auto curr_fps = window->get_rendering_fps();
+                //max_fps = std::max(max_fps, app_fps);
+                //min_fps = std::min(min_fps, app_fps);
+                //std::cout << "min, max fps: [" << int(min_fps) << ", " << int(max_fps) << "]" << std::endl;
+                std::cout << "FPS: " << app_ms << std::endl;
+                std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+            //}
+
+            //elapsed_time += elapsed.count();
+
+            if(framecount++ == 10000) {
+                max_fps = -1.0;
+                min_fps = 10000.0;                
+            }
         }
     });
 

@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 2000.0);
 
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
@@ -211,6 +211,7 @@ int main(int argc, char** argv)
         else
         {
             renderer.queue_draw({&graph});
+std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
         }
     });
 

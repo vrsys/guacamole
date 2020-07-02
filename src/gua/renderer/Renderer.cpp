@@ -93,12 +93,12 @@ std::shared_ptr<const Renderer::SceneGraphs> garbage_collected_copy(std::vector<
 
 Renderer::~Renderer() { stop(); }
 
-void Renderer::renderclient(Mailbox in, std::string window_name)
+void Renderer::renderclient(Mailbox in, std::string const& window_name)
 {
     FpsCounter fpsc(1);
     fpsc.start();
 
-    for(auto& cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in))
+    for(auto cmd : gua::concurrent::pull_items_range<Item, Mailbox>(in))
     {
         // auto window_name(cmd.serialized_cam->config.get_output_window_name());
 
@@ -206,7 +206,7 @@ void Renderer::renderclient(Mailbox in, std::string window_name)
     }
 }
 
-Renderer::Renderer() : render_clients_(), application_fps_(20) { application_fps_.start(); }
+Renderer::Renderer() : render_clients_(), application_fps_(1) { application_fps_.start(); }
 
 void Renderer::send_renderclient(std::string const& window_name, std::shared_ptr<const Renderer::SceneGraphs> sgs, node::CameraNode* cam, bool alternate_frame_rendering)
 {
@@ -241,7 +241,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
         auto& cam_node_vector = graph->get_camera_nodes();
 
         //for(auto& cam : graph->get_camera_nodes())
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for(uint32_t cam_idx = 0; cam_idx < graph->get_camera_nodes().size(); ++cam_idx) 
         {
             auto const& cam_ptr_ref = cam_node_vector[cam_idx];
