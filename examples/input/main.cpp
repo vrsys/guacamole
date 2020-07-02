@@ -120,6 +120,12 @@ int main(int argc, char** argv)
     portal->translate(0.5f, 0.f, -0.2f);
     portal->rotate(-30, 0.f, 1.f, 0.f);
 
+    auto light1 = graph.add_node<gua::node::LightNode>("/", "light1");
+    light1->data.set_type(gua::node::LightNode::Type::POINT);
+    light1->data.brightness = 150.0f;
+    light1->scale(12.f);
+    light1->translate(-2.0f, 5.f, 5.f);
+
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->data.brightness = 150.0f;

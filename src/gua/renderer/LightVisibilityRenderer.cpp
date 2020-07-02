@@ -48,6 +48,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 #endif
     }
 
+
     ctx.render_context->set_frame_buffer(empty_fbo_);
 
     ctx.render_context->set_viewport(scm::gl::viewport(math::vec2ui(0, 0), rasterizer_resolution));
@@ -227,22 +228,31 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
 
+    bool is_image_bound = false;
+
     // draw lights
     for(size_t i = 0; i < lights.size(); ++i)
     {
         if(lights[i].type == 2) // skip sun lights
             continue;
 
+
+
         math::mat4f light_transform(transforms[i]);
 
         auto light_mvp_mat = view_projection_mat * light_transform;
 
+        // pre collect and use instanced draw calls with base offset
         gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        
         gl_program->uniform("light_id", 0, int(i));
-        ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
-        ctx.render_context->apply();
 
+        //only bind this once the moment uniforms are not uploaded individually
+        //if(!is_image_bound) {
+          //  is_image_bound = true;
+            ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
+            ctx.render_context->apply();
+        //}
+        // pre-assemble and use instanced draw calls
         if(lights[i].type == 0) // point light
             light_sphere->draw(pipe.get_context());
         else if(lights[i].type == 1) // spot light

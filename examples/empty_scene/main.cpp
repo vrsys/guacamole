@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
     //pipe->add_pass(PLod_Pass);
     //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-    //pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     //pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     camera->set_pipeline_description(pipe);
