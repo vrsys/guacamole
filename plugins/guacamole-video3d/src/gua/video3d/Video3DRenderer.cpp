@@ -243,8 +243,9 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx, Video3DResource c
 
 
 
+    video3d_data.nka_->try_register_resource(const_cast<Video3DResource*>(&video3d_ressource) );
 
-    if(video3d_data.nka_->update(mapped_pbo_pointers_[ctx.id], video3d_ressource))
+    if(video3d_data.nka_->update(mapped_pbo_pointers_[ctx.id]))
     {
         if(!is_first_frame) {
             ctx.render_context->bind_unpack_buffer(kinect_textures_per_context_pbo_[ctx.id]);

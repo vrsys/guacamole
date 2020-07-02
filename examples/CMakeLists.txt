@@ -3,6 +3,7 @@ IF (GUACAMOLE_EXAMPLES)
 
   # input requires GLFW3
   IF (${GUACAMOLE_GLFW3})
+    add_subdirectory(empty_scene)
     add_subdirectory(obj_to_bin_converter)
     add_subdirectory(clipping)
     add_subdirectory(input)

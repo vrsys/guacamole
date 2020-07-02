@@ -20,14 +20,19 @@ class NetKinectArray
     NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files, const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte);
     ~NetKinectArray();
 
-    bool update(uint8_t* mapped_pbo_back_pointer, ::gua::Video3DResource const& video3d_ressource);
-    bool decompress_images(uint8_t* mapped_pbo_back_pointer, ::gua::Video3DResource const& video3d_ressource, unsigned char* buff);
+    void copy_decompressed_jpeg_images(uint8_t* mapped_pbo_back_pointer_back);
+
+    bool update(uint8_t* mapped_pbo_back_pointer /*, ::gua::Video3DResource const& video3d_ressource*/);
+    bool decompress_images();
     inline unsigned char* getBuffer() { return m_buffer.data(); }
 
+    bool try_register_resource(::gua::Video3DResource* video3d_ressource);
   private:
     void readloop();
 
     std::mutex m_mutex;
+    std::mutex m_mutex_decompression;
+
     std::atomic<bool> m_running;
     const std::string m_server_endpoint;
     std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
@@ -42,10 +47,23 @@ class NetKinectArray
     bool is_jpeg_compressed_back = false;
     bool is_jpeg_compressed      = false;
 
+    std::vector<uint8_t> m_decompressed_images;
+    std::vector<uint8_t> m_decompressed_images_back;
+    std::vector<uint8_t> m_buffer_to_decompress;
+    std::vector<uint8_t> m_buffer_to_decompress_back;
     std::vector<uint8_t> m_buffer;
     std::vector<uint8_t> m_buffer_back;
+    std::atomic<bool> m_need_swap_decompression;
     std::atomic<bool> m_need_swap;
+
+    std::atomic<bool> m_needs_decompression;
+    std::atomic<bool> m_needs_decompression_back;
+    std::atomic<bool> m_has_decompressed_images;
+
     std::thread m_recv;
+    std::thread m_decompress;
+
+    ::gua::Video3DResource* registered_video_3d_resource = nullptr;
 };
 
 } // namespace video3d
