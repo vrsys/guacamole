@@ -8,6 +8,10 @@
 #include <mutex>
 #include <thread>
 
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
+#include <turbojpeg.h>
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
+
 namespace video3d
 {
 class NetKinectArray
@@ -26,8 +30,17 @@ class NetKinectArray
     std::atomic<bool> m_running;
     const std::string m_server_endpoint;
     std::vector<std::shared_ptr<KinectCalibrationFile>> m_calib_files;
+
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
+    std::vector<tjhandle> m_jpeg_decompressor_per_layer;
+#endif //GUACAMOLE_ENABLE_TURBOJPEG
+
     unsigned m_colorsize_byte;
     unsigned m_depthsize_byte;
+
+    bool is_jpeg_compressed_back = false;
+    bool is_jpeg_compressed      = false;
+
     std::vector<uint8_t> m_buffer;
     std::vector<uint8_t> m_buffer_back;
     std::atomic<bool> m_need_swap;

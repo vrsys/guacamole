@@ -26,7 +26,7 @@ add_library( guacamole-video3d SHARED
 
 target_include_directories(guacamole-video3d PUBLIC ${GUACAMOLE_VIDEO3D_INCLUDE_DIR})
 
-target_link_libraries( guacamole-video3d guacamole)
+target_link_libraries( guacamole-video3d guacamole ${TurboJPEG_LIBRARIES})
 
 IF (MSVC)
 	set_target_properties(guacamole-video3d PROPERTIES COMPILE_FLAGS "-D GUA_VIDEO3D_LIBRARY")

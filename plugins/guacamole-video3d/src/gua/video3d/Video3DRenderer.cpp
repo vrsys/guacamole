@@ -246,10 +246,6 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx, Video3DResource c
 
     if(video3d_data.nka_->update(mapped_pbo_pointers_[ctx.id], video3d_ressource))
     {
-
-
-
-
         if(!is_first_frame) {
             ctx.render_context->bind_unpack_buffer(kinect_textures_per_context_pbo_[ctx.id]);
         
@@ -316,6 +312,8 @@ void Video3DRenderer::process_textures(RenderContext const& ctx, Video3DResource
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+
+    auto start = std::chrono::system_clock::now();
     ///////////////////////////////////////////////////////////////////////////
     //  retrieve current view state
     ///////////////////////////////////////////////////////////////////////////
@@ -515,6 +513,9 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             target.unbind(ctx);
         }
     }
+
+    auto end = std::chrono::system_clock::now();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
