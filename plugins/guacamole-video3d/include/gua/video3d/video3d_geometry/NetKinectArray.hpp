@@ -21,6 +21,7 @@ class NetKinectArray
     ~NetKinectArray();
 
     bool update(uint8_t* mapped_pbo_back_pointer, ::gua::Video3DResource const& video3d_ressource);
+    bool decompress_images(uint8_t* mapped_pbo_back_pointer, ::gua::Video3DResource const& video3d_ressource, unsigned char* buff);
     inline unsigned char* getBuffer() { return m_buffer.data(); }
 
   private:
