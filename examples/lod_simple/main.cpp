@@ -313,7 +313,7 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 500.0);
+    gua::events::Ticker ticker(loop, 1.0 / 2000.0);
     std::size_t framecount = 0;
 
     ticker.on_tick.connect([&]() {

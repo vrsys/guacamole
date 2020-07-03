@@ -96,6 +96,8 @@ class GUA_LOD_DLL LodResource : public GeometryResource
     lamure::model_t model_id_;
     math::mat4 local_transform_;
 
+    //mutable istd::unordered_map<std::size_t, scm::gl::buffer_ptr> indirect_buffer_per_context_; 
+
     // data collection per context
     std::unordered_map<std::size_t, scm::gl::buffer_ptr > data_collection_per_context_;
 };
