@@ -28,6 +28,7 @@ layout(location=2) in vec2 gua_in_texcoord;
 // output
 out vec2 gua_quad_coords;
 
+
 // body
 void main() {
     gua_quad_coords = gua_in_texcoord;
