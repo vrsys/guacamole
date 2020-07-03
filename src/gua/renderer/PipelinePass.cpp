@@ -136,7 +136,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
             }
             else
             { // RenderMode::Quad
-                pipe.draw_quad();
+                pipe.draw_quad_instanced();
             }
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES

@@ -1,6 +1,8 @@
 #ifndef GUA_CAMERA_UNIFORM_BLOCK_HPP
 #define GUA_CAMERA_UNIFORM_BLOCK_HPP
 
+#include <gua/config.hpp>
+
 #include <gua/math/math.hpp>
 #include <gua/renderer/Frustum.hpp>
 #include <gua/renderer/RenderContext.hpp>

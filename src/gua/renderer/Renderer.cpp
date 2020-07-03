@@ -176,12 +176,12 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
                     else
                     {
                         // TODO: add alternate frame rendering here? -> take clear and render methods
-                        auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
+                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs));
                         if(img)
                             window->display(img, true);
-                        img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
-                        if(img)
-                            window->display(img, false);
+                        //img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
+                        //if(img)
+                        //    window->display(img, false);
                     }
                 }
                 else

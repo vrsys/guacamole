@@ -247,7 +247,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
         display(texture, config.get_left_resolution(), config.get_left_position(), WindowBase::FULL, is_left, true);
         //display(texture, config.get_left_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);
     } else {
-        display(texture, config.get_right_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);        
+        //display(texture, config.get_right_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);        
     }
 
     break;
@@ -341,7 +341,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
 
     fullscreen_shader_.set_subroutine(ctx_, scm::gl::STAGE_FRAGMENT_SHADER, "get_color", subroutine);
 
-    ctx_.render_context->set_viewport(scm::gl::viewport(position, size));
+
     ctx_.render_context->set_depth_stencil_state(depth_stencil_state_);
 
     if(!clear)
@@ -349,8 +349,23 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
         ctx_.render_context->set_blend_state(blend_state_);
     }
 
-    fullscreen_quad_->draw(ctx_.render_context);
+    if(config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
 
+        scm::math::vec2f const left_cam_pos = scm::math::vec2f(config.get_left_position());
+        scm::math::vec2f const left_cam_res = scm::math::vec2f(config.get_left_resolution());
+        scm::math::vec2f const right_cam_pos = scm::math::vec2f(config.get_right_position());
+        scm::math::vec2f const right_cam_res = scm::math::vec2f(config.get_right_resolution());
+        float const viewport_array[8]  = { left_cam_pos[0], left_cam_pos[1], left_cam_res[0], left_cam_res[1],
+                                           right_cam_pos[0], right_cam_pos[1], right_cam_res[0], right_cam_res[1] };
+
+
+        glapi.glViewportArrayv(0, 2, viewport_array);
+
+        fullscreen_quad_->draw_instanced(ctx_.render_context, 2);
+    } else {
+        ctx_.render_context->set_viewport(scm::gl::viewport(position, size));
+        fullscreen_quad_->draw(ctx_.render_context);        
+    }
     ctx_.render_context->reset_state_objects();
     fullscreen_shader_.unuse(ctx_);
 }

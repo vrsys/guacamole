@@ -278,6 +278,10 @@ class GUA_DLL SceneGraph
 
     std::shared_ptr<SerializedScene> serialize(node::SerializedCameraNode const& camera, CameraMode mode) const;
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    std::shared_ptr<SerializedScene> serialize(node::SerializedCameraNode const& camera) const;
+#endif
+
     /**
      * Intersects a SceneGraph with a given RayNode.
      *

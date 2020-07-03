@@ -262,7 +262,7 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                 ctx.render_context->apply_program();
 
-                tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
             }
         }
 

@@ -158,7 +158,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         }
 
         math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y));
-        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size));
+        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size, camera.config.output_window_name()));
     }
 
     // recreate pipeline passes if pipeline description changed
@@ -198,18 +198,16 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
 
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        if (camera.config.get_enable_stereo())
-        {
+
+
+        //auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
+        
+        //if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
             global_substitution_map_["get_enable_multi_view_rendering"] = "1";
-        } else {
-            global_substitution_map_["get_enable_multi_view_rendering"] = "0";
-        }
+        //} else {
+        //    global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+        //}
 
-#else
-        global_substitution_map_["get_enable_multi_view_rendering"] = "0";
-
-#endif //GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
         global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
         global_substitution_map_["max_lights_num"] = std::to_string(last_description_.get_max_lights_count());
@@ -707,6 +705,11 @@ void Pipeline::bind_light_transformation_uniform_block(unsigned location) const 
 void Pipeline::draw_quad() { quad_->draw(context_.render_context); }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::draw_quad_instanced() { quad_->draw_instanced(context_.render_context, 2); }
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void Pipeline::draw_box() { box_->draw(context_.render_context); }
 

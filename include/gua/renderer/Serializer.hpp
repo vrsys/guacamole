@@ -25,7 +25,8 @@
 
 
 #include <stack>
-
+// information about cmake options
+#include <gua/config.hpp>
 // guacamole headers
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/renderer/Frustum.hpp>

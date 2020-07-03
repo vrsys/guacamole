@@ -20,8 +20,7 @@
  ******************************************************************************/
 
 
-// information about cmake options
-#include <gua/config.hpp>
+
 
 // class header
 #include <gua/renderer/Serializer.hpp>

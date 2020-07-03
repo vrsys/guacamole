@@ -179,8 +179,8 @@ int main(int argc, char** argv)
 
     camera->set_pre_render_cameras({portal_camera});
 
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
