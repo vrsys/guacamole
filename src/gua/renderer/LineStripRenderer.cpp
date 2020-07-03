@@ -93,6 +93,7 @@ LineStripRenderer::LineStripRenderer(RenderContext const& ctx, SubstitutionMap c
 
 void LineStripRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+
     auto& scene = *pipe.current_viewstate().scene;
     auto sorted_objects(scene.nodes.find(std::type_index(typeid(node::LineStripNode))));
 

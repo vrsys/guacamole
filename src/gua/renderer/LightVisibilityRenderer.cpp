@@ -23,8 +23,10 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     std::vector<math::mat4> transforms;
     LightTable::array_type lights;
 
+    unsigned point_lights_num = 0u;
+    unsigned spot_lights_num = 0u;
     unsigned sun_lights_num = 0u;
-    prepare_light_table(pipe, transforms, lights, sun_lights_num);
+    prepare_light_table(pipe, transforms, lights, point_lights_num, spot_lights_num, sun_lights_num);
     math::vec2ui effective_resolution = pipe.get_light_table().invalidate(ctx, camera.config.get_resolution(), lights, tile_power, sun_lights_num);
 
     math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback) ? camera.config.get_resolution() : effective_resolution;
@@ -71,7 +73,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
         glapi.glEnable(GL_MULTISAMPLE);
     }
 
-    draw_lights(pipe, transforms, lights);
+    draw_lights(pipe, transforms, lights, point_lights_num, spot_lights_num);
 
     if(ms_sample_count > 0)
     {
@@ -87,15 +89,24 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& sun_lights_num) const
+void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const
 {
     sun_lights_num = 0u;
     std::vector<math::mat4> sun_transforms;
     std::vector<LightTable::LightBlock> sun_lights;
 
-    for(auto const& l : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))])
-    {
-        auto light(reinterpret_cast<node::LightNode*>(l));
+    auto light_node_subrange = pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))];
+
+    std::vector<node::LightNode*> light_node_pointers(light_node_subrange.size());
+    std::transform(light_node_subrange.begin(), light_node_subrange.end(), light_node_pointers.begin(), [](node::Node* l) -> node::LightNode* {return reinterpret_cast<node::LightNode*>(l); } );
+
+    // sort the nodes according to their type, such that we can use instanced draw calls in a reasonable manner
+    std::sort(light_node_pointers.begin(), light_node_pointers.end(), [](node::LightNode* lhs, node::LightNode* rhs) { return lhs->data.get_type() < rhs->data.get_type();} );
+
+    //important:
+    for(auto light_node_it = light_node_pointers.begin(); light_node_it != light_node_pointers.end(); ++light_node_it) {
+        auto const& light = *light_node_it;
+        //auto light(l);
 
         LightTable::LightBlock light_block{};
         light_block.brightness = light->data.get_brightness();
@@ -107,20 +118,30 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<ma
 
         switch(light->data.get_type())
         {
-        case node::LightNode::Type::SUN:
-            ++sun_lights_num;
-            add_sunlight(pipe, *light, light_block, sun_lights, sun_transforms);
-            break;
         case node::LightNode::Type::POINT:
+            ++point_lights_num;
             add_pointlight(pipe, *light, light_block, lights, transforms);
             break;
         case node::LightNode::Type::SPOT:
+            ++spot_lights_num;
             add_spotlight(pipe, *light, light_block, lights, transforms);
+            break;
+        case node::LightNode::Type::SUN:
+            ++sun_lights_num;
+            add_sunlight(pipe, *light, light_block, sun_lights, sun_transforms);
             break;
         default:
             throw std::runtime_error("LightVisibilityRenderer::prepare_light_table(): Light type not supported.");
         };
     }
+    //for(auto const& l : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))])
+    //{
+    //    int i = l;
+    //}
+
+
+
+    //}
 
     // sun lights need to be at the back
     transforms.insert(transforms.end(), sun_transforms.begin(), sun_transforms.end());
@@ -215,7 +236,7 @@ void LightVisibilityRenderer::add_sunlight(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights) const
+void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights) const
 {
     auto const& ctx(pipe.get_context());
     auto gl_program(ctx.render_context->current_program());
@@ -228,36 +249,92 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
 
-    bool is_image_bound = false;
 
+    if( !(num_point_lights | num_spot_lights) ) {
+        return;
+    }
+
+    ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
+
+
+    std::vector<math::mat4f> transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
+    std::transform(transforms_to_upload.begin(), transforms_to_upload.end(), transforms_to_upload.begin(), [&view_projection_mat] (scm::math::mat4f const& m_transform) {return view_projection_mat * m_transform;});
+
+    pipe.light_transform_block_.update(ctx, transforms_to_upload);
+    pipe.bind_light_transformation_uniform_block(1);
+
+    ctx.render_context->apply();
+    //std::vector<uint32_t> point_light_indices;
+    //std::vector<uint32_t> 
+
+    //render point lights at once:
+    if(num_point_lights > 0) {
+        light_sphere->draw_instanced(pipe.get_context(), num_point_lights, 0, 0);
+    }
+
+
+    //std::cout << "num_spot_lights" << num_spot_lights << std::endl;
+    if(num_spot_lights > 0) {
+        gl_program->uniform("light_type_offset", uint(num_point_lights));
+        light_cone->draw_instanced(pipe.get_context(), num_spot_lights, 0, 0);
+    }
+    //update offset and render spot lights at once
+
+    //gl_program->apply_uniform(ctx, "light_type_offset",int(num_point_lights));
+    //gl_program->uniform("light_type_offset", uint(num_point_lights));
+    //ctx.render_context->apply();
+
+/*
+    for(unsigned int point_light_light_idx = point_light_index_range_start; point_light_light_idx < point_light_index_range_end; ++point_light_light_idx) {
+        math::mat4f light_transform(transforms[point_light_light_idx]);
+
+        auto light_mvp_mat = view_projection_mat * light_transform;
+
+        // pre collect and use instanced draw calls with base offset
+        //gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
+        gl_program->uniform("light_id", 0, int(point_light_light_idx));
+
+        //only bind this once the moment uniforms are not uploaded individually
+        //if(!is_image_bound) {
+          //  is_image_bound = true;
+
+            ctx.render_context->apply();
+        //}
+        // pre-assemble and use instanced draw calls
+        if(lights[point_light_light_idx].type == 0) // point light
+            light_sphere->draw_instanced(pipe.get_context(), 1, 0, point_light_light_idx);
+    }
+*/
+/*
     // draw lights
-    for(size_t i = 0; i < lights.size(); ++i)
+    for(size_t light_index = 0; light_index < lights.size(); ++light_index)
     {
-        if(lights[i].type == 2) // skip sun lights
+        if(lights[light_index].type == 2) // skip sun lights
             continue;
 
 
 
-        math::mat4f light_transform(transforms[i]);
+        math::mat4f light_transform(transforms[light_index]);
 
         auto light_mvp_mat = view_projection_mat * light_transform;
 
         // pre collect and use instanced draw calls with base offset
         gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        gl_program->uniform("light_id", 0, int(i));
+        gl_program->uniform("light_id", 0, int(light_index));
 
         //only bind this once the moment uniforms are not uploaded individually
         //if(!is_image_bound) {
           //  is_image_bound = true;
-            ctx.render_context->bind_image(pipe.get_light_table().get_light_bitset()->get_buffer(ctx), scm::gl::FORMAT_R_32UI, scm::gl::ACCESS_READ_WRITE, 0, 0, 0);
+
             ctx.render_context->apply();
         //}
         // pre-assemble and use instanced draw calls
-        if(lights[i].type == 0) // point light
-            light_sphere->draw(pipe.get_context());
-        else if(lights[i].type == 1) // spot light
-            light_cone->draw(pipe.get_context());
+        if(lights[light_index].type == 0) // point light
+            light_sphere->draw_instanced(pipe.get_context(), 1, 0, light_index);
+        else if(lights[light_index].type == 1) // spot light
+            light_cone->draw_instanced(pipe.get_context(), 1, 0, light_index);
     }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

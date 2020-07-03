@@ -75,6 +75,7 @@ TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const
 
 void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+
     RenderContext const& ctx(pipe.get_context());
 
     auto& scene = *pipe.current_viewstate().scene;

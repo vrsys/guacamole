@@ -180,6 +180,9 @@ void WindowBase::init_context()
     {
         ctx_.render_context->register_debug_callback(boost::make_shared<DebugOutput>());
     }
+
+    ctx_.render_context->clear_default_color_buffer(scm::gl::FRAMEBUFFER_BACK, scm::math::vec4f(0.f, 0.f, 0.f, 1.0f));
+    ctx_.render_context->clear_default_depth_stencil_buffer(); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////

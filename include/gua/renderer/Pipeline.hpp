@@ -28,6 +28,7 @@
 #include <gua/renderer/ShadowMap.hpp>
 #include <gua/renderer/GBuffer.hpp>
 #include <gua/renderer/LightTable.hpp>
+#include <gua/renderer/LightTransformationUniformBlock.hpp>
 #include <gua/renderer/CameraUniformBlock.hpp>
 #include <gua/renderer/SerializedScene.hpp>
 #include <gua/math.hpp>
@@ -93,6 +94,7 @@ class GUA_DLL Pipeline
 #endif
 
   public:
+    friend class LightVisibilityRenderer;
     friend class DepthCubeMapRenderer;
 
     Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
@@ -136,6 +138,7 @@ class GUA_DLL Pipeline
 
   private:
     void bind_camera_uniform_block(unsigned location) const;
+    void bind_light_transformation_uniform_block(unsigned location) const;
 
     void render_shadow_map(LightTable::LightBlock& light_block, Frustum const& frustum, unsigned cascade_id, unsigned viewport_size, bool redraw);
 
@@ -153,6 +156,7 @@ class GUA_DLL Pipeline
     std::shared_ptr<SharedShadowMapResource> shadow_map_res_;
     CameraUniformBlock camera_block_;
     std::unique_ptr<LightTable> light_table_;
+    LightTransformationUniformBlock light_transform_block_;
 
     math::vec2ui last_resolution_;
     PipelineDescription last_description_;
