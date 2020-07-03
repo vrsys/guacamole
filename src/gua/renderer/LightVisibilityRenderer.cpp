@@ -249,7 +249,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
 
-
+    // 
     if( !(num_point_lights | num_spot_lights) ) {
         return;
     }
@@ -262,7 +262,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 
     pipe.light_transform_block_.update(ctx, transforms_to_upload);
     pipe.bind_light_transformation_uniform_block(1);
-
+    gl_program->uniform("light_type_offset", uint(0));
     ctx.render_context->apply();
     //std::vector<uint32_t> point_light_indices;
     //std::vector<uint32_t> 
@@ -276,6 +276,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     //std::cout << "num_spot_lights" << num_spot_lights << std::endl;
     if(num_spot_lights > 0) {
         gl_program->uniform("light_type_offset", uint(num_point_lights));
+        ctx.render_context->apply();
         light_cone->draw_instanced(pipe.get_context(), num_spot_lights, 0, 0);
     }
     //update offset and render spot lights at once
