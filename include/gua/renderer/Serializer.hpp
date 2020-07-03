@@ -22,6 +22,8 @@
 #ifndef GUA_SERIALIZER_HPP
 #define GUA_SERIALIZER_HPP
 
+
+
 #include <stack>
 
 // guacamole headers
@@ -65,6 +67,8 @@ class Serializer : public NodeVisitor
      */
     void check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, int view_id);
 
+    void check(SerializedScene& output, SceneGraph const& scene_graph, Mask const& mask, bool enable_frustum_culling, bool enable_mvr, int view_id);
+
     /**
      * Visits a TransformNode
      *
@@ -98,8 +102,8 @@ class Serializer : public NodeVisitor
 
     void visit_children(node::Node* node);
 
-    Frustum culling_frustum_;
-    Frustum rendering_frustum_;
+    std::vector<Frustum> culling_frusta_;
+    std::vector<Frustum> rendering_frusta_;
     Mask render_mask_;
 
     SerializedScene* data_;

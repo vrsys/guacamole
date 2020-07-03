@@ -241,9 +241,21 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
+    case StereoMode::SIDE_BY_SIDE: // turn this to MVR rendering pass (software and hardware)
+
+    if(is_left) {
+        display(texture, config.get_left_resolution(), config.get_left_position(), WindowBase::FULL, is_left, true);
+        //display(texture, config.get_left_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);
+    } else {
+        display(texture, config.get_right_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);        
+    }
+
+    break;
     case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
-    case StereoMode::SIDE_BY_SIDE:
+
+
+
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
     case StereoMode::NVIDIA_3D_VISION:
 #endif

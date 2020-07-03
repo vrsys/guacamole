@@ -22,6 +22,9 @@
 #ifndef GUA_SERIALIZED_SCENE_HPP
 #define GUA_SERIALIZED_SCENE_HPP
 
+// information about cmake options
+#include <gua/config.hpp>
+
 // guacamole headers
 #include <gua/node/Node.hpp>
 #include <gua/node/ScreenNode.hpp>
@@ -58,6 +61,11 @@ struct GUA_DLL SerializedScene
      * The culling frustum. Not neccessarily the same as above.
      */
     Frustum culling_frustum;
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    Frustum secondary_rendering_frustum;
+    Frustum secondary_culling_frustum;
+#endif
 
     /**
      * The original camera position for which we are rendering. This stays the

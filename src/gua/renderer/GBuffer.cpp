@@ -41,43 +41,50 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution)
 {
     sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);
 
-    color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
+    color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1, 2);
     ctx.render_context->make_resident(color_buffer_read_, sampler_state_);
-    color_buffer_write_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
+    color_buffer_write_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1, 2);
     ctx.render_context->make_resident(color_buffer_write_, sampler_state_);
 
-    pbr_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1);
+    pbr_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1, 2);
     ctx.render_context->make_resident(pbr_buffer_, sampler_state_);
-    normal_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_16, 1);
+    normal_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_16, 1, 2);
     ctx.render_context->make_resident(normal_buffer_, sampler_state_);
-    flags_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_R_8UI, 1);
+    flags_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_R_8UI, 1, 2);
     ctx.render_context->make_resident(flags_buffer_, sampler_state_);
 
-    depth_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_D24_S8, 1);
+    depth_buffer_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_D24_S8, 1, 2);
     ctx.render_context->make_resident(depth_buffer_, sampler_state_);
 
     fbo_read_ = ctx.render_device->create_frame_buffer();
-    fbo_read_->attach_color_buffer(0, color_buffer_read_, 0, 0);
-    fbo_read_->attach_color_buffer(1, pbr_buffer_, 0, 0);
-    fbo_read_->attach_color_buffer(2, normal_buffer_, 0, 0);
-    fbo_read_->attach_color_buffer(3, flags_buffer_, 0, 0);
-    fbo_read_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
 
+
+    fbo_read_->attach_color_buffer(0, color_buffer_read_, 0, 10000);
+
+    fbo_read_->attach_color_buffer(1, pbr_buffer_, 0, 10000);
+    fbo_read_->attach_color_buffer(2, normal_buffer_, 0, 10000);
+    fbo_read_->attach_color_buffer(3, flags_buffer_, 0, 10000);
+    fbo_read_->attach_depth_stencil_buffer(depth_buffer_, 0, 10000);
+    
+    //ctx.render_context->set_frame_buffer(fbo_read_);
+
+    //ctx.render_context->apply_frame_buffer(); // REMOVE!
+    //exit(-1);
     fbo_write_ = ctx.render_device->create_frame_buffer();
-    fbo_write_->attach_color_buffer(0, color_buffer_write_, 0, 0);
-    fbo_write_->attach_color_buffer(1, pbr_buffer_, 0, 0);
-    fbo_write_->attach_color_buffer(2, normal_buffer_, 0, 0);
-    fbo_write_->attach_color_buffer(3, flags_buffer_, 0, 0);
-    fbo_write_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
+    fbo_write_->attach_color_buffer(0, color_buffer_write_, 0, 10000);
+    fbo_write_->attach_color_buffer(1, pbr_buffer_, 0, 10000);
+    fbo_write_->attach_color_buffer(2, normal_buffer_, 0, 10000);
+    fbo_write_->attach_color_buffer(3, flags_buffer_, 0, 10000);
+    fbo_write_->attach_depth_stencil_buffer(depth_buffer_, 0, 10000);
 
 
     fbo_read_only_color_ = ctx.render_device->create_frame_buffer();
-    fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_, 0, 0);
-    fbo_read_only_color_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
+    fbo_read_only_color_->attach_color_buffer(0, color_buffer_read_, 0, 10000);
+    fbo_read_only_color_->attach_depth_stencil_buffer(depth_buffer_, 0, 10000);
 
     fbo_write_only_color_ = ctx.render_device->create_frame_buffer();
-    fbo_write_only_color_->attach_color_buffer(0, color_buffer_write_, 0, 0);
-    fbo_write_only_color_->attach_depth_stencil_buffer(depth_buffer_, 0, 0);
+    fbo_write_only_color_->attach_color_buffer(0, color_buffer_write_, 0, 10000);
+    fbo_write_only_color_->attach_depth_stencil_buffer(depth_buffer_, 0, 10000);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
