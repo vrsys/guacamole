@@ -35,6 +35,19 @@ out vec3 gua_varying_normal;
 // body
 void main() {
     gua_varying_quad_coords = gua_in_texcoord;
-    gua_varying_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
-    gl_Position = gua_projection_matrix * gua_view_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);
+
+
+#if @get_enable_multi_view_rendering@
+    gl_Layer = gl_InstanceID;
+    if(0 == gl_InstanceID) {
+#endif
+    	gua_varying_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
+    	gl_Position = gua_view_projection_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);
+
+#if @get_enable_multi_view_rendering@
+} else {
+    	gua_varying_normal = (gua_normal_matrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
+    	gl_Position = gua_secondary_view_projection_matrix * gua_model_matrix * vec4(gua_in_position*0.5, 1.0);		
+	}
+#endif
 }

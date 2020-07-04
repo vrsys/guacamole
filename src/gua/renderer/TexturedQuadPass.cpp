@@ -70,7 +70,7 @@ PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, Su
             pass.shader()->apply_uniform(ctx, "gua_in_texture", tex);
             pass.shader()->apply_uniform(ctx, "flip", flip);
 
-            pipe.draw_quad();
+            pipe.draw_quad_instanced();
         }
     };
 

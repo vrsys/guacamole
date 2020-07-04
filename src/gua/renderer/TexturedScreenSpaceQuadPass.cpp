@@ -53,7 +53,7 @@ void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_nod
     pass.shader()->apply_uniform(ctx, "offset", offset);
     pass.shader()->apply_uniform(ctx, "opacity", opacity);
 
-    pipe.draw_quad();
+    pipe.draw_quad_instanced();
 }
 
 void render_quads(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe)

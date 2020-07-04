@@ -37,4 +37,6 @@ out vec2 gua_quad_coords;
 void main() {
   gua_quad_coords = gua_in_texcoord;
   gl_Position = vec4(gua_in_position.xy * size + offset, 0.0, 1.0);
+
+  gl_Layer = gl_InstanceID;
 }
