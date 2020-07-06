@@ -692,6 +692,9 @@ void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) co
     if(light_table_->get_light_bitset() && light_table_->get_lights_num() > 0)
     {
         shader->set_uniform(context_, light_table_->get_light_bitset()->get_handle(context_), "gua_light_bitset");
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        shader->set_uniform(context_, light_table_->get_secondary_light_bitset()->get_handle(context_), "gua_secondary_light_bitset");
+#endif
         context_.render_context->bind_uniform_buffer(light_table_->light_uniform_block().block_buffer(), 1);
     }
 }

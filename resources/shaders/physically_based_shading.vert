@@ -62,7 +62,9 @@ void gua_calculate_point_light() {
   gua_lightinfo3 = light_radius;
 
   vec3 position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
-  gl_Position = gua_projection_matrix * gua_view_matrix * vec4(position, 1.0);
+
+  
+  gl_Position = gua_view_projection_projection_matrix * vec4(position, 1.0);
 }
 
 // base lighting calculations for spot lights

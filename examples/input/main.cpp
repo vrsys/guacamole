@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
     // setup rendering pipeline and window
-    auto cam_resolution = gua::math::vec2ui(1920/4, 1080/4);
+    auto cam_resolution = gua::math::vec2ui(1920/2, 1080/2);
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
     window->config.set_enable_vsync(false);
 
 #ifdef RENDER_SIDE_BY_SIDE
-    auto win_resolution = gua::math::vec2ui(2*1920/4, 1080/4);
+    auto win_resolution = gua::math::vec2ui(2*1920/2, 1080/2);
     window->config.set_size(win_resolution);
     window->config.set_left_resolution(cam_resolution);
     window->config.set_right_resolution(cam_resolution);

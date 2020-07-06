@@ -260,24 +260,57 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     std::vector<math::mat4f> transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
     std::transform(transforms_to_upload.begin(), transforms_to_upload.end(), transforms_to_upload.begin(), [&view_projection_mat] (scm::math::mat4f const& m_transform) {return view_projection_mat * m_transform;});
 
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+
+    //gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
+    ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
+                                   scm::gl::FORMAT_R_32UI, 
+                                   scm::gl::ACCESS_READ_WRITE, 
+                                   1, 0, 0);
+
+
+
+
+    auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+
+    std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
+    std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
+
+    //auto secondary_light_mvp_mat = secondary_view_projection_mat * light_transform;
+        
+#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload);
+#else
     pipe.light_transform_block_.update(ctx, transforms_to_upload);
+#endif
     pipe.bind_light_transformation_uniform_block(1);
     gl_program->uniform("light_type_offset", uint(0));
     ctx.render_context->apply();
     //std::vector<uint32_t> point_light_indices;
     //std::vector<uint32_t> 
 
+uint32_t num_point_lights_to_draw = num_point_lights;
+uint32_t num_spot_lights_to_draw = num_spot_lights;
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    num_point_lights_to_draw *= 2;
+    num_spot_lights_to_draw  *= 2;
+#endif
+
     //render point lights at once:
     if(num_point_lights > 0) {
-        light_sphere->draw_instanced(pipe.get_context(), num_point_lights, 0, 0);
+        light_sphere->draw_instanced(pipe.get_context(), num_point_lights_to_draw, 0, 0);
     }
 
 
     //std::cout << "num_spot_lights" << num_spot_lights << std::endl;
     if(num_spot_lights > 0) {
-        gl_program->uniform("light_type_offset", uint(num_point_lights));
+        gl_program->uniform("light_type_offset", uint(num_point_lights_to_draw));
         ctx.render_context->apply();
-        light_cone->draw_instanced(pipe.get_context(), num_spot_lights, 0, 0);
+        light_cone->draw_instanced(pipe.get_context(), num_spot_lights_to_draw, 0, 0);
     }
     //update offset and render spot lights at once
 

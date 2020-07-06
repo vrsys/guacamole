@@ -1,6 +1,7 @@
 #ifndef GUA_LIGHT_TRANSFORMATION_UNIFORM_BLOCK_HPP
 #define GUA_LIGHT_TRANSFORMATION_UNIFORM_BLOCK_HPP
 
+#include <gua/config.hpp>
 #include <gua/math/math.hpp>
 #include <gua/renderer/RenderContext.hpp>
 
@@ -15,6 +16,9 @@ class LightTransformationUniformBlock
     struct LightTransformationBlock
     {
         math::mat4f light_mvp_matrices[32];
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        math::mat4f secondary_light_mvp_matrices[32];
+#endif
     };
 
     using block_type = scm::gl::uniform_block<LightTransformationBlock>;
@@ -23,8 +27,12 @@ class LightTransformationUniformBlock
     ~LightTransformationUniformBlock();
 
     void
-    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices);//Frustum const& cam, math::vec3 const& cyclops_position, std::vector<math::vec4> const& clipping_planes, int view_id, math::vec2ui const& screen_resolution);
+    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices);
 
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    void
+    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices, std::vector<math::mat4f> const& secondary_light_mvp_matrices);
+#endif
     inline const block_type& block() const { return uniform_block_; }
 
   private:

@@ -229,9 +229,20 @@ void main() {
   // init light bitset
   int bitset_words = ((gua_lights_num - 1) >> 5) + 1;
   ivec2 tile = frag_pos >> @light_table_tile_power@;
+
+#if @get_enable_multi_view_rendering@
+if(0 == gl_Layer) {
+#endif
   for (int sl = 0; sl < bitset_words; ++sl) {
     bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r;
   }
+#if @get_enable_multi_view_rendering@
+} else {
+  for (int sl = 0; sl < bitset_words; ++sl) {
+    bitset[sl] = texelFetch(usampler3D(gua_secondary_light_bitset), ivec3(tile, sl), 0).r;
+  } 
+}
+#endif
 
   vec4 abuffer_accumulation_color = vec4(0);
   float abuffer_accumulation_emissivity = 0.0;

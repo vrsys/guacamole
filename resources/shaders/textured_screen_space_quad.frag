@@ -33,7 +33,6 @@ void main() {
 
 vec4 color = texture2D(sampler2D(gua_in_texture), (gua_quad_coords - 0.5)*flip + 0.5) * opacity;
 
-  
   color.rgb /= color.a;
   gua_out_color = color;
 }
