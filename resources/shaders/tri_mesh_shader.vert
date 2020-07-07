@@ -20,15 +20,14 @@ void main() {
 
   @material_input@
 
-
+  gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
 #if @get_enable_multi_view_rendering@
 if(0 == gl_InstanceID) {
 #endif
-  gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+
   gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
 #if @get_enable_multi_view_rendering@
 } else { // TODO: secondary modelview and normal matrices (see trimeshrenderer.cpp)  #note: 
-  gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
   gua_view_position  = (gua_secondary_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
 }
 #endif

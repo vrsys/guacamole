@@ -18,7 +18,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.             *
  *                                                                            *
  ******************************************************************************/
-
+/*
 @include "shaders/common/header.glsl"
 
 // input
@@ -113,3 +113,4 @@ void gua_calculate_sun_light() {
 void main() {
   compute_light();
 }
+*/

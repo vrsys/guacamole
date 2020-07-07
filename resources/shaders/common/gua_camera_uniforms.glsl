@@ -28,6 +28,9 @@ layout (std140, binding=0) uniform cameraBlock {
 };
 
 vec3 gua_camera_position = gua_camera_position_4.xyz;
+#if @get_enable_multi_view_rendering@
+vec3 gua_secondary_camera_position = gua_secondary_camera_position_4.xyz;
+#endif
 vec3 gua_cyclops_position = gua_cyclops_position_4.xyz;
 
 uniform mat4 gua_model_matrix;
@@ -43,3 +46,17 @@ uniform mat4 gua_secondary_model_view_projection_matrix;
 #endif
 
 uniform int  gua_rendering_mode; // 0: normal, 1: lowfi shadows, 2: hifi shadows
+
+
+vec3 gua_get_current_camera_position() {
+
+  #if @get_enable_multi_view_rendering@
+  if(0 == gl_Layer) {
+  #endif
+    return gua_camera_position;
+  #if @get_enable_multi_view_rendering@
+  } else {
+    return gua_secondary_camera_position;
+  }
+  #endif 
+}

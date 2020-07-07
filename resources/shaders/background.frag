@@ -40,14 +40,16 @@ vec3 gua_apply_background_texture() {
   return texture2D(sampler2D(gua_background_texture), gua_quad_coords).xyz;
 }
 
+
 vec3 gua_apply_skymap_texture() {
   vec3 pos = gua_get_position();
-  vec3 view = normalize(pos - gua_camera_position);
+  vec3 curr_cam_pos = gua_get_current_camera_position();
+  vec3 view = normalize(pos - curr_cam_pos);
   const float pi = 3.14159265359;
   float x = 0.5 + 0.5*gua_my_atan2(view.x, -view.z)/pi;
   float y = 1.0 - acos(view.y)/pi;
   vec2 texcoord = vec2(x, y);
-  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - gua_camera_position) - normalize(gua_get_position(vec2(1.0, 0.5)) - gua_camera_position));
+  float l = length(normalize(gua_get_position(vec2(0, 0.5)) - curr_cam_pos) - normalize(gua_get_position(vec2(1.0, 0.5)) - curr_cam_pos));
   vec2 uv = l*(gua_get_quad_coords() - 1.0)/4.0 + 0.5;
   return textureGrad(sampler2D(gua_background_texture), texcoord, dFdx(uv), dFdy(uv)).xyz;
 }
@@ -57,7 +59,7 @@ vec3 gua_apply_background_color() {
 }
 
 vec3 gua_apply_fog(vec3 fog_color) {
-  float dist       = length(gua_camera_position - gua_get_position());
+  float dist       = length(gua_get_current_camera_position - gua_get_position());
   float fog_factor = clamp((dist - gua_fog_start)/(gua_fog_end - gua_fog_start), 0.0, 1.0);
   return mix(gua_get_color(), fog_color, fog_factor);
 }

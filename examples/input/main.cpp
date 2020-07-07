@@ -121,6 +121,8 @@ int main(int argc, char** argv)
     graph.add_node("/transform", example_model);
     example_model->set_draw_bounding_box(true);
 
+    example_model->translate(0.0, 0.0, 1.0);
+
     std::cout << "Hierarchy below teapot contains: " << example_model->num_grouped_faces() << " Triangles" << std::endl;
 
     auto portal = graph.add_node<gua::node::TexturedQuadNode>("/", "portal");
@@ -153,8 +155,12 @@ int main(int argc, char** argv)
     // add mouse interaction
     gua::utils::Trackball trackball(0.01, 0.002, 0.2);
 
+
+
+    scm::math::vec2ui cam_res = scm::math::vec2ui(1920, 1080);
+
     // setup rendering pipeline and window
-    auto cam_resolution = gua::math::vec2ui(1920/2, 1080/2);
+    auto cam_resolution = cam_res;
 
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -187,15 +193,18 @@ int main(int argc, char** argv)
     //camera->set_pre_render_cameras({portal_camera});
 
     //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
 
     window->config.set_enable_vsync(false);
 
+
+
+
 #ifdef RENDER_SIDE_BY_SIDE
-    auto win_resolution = gua::math::vec2ui(2*1920/2, 1080/2);
+    auto win_resolution = gua::math::vec2ui(2*cam_res.x, cam_res.y);
     window->config.set_size(win_resolution);
     window->config.set_left_resolution(cam_resolution);
     window->config.set_right_resolution(cam_resolution);

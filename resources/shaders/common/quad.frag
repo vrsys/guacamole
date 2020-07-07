@@ -29,7 +29,8 @@ in vec3 gua_normal;
 @include "shaders/common/gua_fragment_shader_output.glsl"
 
 void main() {
-    vec3 gua_color = texture2D(sampler2D(gua_in_texture), gua_quad_coords).rgb;
+    //vec3 gua_color = texture2D(sampler2D(gua_in_texture), gua_quad_coords).rgb;
+    vec4 gua_color = texture2DArray(sampler2DArray(gua_in_texture), vec3((gua_varying_quad_coords - 0.5)*flip + 0.5, gl_Layer ) );
     // vec3 gua_color = vec3(gua_quad_coords, 0);
     float gua_emissivity = 1.0;
     float gua_roughness = 0.0;

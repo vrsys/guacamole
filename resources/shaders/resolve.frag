@@ -171,6 +171,7 @@ vec3 gua_apply_background_texture() {
   return mix(col1, col2, gua_background_texture_blend_factor);
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 vec3 gua_apply_cubemap_texture() {
   vec3 pos = gua_get_position();

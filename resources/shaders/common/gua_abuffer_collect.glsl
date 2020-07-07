@@ -89,7 +89,12 @@ void submit_fragment(float depth)
   // if abuffer enabled and not rendering shadows
   if ((bool)@enable_abuffer@ && gua_rendering_mode == 0) {
 #if @enable_abuffer@
+
+  #if @get_enable_multi_view_rendering@
+    float z = texelFetch(sampler2DArray(gua_gbuffer_depth), ivec3(gl_FragCoord.xy, gl_Layer), 0).x;
+  #else
     float z = texelFetch(sampler2D(gua_gbuffer_depth), ivec2(gl_FragCoord.xy), 0).x;
+  #endif
     if (depth > z) discard;
 
     if (gua_alpha < 1.0 - @abuf_insertion_threshold@) {

@@ -33,7 +33,7 @@ in vec3 gua_varying_normal;
 @include "common/gua_abuffer_collect.glsl"
 
 void main() {
-    vec4 color = texture2D(sampler2D(gua_in_texture), (gua_varying_quad_coords - 0.5)*flip + 0.5);
+    vec4 color = texture2DArray(sampler2DArray(gua_in_texture), vec3((gua_varying_quad_coords - 0.5)*flip + 0.5, gl_Layer ) );
 
     gua_alpha = color.a;
     gua_color = color.rgb;

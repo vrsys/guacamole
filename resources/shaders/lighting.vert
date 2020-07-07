@@ -19,6 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
+/*
 @include "shaders/common/header.glsl"
 
 // input
@@ -111,3 +112,4 @@ void gua_calculate_sun_light() {
 void main() {
   compute_light();
 }
+*/

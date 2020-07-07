@@ -272,10 +272,10 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                 if(render_multiview) {
                     tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
-                    std::cout <<"drawing instanced " << std::endl;
+                    //std::cout <<"drawing instanced " << std::endl;
                 } else {
                     tri_mesh_node->get_geometry()->draw(pipe.get_context());
-                    std::cout << "Drawing single geom" << std::endl;  
+                    //std::cout << "Drawing single geom" << std::endl;  
                 }
             }
         }

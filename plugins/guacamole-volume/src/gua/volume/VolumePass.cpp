@@ -46,7 +46,7 @@ PipelinePass VolumePassDescription::make_pass(RenderContext const& ctx, Substitu
 {
     auto renderer(std::make_shared<VolumeRenderer>());
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe) { renderer->render(pipe); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview) { renderer->render(pipe); };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

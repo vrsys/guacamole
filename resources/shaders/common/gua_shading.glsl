@@ -173,7 +173,10 @@ float gua_calculate_light(int light_id,
   LightSource L = gua_lights[light_id];
 
   const float fading_exponent = 5;
-  float fading = pow(clamp(length(gua_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), fading_exponent);
+
+  vec3 gua_current_camera_position = gua_get_current_camera_position();
+
+  float fading = pow(clamp(length(gua_current_camera_position - position) / L.max_shadow_distance, 0.0, 1.0), fading_exponent);
 
   // sun light
   if (L.type == 2) {
@@ -317,7 +320,9 @@ void gua_prepare_shading(out ShadingTerms T, vec3 color, vec3 normal, vec3 posit
 {
   T.N = normal;
   T.P = position;
-  T.E = gua_camera_position;
+
+  T.E = gua_get_current_camera_position();
+
   //T.emit      = pbr.r;
   float metalness = pbr.b;
   T.roughness = max(pbr.g, 0.0001);

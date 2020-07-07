@@ -65,10 +65,15 @@ float gua_get_depth() {
     return gua_get_depth(gua_get_quad_coords());
 }
 
+#if @get_enable_multi_view_rendering@
+float gua_get_depth(sampler2DArray depth_texture, vec2 frag_pos) {
+    return texture2DArray(depth_texture, vec3(frag_pos, gl_Layer) ).x * 2.0 - 1.0;
+}
+#else
 float gua_get_depth(sampler2D depth_texture, vec2 frag_pos) {
     return texture2D(depth_texture, frag_pos).x * 2.0 - 1.0;
 }
-
+#endif
 float gua_get_depth(sampler2D depth_texture) {
     vec2 frag_pos = gua_get_quad_coords(); 
     return gua_get_depth(gua_get_quad_coords()).x;
@@ -96,6 +101,28 @@ vec3 gua_get_position() {
     return gua_get_position(gua_get_quad_coords());
 }
 
+
+#if @get_enable_multi_view_rendering@
+vec3 gua_get_position(sampler2DArray depth_texture, vec2 frag_pos) {
+    vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(depth_texture, frag_pos), 1.0);
+    vec4 h;
+#if @get_enable_multi_view_rendering@
+    if(0 == gl_Layer) {
+#endif
+      h = gua_inverse_projection_view_matrix * screen_space_pos;
+#if @get_enable_multi_view_rendering@
+    } else {
+      h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;      
+    }
+#endif
+    h /= h.w;
+    return h.xyz;
+}
+
+vec3 gua_get_position(sampler2DArray depth_texture) {
+    return gua_get_position(depth_texture, gua_get_quad_coords());
+} 
+#else
 vec3 gua_get_position(sampler2D depth_texture, vec2 frag_pos) {
     vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(depth_texture, frag_pos), 1.0);
     vec4 h;
@@ -115,6 +142,8 @@ vec3 gua_get_position(sampler2D depth_texture, vec2 frag_pos) {
 vec3 gua_get_position(sampler2D depth_texture) {
     return gua_get_position(depth_texture, gua_get_quad_coords());
 } 
+#endif
+
 
 // color -----------------------------------------------------------------------
 #if @get_enable_multi_view_rendering@
