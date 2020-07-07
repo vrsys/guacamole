@@ -89,7 +89,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
         rasterizer_state_ = ctx.render_device->create_rasterizer_state(*d.private_.rasterizer_state_desc_);
     }
 }
-void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview)
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr)
 {
     if(private_.is_enabled_) {
         auto const& ctx(pipe.get_context());
@@ -102,7 +102,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
 
         if(RenderMode::Custom == private_.rendermode_)
         {
-            private_.process_(*this, desc, pipe, render_multiview);
+            private_.process_(*this, desc, pipe, render_multiview, use_hardware_mvr);
         }
         else
         {
@@ -133,16 +133,16 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
 
             if(RenderMode::Callback == private_.rendermode_)
             {
-                private_.process_(*this, desc, pipe, render_multiview);
+                private_.process_(*this, desc, pipe, render_multiview, use_hardware_mvr);
             }
             else
             { // RenderMode::Quad
-                if(render_multiview) {
+                if(render_multiview & !use_hardware_mvr) {
                     pipe.draw_quad_instanced();
-                    std::cout << "Drawing quad instanced" << std::endl;
+                    //std::cout << "Drawing quad instanced" << std::endl;
                 } else {
                     pipe.draw_quad();
-                    std::cout << "Drawing something not instanced" << std::endl;
+                    //std::cout << "Drawing something not instanced" << std::endl;
                 }
             }
 

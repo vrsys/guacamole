@@ -95,7 +95,7 @@ PipelinePass LightVisibilityPassDescription::make_pass(RenderContext const& ctx,
 
     auto renderer = std::make_shared<LightVisibilityRenderer>();
 
-    private_.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) {
+    private_.process_ = [renderer, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) {
         pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state());
         pipe.get_context().render_context->set_rasterizer_state(pass.rasterizer_state());
         renderer->render(pass, pipe, tp, ms_sample_count, enable_conservative, enable_fullscreen_fallback, render_multiview); 

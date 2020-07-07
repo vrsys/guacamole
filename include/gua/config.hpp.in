@@ -44,6 +44,6 @@
 #cmakedefine GUACAMOLE_GLFW3
 #cmakedefine GUACAMOLE_FBX
 
-#define GUACAMOLE_GLSL_VERSION_STRING "#version 440\n"
+#define GUACAMOLE_GLSL_VERSION_STRING "#version 460\n"
 
 #endif  // GUA_CONFIG_HPP

@@ -167,7 +167,7 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
                         bool is_left = cmd.serialized_cam->config.get_left_output_window() == window_name;
                         // auto mode = window->config.get_is_left() ? CameraMode::LEFT : CameraMode::RIGHT;
                         auto mode = is_left ? CameraMode::LEFT : CameraMode::RIGHT;
-                        auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs, false);
+                        auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs, false, false);
                         if(img)
                         {
                             window->display(img, false);
@@ -175,28 +175,32 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
                     }
                     else if(window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
                         // TODO: add alternate frame rendering here? -> take clear and render methods
-                        auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs, false));
+                        auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs, false, false));
                         if(img)
                             window->display(img, true);
-                        img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs, false);
+                        img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs, false, false);
                         if(img)
                             window->display(img, false);
-                        std::cout << "Rendering side by side" << std::endl;                        
+                        //std::cout << "Rendering side by side" << std::endl;                        
                     }
-                    else // StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR & StereoMode::SIDE_BY_SIDE_HARDWARE_MVR
+                    else if(window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR)// StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR & StereoMode::SIDE_BY_SIDE_HARDWARE_MVR
                     {
                         // TODO: add alternate frame rendering here? -> take clear and render methods
-                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs, true));
+                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs, true, false));
                         if(img)
                             window->display(img, true);
-                        //img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
-                        //if(img)
-                        //    window->display(img, false);
+                    }
+                    else //if(window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MVR)
+                    {
+                        // TODO: add alternate frame rendering here? -> take clear and render methods
+                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs, true, true));
+                        if(img)
+                            window->display(img, true);
                     }
                 }
                 else
                 {
-                    auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(), *cmd.serialized_cam, *cmd.scene_graphs, false));
+                    auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(), *cmd.serialized_cam, *cmd.scene_graphs, false, false));
 
                     if(img)
                         window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);

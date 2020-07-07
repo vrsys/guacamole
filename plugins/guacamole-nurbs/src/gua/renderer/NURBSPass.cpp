@@ -73,7 +73,7 @@ PipelinePass NURBSPassDescription::make_pass(RenderContext const& ctx, Substitut
     renderer->pretessellation(_enable_pretessellation);
     renderer->set_substitutions(substitution_map);
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) {
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) {
         pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
         renderer->render(pipe, desc);
     };

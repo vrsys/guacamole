@@ -100,7 +100,7 @@ class GUA_DLL Pipeline
     Pipeline(RenderContext& ctx, math::vec2ui const& resolution);
     Pipeline(Pipeline const&) = delete;
 
-    scm::gl::texture_2d_ptr render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs, bool render_multiview);
+    scm::gl::texture_2d_ptr render_scene(CameraMode mode, node::SerializedCameraNode const& camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs, bool render_multiview, bool use_hardware_mvr);
 
     void load_passes_and_responsibilities();
 

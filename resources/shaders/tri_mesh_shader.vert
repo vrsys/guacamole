@@ -1,5 +1,15 @@
 @include "common/header.glsl"
 
+
+#if @get_enable_hardware_mvr@
+//#extension GL_ARB_fragment_layer_viewport: require
+//#extension GL_ARB_shader_viewport_layer_array: enable
+//#extension GL_OVR_multiview: require
+#extension GL_OVR_multiview2 : enable
+
+layout(num_views = 2) in;
+#endif
+
 layout(location=0) in vec3 gua_in_position;
 layout(location=1) in vec2 gua_in_texcoords;
 layout(location=2) in vec3 gua_in_normal;
@@ -16,16 +26,30 @@ layout(location=4) in vec3 gua_in_bitangent;
 
 @material_method_declarations_vert@
 
+
 void main() {
 
   @material_input@
 
   gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
+
+uint layer_id = 0;
+
+
 #if @get_enable_multi_view_rendering@
-if(0 == gl_InstanceID) {
+#if @get_enable_hardware_mvr@
+layer_id = gl_ViewID_OVR;
+#else
+layer_id = gl_InstanceID;
+#endif
 #endif
 
+
+#if @get_enable_multi_view_rendering@
+if(0 == layer_id) {
+#endif
   gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
+
 #if @get_enable_multi_view_rendering@
 } else { // TODO: secondary modelview and normal matrices (see trimeshrenderer.cpp)  #note: 
   gua_view_position  = (gua_secondary_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
@@ -45,14 +69,13 @@ if(0 == gl_InstanceID) {
   @include "common/gua_varyings_assignment.glsl"
 
 #if @get_enable_multi_view_rendering@
-if (0 == gl_InstanceID) {
+if (0 == layer_id) {
 #endif
   gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
 #if @get_enable_multi_view_rendering@
 } else {
   gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
 }
-  gl_Layer = gl_InstanceID;
-
 #endif
+gl_Layer = int(layer_id);
 }

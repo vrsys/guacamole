@@ -32,7 +32,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_node, Pipeline& pipe, bool render_multiview)
+void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_node, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr)
 {
     UniformValue tex(quad_node->data.get_texture());
     UniformValue flip(scm::math::vec2i(quad_node->data.get_flip_x() ? -1 : 1, quad_node->data.get_flip_y() ? -1 : 1));
@@ -54,7 +54,7 @@ void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_nod
     pass.shader()->apply_uniform(ctx, "offset", offset);
     pass.shader()->apply_uniform(ctx, "opacity", opacity);
 
-    if(render_multiview) {
+    if(render_multiview & !use_hardware_mvr) {
         pipe.draw_quad_instanced();
     } else {
         pipe.draw_quad();
@@ -62,13 +62,13 @@ void render_node(PipelinePass& pass, node::TexturedScreenSpaceQuadNode* quad_nod
 
 }
 
-void render_quads(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview)
+void render_quads(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr)
 {
     auto& scene = *pipe.current_viewstate().scene;
     for(auto const& node : scene.nodes[std::type_index(typeid(node::TexturedScreenSpaceQuadNode))])
     {
         auto quad_node(reinterpret_cast<node::TexturedScreenSpaceQuadNode*>(node));
-        render_node(pass, quad_node, pipe, render_multiview);
+        render_node(pass, quad_node, pipe, render_multiview, use_hardware_mvr);
     }
 }
 

@@ -53,7 +53,7 @@ std::shared_ptr<PipelinePassDescription> TexturedQuadPassDescription::make_copy(
 
 PipelinePass TexturedQuadPassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
-    private_.process_ = [](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview) {
+    private_.process_ = [](PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) {
         for(auto const& node : pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::TexturedQuadNode))])
         {
             auto quad_node(reinterpret_cast<node::TexturedQuadNode*>(node));

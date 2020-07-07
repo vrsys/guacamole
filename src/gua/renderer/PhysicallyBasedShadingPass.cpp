@@ -36,7 +36,7 @@ namespace
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void lighting(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview)
+void lighting(PipelinePass& pass, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr)
 {
 #if 0
   auto const& ctx(pipe.get_context());

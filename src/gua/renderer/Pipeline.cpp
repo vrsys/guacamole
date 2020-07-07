@@ -105,7 +105,7 @@ void Pipeline::load_passes_and_responsibilities()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& original_camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs, bool render_multiview)
+scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& original_camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs, bool render_multiview, bool use_hardware_mvr)
 {
 	node::SerializedCameraNode camera(original_camera);
 
@@ -141,7 +141,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
             context_.render_pipelines.insert(std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
         }
 
-        context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs, render_multiview);
+        context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs, render_multiview, use_hardware_mvr);
     }
 
     // recreate gbuffer if resolution changed
@@ -205,8 +205,11 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
 
-
+        global_substitution_map_["get_enable_hardware_mvr"] = "0";    
         if(render_multiview) {
+            if(use_hardware_mvr) {
+                global_substitution_map_["get_enable_hardware_mvr"] = "1";                
+            }
             global_substitution_map_["get_enable_multi_view_rendering"] = "1";
         } else {
             global_substitution_map_["get_enable_multi_view_rendering"] = "0";
@@ -276,7 +279,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         {
             gbuffer_->toggle_ping_pong();
         }
-        passes_[i].process(*last_description_.get_passes()[i], *this, render_multiview);
+        passes_[i].process(*last_description_.get_passes()[i], *this, render_multiview, use_hardware_mvr);
     }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -495,7 +498,7 @@ void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum co
         {
             if(passes_[pass_idx].enable_for_shadows())
             {
-                passes_[pass_idx].process(*last_description_.get_passes()[pass_idx], *this, false);
+                passes_[pass_idx].process(*last_description_.get_passes()[pass_idx], *this, false, false);
             }
         }
     }

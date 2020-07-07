@@ -156,7 +156,7 @@ PipelinePass SkyMapPassDescription::make_pass(RenderContext const& ctx, Substitu
 {
     auto renderer = std::make_shared<SkyMapRenderer>();
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) { renderer->render_sky_map(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) { renderer->render_sky_map(pipe, desc); };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

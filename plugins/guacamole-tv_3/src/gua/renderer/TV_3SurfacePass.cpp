@@ -61,7 +61,7 @@ PipelinePass TV_3SurfacePassDescription::make_pass(RenderContext const& ctx, Sub
 {
     auto renderer = std::make_shared<TV_3SurfaceRenderer>(ctx, substitution_map);
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) { renderer->render(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) { renderer->render(pipe, desc); };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

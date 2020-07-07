@@ -74,7 +74,7 @@ TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview)
+void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview, bool use_hardware_mvr)
 {
 
     RenderContext const& ctx(pipe.get_context());
@@ -270,12 +270,10 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                 ctx.render_context->apply_program();
 
-                if(render_multiview) {
+                if(render_multiview & !use_hardware_mvr) {
                     tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
-                    //std::cout <<"drawing instanced " << std::endl;
                 } else {
-                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
-                    //std::cout << "Drawing single geom" << std::endl;  
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context()); 
                 }
             }
         }
