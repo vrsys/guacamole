@@ -139,8 +139,10 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
             { // RenderMode::Quad
                 if(render_multiview) {
                     pipe.draw_quad_instanced();
+                    std::cout << "Drawing quad instanced" << std::endl;
                 } else {
                     pipe.draw_quad();
+                    std::cout << "Drawing something not instanced" << std::endl;
                 }
             }
 

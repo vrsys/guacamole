@@ -22,13 +22,16 @@ vec3 gua_unproject_depth_to_position(float scaled_depth) {
     vec2 frag_pos = gua_get_quad_coords();
     vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, scaled_depth, 1.0);
 
-    mat4 active_inverse_projection_view_matrix = gua_inverse_projection_view_matrix;
+    vec4 h;
 #if @get_enable_multi_view_rendering@
-    if(1 == gl_Layer) {
-        active_inverse_projection_view_matrix = gua_secondary_inverse_projection_view_matrix;
+    if(0 == gl_Layer) {
+#endif
+      h = gua_inverse_projection_view_matrix * screen_space_pos;
+#if @get_enable_multi_view_rendering@
+    } else {
+      h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;      
     }
 #endif
-    vec4 h = active_inverse_projection_view_matrix * screen_space_pos;
     h /= h.w; 
     return h.xyz;
 }
@@ -74,7 +77,17 @@ float gua_get_depth(sampler2D depth_texture) {
 // position --------------------------------------------------------------------
 vec3 gua_get_position(vec2 frag_pos) {
     vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(frag_pos), 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+
+    vec4 h;
+#if @get_enable_multi_view_rendering@
+    if(0 == gl_Layer) {
+#endif
+      h = gua_inverse_projection_view_matrix * screen_space_pos;
+#if @get_enable_multi_view_rendering@
+    } else {
+      h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;      
+    }
+#endif
     h /= h.w; 
     return h.xyz;
 }
@@ -85,7 +98,16 @@ vec3 gua_get_position() {
 
 vec3 gua_get_position(sampler2D depth_texture, vec2 frag_pos) {
     vec4 screen_space_pos = vec4(frag_pos * 2.0 - 1.0, gua_get_depth(depth_texture, frag_pos), 1.0);
-    vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+    vec4 h;
+#if @get_enable_multi_view_rendering@
+    if(0 == gl_Layer) {
+#endif
+      h = gua_inverse_projection_view_matrix * screen_space_pos;
+#if @get_enable_multi_view_rendering@
+    } else {
+      h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;      
+    }
+#endif
     h /= h.w;
     return h.xyz;
 }

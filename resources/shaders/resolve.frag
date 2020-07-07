@@ -131,7 +131,18 @@ vec4 abuf_shade(uint pos, float depth) {
   uint flags = bitfieldExtract(data.w, 24, 8);
 
   vec4 screen_space_pos = vec4(gua_get_quad_coords() * 2.0 - 1.0, depth, 1.0);
-  vec4 h = gua_inverse_projection_view_matrix * screen_space_pos;
+
+  vec4 h;
+
+#if @get_enable_multi_view_rendering@
+if(0 == gl_Layer) {
+#endif
+  h = gua_inverse_projection_view_matrix * screen_space_pos;
+#if @get_enable_multi_view_rendering@
+} else {
+  h = gua_secondary_inverse_projection_view_matrix * screen_space_pos;
+}
+#endif
   vec3 position = h.xyz / h.w;
 
   vec4 frag_color_emit = vec4(shade_for_all_lights(color, normal, position, pbr, flags, depth, false), pbr.r);
@@ -240,6 +251,7 @@ if(0 == gl_Layer) {
 } else {
   for (int sl = 0; sl < bitset_words; ++sl) {
     bitset[sl] = texelFetch(usampler3D(gua_secondary_light_bitset), ivec3(tile, sl), 0).r;
+    //bitset[sl] = 0;
   } 
 }
 #endif
@@ -334,6 +346,7 @@ if(0 == gl_Layer) {
   }
 #endif
 
+gua_out_color += 0.1 * (gl_Layer == 0 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0));
 
 }
 

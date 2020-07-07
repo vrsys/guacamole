@@ -46,11 +46,10 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool 
 
 
     
-    //if(create_layered) {
+    if(create_layered) {
             num_fbo_layers = 2;
             attachment_layer_to_bind = 10000; // forces new schism version to bind the attachments completely
-            std::cout << "Create new gbuffer" << std::endl;
-    //}
+    }
     
     sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);
 

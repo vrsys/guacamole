@@ -279,11 +279,9 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
         auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
         std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
         std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
-        std::cout << "This appears to be the wrong branch" << std::endl;
         pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload);
     } else {
 //#endif
-        std::cout << "Updating only one kind of transform" << std::endl;
         pipe.light_transform_block_.update(ctx, transforms_to_upload);
 //#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     }
@@ -299,7 +297,6 @@ uint32_t num_spot_lights_to_draw = num_spot_lights;
     if(render_multiview) {
         num_point_lights_to_draw *= 2;
         num_spot_lights_to_draw  *= 2;
-        std::cout << "RENDERING MULTI LIGHTS" << std::endl;
     }
 //#endif
 
