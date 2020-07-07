@@ -9,28 +9,43 @@
 namespace video3d
 {
 NetKinectArray::NetKinectArray(const std::vector<std::shared_ptr<KinectCalibrationFile>>& calib_files, const std::string& server_endpoint, unsigned colorsize_byte, unsigned depthsize_byte)
-    : m_mutex(), m_mutex_decompression(), m_running(true), m_needs_decompression(false), m_needs_decompression_back(false), m_has_decompressed_images(false), m_server_endpoint(server_endpoint), m_calib_files(calib_files), m_colorsize_byte(colorsize_byte), m_depthsize_byte(depthsize_byte),
-      m_decompressed_images( (m_colorsize_byte + m_depthsize_byte) * m_calib_files.size() ), m_decompressed_images_back(m_decompressed_images.size()), m_buffer_to_decompress((m_colorsize_byte + m_depthsize_byte  ) * m_calib_files.size()), m_buffer_to_decompress_back((m_colorsize_byte + m_depthsize_byte  ) * m_calib_files.size()), m_buffer((m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()), m_buffer_back((m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()), m_need_swap(false), m_recv()
+    : m_mutex(),  m_running(true),  m_server_endpoint(server_endpoint), m_calib_files(calib_files), m_colorsize_byte(colorsize_byte), m_depthsize_byte(depthsize_byte),
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
+      m_mutex_decompression(),
+      m_needs_decompression(false),
+      m_needs_decompression_back(false), m_has_decompressed_images(false),
+      m_decompressed_images( (m_colorsize_byte + m_depthsize_byte) * m_calib_files.size() ), 
+      m_decompressed_images_back(m_decompressed_images.size()), m_buffer_to_decompress((m_colorsize_byte + m_depthsize_byte  ) * m_calib_files.size()), 
+      m_buffer_to_decompress_back((m_colorsize_byte + m_depthsize_byte  ) * m_calib_files.size()),
+#endif
+     m_buffer((m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()), m_buffer_back((m_colorsize_byte + m_depthsize_byte) * m_calib_files.size()), m_need_swap(false), m_recv()
 {
 #ifdef GUACAMOLE_ENABLE_TURBOJPEG
     m_jpeg_decompressor_per_layer.resize(calib_files.size(), 0);
     //m_decompress = std::thread([this]() {} )
 #endif
     m_recv = std::thread([this]() { readloop(); });
+
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     m_decompress = std::thread([this]() { decompress_images(); } );
+#endif
 }
 
 NetKinectArray::~NetKinectArray()
 {
     m_running.store(false);
     m_recv.join();
+
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
     m_decompress.join();
+#endif
 }
 
-
+#ifdef GUACAMOLE_ENABLE_TURBOJPEG
 void NetKinectArray::copy_decompressed_jpeg_images(uint8_t* mapped_pbo_back_pointer_back) {
     memcpy(mapped_pbo_back_pointer_back, m_decompressed_images.data(), m_decompressed_images.size());
 }
+
 
 bool NetKinectArray::decompress_images() {
 
@@ -170,6 +185,7 @@ bool NetKinectArray::decompress_images() {
     }
 
 }
+#endif
 
 bool NetKinectArray::update(uint8_t* mapped_pbo_back_pointer_back/*, ::gua::Video3DResource const& video3d_ressource*/)
 {
