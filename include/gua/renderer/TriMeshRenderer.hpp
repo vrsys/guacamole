@@ -49,7 +49,7 @@ class GUA_DLL TriMeshRenderer
   public:
     TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const& smap);
 
-    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview);
 
   private:
     scm::gl::rasterizer_state_ptr rs_cull_back_;

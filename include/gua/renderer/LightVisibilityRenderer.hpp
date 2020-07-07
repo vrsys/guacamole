@@ -13,10 +13,10 @@ class LightVisibilityRenderer
   public:
     LightVisibilityRenderer() {}
 
-    void render(PipelinePass& pass, Pipeline& pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback);
+    void render(PipelinePass& pass, Pipeline& pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback, bool render_multiview);
 
   private:
-    void draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights) const;
+    void draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights, bool render_multiview) const;
 
     void prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const;
 

@@ -30,6 +30,13 @@
 
 #define RENDER_SIDE_BY_SIDE
 
+#ifdef RENDER_SIDE_BY_SIDE
+  #define RENDER_MVR
+  #ifdef RENDER_MVR
+    //#define USE_HARDWARE_MVR
+  #endif
+#endif
+
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
 {
@@ -177,7 +184,7 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
 
-    camera->set_pre_render_cameras({portal_camera});
+    //camera->set_pre_render_cameras({portal_camera});
 
     //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
     //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
@@ -195,7 +202,15 @@ int main(int argc, char** argv)
 
     window->config.set_left_position(scm::math::vec2ui(0, 0));
     window->config.set_right_position(scm::math::vec2ui(win_resolution.x/2, 0));
-    window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    #ifndef RENDER_MVR 
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    #else
+        #ifdef USE_HARDWARE_MVR
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_HARDWARE_MVR);
+        #else
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR);
+        #endif
+    #endif
     camera->config.set_enable_stereo(true);
 #else
     window->config.set_size(cam_resolution);

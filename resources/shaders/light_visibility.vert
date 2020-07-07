@@ -35,10 +35,10 @@ void main() {
 
 #if @get_enable_multi_view_rendering@
   if(1 == light_table_id) {
-  	gl_Position = light_mvp_matrices[base_light_id] * vec4(gua_in_position, 1.0);
+  	gl_Position = secondary_light_mvp_matrices[base_light_id] * vec4(gua_in_position, 1.0);
   } else {
 #endif
-  gl_Position = secondary_light_mvp_matrices[base_light_id] * vec4(gua_in_position, 1.0);
+  gl_Position = light_mvp_matrices[base_light_id] * vec4(gua_in_position, 1.0);
 #if @get_enable_multi_view_rendering@
   }
 #endif

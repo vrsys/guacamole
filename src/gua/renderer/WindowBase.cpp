@@ -241,8 +241,8 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
 {
     switch(config.get_stereo_mode())
     {
-    case StereoMode::SIDE_BY_SIDE: // turn this to MVR rendering pass (software and hardware)
-
+    case StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR: 
+    case StereoMode::SIDE_BY_SIDE_HARDWARE_MVR: 
     if(is_left) {
         display(texture, config.get_left_resolution(), config.get_left_position(), WindowBase::FULL, is_left, true);
         //display(texture, config.get_left_resolution(), config.get_right_position(), WindowBase::FULL, is_left, true);
@@ -251,6 +251,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, bool is_left)
     }
 
     break;
+    case StereoMode::SIDE_BY_SIDE: // turn this to MVR rendering pass (software and hardware)
     case StereoMode::SEPARATE_WINDOWS:
     case StereoMode::MONO:
 
@@ -349,7 +350,8 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
         ctx_.render_context->set_blend_state(blend_state_);
     }
 
-    if(config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+    if(config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR ||
+       config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MVR   ) {
 
         scm::math::vec2f const left_cam_pos = scm::math::vec2f(config.get_left_position());
         scm::math::vec2f const left_cam_res = scm::math::vec2f(config.get_left_resolution());

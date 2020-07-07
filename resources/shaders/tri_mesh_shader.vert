@@ -48,9 +48,7 @@ if(0 == gl_InstanceID) {
 #if @get_enable_multi_view_rendering@
 if (0 == gl_InstanceID) {
 #endif
-  
   gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
-
 #if @get_enable_multi_view_rendering@
 } else {
   gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);

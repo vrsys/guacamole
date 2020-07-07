@@ -148,13 +148,13 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
 #ifdef GUACAMOLE_ENABLE_NVIDIA_3D_VISION
                         if((window->get_context()->framecount % 2) == 0)
                         {
-                            auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs));
+                            auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs, false));
                             if(img)
                                 window->display(img, true);
                         }
                         else
                         {
-                            auto img(pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs));
+                            auto img(pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs, false));
                             if(img)
                                 window->display(img, false);
                         }
@@ -167,16 +167,26 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
                         bool is_left = cmd.serialized_cam->config.get_left_output_window() == window_name;
                         // auto mode = window->config.get_is_left() ? CameraMode::LEFT : CameraMode::RIGHT;
                         auto mode = is_left ? CameraMode::LEFT : CameraMode::RIGHT;
-                        auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs);
+                        auto img = pipe->render_scene(mode, *cmd.serialized_cam, *cmd.scene_graphs, false);
                         if(img)
                         {
                             window->display(img, false);
                         }
                     }
-                    else
+                    else if(window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+                        // TODO: add alternate frame rendering here? -> take clear and render methods
+                        auto img(pipe->render_scene(CameraMode::LEFT, *cmd.serialized_cam, *cmd.scene_graphs, false));
+                        if(img)
+                            window->display(img, true);
+                        img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs, false);
+                        if(img)
+                            window->display(img, false);
+                        std::cout << "Rendering side by side" << std::endl;                        
+                    }
+                    else // StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR & StereoMode::SIDE_BY_SIDE_HARDWARE_MVR
                     {
                         // TODO: add alternate frame rendering here? -> take clear and render methods
-                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs));
+                        auto img(pipe->render_scene(CameraMode::BOTH, *cmd.serialized_cam, *cmd.scene_graphs, true));
                         if(img)
                             window->display(img, true);
                         //img = pipe->render_scene(CameraMode::RIGHT, *cmd.serialized_cam, *cmd.scene_graphs);
@@ -186,7 +196,7 @@ void Renderer::renderclient(Mailbox in, std::string const& window_name)
                 }
                 else
                 {
-                    auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(), *cmd.serialized_cam, *cmd.scene_graphs));
+                    auto img(pipe->render_scene(cmd.serialized_cam->config.get_mono_mode(), *cmd.serialized_cam, *cmd.scene_graphs, false));
 
                     if(img)
                         window->display(img, cmd.serialized_cam->config.get_mono_mode() != CameraMode::RIGHT);
@@ -260,6 +270,7 @@ void Renderer::queue_draw(std::vector<SceneGraph const*> const& scene_graphs, bo
     application_fps_.step();
 }
 
+/*
 void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_graphs)
 {
     for(auto graph : scene_graphs)
@@ -363,7 +374,7 @@ void Renderer::draw_single_threaded(std::vector<SceneGraph const*> const& scene_
     }
     application_fps_.step();
 }
-
+*/
 void Renderer::stop()
 {
     for(auto& rc : render_clients_)

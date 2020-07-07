@@ -56,7 +56,7 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
     scm::gl::vertex_array_ptr vao_ =
         ctx.render_device->create_vertex_array(scm::gl::vertex_format(0, 0, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f))(0, 1, scm::gl::TYPE_VEC3F, 2 * sizeof(math::vec3f)), {buffer_});
 
-    private_.process_ = [buffer_, vao_](PipelinePass&, PipelinePassDescription const&, Pipeline& pipe) {
+    private_.process_ = [buffer_, vao_](PipelinePass&, PipelinePassDescription const&, Pipeline& pipe, bool render_multiview) {
         auto const& scene = *(pipe.current_viewstate().scene);
         auto count(scene.bounding_boxes.size());
 

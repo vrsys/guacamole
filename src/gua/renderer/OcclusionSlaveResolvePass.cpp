@@ -131,7 +131,7 @@ void OcclusionSlaveResolvePassDescription::create_gpu_resources(gua::RenderConte
 PipelinePass OcclusionSlaveResolvePassDescription::make_pass(RenderContext const& ctx, SubstitutionMap& substitution_map)
 {
 #if not defined(__WIN32__) && not defined(_WIN32) && not defined(_WIN64)
-    private_.process_ = [&](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+    private_.process_ = [&](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) {
         // auto& target = pipe.current_viewstate().target;
         // auto& gua_depth_buffer = target->get_depth_buffer();
 

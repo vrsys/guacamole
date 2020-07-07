@@ -9,12 +9,13 @@
 #include <gua/utils/Logger.hpp>
 
 #include <scm/gl_core/render_device/opengl/gl_core.h>
+#include <gua/databases/WindowDatabase.hpp>
 
 namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback)
+void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int tile_power, unsigned ms_sample_count, bool enable_conservative, bool enable_fullscreen_fallback, bool render_multiview)
 {
     auto const& ctx(pipe.get_context());
     auto const& glapi = ctx.render_context->opengl_api();
@@ -73,7 +74,7 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
         glapi.glEnable(GL_MULTISAMPLE);
     }
 
-    draw_lights(pipe, transforms, lights, point_lights_num, spot_lights_num);
+    draw_lights(pipe, transforms, lights, point_lights_num, spot_lights_num, render_multiview);
 
     if(ms_sample_count > 0)
     {
@@ -236,7 +237,7 @@ void LightVisibilityRenderer::add_sunlight(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights) const
+void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights, bool render_multiview) const
 {
     auto const& ctx(pipe.get_context());
     auto gl_program(ctx.render_context->current_program());
@@ -248,6 +249,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     auto& scene = *pipe.current_viewstate().scene;
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
+
 
     // 
     if( !(num_point_lights | num_spot_lights) ) {
@@ -261,44 +263,45 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     std::transform(transforms_to_upload.begin(), transforms_to_upload.end(), transforms_to_upload.begin(), [&view_projection_mat] (scm::math::mat4f const& m_transform) {return view_projection_mat * m_transform;});
 
 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(render_multiview) {
+        //gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
+        ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
+                                       scm::gl::FORMAT_R_32UI, 
+                                       scm::gl::ACCESS_READ_WRITE, 
+                                       1, 0, 0);
 
+    }   
+//#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
-    //gl_program->uniform("gua_secondary_model_view_projection_matrix", 0, secondary_light_mvp_mat);
-    ctx.render_context->bind_image(pipe.get_light_table().get_secondary_light_bitset()->get_buffer(ctx), 
-                                   scm::gl::FORMAT_R_32UI, 
-                                   scm::gl::ACCESS_READ_WRITE, 
-                                   1, 0, 0);
-
-
-
-
-    auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
-
-    std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
-    std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
-
-    //auto secondary_light_mvp_mat = secondary_view_projection_mat * light_transform;
-        
-#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload);
-#else
-    pipe.light_transform_block_.update(ctx, transforms_to_upload);
-#endif
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(render_multiview) {
+        auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+        std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
+        std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
+        std::cout << "This appears to be the wrong branch" << std::endl;
+        pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload);
+    } else {
+//#endif
+        std::cout << "Updating only one kind of transform" << std::endl;
+        pipe.light_transform_block_.update(ctx, transforms_to_upload);
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    }
+//#endif
     pipe.bind_light_transformation_uniform_block(1);
     gl_program->uniform("light_type_offset", uint(0));
     ctx.render_context->apply();
-    //std::vector<uint32_t> point_light_indices;
-    //std::vector<uint32_t> 
+
 
 uint32_t num_point_lights_to_draw = num_point_lights;
 uint32_t num_spot_lights_to_draw = num_spot_lights;
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    num_point_lights_to_draw *= 2;
-    num_spot_lights_to_draw  *= 2;
-#endif
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(render_multiview) {
+        num_point_lights_to_draw *= 2;
+        num_spot_lights_to_draw  *= 2;
+        std::cout << "RENDERING MULTI LIGHTS" << std::endl;
+    }
+//#endif
 
     //render point lights at once:
     if(num_point_lights > 0) {

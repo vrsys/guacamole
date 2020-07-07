@@ -123,6 +123,7 @@ class GUA_DLL PipelineDescription
     void* user_data_ = nullptr;
     bool enable_abuffer_ = false;
     size_t abuffer_size_ = 800; // in MiB
+    bool enable_multi_view_rendering_ = false;
     float blending_termination_threshold_ = 0.99f;
     int max_lights_count_ = 128;
 };

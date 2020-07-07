@@ -29,6 +29,7 @@
 #include <gua/renderer/Pipeline.hpp>
 
 #include <gua/databases/MaterialShaderDatabase.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 
 namespace
 {
@@ -73,7 +74,7 @@ TriMeshRenderer::TriMeshRenderer(RenderContext const& ctx, SubstitutionMap const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
+void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview)
 {
 
     RenderContext const& ctx(pipe.get_context());
@@ -222,6 +223,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
                 current_shader->apply_uniform(ctx, "gua_normal_matrix", normal_mat);
                 current_shader->apply_uniform(ctx, "gua_rendering_mode", rendering_mode);
 
+
+                if(render_multiview) {
+                    auto secondary_model_view_mat = scene.secondary_rendering_frustum.get_view() * node_world_transform;
+                    current_shader->apply_uniform(ctx, "gua_secondary_model_view_matrix", math::mat4f(secondary_model_view_mat));                
+                }
+
+
                 // lowfi shadows dont need material input
                 if(rendering_mode != 1)
                 {
@@ -262,7 +270,13 @@ void TriMeshRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
 
                 ctx.render_context->apply_program();
 
-                tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                if(render_multiview) {
+                    tri_mesh_node->get_geometry()->draw_instanced(pipe.get_context(), 2);
+                    std::cout <<"drawing instanced " << std::endl;
+                } else {
+                    tri_mesh_node->get_geometry()->draw(pipe.get_context());
+                    std::cout << "Drawing single geom" << std::endl;  
+                }
             }
         }
 

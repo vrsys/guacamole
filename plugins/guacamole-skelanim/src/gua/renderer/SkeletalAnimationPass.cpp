@@ -56,7 +56,7 @@ PipelinePass SkeletalAnimationPassDescription::make_pass(RenderContext const& ct
     renderer->set_global_substitution_map(substitution_map);
     renderer->create_state_objects(ctx);
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) {
         pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
         renderer->render(pipe, desc);
     };

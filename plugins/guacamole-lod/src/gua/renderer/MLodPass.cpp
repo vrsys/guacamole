@@ -65,7 +65,7 @@ PipelinePass MLodPassDescription::make_pass(RenderContext const& ctx, Substituti
     pipeline_responsibilities_.push_back(std::make_shared<VTPostResponsibilityDescription>(*renderer.get()));
 #endif
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe) {
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview) {
         pipe.get_context().render_context->set_depth_stencil_state(pass.depth_stencil_state(), 1);
         renderer->render(pipe, desc);
     };

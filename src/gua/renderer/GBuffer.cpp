@@ -32,7 +32,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, std::string const& output_window_name)
+GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, std::string const& output_window_name)
     : RenderTarget(resolution), abuffer_(), fbo_read_(nullptr), fbo_write_(nullptr), fbo_read_only_color_(nullptr), fbo_write_only_color_(nullptr),
       sampler_state_desc_(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT)
 // linear filtering, only necessary for SSAA 3.11
@@ -46,13 +46,12 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, std::
 
 
     
-    //if("" != output_window_name) {
-    //    auto associated_window = gua::WindowDatabase::instance()->lookup(output_window_name);//->add left_output_window
-    //    if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+    //if(create_layered) {
             num_fbo_layers = 2;
             attachment_layer_to_bind = 10000; // forces new schism version to bind the attachments completely
-    //    }
+            std::cout << "Create new gbuffer" << std::endl;
     //}
+    
     sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);
 
     color_buffer_read_ = ctx.render_device->create_texture_2d(resolution, scm::gl::FORMAT_RGB_8, 1, num_fbo_layers);

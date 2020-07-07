@@ -75,7 +75,7 @@ class GUA_DLL PipelinePassPrivate
     RenderMode rendermode_{RenderMode::Custom};
     std::string name_{"PipelinePass"};
 
-    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&)> process_;
+    std::function<void(PipelinePass&, PipelinePassDescription const&, Pipeline&, bool)> process_;
 };
 
 class GUA_DLL PipelinePassDescription
@@ -164,7 +164,7 @@ class GUA_DLL PipelinePass
     scm::gl::blend_state_ptr blend_state() const;
     std::shared_ptr<ShaderProgram> shader() const;
 
-    void process(PipelinePassDescription const& desc, Pipeline& pipe);
+    void process(PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview);
 
     PipelinePass(PipelinePassDescription const&, RenderContext const&, SubstitutionMap const&);
     ~PipelinePass() = default;

@@ -56,7 +56,7 @@ namespace gua
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution)), camera_block_(ctx.render_device), light_table_(new LightTable), light_transform_block_(ctx.render_device), last_resolution_(0, 0), last_description_(),
+    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution, true)), camera_block_(ctx.render_device), light_table_(new LightTable), light_transform_block_(ctx.render_device), last_resolution_(0, 0), last_description_(),
       global_substitution_map_(), passes_(), responsibilities_pre_render_(), responsibilities_post_render_(),
       quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f))),
       box_(new scm::gl::box_geometry(ctx.render_device, scm::math::vec3f(0.f, 0.f, 0.f), scm::math::vec3f(1.f, 1.f, 1.f)))
@@ -105,7 +105,7 @@ void Pipeline::load_passes_and_responsibilities()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& original_camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs)
+scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::SerializedCameraNode const& original_camera, std::vector<std::unique_ptr<const SceneGraph>> const& scene_graphs, bool render_multiview)
 {
 	node::SerializedCameraNode camera(original_camera);
 
@@ -140,7 +140,8 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         {
             context_.render_pipelines.insert(std::make_pair(cam.uuid, std::make_shared<Pipeline>(context_, camera.config.get_resolution())));
         }
-        context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs);
+
+        context_.render_pipelines[cam.uuid]->render_scene(mode, cam, scene_graphs, render_multiview);
     }
 
     // recreate gbuffer if resolution changed
@@ -150,6 +151,11 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         reload_gbuffer = true;
     }
 
+    bool create_layered_gbuffer = false;
+    if( CameraMode::BOTH == mode ) {
+        create_layered_gbuffer = true;
+    }
+
     if(reload_gbuffer)
     {
         if(gbuffer_)
@@ -157,8 +163,8 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
             gbuffer_->remove_buffers(get_context());
         }
 
-        math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y));
-        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size, camera.config.output_window_name()));
+        math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y) );
+        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size, create_layered_gbuffer, camera.config.output_window_name() ));
     }
 
     // recreate pipeline passes if pipeline description changed
@@ -200,13 +206,11 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
 
 
-        //auto associated_window = gua::WindowDatabase::instance()->lookup(camera.config.output_window_name());//->add left_output_window
-        
-        //if(associated_window->config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE) {
+        if(render_multiview) {
             global_substitution_map_["get_enable_multi_view_rendering"] = "1";
-        //} else {
-        //    global_substitution_map_["get_enable_multi_view_rendering"] = "0";
-        //}
+        } else {
+            global_substitution_map_["get_enable_multi_view_rendering"] = "0";
+        }
 
         global_substitution_map_["abuf_insertion_threshold"] = std::to_string(th);
         global_substitution_map_["abuf_blending_termination_threshold"] = std::to_string(th);
@@ -240,22 +244,23 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
     else
     {
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-        camera_block_.update(context_, 
-                             current_viewstate_.scene->rendering_frustum, 
-                             current_viewstate_.scene->secondary_rendering_frustum,
-                             math::get_translation(camera.transform), 
-                             current_viewstate_.scene->clipping_planes, 
-                             camera.config.get_view_id(),
-                             camera.config.get_resolution());
-#else
-        camera_block_.update(context_, 
-                             current_viewstate_.scene->rendering_frustum, 
-                             math::get_translation(camera.transform), 
-                             current_viewstate_.scene->clipping_planes, 
-                             camera.config.get_view_id(),
-                             camera.config.get_resolution());
-#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+        if(render_multiview) {
+            camera_block_.update(context_, 
+                                 current_viewstate_.scene->rendering_frustum, 
+                                 current_viewstate_.scene->secondary_rendering_frustum,
+                                 math::get_translation(camera.transform), 
+                                 current_viewstate_.scene->clipping_planes, 
+                                 camera.config.get_view_id(),
+                                 camera.config.get_resolution());
+        } else {
+            camera_block_.update(context_, 
+                                 current_viewstate_.scene->rendering_frustum, 
+                                 math::get_translation(camera.transform), 
+                                 current_viewstate_.scene->clipping_planes, 
+                                 camera.config.get_view_id(),
+                                 camera.config.get_resolution());
+        }
+
     }
 
     bind_camera_uniform_block(0);
@@ -271,7 +276,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         {
             gbuffer_->toggle_ping_pong();
         }
-        passes_[i].process(*last_description_.get_passes()[i], *this);
+        passes_[i].process(*last_description_.get_passes()[i], *this, render_multiview);
     }
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
@@ -490,7 +495,7 @@ void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum co
         {
             if(passes_[pass_idx].enable_for_shadows())
             {
-                passes_[pass_idx].process(*last_description_.get_passes()[pass_idx], *this);
+                passes_[pass_idx].process(*last_description_.get_passes()[pass_idx], *this, false);
             }
         }
     }

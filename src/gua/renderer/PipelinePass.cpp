@@ -29,6 +29,7 @@
 #include <gua/databases/GeometryDatabase.hpp>
 #include <gua/databases/Resources.hpp>
 #include <gua/utils/Logger.hpp>
+#include <gua/databases/WindowDatabase.hpp>
 
 namespace gua
 {
@@ -88,7 +89,7 @@ PipelinePass::PipelinePass(PipelinePassDescription const& d, RenderContext const
         rasterizer_state_ = ctx.render_device->create_rasterizer_state(*d.private_.rasterizer_state_desc_);
     }
 }
-void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
+void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview)
 {
     if(private_.is_enabled_) {
         auto const& ctx(pipe.get_context());
@@ -101,7 +102,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 
         if(RenderMode::Custom == private_.rendermode_)
         {
-            private_.process_(*this, desc, pipe);
+            private_.process_(*this, desc, pipe, render_multiview);
         }
         else
         {
@@ -132,11 +133,15 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe)
 
             if(RenderMode::Callback == private_.rendermode_)
             {
-                private_.process_(*this, desc, pipe);
+                private_.process_(*this, desc, pipe, render_multiview);
             }
             else
             { // RenderMode::Quad
-                pipe.draw_quad_instanced();
+                if(render_multiview) {
+                    pipe.draw_quad_instanced();
+                } else {
+                    pipe.draw_quad();
+                }
             }
 
     #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES

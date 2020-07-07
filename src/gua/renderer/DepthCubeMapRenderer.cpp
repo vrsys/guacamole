@@ -193,7 +193,7 @@ void DepthCubeMapRenderer::generate_depth_cubemap_face(unsigned face, node::Cube
     {
         if(pipe.passes_[pass_idx].enable_for_shadows())
         {
-            pipe.passes_[pass_idx].process(*pipe.last_description_.get_passes()[pass_idx], pipe);
+            pipe.passes_[pass_idx].process(*pipe.last_description_.get_passes()[pass_idx], pipe, false);
         }
     }
 
