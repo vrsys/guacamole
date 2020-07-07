@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
 
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-    resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
     resolve_pass->tone_mapping_exposure(1.0f);
 
     portal_pipe->add_pass(resolve_pass);
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
 
-    //camera->set_pre_render_cameras({portal_camera});
+    camera->set_pre_render_cameras({portal_camera});
 
     //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
     //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());

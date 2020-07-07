@@ -41,5 +41,9 @@ void main() {
     gua_roughness = 0.0;
     gua_metalness = 0.0;
 
-    submit_fragment(gl_FragCoord.z);
+    //gua_color = vec3(1.0,0.0, 0.0);
+    
+    @include "common/gua_write_gbuffer.glsl"
+
+    //submit_fragment(gl_FragCoord.z);
 }

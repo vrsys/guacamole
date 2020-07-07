@@ -43,7 +43,7 @@ class GUA_DLL ABuffer
 
     void allocate(RenderContext& ctx, size_t buffer_size);
     void clear(RenderContext const& ctx, math::vec2ui const& resolution);
-    void bind(RenderContext const& ctx);
+    void bind(RenderContext const& ctx, uint offset = 0);
     void unbind(RenderContext const& ctx);
 
   private:

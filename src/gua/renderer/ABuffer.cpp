@@ -67,16 +67,16 @@ void ABuffer::clear(RenderContext const& ctx, math::vec2ui const& resolution)
     ctx.render_context->clear_buffer_sub_data(res_->frag_list, scm::gl::FORMAT_RG_32UI, 0u, FRAG_LIST_WORD_SIZE * resolution.x * resolution.y, 0);
 }
 
-void ABuffer::bind(RenderContext const& ctx)
+void ABuffer::bind(RenderContext const& ctx, uint offset)
 {
     if(!res_)
     {
         return;
     }
 
-    ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0);
-    ctx.render_context->bind_storage_buffer(res_->frag_list, 0);
-    ctx.render_context->bind_storage_buffer(res_->frag_data, 1);
+    ctx.render_context->bind_atomic_counter_buffer(res_->counter, 0 + offset);
+    ctx.render_context->bind_storage_buffer(res_->frag_list, 0 + 2 * offset);
+    ctx.render_context->bind_storage_buffer(res_->frag_data, 1 + 2 * offset);
 }
 
 void ABuffer::unbind(RenderContext const& ctx) {}
