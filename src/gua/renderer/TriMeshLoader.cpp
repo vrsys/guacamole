@@ -368,6 +368,24 @@ std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer(char const*
     return meshes;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+
+std::vector<TriMeshRessource*> const TriMeshLoader::load_from_buffer_unoptimized(char const* buffer_name, unsigned buffer_size, bool build_kd_tree)
+{
+    auto importer = std::make_shared<Assimp::Importer>();
+
+    aiScene const* scene(importer->ReadFileFromMemory(buffer_name, buffer_size, aiProcess_CalcTangentSpace));
+
+    std::vector<TriMeshRessource*> meshes;
+
+    for(unsigned int n = 0; n < scene->mNumMeshes; ++n)
+    {
+        meshes.push_back(new TriMeshRessource(Mesh{*scene->mMeshes[n]}, build_kd_tree));
+    }
+
+    return meshes;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool TriMeshLoader::is_supported(std::string const& file_name) const

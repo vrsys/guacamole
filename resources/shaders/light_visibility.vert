@@ -9,13 +9,11 @@ layout(location=0) in vec3 gua_in_position;
 // 4 float layout
 layout (std140, binding=1) uniform lightBlock {
   mat4  light_mvp_matrices[32];
-#if @get_enable_multi_view_rendering@
+#if @compiled_with_multi_view_rendering@
   mat4  secondary_light_mvp_matrices[32];
 #endif
+  uint num_point_lights_drawn;
 };
-
-
-uniform uint light_type_offset;
 
 // varyings
 out flat uint light_id_shift_5;
@@ -26,7 +24,9 @@ out flat uint light_table_id;
 #endif
 
 void main() {
-  uint base_light_id = gl_InstanceID + light_type_offset;
+  //960 elements in point light currently
+  uint offset = gl_VertexID >= 960 ? num_point_lights_drawn : 0; 
+  uint base_light_id = gl_InstanceID + offset;
 #if @get_enable_multi_view_rendering@
   light_table_id = (base_light_id % 2);
 

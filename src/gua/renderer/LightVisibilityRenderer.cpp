@@ -246,6 +246,9 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     auto light_sphere = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
     auto light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
+    auto combined_light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_combined_light_sphere_cone_proxy"));
+
+
     auto& scene = *pipe.current_viewstate().scene;
 
     math::mat4f  view_projection_mat = math::mat4f(scene.rendering_frustum.get_projection()) * math::mat4f(scene.rendering_frustum.get_view());
@@ -274,23 +277,6 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     }   
 //#endif // GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
 
-//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    if(render_multiview) {
-        auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
-        std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
-        std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
-        pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload);
-    } else {
-//#endif
-        pipe.light_transform_block_.update(ctx, transforms_to_upload);
-//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    }
-//#endif
-    pipe.bind_light_transformation_uniform_block(1);
-    gl_program->uniform("light_type_offset", uint(0));
-    ctx.render_context->apply();
-
-
 uint32_t num_point_lights_to_draw = num_point_lights;
 uint32_t num_spot_lights_to_draw = num_spot_lights;
 //#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
@@ -300,17 +286,34 @@ uint32_t num_spot_lights_to_draw = num_spot_lights;
     }
 //#endif
 
+
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    if(render_multiview) {
+        auto secondary_view_projection_mat = math::mat4f(scene.secondary_rendering_frustum.get_projection()) * math::mat4f(scene.secondary_rendering_frustum.get_view());
+        std::vector<math::mat4f> secondary_transforms_to_upload(transforms.begin(), transforms.begin() + num_point_lights + num_spot_lights);
+        std::transform(secondary_transforms_to_upload.begin(), secondary_transforms_to_upload.end(), secondary_transforms_to_upload.begin(), [&secondary_view_projection_mat] (scm::math::mat4f const& m_transform) {return secondary_view_projection_mat * m_transform;});
+        pipe.light_transform_block_.update(ctx, transforms_to_upload, secondary_transforms_to_upload, num_point_lights_to_draw);
+    } else {
+//#endif
+        pipe.light_transform_block_.update(ctx, transforms_to_upload, num_point_lights_to_draw);
+//#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    }
+//#endif
+    pipe.bind_light_transformation_uniform_block(1);
+    combined_light_cone->bind_buffers_unsafe(pipe.get_context());
+    //gl_program->uniform("light_type_offset", uint(0));
+    ctx.render_context->apply();
+
+
+
+
     //render point lights at once:
     if(num_point_lights > 0) {
-        light_sphere->draw_instanced(pipe.get_context(), num_point_lights_to_draw, 0, 0);
+        combined_light_cone->draw_instanced_partially_unsafe(pipe.get_context(), num_point_lights_to_draw, 0, 960);
     }
 
-
-    //std::cout << "num_spot_lights" << num_spot_lights << std::endl;
     if(num_spot_lights > 0) {
-        gl_program->uniform("light_type_offset", uint(num_point_lights_to_draw));
-        ctx.render_context->apply();
-        light_cone->draw_instanced(pipe.get_context(), num_spot_lights_to_draw, 0, 0);
+        combined_light_cone->draw_instanced_partially_unsafe(pipe.get_context(), num_spot_lights_to_draw, 960, 192);
     }
     //update offset and render spot lights at once
 

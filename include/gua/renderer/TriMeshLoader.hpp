@@ -110,6 +110,16 @@ class GUA_DLL TriMeshLoader
      * \param buffer_size      The buffer's size.
      */
     std::vector<TriMeshRessource*> const load_from_buffer(char const* buffer_name, unsigned buffer_size, bool build_kd_tree);
+
+    /**
+     * Constructor from memory buffer without letting assimp optimize (and therefore destroy the known order of the combined geometry).
+     *
+     * Creates a new MeshLoader from a existing memory buffer.
+     *
+     * \param buffer_name      The buffer to load the meh's data from.
+     * \param buffer_size      The buffer's size.
+     */  
+    std::vector<TriMeshRessource*> const load_from_buffer_unoptimized(char const* buffer_name, unsigned buffer_size, bool build_kd_tree);
     /**
      *
      */

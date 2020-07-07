@@ -63,11 +63,16 @@ void init(int argc, char** argv)
     auto light_sphere_obj = factory.read_plain_file("resources/geometry/gua_light_sphere.obj");
     auto light_cone_obj = factory.read_plain_file("resources/geometry/gua_light_cone.obj");
 
+    auto combined_light_sphere_cone_obj = factory.read_plain_file("resources/geometry/gua_combined_light_cone_sphere.obj");
+
     GeometryDatabase::instance()->add("gua_light_sphere_proxy",
                                       std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_sphere_obj.c_str(), light_sphere_obj.size(), false)[0])));
 
     GeometryDatabase::instance()->add("gua_light_cone_proxy",
                                       std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(light_cone_obj.c_str(), light_cone_obj.size(), false)[0])));
+
+    GeometryDatabase::instance()->add("gua_combined_light_sphere_cone_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer_unoptimized(combined_light_sphere_cone_obj.c_str(), combined_light_sphere_cone_obj.size(), false)[0])));
 
 #else
     GeometryDatabase::instance()->add("gua_light_sphere_proxy",
@@ -77,6 +82,11 @@ void init(int argc, char** argv)
     GeometryDatabase::instance()->add("gua_light_cone_proxy",
                                       std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer(
                                           Resources::lookup_string(Resources::geometry_gua_light_cone_obj).c_str(), Resources::geometry_gua_light_cone_obj.size(), false)[0])));
+
+    GeometryDatabase::instance()->add("gua_combined_light_sphere_cone_proxy",
+                                      std::shared_ptr<GeometryResource>(static_cast<GeometryResource*>(mesh_loader.load_from_buffer_unoptimized(
+                                          Resources::lookup_string(Resources::geometry_gua_combined_light_sphere_cone_obj).c_str(), Resources::geometry_gua_combined_light_sphere_cone_obj.size(), false)[0])));
+
 
 #endif
 

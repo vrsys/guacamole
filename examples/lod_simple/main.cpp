@@ -144,6 +144,23 @@ int main(int argc, char** argv)
     light_transform->rotate(-90, 1.0, 0.0, 0.0);
     light_transform->translate(0.f, 3.f, 1.0f);
 
+    auto light_transform2 = graph.add_node<gua::node::TransformNode>("/", "light_transform2");
+    auto light2 = graph.add_node<gua::node::LightNode>("/light_transform2", "light2");
+    light2->data.set_type(gua::node::LightNode::Type::POINT);
+    light2->data.set_enable_shadows(true);
+
+    light2->data.set_shadow_map_size(1920);
+    light2->data.set_shadow_offset(0.001f);
+    light2->data.set_softness(0.6f);
+    light2->data.set_shadow_far_clipping_in_sun_direction(2.0f);
+    light2->data.set_shadow_near_clipping_in_sun_direction(0.1f);
+
+    light2->data.brightness = 10.0f;
+    light2->scale(12.0f);
+    light2->rotate(90, 1.0, 0.0, 0.0);
+    light2->translate(0.f, 3.f, 1.0f);
+
+
     auto screen = graph.add_node<gua::node::ScreenNode>("/", "screen");
     screen->data.set_size(gua::math::vec2(1.92f, 1.08f));
     screen->translate(0, 0, 1.0);

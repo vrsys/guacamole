@@ -94,6 +94,12 @@ class GUA_DLL TriMeshRessource : public GeometryResource
      */
     void draw_instanced(RenderContext& ctx, int instance_count, int base_vertex = 0, int base_instance = 0) const;
 
+    void draw_instanced_partially(RenderContext& ctx, int instance_count, int start_index, int num_indices) const;
+
+    void bind_buffers_unsafe(RenderContext& ctx) const;
+
+    void draw_instanced_partially_unsafe(RenderContext& ctx, int instance_count, int start_index, int num_indices) const;
+
    /**
      * Draws the kD-tree of the Mesh.
      *

@@ -31,7 +31,7 @@
 #define RENDER_SIDE_BY_SIDE
 
 #ifdef RENDER_SIDE_BY_SIDE
-  #define RENDER_MVR
+  //#define RENDER_MVR
   #ifdef RENDER_MVR
     //#define USE_HARDWARE_MVR
   #endif
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
 
 
-    scm::math::vec2ui cam_res = scm::math::vec2ui(1920/2, 1080/2);
+    scm::math::vec2ui cam_res = scm::math::vec2ui(1920/4, 1080/4);
 
     // setup rendering pipeline and window
     auto cam_resolution = cam_res;
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
     portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
 
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-    //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
     resolve_pass->tone_mapping_exposure(1.0f);
 
     portal_pipe->add_pass(resolve_pass);

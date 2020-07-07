@@ -60,9 +60,6 @@ class GUA_DLL GBuffer : public RenderTarget
 
   private:
     ABuffer abuffer_;
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    ABuffer secondary_abuffer_;
-#endif
 
     scm::gl::frame_buffer_ptr fbo_read_;
     scm::gl::frame_buffer_ptr fbo_write_;

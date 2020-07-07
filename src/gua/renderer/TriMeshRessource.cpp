@@ -199,7 +199,37 @@ void TriMeshRessource::draw_instanced(RenderContext& ctx, int instance_count, in
     ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
     ctx.render_context->apply_vertex_input();
     ctx.render_context->draw_elements_instanced(iter->second.indices_count, 0, instance_count, base_vertex, base_instance);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::draw_instanced_partially(RenderContext& ctx, int instance_count, int start_index, int num_indices) const
+{
+    bind_buffers_unsafe(ctx);
+    draw_instanced_partially_unsafe(ctx, instance_count, start_index, num_indices);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::bind_buffers_unsafe(RenderContext& ctx) const
+{
+    auto iter = ctx.meshes.find(uuid());
+    if(iter == ctx.meshes.end())
+    {
+        // upload to GPU if neccessary
+        upload_to(ctx);
+        iter = ctx.meshes.find(uuid());
+    }
+    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+    ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+    ctx.render_context->apply_vertex_input();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::draw_instanced_partially_unsafe(RenderContext& ctx, int instance_count, int start_index, int num_indices) const
+{
+    ctx.render_context->draw_elements_instanced(num_indices, start_index, instance_count, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

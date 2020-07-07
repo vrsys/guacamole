@@ -19,6 +19,7 @@ class LightTransformationUniformBlock
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
         math::mat4f secondary_light_mvp_matrices[32];
 #endif
+        unsigned num_point_lights_drawn = 0;
     };
 
     using block_type = scm::gl::uniform_block<LightTransformationBlock>;
@@ -27,11 +28,11 @@ class LightTransformationUniformBlock
     ~LightTransformationUniformBlock();
 
     void
-    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices);
+    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices, unsigned int num_point_lights_to_draw);
 
 #ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
     void
-    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices, std::vector<math::mat4f> const& secondary_light_mvp_matrices);
+    update(RenderContext const& context, std::vector<math::mat4f> const& light_mvp_matrices, std::vector<math::mat4f> const& secondary_light_mvp_matrices, unsigned int num_point_lights_to_draw);
 #endif
     inline const block_type& block() const { return uniform_block_; }
 

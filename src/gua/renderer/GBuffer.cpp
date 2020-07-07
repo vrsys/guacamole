@@ -35,9 +35,6 @@ namespace gua
 GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, std::string const& output_window_name)
     : RenderTarget(resolution), 
     abuffer_(), 
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    secondary_abuffer_(),
-#endif
 
     fbo_read_(nullptr), fbo_write_(nullptr), fbo_read_only_color_(nullptr), fbo_write_only_color_(nullptr),
       sampler_state_desc_(scm::gl::FILTER_MIN_MAG_LINEAR, scm::gl::WRAP_MIRRORED_REPEAT, scm::gl::WRAP_MIRRORED_REPEAT)
@@ -109,10 +106,6 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool 
 
 void GBuffer::allocate_a_buffer(RenderContext& ctx, size_t buffer_size) { 
     abuffer_.allocate(ctx, buffer_size); 
-
-#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    secondary_abuffer_.allocate(ctx, buffer_size);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
