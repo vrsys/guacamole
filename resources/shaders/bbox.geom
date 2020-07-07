@@ -29,53 +29,112 @@ layout(line_strip, max_vertices = 16) out;
 in vec3 gua_min[];
 in vec3 gua_max[];
 
+#if @get_enable_multi_view_rendering@
+in flat int layer_id[];
+#endif
 // body 
 void main() {
 mat4 mat = gua_view_projection_matrix;
 
 #if @get_enable_multi_view_rendering@
-
-#endif
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
-    EmitVertex(); 
+    EmitVertex();
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
 
     EndPrimitive();
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
-
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
 
     EndPrimitive();
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
-    EmitVertex(); 
+    EmitVertex();
+    gl_Layer = layer_id[0]; 
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_max[0].z, 1.0);
     EmitVertex(); 
 
     EndPrimitive();
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
+    gl_Layer = layer_id[0];
     gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
     EmitVertex(); 
     
+#else
+    gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+
+    EndPrimitive();
+    gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+
+    gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+
+    EndPrimitive();
+    gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_max[0].z, 1.0);
+    EmitVertex(); 
+
+    EndPrimitive();
+    gl_Position = mat * vec4(gua_min[0].x, gua_max[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_min[0].x, gua_min[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_min[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+    gl_Position = mat * vec4(gua_max[0].x, gua_max[0].y, gua_min[0].z, 1.0);
+    EmitVertex(); 
+
+#endif
+
     EndPrimitive();
 
 }

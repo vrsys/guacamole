@@ -53,7 +53,7 @@ class GUA_LOD_DLL PLodRenderer
   public:
     PLodRenderer();
 
-    void render(Pipeline& pipe, PipelinePassDescription const& desc);
+    void render(Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview);
     void set_global_substitution_map(SubstitutionMap const& smap);
 
   private: // shader related auxiliary methods

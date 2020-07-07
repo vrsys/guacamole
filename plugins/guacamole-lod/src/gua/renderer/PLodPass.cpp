@@ -71,7 +71,7 @@ PipelinePass PLodPassDescription::make_pass(RenderContext const& ctx, Substituti
     auto renderer = std::make_shared<PLodRenderer>();
     renderer->set_global_substitution_map(substitution_map);
 
-    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) { renderer->render(pipe, desc); };
+    private_.process_ = [renderer](PipelinePass& pass, PipelinePassDescription const& desc, Pipeline& pipe, bool render_multiview, bool use_hardware_mvr) { renderer->render(pipe, desc, render_multiview); };
 
     PipelinePass pass{*this, ctx, substitution_map};
     return pass;

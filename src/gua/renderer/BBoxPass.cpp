@@ -84,7 +84,12 @@ PipelinePass BBoxPassDescription::make_pass(RenderContext const& ctx, Substituti
         ctx.render_context->apply();
 
         assert(count < std::numeric_limits<unsigned>::max());
-        ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
+
+        if(render_multiview) {
+            ctx.render_context->draw_arrays_instanced(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count), 2);
+        } else {
+            ctx.render_context->draw_arrays(scm::gl::PRIMITIVE_POINT_LIST, 0, unsigned(count));
+        }
     };
 
     PipelinePass pass{*this, ctx, substitution_map};

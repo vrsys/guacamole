@@ -243,8 +243,8 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
     auto gl_program(ctx.render_context->current_program());
 
     // proxy geometries
-    auto light_sphere = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
-    auto light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
+    //auto light_sphere = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_sphere_proxy"));
+    //auto light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_light_cone_proxy"));
 
     auto combined_light_cone = std::dynamic_pointer_cast<TriMeshRessource>(GeometryDatabase::instance()->lookup("gua_combined_light_sphere_cone_proxy"));
 
@@ -280,7 +280,7 @@ void LightVisibilityRenderer::draw_lights(Pipeline& pipe, std::vector<math::mat4
 uint32_t num_point_lights_to_draw = num_point_lights;
 uint32_t num_spot_lights_to_draw = num_spot_lights;
 //#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
-    if(render_multiview) {
+    if(render_multiview) { //is only valid in instanced mode, rework condition for hardware mvr
         num_point_lights_to_draw *= 2;
         num_spot_lights_to_draw  *= 2;
     }
@@ -301,13 +301,8 @@ uint32_t num_spot_lights_to_draw = num_spot_lights;
 //#endif
     pipe.bind_light_transformation_uniform_block(1);
     combined_light_cone->bind_buffers_unsafe(pipe.get_context());
-    //gl_program->uniform("light_type_offset", uint(0));
     ctx.render_context->apply();
 
-
-
-
-    //render point lights at once:
     if(num_point_lights > 0) {
         combined_light_cone->draw_instanced_partially_unsafe(pipe.get_context(), num_point_lights_to_draw, 0, 960);
     }
@@ -315,63 +310,7 @@ uint32_t num_spot_lights_to_draw = num_spot_lights;
     if(num_spot_lights > 0) {
         combined_light_cone->draw_instanced_partially_unsafe(pipe.get_context(), num_spot_lights_to_draw, 960, 192);
     }
-    //update offset and render spot lights at once
 
-    //gl_program->apply_uniform(ctx, "light_type_offset",int(num_point_lights));
-    //gl_program->uniform("light_type_offset", uint(num_point_lights));
-    //ctx.render_context->apply();
-
-/*
-    for(unsigned int point_light_light_idx = point_light_index_range_start; point_light_light_idx < point_light_index_range_end; ++point_light_light_idx) {
-        math::mat4f light_transform(transforms[point_light_light_idx]);
-
-        auto light_mvp_mat = view_projection_mat * light_transform;
-
-        // pre collect and use instanced draw calls with base offset
-        //gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        gl_program->uniform("light_id", 0, int(point_light_light_idx));
-
-        //only bind this once the moment uniforms are not uploaded individually
-        //if(!is_image_bound) {
-          //  is_image_bound = true;
-
-            ctx.render_context->apply();
-        //}
-        // pre-assemble and use instanced draw calls
-        if(lights[point_light_light_idx].type == 0) // point light
-            light_sphere->draw_instanced(pipe.get_context(), 1, 0, point_light_light_idx);
-    }
-*/
-/*
-    // draw lights
-    for(size_t light_index = 0; light_index < lights.size(); ++light_index)
-    {
-        if(lights[light_index].type == 2) // skip sun lights
-            continue;
-
-
-
-        math::mat4f light_transform(transforms[light_index]);
-
-        auto light_mvp_mat = view_projection_mat * light_transform;
-
-        // pre collect and use instanced draw calls with base offset
-        gl_program->uniform("gua_model_view_projection_matrix", 0, light_mvp_mat);
-        gl_program->uniform("light_id", 0, int(light_index));
-
-        //only bind this once the moment uniforms are not uploaded individually
-        //if(!is_image_bound) {
-          //  is_image_bound = true;
-
-            ctx.render_context->apply();
-        //}
-        // pre-assemble and use instanced draw calls
-        if(lights[light_index].type == 0) // point light
-            light_sphere->draw_instanced(pipe.get_context(), 1, 0, light_index);
-        else if(lights[light_index].type == 1) // spot light
-            light_cone->draw_instanced(pipe.get_context(), 1, 0, light_index);
-    }
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

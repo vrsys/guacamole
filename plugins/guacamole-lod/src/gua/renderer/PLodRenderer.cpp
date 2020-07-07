@@ -268,7 +268,7 @@ void PLodRenderer::set_global_substitution_map(SubstitutionMap const& smap)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc)
+void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& desc, bool render_multiview)
 {
     RenderContext const& ctx(pipe.get_context());
 
