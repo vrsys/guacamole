@@ -31,16 +31,10 @@ layout(location=1) in vec3 gua_in_max;
 out vec3 gua_min;
 out vec3 gua_max;
 
-#if @get_enable_multi_view_rendering@
-out flat int layer_id;
-#endif
 // body
 void main() { 
     gua_min = gua_in_min;
     gua_max = gua_in_max;
 
-#if @get_enable_multi_view_rendering@
-    layer_id = gl_InstanceID;
-#endif
     // gl_Position = gua_projection_matrix * gua_view_matrix * vec4(gua_in_min, 1.0);
 }

@@ -53,6 +53,7 @@ out VertexData {
 void main() {
   @include "../common_LOD/PLOD_vertex_pass_through.glsl"
 
+
   vec3 read_position = in_position;
 
   vec3 raw_point_color = vec3(in_r, in_g, in_b); 

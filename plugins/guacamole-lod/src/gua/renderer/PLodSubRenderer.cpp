@@ -29,7 +29,8 @@ PLodSubRenderer::PLodSubRenderer() : shader_program_(nullptr), shaders_loaded_(f
 void PLodSubRenderer::_initialize_shader_program()
 {
     auto new_program = std::make_shared<ShaderProgram>();
-    new_program->set_shaders(shader_stages_);
+
+    new_program->set_shaders(shader_stages_, std::list<std::string>(), false, false, global_substitution_map_);
     shader_program_ = new_program;
 }
 

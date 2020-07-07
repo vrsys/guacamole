@@ -205,6 +205,13 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         const float th = last_description_.get_blending_termination_threshold();
         global_substitution_map_["enable_abuffer"] = last_description_.get_enable_abuffer() ? "1" : "0";
 
+
+#ifdef GUACAMOLE_ENABLE_MULTI_VIEW_RENDERING
+    global_substitution_map_["compiled_with_multi_view_rendering"] = "1";
+#else
+    global_substitution_map_["compiled_with_multi_view_rendering"] = "0";
+#endif
+
         global_substitution_map_["get_enable_hardware_mvr"] = "0";    
         if(render_multiview) {
             if(use_hardware_mvr) {

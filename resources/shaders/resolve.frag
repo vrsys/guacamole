@@ -347,7 +347,7 @@ if(0 == gl_Layer) {
   }
 #endif
 
-gua_out_color += 0.1 * (gl_Layer == 0 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0));
+//gua_out_color += 0.1 * (gl_Layer == 0 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0));
 
 }
 

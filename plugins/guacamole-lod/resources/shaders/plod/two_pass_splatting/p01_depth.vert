@@ -36,6 +36,9 @@ uniform bool has_provenance_attributes;
 
 @include "../common/deformation.glsl"
 
+#if @get_enable_multi_view_rendering@
+#endif
+
 out VertexData {
   vec3 pass_ms_u;
   vec3 pass_ms_v;

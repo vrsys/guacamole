@@ -7,7 +7,7 @@ layout (std140, binding=0) uniform cameraBlock {
   mat4  gua_inverse_projection_view_matrix;
   vec4  gua_camera_position_4;
 
-#if @get_enable_multi_view_rendering@
+#if @compiled_with_multi_view_rendering@
    mat4  gua_secondary_view_matrix;
    mat4  gua_secondary_projection_matrix;
    mat4  gua_secondary_view_projection_matrix;
