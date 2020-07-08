@@ -74,7 +74,7 @@ void Window::open()
     scm::gl::wm::surface::format_desc window_format(color_format, depth_stencil_format, double_buffer, quad_buffer_stereo);
 
     int version_major = 4;
-    int version_minor = 4;
+    int version_minor = 6;
     bool compatibility_profile = false;
     bool forward_compatible = false;
     bool es_profile = false;

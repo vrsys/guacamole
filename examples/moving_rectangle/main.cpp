@@ -28,7 +28,7 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-#define STEREO_MODE
+//#define STEREO_MODE
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     // setup rendering pipeline and window
     //auto resolution = gua::math::vec2ui(2560, 1440);
     
-    auto resolution = gua::math::vec2ui(3840, 2160);
+    auto resolution = gua::math::vec2ui(3840/2, 2160/2);
     /*
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         {
             renderer.queue_draw({&graph});
 		
-    	    double current_scaling = 2.0 + 100;// * (1.0 + std::sin(++frame_count / 500.0));
+    	    double current_scaling =  (1.0 + std::sin(++frame_count / 500.0));
 	    
 	    auto scm_trans_mat = scm::math::make_translation(0.0, 0.0, -2.0) * scm::math::make_scale(current_scaling, current_scaling, current_scaling) * scm::math::make_rotation(90.0, 1.0, 0.0, 0.0);
 	    example_model->set_transform(scm_trans_mat);		
