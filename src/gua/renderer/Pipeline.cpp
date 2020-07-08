@@ -56,7 +56,7 @@ namespace gua
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution, true)), camera_block_(ctx.render_device), light_table_(new LightTable), light_transform_block_(ctx.render_device), last_resolution_(0, 0), last_description_(),
+    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution, true, true)), camera_block_(ctx.render_device), light_table_(new LightTable), light_transform_block_(ctx.render_device), last_resolution_(0, 0), last_description_(),
       global_substitution_map_(), passes_(), responsibilities_pre_render_(), responsibilities_post_render_(),
       quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f))),
       box_(new scm::gl::box_geometry(ctx.render_device, scm::math::vec3f(0.f, 0.f, 0.f), scm::math::vec3f(1.f, 1.f, 1.f)))
@@ -152,6 +152,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
 
     bool create_layered_gbuffer = false;
+    bool create_hardware_mvr_compatible = use_hardware_mvr;
     if( CameraMode::BOTH == mode ) {
         create_layered_gbuffer = true;
     }
@@ -164,7 +165,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
         }
 
         math::vec2ui new_gbuf_size(std::max(1U, camera.config.resolution().x), std::max(1U, camera.config.resolution().y) );
-        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size, create_layered_gbuffer, camera.config.output_window_name() ));
+        gbuffer_.reset(new GBuffer(get_context(), new_gbuf_size, create_layered_gbuffer, create_hardware_mvr_compatible, camera.config.output_window_name() ));
     }
 
     // recreate pipeline passes if pipeline description changed

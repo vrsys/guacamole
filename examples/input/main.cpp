@@ -33,7 +33,7 @@
 #ifdef RENDER_SIDE_BY_SIDE
   #define RENDER_MVR
   #ifdef RENDER_MVR
-    //#define USE_HARDWARE_MVR
+    #define USE_HARDWARE_MVR
   #endif
 #endif
 
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
 
 
-    scm::math::vec2ui cam_res = scm::math::vec2ui(1920/4, 1080/4);
+    scm::math::vec2ui cam_res = scm::math::vec2ui(1920, 1080);
 
     // setup rendering pipeline and window
     auto cam_resolution = cam_res;

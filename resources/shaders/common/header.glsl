@@ -14,4 +14,6 @@
 
 
 #extension GL_ARB_shader_viewport_layer_array: enable
-#extension GL_NV_viewport_array2: require
+//#extension GL_NV_viewport_array2: require
+
+#extension GL_OVR_multiview2 : enable

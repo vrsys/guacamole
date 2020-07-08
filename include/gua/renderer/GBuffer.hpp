@@ -33,7 +33,7 @@ namespace gua
 class GUA_DLL GBuffer : public RenderTarget
 {
   public:
-    GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, std::string const& output_window_name = "");
+    GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, bool create_multiview_stereo_compatible, std::string const& output_window_name = "");
 
     void clear(RenderContext const& context, float depth = 1.f, unsigned stencil = 0) override;
     void clear_color(RenderContext const& context);

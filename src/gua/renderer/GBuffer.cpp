@@ -32,7 +32,7 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
-GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, std::string const& output_window_name)
+GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool create_layered, bool create_multiview_stereo_compatible, std::string const& output_window_name)
     : RenderTarget(resolution), 
     abuffer_(), 
 
@@ -51,7 +51,13 @@ GBuffer::GBuffer(RenderContext const& ctx, math::vec2ui const& resolution, bool 
     
     if(create_layered) {
             num_fbo_layers = 2;
-            attachment_layer_to_bind = 10000; // forces new schism version to bind the attachments completely
+
+            // forces new schism version to bind the attachments completely
+            if(create_multiview_stereo_compatible) {
+                attachment_layer_to_bind = 10001; 
+            } else {
+                attachment_layer_to_bind = 10000;
+            }
     }
     
     sampler_state_ = ctx.render_device->create_sampler_state(sampler_state_desc_);

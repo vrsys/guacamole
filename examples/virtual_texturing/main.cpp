@@ -41,6 +41,15 @@
 #include <lamure/ren/model_database.h>
 #include <gua/renderer/PBSMaterialFactory.hpp>
 
+#define RENDER_SIDE_BY_SIDE
+
+#ifdef RENDER_SIDE_BY_SIDE
+  //#define RENDER_MVR
+  #ifdef RENDER_MVR
+    //#define USE_HARDWARE_MVR
+  #endif
+#endif
+
 extern WASD_state cam_navigation_state;
 
 bool print_frame_times = true;
@@ -96,8 +105,8 @@ int main(int argc, char** argv)
 
 
     if(atlas_file != ""){
-        gua::VTBackend::set_physical_texture_size(12);
-        gua::VTBackend::set_update_throughput_size(1);
+        gua::VTBackend::set_physical_texture_size(1000);
+        gua::VTBackend::set_update_throughput_size(32);
         gua::VTBackend::set_ram_cache_size(6768);
 
 
@@ -240,7 +249,7 @@ int main(int argc, char** argv)
     int button_state = -1;
 
     // setup rendering pipeline and window
-    auto resolution = gua::math::vec2ui(1920*2, 1080*2);
+    auto resolution = gua::math::vec2ui(1920, 1080);
 
 
     auto camera = graph.add_node<gua::node::CameraNode>("/view_transform/screen", "cam");
@@ -285,9 +294,37 @@ int main(int argc, char** argv)
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
     window->config.set_enable_vsync(false);
+    //window->config.set_size(resolution);
+    //window->config.set_resolution(resolution);
+    //window->config.set_stereo_mode(gua::StereoMode::MONO);
+
+
+#ifdef RENDER_SIDE_BY_SIDE
+    auto win_resolution = gua::math::vec2ui(2*resolution.x, resolution.y);
+    window->config.set_size(win_resolution);
+    window->config.set_left_resolution(resolution);
+    window->config.set_right_resolution(resolution);
+
+    window->config.set_left_position(scm::math::vec2ui(0, 0));
+    window->config.set_right_position(scm::math::vec2ui(win_resolution.x/2, 0));
+    #ifndef RENDER_MVR 
+        window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+    #else
+        #ifdef USE_HARDWARE_MVR
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_HARDWARE_MVR);
+        #else
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR);
+        #endif
+    #endif
+    camera->config.set_enable_stereo(true);
+#else
     window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
+    window->config.set_resolution(cam_resolution);
     window->config.set_stereo_mode(gua::StereoMode::MONO);
+    camera->config.set_enable_stereo(false);
+#endif
+
+
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);

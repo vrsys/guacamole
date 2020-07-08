@@ -148,7 +148,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             {
                 if(program_changed)
                 {
-                    current_material_program->unuse(ctx);
+                    //current_material_program->unuse(ctx);
                     current_material_program->use(ctx);
                 }
 
@@ -175,7 +175,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
             }
         }
 
-        current_material_program->unuse(ctx);
+        //current_material_program->unuse(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
         pipe.end_gpu_query(ctx, gpu_query_name_accum_pass);

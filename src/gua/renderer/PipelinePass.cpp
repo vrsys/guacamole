@@ -137,7 +137,7 @@ void PipelinePass::process(PipelinePassDescription const& desc, Pipeline& pipe, 
             }
             else
             { // RenderMode::Quad
-                if(render_multiview & !use_hardware_mvr) {
+                if(render_multiview /*& !use_hardware_mvr*/) {
                     pipe.draw_quad_instanced();
                     //std::cout << "Drawing quad instanced" << std::endl;
                 } else {

@@ -351,7 +351,7 @@ void WindowBase::display(scm::gl::texture_2d_ptr const& texture, math::vec2ui co
     }
 
     if(config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR ||
-       config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MVR   ) {
+       config.get_stereo_mode() == StereoMode::SIDE_BY_SIDE_HARDWARE_MVR ) {
 
         scm::math::vec2f const left_cam_pos = scm::math::vec2f(config.get_left_position());
         scm::math::vec2f const left_cam_res = scm::math::vec2f(config.get_left_resolution());

@@ -73,7 +73,7 @@ void NormalizationSubRenderer::render_sub_pass(Pipeline& pipe,
 
         fullscreen_quad_->draw(ctx.render_context);
     }
-    shader_program_->unuse(ctx);
+    //shader_program_->unuse(ctx);
 
     target.unbind(ctx);
 

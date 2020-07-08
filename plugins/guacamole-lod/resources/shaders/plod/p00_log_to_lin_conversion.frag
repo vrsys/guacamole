@@ -4,7 +4,7 @@
 // general uniforms
 ///////////////////////////////////////////////////////////////////////////////
 @include "common/gua_camera_uniforms.glsl"
-
+// gbuffer input
 
 ///////////////////////////////////////////////////////////////////////////////
 //sampler
@@ -26,8 +26,11 @@ layout(binding=0) uniform sampler2D gua_log_depth_buffer;
 float get_eyespace_depth_from_sampler() {
 
 	vec3 ndcPos;
-  ndcPos.xy = gl_FragCoord.xy / vec2(win_width, win_height);
+  	ndcPos.xy = gl_FragCoord.xy / vec2(win_width, win_height);
+	//ndcPos.xy = gua_get_quad_coords();
 	ndcPos.z = texture2D (gua_log_depth_buffer, ndcPos.xy).r; // or gl_FragCoord.z
+	//ndcPos.z = gua_get_depth();
+
 	ndcPos -= 0.5;
 	ndcPos *= 2.0;
 	vec4 clipPos;

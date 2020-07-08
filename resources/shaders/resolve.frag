@@ -135,7 +135,7 @@ vec4 abuf_shade(uint pos, float depth) {
   vec4 h;
 
 #if @get_enable_multi_view_rendering@
-if(0 == gl_Layer) {
+if(0 == LAYER_ID) {
 #endif
   h = gua_inverse_projection_view_matrix * screen_space_pos;
 #if @get_enable_multi_view_rendering@
@@ -243,7 +243,7 @@ void main() {
   ivec2 tile = frag_pos >> @light_table_tile_power@;
 
 #if @get_enable_multi_view_rendering@
-if(0 == gl_Layer) {
+if(0 == LAYER_ID) {
 #endif
   for (int sl = 0; sl < bitset_words; ++sl) {
     bitset[sl] = texelFetch(usampler3D(gua_light_bitset), ivec3(tile, sl), 0).r;

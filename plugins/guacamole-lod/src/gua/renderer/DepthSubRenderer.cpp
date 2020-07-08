@@ -114,7 +114,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
         }
     }
 
-    shader_program_->unuse(ctx);
+    //shader_program_->unuse(ctx);
 
 #ifdef GUACAMOLE_ENABLE_PIPELINE_PASS_TIME_QUERIES
     pipe.end_gpu_query(ctx, gpu_query_name_depth_pass);

@@ -1,12 +1,17 @@
 @include "common/header.glsl"
 
 
+
 #if @get_enable_hardware_mvr@
 //#extension GL_ARB_fragment_layer_viewport: require
 //#extension GL_ARB_shader_viewport_layer_array: enable
-//#extension GL_OVR_multiview: require
-#extension GL_OVR_multiview2 : enable
+#extension GL_NV_viewport_array2: require
+#extension GL_OVR_multiview : require
+#extension GL_OVR_multiview2 : require
+#extension GL_ARB_shader_viewport_layer_array: enable
+//#extension GL_NV_viewport_array2: require
 
+//#extension GL_OVR_multiview : enable
 layout(num_views = 2) in;
 #endif
 
@@ -33,20 +38,20 @@ void main() {
 
   gua_world_position = (gua_model_matrix * vec4(gua_in_position, 1.0)).xyz;
 
-uint layer_id = 0;
+
 
 
 #if @get_enable_multi_view_rendering@
 #if @get_enable_hardware_mvr@
-layer_id = gl_ViewID_OVR;
+#define LAYER_ID gl_ViewID_OVR
 #else
-layer_id = gl_InstanceID;
+#define LAYER_ID gl_InstanceID
 #endif
 #endif
 
 
 #if @get_enable_multi_view_rendering@
-if(0 == layer_id) {
+if(0 == LAYER_ID) {
 #endif
   gua_view_position  = (gua_model_view_matrix * vec4(gua_in_position, 1.0)).xyz;
 
@@ -68,14 +73,23 @@ if(0 == layer_id) {
 
   @include "common/gua_varyings_assignment.glsl"
 
-#if @get_enable_multi_view_rendering@
-if (0 == layer_id) {
-#endif
+#if @get_enable_hardware_mvr@
+  if (0 == LAYER_ID) {
   gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
-#if @get_enable_multi_view_rendering@
-} else {
-  gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
-}
+  } else if(1 == gl_ViewID_OVR) {
+    gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
+  }
+#else
+  #if @get_enable_multi_view_rendering@
+  gl_Layer = LAYER_ID;
+  if (0 == LAYER_ID) {
+  #endif
+    gl_Position = gua_view_projection_matrix * vec4(gua_world_position, 1.0);
+  #if @get_enable_multi_view_rendering@
+  } else {
+    gl_Position = gua_secondary_view_projection_matrix * vec4(gua_world_position, 1.0);
+  }
+  #endif
 #endif
-gl_Layer = int(layer_id);
+
 }

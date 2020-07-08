@@ -200,6 +200,9 @@ void PLodRenderer::perform_frustum_culling_for_scene(std::vector<node::Node*>& m
 
     auto& scene = *pipe.current_viewstate().scene;
 
+    auto const& frustum = pipe.current_viewstate().frustum;
+    scm::math::mat4d const view_matrix = frustum.get_view();
+
     // loop through all models and perform frustum culling
     for(auto const& object : models)
     {
@@ -222,6 +225,8 @@ void PLodRenderer::perform_frustum_culling_for_scene(std::vector<node::Node*>& m
         auto scm_transpose_model_matrix = scm::math::transpose(scm_model_matrix);
         auto scm_inverse_model_matrix = scm::math::inverse(scm_model_matrix);
 
+        auto model_view_matrix = view_matrix * scm_model_matrix;
+
         for(unsigned plane_idx = 0; plane_idx < num_global_clipping_planes; ++plane_idx)
         {
             scm::math::vec4d plane_vec = scm::math::vec4d(global_clipping_planes[plane_idx]);
@@ -240,8 +245,32 @@ void PLodRenderer::perform_frustum_culling_for_scene(std::vector<node::Node*>& m
             global_clipping_planes[plane_idx] = scm::math::vec4d(xyz_comp, -d);
         }
 
-        auto const& node_list = cut_map.at(plod_node)->complete_set();
+        auto& node_list = cut_map.at(plod_node)->complete_set();
 
+        //auto const& bounding_box_vector = bvh->get_bounding_boxes();
+
+//revisit later for performance measurement
+#if 0
+        auto compute_dist = [](scm::math::vec3f const& v3, scm::math::vec4d const& v4) {
+            scm::math::vec3d dist_vec(double(v3[2]) - v4[2]);
+
+            return scm::math::length_sqr(dist_vec);
+        };
+
+
+        std::map<size_t, double> dist_map;
+
+        for(auto const& node_slot_aggregate : node_list) {
+            dist_map[node_slot_aggregate.node_id_] 
+            = compute_dist(scm::math::vec3f(0), model_view_matrix * scm::math::vec4d(scm::math::vec3d(model_bounding_boxes[node_slot_aggregate.node_id_].center()), 1.0));
+        }
+
+        std::sort(node_list.begin(), node_list.end(), [&](lamure::ren::cut::node_slot_aggregate const& lhs, lamure::ren::cut::node_slot_aggregate const& rhs) {
+            return dist_map[lhs.node_id_] < dist_map[rhs.node_id_];
+        });
+        //std::sort(node_list.begin(), node_list.end(),[](lamure::ren::cut::node_slot_aggregate const& lhs, 
+        //                                                lamure::ren::cut::node_slot_aggregate const& rhs) {return true;} );
+#endif
         for(auto const& n : node_list)
         {
             if(culling_frustum.classify(model_bounding_boxes[n.node_id_]) != 1)
@@ -383,25 +412,27 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
     }
     std::cout << "Surfels : " << surfels_in_cut << "\n";
 #endif
+    {
 
-    if(!pipe.current_viewstate().shadow_mode)
-    { // normal rendering branch
+        if(!pipe.current_viewstate().shadow_mode)
+        { // normal rendering branch
 
-        PLodPassDescription const& plod_desc = static_cast<PLodPassDescription const&>(desc);
+            PLodPassDescription const& plod_desc = static_cast<PLodPassDescription const&>(desc);
 
-        auto const surfel_render_mode = plod_desc.mode();
+            auto const surfel_render_mode = plod_desc.mode();
 
-        for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
-        {
-            pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id, render_multiview);
-        }
-    }
-    else
-    { // shadow branch
-        {
-            for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
+            for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
             {
                 pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id, render_multiview);
+            }
+        }
+        else
+        { // shadow branch
+            {
+                for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
+                {
+                    pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id, render_multiview);
+                }
             }
         }
     }

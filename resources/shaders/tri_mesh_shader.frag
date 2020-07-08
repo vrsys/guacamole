@@ -1,8 +1,22 @@
 @include "common/header.glsl"
 
+#if @get_enable_hardware_mvr@
+//#extension GL_ARB_fragment_layer_viewport: require
+//#extension GL_ARB_shader_viewport_layer_array: enable
+
+#extension GL_ARB_shading_language_include : enable
+#extension GL_NV_viewport_array2: require
+#extension GL_OVR_multiview : require
+#extension GL_OVR_multiview2 : require
+
+#endif
+
+
 #if @enable_early_fragment_test@
 layout (early_fragment_tests) in;
 #endif
+
+
 
 @include "common/gua_fragment_shader_input.glsl"
 @include "common/gua_camera_uniforms.glsl"
@@ -27,6 +41,7 @@ vec2 gua_get_quad_coords() {
 
 @include "common/virtual_texturing_functions.frag"
 #endif
+
 
 void main()
 {
