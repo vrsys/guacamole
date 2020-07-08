@@ -55,7 +55,8 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
                                                      std::vector<node::Node*>& sorted_models,
                                                      std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
                                                      lamure::context_t context_id,
-                                                     lamure::view_t lamure_view_id)
+                                                     lamure::view_t lamure_view_id,
+                                                     bool render_multiview)
 {
     auto const& camera = pipe.current_viewstate().camera;
     RenderContext& ctx(pipe.get_context());
@@ -110,15 +111,25 @@ void LowQualitySplattingSubRenderer::render_sub_pass(Pipeline& pipe,
             plod_node->bind_time_series_data_to(ctx, current_material_program);
             ctx.render_context->apply();
 
-            plod_resource->draw(ctx,
-                                context_id,
-                                lamure_view_id,
-                                model_id,
-                                controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
-                                nodes_in_frustum,
-                                scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
-
+            if(render_multiview) {
+                plod_resource->draw_instanced(2, ctx,
+                                              context_id,
+                                              lamure_view_id,
+                                              model_id,
+                                              controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
+                                              nodes_in_frustum,
+                                              scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
+            } else {
+                plod_resource->draw(ctx,
+                                    context_id,
+                                    lamure_view_id,
+                                    model_id,
+                                    controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
+                                    nodes_in_frustum,
+                                    scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);                
+            }
             program_changed = false;
+        
         }
         else
         {

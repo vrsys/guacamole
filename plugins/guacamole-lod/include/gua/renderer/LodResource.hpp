@@ -87,6 +87,17 @@ class GUA_LOD_DLL LodResource : public GeometryResource
               scm::math::mat4d model_view_matrix = math::mat4d(),
               bool draw_sorted = false) const;
 
+    void draw_instanced(uint32_t instance_count, RenderContext const& ctx,
+                        lamure::context_t context_id,
+                        lamure::view_t view_id,
+                        lamure::model_t model_id,
+                        scm::gl::vertex_array_ptr const& vertex_array,
+                        std::unordered_set<lamure::node_t> const& nodes_in_frustum,
+                        scm::gl::primitive_topology const type,
+                        scm::math::mat4d model_view_matrix = math::mat4d(),
+                        bool draw_sorted = false
+                        ) const;
+
     math::mat4 const& local_transform() const;
 
     void ray_test(Ray const& ray, int options, node::Node* owner, std::set<PickResult>& hits);

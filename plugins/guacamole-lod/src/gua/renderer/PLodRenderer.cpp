@@ -393,7 +393,7 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
 
         for(auto const& pass : *(plod_pipelines_[surfel_render_mode]))
         {
-            pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id);
+            pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id, render_multiview);
         }
     }
     else
@@ -401,7 +401,7 @@ void PLodRenderer::render(gua::Pipeline& pipe, PipelinePassDescription const& de
         {
             for(auto const& pass : *(plod_pipelines_[PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS]))
             {
-                pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id);
+                pass->render_sub_pass(pipe, desc, shared_pass_resources_[gua_view_id].second, sorted_objects->second, nodes_in_frustum_per_model, context_id, lamure_view_id, render_multiview);
             }
         }
     }

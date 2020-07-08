@@ -41,6 +41,15 @@
 #define USE_POINTCLOUD_LOD_MODEL 1
 #define USE_REGULAR_TRIMESH_MODEL 1
 
+#define RENDER_SIDE_BY_SIDE
+
+#ifdef RENDER_SIDE_BY_SIDE
+  #define RENDER_MVR
+  #ifdef RENDER_MVR
+    //#define USE_HARDWARE_MVR
+  #endif
+#endif
+
 int main(int argc, char** argv)
 {
     // init guacamole
@@ -79,7 +88,7 @@ int main(int argc, char** argv)
     //"data/objects/Tempelherrenhaus/Pointcloud_Ruine_xyz_parts_00001.bvh",
     //"data/objects/wappen_local.bvh",
 #else
-                                                    "/opt/3d_models/lamure/plod/pig_pr.bvh",
+                                                    "/mnt/pitoti/hallermann_scans/Domfiguren/Figur_original/figur_original.bvh",
 #endif
                                                     lod_rough,
                                                     gua::LodLoader::NORMALIZE_POSITION | gua::LodLoader::NORMALIZE_SCALE | gua::LodLoader::MAKE_PICKABLE);
@@ -176,11 +185,11 @@ int main(int argc, char** argv)
 
     // setup rendering pipeline and window
     // auto resolution = gua::math::vec2ui(3840, 2160);
-    auto resolution = gua::math::vec2ui(1920, 1080);
+    auto cam_resolution = gua::math::vec2ui(1920, 1080);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0.0f, 0, 2.5f);
-    camera->config.set_resolution(resolution);
+    camera->config.set_resolution(cam_resolution);
 
     // use close near plane to allow inspection of details
     camera->config.set_near_clip(0.01f);
@@ -188,18 +197,20 @@ int main(int argc, char** argv)
     camera->config.set_screen_path("/screen");
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
-    // camera->config.set_enable_stereo(true);
 
+#ifdef RENDER_SIDE_BY_SIDE
+    camera->config.set_enable_stereo(true);
+#endif
     auto PLod_Pass = std::make_shared<gua::PLodPassDescription>();
 
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-    pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
     pipe->add_pass(PLod_Pass);
-    pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
     pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
-    pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     camera->set_pipeline_description(pipe);
 
     pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
@@ -209,16 +220,34 @@ int main(int argc, char** argv)
     pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
 
     auto& p_desc = camera->get_pipeline_description();
-    p_desc->set_enable_abuffer(true);
-    p_desc->set_abuffer_size(1500);
+    //p_desc->set_enable_abuffer(true);
+    //p_desc->set_abuffer_size(1500);
 
     // init window and window behaviour
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
     window->config.set_enable_vsync(false);
-    window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
-    window->config.set_stereo_mode(gua::StereoMode::MONO);
+
+    auto win_resolution = gua::math::vec2ui(1920, 1080);
+
+    #ifdef RENDER_SIDE_BY_SIDE
+        win_resolution.x *= 2;
+        window->config.set_left_resolution(cam_resolution);
+        window->config.set_right_resolution(cam_resolution);
+
+        window->config.set_left_position(scm::math::vec2ui(0, 0));
+        window->config.set_right_position(scm::math::vec2ui(cam_resolution.x, 0));
+        #ifndef RENDER_MVR
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+        #else
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR);
+        #endif
+    #else
+        window->config.set_resolution(win_resolution);
+        window->config.set_stereo_mode(gua::StereoMode::MONO);        
+    #endif
+        window->config.set_size(win_resolution);
+
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
         window->config.set_resolution(new_size);
@@ -229,8 +258,8 @@ int main(int argc, char** argv)
     // trackball controls
     bool drag_mode = false;
     window->on_move_cursor.connect([&](gua::math::vec2 const& pos) {
-        float nx = 2.f * float(pos.x - (resolution.x / 2)) / float(resolution.x);
-        float ny = -2.f * float(resolution.y - pos.y - (resolution.y / 2)) / float(resolution.y);
+        float nx = 2.f * float(pos.x - (win_resolution.x / 2)) / float(win_resolution.x);
+        float ny = -2.f * float(win_resolution.y - pos.y - (win_resolution.y / 2)) / float(win_resolution.y);
         if(button_state != -1)
         {
             if(drag_mode)

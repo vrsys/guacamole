@@ -68,7 +68,8 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                        std::vector<node::Node*>& sorted_models,
                                        std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
                                        lamure::context_t context_id,
-                                       lamure::view_t lamure_view_id)
+                                       lamure::view_t lamure_view_id,
+                                       bool render_multiview)
 {
 
     auto const& camera = pipe.current_viewstate().camera;

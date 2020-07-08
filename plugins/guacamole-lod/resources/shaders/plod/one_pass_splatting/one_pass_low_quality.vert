@@ -41,7 +41,12 @@ out VertexData {
   vec3 pass_normal;
   vec3 pass_point_color;
   float pass_radius;
+#if @get_enable_multi_view_rendering@
+  int layer_id;
+#endif
 } VertexOut;
+
+
 
 void main() {
 
@@ -81,5 +86,16 @@ void main() {
 
   VertexOut.pass_normal = in_normal;
 
+
+
+
+
+#if @get_enable_multi_view_rendering@
+#if @get_enable_hardware_mvr@
+VertexOut.layer_id = gl_ViewID_OVR;
+#else
+VertexOut.layer_id = gl_InstanceID;
+#endif
+#endif
 
 }

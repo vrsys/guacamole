@@ -49,7 +49,8 @@ class GUA_LOD_DLL PLodSubRenderer
                                  std::vector<node::Node*>& sorted_models,
                                  std::unordered_map<node::PLodNode*, std::unordered_set<lamure::node_t>>& nodes_in_frustum_per_model,
                                  lamure::context_t context_id,
-                                 lamure::view_t lamure_view_id) = 0;
+                                 lamure::view_t lamure_view_id,
+                                 bool render_multiview) = 0;
 
     virtual void forward_global_substitution_map(SubstitutionMap const& smap) { global_substitution_map_ = smap; }
 

@@ -19,6 +19,9 @@ in VertexData {
   vec3 pass_normal;
   vec3 pass_point_color;
   float pass_radius;
+#if @get_enable_multi_view_rendering@
+  int layer_id;
+#endif
 } VertexIn[];
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,7 +88,10 @@ void main()
    VertexOut.pass_uv_coords      = vec2(-1.0, -1.0);
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
-   VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
+   VertexOut.pass_point_color    = VertexIn[0].pass_point_color;
+  #if @get_enable_multi_view_rendering@
+   gl_Layer                     = VertexIn[0].layer_id;
+  #endif
    EmitVertex();
    
    a = vec4(gl_in[0].gl_Position.xyz - ms_u + sqrt2_plus1 * ms_v, 1.0);
@@ -94,6 +100,9 @@ void main()
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
    VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
+  #if @get_enable_multi_view_rendering@
+   gl_Layer                     = VertexIn[0].layer_id;
+  #endif
    EmitVertex();
 
    a = vec4(gl_in[0].gl_Position.xyz + sqrt2_plus1 * ms_u - ms_v, 1.0);
@@ -102,6 +111,9 @@ void main()
    VertexOut.pass_world_position = (gua_model_matrix * a).xyz;
    VertexOut.pass_normal         = normalized_world_normal;
    VertexOut.pass_point_color          = VertexIn[0].pass_point_color;
+  #if @get_enable_multi_view_rendering@
+   gl_Layer                     = VertexIn[0].layer_id;
+  #endif
    EmitVertex();
 
 
@@ -134,6 +146,9 @@ void main()
     VertexOut.pass_world_position = (gua_model_matrix * q_pos_ms).xyz;
     VertexOut.pass_normal = normalize(world_normal.xyz);
     VertexOut.pass_point_color = VertexIn[0].pass_point_color;
+  #if @get_enable_multi_view_rendering@
+   gl_Layer                     = VertexIn[0].layer_id;
+  #endif
     EmitVertex();
   }
 #endif
