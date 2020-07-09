@@ -1,14 +1,7 @@
-@include "common/header.glsl"
-
 #if @get_enable_hardware_mvr@
-//#extension GL_ARB_fragment_layer_viewport: require
-//#extension GL_ARB_shader_viewport_layer_array: enable
-
-#extension GL_ARB_shading_language_include : enable
-#extension GL_NV_viewport_array2: require
-#extension GL_OVR_multiview : require
-#extension GL_OVR_multiview2 : require
-
+@include "common/header_multiview_enabled.glsl"
+#else
+@include "common/header.glsl"
 #endif
 
 

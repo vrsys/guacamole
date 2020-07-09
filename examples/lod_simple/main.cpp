@@ -44,7 +44,7 @@
 #define RENDER_SIDE_BY_SIDE
 
 #ifdef RENDER_SIDE_BY_SIDE
-  #define RENDER_MVR
+  //#define RENDER_MVR
   #ifdef RENDER_MVR
     //#define USE_HARDWARE_MVR
   #endif
@@ -202,7 +202,8 @@ int main(int argc, char** argv)
     camera->config.set_enable_stereo(true);
 #endif
     auto PLod_Pass = std::make_shared<gua::PLodPassDescription>();
-
+    PLod_Pass->mode(gua::PLodPassDescription::SurfelRenderMode::LQ_ONE_PASS);
+    PLod_Pass->touch();
     auto pipe = std::make_shared<gua::PipelineDescription>();
     pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
@@ -213,11 +214,11 @@ int main(int argc, char** argv)
     //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     camera->set_pipeline_description(pipe);
 
-    pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
-    pipe->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
+    //pipe->get_resolve_pass()->tone_mapping_exposure(1.f);
+    //pipe->get_resolve_pass()->tone_mapping_method(gua::ResolvePassDescription::ToneMappingMethod::UNCHARTED);
 
-    pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
-    pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
+    //pipe->get_resolve_pass()->background_mode(gua::ResolvePassDescription::BackgroundMode::SKYMAP_TEXTURE);
+    //pipe->get_resolve_pass()->background_texture("data/textures/envlightmap.jpg");
 
     auto& p_desc = camera->get_pipeline_description();
     //p_desc->set_enable_abuffer(true);
@@ -365,7 +366,7 @@ int main(int argc, char** argv)
     ticker.on_tick.connect([&]() {
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
-        light_transform->rotate(0.1, 0.f, 1.f, 0.f);
+        //light_transform->rotate(0.1, 0.f, 1.f, 0.f);
         window->process_events();
         if(window->should_close())
         {

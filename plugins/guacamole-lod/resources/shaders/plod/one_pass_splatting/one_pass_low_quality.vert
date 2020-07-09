@@ -12,6 +12,10 @@ layout (std430, binding = 20) coherent readonly buffer time_series_data_ssbo {
   float[] time_series_data;
 };
 
+//layout (std430, binding = 20) coherent readonly buffer surfel_data_ssbo {
+//  float[] time_series_data;
+//};
+
 uniform int floats_per_attribute_timestep;
 uniform float current_timestep;
 

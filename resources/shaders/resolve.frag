@@ -1,5 +1,8 @@
+#if @get_enable_hardware_mvr@
+@include "common/header_multiview_enabled.glsl"
+#else
 @include "common/header.glsl"
-
+#endif
 // varying input
 in vec2 gua_quad_coords;
 

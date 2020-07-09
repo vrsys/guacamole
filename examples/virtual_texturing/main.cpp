@@ -44,9 +44,9 @@
 #define RENDER_SIDE_BY_SIDE
 
 #ifdef RENDER_SIDE_BY_SIDE
-  //#define RENDER_MVR
+  #define RENDER_MVR
   #ifdef RENDER_MVR
-    //#define USE_HARDWARE_MVR
+    #define USE_HARDWARE_MVR
   #endif
 #endif
 

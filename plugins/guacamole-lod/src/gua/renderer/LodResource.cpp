@@ -158,7 +158,9 @@ void LodResource::draw(RenderContext const& ctx,
 
     ctx.render_context->bind_vertex_array(vertex_array);
     ctx.render_context->apply();
-/*
+
+
+#if 1
     std::vector<int32_t> in_first_indices(nodes_in_frustum.size());
     std::vector<int32_t> in_counts(nodes_in_frustum.size(), primitives_per_node_of_model);
 
@@ -167,13 +169,14 @@ void LodResource::draw(RenderContext const& ctx,
     {
         if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
         {
-            in_first_indices[current_node_index] = n.slot_id_ * primitives_per_node;
+            in_first_indices[current_node_index++] = n.slot_id_ * primitives_per_node;
         }
     }
 
     if(in_first_indices.size()) {
         ctx.render_context->multi_draw_arrays(type, in_first_indices.data(), in_counts.data(), in_first_indices.size() );
-    }*/
+    }
+#else
     
     for(const auto& n : node_list)
     {
@@ -182,7 +185,8 @@ void LodResource::draw(RenderContext const& ctx,
             ctx.render_context->draw_arrays(type, n.slot_id_ * primitives_per_node, primitives_per_node_of_model);
         }
     }
-
+    
+#endif
     //}
 }
 
@@ -258,8 +262,22 @@ void LodResource::draw_instanced(
 
 
     scm::gl::context_vertex_input_guard vig(ctx.render_context);
+/*
+    uint32_t num_bytes_to_bind = 0;
+    uint32_t highest_slot_id_to_render = 0;
+    for(const auto& n : node_list)
+    {
+        if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
+        {
+            highest_slot_id_to_render = std::max(highest_slot_id_to_render, uint32_t(n.slot_id_) );//if(n.slot_id_ > )
+        }
+    }
 
-
+    num_bytes_to_bind = (highest_slot_id_to_render + 1) * primitives_per_node_of_model * 32;
+*/
+    //ctx.render_context->bind_storage_buffer(vertex_array, 24, 0, num_bytes_to_bind );// looked_up_time_series_data_item->data.size());
+    //ctx.render_context->set_storage_buffers( std::vector<scm::gl::render_context::buffer_binding>{scm::gl::BIND_STORAGE_BUFFER} );
+    //ctx.render_context->apply_storage_buffer_bindings();
     ctx.render_context->bind_vertex_array(vertex_array);
     ctx.render_context->apply();
 /*
@@ -279,6 +297,23 @@ void LodResource::draw_instanced(
         ctx.render_context->multi_draw_arrays(type, in_first_indices.data(), in_counts.data(), in_first_indices.size() );
     }*/
     
+#if 0
+    std::vector<int32_t> in_first_indices(nodes_in_frustum.size());
+    std::vector<int32_t> in_counts(nodes_in_frustum.size(), primitives_per_node_of_model);
+
+    uint32_t current_node_index = 0;
+    for(const auto& n : node_list)
+    {
+        if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
+        {
+            in_first_indices[current_node_index++] = n.slot_id_ * primitives_per_node;
+        }
+    }
+
+    if(in_first_indices.size()) {
+        ctx.render_context->multi_draw_arrays(type, in_first_indices.data(), in_counts.data(), in_first_indices.size() );
+    }
+#else
     for(const auto& n : node_list)
     {
         if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
@@ -286,7 +321,7 @@ void LodResource::draw_instanced(
             ctx.render_context->draw_arrays_instanced(type, n.slot_id_ * primitives_per_node, primitives_per_node_of_model, instance_count);
         }
     }
-
+#endif
     //}
 }
 

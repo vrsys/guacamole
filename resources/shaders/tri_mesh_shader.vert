@@ -1,17 +1,10 @@
+#if @get_enable_hardware_mvr@
+@include "common/header_multiview_enabled.glsl"
+#else
 @include "common/header.glsl"
-
-
+#endif
 
 #if @get_enable_hardware_mvr@
-//#extension GL_ARB_fragment_layer_viewport: require
-//#extension GL_ARB_shader_viewport_layer_array: enable
-#extension GL_NV_viewport_array2: require
-#extension GL_OVR_multiview : require
-#extension GL_OVR_multiview2 : require
-#extension GL_ARB_shader_viewport_layer_array: enable
-//#extension GL_NV_viewport_array2: require
-
-//#extension GL_OVR_multiview : enable
 layout(num_views = 2) in;
 #endif
 

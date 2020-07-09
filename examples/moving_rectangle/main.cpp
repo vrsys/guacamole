@@ -28,7 +28,14 @@
 #include <gua/utils/Logger.hpp>
 #include <gua/utils/Trackball.hpp>
 
-//#define STEREO_MODE
+#define RENDER_SIDE_BY_SIDE
+
+#ifdef RENDER_SIDE_BY_SIDE
+  #define RENDER_MVR
+  #ifdef RENDER_MVR
+    #define USE_HARDWARE_MVR
+  #endif
+#endif
 
 // forward mouse interaction to trackball
 void mouse_button(gua::utils::Trackball& trackball, int mousebutton, int action, int mods)
@@ -166,13 +173,13 @@ int main(int argc, char** argv)
 */
 
     auto normal_pipe = std::make_shared<gua::PipelineDescription>();
-    normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+
     
     normal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
-
+    normal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
-    resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
-    resolve_pass->tone_mapping_exposure(1.0f);
+    //resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
+    //resolve_pass->tone_mapping_exposure(1.0f);
 
     normal_pipe->add_pass(resolve_pass);
     //normal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
@@ -184,7 +191,7 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
 
-    #ifdef STEREO_MODE
+    #ifdef RENDER_SIDE_BY_SIDE
         camera->config.set_enable_stereo(true);
     #else
         camera->config.set_enable_stereo(false);
@@ -199,16 +206,38 @@ int main(int argc, char** argv)
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
 
+    auto win_resolution = resolution;
     window->config.set_enable_vsync(false);
-    window->config.set_size(resolution);
-    window->config.set_resolution(resolution);
 
-    #ifdef STEREO_MODE
-        window->config.set_stereo_mode(gua::StereoMode::ANAGLYPH_RED_CYAN);
+
+    #ifdef RENDER_SIDE_BY_SIDE
+
+        win_resolution.x *= 2;
+        #ifdef RENDER_MVR
+
+            #ifdef USE_HARDWARE_MVR
+                window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_HARDWARE_MVR);
+            #else
+                window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE_SOFTWARE_MVR);
+            #endif
+
+        #else
+            window->config.set_stereo_mode(gua::StereoMode::SIDE_BY_SIDE);
+        #endif
+
+
+
+        window->config.set_left_resolution(resolution);
+        window->config.set_right_resolution(resolution);
+
+        window->config.set_left_position(scm::math::vec2ui(0, 0));
+        window->config.set_right_position(scm::math::vec2ui(resolution.x, 0));
+
     #else 
         window->config.set_stereo_mode(gua::StereoMode::MONO);
+        window->config.set_resolution(win_resolution);
     #endif
-
+        window->config.set_size(win_resolution);
 
 
     window->on_resize.connect([&](gua::math::vec2ui const& new_size) {
