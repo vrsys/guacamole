@@ -122,7 +122,7 @@ std::string ResourceFactory::resolve_substitutions(std::string const& shader_sou
         else
         {
             Logger::LOG_WARNING << "Option \"" << match[1] << "\" is unknown!" << std::endl;
-            subs = match.str();
+            subs = "0\n";//match.str();
         }
         out += match.prefix().str() + subs;
         s = match.suffix().str();

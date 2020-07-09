@@ -114,6 +114,10 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
 
         int view_id(camera.config.get_view_id());
 
+        uint32_t num_different_models = sorted_models.size();
+
+
+        bool needs_resource_rebinding = num_different_models != 1;
         bool program_changed = false;
         // loop through all models and render accumulation pass
         for(auto const& object : sorted_models)
@@ -165,7 +169,7 @@ void AccumSubRenderer::render_sub_pass(Pipeline& pipe,
                                     model_id,
                                     controller->get_context_memory(context_id, lamure::ren::bvh::primitive_type::POINTCLOUD, ctx.render_device),
                                     nodes_in_frustum,
-                                    scm::gl::primitive_topology::PRIMITIVE_POINT_LIST);
+                                    scm::gl::primitive_topology::PRIMITIVE_POINT_LIST );
 
                 program_changed = false;
             }

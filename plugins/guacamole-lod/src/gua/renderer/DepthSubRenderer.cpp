@@ -76,6 +76,7 @@ void DepthSubRenderer::render_sub_pass(Pipeline& pipe,
     pipe.begin_gpu_query(ctx, gpu_query_name_depth_pass);
 #endif
 
+
     // loop through all models and render depth pass
     for(auto const& object : sorted_models)
     {

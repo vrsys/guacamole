@@ -20,7 +20,7 @@
  ******************************************************************************/
 
 
-@include "shaders/common/header.glsl"
+@include "shaders/common/mvr_less_header.glsl"
 @include "shaders/common/gua_camera_uniforms.glsl"
 
 layout(points) in;

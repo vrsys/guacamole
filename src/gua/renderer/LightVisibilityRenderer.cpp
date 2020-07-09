@@ -27,7 +27,12 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
     unsigned point_lights_num = 0u;
     unsigned spot_lights_num = 0u;
     unsigned sun_lights_num = 0u;
-    prepare_light_table(pipe, transforms, lights, point_lights_num, spot_lights_num, sun_lights_num);
+    bool needs_to_render = prepare_light_table(pipe, transforms, lights, point_lights_num, spot_lights_num, sun_lights_num);
+
+    //if(!needs_to_render) {
+    //    return;
+    //}
+
     math::vec2ui effective_resolution = pipe.get_light_table().invalidate(ctx, camera.config.get_resolution(), lights, tile_power, sun_lights_num);
 
     math::vec2ui rasterizer_resolution = (enable_fullscreen_fallback) ? camera.config.get_resolution() : effective_resolution;
@@ -90,13 +95,17 @@ void LightVisibilityRenderer::render(PipelinePass& pass, Pipeline& pipe, int til
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const
+bool LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const
 {
     sun_lights_num = 0u;
     std::vector<math::mat4> sun_transforms;
     std::vector<LightTable::LightBlock> sun_lights;
 
     auto light_node_subrange = pipe.current_viewstate().scene->nodes[std::type_index(typeid(node::LightNode))];
+
+    if(light_node_subrange.empty()) {
+        return false;
+    } 
 
     std::vector<node::LightNode*> light_node_pointers(light_node_subrange.size());
     std::transform(light_node_subrange.begin(), light_node_subrange.end(), light_node_pointers.begin(), [](node::Node* l) -> node::LightNode* {return reinterpret_cast<node::LightNode*>(l); } );
@@ -147,6 +156,8 @@ void LightVisibilityRenderer::prepare_light_table(Pipeline& pipe, std::vector<ma
     // sun lights need to be at the back
     transforms.insert(transforms.end(), sun_transforms.begin(), sun_transforms.end());
     lights.insert(lights.end(), sun_lights.begin(), sun_lights.end());
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

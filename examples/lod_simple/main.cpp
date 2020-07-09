@@ -44,7 +44,7 @@
 #define RENDER_SIDE_BY_SIDE
 
 #ifdef RENDER_SIDE_BY_SIDE
-  //#define RENDER_MVR
+  #define RENDER_MVR
   #ifdef RENDER_MVR
     //#define USE_HARDWARE_MVR
   #endif
@@ -209,8 +209,8 @@ int main(int argc, char** argv)
     //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
     pipe->add_pass(PLod_Pass);
     //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
-    pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-    pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    //pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
     //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
     camera->set_pipeline_description(pipe);
 
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
     ticker.on_tick.connect([&]() {
         screen->set_transform(scm::math::inverse(gua::math::mat4(trackball.transform_matrix())));
 
-        //light_transform->rotate(0.1, 0.f, 1.f, 0.f);
+        light_transform->rotate(0.1, 0.f, 1.f, 0.f);
         window->process_events();
         if(window->should_close())
         {

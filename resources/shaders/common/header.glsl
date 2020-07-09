@@ -14,6 +14,20 @@
 
 
 #extension GL_ARB_shader_viewport_layer_array: enable
+
+
+#if @get_enable_hardware_mvr@
+#extension GL_OVR_multiview2 : require
+#endif
+
+#if @get_enable_multi_view_rendering@
+#if @get_enable_hardware_mvr@
+#define LAYER_ID gl_ViewID_OVR
+#else
+#define LAYER_ID gl_InstanceID
+#endif
+#endif
+
 //#extension GL_NV_viewport_array2: require
 
 //#extension GL_OVR_multiview2 : enable

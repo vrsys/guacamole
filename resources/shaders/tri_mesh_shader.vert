@@ -34,13 +34,7 @@ void main() {
 
 
 
-#if @get_enable_multi_view_rendering@
-#if @get_enable_hardware_mvr@
-#define LAYER_ID gl_ViewID_OVR
-#else
-#define LAYER_ID gl_InstanceID
-#endif
-#endif
+
 
 
 #if @get_enable_multi_view_rendering@

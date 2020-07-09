@@ -27,8 +27,8 @@ math::vec2ui LightTable::invalidate(RenderContext const& ctx, math::vec2ui const
 
     if(tile_power > 0)
     {
-        width = std::ceil(float(resolution.x) / std::pow(2, tile_power));
-        height = std::ceil(float(resolution.y) / std::pow(2, tile_power));
+        width = std::ceil(float(resolution.x) / (1 << tile_power));
+        height = std::ceil(float(resolution.y) / (1 << tile_power));
     }
     else
     {

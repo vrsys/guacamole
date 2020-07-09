@@ -19,7 +19,7 @@
  *                                                                            *
  ******************************************************************************/
 
-@include "shaders/common/header.glsl"
+@include "shaders/common/mvr_less_header.glsl"
 
 // varyings
 in vec2 gua_quad_coords;

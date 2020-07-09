@@ -18,7 +18,7 @@ class LightVisibilityRenderer
   private:
     void draw_lights(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned const& num_point_lights, unsigned const& num_spot_lights, bool render_multiview) const;
 
-    void prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const;
+    bool prepare_light_table(Pipeline& pipe, std::vector<math::mat4>& transforms, LightTable::array_type& lights, unsigned& point_lights_num, unsigned& spot_lights_num, unsigned& sun_lights_num) const;
 
     void add_pointlight(Pipeline& pipe, node::LightNode& light, LightTable::LightBlock& light_block, LightTable::array_type& lights, std::vector<math::mat4>& light_transforms) const;
 
