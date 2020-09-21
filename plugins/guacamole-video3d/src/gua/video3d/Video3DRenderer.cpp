@@ -228,24 +228,52 @@ void Video3DRenderer::update_buffers(RenderContext const& ctx, Video3DResource c
         return;
     }
 
-    if(video3d_data.nka_->update())
+    int64_t total_payload_size = video3d_ressource.number_of_cameras() * (video3d_ressource.color_size() + video3d_ressource.depth_size_byte());
+
+    bool is_first_frame = false;
+    if(kinect_textures_per_context_pbo_back_.end() == kinect_textures_per_context_pbo_back_.find(ctx.id)) {
+        kinect_textures_per_context_pbo_back_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_payload_size, 0);
+        kinect_textures_per_context_pbo_[ctx.id] = ctx.render_device->create_buffer(scm::gl::BIND_PIXEL_UNPACK_BUFFER, scm::gl::USAGE_STREAM_DRAW, total_payload_size, 0);
+
+        mapped_pbo_pointers_[ctx.id] = (uint8_t*)ctx.render_context->map_buffer(kinect_textures_per_context_pbo_back_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_INVALIDATE_BUFFER);
+
+        is_first_frame = true;   
+    }
+
+
+
+
+    video3d_data.nka_->try_register_resource(const_cast<Video3DResource*>(&video3d_ressource) );
+
+    if(video3d_data.nka_->update(mapped_pbo_pointers_[ctx.id]))
     {
-        unsigned char* buff = video3d_data.nka_->getBuffer();
-        for(unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i)
-        {
-            ctx.render_context->update_sub_texture(video3d_data.color_tex_,
-                                                   scm::gl::texture_region(scm::math::vec3ui(0, 0, i), scm::math::vec3ui(video3d_data.color_tex_->dimensions(), 1)),
-                                                   0, // mip-mapping level
-                                                   video3d_ressource.calib_files()[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
-                                                   static_cast<void*>(buff));
-            buff += video3d_ressource.color_size();
-            ctx.render_context->update_sub_texture(video3d_data.depth_tex_,
-                                                   scm::gl::texture_region(scm::math::vec3ui(0, 0, i), scm::math::vec3ui(video3d_data.depth_tex_->dimensions(), 1)),
-                                                   0, // mip-mapping level
-                                                   scm::gl::FORMAT_R_32F,
-                                                   static_cast<void*>(buff));
-            buff += video3d_ressource.depth_size_byte();
+        if(!is_first_frame) {
+            ctx.render_context->bind_unpack_buffer(kinect_textures_per_context_pbo_[ctx.id]);
+        
+            //unsigned char* buff = video3d_data.nka_->getBuffer();
+
+            int64_t read_offset = 0;
+            for(unsigned i = 0; i < video3d_ressource.number_of_cameras(); ++i)
+            {
+                ctx.render_context->update_sub_texture(video3d_data.color_tex_,
+                                                       scm::gl::texture_region(scm::math::vec3ui(0, 0, i), scm::math::vec3ui(video3d_data.color_tex_->dimensions(), 1)),
+                                                       0, // mip-mapping level
+                                                       video3d_ressource.calib_files()[0]->isCompressedRGB() ? scm::gl::FORMAT_BC1_RGBA : scm::gl::FORMAT_RGB_8,
+                                                       read_offset);
+                read_offset += video3d_ressource.color_size();
+                ctx.render_context->update_sub_texture(video3d_data.depth_tex_,
+                                                       scm::gl::texture_region(scm::math::vec3ui(0, 0, i), scm::math::vec3ui(video3d_data.depth_tex_->dimensions(), 1)),
+                                                       0, // mip-mapping level
+                                                       scm::gl::FORMAT_R_32F,
+                                                       read_offset);
+                read_offset += video3d_ressource.depth_size_byte();
+            }
+            ctx.render_context->bind_unpack_buffer(0);
         }
+
+        ctx.render_context->unmap_buffer(kinect_textures_per_context_pbo_back_[ctx.id]);
+        std::swap(kinect_textures_per_context_pbo_[ctx.id], kinect_textures_per_context_pbo_back_[ctx.id]);
+        mapped_pbo_pointers_[ctx.id] = (uint8_t*)ctx.render_context->map_buffer(kinect_textures_per_context_pbo_back_[ctx.id], scm::gl::access_mode::ACCESS_WRITE_INVALIDATE_BUFFER);
 
         process_textures(ctx, video3d_ressource, pipe);
     }
@@ -285,6 +313,8 @@ void Video3DRenderer::process_textures(RenderContext const& ctx, Video3DResource
 ////////////////////////////////////////////////////////////////////////////////
 void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc)
 {
+
+    auto start = std::chrono::system_clock::now();
     ///////////////////////////////////////////////////////////////////////////
     //  retrieve current view state
     ///////////////////////////////////////////////////////////////////////////
@@ -484,6 +514,9 @@ void Video3DRenderer::render(Pipeline& pipe, PipelinePassDescription const& desc
             target.unbind(ctx);
         }
     }
+
+    auto end = std::chrono::system_clock::now();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

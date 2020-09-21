@@ -84,6 +84,16 @@ class GUA_DLL TriMeshRessource : public GeometryResource
      */
     void draw(RenderContext& context) const;
 
+    /**
+     * Draws Instances of Mesh.
+     *
+     * Draws the Mesh Instances to the given context.
+     *
+     * \param context          The RenderContext to draw onto.
+     * \param instance_count   The Number of Mesh Instances to draw.
+     */
+    void draw_instanced(RenderContext& ctx, int instance_count, int base_vertex = 0, int base_instance = 0) const;
+
    /**
      * Draws the kD-tree of the Mesh.
      *

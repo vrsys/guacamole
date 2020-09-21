@@ -56,7 +56,7 @@ namespace gua
 ////////////////////////////////////////////////////////////////////////////////
 
 Pipeline::Pipeline(RenderContext& ctx, math::vec2ui const& resolution)
-    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution)), camera_block_(ctx.render_device), light_table_(new LightTable), last_resolution_(0, 0), last_description_(),
+    : current_viewstate_(), context_(ctx), gbuffer_(new GBuffer(ctx, resolution)), camera_block_(ctx.render_device), light_table_(new LightTable), light_transform_block_(ctx.render_device), last_resolution_(0, 0), last_description_(),
       global_substitution_map_(), passes_(), responsibilities_pre_render_(), responsibilities_post_render_(),
       quad_(new scm::gl::quad_geometry(ctx.render_device, scm::math::vec2f(-1.f, -1.f), scm::math::vec2f(1.f, 1.f))),
       box_(new scm::gl::box_geometry(ctx.render_device, scm::math::vec3f(0.f, 0.f, 0.f), scm::math::vec3f(1.f, 1.f, 1.f)))
@@ -235,6 +235,7 @@ scm::gl::texture_2d_ptr Pipeline::render_scene(CameraMode mode, node::Serialized
     }
 
     bind_camera_uniform_block(0);
+
 
     // clear gbuffer
     gbuffer_->clear(context_, 1.f, 1);
@@ -460,7 +461,7 @@ void Pipeline::render_shadow_map(LightTable::LightBlock& light_block, Frustum co
 
         camera_block_.update(context_, frustum, frustum.get_camera_position(), current_viewstate_.scene->clipping_planes, current_viewstate_.camera.config.get_view_id(), math::vec2ui(viewport_size));
         bind_camera_uniform_block(0);
-
+        
         // process all passes
         for(std::size_t pass_idx = 0; pass_idx < passes_.size(); ++pass_idx)
         {
@@ -675,7 +676,7 @@ void Pipeline::bind_light_table(std::shared_ptr<ShaderProgram> const& shader) co
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::bind_camera_uniform_block(unsigned location) const { get_context().render_context->bind_uniform_buffer(camera_block_.block().block_buffer(), location); }
-
+void Pipeline::bind_light_transformation_uniform_block(unsigned location) const { get_context().render_context->bind_uniform_buffer(light_transform_block_.block().block_buffer(), location); }
 ////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::draw_quad() { quad_->draw(context_.render_context); }

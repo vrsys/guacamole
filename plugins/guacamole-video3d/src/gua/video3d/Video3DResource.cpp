@@ -114,7 +114,7 @@ void Video3DResource::init()
             }
         }
 
-        for(auto calib_file : calib_files_)
+        for(auto const& calib_file : calib_files_)
         {
             const unsigned pixelcountc = calib_file->getWidthC() * calib_file->getHeightC();
 

@@ -84,7 +84,45 @@ void TriMeshRessource::upload_to(RenderContext& ctx) const
 
     ctx.render_context->unmap_buffer(cmesh.vertices);
 
-    cmesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, mesh_.num_triangles * 3 * sizeof(unsigned), mesh_.indices.data());
+    auto const max_index_iterator = std::max_element(mesh_.indices.begin(), mesh_.indices.end());
+    
+    uint8_t num_index_bits = 32;
+
+    if(max_index_iterator != mesh_.indices.end()) {
+        if( (1 <<  8) > *max_index_iterator) {
+            num_index_bits = 8;
+        }
+        else if( (1 << 16) > *max_index_iterator) {
+            num_index_bits = 16;
+        }
+    }
+
+    uint32_t const num_indices = mesh_.num_triangles * 3;
+    switch(num_index_bits) {
+        /*case 8: {
+            std::cout << "USING 8 BIT INDICES" << std::endl;
+            cmesh.indices_type = scm::gl::TYPE_UBYTE;
+            std::vector<uint8_t> eight_bit_indices(mesh_.indices.size());
+            std::copy(mesh_.indices.begin(), mesh_.indices.end(), eight_bit_indices.begin());
+            cmesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW,  num_indices * sizeof(uint8_t), eight_bit_indices.data());
+            break;  
+        }*/
+        case 16: {
+            std::cout << "USING 16 BIT INDICES" << std::endl;
+            cmesh.indices_type = scm::gl::TYPE_USHORT;
+            std::vector<uint16_t> sixteen_bit_indices(mesh_.indices.size());
+            std::copy(mesh_.indices.begin(), mesh_.indices.end(), sixteen_bit_indices.begin());
+            cmesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, num_indices * sizeof(uint16_t), sixteen_bit_indices.data());
+            break;
+        }
+
+        default: {
+            std::cout << "USING 32 BIT INDICES" << std::endl;
+            cmesh.indices = ctx.render_device->create_buffer(scm::gl::BIND_INDEX_BUFFER, scm::gl::USAGE_STATIC_DRAW, mesh_.num_triangles * 3 * sizeof(uint32_t), mesh_.indices.data());
+            break;
+        }
+    }
+
 
     cmesh.vertex_array = ctx.render_device->create_vertex_array(mesh_.get_vertex_format(), {cmesh.vertices});
     ctx.meshes[uuid()] = cmesh;
@@ -144,6 +182,24 @@ void TriMeshRessource::draw(RenderContext& ctx) const
     ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
     ctx.render_context->apply_vertex_input();
     ctx.render_context->draw_elements(iter->second.indices_count);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TriMeshRessource::draw_instanced(RenderContext& ctx, int instance_count, int base_vertex, int base_instance) const
+{
+    auto iter = ctx.meshes.find(uuid());
+    if(iter == ctx.meshes.end())
+    {
+        // upload to GPU if neccessary
+        upload_to(ctx);
+        iter = ctx.meshes.find(uuid());
+    }
+    ctx.render_context->bind_vertex_array(iter->second.vertex_array);
+    ctx.render_context->bind_index_buffer(iter->second.indices, iter->second.indices_topology, iter->second.indices_type);
+    ctx.render_context->apply_vertex_input();
+    ctx.render_context->draw_elements_instanced(iter->second.indices_count, 0, instance_count, base_vertex, base_instance);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

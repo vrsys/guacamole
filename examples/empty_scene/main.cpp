@@ -120,12 +120,6 @@ int main(int argc, char** argv)
     portal->translate(0.5f, 0.f, -0.2f);
     portal->rotate(-30, 0.f, 1.f, 0.f);
 
-    auto light1 = graph.add_node<gua::node::LightNode>("/", "light1");
-    light1->data.set_type(gua::node::LightNode::Type::POINT);
-    light1->data.brightness = 150.0f;
-    light1->scale(12.f);
-    light1->translate(-2.0f, 5.f, 5.f);
-
     auto light2 = graph.add_node<gua::node::LightNode>("/", "light2");
     light2->data.set_type(gua::node::LightNode::Type::POINT);
     light2->data.brightness = 150.0f;
@@ -147,6 +141,7 @@ int main(int argc, char** argv)
     // setup rendering pipeline and window
     auto resolution = gua::math::vec2ui(1920, 1080);
 
+    /*
     auto portal_camera = graph.add_node<gua::node::CameraNode>("/portal_screen", "portal_cam");
     portal_camera->translate(0, 0, 2.0);
     portal_camera->config.set_resolution(gua::math::vec2ui(1200, 800));
@@ -158,15 +153,15 @@ int main(int argc, char** argv)
     auto portal_pipe = std::make_shared<gua::PipelineDescription>();
     portal_pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
     portal_pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
-
+    */
     auto resolve_pass = std::make_shared<gua::ResolvePassDescription>();
     resolve_pass->background_mode(gua::ResolvePassDescription::BackgroundMode::QUAD_TEXTURE);
     resolve_pass->tone_mapping_exposure(1.0f);
 
-    portal_pipe->add_pass(resolve_pass);
-    portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //portal_pipe->add_pass(resolve_pass);
+    //portal_pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
 
-    portal_camera->set_pipeline_description(portal_pipe);
+    //portal_camera->set_pipeline_description(portal_pipe);
 
     auto camera = graph.add_node<gua::node::CameraNode>("/screen", "cam");
     camera->translate(0, 0, 2.0);
@@ -175,10 +170,21 @@ int main(int argc, char** argv)
     camera->config.set_scene_graph_name("main_scenegraph");
     camera->config.set_output_window_name("main_window");
     camera->config.set_enable_stereo(false);
-    camera->set_pre_render_cameras({portal_camera});
+    //camera->set_pre_render_cameras({portal_camera});
 
-    camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
-    camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    //camera->get_pipeline_description()->get_resolve_pass()->tone_mapping_exposure(1.0f);
+    //camera->get_pipeline_description()->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+
+    auto pipe = std::make_shared<gua::PipelineDescription>();
+    //pipe->add_pass(std::make_shared<gua::TriMeshPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::MLodPassDescription>());
+    //pipe->add_pass(PLod_Pass);
+    //pipe->add_pass(std::make_shared<gua::BBoxPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::LightVisibilityPassDescription>());
+    //pipe->add_pass(std::make_shared<gua::ResolvePassDescription>());
+    //pipe->add_pass(std::make_shared<gua::DebugViewPassDescription>());
+    camera->set_pipeline_description(pipe);
+
 
     auto window = std::make_shared<gua::GlfwWindow>();
     gua::WindowDatabase::instance()->add("main_window", window);
@@ -200,8 +206,12 @@ int main(int argc, char** argv)
 
     // application loop
     gua::events::MainLoop loop;
-    gua::events::Ticker ticker(loop, 1.0 / 2000.0);
+    gua::events::Ticker ticker(loop, 1.0 / 5000.0);
 
+    float max_fps = -1.0;
+    float min_fps = 10000.0;
+
+    unsigned int framecount = 0;
     ticker.on_tick.connect([&]() {
         // apply trackball matrix to object
         gua::math::mat4 modelmatrix = scm::math::make_translation(trackball.shiftx(), trackball.shifty(), trackball.distance()) * gua::math::mat4(trackball.rotation());
@@ -216,8 +226,32 @@ int main(int argc, char** argv)
         }
         else
         {
+
+
+            auto start_decompress_avatar = std::chrono::system_clock::now();
             renderer.queue_draw({&graph});
-std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+            auto end_decompress_avatar = std::chrono::system_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end_decompress_avatar - start_decompress_avatar);
+
+
+
+
+            //if(elapsed.count()) {
+                float app_ms =  elapsed.count();
+                auto curr_fps = window->get_rendering_fps();
+                //max_fps = std::max(max_fps, app_fps);
+                //min_fps = std::min(min_fps, app_fps);
+                //std::cout << "min, max fps: [" << int(min_fps) << ", " << int(max_fps) << "]" << std::endl;
+                std::cout << "FPS: " << app_ms << std::endl;
+                std::cout << "FPS: " << window->get_rendering_fps() << "  Frametime: " << 1000.f / window->get_rendering_fps() << std::endl;
+            //}
+
+            //elapsed_time += elapsed.count();
+
+            if(framecount++ == 10000) {
+                max_fps = -1.0;
+                min_fps = 10000.0;                
+            }
         }
     });
 

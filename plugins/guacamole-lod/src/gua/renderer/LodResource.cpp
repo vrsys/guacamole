@@ -53,6 +53,13 @@ namespace gua
 {
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef  struct {
+    uint32_t  count;
+    uint32_t  instanceCount;
+    uint32_t  first;
+    uint32_t  baseInstance;
+} DrawArraysIndirectCommand;
+
 LodResource::LodResource(lamure::model_t model_id, bool is_pickable, math::mat4 const& local_transform) : model_id_(model_id), is_pickable_(is_pickable), local_transform_(local_transform), data_collection_per_context_({})
 {
     //compute bounds
@@ -100,10 +107,7 @@ void LodResource::draw(RenderContext const& ctx,
     uint32_t primitives_per_node = database->get_primitives_per_node();
     uint32_t primitives_per_node_of_model = bvh->get_primitives_per_node();
 
-    scm::gl::context_vertex_input_guard vig(ctx.render_context);
 
-    ctx.render_context->bind_vertex_array(vertex_array);
-    ctx.render_context->apply();
 
     if(draw_sorted)
     {
@@ -134,25 +138,52 @@ void LodResource::draw(RenderContext const& ctx,
             return result;
         });
 
+        node_list = node_render_list;
+        
+        /*
         for(const auto& n : node_render_list)
         {
             // result inside vector means the node is out of frustum
-            // if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
-
-            ctx.render_context->draw_arrays(type, n.slot_id_ * primitives_per_node, primitives_per_node_of_model);
-            //}
-        }
-    }
-    else
-    {
-        for(const auto& n : node_list)
-        {
-            if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
-            {
+             if (nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end()) {
                 ctx.render_context->draw_arrays(type, n.slot_id_ * primitives_per_node, primitives_per_node_of_model);
             }
+        }*/
+    }
+    //else
+    //{
+
+
+    scm::gl::context_vertex_input_guard vig(ctx.render_context);
+
+
+    ctx.render_context->bind_vertex_array(vertex_array);
+    ctx.render_context->apply();
+/*
+    std::vector<int32_t> in_first_indices(nodes_in_frustum.size());
+    std::vector<int32_t> in_counts(nodes_in_frustum.size(), primitives_per_node_of_model);
+
+    uint32_t current_node_index = 0;
+    for(const auto& n : node_list)
+    {
+        if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
+        {
+            in_first_indices[current_node_index] = n.slot_id_ * primitives_per_node;
         }
     }
+
+    if(in_first_indices.size()) {
+        ctx.render_context->multi_draw_arrays(type, in_first_indices.data(), in_counts.data(), in_first_indices.size() );
+    }*/
+    
+    for(const auto& n : node_list)
+    {
+        if(nodes_in_frustum.find(n.node_id_) != nodes_in_frustum.end())
+        {
+            ctx.render_context->draw_arrays(type, n.slot_id_ * primitives_per_node, primitives_per_node_of_model);
+        }
+    }
+
+    //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
