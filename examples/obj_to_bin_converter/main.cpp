@@ -52,10 +52,21 @@ int main(int argc, char** argv)
     // initialize guacamole
     gua::init(argc_tmp, argv_tmp);
 
+    bool make_pickable = false;
+    if(const char* make_pickable_p = std::getenv("GUACAMOLE_MAKE_PICKABLE")){
+        std::string make_pickable_flag(make_pickable_p);
+        make_pickable = "TRUE" == make_pickable_flag ? true : false;
+
+    }
+    if(make_pickable){
+        std::cout << "make pickable enabled, KDtree will be built and saved" << std::endl;        
+    }
+    
+
     std::cout << "start loading " << obj_file << std::endl;
     gua::TriMeshLoader loader;
 
-    auto obj_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , obj_file.c_str(), gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::MAKE_PICKABLE));
+    auto obj_node(loader.create_geometry_from_file("model_node" /*should be unique*/ , obj_file.c_str(), make_pickable ? gua::TriMeshLoader::LOAD_MATERIALS | gua::TriMeshLoader::MAKE_PICKABLE : gua::TriMeshLoader::LOAD_MATERIALS));
 
     
     unsigned mesh_counter = 0;
@@ -63,21 +74,21 @@ int main(int argc, char** argv)
         std::string filename_gua_trimesh(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         std::string filename_gua_kdtree(bin_file_base + "_" + toString(mesh_counter) + ".gua_kdtree");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node));
-        t_node->get_geometry()->save_to_binary(obj_file,(const char*) filename_gua_trimesh.c_str(), (const char*) filename_gua_kdtree.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary(obj_file,(const char*) filename_gua_trimesh.c_str(), make_pickable ? (const char*) filename_gua_kdtree.c_str() : nullptr, gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
 
         ++mesh_counter;
         std::cout << "saved " << filename_gua_trimesh << std::endl;
-        std::cout << "saved " << filename_gua_kdtree << std::endl;
+        if(make_pickable) std::cout << "saved " << filename_gua_kdtree << std::endl;
     }
     for(unsigned i = 0; i < obj_node->get_children().size(); ++i){
         std::string filename_gua_trimesh(bin_file_base + "_" + toString(mesh_counter) + ".gua_trimesh");
         std::string filename_gua_kdtree(bin_file_base + "_" + toString(mesh_counter) + ".gua_kdtree");
         auto t_node(std::dynamic_pointer_cast<gua::node::TriMeshNode>(obj_node->get_children()[i]));
-        t_node->get_geometry()->save_to_binary(obj_file, (const char*) filename_gua_trimesh.c_str(), (const char*) filename_gua_kdtree.c_str(), gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
+        t_node->get_geometry()->save_to_binary(obj_file, (const char*) filename_gua_trimesh.c_str(), make_pickable ? (const char*) filename_gua_kdtree.c_str() : nullptr, gua::TriMeshLoader::LOAD_MATERIALS /*, gua::TriMeshRessource::SAVE_TANGENTS | gua::TriMeshRessource::SAVE_BITANGENTS*/);
 
         ++mesh_counter;
         std::cout << "saved " << filename_gua_trimesh << std::endl;
-        std::cout << "saved " << filename_gua_kdtree << std::endl;
+        if(make_pickable) std::cout << "saved " << filename_gua_kdtree << std::endl;
     }
 
     return 0;
